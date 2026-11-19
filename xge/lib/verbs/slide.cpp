@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 #include "load/reading.h"
 
 namespace xge
@@ -23,9 +22,9 @@ namespace xge
 
 	static bool runSlide(const CmdSlide& slide, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
-		if (!slide.objClass.empty()) { return executor.game.slideClass(slide.objClass, slide.direction); }
-		if (doer.self && doer.self->onCells) { executor.game.slideCells(*doer.self, slide.direction); }
+		Game& game = doer.game();
+		if (!slide.objClass.empty()) { return game.slideClass(slide.objClass, slide.direction); }
+		if (doer.self && doer.self->onCells) { game.slideCells(*doer.self, slide.direction); }
 		return true;
 	}
 

@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 #include "play/maze.h"
 #include "load/reading.h"
 #include <variant>
@@ -26,9 +25,9 @@ namespace xge
 
 	static bool runGo(const CmdGo& go, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
-		if (doer.self && doer.self->onCells) { return executor.game.goCells(*doer.self, go.direction, go.speed); }
-		if (doer.self && doer.action) { if (Maze* maze = executor.game.mazeOf(*doer.self)) { startGo(*maze, go); } }
+		Game& game = doer.game();
+		if (doer.self && doer.self->onCells) { return game.goCells(*doer.self, go.direction, go.speed); }
+		if (doer.self && doer.action) { if (Maze* maze = game.mazeOf(*doer.self)) { startGo(*maze, go); } }
 		return true;
 	}
 

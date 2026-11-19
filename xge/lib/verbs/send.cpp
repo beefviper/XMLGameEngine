@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 #include "load/check.h"
 #include "load/reading.h"
 
@@ -64,11 +63,11 @@ namespace xge
 
 	static bool runSend(const CmdSend& send, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
+		Game& game = doer.game();
 		// Members of a held class, holder to holder; else a piece, map to map.
-		if (send.held) { return executor.game.sendHeld(send.from, send.into, send.count, send.all, send.sprite); }
+		if (send.held) { return game.sendHeld(send.from, send.into, send.count, send.all, send.sprite); }
 		const auto cell = [](const std::optional<float>& given) { return given ? std::optional<int>(static_cast<int>(std::lround(*given))) : std::nullopt; };
-		return executor.game.sendCells(send.target, send.from, send.into, cell(send.column), cell(send.row));
+		return game.sendCells(send.target, send.from, send.into, cell(send.column), cell(send.row));
 	}
 
 	static void printSend(std::ostream& o, const CmdSend& send)

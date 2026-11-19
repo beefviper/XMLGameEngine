@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 
 namespace xge
 {
@@ -17,8 +16,7 @@ namespace xge
 
 	static bool runOut(const CmdOut&, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
-		if (!doer.self) { executor.game.passTurn(true); }
+		if (!doer.self) { doer.game().passTurn(true); }
 		return true;
 	}
 

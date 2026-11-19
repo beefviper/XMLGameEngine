@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 
 namespace xge
 {
@@ -17,8 +16,7 @@ namespace xge
 
 	static bool runSettle(const CmdSettle&, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
-		if (doer.self) { executor.game.settle(*doer.self); }
+		if (doer.self) { doer.game().settle(*doer.self); }
 		return true;
 	}
 

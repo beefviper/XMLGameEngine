@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 
 namespace xge
 {
@@ -17,8 +16,7 @@ namespace xge
 
 	static bool runCollapse(const CmdCollapse&, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
-		if (doer.match) { executor.game.collapseCells(*doer.match); }
+		if (doer.match) { doer.game().collapseCells(*doer.match); }
 		return true;
 	}
 

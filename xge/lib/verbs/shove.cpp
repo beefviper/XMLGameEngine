@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 
 namespace xge
 {
@@ -17,8 +16,7 @@ namespace xge
 
 	static bool runShove(const CmdShove&, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
-		return doer.self && doer.touch && doer.other && executor.game.shoveCells(*doer.other, doer.touch->edge);
+		return doer.self && doer.touch && doer.other && doer.game().shoveCells(*doer.other, doer.touch->edge);
 	}
 
 	static void printShove(std::ostream& o, const CmdShove&)

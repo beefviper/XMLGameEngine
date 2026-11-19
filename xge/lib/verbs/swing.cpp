@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 #include "load/reading.h"
 
 #include <algorithm>
@@ -38,10 +37,10 @@ namespace xge
 
 	static bool runSwing(const CmdSwing& swing, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
+		Game& game = doer.game();
 		Object* const self = doer.self;
 		if (!self || !doer.action) { return true; }
-		Object::Swing& stroke = executor.game.parts().give(executor.game.parts().swings, self->id);
+		Object::Swing& stroke = game.parts().give(game.parts().swings, self->id);
 		stroke.seconds = swing.seconds;
 		stroke.by = swing.by;
 		stroke.held = doer.pressed;

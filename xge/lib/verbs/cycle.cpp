@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 
 #include <stdexcept>
 #include <string>
@@ -24,8 +23,7 @@ namespace xge
 
 	static bool runCycle(const CmdCycle& cycle, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
-		if (doer.self) { executor.game.cycleCells(*doer.self, cycle.backward); }
+		if (doer.self) { doer.game().cycleCells(*doer.self, cycle.backward); }
 		return true;
 	}
 

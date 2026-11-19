@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 #include "play/verbs.h"
 
 namespace xge
@@ -16,10 +15,19 @@ namespace xge
 		return CmdWrap{};
 	}
 
+	// <wrap />: once right off through `edge`, back in from the other side.
+	//
+	// Until it has gone completely, nothing happens: an object still partly
+	// in view slides out as normal. It comes back one screen and one object's
+	// width along, so anything spaced along a lane keeps its spacing.
+	static void wrap(Object& object, const WindowDesc& window, Edge edge)
+	{
+		wrapAround(object.position, object.size, object.velocity + object.riding, { window.width, window.height }, edge);
+	}
+
 	static bool runWrap(const CmdWrap&, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
-		if (doer.self && doer.screenEdge) { xge::wrap(*doer.self, executor.game.getWindowDesc(), *doer.screenEdge); }
+		if (doer.self && doer.screenEdge) { xge::wrap(*doer.self, doer.game().getWindowDesc(), *doer.screenEdge); }
 		return true;
 	}
 

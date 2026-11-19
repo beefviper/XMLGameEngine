@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 
 namespace xge
 {
@@ -17,8 +16,8 @@ namespace xge
 
 	static bool runGrow(const CmdGrow&, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
-		if (doer.self && !executor.game.cellPart(*doer.self).chain.empty()) { ++executor.game.placeFor(*doer.self).chainGrow; }
+		Game& game = doer.game();
+		if (doer.self && !game.cellPart(*doer.self).chain.empty()) { ++game.placeFor(*doer.self).chainGrow; }
 		return true;
 	}
 

@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 #include "load/reading.h"
 
 #include <cmath>
@@ -32,16 +31,16 @@ namespace xge
 
 	static bool runPass(const CmdPass& pass, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
+		Game& game = doer.game();
 		Object* const self = doer.self;
-		if (pass.member >= 0) { return executor.game.passPlayersTo(pass.group.empty() && self ? self->groupName : pass.group, pass.member); }
+		if (pass.member >= 0) { return game.passPlayersTo(pass.group.empty() && self ? self->groupName : pass.group, pass.member); }
 		if (!pass.group.empty())
 		{
-			Object* const on = executor.game.onTurn(pass.group);
-			return !on || executor.game.passPlayers(*on);
+			Object* const on = game.onTurn(pass.group);
+			return !on || game.passPlayers(*on);
 		}
-		if (!self) { executor.game.passTurn(false); }
-		else if (executor.game.turnsOf(*self).takes) { return executor.game.passPlayers(*self); }
+		if (!self) { game.passTurn(false); }
+		else if (game.turnsOf(*self).takes) { return game.passPlayers(*self); }
 		return true;
 	}
 

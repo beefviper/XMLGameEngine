@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 #include "load/check.h"
 #include "load/reading.h"
 #include "play/geometry.h"
@@ -48,14 +47,14 @@ namespace xge
 	// in flight. From a shooter with a heading the shot leaves its nose the
 	// way it faces, at the projectile's own speed; from any other it leaves
 	// the top centre, at the projectile's own velocity.
-	static bool fireProjectile(CommandExecutor& executor, Object& shooter, const std::string& projectileName)
+	static bool fireProjectile(Game& game, Object& shooter, const std::string& projectileName)
 	{
-		Object* projectile = executor.game.spawn(projectileName);
+		Object* projectile = game.spawn(projectileName);
 		if (!projectile) { return false; }
 
 		const Box from{ shooter.position, sizeOf(shooter) };
 		const Vector2f shotSize = sizeOf(*projectile);
-		const float speed = std::hypot(executor.game.startOf(*projectile).velocity.x, executor.game.startOf(*projectile).velocity.y);
+		const float speed = std::hypot(game.startOf(*projectile).velocity.x, game.startOf(*projectile).velocity.y);
 		std::optional<Shot> shot;
 		if (shooter.hasAim)
 		{
@@ -77,7 +76,7 @@ namespace xge
 		{
 			// From the shooter's top-centre: the projectile's own middle over
 			// the shooter's, so a thin shot leaves the middle of the gun.
-			shot = Shot{ shotFromTop(from, shotSize), executor.game.startOf(*projectile).velocity };
+			shot = Shot{ shotFromTop(from, shotSize), game.startOf(*projectile).velocity };
 		}
 
 		projectile->position = shot->position;
@@ -89,8 +88,7 @@ namespace xge
 
 	static bool runFire(const CmdFire& fire, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
-		return !doer.self || fireProjectile(executor, *doer.self, fire.projectileName);
+		return !doer.self || fireProjectile(doer.game(), *doer.self, fire.projectileName);
 	}
 
 	static void printFire(std::ostream& o, const CmdFire& fire)

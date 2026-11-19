@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 #include "load/reading.h"
 
 #include <memory>
@@ -29,10 +28,10 @@ namespace xge
 
 	static bool runPut(const CmdPut& putCommand, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
+		Game& game = doer.game();
 		CmdPut put = putCommand;
-		if (put.objClass.empty()) { put.objClass = executor.game.turnClass(); }
-		return doer.self && !put.objClass.empty() && executor.game.putPiece(*doer.self, put);
+		if (put.objClass.empty()) { put.objClass = game.turnClass(); }
+		return doer.self && !put.objClass.empty() && game.putPiece(*doer.self, put);
 	}
 
 	static void printPut(std::ostream& o, const CmdPut& put)

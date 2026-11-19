@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 #include "load/reading.h"
 
 #include <memory>
@@ -32,8 +31,7 @@ namespace xge
 
 	static bool runOrder(const CmdOrder& order, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
-		return executor.game.orderHeld(order.group);
+		return doer.game().orderHeld(order.group);
 	}
 
 	static void printOrder(std::ostream& o, const CmdOrder& order)

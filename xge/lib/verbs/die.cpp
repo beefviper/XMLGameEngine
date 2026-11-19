@@ -14,6 +14,17 @@ namespace xge
 		return CmdDie{};
 	}
 
+	// <die />: out of play; not drawn, moved or collided with.
+	//
+	// Everything else about it is left as it was, so whatever brings it back
+	// (fire() re-launching a bullet, reset()) starts from a known place.
+	static void die(Object& object)
+	{
+		object.collisionsOn = false;
+		object.isVisible = false;
+		object.path.name.clear();
+	}
+
 	static bool runDie(const CmdDie&, const Doer& doer)
 	{
 		if (doer.self) { xge::die(*doer.self); }

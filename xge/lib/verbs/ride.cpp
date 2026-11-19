@@ -14,6 +14,15 @@ namespace xge
 		return CmdRide{};
 	}
 
+	// <ride />: moves with `other` for this frame.
+	//
+	// Not kept: worked out again every frame from whatever is still being
+	// touched, so the moment it is off the other one, it is at rest.
+	static void ride(Object& object, const Object& other)
+	{
+		object.riding = other.velocity;
+	}
+
 	static bool runRide(const CmdRide&, const Doer& doer)
 	{
 		if (doer.self && doer.touch) { xge::ride(*doer.self, *doer.other); }

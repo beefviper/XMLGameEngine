@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 #include "load/reading.h"
 
 namespace xge
@@ -23,8 +22,7 @@ namespace xge
 
 	static bool runMerge(const CmdMerge& merge, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
-		return doer.self && doer.touch && doer.other && executor.game.mergeCells(*doer.self, *doer.other, merge.variable);
+		return doer.self && doer.touch && doer.other && doer.game().mergeCells(*doer.self, *doer.other, merge.variable);
 	}
 
 	static void printMerge(std::ostream& o, const CmdMerge& merge)

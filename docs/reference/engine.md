@@ -125,14 +125,14 @@ Design: [build-and-layout](../designs/51-build-and-layout.md).
 | the game | `game/game.cpp` | the interpreter: objects, the state stack, scenes, conditions, resets, paths, spawns, the answers to `FrameRules` |
 | | `game/scenes.cpp` | `layOutScenes`, states `from=` others |
 | | `game/command.cpp` | raw command tags into typed `Command`s (`makeCommand`, by the verb), printing them and objects; `operationShape` |
-| | `verbs/` | a file per verb: its name, the places it may go, `read`, `make`, `check` and `run`; `verb.h` says what a verb is, `all.cpp` lists them |
+| | `verbs/` | a file per verb: its name, the places it may go, `read`, `make`, `check`, `run`, `hold` and `print`, and the work it does; `verb.h` says what a verb is, `all.cpp` lists them |
 | | `game/object.*`, `game/states.*`, `game/data.h`, `game/random.cpp` | the data model; the one random source |
 | | `game/name.h`, `game/variables.h` | `Name`, a name from the game file held once in the game's `NameStore` (`Game::nameOf`); `Variables`, an object's variables as one short list |
 | | `game/parts.*`, `game/store.h` | every object's handle (`ObjectId`) and the parts it has, a `Store` per kind (`Game::parts()`) |
 | | `game/cells.cpp`, `game/holders.cpp`, `game/think.cpp` | maps of cells and board games; cards; the board-game search |
 | the frame | `play/frame.cpp` | `playOneFrame`: the order of a frame and the moving |
 | | `play/geometry.cpp`, `play/collision.cpp` | touching (box, circle, swept, pixel walk, `contactOf`) and the verbs' arithmetic |
-| | `play/verbs.cpp`, `play/executor.cpp` | the verbs' work on objects; running a command by its verb, and the work that needs the game |
+| | `play/verbs.cpp`, `play/executor.cpp` | what several verbs and the frame do to an object; running a list of commands by their verbs |
 | | `play/maze.cpp` | walking a map's tiles |
 | | `play/numbers.h` | the one-number operations of a value (`sign`, `sine`, `cosine`) |
 | pictures | `picture/bitmap.cpp`, `svg.cpp`, `image.cpp`, `font.cpp`, `color.cpp` | pixels, flips and turns; SVG with lunasvg; picture sheets cut and shrunk (`<pictures>`); fonts and the 8x8 fallback; colour names |

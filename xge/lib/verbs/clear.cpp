@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 
 namespace xge
 {
@@ -17,8 +16,7 @@ namespace xge
 
 	static bool runClear(const CmdClear&, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
-		if (doer.match) { executor.game.clearCells(*doer.match); }
+		if (doer.match) { doer.game().clearCells(*doer.match); }
 		return true;
 	}
 

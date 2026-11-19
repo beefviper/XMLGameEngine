@@ -15,11 +15,13 @@ namespace xge
 		return CmdCarry{};
 	}
 
+	// Picks `item` up, held where it is now, putting down what it carried
+	// before; nothing if it was just put down and is still being touched.
 	// Taken from whatever had it: one thing is carried by one object at a time.
 	static void takeUp(Game& game, Object& object, const Object& item)
 	{
 		Parts& parts = game.parts();
-		if (const Object::Carry* mine = parts.carries.find(object.id); mine && (item.name == mine->what || item.name == mine->dropped))
+		if (const Object::Carry* mine = parts.carries.find(object.id); &item == &object || (mine && (item.name == mine->what || item.name == mine->dropped)))
 		{
 			return;
 		}
@@ -33,7 +35,9 @@ namespace xge
 			}
 		}
 
-		xge::carry(object, parts.give(parts.carries, object.id), item);
+		Object::Carry& carry = parts.give(parts.carries, object.id);
+		carry.what = item.name;
+		carry.offset = item.position - object.position;
 	}
 
 	static bool runCarry(const CmdCarry&, const Doer& doer)

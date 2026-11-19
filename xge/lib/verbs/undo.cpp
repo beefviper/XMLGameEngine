@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 
 namespace xge
 {
@@ -17,8 +16,7 @@ namespace xge
 
 	static bool runUndo(const CmdUndo&, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
-		return executor.game.undo();
+		return doer.game().undo();
 	}
 
 	static void printUndo(std::ostream& o, const CmdUndo&)

@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 
 namespace xge
 {
@@ -17,8 +16,7 @@ namespace xge
 
 	static bool runThrough(const CmdThrough&, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
-		if (doer.self && doer.touch) { executor.game.stepThrough(); }
+		if (doer.self && doer.touch) { doer.game().stepThrough(); }
 		return true;
 	}
 

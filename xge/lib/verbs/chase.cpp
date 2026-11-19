@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 #include "load/check.h"
 #include "load/reading.h"
 #include "play/geometry.h"
@@ -45,12 +44,12 @@ namespace xge
 	// this step, if it gets there). It faces the
 	// way it goes, and a heading turns to it. With none in play it carries on
 	// as it was.
-	static void chaseNearest(CommandExecutor& executor, Object& object, const CmdChase& command)
+	static void chaseNearest(Game& game, Object& object, const CmdChase& command)
 	{
-		const Object* target = executor.game.nearestInPlay(object, command.target);
+		const Object* target = game.nearestInPlay(object, command.target);
 		if (!target) { return; }
 
-		if (const auto way = xge::chase(middleOf(object), middleOf(*target), command.speed, command.stopWithin, executor.game.stepTime(), object.velocity))
+		if (const auto way = xge::chase(middleOf(object), middleOf(*target), command.speed, command.stopWithin, game.stepTime(), object.velocity))
 		{
 			object.facing = directionOf(*way);
 			if (object.turning.hasHeading)
@@ -63,8 +62,7 @@ namespace xge
 
 	static bool runChase(const CmdChase& chase, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
-		if (doer.self) { chaseNearest(executor, *doer.self, chase); }
+		if (doer.self) { chaseNearest(doer.game(), *doer.self, chase); }
 		return true;
 	}
 

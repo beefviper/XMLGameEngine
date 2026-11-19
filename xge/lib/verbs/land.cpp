@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 #include "play/geometry.h"
 #include "play/verbs.h"
 
@@ -48,8 +47,7 @@ namespace xge
 
 	static bool runLand(const CmdLand&, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
-		if (doer.self && doer.touch) { landOnto(*doer.self, executor.game.parts().drives.find(doer.self->id), *doer.other, doer.touch->edge); }
+		if (doer.self && doer.touch) { landOnto(*doer.self, doer.game().parts().drives.find(doer.self->id), *doer.other, doer.touch->edge); }
 		return true;
 	}
 

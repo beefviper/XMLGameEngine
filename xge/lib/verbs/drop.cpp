@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 #include "play/verbs.h"
 
 namespace xge
@@ -16,15 +15,27 @@ namespace xge
 		return CmdDrop{};
 	}
 
+	// <drop />: puts down what it carries.
+	static void drop(Object::Carry& carry)
+	{
+		if (carry.what.empty())
+		{
+			return;
+		}
+
+		carry.dropped = carry.what;
+		carry.what.clear();
+	}
+
 	static bool runDrop(const CmdDrop&, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
+		Game& game = doer.game();
 		Object* const self = doer.self;
 		// A picker puts back the piece it holds; refused in the middle of a run
 		// of jumps.
-		if (self && executor.game.isHand(*self)) { return executor.game.dropItems(*self); }
-		if (self && !executor.game.pickerOf(*self).picked.empty()) { return executor.game.dropPiece(*self); }
-		if (self) { if (Object::Carry* carry = executor.game.parts().carries.find(self->id)) { xge::drop(*carry); } }
+		if (self && game.isHand(*self)) { return game.dropItems(*self); }
+		if (self && !game.pickerOf(*self).picked.empty()) { return game.dropPiece(*self); }
+		if (self) { if (Object::Carry* carry = game.parts().carries.find(self->id)) { xge::drop(*carry); } }
 		return true;
 	}
 

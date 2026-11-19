@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 #include "load/reading.h"
 
 namespace xge
@@ -26,9 +25,9 @@ namespace xge
 
 	static bool runCount(const CmdCount& count, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
-		if (!count.place.any()) { executor.game.setNumber(count.target, executor.game.countClass(count.objClass)); }
-		else if (doer.self) { executor.game.setNumber(count.target, static_cast<float>(executor.game.piecesAbout(*doer.self, count.objClass, count.place).size())); }
+		Game& game = doer.game();
+		if (!count.place.any()) { game.setNumber(count.target, game.countClass(count.objClass)); }
+		else if (doer.self) { game.setNumber(count.target, static_cast<float>(game.piecesAbout(*doer.self, count.objClass, count.place).size())); }
 		return true;
 	}
 

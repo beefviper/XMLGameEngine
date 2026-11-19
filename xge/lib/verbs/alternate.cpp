@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 #include "load/check.h"
 #include "load/reading.h"
 
@@ -46,8 +45,7 @@ namespace xge
 
 	static bool runAlternate(const CmdAlternate& alternate, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
-		if (!doer.self) { executor.game.startTurns(alternate.players); }
+		if (!doer.self) { doer.game().startTurns(alternate.players); }
 		return true;
 	}
 

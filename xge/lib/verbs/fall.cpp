@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 
 namespace xge
 {
@@ -17,8 +16,7 @@ namespace xge
 
 	static bool runFall(const CmdFall& fall, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
-		if (doer.match) { executor.game.fallCells(doer.match->map, fall.objClass); }
+		if (doer.match) { doer.game().fallCells(doer.match->map, fall.objClass); }
 		return true;
 	}
 

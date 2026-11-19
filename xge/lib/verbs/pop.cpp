@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 #include "load/check.h"
 
 #include <string>
@@ -26,8 +25,7 @@ namespace xge
 
 	static bool runPop(const CmdPopState& popStateCommand, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
-		executor.game.popState(popStateCommand.name);
+		doer.game().popState(popStateCommand.name);
 		return true;
 	}
 

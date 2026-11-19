@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 
 #include <stdexcept>
 
@@ -20,8 +19,7 @@ namespace xge
 
 	static bool runCall(const CmdCall& call, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
-		return doer.self && executor.game.callValue(*doer.self, call.holder);
+		return doer.self && doer.game().callValue(*doer.self, call.holder);
 	}
 
 	static void printCall(std::ostream& o, const CmdCall& call)

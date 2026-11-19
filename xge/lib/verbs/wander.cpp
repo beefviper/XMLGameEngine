@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 #include "play/maze.h"
 #include "load/reading.h"
 #include <variant>
@@ -25,8 +24,7 @@ namespace xge
 
 	static bool runWander(const CmdWander& wander, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
-		if (doer.self) { if (Maze* maze = executor.game.mazeOf(*doer.self)) { startWander(*maze, wander); } }
+		if (doer.self) { if (Maze* maze = doer.game().mazeOf(*doer.self)) { startWander(*maze, wander); } }
 		return true;
 	}
 

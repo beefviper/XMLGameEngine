@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 #include "load/check.h"
 #include "load/reading.h"
 
@@ -29,8 +28,7 @@ namespace xge
 
 	static bool runSilence(const CmdSilence& silence, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
-		executor.game.silenceSound(silence.sound);
+		doer.game().silenceSound(silence.sound);
 		return true;
 	}
 

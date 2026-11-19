@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 #include "load/check.h"
 #include "load/reading.h"
 
@@ -33,8 +32,7 @@ namespace xge
 
 	static bool runShift(const CmdShift& shift, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
-		executor.game.shift(shift.target, shift.by);
+		doer.game().shift(shift.target, shift.by);
 		return true;
 	}
 

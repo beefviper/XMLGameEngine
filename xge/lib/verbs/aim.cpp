@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 #include "load/check.h"
 #include "load/reading.h"
 #include "play/geometry.h"
@@ -41,9 +40,9 @@ namespace xge
 	// where its middle is now, and the object faces that way (to the nearest
 	// of the four, or exactly, if it has a heading). Lined, only along one of
 	// the eight ways, and refused (false) when none is near enough.
-	static bool aimAtNearest(CommandExecutor& executor, Object& object, const CmdAim& command)
+	static bool aimAtNearest(Game& game, Object& object, const CmdAim& command)
 	{
-		const Object* other = executor.game.nearestInPlay(object, command.target);
+		const Object* other = game.nearestInPlay(object, command.target);
 		if (!other) { return !command.lined; }
 
 		auto way = wayTo(middleOf(object), middleOf(*other));
@@ -67,8 +66,7 @@ namespace xge
 
 	static bool runAim(const CmdAim& aim, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
-		return !doer.self || aimAtNearest(executor, *doer.self, aim);
+		return !doer.self || aimAtNearest(doer.game(), *doer.self, aim);
 	}
 
 	static void printAim(std::ostream& o, const CmdAim& aim)

@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 #include "load/check.h"
 #include "load/reading.h"
 
@@ -32,8 +31,7 @@ namespace xge
 
 	static bool runPush(const CmdPushState& pushStateCommand, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
-		executor.game.pushState(pushStateCommand.name);
+		doer.game().pushState(pushStateCommand.name);
 		return true;
 	}
 

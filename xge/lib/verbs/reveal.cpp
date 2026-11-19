@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 #include "load/check.h"
 #include "load/reading.h"
 
@@ -39,8 +38,7 @@ namespace xge
 
 	static bool runReveal(const CmdReveal& reveal, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
-		executor.game.reveal(reveal.target, reveal.count);
+		doer.game().reveal(reveal.target, reveal.count);
 		return true;
 	}
 

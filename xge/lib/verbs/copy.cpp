@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 #include "load/check.h"
 #include "load/reading.h"
 
@@ -37,8 +36,7 @@ namespace xge
 
 	static bool runCopy(const CmdCopy& copy, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
-		executor.game.copyVariable(copy.from, copy.into);
+		doer.game().copyVariable(copy.from, copy.into);
 		return true;
 	}
 

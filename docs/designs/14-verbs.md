@@ -11,14 +11,14 @@ One place for everything the engine knows about a verb.
 
 ## The shape
 
-- **A `Verb` record a file** (`verbs/verb.h`): `name`, up to three `forms` (how a message names it, the places it may go, the kind of command it makes), `onRelease` (it acts when a key is let go), and the functions `read`, `make`, `check`, `run`, `print` and `printRaw`. `bounce.cpp` holds `<bounce>` and nothing else.
-- **The command processor is a lookup.** `readCommand` finds the verb by its tag, reads the names any command may have (its attributes) and calls `read` for the rest; `makeCommand` calls `make`; the load-time check calls `check`; `CommandExecutor::run` finds the verb of a command (`verbOf`, a table by the command's kind) and calls `run` with a `Doer`: who is running it and what it touched. The place check reads the forms.
+- **A `Verb` record a file** (`verbs/verb.h`): `name`, up to three `forms` (how a message names it, the places it may go, the kind of command it makes), `onRelease` (it acts when a key is let go), and the functions `read`, `make`, `check`, `run`, `hold` (it goes on while its key is still down as a state begins) and `print`, each left out when the verb has none. `bounce.cpp` holds `<bounce>` and nothing else.
+- **The command processor is a lookup.** `readCommand` finds the verb by its tag, reads the names any command may have (its attributes) and calls `read` for the rest; `makeCommand` calls `make`; the load-time check calls `check`; `CommandExecutor::run` finds the verb of a command (`verbOf`, a table by the command's kind) and calls `run` with a `Doer`: who is running it, what it touched, and the game (`touching()`, `atEdge()`, `game()`). `run`, `print` and `check` take the verb's own `Cmd*` (`runAs<runBounce>` picks it out), so a file reads: the tag, its numbers, the work. The place check reads the forms.
 - **Forms** are for the few verbs written more than one way: `<reset />`, `<reset object>` and `<reset scene>` make three kinds of command; `<despawn />` is about the object running it and goes where that means something, `<despawn object>` anywhere a change does.
-- **The work stays where it was**: the arithmetic in `play/verbs.cpp` and `play/geometry.cpp`, what needs the game in `CommandExecutor` and `Game`. A verb's file says when each is called.
-  - A helper only one verb calls is in that verb's file instead, taking the executor: the hunt by hops, the fired shot, aiming, the chase, landing, the knock through a still thing.
-  - One that several call stays in `CommandExecutor`: `hop` (the hop verb, and the hunt by hops) and the flight it starts.
-- **Printing is the verb's too.** `operator<<` for a `Command` asks its verb's `print`, and for a `RawCommand` prints the tag and then asks `printRaw` for the rest. Only the two kinds that are no verb's, a condition in a list (`CmdWhen`) and a command worked out as it runs (`CmdLive`), are printed in `game/command.cpp`. The tests of generated games compare these printouts, so the text is part of what a verb is.
-- **The `Cmd*` structs and the `Command` variant stay in `game/command.h`**: tests and the generator make them, and `run` reads its own with `std::get`.
+- **The work is the verb's file.** What one verb does is a function in its file, given the game: `bounceOff` and `bounceOffEdge` above `runBounce`, the spawn's placing, the hop's flight, the knock's trade of speed.
+  - What several share stays shared: `rub` (bounce and knock) and the object helpers in `play/verbs.cpp`, the arithmetic in `play/geometry.cpp`, `hopObject` (a hop, and a hunt by hops) in `hop.cpp`, declared in `verb.h`.
+  - `CommandExecutor` runs lists of commands and holds what they share: the trigger's flood guard and the held share of an `<inc>`.
+- **Printing is the verb's too.** `operator<<` for a `Command` asks its verb's `print`; a `RawCommand` prints its tag. Only the two kinds that are no verb's, a condition in a list (`CmdWhen`) and a command worked out as it runs (`CmdLive`), are printed in `game/command.cpp`. The tests of generated games compare these printouts, so the text is part of what a verb is.
+- **The `Cmd*` structs and the `Command` variant stay in `game/command.h`**: tests and the generator make them.
 
 ## Choices
 

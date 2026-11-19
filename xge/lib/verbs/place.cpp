@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 
 namespace xge
 {
@@ -17,9 +16,9 @@ namespace xge
 
 	static bool runPlace(const CmdPlace& place, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
+		Game& game = doer.game();
 		Object* const self = doer.self;
-		return self && (executor.game.isHand(*self) ? executor.game.layItems(*self, place.into) : executor.game.placePiece(*self));
+		return self && (game.isHand(*self) ? game.layItems(*self, place.into) : game.placePiece(*self));
 	}
 
 	static void printPlace(std::ostream& o, const CmdPlace& place)

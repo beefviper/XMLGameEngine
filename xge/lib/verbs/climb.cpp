@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 #include "load/reading.h"
 
 #include <stdexcept>
@@ -33,10 +32,10 @@ namespace xge
 
 	static bool runClimb(const CmdClimb& climb, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
+		Game& game = doer.game();
 		Object* const self = doer.self;
 		if (!self || !doer.action) { return true; }
-		Object::Climb& asked = executor.game.parts().give(executor.game.parts().climbs, self->id);
+		Object::Climb& asked = game.parts().give(game.parts().climbs, self->id);
 		asked.activeClimb[climb.direction == Direction::Up ? 0 : 1] = doer.pressed ? climb.step : 0.0f;
 		asked.climbClass = climb.ladderClass;
 		asked.climbOnce = doer.pressed && doer.byRule;

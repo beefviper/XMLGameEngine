@@ -27,6 +27,19 @@ namespace xge
 		return CmdDeflect{ maxAngle };
 	}
 
+	// <deflect>maxDegrees</deflect>: back off `other` at an angle set by
+	// where on the touched side it hit.
+	//
+	// How far the object's middle is from the middle of the touched side, as
+	// a share of half that side's length (-1 at one end, 1 at the other, held
+	// there past the ends), times maxDegrees, is the angle away from straight
+	// back out, towards the end it hit nearer to: off a Pong paddle's top
+	// half the ball goes back up, off its bottom half down.
+	static void deflect(Object& object, const Object& other, Edge edge, float maxDegrees)
+	{
+		object.velocity = deflected(object.velocity, { object.position, sizeOf(object) }, { other.position, sizeOf(other) }, edge, maxDegrees);
+	}
+
 	static bool runDeflect(const CmdDeflect& deflect, const Doer& doer)
 	{
 		if (doer.self && doer.touch) { xge::deflect(*doer.self, *doer.other, doer.touch->edge, deflect.maxAngle); }

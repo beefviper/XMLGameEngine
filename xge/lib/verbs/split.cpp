@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 
 namespace xge
 {
@@ -17,8 +16,7 @@ namespace xge
 
 	static bool runSplit(const CmdSplit&, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
-		if (doer.self) { executor.game.splitChain(*doer.self); }
+		if (doer.self) { doer.game().splitChain(*doer.self); }
 		return true;
 	}
 

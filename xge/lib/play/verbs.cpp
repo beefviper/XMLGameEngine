@@ -22,67 +22,6 @@ namespace xge
 		return measureShapeSize(object.drawn.picture);
 	}
 
-	void cutHole(Parts& parts, Resources& resources, Object& object, const Object& other, float radius, float rough)
-	{
-		if (!object.drawn.bitmap) { return; }
-
-		Bitmap cut = *object.drawn.bitmap;
-
-		// Where it struck: the solid pixel nearest the other's middle, near
-		// enough the other to be touched by it.
-		const Vector2f otherSize = sizeOf(other);
-		Vector2f middle = other.position + otherSize * 0.5f - object.position;
-		{
-			const Vector2f from = other.position - object.position;
-			const int reach = 2;
-			float best = -1.0f;
-			Vector2f nearest = middle;
-			const int x0 = std::max(0, static_cast<int>(std::floor(from.x)) - reach);
-			const int y0 = std::max(0, static_cast<int>(std::floor(from.y)) - reach);
-			const int x1 = std::min(cut.width - 1, static_cast<int>(std::ceil(from.x + otherSize.x)) + reach);
-			const int y1 = std::min(cut.height - 1, static_cast<int>(std::ceil(from.y + otherSize.y)) + reach);
-			for (int y = y0; y <= y1; ++y)
-			{
-				for (int x = x0; x <= x1; ++x)
-				{
-					if (!cut.solidAt(x, y)) { continue; }
-					const Vector2f at{ static_cast<float>(x) + 0.5f, static_cast<float>(y) + 0.5f };
-					const float away = (at.x - middle.x) * (at.x - middle.x) + (at.y - middle.y) * (at.y - middle.y);
-					if (best < 0.0f || away < best) { best = away; nearest = at; }
-				}
-			}
-			middle = nearest;
-		}
-		const int left = std::max(0, static_cast<int>(std::floor(middle.x - radius)));
-		const int top = std::max(0, static_cast<int>(std::floor(middle.y - radius)));
-		const int right = std::min(cut.width - 1, static_cast<int>(std::ceil(middle.x + radius)));
-		const int bottom = std::min(cut.height - 1, static_cast<int>(std::ceil(middle.y + radius)));
-		bool changed = false;
-		for (int y = top; y <= bottom; ++y)
-		{
-			for (int x = left; x <= right; ++x)
-			{
-				const float dx = static_cast<float>(x) + 0.5f - middle.x;
-				const float dy = static_cast<float>(y) + 0.5f - middle.y;
-				const float reach = rough > 0.0f ? radius * (1.0f - rough * randomBetween(0.0f, 1.0f)) : radius;
-				if (dx * dx + dy * dy > reach * reach || !cut.solidAt(x, y)) { continue; }
-				cut.rgba[(static_cast<std::size_t>(y) * static_cast<std::size_t>(cut.width) + static_cast<std::size_t>(x)) * 4 + 3] = 0;
-				changed = true;
-			}
-		}
-		if (!changed) { return; }
-
-		// The first hole makes the picture its own, kept whole for a reset;
-		// each after that is cut into it.
-		if (parts.unholed.has(object.id)) { resources.replace(object.drawn.bitmap, std::move(cut)); }
-		else
-		{
-			parts.unholed.add(object.id, parts.orderOf(object.id), { object.drawn.bitmap });
-			object.drawn.bitmap = resources.own(std::move(cut));
-		}
-		object.drawn.visualDirty = true;
-	}
-
 	namespace
 	{
 		float dotOf(const Vector2f& a, const Vector2f& b) noexcept { return a.x * b.x + a.y * b.y; }
@@ -152,66 +91,12 @@ namespace xge
 		rest->at = mover.position;
 	}
 
-	// How far the object's middle is from the middle of the touched side, as
-	// a share of half that side's length (-1 at one end, 1 at the other, held
-	// there past the ends), times maxDegrees, is the angle away from straight
-	// back out, towards the end it hit nearer to: off a Pong paddle's top
-	// half the ball goes back up, off its bottom half down.
-	void deflect(Object& object, const Object& other, Edge edge, float maxDegrees)
-	{
-		object.velocity = deflected(object.velocity, { object.position, sizeOf(object) }, { other.position, sizeOf(other) }, edge, maxDegrees);
-	}
-
 	// Only the touched edge's own axis is affected, so an object pressed
 	// against the bottom wall still slides left or right, and one moving away
 	// from the wall is not held back.
 	void stick(Object& object, const WindowDesc& window, Edge edge)
 	{
 		stickInside(object.position, object.velocity, object.size, { window.width, window.height }, edge);
-	}
-
-	void stickAgainst(Object& object, Edge side)
-	{
-		Vector2f& velocity = object.velocity;
-		if ((side == Edge::Top && velocity.y < 0.0f) || (side == Edge::Bottom && velocity.y > 0.0f)) { velocity.y = 0.0f; }
-		if ((side == Edge::Left && velocity.x < 0.0f) || (side == Edge::Right && velocity.x > 0.0f)) { velocity.x = 0.0f; }
-	}
-
-	// Until it has gone completely, nothing happens: an object still partly
-	// in view slides out as normal. It comes back one screen and one object's
-	// width along, so anything spaced along a lane keeps its spacing.
-	void wrap(Object& object, const WindowDesc& window, Edge edge)
-	{
-		wrapAround(object.position, object.size, object.velocity + object.riding, { window.width, window.height }, edge);
-	}
-
-	// Not kept: worked out again every frame from whatever is still being
-	// touched, so the moment it is off the other one, it is at rest.
-	void ride(Object& object, const Object& other)
-	{
-		object.riding = other.velocity;
-	}
-
-	void carry(Object& object, Object::Carry& carry, const Object& item)
-	{
-		if (item.name == carry.what || item.name == carry.dropped || &item == &object)
-		{
-			return;
-		}
-
-		carry.what = item.name;
-		carry.offset = item.position - object.position;
-	}
-
-	void drop(Object::Carry& carry)
-	{
-		if (carry.what.empty())
-		{
-			return;
-		}
-
-		carry.dropped = carry.what;
-		carry.what.clear();
 	}
 
 	void track(Object& object, bool horizontal, float fraction, float span)
@@ -253,91 +138,4 @@ namespace xge
 		object.position = at - sizeOf(object) * 0.5f;
 	}
 
-	// Everything else about it is left as it was, so whatever brings it back
-	// (fire() re-launching a bullet, reset()) starts from a known place.
-	void die(Object& object)
-	{
-		object.collisionsOn = false;
-		object.isVisible = false;
-		object.path.name.clear();
-	}
-
-	// Neither its own pull nor a thruster still held is left (a reset gives
-	// them back). Being in motion is what makes collisions run, so an object
-	// that has stopped is no longer asked about what it is resting on.
-	void stop(Object& object)
-	{
-		object.velocity = {};
-		object.acceleration = {};
-		object.footing.climbing = false;
-		object.footing.jumping = false;
-		object.path.name.clear();
-	}
-
-	void restart(Object& object, const Moment& start, const Drive* drive)
-	{
-		object.position = start.position;
-		object.footing.climbing = false;
-		object.footing.jumping = false;
-		object.footing.grounded = false;
-		object.hasAim = false;
-		const bool keyHeld = drive && std::any_of(drive->moveStep.begin(), drive->moveStep.end(), [](float step) { return step != 0.0f; });
-		if (!keyHeld)
-		{
-			object.velocity = start.velocity;
-		}
-		object.heading = start.heading;
-		object.showHeading();
-	}
-
-	// Each direction's step is kept (Object::Drive::moveStep), so holding Down
-	// and tapping Up stops, and letting go of Up moves down again.
-	void holdStep(Object& object, Drive& drive, Direction direction, float step)
-	{
-		drive.moveStep[static_cast<std::size_t>(direction)] = step;
-
-		// With a <grip> that is not at once the velocity goes there over
-		// time (playOneFrame), on the ground; a pull still has the up and down.
-		const bool slides = !std::isinf(object.motion.grip);
-		if (direction == Direction::Left || direction == Direction::Right)
-		{
-			if (!object.footing.jumping && !slides)
-			{
-				object.velocity.x = drive.moveStep[static_cast<std::size_t>(Direction::Right)]
-					- drive.moveStep[static_cast<std::size_t>(Direction::Left)];
-			}
-		}
-		else if (!slides || object.acceleration.y != 0.0f)
-		{
-			object.velocity.y = drive.moveStep[static_cast<std::size_t>(Direction::Down)]
-				- drive.moveStep[static_cast<std::size_t>(Direction::Up)];
-		}
-	}
-
-	void holdMove(Object& object, Drive& drive, Direction direction, float step, bool pressed)
-	{
-		holdStep(object, drive, direction, pressed ? step : 0.0f);
-		const auto held = [&](Direction way) { return drive.moveStep[static_cast<std::size_t>(way)] != 0.0f; };
-		const float across = (held(Direction::Right) ? 1.0f : 0.0f) - (held(Direction::Left) ? 1.0f : 0.0f);
-		const float upDown = (held(Direction::Down) ? 1.0f : 0.0f) - (held(Direction::Up) ? 1.0f : 0.0f);
-		if (pressed && step != 0.0f)
-		{
-			object.facing = direction;
-			object.hasAim = false;
-		}
-		else if (!pressed && (across == 0.0f) != (upDown == 0.0f))
-		{
-			// One of two let go: the way still held, straight.
-			object.facing = across < 0.0f ? Direction::Left : across > 0.0f ? Direction::Right : upDown < 0.0f ? Direction::Up : Direction::Down;
-			object.hasAim = false;
-		}
-		// Two held across each other: an object with a <facing> faces the
-		// diagonal between them, and its <fire>s leave along it. Let go of
-		// both, it keeps facing the way it last went.
-		if (object.hasFacing && across != 0.0f && upDown != 0.0f)
-		{
-			object.aim = Vector2f{ across, upDown } * (1.0f / std::sqrt(2.0f));
-			object.hasAim = true;
-		}
-	}
 }

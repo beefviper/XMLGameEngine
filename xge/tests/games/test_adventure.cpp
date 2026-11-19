@@ -33,6 +33,14 @@ using Catch::Approx;
 
 namespace
 {
+	// Out of play, as <die /> leaves an object.
+	void die(Object& object)
+	{
+		object.collisionsOn = false;
+		object.isVisible = false;
+		object.path.name.clear();
+	}
+
 	struct Adventure
 	{
 		Game game{ "descriptions/adventure.xml" };

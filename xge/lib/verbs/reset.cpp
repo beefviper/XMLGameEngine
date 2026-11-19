@@ -10,6 +10,7 @@
 #include "load/reading.h"
 #include "load/spelling.h"
 
+#include <algorithm>
 #include <stdexcept>
 
 namespace xge
@@ -42,13 +43,27 @@ namespace xge
 		}
 	}
 
-	// Back where it started, facing the way it started and going the way it
-	// started, with any <random> in that start drawn again (a new serve).
-	// While a held key is moving it, that key still decides its velocity.
+	// A bare <reset /> on an object: back where it started, facing the way
+	// it started and going the way it started, with any <random> in that
+	// start drawn again (a new serve). While a held key is moving it, that
+	// key still decides its velocity.
 	static void startAgain(Game& game, Object& object)
 	{
 		game.drawStartAgain(object);
-		xge::restart(object, game.startOf(object), game.parts().drives.find(object.id));
+		const Moment& start = game.startOf(object);
+		const Drive* drive = game.parts().drives.find(object.id);
+		object.position = start.position;
+		object.footing.climbing = false;
+		object.footing.jumping = false;
+		object.footing.grounded = false;
+		object.hasAim = false;
+		const bool keyHeld = drive && std::any_of(drive->moveStep.begin(), drive->moveStep.end(), [](float step) { return step != 0.0f; });
+		if (!keyHeld)
+		{
+			object.velocity = start.velocity;
+		}
+		object.heading = start.heading;
+		object.showHeading();
 	}
 
 	static bool runReset(const Command& command, const Doer& doer)

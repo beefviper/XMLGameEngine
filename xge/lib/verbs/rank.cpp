@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 #include "load/check.h"
 #include "load/reading.h"
 #include "load/spelling.h"
@@ -52,8 +51,7 @@ namespace xge
 
 	static bool runRank(const CmdRank& rank, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
-		executor.game.rank(rank.entry, rank.table);
+		doer.game().rank(rank.entry, rank.table);
 		return true;
 	}
 

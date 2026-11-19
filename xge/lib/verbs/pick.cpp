@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 #include "load/reading.h"
 
 #include <memory>
@@ -30,9 +29,9 @@ namespace xge
 
 	static bool runPick(const CmdPick& pick, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
+		Game& game = doer.game();
 		Object* const self = doer.self;
-		return self && (executor.game.isHand(*self) ? executor.game.pickItems(*self) : executor.game.pickPiece(*self, pick.objClass.empty() ? executor.game.turnClass() : pick.objClass, pick.only));
+		return self && (game.isHand(*self) ? game.pickItems(*self) : game.pickPiece(*self, pick.objClass.empty() ? game.turnClass() : pick.objClass, pick.only));
 	}
 
 	static void printPick(std::ostream& o, const CmdPick& pick)
