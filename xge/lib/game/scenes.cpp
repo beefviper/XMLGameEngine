@@ -596,7 +596,8 @@ namespace xge
 					variables.emplace_back(path + "." + name, value);
 				}
 
-				for (RawObject object : scene.objects)
+				// Moved, not copied: the scene's list is cleared below.
+				for (RawObject& object : scene.objects)
 				{
 					// Each name it has inside its scene is also a name in its
 					// state for the same thing in every scene (playing.rock), so
@@ -735,6 +736,13 @@ namespace xge
 		// variables (and the scene each is read in) as they are made.
 		std::vector<RawObject> all = std::move(data.objects);
 		std::vector<std::pair<std::size_t, Context>> sceneVariables;
+		std::size_t count = all.size();
+		for (const RawState& state : data.states)
+		{
+			count += state.objects.size();
+			for (const RawScene& scene : state.scenes) { count += scene.objects.size(); }
+		}
+		all.reserve(count);
 
 		for (RawState& state : data.states) { layOutState(state, names, all, sceneVariables, data.variables); }
 
