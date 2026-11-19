@@ -182,16 +182,16 @@ The author's order: the resource manager and the components first, since the res
 
 ### CR6. One reader, not two
 
-- [x] **1. The author: yes or no.** **No** (the author): the engine is the big reader that takes any game; a generated game is small and single-purpose, as if written by hand, so it does not carry the reader. CR6 is skipped; CR7 goes ahead with `data.xsl` kept in step. Was: `engine-cpp` would write the game's tree (after `from=` is worked out) as a C++ table, and the generated program would run `load/xml.cpp` over it through a small `XmlNode`. `data.xsl` (4,138 lines), `merge.xsl` (768), `modules/game_parts.h` (588) and the describer in `test_generated_games.cpp` (551) go; the generator leaves [changing the language](agents/readme.md#changing-the-language). It stays XSLT, with no XML library in the program. The cost: the program carries the reader and reads its table at start. If no, skip to CR7 and A1 step 4 stays parked.
+- [x] **1. The author: yes or no.** **Yes, for `engine-cpp`** (the author): it was only what was left once `windows-cpp` became stand-alone, so it can work the way the engine does. `windows-cpp` (A5) stays small and hand-written-looking, untouched. Was: `engine-cpp` would write the game's tree (after `from=` is worked out) as a C++ table, and the generated program would run `load/xml.cpp` over it through a small `XmlNode`. `data.xsl` (4,138 lines), `merge.xsl` (768), `modules/game_parts.h` (588) and the describer in `test_generated_games.cpp` (551) go; the generator leaves [changing the language](agents/readme.md#changing-the-language). It stays XSLT, with no XML library in the program. The cost: the program carries the reader and reads its table at start. If no, skip to CR7 and A1 step 4 stays parked.
 - [ ] **2. The tree and its node (M).** A static tree type and an `XmlNode` over it (`xge/lib/xml/`), with a test that reads Pong from one.
 - [ ] **3. The stylesheet (M).** `games/generators/engine-cpp/tree.xsl` writes it; `xgetest-generated` plays each generated game beside the engine's as it does now.
 - [ ] **4. The second reader goes (S).** Delete the four files and their mentions in `engine.xml`, `assets.cmake`, the agent notes and [generator](designs/40-generator.md).
-- [ ] **5. `hasX` beside a value becomes `std::optional` (S).** From CR5 step 3; `data.xsl` writes the optional in place of the flag.
+- [ ] **5. `hasX` beside a value becomes `std::optional` (S).** From CR5 step 3, once `data.xsl` no longer writes them.
 
 ### CR7. A verb owns its data
 
 - **Why.** `RawCommand` is 3,328 bytes of 61 shared fields. This is A1 step 4, and it replaces that step.
-- **Needs** nothing more: CR6 was turned down, so `data.xsl` changes with each verb.
+- **Needs** CR6.
 - **Steps.**
   - [ ] **1. The shape, on three verbs (M).** `RawCommand` becomes the verb, its line, and the verb's own data (a `std::variant` of small structs beside each verb's `Cmd...` struct, or one struct serving as both where nothing is worked out). `<bounce>`, `<hop>` and `<spawn>` first. **The author** reads those three files before the rest move.
   - [ ] **2. The rest, ten verbs a commit (L in all).** A field two verbs used for different things (`seconds`, `amount`, `distance`) becomes each verb's own, named for what it is there. **Check after each commit:** `xgetest "[verbs]"`, `xgetest-generated`.
