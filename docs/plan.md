@@ -185,7 +185,7 @@ The author's order: the resource manager and the components first, since the res
 - [x] **2. The tree and its node (M).** Done: `xml/tree.h` (`TreeElement`, `viewOfTree`); `load/xml.cpp` reads a checked `<game>` element (`readGame(root)`) and `load/file.cpp` loads and checks a file; `test_tree.cpp` reads Pong, Pac-Man, Klondike and Mario Bros. from trees. Was: A static tree type and an `XmlNode` over it (`xge/lib/xml/`), with a test that reads Pong from one.
 - [x] **3. The stylesheet (M).** Done: `tree.xsl` writes each element as a static `TreeElement` array; the program includes the reader, `load/merge.cpp` and `xml/tree.cpp`, and nothing else changed. Was: `games/generators/engine-cpp/tree.xsl` writes it; `xgetest-generated` plays each generated game beside the engine's as it does now.
 - [x] **4. The second reader goes (S).** Done: `data.xsl`, `merge.xsl`, `game_parts.h`, the describer and `<module>` in `generate.cpp` gone. Was: Delete the four files and their mentions in `engine.xml`, `assets.cmake`, the agent notes and [generator](designs/40-generator.md).
-- [ ] **5. `hasX` beside a value becomes `std::optional` (S).** From CR5 step 3, once `data.xsl` no longer writes them.
+- [x] **5. `hasX` beside a value becomes `std::optional` (S).** Done: an object's acceleration, heading, pivot, drag, friction, mass, surface drag and grip, light and grip; a picture's scale, svg part and line thickness; a path's start and a holder's picked sends. `RawObject` stays 14,608 bytes. `hasAnimation` and `hasAltitude` stay: each says a whole part was written, and its values keep their defaults. Was: from CR5 step 3, once `data.xsl` no longer writes them.
 
 ### CR7. A verb owns its data
 
