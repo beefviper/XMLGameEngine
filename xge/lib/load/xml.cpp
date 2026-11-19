@@ -2538,8 +2538,12 @@ namespace xge
 				waiting(character);
 				return;
 			}
+			const auto tiles = tilesOf(map, character);
+			// Room for them all at once, growing as a vector does: each move of
+			// a written object moves all its text.
+			if (out.capacity() < out.size() + tiles.size()) { out.reserve(std::max(out.size() + tiles.size(), out.capacity() * 2)); }
 			int count = 0;
-			for (const auto& [column, row] : tilesOf(map, character))
+			for (const auto& [column, row] : tiles)
 			{
 				++count;
 				const std::string memberName = map.name + "." + name + "." + std::to_string(count);
