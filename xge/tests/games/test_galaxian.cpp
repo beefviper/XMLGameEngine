@@ -364,10 +364,10 @@ TEST_CASE("mistakes with paths are turned away when the game loads, saying where
 	fails(kSquare, both, "<timers><timer><after>1</after><follow path=\"square\" /></timer></timers>", "needs object=\"...\" here");
 	fails(kSquare, both, "<timers><timer><after>1</after><follow path=\"square\" object=\"c\" /></timer></timers>", "<follow> names 'c'");
 	fails("<paths><path name=\"p\"><speed>0</speed><home /></path></paths>", both, "", "the <speed> is not above 0");
-	fails("<paths><path name=\"p\"><speed>10</speed></path></paths>", both, "", "has no <step> or <home />");
+	fails("<paths><path name=\"p\"><speed>10</speed></path></paths>", both, "", "path[1]: expected one of <step>, <home> but the element ends");
 	fails("<paths><path name=\"p\"><speed>10</speed><home /></path><path name=\"p\"><speed>10</speed><home /></path></paths>", both, "",
 		"already a path of that name");
-	fails("<paths><path name=\"p\"><speed>10</speed><wait /></path></paths>", both, "", "unknown <wait>");
+	fails("<paths><path name=\"p\"><speed>10</speed><wait /></path></paths>", both, "", "path[1]: unexpected element <wait>, expected one of <step>, <home>");
 	fails(kSquare, both, "<timers><timer><after>1</after><shift object=\"a\" /></timer></timers>", "<shift>");
 	fails(kSquare, both, "<timers><timer><after>1</after><shift object=\"c\"><x>1</x></shift></timer></timers>", "'c'");
 	fails(kSquare, box("a", 0, 0, "<timers><timer><after>1</after><follow path=\"square\"><nearest>1</nearest></follow></timer></timers>") + box("b", 0, 0), "",

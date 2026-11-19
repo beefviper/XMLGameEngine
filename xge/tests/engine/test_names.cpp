@@ -195,7 +195,7 @@ TEST_CASE("an object, group, map or state may not take a name the engine's words
 
 TEST_CASE("a misspelt name says the line of what holds it, under every XML library", "[names][line_numbers]")
 {
-	// No schema is named, so only the checks after reading see these; each
+	// The schema cannot see these, only the checks after reading; each
 	// case misspells one name of a game that otherwise loads.
 	const std::string file = scratchName("descriptions/names_lines.xml");
 	const auto write = [&](const std::string& rule, const std::string& triggered, const std::string& condition, const std::string& shown)
@@ -217,11 +217,11 @@ TEST_CASE("a misspelt name says the line of what holds it, under every XML libra
 			"          <actions><action name=\"sink\"><stop /></action></actions>\n"
 			"        </object>\n"
 			"      </objects>\n"
+			"      <shows><show object=\"" << shown << "\" /></shows>\n"
 			"      <inputs><input button=\"space\"><pop /></input></inputs>\n"
 			"      <conditions>\n"
 			"        <condition object=\"frog\" variable=\"" << condition << "\"><atmost>0</atmost><pop /></condition>\n"
 			"      </conditions>\n"
-			"      <shows><show object=\"" << shown << "\" /></shows>\n"
 			"    </state>\n"
 			"  </states>\n"
 			"</game>\n";
@@ -256,7 +256,7 @@ TEST_CASE("a misspelt name says the line of what holds it, under every XML libra
 	const Case cases[] = {
 		{ "a rule's class", "lgo", "log", "x", "frog", "no object has the class 'lgo'", " (line 8)" },
 		{ "a command's object, in an action: the object's line", "log", "lgo", "x", "frog", "an action of 'lgo' is asked for", " (line 6)" },
-		{ "a condition's variable", "log", "log", "z", "frog", "variable=\"z\"", " (line 20)" },
+		{ "a condition's variable", "log", "log", "z", "frog", "variable=\"z\"", " (line 21)" },
 		{ "a state's show", "log", "log", "x", "forg", "<show object=\"forg\" />", " (line 4)" },
 	};
 	for (const XmlBackend backend : XmlDocumentFactory::availableBackends())

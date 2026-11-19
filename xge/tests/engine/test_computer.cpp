@@ -105,13 +105,13 @@ TEST_CASE("a <hold> is only for a <computer>, and holds a key there is", "[compu
 	CHECK_THROWS_WITH(load("<conditions><condition object=\"bat\" variable=\"x\"><above>0</above><hold button=\"j\" /></condition></conditions>"),
 		ContainsSubstring("'hold'"));
 	CHECK_THROWS_WITH(loose("<conditions><condition object=\"bat\" variable=\"x\"><above>0</above><hold button=\"j\" /></condition></conditions>"),
-		ContainsSubstring("<hold> does nothing in a <condition>"));
+		ContainsSubstring("condition[1]: unexpected element <hold>"));
 	CHECK_THROWS_WITH(load("<computer><condition object=\"bat\" variable=\"x\"><above>0</above><hold button=\"joystick\" /></condition></computer>"),
 		ContainsSubstring("no key named 'joystick'"));
 	CHECK_THROWS_WITH(load("<computer><condition object=\"bat\" variable=\"x\"><above>0</above><pop /></condition></computer>"),
 		ContainsSubstring("'pop'"));
 	CHECK_THROWS_WITH(loose("<computer><condition object=\"bat\" variable=\"x\"><above>0</above><pop /></condition></computer>"),
-		ContainsSubstring("<pop> does nothing in a <computer>'s <condition>"));
+		ContainsSubstring("computer/condition[1]: unexpected element <pop>"));
 }
 
 TEST_CASE("a condition can test where an object is and how it goes, against a number or another's", "[computer][conditions]")

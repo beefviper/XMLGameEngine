@@ -138,7 +138,8 @@ TEST_CASE("a command out of its place: the schema turns it away, and so does the
 			CHECK(weakAccepts(misplaced.objects, misplaced.onSpace) != misplaced.schemaSays);
 			const Scratch file(misplaced.objects, misplaced.onSpace);
 			CHECK_THROWS(Game(file.path));
-			CHECK_THAT(looseError(misplaced.objects, misplaced.onSpace), ContainsSubstring(misplaced.loaderSays));
+			// One naming no schema is checked against the engine's own too.
+			CHECK_THAT(looseError(misplaced.objects, misplaced.onSpace), ContainsSubstring(misplaced.schemaSays ? "failed to validate against the schema" : misplaced.loaderSays));
 		}
 	}
 }

@@ -11,6 +11,7 @@
 // must refuse to load, naming what it does not read.
 
 #include "scratch.h"
+#include "load/xml.h"
 #include "load/xsd.h"
 #include "xml/document.h"
 
@@ -650,4 +651,27 @@ TEST_CASE("the light schema checker and Xerces agree on every game with an attri
 TEST_CASE("the light schema checker and Xerces agree on every game with a value changed", "[schema][checker][sweep]")
 {
 	sweep(changeText, 7);
+}
+
+TEST_CASE("a game that names no schema is checked against the engine's own", "[schema][checker]")
+{
+	std::ifstream in("descriptions/pong.xml");
+	std::string pong{ std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>() };
+	const std::string named = " xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\"";
+	REQUIRE(pong.find(named) != std::string::npos);
+	pong.erase(pong.find(named), named.size());
+	std::string wrong = pong;
+	wrong.replace(wrong.find("<variables>"), 0, "<colour />");
+
+	for (const XmlBackend backend : XmlDocumentFactory::availableBackends())
+	{
+		INFO(XmlDocumentFactory::name(backend));
+		const ScratchFile good{ std::filesystem::temp_directory_path() / scratchName("xge_unnamed_good.xml") };
+		std::ofstream(good.path) << pong;
+		CHECK(readGame(good.path.string(), backend).validation.find("weak") == 0);
+
+		const ScratchFile bad{ std::filesystem::temp_directory_path() / scratchName("xge_unnamed_bad.xml") };
+		std::ofstream(bad.path) << wrong;
+		CHECK_THROWS_WITH(readGame(bad.path.string(), backend), ContainsSubstring("failed to validate against the schema: game: unexpected element <colour>"));
+	}
 }

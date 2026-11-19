@@ -462,7 +462,7 @@ TEST_CASE("mistakes in an svg sprite are reported where they are", "[svg][xml]")
 	SECTION("no path")
 	{
 		CHECK_THROWS_WITH(Loaded(gameXml(objectWith("<sprite><svg><scale>2</scale></svg></sprite>"), shows)),
-			ContainsSubstring("object 'thing'") && ContainsSubstring("path"));
+			ContainsSubstring("svg: unexpected element <scale>, expected <path>"));
 	}
 
 	SECTION("only some of x, y, width and height")

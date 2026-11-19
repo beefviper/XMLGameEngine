@@ -106,7 +106,7 @@ namespace
 		return "<game>"
 			"<window name=\"test\"><width>800</width><height>600</height><background>color.black</background>"
 			"<framerate>60</framerate></window>"
-			"<variables>" + variables + "</variables>"
+			"<variables>" + (variables.empty() ? std::string("<variable name=\"unused\">0</variable>") : variables) + "</variables>"
 			"<states><objects>" + objects + "</objects>"
 			"<state name=\"playing\"><shows><show object=\"o\" /></shows>"
 			"<inputs><input button=\"space\"><pop /></input></inputs>" + conditions + "</state>" + moreStates + "</states>"
@@ -201,7 +201,7 @@ TEST_CASE("a window's <scale> shows it that many times larger; with none it is 1
 
 	std::string zero = plain;
 	zero.replace(zero.find("<background>"), 0, "<scale>0</scale>");
-	CHECK_THROWS_WITH(Loaded(zero, "xge_test_scale_zero.xml"), ContainsSubstring("<scale>"));
+	CHECK_THROWS_WITH(Loaded(zero, "xge_test_scale_zero.xml"), ContainsSubstring("scale: \"0\" is not a valid xs:positiveInteger"));
 }
 
 TEST_CASE("a window's background, fullscreen and framerate, and a <collisions>' enabled, may be left out", "[xml_format][window]")
@@ -253,7 +253,7 @@ TEST_CASE("a value with both text and a tag, or an unknown tag, is turned away",
 
 	ObjectXml unknown;
 	unknown.x = "<dice sides=\"6\" />";
-	REQUIRE_THROWS_WITH(Loaded(gameXml("", objectXml(unknown))), ContainsSubstring("unknown value tag <dice>"));
+	REQUIRE_THROWS_WITH(Loaded(gameXml("", objectXml(unknown))), ContainsSubstring("position/x: unexpected element <dice>"));
 
 	ObjectXml empty;
 	empty.x = "";
@@ -261,7 +261,7 @@ TEST_CASE("a value with both text and a tag, or an unknown tag, is turned away",
 
 	ObjectXml incomplete;
 	incomplete.x = "<random><min>1</min></random>";
-	REQUIRE_THROWS_WITH(Loaded(gameXml("", objectXml(incomplete))), ContainsSubstring("missing <max>"));
+	REQUIRE_THROWS_WITH(Loaded(gameXml("", objectXml(incomplete))), ContainsSubstring("position/x/random: expected <max> but the element ends"));
 }
 
 TEST_CASE("an expression that does not compile says whose it is", "[xml_format][errors]")
@@ -395,19 +395,19 @@ TEST_CASE("an unknown command, or one missing its attribute, says where", "[xml_
 	ObjectXml unknown;
 	unknown.collisions = "<collision edge=\"left\"><explode /></collision>";
 	REQUIRE_THROWS_WITH(Loaded(gameXml("", objectXml(unknown))),
-		ContainsSubstring("object 'o' > <collisions> > <collision>") && ContainsSubstring("unknown command <explode>"));
+		ContainsSubstring("collision[1]: unexpected element <explode>"));
 
 	ObjectXml missing;
 	missing.collisions = "<collision edge=\"left\"><inc /></collision>";
-	REQUIRE_THROWS_WITH(Loaded(gameXml("", objectXml(missing))), ContainsSubstring("<inc> needs variable="));
+	REQUIRE_THROWS_WITH(Loaded(gameXml("", objectXml(missing))), ContainsSubstring("collision[1]/inc: missing required attribute 'variable'"));
 
 	ObjectXml badEdge;
 	badEdge.collisions = "<collision edge=\"middle\"><bounce /></collision>";
-	REQUIRE_THROWS_WITH(Loaded(gameXml("", objectXml(badEdge))), ContainsSubstring("edge=\"middle\""));
+	REQUIRE_THROWS_WITH(Loaded(gameXml("", objectXml(badEdge))), ContainsSubstring("attribute 'edge' = \"middle\" is not a valid edgeType"));
 
 	ObjectXml badDirection;
 	badDirection.extra = "<actions><action name=\"a\"><move direction=\"sideways\">1</move></action></actions>";
-	REQUIRE_THROWS_WITH(Loaded(gameXml("", objectXml(badDirection))), ContainsSubstring("direction=\"sideways\""));
+	REQUIRE_THROWS_WITH(Loaded(gameXml("", objectXml(badDirection))), ContainsSubstring("move: attribute 'direction' = \"sideways\" is not a valid directionType"));
 }
 
 TEST_CASE("<pop state> puts that state in place of this one, so the stack does not grow", "[xml_format][commands]")
@@ -477,12 +477,12 @@ TEST_CASE("a mistake the schema lets through stops the load, saying what to writ
 		o.extra = "<actions><action name=\"go\"><move direction=\"left\">1</move></action></actions>";
 		const std::string error = errorOf(withStates(gameXml("", objectXml(o)),
 			"<states><state name=\"playing\"><shows><show object=\"o\" /></shows><inputs><input button=\"a\"><move direction=\"left\">1</move></input></inputs></state></states>"));
-		CHECK_THAT(error, ContainsSubstring("state 'playing' > <input button=\"a\">: <move> does nothing in an <input>"));
-		CHECK_THAT(error, ContainsSubstring("<trigger object=\"...\" action=\"...\" />"));
+		CHECK_THAT(error, ContainsSubstring("input[1]: unexpected element <move>"));
+		CHECK_THAT(error, ContainsSubstring("failed to validate against the schema"));
 
 		ObjectXml edge;
 		edge.collisions = "<collision edge=\"left\"><push state=\"playing\" /></collision>";
-		CHECK_THAT(errorOf(gameXml("", objectXml(edge))), ContainsSubstring("object 'o' > <collision edge>: <push> does nothing in a screen-edge <collision>"));
+		CHECK_THAT(errorOf(gameXml("", objectXml(edge))), ContainsSubstring("collision[1]: unexpected element <push>"));
 
 		ObjectXml touch;
 		touch.collisions = "<collision><wrap /></collision>";
@@ -609,7 +609,7 @@ TEST_CASE("a shape with a part missing says which", "[xml_format][errors]")
 {
 	ObjectXml noRadius;
 	noRadius.sprite = "<circle><color>color.red</color></circle>";
-	REQUIRE_THROWS_WITH(Loaded(gameXml("", objectXml(noRadius))), ContainsSubstring("<circle>") && ContainsSubstring("missing <radius>"));
+	REQUIRE_THROWS_WITH(Loaded(gameXml("", objectXml(noRadius))), ContainsSubstring("circle: unexpected element <color>, expected <radius>"));
 
 	ObjectXml noLabel;
 	noLabel.sprite = "<text><size>20</size></text>";
@@ -617,7 +617,7 @@ TEST_CASE("a shape with a part missing says which", "[xml_format][errors]")
 
 	ObjectXml unknownShape;
 	unknownShape.sprite = "<triangle />";
-	REQUIRE_THROWS_WITH(Loaded(gameXml("", objectXml(unknownShape))), ContainsSubstring("unknown shape <triangle>"));
+	REQUIRE_THROWS_WITH(Loaded(gameXml("", objectXml(unknownShape))), ContainsSubstring("sprite[1]: unexpected element <triangle>"));
 }
 
 TEST_CASE("a condition is a test tag, then the commands it runs", "[xml_format][conditions]")
@@ -720,9 +720,9 @@ TEST_CASE("a comparison with a variable the game does not have is turned away", 
 
 	fails("<above>q.score</above>", "q.score");
 	fails("<above>o.scroe</above>", "o.scroe");
-	fails("<above object=\"o\" variable=\"score\" />", "takes its number as content, which may name a variable: <above>o.score</above>");
-	fails("<remaining variable=\"score\" />", "takes its number as content");
-	fails("<over>1</over>", "expected <atleast>, <atmost>, <above>, <below>, <equal>, <unequal>, <remaining>, <lowest /> or <highest />");
+	fails("<above object=\"o\" variable=\"score\" />", "above: attribute 'object' is not declared for <above>");
+	fails("<remaining variable=\"score\" />", "remaining: attribute 'variable' is not declared for <remaining>");
+	fails("<over>1</over>", "condition[1]: unexpected element <over>");
 }
 
 TEST_CASE("a condition with no test, a wrong first tag, or no variable to read is turned away", "[xml_format][errors]")
@@ -871,7 +871,7 @@ TEST_CASE("an input names one key by button=, or several by a <button> each", "[
 	CHECK(input.count(KeyCode::P) == 1);
 
 	REQUIRE_THROWS_WITH(Loaded(withInput("<input button=\"space p\"><pop /></input>")),
-		ContainsSubstring("button=\"space p\" names several; write each as a <button> of its own"));
+		ContainsSubstring("attribute 'button' = \"space p\" is not a valid xs:NMTOKEN"));
 	REQUIRE_THROWS_WITH(Loaded(withInput("<input button=\"space\"><button>p</button><pop /></input>")),
 		ContainsSubstring("has button=\"space\" and a <button>; use one or the other"));
 	REQUIRE_THROWS_WITH(Loaded(withInput("<input><pop /></input>")),
@@ -888,9 +888,9 @@ TEST_CASE("a number with a range stops the load outside it, read without the sch
 		return xml;
 	};
 
-	REQUIRE_THROWS_WITH(Loaded(with("<width>800</width>", "<width>0</width>")), ContainsSubstring("<window>: <width> is 0; expected a number of pixels, 1 or more"));
-	REQUIRE_THROWS_WITH(Loaded(with("<height>600</height>", "<height>-5</height>")), ContainsSubstring("<height> is -5; expected a number of pixels, 1 or more"));
-	REQUIRE_THROWS_WITH(Loaded(with("<framerate>60</framerate>", "<framerate>0</framerate>")), ContainsSubstring("<framerate> is 0; expected a number of frames a second, 1 or more"));
+	REQUIRE_THROWS_WITH(Loaded(with("<width>800</width>", "<width>0</width>")), ContainsSubstring("width: \"0\" is not a valid windowSizeType"));
+	REQUIRE_THROWS_WITH(Loaded(with("<height>600</height>", "<height>-5</height>")), ContainsSubstring("height: \"-5\" is not a valid windowSizeType"));
+	REQUIRE_THROWS_WITH(Loaded(with("<framerate>60</framerate>", "<framerate>0</framerate>")), ContainsSubstring("framerate: \"0\" is not a valid xs:positiveInteger"));
 	CHECK_NOTHROW(Loaded(with("<framerate>60</framerate>", "<framerate>500</framerate>")));
 
 	ObjectXml circle;
@@ -961,7 +961,7 @@ TEST_CASE("a command that names a state, object or action the game does not have
 	REQUIRE_THROWS_WITH(Loaded(withInput("<trigger object=\"o\" action=\"jump\" />")),
 		ContainsSubstring("'o' has no action named 'jump'"));
 	REQUIRE_THROWS_WITH(Loaded(withInput("<fire object=\"bullet\" />")),
-		ContainsSubstring("bullet"));
+		ContainsSubstring("input[1]: unexpected element <fire>"));
 	REQUIRE_THROWS_WITH(Loaded(withInput("<reset object=\"nobody\" />")),
 		ContainsSubstring("nobody"));
 

@@ -166,15 +166,15 @@ TEST_CASE("with a heading, every kind of picture is drawn once, flipped, and tur
 TEST_CASE("a flip that is not horizontal or vertical is turned away, saying where", "[pictures][flip][errors]")
 {
 	CHECK_THROWS_WITH(Pictures({ "<bitmap>" + kRows + "<flip>sideways</flip></bitmap>" }),
-		ContainsSubstring("object 'o1'") && ContainsSubstring("<flip> is \"sideways\""));
+		ContainsSubstring("bitmap/flip: \"sideways\" is not a valid flipType"));
 	CHECK_THROWS_WITH(Pictures({ "<svg>" + kSvg + "<flip>diagonal</flip></svg>" }),
-		ContainsSubstring("<flip> is \"diagonal\""));
+		ContainsSubstring("svg/flip: \"diagonal\" is not a valid flipType"));
 }
 
 TEST_CASE("Space Invaders 2's alien bolts are the sheet's bolt turned upside down, to fly down", "[pictures][flip][spaceinvaders2]")
 {
 	Game game{ "descriptions/spaceinvaders2.xml" };
-	Pictures sheet({ "<svg>" + kSvg + "<scale>1.5</scale></svg>" });
+	Pictures sheet({ "<svg><path>assets/Space Invaders Color Sprites.svg</path><x>11</x><y>37</y><width>10</width><height>23</height><scale>1.5</scale><hide>backdrop</hide></svg>" });
 
 	const Object& bolt = game.getObject("bomb");
 	CHECK(samePixels(*bolt.drawn.bitmap, flipBitmap(*sheet.object(1).drawn.bitmap, false, true)));

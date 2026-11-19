@@ -646,9 +646,9 @@ TEST_CASE("map: what a <map> turns away", "[map]")
 	CHECK_THAT(loadError(mapGame(map("<row>x#x</row>", walls + "<object name=\"p\" char=\"x\">" + kDotSprite + "</object>"))), ContainsSubstring("which is on 2 tiles"));
 	CHECK(loadError(mapGame(map("<row>#xx</row>", walls + "<object name=\"p\" char=\"x\">" + kDotSprite + "</object>"))).empty());
 	CHECK_THAT(loadError(mapGame(map("<row>#x#</row>", walls + "<object name=\"p\" char=\"x\">" + kDotSprite + "<position><x>0</x><y>0</y></position></object>"))),
-		ContainsSubstring("has no <position>"));
+		ContainsSubstring("map/object: unexpected element <position>"));
 	CHECK_THAT(loadError(mapGame(map("<row>###</row>", ""))), ContainsSubstring("has nothing on it"));
-	CHECK_THAT(loadError(mapGame("<object name=\"p\" char=\"x\">" + kDotSprite + "<position><x>0</x><y>0</y></position></object>")), ContainsSubstring("on no <map>"));
+	CHECK_THAT(loadError(mapGame("<object name=\"p\" char=\"x\">" + kDotSprite + "<position><x>0</x><y>0</y></position></object>")), ContainsSubstring("attribute 'char' is not declared for <object>"));
 }
 
 TEST_CASE("maze: what a walker's verbs and a look's timer turn away", "[map][maze]")

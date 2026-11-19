@@ -78,7 +78,7 @@ namespace
 	{
 		return R"(<game>
   <window name="t"><width>200</width><height>100</height><background>color.black</background><framerate>60</framerate></window>
-  <variables />
+  <variables><variable name="unused">0</variable></variables>
   <states>
     <state name="playing">
       <objects>

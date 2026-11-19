@@ -321,21 +321,21 @@ TEST_CASE("a sound the game cannot use is turned away when it loads, saying wher
 	const std::string blip = "<sounds><sound name=\"blip\"><note pitch=\"A4\">0.05</note></sound></sounds>";
 
 	fails(blip, "<play sound=\"bleep\" />", "<play sound=\"bleep\" /> names no sound of the game");
-	fails(blip, "<play />", "<play> needs sound=");
+	fails(blip, "<play />", "input[1]/play: missing required attribute 'sound'");
 	fails(blip, "<silence sound=\"bleep\" />", "<silence sound=\"bleep\" /> names no sound of the game");
-	fails(blip, "<silence />", "<silence> needs sound=");
-	fails("<sounds><sound name=\"s\"><volume>0.5</volume><loop /><note pitch=\"A4\">0.1</note></sound></sounds>", "<pop />", "<loop /> has to come first");
-	fails("<sounds><sound name=\"s\" wave=\"organ\"><note pitch=\"A4\">0.1</note></sound></sounds>", "<pop />", "wave=\"organ\"");
-	fails("<sounds><sound name=\"s\"><note pitch=\"A4\" wave=\"pulse\">0.1</note></sound></sounds>", "<pop />", "wave=\"pulse\"");
+	fails(blip, "<silence />", "input[1]/silence: missing required attribute 'sound'");
+	fails("<sounds><sound name=\"s\"><volume>0.5</volume><loop /><note pitch=\"A4\">0.1</note></sound></sounds>", "<pop />", "sound[1]: unexpected element <loop>");
+	fails("<sounds><sound name=\"s\" wave=\"organ\"><note pitch=\"A4\">0.1</note></sound></sounds>", "<pop />", "sound[1]: attribute 'wave' = \"organ\" is not a valid waveType");
+	fails("<sounds><sound name=\"s\"><note pitch=\"A4\" wave=\"pulse\">0.1</note></sound></sounds>", "<pop />", "sound[1]/note: attribute 'wave' = \"pulse\" is not a valid waveType");
 	fails("<sounds><sound name=\"s\"><note pitch=\"H2\">0.1</note></sound></sounds>", "<pop />", "pitch=\"H2\" is not a pitch");
 	fails("<sounds><sound name=\"s\"><note pitch=\"A4\" to=\"up\">0.1</note></sound></sounds>", "<pop />", "to=\"up\" is not a pitch");
 	fails("<sounds><sound name=\"s\"><note pitch=\"A4\">0</note></sound></sounds>", "<pop />", "sound 's' > <note> 1: lasts 0");
 	fails("<sounds><sound name=\"s\"><note pitch=\"A4\">0.1</note><rest>60</rest></sound></sounds>", "<pop />", "<rest> 2: lasts 60");
-	fails("<sounds><sound name=\"s\"><note>0.1</note></sound></sounds>", "<pop />", "<note> needs pitch=");
+	fails("<sounds><sound name=\"s\"><note>0.1</note></sound></sounds>", "<pop />", "sound[1]/note: missing required attribute 'pitch'");
 	fails("<sounds><sound name=\"s\"><volume>2</volume><note pitch=\"A4\">0.1</note></sound></sounds>", "<pop />", "<volume> is 2");
-	fails("<sounds><sound name=\"s\"><note pitch=\"A4\">0.1</note><volume>1</volume></sound></sounds>", "<pop />", "<volume> has to come before");
-	fails("<sounds><sound name=\"s\"></sound></sounds>", "<pop />", "has no <note>");
-	fails("<sounds><sound name=\"s\"><beep /></sound></sounds>", "<pop />", "unknown <beep>");
+	fails("<sounds><sound name=\"s\"><note pitch=\"A4\">0.1</note><volume>1</volume></sound></sounds>", "<pop />", "sound[1]: unexpected element <volume>");
+	fails("<sounds><sound name=\"s\"></sound></sounds>", "<pop />", "sound[1]: expected one of <note>, <rest>, <part>, <path> but the element ends");
+	fails("<sounds><sound name=\"s\"><beep /></sound></sounds>", "<pop />", "sound[1]: unexpected element <beep>");
 	fails("<sounds><sound name=\"s\"><note pitch=\"A4\">0.1</note></sound><sound name=\"s\"><note pitch=\"A5\">0.1</note></sound></sounds>",
 		"<pop />", "already a sound of that name");
 }
@@ -703,12 +703,12 @@ TEST_CASE("parts the game cannot use are turned away when it loads, saying where
 		INFO(sounds);
 		CHECK_THROWS_WITH(loadSounds(gameWithSounds(sounds)), ContainsSubstring(expected));
 	};
-	fails("<sounds><sound name=\"s\"><note pitch=\"A4\">0.1</note><part><note pitch=\"A4\">0.1</note></part></sound></sounds>", "cannot have <part>s as well");
-	fails("<sounds><sound name=\"s\"><part><note pitch=\"A4\">0.1</note></part><note pitch=\"A4\">0.1</note></sound></sounds>", "go inside them");
-	fails("<sounds><sound name=\"s\"><part></part></sound></sounds>", "sound 's' > <part> 1: has no <note>");
-	fails("<sounds><sound name=\"s\"><part><note pitch=\"A4\">0.1</note></part><part><loop /></part></sound></sounds>", "<part> 2: unknown <loop>");
-	fails("<sounds><sound name=\"s\"><part wave=\"organ\"><note pitch=\"A4\">0.1</note></part></sound></sounds>", "wave=\"organ\"");
-	fails("<sounds><sound name=\"s\"><part><note pitch=\"A4\">0.1</note></part><volume>1</volume></sound></sounds>", "<volume> has to come before");
+	fails("<sounds><sound name=\"s\"><note pitch=\"A4\">0.1</note><part><note pitch=\"A4\">0.1</note></part></sound></sounds>", "sound[1]: unexpected element <part>");
+	fails("<sounds><sound name=\"s\"><part><note pitch=\"A4\">0.1</note></part><note pitch=\"A4\">0.1</note></sound></sounds>", "sound[1]: unexpected element <note>");
+	fails("<sounds><sound name=\"s\"><part></part></sound></sounds>", "sound[1]/part[1]: expected one of <note>, <rest> but the element ends");
+	fails("<sounds><sound name=\"s\"><part><note pitch=\"A4\">0.1</note></part><part><loop /></part></sound></sounds>", "sound[1]/part[2]: unexpected element <loop>");
+	fails("<sounds><sound name=\"s\"><part wave=\"organ\"><note pitch=\"A4\">0.1</note></part></sound></sounds>", "sound[1]/part[1]: attribute 'wave' = \"organ\" is not a valid waveType");
+	fails("<sounds><sound name=\"s\"><part><note pitch=\"A4\">0.1</note></part><volume>1</volume></sound></sounds>", "sound[1]: unexpected element <volume>");
 }
 
 TEST_CASE("a note with a decay dies away evenly from its start, and is silent once it has", "[sound][decay]")
@@ -770,8 +770,8 @@ TEST_CASE("a decay the game cannot use is turned away when it loads, saying wher
 	};
 	fails("<sounds><sound name=\"s\"><decay>0</decay><note pitch=\"A4\">0.1</note></sound></sounds>", "<decay> is 0 seconds; expected more than 0");
 	fails("<sounds><sound name=\"s\"><decay>11</decay><note pitch=\"A4\">0.1</note></sound></sounds>", "<decay> is 11 seconds");
-	fails("<sounds><sound name=\"s\"><note pitch=\"A4\">0.1</note><decay>0.5</decay></sound></sounds>", "<decay> has to come before");
-	fails("<sounds><sound name=\"s\"><part><note pitch=\"A4\">0.1</note><decay>0.5</decay></part></sound></sounds>", "<part> 1: <decay> has to come before");
+	fails("<sounds><sound name=\"s\"><note pitch=\"A4\">0.1</note><decay>0.5</decay></sound></sounds>", "sound[1]: unexpected element <decay>");
+	fails("<sounds><sound name=\"s\"><part><note pitch=\"A4\">0.1</note><decay>0.5</decay></part></sound></sounds>", "sound[1]/part[1]: unexpected element <decay>");
 	fails("<sounds><sound name=\"s\"><decay>0.5</decay><path>assets/none.wav</path></sound></sounds>", "has no <decay>");
 }
 
@@ -1157,7 +1157,7 @@ TEST_CASE("a recording that is missing or unreadable, or a <path> with notes, st
 	CHECK_THAT(refused("<sound name=\"roar\"><path>" + text.path.generic_string() + "</path></sound>"),
 		ContainsSubstring("sound 'roar'") && ContainsSubstring("is not a WAV file"));
 
-	CHECK_THAT(refused("<sound name=\"roar\"><note pitch=\"C4\">0.1</note><path>a.wav</path></sound>"), ContainsSubstring("cannot have a <path> as well"));
-	CHECK_THAT(refused("<sound name=\"roar\"><path>a.wav</path><note pitch=\"C4\">0.1</note></sound>"), ContainsSubstring("cannot have <note>s as well"));
+	CHECK_THAT(refused("<sound name=\"roar\"><note pitch=\"C4\">0.1</note><path>a.wav</path></sound>"), ContainsSubstring("sound[1]: unexpected element <path>"));
+	CHECK_THAT(refused("<sound name=\"roar\"><path>a.wav</path><note pitch=\"C4\">0.1</note></sound>"), ContainsSubstring("sound[1]: unexpected element <note>"));
 	CHECK_THAT(refused("<sound name=\"roar\" wave=\"sine\"><path>a.wav</path></sound>"), ContainsSubstring("has no wave="));
 }

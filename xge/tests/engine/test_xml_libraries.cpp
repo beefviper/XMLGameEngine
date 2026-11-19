@@ -230,7 +230,7 @@ TEST_CASE("a reader's message ends with the line of the tag it is about", "[xml_
 		write("<polygon><point><x>0</x><y>0</y></point><corner /></polygon>", "<pop />");
 		const std::string sprite = errorOf(backend);
 		INFO(sprite);
-		CHECK(sprite.find("unknown <corner>") != std::string::npos);
+		CHECK(sprite.find("unexpected element <corner>, expected <point>") != std::string::npos);
 		CHECK(endsWith(sprite, " (line 8)"));
 		// A verb the engine does not have, on line 14.
 		write("<circle><radius>5</radius></circle>", "<leap />");

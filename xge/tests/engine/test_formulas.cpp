@@ -78,7 +78,7 @@ namespace
 		return "<game>"
 			"<window name=\"test\"><width>800</width><height>600</height><background>color.black</background>"
 			"<framerate>60</framerate></window>"
-			"<variables>" + variables + "</variables>"
+			"<variables>" + (variables.empty() ? std::string("<variable name=\"unused\">0</variable>") : variables) + "</variables>"
 			"<states><objects><object name=\"o\"><sprite><circle><radius>5</radius></circle></sprite>"
 			"<position><x>" + x + "</x><y>" + y + "</y></position>"
 			"<velocity><x>0</x><y>0</y></velocity>"
@@ -199,9 +199,9 @@ TEST_CASE("smallest, largest, absolute and clamp", "[formulas]")
 	CHECK(xOf("<clamp><value>xoffset</value><atleast>0</atleast><atmost>50</atmost></clamp>", kVariables) == 7.0f);
 
 	// Too many operands, too few, or in the wrong order.
-	CHECK_THROWS_WITH(Loaded(gameXml("<absolute><value>1</value><value>2</value></absolute>")), ContainsSubstring("after all it holds: it holds one <value>"));
-	CHECK_THROWS_WITH(Loaded(gameXml("<smallest><value>1</value></smallest>")), ContainsSubstring("needs two or more <value>"));
-	CHECK_THROWS_WITH(Loaded(gameXml("<clamp><value>1</value><atmost>2</atmost><atleast>0</atleast></clamp>")), ContainsSubstring("<atmost> where <atleast> belongs"));
+	CHECK_THROWS_WITH(Loaded(gameXml("<absolute><value>1</value><value>2</value></absolute>")), ContainsSubstring("game/states/objects/object/position/x/absolute: unexpected element <value>"));
+	CHECK_THROWS_WITH(Loaded(gameXml("<smallest><value>1</value></smallest>")), ContainsSubstring("game/states/objects/object/position/x/smallest: expected <value> but the element ends"));
+	CHECK_THROWS_WITH(Loaded(gameXml("<clamp><value>1</value><atmost>2</atmost><atleast>0</atleast></clamp>")), ContainsSubstring("game/states/objects/object/position/x/clamp: unexpected element <atmost>, expected <atleast>"));
 }
 
 TEST_CASE("sign, ceiling, sine and cosine, the last two of degrees", "[formulas]")
@@ -217,9 +217,9 @@ TEST_CASE("sign, ceiling, sine and cosine, the last two of degrees", "[formulas]
 	CHECK(std::fabs(xOf("<sine><value>-90</value></sine>") + 1.0f) < 1e-6f);
 	CHECK(xOf("<cosine><value>0</value></cosine>") == 1.0f);
 
-	CHECK_THROWS_WITH(Loaded(gameXml("<sine><value>1</value><value>2</value></sine>")), ContainsSubstring("after all it holds: it holds one <value>"));
+	CHECK_THROWS_WITH(Loaded(gameXml("<sine><value>1</value><value>2</value></sine>")), ContainsSubstring("game/states/objects/object/position/x/sine: unexpected element <value>"));
 	CHECK_THROWS_WITH(Loaded(gameXml("<tangent><value>1</value></tangent>")),
-		ContainsSubstring("an operation: <add>, <subtract>, <multiply>, <divide>, <remainder>, <smallest>, <largest>, <absolute>, <negate>, <sign>, <floor>, <ceiling>, <round>, <sine>, <cosine>, <clamp> or <compare>"));
+		ContainsSubstring("game/states/objects/object/position/x: unexpected element <tangent>"));
 }
 
 TEST_CASE("negate, floor, round and remainder", "[formulas]")
@@ -236,7 +236,7 @@ TEST_CASE("negate, floor, round and remainder", "[formulas]")
 	CHECK(xOf("<remainder><value>7.5</value><value>2</value></remainder>") == 1.5f);
 	CHECK_THROWS_WITH(Loaded(gameXml("<remainder><value>1</value><value>0</value></remainder>")), ContainsSubstring("<remainder>: the divisor is 0"));
 	CHECK_THROWS_WITH(Loaded(gameXml("<remainder><value>1</value><value>2</value><value>3</value></remainder>")),
-		ContainsSubstring("it holds two <value>"));
+		ContainsSubstring("game/states/objects/object/position/x/remainder: unexpected element <value>"));
 }
 
 TEST_CASE("a <compare> is 1 when its test holds and 0 when not", "[formulas]")
@@ -272,9 +272,9 @@ TEST_CASE("a <compare> is 1 when its test holds and 0 when not", "[formulas]")
 	// Either side can be an operation of its own.
 	CHECK(xOf("<compare><value><add><value>w</value><value>1</value></add></value><above>w</above></compare>", kVariables) == 1.0f);
 
-	CHECK_THROWS_WITH(Loaded(gameXml("<compare><value>1</value></compare>")), ContainsSubstring("needs a <value>, then one of <above>, <below>, <atleast>, <atmost> or <equal>"));
-	CHECK_THROWS_WITH(Loaded(gameXml("<compare><value>1</value><value>2</value></compare>")), ContainsSubstring("has <value> where its test belongs"));
-	CHECK_THROWS_WITH(Loaded(gameXml("<atleast><value>1</value><value>2</value></atleast>")), ContainsSubstring("unknown value tag <atleast>"));
+	CHECK_THROWS_WITH(Loaded(gameXml("<compare><value>1</value></compare>")), ContainsSubstring("game/states/objects/object/position/x/compare: expected one of <above>, <below>, <atleast>, <atmost>, <equal> but the element ends"));
+	CHECK_THROWS_WITH(Loaded(gameXml("<compare><value>1</value><value>2</value></compare>")), ContainsSubstring("game/states/objects/object/position/x/compare: unexpected element <value>, expected one of <above>"));
+	CHECK_THROWS_WITH(Loaded(gameXml("<atleast><value>1</value><value>2</value></atleast>")), ContainsSubstring("game/states/objects/object/position/x: unexpected element <atleast>"));
 }
 
 TEST_CASE("a value's text has no functions: they are operation tags", "[formulas][errors]")
@@ -289,7 +289,7 @@ TEST_CASE("a <random>'s ends can be operations", "[formulas]")
 {
 	CHECK(xOf("<random><min><multiply><value>w</value><value>2</value></multiply></min><max>200</max></random>", kVariables) == 200.0f);
 	CHECK(xOf("<random><min>xoffset</min><max><smallest><value>w</value><value>7</value></smallest></max></random>", kVariables) == 7.0f);
-	CHECK_THROWS_WITH(Loaded(gameXml("<random><min><dice /></min><max>2</max></random>")), ContainsSubstring("an end is a number, a name or an operation"));
+	CHECK_THROWS_WITH(Loaded(gameXml("<random><min><dice /></min><max>2</max></random>")), ContainsSubstring("game/states/objects/object/position/x/random/min: unexpected element <dice>"));
 }
 
 TEST_CASE("variables can hold an operation, and an expression can use them", "[formulas]")
@@ -368,26 +368,31 @@ TEST_CASE("an operation that is wrong says which operation and what", "[formulas
 	{
 		const char* what;
 		std::string value;
+		const char* where;
 		const char* says;
 	};
+	// What the loader says names the object's value; what the schema
+	// turns away, the path to it.
+	const char* const loader = "object 'o' > <position> > <x>";
+	const char* const schema = "game/states/objects/object/position/x";
 
 	const Mistake mistakes[] = {
-		{ "nothing", "", "has no value" },
-		{ "two operations", "<add><value>1</value><value>1</value></add><add><value>1</value><value>1</value></add>", "holds more than one value tag" },
-		{ "a tag that is not an operation", "<modulo><value>7</value><value>2</value></modulo>", "unknown value tag <modulo>" },
-		{ "one operand", "<subtract><value>1</value></subtract>", "needs two or more <value>" },
-		{ "an expression as an operand", "<add><value>a + b</value><value>1</value></add>", "\"a + b\" is not a name or a number" },
-		{ "an operand with text and a tag", "<add><value>2 <random><min>1</min><max>2</max></random></value><value>1</value></add>", "both the text \"2\" and a <random> tag" },
-		{ "an operand with a tag that is not an operation", "<add><value><dice /></value><value>1</value></add>", "<dice>, which is not an operation" },
-		{ "an operand with nothing in it", "<add><value></value><value>1</value></add>", "has no value" },
-		{ "text beside the tag", "5 <add><value>1</value><value>1</value></add>", "both the text \"5\" and a <add> tag" },
+		{ "nothing", "", loader, "has no value" },
+		{ "two operations", "<add><value>1</value><value>1</value></add><add><value>1</value><value>1</value></add>", schema, ": unexpected element <add>" },
+		{ "a tag that is not an operation", "<modulo><value>7</value><value>2</value></modulo>", schema, ": unexpected element <modulo>" },
+		{ "one operand", "<subtract><value>1</value></subtract>", schema, "/subtract: expected <value> but the element ends" },
+		{ "an expression as an operand", "<add><value>a + b</value><value>1</value></add>", loader, "\"a + b\" is not a name or a number" },
+		{ "an operand with text and a tag", "<add><value>2 <random><min>1</min><max>2</max></random></value><value>1</value></add>", loader, "both the text \"2\" and a <random> tag" },
+		{ "an operand with a tag that is not an operation", "<add><value><dice /></value><value>1</value></add>", schema, "/add/value[1]: unexpected element <dice>" },
+		{ "an operand with nothing in it", "<add><value></value><value>1</value></add>", loader, "has no value" },
+		{ "text beside the tag", "5 <add><value>1</value><value>1</value></add>", loader, "both the text \"5\" and a <add> tag" },
 	};
 
 	for (const Mistake& mistake : mistakes)
 	{
 		DYNAMIC_SECTION(mistake.what)
 		{
-			REQUIRE_THROWS_WITH(Loaded(gameXml(mistake.value)), ContainsSubstring("object 'o' > <position> > <x>") && ContainsSubstring(mistake.says));
+			REQUIRE_THROWS_WITH(Loaded(gameXml(mistake.value)), ContainsSubstring(mistake.where) && ContainsSubstring(mistake.says));
 		}
 	}
 }
@@ -692,7 +697,7 @@ TEST_CASE("a divisor that is 0 only because it is not known yet is not refused a
 		"<game>"
 		"<window name=\"test\"><width>800</width><height>600</height><background>color.black</background>"
 		"<framerate>60</framerate></window>"
-		"<variables></variables>"
+		"<variables><variable name=\"unused\">0</variable></variables>"
 		"<states><objects>"
 		"<object name=\"a\"><sprite><circle><radius>5</radius></circle></sprite>"
 		"<position><x>0</x><y>0</y></position><velocity><x>0</x><y>0</y></velocity>"

@@ -118,8 +118,8 @@ namespace
 	// What is wrapped around a sprite, or sprites, and an animation.
 	std::string objectWith(const std::string& sprites, const std::string& animation = "", const std::string& extra = "")
 	{
-		return "<object name=\"thing\">" + sprites + animation + extra +
-			"<position><x>10</x><y>20</y></position><velocity><x>0</x><y>0</y></velocity>"
+		return "<object name=\"thing\">" + sprites + animation +
+			"<position><x>10</x><y>20</y></position><velocity><x>0</x><y>0</y></velocity>" + extra +
 			"<collisions><off /></collisions></object>";
 	}
 
@@ -959,12 +959,12 @@ TEST_CASE("the members of a group can each have sprites and an animation of thei
 		// shares everything the group gives
 		"<member name=\"same\"><position><x>10</x></position></member>"
 		// its own interval, the group's sprites
-		"<member name=\"quick\"><position><x>40</x></position>"
-		"<animation><seconds>0.5</seconds><frame sprite=\"a\" /><frame sprite=\"b\" /></animation></member>"
+		"<member name=\"quick\">"
+		"<animation><seconds>0.5</seconds><frame sprite=\"a\" /><frame sprite=\"b\" /></animation><position><x>40</x></position></member>"
 		// sprites of its own, with the group's animation picking them out by name
-		"<member name=\"mine\"><position><x>70</x></position>"
+		"<member name=\"mine\">"
 		"<sprite name=\"a\"><bitmap><row>**</row><row>**</row><scale>2</scale></bitmap></sprite>"
-		"<sprite name=\"b\"><bitmap><row>..</row><row>..</row><scale>2</scale></bitmap></sprite></member>"
+		"<sprite name=\"b\"><bitmap><row>..</row><row>..</row><scale>2</scale></bitmap></sprite><position><x>70</x></position></member>"
 		"</group>";
 
 	Loaded loaded{ gameXml(group, "<show object=\"pair\" />") };
@@ -1056,13 +1056,13 @@ TEST_CASE("mistakes in sprites and animations are reported where they are", "[an
 	SECTION("an animation with no interval")
 	{
 		CHECK_THROWS_WITH(Loaded(gameXml(objectWith(kA + kB, "<animation><frame sprite=\"a\" /><frame sprite=\"b\" /></animation>"), shows)),
-			ContainsSubstring("<animation>") && ContainsSubstring("missing <seconds>"));
+			ContainsSubstring("animation[1]: unexpected element <frame>, expected <seconds>"));
 	}
 
 	SECTION("a frame with no sprite")
 	{
 		CHECK_THROWS_WITH(Loaded(gameXml(objectWith(kA + kB, "<animation><seconds>1</seconds><frame /><frame sprite=\"b\" /></animation>"), shows)),
-			ContainsSubstring("<frame>") && ContainsSubstring("sprite=\"...\""));
+			ContainsSubstring("animation[1]/frame: missing required attribute 'sprite'"));
 	}
 
 	SECTION("an interval that is not above 0")
@@ -1076,7 +1076,7 @@ TEST_CASE("mistakes in sprites and animations are reported where they are", "[an
 	SECTION("a window with a framerate of 0, which could count no seconds")
 	{
 		CHECK_THROWS_WITH(Loaded(gameXml(objectWith(kA + kB, kTwoFrames), shows, 0)),
-			ContainsSubstring("<framerate> is 0; expected a number of frames a second, 1 or more"));
+			ContainsSubstring("framerate: \"0\" is not a valid xs:positiveInteger"));
 	}
 
 	SECTION("frames that are not all the same size")
@@ -1115,7 +1115,7 @@ TEST_CASE("mistakes in sprites and animations are reported where they are", "[an
 			"<group name=\"pair\">" + kA + kB + kTwoFrames +
 			"<position><y>50</y></position><velocity><x>0</x><y>0</y></velocity>"
 			"<collisions><off /></collisions>"
-			"<member name=\"odd\"><position><x>10</x></position><sprite name=\"only\"><bitmap><row>*</row></bitmap></sprite></member>"
+			"<member name=\"odd\"><sprite name=\"only\"><bitmap><row>*</row></bitmap></sprite><position><x>10</x></position></member>"
 			"</group>";
 		CHECK_THROWS_WITH(Loaded(gameXml(group, "<show object=\"pair\" />")),
 			ContainsSubstring("object 'odd'") && ContainsSubstring("<sprite name=\"only\"> is never shown"));

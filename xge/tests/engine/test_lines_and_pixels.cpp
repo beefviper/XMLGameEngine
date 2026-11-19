@@ -476,19 +476,19 @@ TEST_CASE("mistakes in a sprite of lines are reported where they are", "[lines][
 	SECTION("a line missing its end")
 	{
 		CHECK_THROWS_WITH(Loaded(gameXml(objectWith("<line><from><x>0</x><y>0</y></from></line>"), "<show object=\"thing\" />")),
-			ContainsSubstring("<line>") && ContainsSubstring("missing <to>"));
+			ContainsSubstring("line[1]: expected <to> but the element ends"));
 	}
 
 	SECTION("lines mixed with another shape")
 	{
 		CHECK_THROWS_WITH(Loaded(gameXml(objectWith(line + "<circle><radius>4</radius></circle>"), "<show object=\"thing\" />")),
-			ContainsSubstring("a sprite of lines holds only <line>s"));
+			ContainsSubstring("sprite[1]: unexpected element <circle>"));
 	}
 
 	SECTION("a collision type that is not one")
 	{
 		CHECK_THROWS_WITH(Loaded(gameXml(objectWith(line, "<type>round</type>"), "<show object=\"thing\" />")),
-			ContainsSubstring("expected box or pixel"));
+			ContainsSubstring("\"round\" is not a valid collisionShapeType"));
 	}
 
 	SECTION("pixel collisions on text, which only a window can draw")

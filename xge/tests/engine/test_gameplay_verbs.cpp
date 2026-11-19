@@ -459,24 +459,24 @@ TEST_CASE("mistakes in the new tags are turned away when the game loads, saying 
 
 	const std::string plain = state("playing", { "o" });
 
-	fails(box("o", 0, 0, 1, 1, "<off />", "<facing>north</facing>"), plain, "<facing> is \"north\"");
-	fails(box("o", 0, 0, 1, 1, "<off />", {}, "<timers><timer><pop /></timer></timers>"), plain, "needs an <every> or an <after>");
+	fails(box("o", 0, 0, 1, 1, "<off />", "<facing>north</facing>"), plain, "facing: \"north\" is not a valid directionType");
+	fails(box("o", 0, 0, 1, 1, "<off />", {}, "<timers><timer><pop /></timer></timers>"), plain, "timer[1]: unexpected element <pop>, expected one of <every>, <after>");
 	fails(box("o", 0, 0, 1, 1, "<off />", {}, "<timers><timer><every>0</every></timer></timers>"), plain, "<every> is 0");
 	fails(box("o", 0, 0, 1, 1, "<off />", {}, "<timers><timer><after>1</after><push state=\"nowhere\" /></timer></timers>"), plain,
-		"<push state=\"nowhere\" /> names no state");
+		"timer[1]: unexpected element <push>");
 	fails(box("o", 0, 0, 1, 1, "<off />", {}, "<actions><action name=\"j\"><jump /></action></actions>"),
 		plain, "> <jump>: has no value");
 	fails(box("o", 0, 0, 1, 1, "<off />", {}, "<actions><action name=\"c\"><chase object=\"o\"><speed>2</speed></chase></action></actions>"),
-		plain, "unknown <speed>; expected its speed, then <near> if wanted");
+		plain, "chase: unexpected element <speed>");
 	fails(box("o", 0, 0, 1, 1, "<off />", {}, "<actions><action name=\"c\"><chase object=\"o\">2<random><min>1</min><max>3</max></random></chase></action></actions>"),
 		plain, "holds both the text \"2\" and a <random> tag");
 	fails(box("o", 0, 0, 1, 1, "<off />", {}, "<actions><action name=\"j\"><hop direction=\"up\">5<seconds>0</seconds></hop></action></actions>"),
 		plain, "<hop> has <seconds> of 0");
 	fails(box("o", 0, 0, 1, 1, "<off />", {}, "<actions><action name=\"j\"><jump direction=\"up\">5</jump></action></actions>"),
-		plain, "is now <hop direction=...> with <seconds>");
+		plain, "jump: attribute 'direction' is not declared for <jump>");
 	const std::string inputs = "<inputs><input button=\"space\"><pop /></input></inputs>";
 	fails(box("o", 0, 0, 1, 1), "<state name=\"playing\"><shows><show set=\"nothing\" /></shows>" + inputs + "</state>",
-		"<show set=...> is gone");
+		"show[1]: attribute 'set' is not declared for <show>");
 	fails(box("o", 0, 0, 1, 1), "<state name=\"playing\"><shows><show object=\"o\" state=\"playing\" /></shows>" + inputs + "</state>",
 		"names an object=\"...\" or a state=\"...\", one of them");
 }
@@ -1190,7 +1190,7 @@ TEST_CASE("mistakes in totals, distances and <any> stop the load, saying where",
 		INFO(condition);
 		CHECK_THROWS_WITH(Coins(condition, XmlBackend::TinyXml2, false), ContainsSubstring(expected));
 	};
-	fails("class=\"coin\" total=\"most\"><atleast>1</atleast>", "total=\"most\" is not a total");
+	fails("class=\"coin\" total=\"most\"><atleast>1</atleast>", "attribute 'total' = \"most\" is not a valid totalType");
 	fails("class=\"coin\" total=\"count\" variable=\"v\"><atleast>1</atleast>", "reads no variable=");
 	fails("class=\"coin\" total=\"sum\"><atleast>1</atleast>", "needs variable=");
 	fails("class=\"coin\" total=\"sum\" variable=\"w\"><atleast>1</atleast>", "no object it looks at has a variable of that name");
@@ -1199,11 +1199,11 @@ TEST_CASE("mistakes in totals, distances and <any> stop the load, saying where",
 	fails("object=\"ball\" distance=\"coin1\" total=\"count\"><below>5</below>", "measures no distance=");
 	fails("class=\"coin\" total=\"count\"><remaining>1</remaining>", "<remaining> counts what is in play");
 	fails("object=\"ball\"><any><condition object=\"ball\" variable=\"n\"><below>5</below></condition></any>", "so the condition has no class=");
-	fails("><all><condition object=\"ball\" variable=\"n\"><below>5</below></condition></all>", "<all>: is gone; tests that must all hold are a condition in a condition");
-	fails("><any><all></all></any>", "<all>: is gone");
-	fails("><any></any>", "<any>: has no <condition>");
-	fails("><any><condition object=\"coin1\" variable=\"v\"><below>5</below><inc variable=\"flag.n\" /></condition></any>", "the commands go at the end");
-	fails("><any><when /></any>", "unknown <when>");
+	fails("><all><condition object=\"ball\" variable=\"n\"><below>5</below></condition></all>", "condition[1]: unexpected element <all>");
+	fails("><any><all></all></any>", "any: unexpected element <all>, expected one of <condition>, <any>");
+	fails("><any></any>", "any: expected one of <condition>, <any> but the element ends");
+	fails("><any><condition object=\"coin1\" variable=\"v\"><below>5</below><inc variable=\"flag.n\" /></condition></any>", "any/condition: unexpected element <inc>");
+	fails("><any><when /></any>", "any: unexpected element <when>, expected one of <condition>, <any>");
 	fails("><any><condition object=\"coin1\"><below>5</below></condition></any>", "<any> > <condition>: <below> reads a variable");
 
 	// The schema turns the shapes away first.

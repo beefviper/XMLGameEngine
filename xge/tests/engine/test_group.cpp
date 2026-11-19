@@ -309,7 +309,7 @@ TEST_CASE("a group or member that is incomplete says where", "[group][errors]")
 	SECTION("a group with no name")
 	{
 		REQUIRE_THROWS_WITH(Loaded(gameXml("<group>" + kSprite + kPosition + kVelocity + kCollisions + kMember + "</group>")),
-			ContainsSubstring("<group>") && ContainsSubstring("name="));
+			ContainsSubstring("group: missing required attribute 'name'"));
 	}
 
 	SECTION("nothing gives the sprite")
@@ -329,13 +329,13 @@ TEST_CASE("a group or member that is incomplete says where", "[group][errors]")
 	{
 		REQUIRE_THROWS_WITH(Loaded(gameXml(groupWith(kSprite + kPosition + kVelocity + kCollisions,
 			"<member><collisions></collisions></member>"))),
-			ContainsSubstring("object 'lane.1'") && ContainsSubstring("a member can give <sprite>s, an <animation>, a <position>, a <velocity>, <variables>, an <owns>, a <team> and a <think>"));
+			ContainsSubstring("member[1]: unexpected element <collisions>"));
 	}
 
 	SECTION("something a group cannot say")
 	{
 		REQUIRE_THROWS_WITH(Loaded(gameXml(groupWith(kSprite + kPosition + kVelocity + kCollisions + "<bogus />", kMember))),
-			ContainsSubstring("group 'lane'") && ContainsSubstring("unknown <bogus>"));
+			ContainsSubstring("group: unexpected element <bogus>"));
 	}
 
 	SECTION("a value that is both text and a tag, in a member")
@@ -452,7 +452,7 @@ TEST_CASE("lines of text are a group in <rows> alone: one style, each line named
 		"<row number=\"3\"><sprite><text><content>third</content></text></sprite><padding><y>50</y></padding></row>"
 		"</group>";
 	std::string xml = gameXml(lines, "<show object=\"help\" />");
-	xml.replace(xml.find("<variables>"), 0, "<styles><style name=\"help\"><size>20</size><color>color.white</color></style></styles>");
+	xml.replace(xml.find("<states>"), 0, "<styles><style name=\"help\"><size>20</size><color>color.white</color></style></styles>");
 	Loaded loaded{ xml };
 	Game& game = loaded.game;
 
@@ -573,7 +573,7 @@ TEST_CASE("cells that cannot be laid out, or changed two ways at once, say where
 
 	SECTION("rows that are not a whole number")
 	{
-		REQUIRE_THROWS_WITH(refused(wallWith("", "two")), ContainsSubstring("<rows>") && ContainsSubstring("a whole number"));
+		REQUIRE_THROWS_WITH(refused(wallWith("", "two")), ContainsSubstring("rows: \"two\" is not a valid xs:positiveInteger"));
 	}
 
 	SECTION("columns and members both")
@@ -722,7 +722,7 @@ TEST_CASE("a group with groups inside it has no members of its own", "[group][ne
 	REQUIRE_THROWS_WITH(Loaded(gameXml(
 		"<group name=\"lanes\">" + kSprite + kPosition + "<member /><group name=\"inner\"><member /></group></group>",
 		"<show object=\"lanes\" />")),
-		ContainsSubstring("group 'lanes'") && ContainsSubstring("has <group>s inside it, so it has no <member>s"));
+		ContainsSubstring("group: unexpected element <group>"));
 }
 
 TEST_CASE("frogger.xml and spacerace.xml are made of the groups they are written as", "[group][shipped]")

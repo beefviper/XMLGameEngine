@@ -32,10 +32,11 @@ namespace xge
 {
 	namespace
 	{
-		// What load/xml knows how to read is fixed by xgedef.xsd,
-		// but not every file names that schema (and only Xerces really checks
-		// against it), so every reader below also checks what it needs and
-		// says where it was when something is missing or wrong.
+		// What load/xml knows how to read is fixed by xgedef.xsd, and every
+		// file is checked against it (the one it names, else this one), but
+		// for now every reader below also checks what it needs and says
+		// where it was when something is missing or wrong.
+		constexpr const char* engineSchema = "xgedef.xsd";
 
 		RawVector2 readVector2(const XmlNode& node, const std::string& where)
 		{
@@ -3605,19 +3606,23 @@ namespace xge
 			// schema actually uses (see load/xsd.h) - against that same schema
 			// file, resolved relative to filename the same way Xerces resolves
 			// it relative to the document.
+			// One that names none is checked against the engine's own: the
+			// xgedef.xsd beside it or above it, else the games folder's.
 			const std::string schemaLocation = getAttribute(root.get(), "xsi:noNamespaceSchemaLocation");
 
-			if (schemaLocation.empty())
-			{
-				validation = SchemaValidation::None;
-			}
-			else if (backend == XmlBackend::Xerces)
+			if (!schemaLocation.empty() && backend == XmlBackend::Xerces)
 			{
 				validation = SchemaValidation::Strong;
 			}
 			else
 			{
-				const std::string schemaPath = findSchema(filename, schemaLocation).string();
+				std::filesystem::path found = findSchema(filename, schemaLocation.empty() ? std::string(engineSchema) : schemaLocation);
+				if (schemaLocation.empty() && !std::filesystem::exists(found)) { found = engineSchema; }
+				if (!std::filesystem::exists(found))
+				{
+					throw std::runtime_error("XML file names no schema, and there is no " + std::string(engineSchema) + " beside it, above it or in the working folder to check it against");
+				}
+				const std::string schemaPath = found.string();
 
 				std::string why;
 				if (!validateWithKeptSchema(*root, schemaPath, backend, why))
