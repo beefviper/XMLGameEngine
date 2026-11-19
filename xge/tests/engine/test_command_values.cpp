@@ -6,7 +6,8 @@
 // Every number a command holds is renamed alike: self made the object
 // running it, an object's name made its copy's, and a live number in any of
 // them makes the command again each time it runs. Each walk over a command
-// once listed its values by hand, and the lists disagreed (docs/plan.md CR1).
+// once listed its values by hand, and the lists disagreed (docs/plan.md CR1);
+// now each verb's own data lists its numbers, and this list holds every one.
 
 #include "scratch.h"
 #include "engine/engine.h"
@@ -29,33 +30,46 @@ using namespace xge;
 
 namespace
 {
-	// A number of a command: the shared one, or one of a verb's own data,
-	// made when it is not there yet.
+	// A number of a command: one of its verb's own, made when it is not
+	// there yet.
 	using Place = RawValue& (*)(RawCommand&);
 
-	template <RawValue RawCommand::*Part> RawValue& shared(RawCommand& command) { return command.*Part; }
+	template <typename Own> Own& ownData(RawCommand& command)
+	{
+		Own* data = std::get_if<Own>(&command.own);
+		return data ? *data : command.own.template emplace<Own>();
+	}
 
 	template <typename Own, std::optional<RawValue> Own::*Part> RawValue& own(RawCommand& command)
 	{
-		Own* data = std::get_if<Own>(&command.own);
-		if (!data) { data = &command.own.template emplace<Own>(); }
-		std::optional<RawValue>& value = data->*Part;
+		std::optional<RawValue>& value = ownData<Own>(command).*Part;
 		return value ? *value : value.emplace();
 	}
 
+	template <typename Own, RawValue Own::*Part> RawValue& always(RawCommand& command) { return ownData<Own>(command).*Part; }
+
 	// Every number a command can hold, with the name a message gives it.
 	const std::vector<std::pair<const char*, Place>> commandValues{
-		{ "amount", shared<&RawCommand::amount> }, { "seconds", shared<&RawCommand::seconds> },
-		{ "distance", shared<&RawCommand::distance> }, { "ahead", shared<&RawCommand::ahead> },
-		{ "positionX", shared<&RawCommand::positionX> }, { "positionY", shared<&RawCommand::positionY> },
-		{ "column", shared<&RawCommand::column> }, { "row", shared<&RawCommand::row> },
-		{ "bounce's share", own<RawBounce, &RawBounce::share> },
+		{ "bounce's share", own<RawBounce, &RawBounce::share> }, { "knock's bounce", own<RawKnock, &RawKnock::bounce> },
 		{ "hop's distance", own<RawHop, &RawHop::distance> }, { "hop's seconds", own<RawHop, &RawHop::seconds> }, { "hop's arc", own<RawHop, &RawHop::arc> },
 		{ "spawn's count", own<RawSpawn, &RawSpawn::count> }, { "spawn's x", own<RawSpawn, &RawSpawn::positionX> }, { "spawn's y", own<RawSpawn, &RawSpawn::positionY> },
 		{ "spawn's velocity x", own<RawSpawn, &RawSpawn::velocityX> }, { "spawn's velocity y", own<RawSpawn, &RawSpawn::velocityY> },
 		{ "spawn's acceleration x", own<RawSpawn, &RawSpawn::accelerationX> }, { "spawn's acceleration y", own<RawSpawn, &RawSpawn::accelerationY> },
 		{ "spawn's column", own<RawSpawn, &RawSpawn::column> }, { "spawn's row", own<RawSpawn, &RawSpawn::row> },
 		{ "spawn's below", own<RawSpawn, &RawSpawn::freeBelow> }, { "spawn's member", own<RawSpawn, &RawSpawn::member> },
+		{ "inc's by", own<RawInc, &RawInc::by> }, { "dec's by", own<RawDec, &RawDec::by> }, { "set's value", always<RawSet, &RawSet::value> },
+		{ "jump's height", always<RawJump, &RawJump::height> }, { "pass's member", own<RawPass, &RawPass::member> }, { "reveal's count", own<RawReveal, &RawReveal::count> },
+		{ "go's speed", always<RawGo, &RawGo::speed> }, { "wander's speed", always<RawWander, &RawWander::speed> }, { "climb's speed", always<RawClimb, &RawClimb::speed> },
+		{ "follow's stagger", own<RawFollow, &RawFollow::stagger> }, { "follow's nearest", own<RawFollow, &RawFollow::nearest> },
+		{ "move's step", always<RawMove, &RawMove::step> }, { "move's wait", own<RawMove, &RawMove::wait> }, { "turn's rate", own<RawTurn, &RawTurn::rate> },
+		{ "thrust's amount", always<RawThrust, &RawThrust::amount> }, { "deflect's widest", always<RawDeflect, &RawDeflect::widest> },
+		{ "hole's radius", always<RawHole, &RawHole::radius> }, { "hole's rough", own<RawHole, &RawHole::rough> },
+		{ "swing's degrees", always<RawSwing, &RawSwing::degrees> }, { "swing's seconds", always<RawSwing, &RawSwing::seconds> },
+		{ "chase's speed", always<RawChase, &RawChase::speed> }, { "chase's near", own<RawChase, &RawChase::near> }, { "aim's lined", own<RawAim, &RawAim::lined> },
+		{ "shift's x", own<RawShift, &RawShift::x> }, { "shift's y", own<RawShift, &RawShift::y> },
+		{ "hunt's speed", always<RawHunt, &RawHunt::speed> }, { "hunt's ahead", own<RawHunt, &RawHunt::ahead> }, { "hunt's retreat", always<RawHunt, &RawHunt::retreatWithin> },
+		{ "send's column", own<RawSend, &RawSend::column> }, { "send's row", own<RawSend, &RawSend::row> }, { "send's count", own<RawSend, &RawSend::count> },
+		{ "think's depth", own<RawThink, &RawThink::depth> },
 	};
 
 	RawCommand commandWith(Place place, const std::string& text)

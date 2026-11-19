@@ -1278,8 +1278,9 @@ namespace xge
 
 	// One command tag from the XML - <bounce/>, <inc variable="a.b"/>,
 	// <move direction="up">step</move>, ... - before its number is worked out.
-	// `verb` is the tag name; its own data is in `own`, or for a verb without
-	// it, in which of the other fields it uses (see makeCommand).
+	// `verb` is the tag name; the names below are the attributes any command
+	// may have, and its numbers and the rest of what it says are its own
+	// (`own`).
 
 	struct RawCommand
 	{
@@ -1300,15 +1301,6 @@ namespace xge
 		std::string scene;     // enter, reset
 		std::string way;       // enter, reset: a way of the current scene
 		std::string from;      // become, trigger: only one showing this look
-		RawValue amount;       // follow (how many nearest; empty text: all), move, turn, thrust, deflect (the widest angle), hole (the radius), hunt (the speed)
-		RawValue seconds;      // jump (empty text: the default), follow (the stagger; empty text: 0), swing (its stroke), move (its <wait>)
-		RawValue distance;     // chase (near; empty text: 0), hunt (how many tiles near is near enough to retreat), aim (lined; empty text: any way), swing (its <degrees>)
-		RawValue ahead;        // hunt (tiles in front of the one hunted; empty text: 0)
-		// shift: its <x> and <y>, each empty text when left out (0).
-		RawValue positionX;
-		RawValue positionY;
-		RawValue column;       // send: on a cell map, where it goes
-		RawValue row;
 		// condition (a <condition> in an action): its test, and its commands
 		// as the test's own (shared; copied before it is changed).
 		std::shared_ptr<RawCondition> test;
@@ -1324,10 +1316,6 @@ namespace xge
 	private:
 		template <typename Command, typename Visit> static void eachValue(Command& command, Visit& visit)
 		{
-			for (auto* each : { &command.amount, &command.seconds, &command.distance, &command.ahead, &command.positionX, &command.positionY, &command.column, &command.row })
-			{
-				visit(*each);
-			}
 			std::visit([&](auto& own)
 			{
 				using Own = std::remove_const_t<std::remove_reference_t<decltype(own)>>;

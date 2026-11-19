@@ -12,7 +12,7 @@ The language had a pass that asked of every word whether it was needed. The C++ 
 |---|---|
 | One `Object` | 4,736 bytes, whatever it is. A Pong ball carries a card holder (776 bytes), a hand (192), cell-map state (184) and key-drive state (224) |
 | One object as written (`RawObject`) | 14,600 bytes |
-| One command as written (`RawCommand`) | 3,328 bytes: 61 fields shared by every verb, most of them empty for any one. A `Command` is 184 |
+| One command as written (`RawCommand`) | 3,328 bytes: 61 fields shared by every verb, most of them empty for any one (2,496 after CR7, each verb's own). A `Command` is 184 |
 | Pictures | Rows, SVGs and sheet cells are already drawn once per description (`drawOnce`), so Space Invaders' 77 objects hold 16 pictures. Lines and polygons are drawn per object; circles, rectangles and texts are drawn again each time a window asks. Five caches share them: `drawOnce`, the flips, the open sheets, each `Turnable`'s turned pictures and a static map of image files |
 | Textures | Each window keeps a texture per object name and builds it again whenever the object's picture changes: in 600 frames Space Invaders builds 1,109 textures (9 MB of pixels) for its 16 pictures, Pac-Man keeps 777 textures for 35 |
 | `before` | A whole `Moment` (its variables map and three vectors included) copied for every object every frame, read in one place for its position and two flags |

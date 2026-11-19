@@ -193,8 +193,8 @@ The author's order: the resource manager and the components first, since the res
 - **Needs** CR6.
 - **Steps.**
   - [x] **1. The shape, on three verbs (M).** Done; the author: "good for now", though still busy and its names not easy to follow. Built: `RawOwn` (`std::variant<std::monostate, RawBounce, RawHop, RawSpawn>`) in `RawCommand::own`, each with `eachValue` for `forEachValue`; a hunt's hop is a `RawHop` (`byHops` gone). `RawCommand` 3,328 to 4,112 bytes until step 3; Pac-Man's `--check` 1.96G to 1.86G. Was: `RawCommand` becomes the verb, its line, and the verb's own data (a `std::variant` of small structs beside each verb's `Cmd...` struct, or one struct serving as both where nothing is worked out). `<bounce>`, `<hop>` and `<spawn>` first. **The author** reads those three files before the rest move.
-  - [ ] **2. The rest, ten verbs a commit (L in all).** A field two verbs used for different things (`seconds`, `amount`, `distance`) becomes each verb's own, named for what it is there. **Check after each commit:** `xgetest "[verbs]"`, `xgetest-generated`.
-  - [ ] **3. The bag goes (S).** `RawCommand` has no shared value fields; CR1's `forEachValue` asks the verb. Load errors name the command's own line. **Check:** `[size]`.
+  - [x] **2. The rest, ten verbs a commit (L in all).** Done, with the work each verb does moved into its file and typed `run`/`print`/`check` (the author: "do them all like that"); `hold` and `point` join the table for held keys and the mouse. Was: A field two verbs used for different things (`seconds`, `amount`, `distance`) becomes each verb's own, named for what it is there. **Check after each commit:** `xgetest "[verbs]"`, `xgetest-generated`.
+  - [x] **3. The bag goes (S).** Done: `RawCommand` 3,328 to 2,496 bytes; Pac-Man's `--check` 1.86G to 1.72G; load errors already name the line (`onLineOf`). Was: `RawCommand` has no shared value fields; CR1's `forEachValue` asks the verb. Load errors name the command's own line. **Check:** `[size]`.
 - **Files.** `xge/lib/game/command.h`, `xge/lib/verbs/*`, `load/reading.*`; `docs/designs/14-verbs.md`.
 
 ### CR8. No special rules
