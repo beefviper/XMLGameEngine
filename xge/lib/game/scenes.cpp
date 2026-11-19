@@ -73,11 +73,6 @@ namespace xge
 			std::string where;
 		};
 
-		bool endsWith(const std::string& text, const std::string& end)
-		{
-			return text.size() >= end.size() && text.compare(text.size() - end.size(), end.size(), end) == 0;
-		}
-
 		// Every name in the game, written out in full, and how a name used
 		// somewhere is found among them.
 		class Names
@@ -219,16 +214,15 @@ namespace xge
 				return name;
 			}
 
-			static std::string endOfOnePath(const std::string& name, const std::set<std::string>& among, const Context& context, bool quiet)
+			std::string endOfOnePath(const std::string& name, const std::set<std::string>& among, const Context& context, bool quiet) const
 			{
 				// The shortest path that ends with it: rock is playing.rock (the
 				// rock of every scene) before playing.room1.rock.
-				const std::string end = "." + name;
+				const std::vector<std::string>* ending = endingsOf(among, name);
 				std::vector<std::string> found;
 				std::size_t fewest = std::string::npos;
-				for (const std::string& candidate : among)
+				for (const std::string& candidate : ending ? *ending : std::vector<std::string>{})
 				{
-					if (!endsWith(candidate, end)) { continue; }
 					const auto dots = static_cast<std::size_t>(std::count(candidate.begin(), candidate.end(), '.'));
 					if (dots < fewest) { found.clear(); fewest = dots; }
 					if (dots == fewest) { found.push_back(candidate); }
@@ -239,6 +233,37 @@ namespace xge
 					throw std::runtime_error(context.where + ": '" + name + "' could be " + listOf(found) + "; write the path of the one meant");
 				}
 				return name;
+			}
+
+		private:
+			// Each set's paths by every ending after a dot (playing.room1.rock
+			// under room1.rock and rock), made when first asked and again if
+			// the set has grown: a lookup is then one search, not a pass over
+			// every name.
+			struct Endings
+			{
+				std::size_t madeFrom{ std::string::npos };
+				std::map<std::string, std::vector<std::string>, std::less<>> byEnding;
+			};
+			mutable std::map<const std::set<std::string>*, Endings> endings;
+
+			const std::vector<std::string>* endingsOf(const std::set<std::string>& among, const std::string& name) const
+			{
+				Endings& kept = endings[&among];
+				if (kept.madeFrom != among.size())
+				{
+					kept.byEnding.clear();
+					for (const std::string& path : among)
+					{
+						for (std::size_t dot = path.find('.'); dot != std::string::npos; dot = path.find('.', dot + 1))
+						{
+							kept.byEnding[path.substr(dot + 1)].push_back(path);
+						}
+					}
+					kept.madeFrom = among.size();
+				}
+				const auto found = kept.byEnding.find(name);
+				return found == kept.byEnding.end() ? nullptr : &found->second;
 			}
 		};
 
