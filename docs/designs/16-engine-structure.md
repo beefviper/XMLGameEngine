@@ -128,6 +128,21 @@ Built twice, and what became of it (plan CR8 step 3):
 | A shot by facing, worked out side by side | `shotAlong` the facing's way |
 | A null-safe `getAttribute` for nodes never null, and `readValueBody` in the header | Gone; the body is private to `readValue` |
 
+## Text looked up while playing (plan CR8 step 4)
+
+The author: a name is looked up once, when it is read or when its object comes into being, and then held as an id; nothing is found by its text while playing. Measured with callgrind over `[speed]` (every game, 3,600 frames, only `Engine::update` counted): 555G instructions, of which string work alone (compare, copy, size) is 123G, 22%.
+
+| Family | Measured | Becomes |
+|---|---|---|
+| Variables by name: `Variables::find` compares text along an object's list | 10.1%, nearly all from the card search (`valueOf` in `meldFits`) | variables keyed by `Name`; a command, condition or rule holds the `Name` it reads |
+| Objects and groups by name: `named`, `inGroup`, `Name == std::string`, `getObject` | 4% | commands, rules and timers hold `Name`s, compared as ids |
+| Names in a number (`Calc::has`, `evaluateNow`, `refreshLive`) | 2.5% | each name in an expression bound to where it is read, at load |
+| Text made while playing: timers joining `owner.name`, a scene asked for by name, looks compared by name | about 1% | made once at load |
+
+`self`, `other` and a spawned copy's name are only known while playing: each gets its id once, when it is known.
+
+Not a name, but found on the way: the card search (`meldDeadwood`, gin rummy's think) is 40% of all play, and builds a `std::vector<float>` for each meld it tries (10%).
+
 ## Open
 
 - The names table.
