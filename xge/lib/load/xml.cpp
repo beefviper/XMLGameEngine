@@ -27,15 +27,16 @@
 #include <set>
 #include <sstream>
 #include <stdexcept>
+#include <string_view>
 
 namespace xge
 {
 	namespace
 	{
 		// What load/xml knows how to read is fixed by xgedef.xsd, and every
-		// file is checked against it (the one it names, else this one), but
-		// for now every reader below also checks what it needs and says
-		// where it was when something is missing or wrong.
+		// file is checked against it (the one it names, else this one), so
+		// the readers below trust that shape and check only what a schema
+		// cannot say, saying where it was.
 		constexpr const char* engineSchema = "xgedef.xsd";
 
 		RawVector2 readVector2(const XmlNode& node, const std::string& where)
@@ -1877,6 +1878,42 @@ namespace xge
 			return !exists || readBool(*exists, where);
 		}
 
+		// The parts an object, or a group for its members, gives by one tag
+		// each and reads alike: the tag and how it is read into the object.
+		struct SimplePart
+		{
+			std::string_view tag;
+			void (*read)(const XmlNode& node, RawObject& into, const std::string& where);
+		};
+
+		constexpr SimplePart simpleParts[]
+		{
+			{ "acceleration", [](const XmlNode& node, RawObject& into, const std::string& where) { into.hasAcceleration = true; into.rawAcceleration = readVector2(node, where); } },
+			{ "heading", [](const XmlNode& node, RawObject& into, const std::string& where) { into.hasHeading = true; into.rawHeading = readValue(node, where); } },
+			{ "pivot", [](const XmlNode& node, RawObject& into, const std::string& where) { into.hasPivot = true; into.rawPivot = readVector2(node, where); } },
+			{ "drag", [](const XmlNode& node, RawObject& into, const std::string& where) { into.hasDrag = true; into.rawDrag = readValue(node, where); } },
+			{ "friction", [](const XmlNode& node, RawObject& into, const std::string& where) { into.hasFriction = true; into.rawFriction = readValue(node, where); } },
+			{ "mass", [](const XmlNode& node, RawObject& into, const std::string& where) { into.hasMass = true; into.rawMass = readValue(node, where); } },
+			{ "surface", [](const XmlNode& node, RawObject& into, const std::string& where) { readSurface(node, into, where); } },
+			{ "facing", [](const XmlNode& node, RawObject& into, const std::string&) { into.facing = readText(node); } },
+			{ "maze", [](const XmlNode& node, RawObject& into, const std::string& where) { into.maze = readMaze(node, where); } },
+			{ "most", [](const XmlNode& node, RawObject& into, const std::string& where) { into.most = readCount(node, where); } },
+			// <waiting />: out of play until a <reveal>; <ready />, in play after
+			// all (a take of a waiting piece). <hidden />: in play, never drawn.
+			{ "waiting", [](const XmlNode&, RawObject& into, const std::string&) { into.isVisible = false; } },
+			{ "ready", [](const XmlNode&, RawObject& into, const std::string&) { into.isVisible = true; } },
+			{ "hidden", [](const XmlNode&, RawObject& into, const std::string&) { into.isDrawn = false; } },
+		};
+
+		const SimplePart* simplePart(std::string_view tag)
+		{
+			for (const SimplePart& part : simpleParts)
+			{
+				if (part.tag == tag) { return &part; }
+			}
+			return nullptr;
+		}
+
 		// An <object>; on a <map> (`map`), one that starts on the one tile of
 		// the character it picks, with no <position> of its own.
 		// The tag read; readObject without the line.
@@ -1956,55 +1993,20 @@ namespace xge
 			{
 				rawObject.rawVelocity = { zeroValue(), zeroValue() };
 			}
-			if (auto acceleration = findChild(&object, "acceleration"))
+			for (std::unique_ptr<XmlNode> child = object.getFirstChild(); child != nullptr; child = child->getNextSibling())
 			{
-				rawObject.hasAcceleration = true;
-				rawObject.rawAcceleration = readVector2(*acceleration, where);
-			}
-			if (auto heading = findChild(&object, "heading"))
-			{
-				rawObject.hasHeading = true;
-				rawObject.rawHeading = readValue(*heading, where);
-			}
-			if (auto pivot = findChild(&object, "pivot"))
-			{
-				rawObject.hasPivot = true;
-				rawObject.rawPivot = readVector2(*pivot, where);
-			}
-			if (auto drag = findChild(&object, "drag"))
-			{
-				rawObject.hasDrag = true;
-				rawObject.rawDrag = readValue(*drag, where);
-			}
-			if (auto friction = findChild(&object, "friction"))
-			{
-				rawObject.hasFriction = true;
-				rawObject.rawFriction = readValue(*friction, where);
-			}
-			if (auto surface = findChild(&object, "surface")) { readSurface(*surface, rawObject, where); }
-			if (auto mass = findChild(&object, "mass"))
-			{
-				rawObject.hasMass = true;
-				rawObject.rawMass = readValue(*mass, where);
+				if (const SimplePart* part = simplePart(child->getName())) { part->read(*child, rawObject, where); }
 			}
 			readPullAndSeek(object, rawObject, where);
 			readSight(object, rawObject, where);
-			if (auto facing = findChild(&object, "facing")) { rawObject.facing = readText(*facing); }
 			readMoves(object, rawObject, where);
-			if (auto maze = findChild(&object, "maze")) { rawObject.maze = readMaze(*maze, where); }
 			if (auto chain = findChild(&object, "chain"))
 			{
 				if (!map || !map->cells) { fail(where, "has a <chain>, which is for an object on a map with <cells />"); }
 				rawObject.chain = chain->getAttribute("object");
 			}
 			rawObject.timers = readTimers(findChild(&object, "timers").get(), where);
-			// <waiting />: out of play until a <reveal>; <ready />, in play after
-			// all (a take of a waiting piece). <hidden />: in play, never drawn.
-			if (findChild(&object, "waiting")) { rawObject.isVisible = false; }
-			if (findChild(&object, "ready")) { rawObject.isVisible = true; }
-			if (findChild(&object, "hidden")) { rawObject.isDrawn = false; }
 			rawObject.exists = rawObject.exists && readExists(object, where);
-			if (auto most = findChild(&object, "most")) { rawObject.most = readCount(*most, where); }
 			if (auto collisions = findChild(&object, "collisions")) { rawObject.rawCollisionData = readCollisions(*collisions, where); }
 			readActions(object, where, rawObject.action);
 			readObjectVariables(object, where, rawObject.variable);
@@ -2208,10 +2210,8 @@ namespace xge
 					fail(where, "is on map '" + own.map->name + "', whose rows say where its members are, so it has no <" + tag + ">");
 				}
 
-				if (tag == "waiting" || tag == "ready") { shared.isVisible = tag == "ready"; }
-				else if (tag == "hidden") { shared.isDrawn = false; }
+				if (const SimplePart* part = simplePart(tag)) { part->read(*child, shared, where); }
 				else if (tag == "exists") { shared.exists = readBool(*child, where); }
-				else if (tag == "most") { shared.most = readCount(*child, where); }
 				else if (tag == "columns" || tag == "rows")
 				{
 					(tag == "columns" ? own.columns : own.rows) = readCount(*child, where);
@@ -2234,47 +2234,14 @@ namespace xge
 					if (given.x) { into.x = given.x; }
 					if (given.y) { into.y = given.y; }
 				}
-				else if (tag == "acceleration")
-				{
-					shared.hasAcceleration = true;
-					shared.rawAcceleration = readVector2(*child, where);
-				}
-				else if (tag == "heading")
-				{
-					shared.hasHeading = true;
-					shared.rawHeading = readValue(*child, where);
-				}
-				else if (tag == "pivot")
-				{
-					shared.hasPivot = true;
-					shared.rawPivot = readVector2(*child, where);
-				}
-				else if (tag == "drag")
-				{
-					shared.hasDrag = true;
-					shared.rawDrag = readValue(*child, where);
-				}
-				else if (tag == "friction")
-				{
-					shared.hasFriction = true;
-					shared.rawFriction = readValue(*child, where);
-				}
-				else if (tag == "mass")
-				{
-					shared.hasMass = true;
-					shared.rawMass = readValue(*child, where);
-				}
-				else if (tag == "surface") { readSurface(*child, shared, where); }
 				else if (tag == "pull" || tag == "seek" || tag == "light" || tag == "dark" || tag == "altitude" || tag == "shadow") { /* below, all at once */ }
 				else if (tag == "collisions") { shared.rawCollisionData = readCollisions(*child, where, shared.rawCollisionData); }
-				else if (tag == "facing") { shared.facing = readText(*child); }
 				else if (tag == "poses" || tag == "mirror" || tag == "grip" || tag == "joins" || tag == "moves" || tag == "marks" || tag == "holds" || tag == "owns") { /* below, all at once */ }
 				else if (tag == "turns")
 				{
 					shared.takesTurns = true;
 					shared.turnsSprite = child->getAttribute("sprite");
 				}
-				else if (tag == "maze") { shared.maze = readMaze(*child, where); }
 				else if (tag == "chain")
 				{
 					if (!own.map || !own.map->cells) { fail(where, "has a <chain>, which is for a group on a map with <cells />"); }
