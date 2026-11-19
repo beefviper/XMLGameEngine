@@ -27,6 +27,13 @@ using Catch::Matchers::WithinAbs;
 
 namespace
 {
+	// A rule of `self`'s about touching `other` on that edge of its own.
+	bool runTouching(CommandExecutor& executor, const Command& command, Object& self, Object& other, Edge edge)
+	{
+		const Touch touch = touchAcross(edge);
+		return executor.run(command, Doer::meeting(self, other, touch));
+	}
+
 	float evaluatePlainNumber(const RawValue& value)
 	{
 		return std::stof(value.text);
@@ -80,7 +87,7 @@ namespace
 		{
 			ball.position = { 130.0f, 375.0f + offset - 10.0f };
 			ball.velocity = { -6.0f, 2.0f };
-			executor.executeObjectCollision(Command{ CmdDeflect{ maxAngle } }, ball, paddle1, Edge::Left);
+			runTouching(executor, Command{ CmdDeflect{ maxAngle } }, ball, paddle1, Edge::Left);
 		}
 	};
 }
@@ -167,14 +174,14 @@ TEST_CASE("which way the ball goes depends on the side it hit, not on how it cam
 	// Coming in steeply downwards onto the top half of paddle1: back up.
 	pong.ball.position = { 130.0f, 330.0f };
 	pong.ball.velocity = { -1.0f, 7.0f };
-	pong.executor.executeObjectCollision(Command{ CmdDeflect{ 45.0f } }, pong.ball, pong.paddle1, Edge::Left);
+	runTouching(pong.executor, Command{ CmdDeflect{ 45.0f } }, pong.ball, pong.paddle1, Edge::Left);
 	CHECK(pong.ball.velocity.x > 0.0f);
 	CHECK(pong.ball.velocity.y < 0.0f);
 
 	// Off paddle2's left side the ball goes left.
 	pong.ball.position = { 1130.0f, 410.0f };
 	pong.ball.velocity = { 6.0f, 0.0f };
-	pong.executor.executeObjectCollision(Command{ CmdDeflect{ 45.0f } }, pong.ball, pong.paddle2, Edge::Right);
+	runTouching(pong.executor, Command{ CmdDeflect{ 45.0f } }, pong.ball, pong.paddle2, Edge::Right);
 	CHECK(pong.ball.velocity.x < 0.0f);
 	CHECK(pong.ball.velocity.y > 0.0f);
 	CHECK_THAT(speedOf(pong.ball), WithinAbs(6.0f, 1e-4f));
@@ -184,7 +191,7 @@ TEST_CASE("a <deflect> in a screen-edge rule does nothing", "[deflect]")
 {
 	Pong pong;
 	pong.ball.velocity = { -6.0f, 2.0f };
-	pong.executor.executeScreenEdgeCollision(Command{ CmdDeflect{ 45.0f } }, pong.ball, Edge::Left);
+	pong.executor.run(Command{ CmdDeflect{ 45.0f } }, Doer::atEdgeOf(pong.ball, Edge::Left));
 	CHECK(pong.ball.velocity.x == -6.0f);
 	CHECK(pong.ball.velocity.y == 2.0f);
 }

@@ -1135,7 +1135,7 @@ namespace xge
 
 		// Counts `seconds` on every object timer of what is shown and every
 		// timer of the current state, and runs the commands of the ones that
-		// go off (CommandExecutor::executeTimer).
+		// go off (CommandExecutor::run).
 		void updateTimers(float seconds);
 
 		// `owed` seconds off one timer; true when it has gone off, with what

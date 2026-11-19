@@ -328,10 +328,7 @@ namespace xge
 			// a <spawn><free /> (Snake's next food).
 			const std::size_t steppingBefore = stepping.size();
 			for (Object* cell : cells) { stepping.push_back({ mapOf(mover).name, whole(place(*cell).column) + across, whole(place(*cell).row) + down }); }
-			Touch touch;
-			touch.edge = edge;
-			touch.normal = outOf(opposite(edge));
-			touch.along = 0.5f;
+			Touch touch = touchAcross(edge);
 			touch.point = middleOf(*blocker);
 			const int beforeColumn = whole(place(mover).column);
 			const int beforeRow = whole(place(mover).row);
@@ -660,7 +657,7 @@ namespace xge
 
 				for (const Command& command : check.commands)
 				{
-					if (!executor.executeCheck(command, match)) { break; }
+					if (!executor.run(command, Doer::finding(match))) { break; }
 				}
 				// Still full (nothing cleared it): on up.
 				const bool stillFull = std::all_of(match.pieces.begin(), match.pieces.end(), [&](const std::string& name)
@@ -745,7 +742,7 @@ namespace xge
 			for (const Object* piece : found) { match.pieces.push_back(piece->name); }
 			for (const Command& command : check.commands)
 			{
-				if (!executor.executeCheck(command, match)) { break; }
+				if (!executor.run(command, Doer::finding(match))) { break; }
 			}
 			const bool taken = std::any_of(match.pieces.begin(), match.pieces.end(), [&](const std::string& name)
 				{

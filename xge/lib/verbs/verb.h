@@ -103,6 +103,12 @@ namespace xge
 		// A rule about the window's edge: self and that edge.
 		bool atEdge() const noexcept { return self && screenEdge.has_value(); }
 		Game& game() const noexcept;
+
+		// The doer of each kind of list.
+		static Doer of(Object* self) noexcept { Doer doer; doer.self = self; return doer; }
+		static Doer meeting(Object& self, Object& other, const Touch& touch) noexcept { Doer doer = of(&self); doer.other = &other; doer.touch = &touch; return doer; }
+		static Doer atEdgeOf(Object& self, Edge edge) noexcept { Doer doer = of(&self); doer.screenEdge = edge; return doer; }
+		static Doer finding(const Object::CellMatch& match) noexcept { Doer doer; doer.match = &match; return doer; }
 	};
 
 	// One way a verb is written: how a message names it, where it may go

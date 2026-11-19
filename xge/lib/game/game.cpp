@@ -1325,7 +1325,7 @@ namespace xge
 		CommandExecutor executor(*this);
 		for (const Command& command : commands)
 		{
-			if (!executor.executeTimer(command, &objects[index])) { break; }
+			if (!executor.run(command, Doer::of(&objects[index]))) { break; }
 		}
 	}
 
@@ -1339,7 +1339,7 @@ namespace xge
 		CommandExecutor executor(*this);
 		for (const Command& command : commands)
 		{
-			if (!executor.executeTimer(command, &objects[index])) { break; }
+			if (!executor.run(command, Doer::of(&objects[index]))) { break; }
 		}
 	}
 
@@ -1379,7 +1379,7 @@ namespace xge
 					// Its kind's: a command that resets the object leaves them be.
 					for (const auto& command : timers[t].commands)
 					{
-						if (!executor.executeTimer(command, &objects[i])) { break; }
+						if (!executor.run(command, Doer::of(&objects[i]))) { break; }
 					}
 					// Hidden, or out of the look it follows, it stops counting.
 					if (!isShown(objects[i]) || (!sprite.empty() && objects[i].lookName() != sprite)) { break; }
@@ -1410,7 +1410,7 @@ namespace xge
 					takeTurnStop();
 					for (const auto& command : commands)
 					{
-						executor.executeTimer(command, nullptr);
+						executor.run(command, Doer{});
 						if (takeTurnStop() || !unchanged()) { break; }
 					}
 				}
@@ -1776,7 +1776,7 @@ namespace xge
 					}
 					for (const auto& command : commands)
 					{
-						if (!executor.executeTimer(command, &object)) { break; }
+						if (!executor.run(command, Doer::of(&object))) { break; }
 					}
 					if (!object.isFollowing()) { break; }
 				}
@@ -2074,7 +2074,7 @@ namespace xge
 			}
 			// A verb refused ends its rule there; the next rule still runs.
 			const std::size_t end = guard != guards.end() ? guard->first + guard->count : i + 1;
-			while (i < end && executor.executeScreenEdgeCollision(commands[i], object, edge)) { ++i; }
+			while (i < end && executor.run(commands[i], Doer::atEdgeOf(object, edge))) { ++i; }
 			i = end;
 		}
 	}
@@ -2274,7 +2274,7 @@ namespace xge
 			// A verb refused ends the rule there, as it ends an action.
 			for (const auto& command : rule.commands)
 			{
-				if (!executor.executeObjectCollision(command, self, other, touch)) { break; }
+				if (!executor.run(command, Doer::meeting(self, other, touch))) { break; }
 			}
 		}
 		self.motion.speedHeld = false;
@@ -2738,7 +2738,7 @@ namespace xge
 		takeTurnStop();
 		for (const auto& command : commands)
 		{
-			if (!executor.executeCondition(command) || takeTurnStop()) { break; }
+			if (!executor.run(command, Doer{}) || takeTurnStop()) { break; }
 		}
 	}
 }

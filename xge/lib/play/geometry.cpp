@@ -468,6 +468,15 @@ namespace xge
 		return contact;
 	}
 
+	Touch touchAcross(Edge edge) noexcept
+	{
+		Touch touch;
+		touch.edge = edge;
+		touch.normal = outOf(opposite(edge));
+		touch.along = 0.5f;
+		return touch;
+	}
+
 	Touch touchOfFirst(const Contact& contact) noexcept
 	{
 		return { opposite(contact.edgeOfSecond), contact.point, contact.normal, contact.alongSecond, contact.depth, contact.time };

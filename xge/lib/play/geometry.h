@@ -116,6 +116,9 @@ namespace xge
 		const std::string* through{ nullptr };
 	};
 
+	// A touch straight across the middle of that edge of one's own.
+	Touch touchAcross(Edge edge) noexcept;
+
 	// The touch as the first or the second of the pair sees it.
 	Touch touchOfFirst(const Contact& contact) noexcept;
 	Touch touchOfSecond(const Contact& contact) noexcept;

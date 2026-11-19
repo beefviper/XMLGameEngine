@@ -25,42 +25,9 @@ namespace xge
 	public:
 		explicit CommandExecutor(Game& gameToRun) noexcept : game(gameToRun) {}
 
-		// object.kind->collisionData.edges, driven by
-		// touchesScreenEdge. Each of these returns false
-		// when the verb is refused (a <spawn> or <fire> with every copy out,
-		// an <aim> not lined up, a hop that cannot be made), which ends the
-		// rule, key or condition there, as it ends an action.
-		bool executeScreenEdgeCollision(const Command& command, Object& object, Edge edge);
-
-		// object.kind->collisionData.others, driven by Game::reactTo. `other` is
-		// the object being touched. `touch` must already be self-relative to
-		// `object` (touch.edge the edge of *this* object that was touched,
-		// touch.normal the way out of `other` towards it) - see play/collision.h for why that's not simply the raw
-		// result of a check there.
-		bool executeObjectCollision(const Command& command, Object& object, Object& other, const Touch& touch);
-
-		// The same with only the edge known: a touch straight across it.
-		bool executeObjectCollision(const Command& command, Object& object, Object& other, Edge edge);
-
 		// A command bound to a key in the current State's <input> list: push or
 		// pop a state, or trigger a named action on another object.
 		bool executeInput(const Command& command, bool keyPressed);
-
-		// A State's <condition> action, once Game::checkConditions decides it's
-		// met: same command set as an <input> (in practice just push/pop a
-		// state), so this is just executeInput as an always-"pressed" input.
-		bool executeCondition(const Command& command);
-
-		// A command of a cell map's check that holds, about what it found.
-		bool executeCheck(const Command& command, const Object::CellMatch& match);
-
-		// A <timer> that has gone off: on an object (owner) or in a state (no
-		// owner). The state commands, inc, dec, play and trigger work in both;
-		// on an object, fire, reverse, move, die, stop and a bare reset
-		// act on that object (a bare reset in a state resets the game).
-		// False when the command is a verb that could not happen (see
-		// triggerObjectAction), and the timer's other commands are skipped.
-		bool executeTimer(const Command& command, Object* owner);
 
 		// A key that was already down when a state began: applies only the
 		// continuous part of its binding (an action's move.* and thrust.*,
@@ -89,8 +56,13 @@ namespace xge
 		// it, so a held count goes by the time held. 1 otherwise.
 		float heldShare = 1.0f;
 
-		// A command, done as `doer` says by its verb (Verb::run). False when
-		// the verb is refused, which ends the list it is in.
+		// A command, done as `doer` says by its verb (Verb::run): a rule
+		// about another object gives self, other and the touch (self-relative:
+		// see play/collision.h); one about the window's edge self and the
+		// edge; an object's timer self; a state's timer or condition nothing;
+		// a cell map's check what it found. False when the verb is refused
+		// (a <spawn> with every copy out, an <aim> not lined up, a hop that
+		// cannot be made), which ends the list it is in.
 		bool run(const Command& command, const Doer& doer);
 
 

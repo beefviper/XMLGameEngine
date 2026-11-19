@@ -28,49 +28,11 @@ namespace xge
 		return command;
 	}
 
-	bool CommandExecutor::executeScreenEdgeCollision(const Command& command, Object& object, Edge edge)
-	{
-		Doer doer;
-		doer.self = &object;
-		doer.screenEdge = edge;
-		return run(command, doer);
-	}
-
-	bool CommandExecutor::executeObjectCollision(const Command& command, Object& object, Object& other, Edge edge)
-	{
-		Touch touch;
-		touch.edge = edge;
-		touch.normal = outOf(opposite(edge));
-		touch.along = 0.5f;
-		return executeObjectCollision(command, object, other, touch);
-	}
-
-	bool CommandExecutor::executeObjectCollision(const Command& command, Object& object, Object& other, const Touch& touch)
-	{
-		Doer doer;
-		doer.self = &object;
-		doer.other = &other;
-		doer.touch = &touch;
-		return run(command, doer);
-	}
-
 	bool CommandExecutor::executeInput(const Command& command, bool keyPressed)
 	{
 		Doer doer;
 		doer.pressed = keyPressed;
 		doer.byRule = false;
-		return run(command, doer);
-	}
-
-	bool CommandExecutor::executeCondition(const Command& command)
-	{
-		return run(command, Doer{});
-	}
-
-	bool CommandExecutor::executeCheck(const Command& command, const Object::CellMatch& match)
-	{
-		Doer doer;
-		doer.match = &match;
 		return run(command, doer);
 	}
 
@@ -97,13 +59,6 @@ namespace xge
 			const Command& shape = shapeOf(action);
 			if (const Verb* verb = verbOf(shape); verb && verb->point) { verb->point(shape, doer, across, fraction); }
 		}
-	}
-
-	bool CommandExecutor::executeTimer(const Command& command, Object* owner)
-	{
-		Doer doer;
-		doer.self = owner;
-		return run(command, doer);
 	}
 
 	bool CommandExecutor::run(const Command& command, const Doer& doer)

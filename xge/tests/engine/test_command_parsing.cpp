@@ -51,8 +51,7 @@ namespace
 
 TEST_CASE("<reset /> makes the untargeted CmdReset", "[command_parsing]")
 {
-	// Only ever meaningful inside a collision rule (see
-	// CommandExecutor::executeScreenEdgeCollision) or, since a state's
+	// Only ever meaningful inside a collision rule or, since a state's
 	// <input>/<condition> reuses the same command set, as the full-game reset
 	// (CommandExecutor::executeInput/Game::resetAll) - either way, the same
 	// untargeted CmdReset.

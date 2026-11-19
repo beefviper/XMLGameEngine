@@ -24,6 +24,13 @@ using namespace xge;
 
 namespace
 {
+	// A rule of `self`'s about touching `other` on that edge of its own.
+	bool runTouching(CommandExecutor& executor, const Command& command, Object& self, Object& other, Edge edge)
+	{
+		const Touch touch = touchAcross(edge);
+		return executor.run(command, Doer::meeting(self, other, touch));
+	}
+
 	float evaluatePlainNumber(const RawValue& value)
 	{
 		return std::stof(value.text);
@@ -149,21 +156,21 @@ TEST_CASE("a rule about another object can reset, move, count and ride", "[new_v
 	Pair pair;
 
 	pair.frog.position = { 100.0f, 100.0f };
-	pair.executor.executeObjectCollision(Command{ CmdMove{ Direction::Up, 10.0f } }, pair.frog, pair.hedge, Edge::Top);
+	runTouching(pair.executor, Command{ CmdMove{ Direction::Up, 10.0f } }, pair.frog, pair.hedge, Edge::Top);
 	CHECK(pair.frog.position.x == 100.0f);
 	CHECK(pair.frog.position.y == 90.0f);
 
-	pair.executor.executeObjectCollision(Command{ CmdReset{} }, pair.frog, pair.hedge, Edge::Top);
+	runTouching(pair.executor, Command{ CmdReset{} }, pair.frog, pair.hedge, Edge::Top);
 	CHECK(pair.frog.position.x == pair.game.startOf(pair.frog).position.x);
 	CHECK(pair.frog.position.y == pair.game.startOf(pair.frog).position.y);
 
-	pair.executor.executeObjectCollision(Command{ CmdIncrement{ { "frog", "score" } } }, pair.frog, pair.hedge, Edge::Top);
-	pair.executor.executeObjectCollision(Command{ CmdDecrement{ { "frog", "lives" } } }, pair.frog, pair.hedge, Edge::Top);
+	runTouching(pair.executor, Command{ CmdIncrement{ { "frog", "score" } } }, pair.frog, pair.hedge, Edge::Top);
+	runTouching(pair.executor, Command{ CmdDecrement{ { "frog", "lives" } } }, pair.frog, pair.hedge, Edge::Top);
 	CHECK(pair.frog.variable["score"] == 1.0f);
 	CHECK(pair.frog.variable["lives"] == 2.0f);
 
 	pair.hedge.velocity = { 2.5f, 0.0f };
-	pair.executor.executeObjectCollision(Command{ CmdRide{} }, pair.frog, pair.hedge, Edge::Top);
+	runTouching(pair.executor, Command{ CmdRide{} }, pair.frog, pair.hedge, Edge::Top);
 	CHECK(pair.frog.riding.x == 2.5f);
 	CHECK(pair.frog.velocity.x == 0.0f); // its own velocity is not touched
 }
@@ -212,11 +219,11 @@ TEST_CASE("an <inc> or <dec> amount is added to or taken off the variable", "[ne
 {
 	Pair pair;
 
-	pair.executor.executeObjectCollision(Command{ CmdIncrement{ { "frog", "score" }, 5.0f } }, pair.frog, pair.hedge, Edge::Top);
-	pair.executor.executeObjectCollision(Command{ CmdIncrement{ { "frog", "score" }, 2.5f } }, pair.frog, pair.hedge, Edge::Top);
+	runTouching(pair.executor, Command{ CmdIncrement{ { "frog", "score" }, 5.0f } }, pair.frog, pair.hedge, Edge::Top);
+	runTouching(pair.executor, Command{ CmdIncrement{ { "frog", "score" }, 2.5f } }, pair.frog, pair.hedge, Edge::Top);
 	CHECK(pair.frog.variable["score"] == 7.5f);
 
-	pair.executor.executeObjectCollision(Command{ CmdDecrement{ { "frog", "lives" }, 2.0f } }, pair.frog, pair.hedge, Edge::Top);
+	runTouching(pair.executor, Command{ CmdDecrement{ { "frog", "lives" }, 2.0f } }, pair.frog, pair.hedge, Edge::Top);
 	CHECK(pair.frog.variable["lives"] == 1.0f);
 }
 
