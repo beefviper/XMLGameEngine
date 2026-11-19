@@ -40,6 +40,10 @@ namespace xge
 
 	ElementPtr copyElement(const XmlNode& node);
 
+	// The element `node` views (viewOf), shared, since an element is never
+	// changed once made; a node read from a file is copied (copyElement).
+	ElementPtr elementOf(const XmlNode& node);
+
 	// The element read as an XmlNode, so load/xml reads it like any other.
 	std::unique_ptr<XmlNode> viewOf(const ElementPtr& element);
 

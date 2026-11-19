@@ -2576,23 +2576,27 @@ namespace xge
 			map.name = node.getAttribute("name");
 			const std::string where = "map '" + map.name + "'";
 			refuseReserved(map.name, "a map", where);
+			const Children children(node);
 
-			const std::unique_ptr<XmlNode> tile = requireChild(node, "tile", where);
+			const XmlNode* tile = children.find("tile");
+			const XmlNode* position = children.find("position");
+			if (!tile) { fail(where, "missing <tile>"); }
+			if (!position) { fail(where, "missing <position>"); }
 			map.tileWidth = readValueOf(*tile, "width", where + " > <tile>");
 			map.tileHeight = readValueOf(*tile, "height", where + " > <tile>");
-			map.position = readVector2(*requireChild(node, "position", where), where);
-			if (auto columns = findChild(&node, "columns")) { map.columns = readCount(*columns, where); }
-			if (auto rows = findChild(&node, "rows")) { map.rowCount = readCount(*rows, where); }
-			map.cells = findChild(&node, "cells") != nullptr;
-			if (auto checks = findChild(&node, "checks"))
+			map.position = readVector2(*position, where);
+			if (auto columns = children.find("columns")) { map.columns = readCount(*columns, where); }
+			if (auto rows = children.find("rows")) { map.rowCount = readCount(*rows, where); }
+			map.cells = children.find("cells") != nullptr;
+			if (auto checks = children.find("checks"))
 			{
 				if (!map.cells) { fail(where, "has <checks>, which ask about a map with <cells />"); }
 				map.checks = readChecks(*checks, where);
 			}
 
-			for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
+			for (const auto& [tag, child] : children)
 			{
-				if (child->getName() != "row") { continue; }
+				if (tag != "row") { continue; }
 				const std::string row = readText(*child);
 				const std::string here = where + " > <row> " + std::to_string(map.rows.size() + 1);
 				if (row.empty()) { fail(here, "is empty"); }
@@ -2613,9 +2617,8 @@ namespace xge
 			GroupShared outer;
 			outer.map = &map;
 			bool any = false;
-			for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
+			for (const auto& [tag, child] : children)
 			{
-				const std::string tag = child->getName();
 				if (tag == "group")
 				{
 					readGroup(*child, out, outer);
@@ -3030,7 +3033,7 @@ namespace xge
 			{
 				if (const XmlNode* child = children.find(tag))
 				{
-					const std::set<std::string> more = spawnedIn(copyElement(*child), kit);
+					const std::set<std::string> more = spawnedIn(elementOf(*child), kit);
 					names.insert(more.begin(), more.end());
 				}
 			}
@@ -3541,14 +3544,14 @@ namespace xge
 		{
 			for (std::unique_ptr<XmlNode> piece = piecesNode->getFirstChild(); piece != nullptr; piece = piece->getNextSibling())
 			{
-				kit.add(copyElement(*piece), "the top-level <objects>");
+				kit.add(elementOf(*piece), "the top-level <objects>");
 			}
 		}
 		if (const XmlNode* pathsNode = top.find("paths"))
 		{
 			for (std::unique_ptr<XmlNode> path = pathsNode->getFirstChild(); path != nullptr; path = path->getNextSibling())
 			{
-				kit.addSet("path", path->getAttribute("name"), copyElement(*path));
+				kit.addSet("path", path->getAttribute("name"), elementOf(*path));
 			}
 		}
 

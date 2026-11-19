@@ -40,6 +40,8 @@ namespace xge
 			std::string getText() const override { return self->text; }
 			int line() const override { return self->line; }
 
+			const ElementPtr& element() const { return self; }
+
 			std::unique_ptr<XmlNode> getFirstChild() const override
 			{
 				if (self->children.empty()) { return nullptr; }
@@ -333,6 +335,12 @@ namespace xge
 		return made;
 	}
 
+	ElementPtr elementOf(const XmlNode& node)
+	{
+		if (const auto* view = dynamic_cast<const ElementNode*>(&node)) { return view->element(); }
+		return copyElement(node);
+	}
+
 	std::unique_ptr<XmlNode> viewOf(const ElementPtr& element)
 	{
 		return std::make_unique<ElementNode>(element, nullptr, 0);
@@ -575,7 +583,7 @@ namespace xge
 		std::set<std::string> writtenHere;
 		for (std::unique_ptr<XmlNode> node = objects.getFirstChild(); node != nullptr; node = node->getNextSibling())
 		{
-			const ElementPtr written = copyElement(*node);
+			const ElementPtr written = elementOf(*node);
 			const std::string tag = written->name;
 			const std::string name = written->attribute("name");
 			const std::string from = written->attribute("from");
