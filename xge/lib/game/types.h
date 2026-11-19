@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include <cmath>
+
 namespace xge
 {
 	// Backend-agnostic 2D vector - used for Object::position/velocity/size so
@@ -29,6 +31,11 @@ namespace xge
 		friend bool operator==(const Vector2f& a, const Vector2f& b) noexcept { return a.x == b.x && a.y == b.y; }
 		friend bool operator!=(const Vector2f& a, const Vector2f& b) noexcept { return !(a == b); }
 	};
+
+	// The arithmetic of two vectors.
+	inline float dotOf(const Vector2f& a, const Vector2f& b) noexcept { return a.x * b.x + a.y * b.y; }
+	inline float crossOf(const Vector2f& a, const Vector2f& b) noexcept { return a.x * b.y - a.y * b.x; }
+	inline float lengthOf(const Vector2f& a) noexcept { return std::hypot(a.x, a.y); }
 
 	enum class Direction { Up, Down, Left, Right };
 

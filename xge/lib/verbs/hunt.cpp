@@ -115,7 +115,7 @@ namespace xge
 		{
 			if (!insideWindow({ object.position + step, sizeOf(object) }, { window.width, window.height })) { continue; }
 			const Vector2f off = middle + step - there;
-			const float distance = off.x * off.x + off.y * off.y;
+			const float distance = dotOf(off, off);
 			if (!best || distance < bestDistance)
 			{
 				best = std::make_pair(way, step);

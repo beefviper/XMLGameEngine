@@ -40,7 +40,7 @@ namespace xge
 		float distanceSquared(const Vector2f& a, const Vector2f& b) noexcept
 		{
 			const Vector2f apart = a - b;
-			return apart.x * apart.x + apart.y * apart.y;
+			return dotOf(apart, apart);
 		}
 
 		// A map's tiles, and the objects on each (by index), as this frame

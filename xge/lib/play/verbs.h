@@ -42,7 +42,7 @@ namespace xge
 		{
 			if (&other == &from || !other.named(name) || !inPlay(other)) { continue; }
 			const Vector2f apart = middleOf(other) - here;
-			const float distance = apart.x * apart.x + apart.y * apart.y;
+			const float distance = dotOf(apart, apart);
 			if (!nearest || distance < nearestApart)
 			{
 				nearest = &other;

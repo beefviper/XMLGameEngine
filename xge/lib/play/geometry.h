@@ -281,7 +281,6 @@ namespace xge
 		const PixelSpread first = pixelSpreadAt(a, solidA, point, radius);
 		const PixelSpread second = pixelSpreadAt(b, solidB, point, radius);
 		const Vector2f apart = first.middle - second.middle;
-		const auto length = [](const Vector2f& v) { return std::hypot(v.x, v.y); };
 
 		// The surface lies flat across the point, both ways along it: it faces
 		// across itself. Nothing does (a corner, the end of a line, a point on
@@ -289,21 +288,21 @@ namespace xge
 		constexpr float flat = 1.5f;
 		const PixelSpread& surface = second.stretch >= first.stretch ? second : first;
 		const Vector2f off = point - surface.middle;
-		const bool across = std::abs(off.x * surface.along.x + off.y * surface.along.y) < 0.5f * surface.reach;
+		const bool across = std::abs(dotOf(off, surface.along)) < 0.5f * surface.reach;
 		Vector2f out;
 		if (surface.stretch < flat || surface.count < 3.0f || !across)
 		{
-			if (length(apart) < 0.01f) { return false; }
+			if (lengthOf(apart) < 0.01f) { return false; }
 			out = apart;
 		}
 		else
 		{
 			out = { -surface.along.y, surface.along.x };
-			const float side = out.x * apart.x + out.y * apart.y;
+			const float side = dotOf(out, apart);
 			if (std::abs(side) < 0.0001f) { return false; }
 			if (side < 0.0f) { out = out * -1.0f; }
 		}
-		normal = out * (1.0f / length(out));
+		normal = out * (1.0f / lengthOf(out));
 		return true;
 	}
 

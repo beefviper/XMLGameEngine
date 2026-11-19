@@ -70,14 +70,14 @@ namespace xge
 		}
 
 		float total = 0.0f;
-		for (std::size_t i = 1; i < corners.size(); ++i) { total += std::hypot(corners[i].x - corners[i - 1].x, corners[i].y - corners[i - 1].y); }
+		for (std::size_t i = 1; i < corners.size(); ++i) { total += lengthOf(corners[i] - corners[i - 1]); }
 
 		Vector2f at = corners.front();
 		float left = std::clamp(fraction, 0.0f, 1.0f) * total;
 		for (std::size_t i = 1; i < corners.size(); ++i)
 		{
 			const Vector2f leg = corners[i] - corners[i - 1];
-			const float length = std::hypot(leg.x, leg.y);
+			const float length = lengthOf(leg);
 			if (left <= length && length > 0.0f)
 			{
 				at = corners[i - 1] + leg * (left / length);

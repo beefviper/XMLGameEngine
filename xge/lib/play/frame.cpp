@@ -255,7 +255,7 @@ namespace xge
 				if (object.turning.hasHeading)
 				{
 					const Vector2f way = ahead(object.heading);
-					const float along = object.velocity.x * way.x + object.velocity.y * way.y;
+					const float along = dotOf(object.velocity, way);
 					const Vector2f across = object.velocity - way * along;
 					object.velocity -= across * (1.0f - kept(object.ground.grip));
 					continue;
@@ -757,7 +757,7 @@ namespace xge
 						// neighbour it only touches does not stand in the way.
 						const Vector2f middle = object.position + size * 0.5f;
 						const Vector2f in = middle - Vector2f{ x, y };
-						const float far = std::hypot(in.x, in.y);
+						const float far = lengthOf(in);
 						const Vector2f point = far > 1.0f ? Vector2f{ x, y } + in * (1.0f / far) : middle;
 						return !blocked(light, object, point);
 					});

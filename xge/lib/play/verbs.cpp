@@ -22,14 +22,6 @@ namespace xge
 		return measureShapeSize(object.drawn.picture);
 	}
 
-	namespace
-	{
-		float dotOf(const Vector2f& a, const Vector2f& b) noexcept { return a.x * b.x + a.y * b.y; }
-		float crossOf(const Vector2f& a, const Vector2f& b) noexcept { return a.x * b.y - a.y * b.x; }
-		float lengthOf(const Vector2f& a) noexcept { return std::hypot(a.x, a.y); }
-
-	}
-
 	// After `mover` has met `surface`, which does not move of itself
 	// (going at `surfaceAt` where they touch, `out` the way out of it to
 	// the mover), going at `before` as it came: its <friction>.

@@ -1701,7 +1701,7 @@ namespace xge
 			const auto apart = [&](const Object* object)
 			{
 				const Vector2f d = object->position + object->size * 0.5f - middle;
-				return d.x * d.x + d.y * d.y;
+				return dotOf(d, d);
 			};
 			std::stable_sort(going.begin(), going.end(), [&](const Object* a, const Object* b) { return apart(a) < apart(b); });
 			if (going.size() > static_cast<std::size_t>(nearest)) { going.resize(static_cast<std::size_t>(nearest)); }
@@ -1786,7 +1786,7 @@ namespace xge
 				const Vector2f left = leg.home ? startOf(object).position + object.shifted - object.position : object.path.left;
 				const std::optional<Vector2f> step = pathStep(left, budget);
 				const bool last = object.path.leg + 1 == path.steps.size();
-				const float distance = std::hypot(left.x, left.y);
+				const float distance = lengthOf(left);
 				if (!step)
 				{
 					++object.path.leg;
@@ -2253,7 +2253,7 @@ namespace xge
 		// the rules run); taken once, so that a rule that stops it does not
 		// change which of the rules after it run.
 		const Vector2f motion = motionOf(self, 1.0f);
-		self.motion.speed = std::sqrt(motion.x * motion.x + motion.y * motion.y);
+		self.motion.speed = std::sqrt(dotOf(motion, motion));
 		self.motion.speedHeld = true;
 		// Its look as the touch happens, for sprite=, likewise.
 		const std::string look = self.lookName();
@@ -2596,7 +2596,7 @@ namespace xge
 		const Object* nearest = nearestInPlay(object, selfIn(condition, condition.distanceTo));
 		if (!nearest) { return std::nullopt; }
 		const Vector2f apart = (nearest->position + nearest->size * 0.5f) - (object.position + object.size * 0.5f);
-		return std::hypot(apart.x, apart.y);
+		return lengthOf(apart);
 	}
 
 	// A total over everything that matches and is in play.

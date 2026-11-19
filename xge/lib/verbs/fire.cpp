@@ -54,7 +54,7 @@ namespace xge
 
 		const Box from{ shooter.position, sizeOf(shooter) };
 		const Vector2f shotSize = sizeOf(*projectile);
-		const float speed = std::hypot(game.startOf(*projectile).velocity.x, game.startOf(*projectile).velocity.y);
+		const float speed = lengthOf(game.startOf(*projectile).velocity);
 		std::optional<Shot> shot;
 		if (shooter.aim)
 		{

@@ -237,7 +237,7 @@ namespace xge
 		float turningReach(const Object& object) noexcept
 		{
 			const Vector2f arm = object.turning.hasPivot ? object.turning.pivotFromMiddle : Vector2f{};
-			return std::hypot(arm.x, arm.y) + std::hypot(object.size.x, object.size.y) / 2.0f;
+			return lengthOf(arm) + lengthOf(object.size) / 2.0f;
 		}
 
 		// Where one of a pair is `time` through a sweep, moving by `move` and
@@ -354,7 +354,7 @@ namespace xge
 		if (object.kind->collisionData.type != CollisionType::Pixel || !object.drawn.bitmap) { return true; }
 
 		// Its pixels: from where the line meets its box, half a pixel at a time.
-		const float length = std::hypot(along.x, along.y);
+		const float length = lengthOf(along);
 		if (!(length > 0.0f)) { return solidAt(object, from - box.position); }
 		const int steps = static_cast<int>(std::ceil(length / 0.5f));
 		for (int i = static_cast<int>(std::floor(hit->time * static_cast<float>(steps))); i <= steps; ++i)
