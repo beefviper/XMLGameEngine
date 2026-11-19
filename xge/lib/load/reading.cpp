@@ -13,11 +13,6 @@
 
 namespace xge
 {
-	std::string getAttribute(const XmlNode* node, const std::string& name)
-	{
-		return node ? node->getAttribute(name) : std::string{};
-	}
-
 	std::string trim(const std::string& text)
 	{
 		const auto first = text.find_first_not_of(" \t\r\n");
@@ -284,17 +279,7 @@ namespace xge
 	// A number, written either as an expression (the text of the element) or
 	// as one value tag inside it - see RawValue - and whether it is
 	// update="live".
-	RawValue readValue(const XmlNode& node, const std::string& where)
-	{
-		return onLineOf(node, [&]
-		{
-			RawValue value = readValueBody(node, where);
-			value.live = node.getAttribute("update") == "live";
-			return value;
-		});
-	}
-
-	RawValue readValueBody(const XmlNode& node, const std::string& where)
+	static RawValue readValueBody(const XmlNode& node, const std::string& where)
 	{
 		const std::string text = readText(node);
 		const std::string here = where + " > <" + node.getName() + ">";
@@ -358,6 +343,16 @@ namespace xge
 		}
 
 		fail(here, "unknown value tag <" + tagName + ">; a value is a number, a name, <random>, <centered>, a side (<left>, <right>, <top>, <bottom>) or an operation: " + operationTags());
+	}
+
+	RawValue readValue(const XmlNode& node, const std::string& where)
+	{
+		return onLineOf(node, [&]
+		{
+			RawValue value = readValueBody(node, where);
+			value.live = node.getAttribute("update") == "live";
+			return value;
+		});
 	}
 
 	RawValue readValueOf(const XmlNode& parent, const std::string& name, const std::string& where)

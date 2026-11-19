@@ -56,7 +56,7 @@ namespace xge
 			// it relative to the document.
 			// One that names none is checked against the engine's own: the
 			// xgedef.xsd beside it or above it, else the games folder's.
-			const std::string schemaLocation = getAttribute(root.get(), "xsi:noNamespaceSchemaLocation");
+			const std::string schemaLocation = root ? root->getAttribute("xsi:noNamespaceSchemaLocation") : std::string{};
 
 			if (!schemaLocation.empty() && backend == XmlBackend::Xerces)
 			{

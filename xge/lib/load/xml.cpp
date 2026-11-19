@@ -1864,7 +1864,7 @@ namespace xge
 			rawObject.line = object.line();
 			rawObject.name = object.getAttribute("name");
 			refuseReserved(rawObject.name, "an object", "<object name=\"" + rawObject.name + "\">");
-			rawObject.objClass = getAttribute(&object, "class");
+			rawObject.objClass = object.getAttribute("class");
 
 			const std::string where = "object '" + rawObject.name + "'";
 			const Children children(object);
@@ -2189,7 +2189,7 @@ namespace xge
 			readActions(group, where, shared.action);
 			readObjectVariables(group, where, shared.variable);
 			readPieceMoves(group, shared, where);
-			if (const std::string objClass = getAttribute(&group, "class"); !objClass.empty()) { shared.objClass = objClass; }
+			if (const std::string objClass = group.getAttribute("class"); !objClass.empty()) { shared.objClass = objClass; }
 			return inner;
 		}
 

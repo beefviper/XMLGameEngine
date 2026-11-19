@@ -17,7 +17,7 @@ namespace xge
 	static void readJump(const XmlNode& node, const std::string& where, RawCommand& command)
 	{
 		// The old <jump>, to a place: that is a <hop> with <seconds> now.
-		if (!getAttribute(&node, "direction").empty()) { fail(where, "<jump direction=...> to a place is now <hop direction=...> with <seconds>; <jump> is up off the ground, its height as its content"); }
+		if (!node.getAttribute("direction").empty()) { fail(where, "<jump direction=...> to a place is now <hop direction=...> with <seconds>; <jump> is up off the ground, its height as its content"); }
 		command.own = RawJump{ readValue(node, where) };
 	}
 

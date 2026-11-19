@@ -117,6 +117,17 @@ Where one mechanic bent shared code for itself, and what each became (the author
 
 Verb-name checks outside `verbs/`: 14 before, 2 now (pick, condition).
 
+Built twice, and what became of it (plan CR8 step 3):
+
+| What | Now |
+|---|---|
+| A vector's dot, cross and length: three helpers, two lambdas and 25 places by hand | `dotOf`, `crossOf`, `lengthOf` beside `Vector2f` |
+| Six `execute...` calls on the executor that only made a `Doer` and called `run` | `run` with `Doer::of`, `meeting`, `atEdgeOf` or `finding`; the key and pointer entries stay, as they do work |
+| A touch straight across an edge, made by hand twice | `touchAcross` |
+| Stopping what carries a thing out through an edge, for the window and for a touch | `stopGoingOut`, used by `stickInside` |
+| A shot by facing, worked out side by side | `shotAlong` the facing's way |
+| A null-safe `getAttribute` for nodes never null, and `readValueBody` in the header | Gone; the body is private to `readValue` |
+
 ## Open
 
 - The names table.

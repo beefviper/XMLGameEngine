@@ -25,8 +25,6 @@
 
 namespace xge
 {
-	std::string getAttribute(const XmlNode* node, const std::string& name);
-
 	std::string trim(const std::string& text);
 
 	// The first child of parent named `name`, or nullptr if parent is null
@@ -148,8 +146,6 @@ namespace xge
 	// as one value tag inside it - see RawValue - and whether it is
 	// update="live".
 	RawValue readValue(const XmlNode& node, const std::string& where);
-
-	RawValue readValueBody(const XmlNode& node, const std::string& where);
 
 	RawValue readValueOf(const XmlNode& parent, const std::string& name, const std::string& where);
 
