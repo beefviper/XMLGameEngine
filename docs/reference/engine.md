@@ -110,7 +110,8 @@ Design: [build-and-layout](../designs/51-build-and-layout.md).
 
 | Part | Files | What |
 |---|---|---|
-| reading | `load/xml.cpp` | tags into a `GameData` (`readGame()`) |
+| reading | `load/file.cpp` | a game file loaded with an XML library and checked against its schema, then read (`readGame(filename)`) |
+| | `load/xml.cpp` | a checked `<game>` element's tags into a `GameData` (`readGame(root)`) |
 | | `load/reading.cpp` | what every reader shares: a child, an attribute, a value, `fail` |
 | | `load/merge.cpp` | pieces and `from=` on the XML (`layOut`, `addWaiting`), as `merge.xsl` does |
 | | `load/expr.cpp` | values, operations, building `Object`s and `State`s; the loading stages in order (`game_expr::init`) |

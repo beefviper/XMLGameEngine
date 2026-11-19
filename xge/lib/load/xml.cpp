@@ -5,27 +5,21 @@
 
 #include "load/xml.h"
 
-#include "engine/folder.h"
-#include "game/game.h"
 #include "engine/keys.h"
 #include "load/merge.h"
 #include "load/reading.h"
 #include "load/spelling.h"
-#include "load/xsd.h"
 #include "verbs/verb.h"
 
 #include <algorithm>
 #include <cctype>
 #include <cstdlib>
-#include <filesystem>
 #include <functional>
 #include <initializer_list>
-#include <iostream>
 #include <map>
 #include <memory>
 #include <optional>
 #include <set>
-#include <sstream>
 #include <stdexcept>
 #include <string_view>
 
@@ -34,10 +28,9 @@ namespace xge
 	namespace
 	{
 		// What load/xml knows how to read is fixed by xgedef.xsd, and every
-		// file is checked against it (the one it names, else this one), so
-		// the readers below trust that shape and check only what a schema
-		// cannot say, saying where it was.
-		constexpr const char* engineSchema = "xgedef.xsd";
+		// game is checked against it before it gets here, so the readers
+		// below trust that shape and check only what a schema cannot say,
+		// saying where it was.
 
 		RawVector2 readVector2(const XmlNode& node, const std::string& where)
 		{
@@ -3291,65 +3284,6 @@ namespace xge
 
 	namespace
 	{
-		// The game file loaded and checked against its schema, with the pictures
-		// put in where sprites take them (<bitmap from>), so the rest reads each
-		// as if written out there.
-		ElementPtr loadGameFile(const std::string& filename, XmlBackend backend, SchemaValidation& validation)
-		{
-			std::unique_ptr<XmlDocument> document = XmlDocumentFactory::create(backend);
-
-			if (!document->load(filename))
-			{
-				// Thrown, not exit(): a front end that loads games one after another
-				// (xgegui) tells the user and carries on.
-				throw std::runtime_error("XML file failed to load: " + document->getErrorMessage());
-			}
-
-			// find key points in document
-			std::unique_ptr<XmlNode> root = document->getRootElement();
-
-			// A game file names its schema the same way regardless of backend
-			// (xsi:noNamespaceSchemaLocation - see games/descriptions/*.xml), so this reads
-			// it directly off root rather than asking XmlDocument for it.
-			// Xerces already ran its own real validation as part of load()
-			// above whenever this is non-empty (see xml/xerces.cpp) - load()
-			// would have failed already otherwise, so reaching here means it
-			// passed. Every other backend can only check well-formedness on its
-			// own (see xml/document.h), so this falls back to XsdLiteValidator
-			// - this project's own interpreter for the subset of XSD this
-			// schema actually uses (see load/xsd.h) - against that same schema
-			// file, resolved relative to filename the same way Xerces resolves
-			// it relative to the document.
-			// One that names none is checked against the engine's own: the
-			// xgedef.xsd beside it or above it, else the games folder's.
-			const std::string schemaLocation = getAttribute(root.get(), "xsi:noNamespaceSchemaLocation");
-
-			if (!schemaLocation.empty() && backend == XmlBackend::Xerces)
-			{
-				validation = SchemaValidation::Strong;
-			}
-			else
-			{
-				std::filesystem::path found = findSchema(filename, schemaLocation.empty() ? std::string(engineSchema) : schemaLocation);
-				if (schemaLocation.empty() && !std::filesystem::exists(found)) { found = engineSchema; }
-				if (!std::filesystem::exists(found))
-				{
-					throw std::runtime_error("XML file names no schema, and there is no " + std::string(engineSchema) + " beside it, above it or in the working folder to check it against");
-				}
-				const std::string schemaPath = found.string();
-
-				std::string why;
-				if (!validateWithKeptSchema(*root, schemaPath, backend, why))
-				{
-					throw std::runtime_error("XML file failed to validate against the schema: " + why);
-				}
-
-				validation = SchemaValidation::Weak;
-			}
-
-			return withPictures(copyElement(*root));
-		}
-
 		// <window name="..."> and its settings. These are plain numbers, not
 		// expressions - the expressions in the rest of the file are worked out
 		// against the window's size.
@@ -3494,13 +3428,24 @@ namespace xge
 		}
 	}
 
-	void game_xml::init(const std::string& filename, XmlBackend backend, WindowDesc& windowDesc,
-		std::vector<std::pair<std::string, RawValue>>& rawVariables, std::vector<RawState>& rawStates,
-		std::vector<RawObject>& rawObjects, std::vector<RawSound>& rawSounds, std::vector<RawPath>& rawPaths,
-		std::vector<RawStyle>& rawStyles, std::vector<Sheet>& rawSheets, std::vector<RawPatterns>& rawPatterns, std::vector<std::string>& rawKeeps, RawDemo& rawDemo,
-		SchemaValidation& validation)
+	GameData readGame(const XmlNode& file)
 	{
-		const ElementPtr pictured = loadGameFile(filename, backend, validation);
+		GameData data;
+		WindowDesc& windowDesc = data.window;
+		std::vector<std::pair<std::string, RawValue>>& rawVariables = data.variables;
+		std::vector<RawState>& rawStates = data.states;
+		std::vector<RawObject>& rawObjects = data.objects;
+		std::vector<RawSound>& rawSounds = data.sounds;
+		std::vector<RawPath>& rawPaths = data.paths;
+		std::vector<RawStyle>& rawStyles = data.styles;
+		std::vector<Sheet>& rawSheets = data.sheets;
+		std::vector<RawPatterns>& rawPatterns = data.patterns;
+		std::vector<std::string>& rawKeeps = data.keeps;
+		RawDemo& rawDemo = data.demo;
+
+		// The pictures put in where sprites take them (<bitmap from>), so the
+		// rest reads each as if written out there.
+		const ElementPtr pictured = withPictures(copyElement(file));
 		const std::unique_ptr<XmlNode> root = viewOf(pictured);
 		const Children top(*root);
 
@@ -3579,93 +3524,11 @@ namespace xge
 		}
 
 		readStates(*states, rawStates, kit, gameNames);
-	}
-
-	GameData readGame(const std::string& filename, XmlBackend backend)
-	{
-		GameData data;
-		SchemaValidation validation = SchemaValidation::None;
-		game_xml{}.init(filename, backend, data.window, data.variables, data.states, data.objects, data.sounds, data.paths, data.styles, data.sheets, data.patterns, data.keeps, data.demo, validation);
-
-		std::ostringstream said;
-		said << validation;
-		data.validation = said.str();
 		return data;
 	}
 
-	Game::Game(const std::string& file) :
-		Game(readGame(file))
+	RawDemo readDemo(const XmlNode& demo)
 	{
-	}
-
-	RawDemo readDemo(const std::string& filename, XmlBackend backend)
-	{
-		std::unique_ptr<XmlDocument> document = XmlDocumentFactory::create(backend);
-		if (!document->load(filename))
-		{
-			throw std::runtime_error("the keys file failed to load: " + document->getErrorMessage());
-		}
-		std::unique_ptr<XmlNode> root = document->getRootElement();
-		if (root && root->getName() == "demo")
-		{
-			return readDemoElement(*root);
-		}
-		if (std::unique_ptr<XmlNode> demoNode = root ? findChild(root.get(), "demo") : nullptr)
-		{
-			return readDemoElement(*demoNode);
-		}
-		throw std::runtime_error(filename + " has no <demo>: a keys file is a <demo> as --record writes one, or a game file holding one");
-	}
-
-	std::string withDemo(const std::string& gameText, const RawDemo& demo)
-	{
-		std::ostringstream element;
-		element << "  <demo>\n"
-			<< "    <seed>" << demo.seed << "</seed>\n"
-			<< "    <frames>" << demo.frames << "</frames>\n";
-		for (const DemoKey& key : demo.keys)
-		{
-			const char* tag = key.pressed ? "press" : "release";
-			element << "    <" << tag << " button=\"" << key.button << "\">" << key.frame << "</" << tag << ">\n";
-		}
-		element << "  </demo>\n";
-
-		// The one it had goes, from the start of its line to the end of it.
-		std::string text = gameText;
-		const auto open = text.find("<demo>", text.rfind("</states>") == std::string::npos ? 0 : text.rfind("</states>"));
-		if (open != std::string::npos)
-		{
-			const auto close = text.find("</demo>", open);
-			if (close != std::string::npos)
-			{
-				const auto lineStart = text.rfind('\n', open);
-				auto end = text.find('\n', close);
-				end = end == std::string::npos ? text.size() : end + 1;
-				text.erase(lineStart == std::string::npos ? 0 : lineStart + 1, end - (lineStart == std::string::npos ? 0 : lineStart + 1));
-			}
-		}
-
-		const auto gameEnd = text.rfind("</game>");
-		if (gameEnd == std::string::npos)
-		{
-			throw std::runtime_error("the game file has no </game> to write the demo before");
-		}
-
-		// Lines end as the file's do (a Windows checkout's end in \r\n).
-		std::string lines = element.str();
-		if (text.find("\r\n") != std::string::npos)
-		{
-			std::string crlf;
-			for (const char c : lines)
-			{
-				if (c == '\n') { crlf += '\r'; }
-				crlf += c;
-			}
-			lines = std::move(crlf);
-		}
-
-		const auto lineStart = text.rfind('\n', gameEnd);
-		text.insert(lineStart == std::string::npos ? gameEnd : lineStart + 1, lines);
-		return text;
+		return readDemoElement(demo);
 	}
 }

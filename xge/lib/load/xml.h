@@ -19,45 +19,19 @@
 
 namespace xge
 {
-	// Deserializes a game XML file into Game's raw (unevaluated) data -
-	// windowDesc, rawVariables, rawStates, rawObjects, rawSounds, rawPaths - the values,
-	// sprites, sounds and commands exactly as the file says them, none of it worked out yet (that is
-	// load/expr's job). Only ever talks to the abstract XmlNode/XmlDocument
-	// interface (xml/document.h), never a particular XML library directly - same
-	// separation as Engine/Window on the graphics side. No longer owns any
-	// per-run state itself (the whole XmlDocument lives and dies inside a single
-	// init() call), so there's nothing here to construct, destroy, or forbid
-	// copying/moving of.
-	//
-	// A tag the file gets wrong (a missing <radius>, an unknown command, a
-	// value with both text and a <random>) throws std::runtime_error saying
-	// where, whether or not the file names a schema.
-	class game_xml
-	{
-	public:
-		// validation is an out-param reporting how filename's contents were
-		// checked against xgedef.xsd - Strong if backend is
-		// Xerces and the file named a schema (Xerces already validated it
-		// for real as part of loading - see xml/xerces.cpp), Weak if some
-		// other backend loaded it and this project's own XsdLiteValidator
-		// (load/xsd.h) checked it instead, or None if the file named no
-		// schema at all. See Game::printGame().
-		//
-		// rawVariables keeps the order the file declares them in, so that
-		// load/expr can let one variable's value use the ones before it.
-		void init(const std::string& filename, XmlBackend backend, WindowDesc& windowDesc,
-			std::vector<std::pair<std::string, RawValue>>& rawVariables,
-			std::vector<RawState>& rawStates,
-			std::vector<RawObject>& rawObjects,
-			std::vector<RawSound>& rawSounds,
-			std::vector<RawPath>& rawPaths,
-			std::vector<RawStyle>& rawStyles,
-			std::vector<Sheet>& rawSheets,
-			std::vector<RawPatterns>& rawPatterns,
-			std::vector<std::string>& rawKeeps,
-			RawDemo& rawDemo,
-			SchemaValidation& validation);
-	};
+	// The game under `file`, its root <game> element, as Game's raw data:
+	// the values, sprites, sounds and commands as the file says them, none
+	// of it worked out yet (load/expr's job). The element has the shape
+	// the schema says: load/file.cpp checks a file before it gets here, and
+	// a generated program's tree was checked when it was made. Read through
+	// XmlNode only (xml/document.h), never a particular XML library. A tag
+	// the file gets wrong in a way no schema can say (two states of one
+	// name, a char= on no tile) throws, saying where.
+	GameData readGame(const XmlNode& file);
+
+	// A <demo> element: its seed, its frames, and each key pressed and let
+	// go with the frame it happened in.
+	RawDemo readDemo(const XmlNode& demo);
 
 	// The text of a game file with `demo` written into it as its <demo>, in
 	// place of the one it had, or as the last thing in <game>: what
@@ -70,6 +44,9 @@ namespace xge
 	RawDemo readDemo(const std::string& filename, XmlBackend backend = XmlDocumentFactory::defaultBackend());
 
 	// The game in that file, read with that XML library and checked against
-	// the schema it names (load/xml::init), as Game is made from it.
+	// the schema it names, else the engine's own (load/file.cpp), as Game is
+	// made from it. GameData::validation says how it was checked: Strong when
+	// Xerces checked it as it loaded, Weak when the engine's own checker did
+	// (load/xsd.h).
 	GameData readGame(const std::string& filename, XmlBackend backend = XmlDocumentFactory::defaultBackend());
 }

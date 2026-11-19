@@ -60,6 +60,7 @@ set(ENGINE_SOURCES
 	"xge/lib/load/spelling.cpp"
 	"xge/lib/load/merge.cpp"
 	"xge/lib/load/xml.cpp"
+	"xge/lib/load/file.cpp"
 	"xge/lib/load/reading.cpp"
 	"xge/lib/xml/document.cpp"
 	"xge/lib/load/xsd.cpp"
