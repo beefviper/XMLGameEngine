@@ -908,28 +908,17 @@ namespace xge
 				if (top && name == "any")
 				{
 					readAcceptRules(*part, rule, rule.anyRules, at, 1);
-					if (rule.anyRules.empty()) { fail(at, "holds the <condition>s of which one must hold"); }
 					continue;
 				}
 				if (top && name == "wild")
 				{
-					if (!rule.wildVariable.empty()) { fail(at, "is a second <wild>; a holder has one"); }
-					rule.wildVariable = requireAttribute(*part, "variable", at);
+					rule.wildVariable = part->getAttribute("variable");
 					readAcceptRules(*part, rule, rule.wildRules, at, 2);
-					if (rule.wildRules.empty()) { fail(at, "says which are wild by <condition>s on them"); }
 					continue;
 				}
-				if (name != "condition")
-				{
-					fail(here, "unknown <" + name + ">; expected " + std::string(top ? "<condition>s, an <any>, a <wild> and an <empty>" : "<condition>s"));
-				}
 				const std::unique_ptr<XmlNode> test = part->getFirstChild();
-				const std::string kind = test ? test->getName() : "";
+				const std::string kind = test->getName();
 				HolderRule::VarRule each;
-				if (kind != "equal" && kind != "unequal" && kind != "above" && kind != "below" && kind != "atleast" && kind != "atmost")
-				{
-					fail(at, "compares the arriving one with an <equal>, <unequal>, <above>, <below>, <atleast> or <atmost>");
-				}
 				each.kind = kind == "equal" ? Kind::Equal : kind == "unequal" ? Kind::Unequal : kind == "above" ? Kind::Above
 					: kind == "below" ? Kind::Below : kind == "atleast" ? Kind::AtLeast : Kind::AtMost;
 				const std::string testAt = at + " > <" + kind + ">";
@@ -953,7 +942,6 @@ namespace xge
 					into.push_back(std::move(each));
 					continue;
 				}
-				if (!total.empty()) { fail(at, "total=\"" + total + "\"; expected count or sum"); }
 
 				// top.<variable>, or <add> or <subtract> of it and a number: the one
 				// it would go on, as <equal><add><value>top.rank</value><value>1</value></add></equal>.
@@ -993,17 +981,16 @@ namespace xge
 		// A <score patterns>: its <melds />, <with object> and <best>.
 		void readScore(const XmlNode& node, RawObject::RawHolder& holder, const std::string& at)
 		{
-			holder.score = requireAttribute(node, "patterns", at);
+			holder.score = node.getAttribute("patterns");
 			for (std::unique_ptr<XmlNode> part = node.getFirstChild(); part != nullptr; part = part->getNextSibling())
 			{
 				if (part->getName() == "with")
 				{
-					holder.scoreWith = requireAttribute(*part, "object", at + " > <with>");
+					holder.scoreWith = part->getAttribute("object");
 					if (auto full = findChild(part.get(), "full")) { holder.scoreFull = readCount(*full, at + " > <with> > <full>"); }
 				}
 				else if (part->getName() == "best") { holder.scoreBest = readCount(*part, at + " > <best>"); }
-				else if (part->getName() == "melds") { holder.melds = holder.score; }
-				else { fail(at, "unknown <" + part->getName() + ">; expected <melds />, <with> and <best>"); }
+				else { holder.melds = holder.score; }
 			}
 			// <melds />: scored by splitting the cards into groups, not by the best pattern among them.
 			if (!holder.melds.empty())
@@ -1023,7 +1010,7 @@ namespace xge
 		void readHolds(const XmlNode& node, RawObject::RawHolder& holder, const std::string& here)
 		{
 			holder.is = true;
-			holder.holdsClass = requireAttribute(node, "class", here);
+			holder.holdsClass = node.getAttribute("class");
 			holder.holdsSprite = node.getAttribute("sprite");
 			const auto halves = [&](const XmlNode& vector, RawValue& x, RawValue& y, const std::string& at)
 			{
@@ -1059,15 +1046,11 @@ namespace xge
 				{
 					// What its members are worth added: a variable of each,
 					// <atmost> a limit a member's `high` stays within.
-					holder.counts = requireAttribute(*child, "variable", at);
+					holder.counts = child->getAttribute("variable");
 					holder.hasPoints = true;
-					for (std::unique_ptr<XmlNode> part = child->getFirstChild(); part != nullptr; part = part->getNextSibling())
-					{
-						if (part->getName() != "atmost") { fail(at, "unknown <" + part->getName() + ">; expected an <atmost> if wanted"); }
-						holder.pointsMost = readValue(*part, at + " > <atmost>");
-					}
+					if (auto most = child->getFirstChild()) { holder.pointsMost = readValue(*most, at + " > <atmost>"); }
 				}
-				else if (tag == "top") { holder.topSprite = requireAttribute(*child, "sprite", at); }
+				else if (tag == "top") { holder.topSprite = child->getAttribute("sprite"); }
 				else if (tag == "lift") { holder.lift = readValue(*child, at); }
 				else if (tag == "score") { readScore(*child, holder, at); }
 				else if (tag == "trick")
@@ -1075,24 +1058,20 @@ namespace xge
 					// A trick: any card leads, then the value led is followed;
 					// <breaks> one that leads only once played, <trumps> one over the rest.
 					HolderRule& rule = holder.takes;
-					rule.trickBy = requireAttribute(*child, "variable", at);
+					rule.trickBy = child->getAttribute("variable");
 					rule.given = true;
 					rule.follow = true;
 					for (std::unique_ptr<XmlNode> part = child->getFirstChild(); part != nullptr; part = part->getNextSibling())
 					{
-						const std::string name = part->getName();
-						if (name != "breaks" && name != "trumps") { fail(at, "unknown <" + name + ">; expected <breaks> and <trumps>"); }
-						(name == "breaks" ? rule.breaks : rule.trumps).push_back(readText(*part));
+						(part->getName() == "breaks" ? rule.breaks : rule.trumps).push_back(readText(*part));
 					}
 				}
 				else if (tag == "order")
 				{
 					for (std::unique_ptr<XmlNode> by = child->getFirstChild(); by != nullptr; by = by->getNextSibling())
 					{
-						if (by->getName() != "by") { fail(at, "unknown <" + by->getName() + ">; expected a <by variable> for each thing kept in order, the first first"); }
-						holder.orderBy.push_back(requireAttribute(*by, "variable", at + " > <by>"));
+						holder.orderBy.push_back(by->getAttribute("variable"));
 					}
-					if (holder.orderBy.empty()) { fail(at, "keeps what it holds in order <by variable>"); }
 				}
 				else if (tag == "picked")
 				{
@@ -1104,36 +1083,25 @@ namespace xge
 						const std::string name = part->getName();
 						if (name == "send")
 						{
-							if (!part->getAttribute("from").empty()) { fail(at + " > <send>", "sends from the holder itself; leave out from="); }
 							holder.pickedInto = part->getAttribute("into");
 							holder.pickedSends = readLeadValue(*part, {}, "how many", at);
 							holder.hasPickedSend = true;
 						}
-						else if (name == "play") { holder.pickedSound = requireAttribute(*part, "sound", at + " > <play>"); }
+						else if (name == "play") { holder.pickedSound = part->getAttribute("sound"); }
 						else if (name == "empty")
 						{
 							for (std::unique_ptr<XmlNode> step = part->getFirstChild(); step != nullptr; step = step->getNextSibling())
 							{
-								const std::string verb = step->getName();
-								const std::string where = at + " > <empty> > <" + verb + ">";
-								if (verb == "send")
+								if (step->getName() == "send")
 								{
-									holder.emptyFrom = requireAttribute(*step, "from", where);
-									if (!findChild(step.get(), "all")) { fail(where, "brings back <all /> of what that holder holds (and <leave> on it if wanted)"); }
-									if (auto leave = findChild(step.get(), "leave")) { holder.emptyLeave = readValue(*leave, where + " > <leave>"); }
+									holder.emptyFrom = step->getAttribute("from");
+									if (auto leave = findChild(step.get(), "leave")) { holder.emptyLeave = readValue(*leave, at + " > <empty> > <send> > <leave>"); }
 								}
-								else if (verb == "order")
-								{
-									if (!findChild(step.get(), "random")) { fail(where, "orders what came back at <random />"); }
-									holder.emptyRandom = true;
-								}
-								else { fail(at + " > <empty>", "unknown <" + verb + ">; expected a <send from> and an <order>"); }
+								else { holder.emptyRandom = true; }
 							}
 						}
-						else { fail(at, "unknown <" + name + ">; expected a <send into>, an <empty> and a <play sound>"); }
 					}
 				}
-				else { fail(here, "unknown <" + tag + ">; expected <spread>s, <accepts>, <run />, <counts>, <top>, <lift>, <trick>, <score>, <order> and <picked>"); }
 			}
 		}
 
@@ -1170,7 +1138,7 @@ namespace xge
 				trigger.verb = "trigger";
 				trigger.line = node->line();
 				trigger.object = node->getAttribute("object");
-				trigger.action = requireAttribute(*node, "action", here);
+				trigger.action = node->getAttribute("action");
 				trigger.from = node->getAttribute("from");
 				std::vector<RawCommand> instead = readCommands(otherwise->getFirstChild(), here + " > <otherwise>");
 				if (instead.empty()) { fail(here + " > <otherwise>", "is empty; leave it out"); }
@@ -1193,10 +1161,6 @@ namespace xge
 			{
 				const std::string here = where + " > <timer>";
 				std::unique_ptr<XmlNode> when = timer->getFirstChild();
-				if (!when || (when->getName() != "every" && when->getName() != "after"))
-				{
-					fail(here, "needs an <every> or an <after> first: how many seconds");
-				}
 
 				RawTimer raw;
 				raw.name = timer->getAttribute("name");
@@ -1409,15 +1373,6 @@ namespace xge
 			readPieceMoves(node, object, where);
 		}
 
-		std::string readFacing(const XmlNode& node, const std::string& where)
-		{
-			const std::string facing = readText(node);
-			if (facing != "up" && facing != "down" && facing != "left" && facing != "right")
-			{
-				fail(where, "<facing> is \"" + facing + "\"; expected up, down, left or right");
-			}
-			return facing;
-		}
 
 		// A value and its name, such as <variable name="score">0</variable>.
 		// A name the engine's own words would hide. What starts a dotted
@@ -1702,10 +1657,7 @@ namespace xge
 			if (findChild(&collisions, "lockstep")) { collisionData.lockstep = true; }
 			if (auto type = findChild(&collisions, "type"))
 			{
-				const std::string text = readText(*type);
-				if (text == "box") { collisionData.type = CollisionType::Box; }
-				else if (text == "pixel") { collisionData.type = CollisionType::Pixel; }
-				else { fail(collisionsHere, "<type> is \"" + text + "\"; expected box or pixel"); }
+				collisionData.type = readText(*type) == "pixel" ? CollisionType::Pixel : CollisionType::Box;
 			}
 
 			// The characters of its bitmap that touch, each <solid char>; an
@@ -2039,7 +1991,7 @@ namespace xge
 			}
 			readPullAndSeek(object, rawObject, where);
 			readSight(object, rawObject, where);
-			if (auto facing = findChild(&object, "facing")) { rawObject.facing = readFacing(*facing, where); }
+			if (auto facing = findChild(&object, "facing")) { rawObject.facing = readText(*facing); }
 			readMoves(object, rawObject, where);
 			if (auto maze = findChild(&object, "maze")) { rawObject.maze = readMaze(*maze, where); }
 			if (auto chain = findChild(&object, "chain"))
@@ -2130,9 +2082,8 @@ namespace xge
 		};
 
 		// The parts of a member, row, column or cell, as far as they are its
-		// own; `allowed` is what it may give, said in the message for anything
-		// else. Its sprites are applied to the group's later (changeSprites).
-		GroupPart readGroupPart(std::unique_ptr<XmlNode> node, const std::string& where, const std::set<std::string>& allowed, const std::string& expected)
+		// own. Its sprites are applied to the group's later (changeSprites).
+		GroupPart readGroupPart(std::unique_ptr<XmlNode> node, const std::string& where)
 		{
 			GroupPart part;
 			part.where = where;
@@ -2140,7 +2091,6 @@ namespace xge
 			for (std::unique_ptr<XmlNode> child = node->getFirstChild(); child != nullptr; child = child->getNextSibling())
 			{
 				const std::string tag = child->getName();
-				if (!allowed.count(tag)) { fail(where, "unknown <" + tag + ">; " + expected); }
 
 				if (tag == "sprite") { part.sprites.insert(child->getAttribute("name")); }
 				else if (tag == "animation") { /* below, all at once */ }
@@ -2319,7 +2269,7 @@ namespace xge
 				else if (tag == "surface") { readSurface(*child, shared, where); }
 				else if (tag == "pull" || tag == "seek" || tag == "light" || tag == "dark" || tag == "altitude" || tag == "shadow") { /* below, all at once */ }
 				else if (tag == "collisions") { shared.rawCollisionData = readCollisions(*child, where, shared.rawCollisionData); }
-				else if (tag == "facing") { shared.facing = readFacing(*child, where); }
+				else if (tag == "facing") { shared.facing = readText(*child); }
 				else if (tag == "poses" || tag == "mirror" || tag == "grip" || tag == "joins" || tag == "moves" || tag == "marks" || tag == "holds" || tag == "owns") { /* below, all at once */ }
 				else if (tag == "turns")
 				{
@@ -2338,10 +2288,6 @@ namespace xge
 					shared.shapeRows = readShapeRows(*child, where);
 				}
 				else if (tag == "group") { inner = true; }
-				else if (tag != "sprite" && tag != "actions" && tag != "variables" && tag != "timers" && tag != "member" && tag != "row" && tag != "column" && tag != "cell")
-				{
-					fail(where, "unknown <" + tag + ">; expected <columns>, <rows>, <padding>, <slope>, <sprite>, <animation>, <position>, <velocity>, <acceleration>, <heading>, <drag>, <friction>, <mass>, <surface>, <pull>, <seek>, <light>, <dark>, <altitude>, <shadow>, <facing>, <poses>, <mirror>, <grip>, <joins>, <moves>, <marks>, <holds>, <owns>, <turns>, <maze>, <chain>, <shape>, <waiting /> or <ready />, <hidden />, <most>, <collisions>, <actions>, <variables>, <timers>, then <member>s, <group>s, or <row>s, <column>s and <cell>s");
-				}
 			}
 
 			own.sprites = changeSprites(own.sprites, group, where);
@@ -2506,8 +2452,7 @@ namespace xge
 				const std::string memberName = ownName.empty() ? name + "." + std::to_string(count) : ownName;
 				const std::string here = "object '" + memberName + "' (a member of " + where + ")";
 
-				const GroupPart member = readGroupPart(std::move(child), here, { "sprite", "animation", "position", "velocity", "variables", "owns", "team", "think" },
-					"a member can give <sprite>s, an <animation>, a <position>, a <velocity>, <variables>, an <owns>, a <team> and a <think>");
+				const GroupPart member = readGroupPart(std::move(child), here);
 				out.push_back(makeMember(group, own, memberName, here, { &member }));
 			}
 
@@ -2529,8 +2474,7 @@ namespace xge
 					const std::string number = child->getAttribute("number");
 					const std::string here = where + " > <" + tag + (number.empty() ? std::string() : " number=\"" + number + "\"") + ">";
 					std::vector<bool> picked = readPick(*child, tag == "row" ? rows : columns, here);
-					GroupPart line = readGroupPart(std::move(child), here, { "number", "odd", "even", "sprite", "animation", "velocity", "padding", "variables" },
-						"a <" + tag + "> can give <sprite>s, an <animation>, a <velocity>, a <padding> and <variables>");
+					GroupPart line = readGroupPart(std::move(child), here);
 					if (tag == "row") { line.rows = std::move(picked); }
 					else
 					{
@@ -2562,8 +2506,7 @@ namespace xge
 						if (other.row == row && other.column == column) { fail(here, "is the same place as an earlier <cell>; say all of it in one"); }
 					}
 
-					GroupPart cell = readGroupPart(std::move(child), here, { "sprite", "animation", "velocity", "variables" },
-						"a <cell> can give <sprite>s, an <animation>, a <velocity> and <variables>");
+					GroupPart cell = readGroupPart(std::move(child), here);
 					cell.row = row;
 					cell.column = column;
 					cells.push_back(std::move(cell));
@@ -2907,7 +2850,6 @@ namespace xge
 		{
 			for (std::unique_ptr<XmlNode> input = node.getFirstChild(); input != nullptr; input = input->getNextSibling())
 			{
-				if (input->getName() != "input") { fail(where, "has <" + input->getName() + ">, which is not an <input>"); }
 				std::unique_ptr<XmlNode> commandsStart;
 				const std::vector<std::string> buttons = namesGiven(*input, "button", where + " > <input>", &commandsStart);
 				const std::string axis = input->getAttribute("axis");
@@ -2928,10 +2870,6 @@ namespace xge
 				for (const std::string& button : buttons) { written += (written.empty() ? "" : " ") + button; }
 				const auto moment = on.empty() ? keyMoments.begin()
 					: std::find_if(keyMoments.begin(), keyMoments.end(), [&](const char* name) { return on == name; });
-				if (moment == keyMoments.end())
-				{
-					fail(where + " > <input " + written + ">", "on=\"" + on + "\" is not a moment of a key; expected press, hold or release");
-				}
 				const std::vector<RawCommand> commands = readKeyCommands(std::move(commandsStart), where + " > <input " + written + ">");
 				auto& to = out.buttons[static_cast<std::size_t>(moment - keyMoments.begin())];
 				for (const std::string& button : buttons)
@@ -3059,15 +2997,10 @@ namespace xge
 			{
 				if (!raw.total.empty()) { fail(here, "<" + testName + " /> holds for one of those matched, so it takes no total= (total=\"" + testName + "\" is the number itself)"); }
 				if (raw.variableName.empty() && raw.distance.empty()) { fail(here, "<" + testName + " /> compares a variable, so it needs variable=\"...\""); }
-				if (test->getFirstChild()) { fail(here, "<" + testName + " /> has nothing in it"); }
 				return test->getNextSibling();
 			}
 
 			const bool remaining = raw.test == RawCondition::Test::Remaining;
-			if (!raw.total.empty() && raw.total != "count" && raw.total != "sum" && raw.total != "highest" && raw.total != "lowest")
-			{
-				fail(here, "total=\"" + raw.total + "\" is not a total; expected count, sum, highest or lowest");
-			}
 			if (raw.total == "count" && !raw.distance.empty()) { fail(here, "total=\"count\" counts the objects in play, so it measures no distance="); }
 			if (remaining && (!raw.total.empty() || !raw.distance.empty())) { fail(here, "<remaining> counts what is in play, so it takes no total= or distance="); }
 			if (!raw.distance.empty() && !raw.variableName.empty()) { fail(here, "distance=\"" + raw.distance + "\" measures how far, so it reads no variable="); }
@@ -3079,11 +3012,6 @@ namespace xge
 
 			// The number compared with, which may name another variable
 			// (<above>gun2.score</above>), read as the game runs.
-			if (!test->getAttribute("object").empty() || !test->getAttribute("variable").empty())
-			{
-				fail(here, "<" + testName + "> takes its number as content, which may name a variable: <" + testName + ">"
-					+ (test->getAttribute("object").empty() ? "self" : test->getAttribute("object")) + "." + test->getAttribute("variable") + "</" + testName + ">");
-			}
 			raw.threshold = readValue(*test, here);
 			return test->getNextSibling();
 		}
@@ -3345,8 +3273,8 @@ namespace xge
 					const std::string at = where + " > <starts> > <" + start.verb + ">";
 					if (start.verb == "send" || start.verb == "distribute")
 					{
-						start.from = requireAttribute(*step, "from", at);
-						start.into = requireAttribute(*step, "into", at);
+						start.from = step->getAttribute("from");
+						start.into = step->getAttribute("into");
 						if (findChild(step.get(), "all")) { start.all = true; }
 						else
 						{
@@ -3356,16 +3284,10 @@ namespace xge
 						}
 						if (auto more = findChild(step.get(), "more"))
 						{
-							if (start.verb != "distribute") { fail(at, "has a <more>, which is for <distribute>"); }
 							start.more = static_cast<int>(readPlainNumber(*more, at + " > <more>"));
 						}
 					}
-					else if (start.verb == "order")
-					{
-						start.from = requireAttribute(*step, "group", at);
-						if (!findChild(step.get(), "random")) { fail(at, "orders at <random /> (for now the only order a start knows)"); }
-					}
-					else { fail(where + " > <starts>", "unknown <" + start.verb + ">; expected <send>, <order> and <distribute>"); }
+					else { start.from = step->getAttribute("group"); }
 					rawState.starts.push_back(std::move(start));
 				}
 			}
@@ -3380,7 +3302,7 @@ namespace xge
 			// <music sound="..." /> (optional)
 			if (std::unique_ptr<XmlNode> music = findChild(&state, "music"))
 			{
-				rawState.music = requireAttribute(*music, "sound", where + " > <music>");
+				rawState.music = music->getAttribute("sound");
 			}
 
 			// <inputs>: its own <input>s, over those of the state it is from=.
