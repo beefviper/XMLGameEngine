@@ -245,8 +245,7 @@ namespace xge
 		RawVector2 from;
 		RawVector2 to;
 		std::string color;           // "" means color.white
-		RawValue thickness;          // only when hasThickness; otherwise 1
-		bool hasThickness{ false };
+		std::optional<RawValue> thickness;  // when written; otherwise 1
 	};
 
 	// One <polygon> of a sprite of filled shapes: its corners in order, in
@@ -288,17 +287,21 @@ namespace xge
 		// bitmap: each <color char="w">: the character and the name of its
 		// color, in the order written (`color` is the '*'s).
 		std::vector<std::pair<char, std::string>> bitmapColors;
-		RawValue scale;              // bitmap: real pixels to a character; svg: real pixels to a unit of the drawing; only when hasScale
-		bool hasScale{ false };
+		// bitmap: real pixels to a character; svg: real pixels to a unit of
+		// the drawing; when written.
+		std::optional<RawValue> scale;
 
 		// svg: the file is `path` (as for an image). The part of the drawing to
 		// take, in the drawing's units, is x, y, width and height, all four
 		// given or none (then all of it). hide names elements to leave out.
-		RawValue svgX;
-		RawValue svgY;
-		RawValue svgWidth;
-		RawValue svgHeight;
-		bool hasSvgRegion{ false };
+		struct Region
+		{
+			RawValue x;
+			RawValue y;
+			RawValue width;
+			RawValue height;
+		};
+		std::optional<Region> svgRegion;
 		std::vector<std::string> svgHide;
 
 		RawValue radius;             // circle
@@ -314,8 +317,8 @@ namespace xge
 		std::string path;            // image, svg
 
 		// cell: a picture cut from the game's <sheet> called `sheet`, the
-		// cell at `column` and `row` (from 1), or with hasSvgRegion the part
-		// at svgX, svgY, svgWidth by svgHeight; drawn `scale` pixels to the
+		// cell at `column` and `row` (from 1), or with an svgRegion the part
+		// it says; drawn `scale` pixels to the
 		// sheet's, or (a pack's faces) made `width` by `height` when given.
 		std::string sheet;
 		RawValue column;
@@ -404,9 +407,9 @@ namespace xge
 		RawValue size;               // empty: the style gives no size
 		std::string color;           // empty: the style gives no color
 		std::string font;            // a text's font file; empty: the style gives none
-		// A bitmap's: its <scale>, and its other colors, a character each.
-		bool hasScale{ false };
-		RawValue scale;
+		// A bitmap's: its <scale> (when written), and its other colors, a
+		// character each.
+		std::optional<RawValue> scale;
 		std::vector<std::pair<char, std::string>> bitmapColors;
 	};
 
@@ -816,7 +819,7 @@ namespace xge
 		{
 			const auto own = [&](RawSprite& each)
 			{
-				if (each.kind != "cell" || each.hasSvgRegion) { return; }
+				if (each.kind != "cell" || each.svgRegion) { return; }
 				const auto unset = [](const RawValue& value) { return value.kind == RawValue::Kind::Expression && value.text.empty(); };
 				if (unset(each.column)) { each.column = RawValue::expression(std::to_string(cell.column)); }
 				if (unset(each.row)) { each.row = RawValue::expression(std::to_string(cell.row)); }

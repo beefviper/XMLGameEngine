@@ -156,11 +156,7 @@ namespace xge
 			{
 				if (!(x && y && width && height)) { fail(here, "takes a part of the sheet with all four of <x>, <y>, <width> and <height>, or a <column> and <row>"); }
 				if (findChild(&cell, "column") || findChild(&cell, "row")) { fail(here, "has a <column> or <row> and a part by <x> and <y>; give one"); }
-				sprite.hasSvgRegion = true;
-				sprite.svgX = readValue(*x, here);
-				sprite.svgY = readValue(*y, here);
-				sprite.svgWidth = readValue(*width, here);
-				sprite.svgHeight = readValue(*height, here);
+				sprite.svgRegion = { readValue(*x, here), readValue(*y, here), readValue(*width, here), readValue(*height, here) };
 				return;
 			}
 			if (auto column = findChild(&cell, "column")) { sprite.column = readValue(*column, here); }
@@ -252,7 +248,6 @@ namespace xge
 
 				if (auto scale = findChild(&shape, "scale"))
 				{
-					sprite.hasScale = true;
 					sprite.scale = readValue(*scale, here);
 				}
 				readBitmapColors(shape, here, sprite.bitmapColors);
@@ -274,16 +269,11 @@ namespace xge
 				{
 					if (!(x && y && width && height)) { fail(here, "takes a part of the drawing with all four of <x>, <y>, <width> and <height>, or none of them"); }
 
-					sprite.hasSvgRegion = true;
-					sprite.svgX = readValue(*x, here);
-					sprite.svgY = readValue(*y, here);
-					sprite.svgWidth = readValue(*width, here);
-					sprite.svgHeight = readValue(*height, here);
+					sprite.svgRegion = { readValue(*x, here), readValue(*y, here), readValue(*width, here), readValue(*height, here) };
 				}
 
 				if (auto scale = findChild(&shape, "scale"))
 				{
-					sprite.hasScale = true;
 					sprite.scale = readValue(*scale, here);
 				}
 
@@ -300,7 +290,6 @@ namespace xge
 				readCell(shape, sprite, here);
 				if (auto scale = findChild(&shape, "scale"))
 				{
-					sprite.hasScale = true;
 					sprite.scale = readValue(*scale, here);
 				}
 				sprite.flip = readPictureFlip(shape, here);
@@ -349,7 +338,6 @@ namespace xge
 			if (auto color = findChild(&line, "color")) { rawLine.color = readText(*color); }
 			if (auto thickness = findChild(&line, "thickness"))
 			{
-				rawLine.hasThickness = true;
 				rawLine.thickness = readValue(*thickness, here);
 			}
 
@@ -513,18 +501,17 @@ namespace xge
 				{
 					// Changing the part taken may give only what changes; taking
 					// a part of what was the whole drawing needs all four.
-					if (!sprite.hasSvgRegion && !(x && y && width && height)) { fail(here, "takes a part of the drawing with all four of <x>, <y>, <width> and <height>, or none of them"); }
+					if (!sprite.svgRegion && !(x && y && width && height)) { fail(here, "takes a part of the drawing with all four of <x>, <y>, <width> and <height>, or none of them"); }
 
-					sprite.hasSvgRegion = true;
-					if (x) { sprite.svgX = readValue(*x, here); }
-					if (y) { sprite.svgY = readValue(*y, here); }
-					if (width) { sprite.svgWidth = readValue(*width, here); }
-					if (height) { sprite.svgHeight = readValue(*height, here); }
+					RawSprite::Region& region = sprite.svgRegion ? *sprite.svgRegion : sprite.svgRegion.emplace();
+					if (x) { region.x = readValue(*x, here); }
+					if (y) { region.y = readValue(*y, here); }
+					if (width) { region.width = readValue(*width, here); }
+					if (height) { region.height = readValue(*height, here); }
 				}
 
 				if (auto scale = findChild(shape.get(), "scale"))
 				{
-					sprite.hasScale = true;
 					sprite.scale = readValue(*scale, here);
 				}
 				if (base.kind == "bitmap")
@@ -607,7 +594,6 @@ namespace xge
 				sprite.name = (spec.name.empty() ? std::string("frame") : spec.name) + "." + std::to_string(spec.cells.size() + 1);
 				if (auto scale = findChild(&node, "scale"))
 				{
-					sprite.hasScale = true;
 					sprite.scale = readValue(*scale, at);
 				}
 				sprite.flip = readPictureFlip(node, at);
@@ -3320,7 +3306,6 @@ namespace xge
 					if (auto size = findChild(style.get(), "size")) { raw.size = readValue(*size, here); }
 					if (auto scale = findChild(style.get(), "scale"))
 					{
-						raw.hasScale = true;
 						raw.scale = readValue(*scale, here);
 					}
 					if (auto color = findPlainColor(*style)) { raw.color = readText(*color); }

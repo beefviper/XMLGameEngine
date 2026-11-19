@@ -364,7 +364,7 @@ namespace xge
 					value(line.from.y, context);
 					value(line.to.x, context);
 					value(line.to.y, context);
-					value(line.thickness, context);
+					if (line.thickness) { value(*line.thickness, context); }
 				}
 				for (RawPolygon& polygon : sprite.polygons)
 				{
@@ -374,8 +374,12 @@ namespace xge
 						value(point.y, context);
 					}
 				}
-				for (RawValue* part : { &sprite.scale, &sprite.svgX, &sprite.svgY, &sprite.svgWidth, &sprite.svgHeight,
-					&sprite.radius, &sprite.width, &sprite.height, &sprite.size, &sprite.thickness })
+				if (sprite.scale) { value(*sprite.scale, context); }
+				if (sprite.svgRegion)
+				{
+					for (RawValue* part : { &sprite.svgRegion->x, &sprite.svgRegion->y, &sprite.svgRegion->width, &sprite.svgRegion->height }) { value(*part, context); }
+				}
+				for (RawValue* part : { &sprite.radius, &sprite.width, &sprite.height, &sprite.size, &sprite.thickness })
 				{
 					value(*part, context);
 				}

@@ -346,7 +346,7 @@ namespace xge
 				segment.y2 = evaluate(rawLine.to.y, where);
 				checkColor(rawLine.color.empty() ? "color.white" : rawLine.color, where + " > <line>");
 				segment.color = colorFromName(rawLine.color.empty() ? "color.white" : rawLine.color);
-				if (rawLine.hasThickness) { segment.thickness = static_cast<int>(std::lround(evaluate(rawLine.thickness, where))); }
+				if (rawLine.thickness) { segment.thickness = static_cast<int>(std::lround(evaluate(*rawLine.thickness, where))); }
 				if (segment.thickness < 1) { throw std::invalid_argument("a <line> has a <thickness> under 1"); }
 				kept->lines.push_back(segment);
 			}
@@ -395,13 +395,13 @@ namespace xge
 			const auto given = [](const RawValue& value) { return !(value.kind == RawValue::Kind::Expression && value.text.empty()); };
 			SheetCell cell;
 			std::string key = "cell|" + sheet->name + "|";
-			if (sprite.hasSvgRegion)
+			if (sprite.svgRegion)
 			{
 				cell.free = true;
-				cell.x = evaluate(sprite.svgX, where);
-				cell.y = evaluate(sprite.svgY, where);
-				cell.width = evaluate(sprite.svgWidth, where);
-				cell.height = evaluate(sprite.svgHeight, where);
+				cell.x = evaluate(sprite.svgRegion->x, where);
+				cell.y = evaluate(sprite.svgRegion->y, where);
+				cell.width = evaluate(sprite.svgRegion->width, where);
+				cell.height = evaluate(sprite.svgRegion->height, where);
 				key += keyNumber(cell.x) + "," + keyNumber(cell.y) + "," + keyNumber(cell.width) + "," + keyNumber(cell.height);
 			}
 			else
@@ -413,7 +413,7 @@ namespace xge
 			const bool sized = given(sprite.width) && given(sprite.height);
 			const int toWidth = sized ? static_cast<int>(std::lround(evaluate(sprite.width, where))) : 0;
 			const int toHeight = sized ? static_cast<int>(std::lround(evaluate(sprite.height, where))) : 0;
-			const float cellScale = sprite.hasScale ? evaluate(sprite.scale, where) : 1.0f;
+			const float cellScale = sprite.scale ? evaluate(*sprite.scale, where) : 1.0f;
 			key += sized ? "|" + std::to_string(toWidth) + "x" + std::to_string(toHeight) : "|*" + keyNumber(cellScale);
 			key += "|" + sprite.flip;
 
@@ -433,13 +433,13 @@ namespace xge
 			// 1. The part of the drawing, and how many pixels to a unit.
 			SvgRegion region;
 			float svgScale = 1.0f;
-			if (sprite.hasSvgRegion)
+			if (sprite.svgRegion)
 			{
-				region = { evaluate(sprite.svgX, where), evaluate(sprite.svgY, where),
-					evaluate(sprite.svgWidth, where), evaluate(sprite.svgHeight, where) };
+				region = { evaluate(sprite.svgRegion->x, where), evaluate(sprite.svgRegion->y, where),
+					evaluate(sprite.svgRegion->width, where), evaluate(sprite.svgRegion->height, where) };
 				if (region.isWhole()) { throw std::invalid_argument("an svg's <width> and <height> must both be above 0"); }
 			}
-			if (sprite.hasScale) { svgScale = evaluate(sprite.scale, where); }
+			if (sprite.scale) { svgScale = evaluate(*sprite.scale, where); }
 
 			// 2. Drawn by lunasvg (picture/svg.cpp), once for every sprite that
 			// takes the same part at the same scale (a group's cells).
@@ -452,7 +452,7 @@ namespace xge
 		else
 		{
 			// 1. The rows, and how many pixels to a character.
-			const int rowsScale = sprite.hasScale ? static_cast<int>(std::lround(evaluate(sprite.scale, where))) : 1;
+			const int rowsScale = sprite.scale ? static_cast<int>(std::lround(evaluate(*sprite.scale, where))) : 1;
 
 			// 2. Drawn, once for every sprite of the same rows, scale and
 			// colors (a group's cells).

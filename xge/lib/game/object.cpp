@@ -300,11 +300,7 @@ namespace xge
 						throw std::runtime_error("object '" + object.name + "': style=\"" + sprite.style + "\" names no <style> of the game's <styles>");
 					}
 					// Its own scale and colors first; the style's for the rest.
-					if (!sprite.hasScale && style->hasScale)
-					{
-						sprite.hasScale = true;
-						sprite.scale = style->scale;
-					}
+					if (!sprite.scale && style->scale) { sprite.scale = style->scale; }
 					if (sprite.color.empty() && !style->color.empty())
 					{
 						sprite.color = style->color;
