@@ -3158,16 +3158,17 @@ namespace xge
 				for (std::unique_ptr<XmlNode> step = starts->getFirstChild(); step != nullptr; step = step->getNextSibling())
 				{
 					RawStart start;
-					start.verb = step->getName();
-					const std::string at = where + " > <starts> > <" + start.verb + ">";
-					if (start.verb == "send" || start.verb == "distribute")
+					const std::string tag = step->getName();
+					start.step = tag == "send" ? RawStart::Step::Send : tag == "distribute" ? RawStart::Step::Distribute : RawStart::Step::Order;
+					const std::string at = where + " > <starts> > <" + tag + ">";
+					if (start.step != RawStart::Step::Order)
 					{
 						start.from = step->getAttribute("from");
 						start.into = step->getAttribute("into");
 						if (findChild(step.get(), "all")) { start.all = true; }
 						else
 						{
-							const RawValue count = readLeadValue(*step, { "more" }, start.verb == "send" ? "how many, or <all />" : "how many each, then <more> if wanted", at);
+							const RawValue count = readLeadValue(*step, { "more" }, start.step == RawStart::Step::Send ? "how many, or <all />" : "how many each, then <more> if wanted", at);
 							try { start.count = std::stoi(count.text); }
 							catch (const std::exception&) { fail(at, "is \"" + count.text + "\"; expected a whole number"); }
 						}

@@ -43,7 +43,9 @@ namespace xge
 	// <all />), <order group> (<random />), <distribute from into>N<more>.
 	struct RawStart
 	{
-		std::string verb;      // send, order, distribute
+		enum class Step { Send, Distribute, Order };
+		Step step{ Step::Send };
+		const char* tag() const noexcept { return step == Step::Send ? "send" : step == Step::Distribute ? "distribute" : "order"; }
 		std::string from;      // send, distribute; order: the group ordered
 		std::string into;
 		int count{};

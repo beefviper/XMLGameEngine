@@ -109,8 +109,8 @@ namespace xge
 				std::string start;   // the holder every member starts in
 				for (const RawStart& step : state.starts)
 				{
-					const std::string where = "state '" + state.name + "' > <starts> > <" + step.verb + ">";
-					if (step.verb == "send" && step.all)
+					const std::string where = "state '" + state.name + "' > <starts> > <" + step.tag() + ">";
+					if (step.step == RawStart::Step::Send && step.all)
 					{
 						bool any = false;
 						for (RawObject& object : objects)
@@ -126,7 +126,7 @@ namespace xge
 					{
 						throw std::runtime_error(where + ": for now a start sends <all /> of a group into one holder first, then orders and sends from that holder");
 					}
-					if (step.verb == "order")
+					if (step.step == RawStart::Step::Order)
 					{
 						// What starts in it is shuffled; with no <order>, it lies in the pack's order.
 						for (RawObject* each : holdersFor(step.from, state.name)) { each->holder.startShuffled = true; }
