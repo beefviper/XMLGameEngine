@@ -1161,8 +1161,41 @@ namespace xge
 	struct RawWander { RawValue speed; static auto values(auto& own) { return std::tie(own.speed); } };
 	struct RawClimb { RawValue speed; static auto values(auto& own) { return std::tie(own.speed); } };
 
+	// <follow path="..."><stagger>s</stagger><nearest>N</nearest></follow>:
+	// the seconds between each one setting off, and how many nearest set
+	// off (left out: all).
+	struct RawFollow { std::optional<RawValue> stagger, nearest; static auto values(auto& own) { return std::tie(own.stagger, own.nearest); } };
+
+	// <move direction="...">step<wait>s</wait></move>.
+	struct RawMove { RawValue step; std::optional<RawValue> wait; static auto values(auto& own) { return std::tie(own.step, own.wait); } };
+
+	// <turn direction="...">degrees a second</turn>; left out on a cell map.
+	struct RawTurn { std::optional<RawValue> rate; static auto values(auto& own) { return std::tie(own.rate); } };
+
+	// <thrust>N</thrust>: how hard it pushes.
+	struct RawThrust { RawValue amount; static auto values(auto& own) { return std::tie(own.amount); } };
+
+	// <deflect>degrees</deflect>: the widest angle it goes back off at.
+	struct RawDeflect { RawValue widest; static auto values(auto& own) { return std::tie(own.widest); } };
+
+	// <hole>radius<rough>share</rough></hole>.
+	struct RawHole { RawValue radius; std::optional<RawValue> rough; static auto values(auto& own) { return std::tie(own.radius, own.rough); } };
+
+	// <swing><degrees>N</degrees><seconds>s</seconds></swing>.
+	struct RawSwing { RawValue degrees, seconds; static auto values(auto& own) { return std::tie(own.degrees, own.seconds); } };
+
+	// <chase object="...">speed<near>N</near></chase>.
+	struct RawChase { RawValue speed; std::optional<RawValue> near; static auto values(auto& own) { return std::tie(own.speed, own.near); } };
+
+	// <aim object="..."><lined>N</lined></aim>: only when lined up within N.
+	struct RawAim { std::optional<RawValue> lined; static auto values(auto& own) { return std::tie(own.lined); } };
+
+	// <shift object="..."><x>N</x><y>N</y></shift>: by how far.
+	struct RawShift { std::optional<RawValue> x, y; static auto values(auto& own) { return std::tie(own.x, own.y); } };
+
 	using RawOwn = std::variant<std::monostate, RawBounce, RawHop, RawSpawn,
-		RawInc, RawDec, RawSet, RawJump, RawKnock, RawPass, RawReveal, RawGo, RawWander, RawClimb>;
+		RawInc, RawDec, RawSet, RawJump, RawKnock, RawPass, RawReveal, RawGo, RawWander, RawClimb,
+		RawFollow, RawMove, RawTurn, RawThrust, RawDeflect, RawHole, RawSwing, RawChase, RawAim, RawShift>;
 
 	// Each number among a verb's own parts that was written: a RawValue, or
 	// an optional one, or pair, that holds something.

@@ -25,7 +25,7 @@ namespace xge
 	static Command makeBounce(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
 		const RawBounce& bounce = ownOf<RawBounce>(raw);
-		const float share = bounce.share ? evaluate(*bounce.share) : 1.0f;
+		const float share = valueOr(bounce.share, 1.0f, evaluate);
 		if (!(share >= 0.0f))
 		{
 			throw std::runtime_error("<bounce> keeps a share of " + formatDisplayNumber(share) + " of its speed; expected 0 or more");

@@ -26,7 +26,7 @@ namespace xge
 	static Command makeDec(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
 		// By its amount, or by 1 when it has none.
-		return CmdDecrement{ VariableName::of(raw.variable), ownOf<RawDec>(raw).by ? evaluate(*ownOf<RawDec>(raw).by) : 1.0f };
+		return CmdDecrement{ VariableName::of(raw.variable), valueOr(ownOf<RawDec>(raw).by, 1.0f, evaluate) };
 	}
 
 	static void checkDec(const CmdDecrement& decrement, const Checking& checking)

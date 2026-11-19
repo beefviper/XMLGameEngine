@@ -36,7 +36,7 @@ namespace
 	{
 		RawCommand command;
 		command.verb = "deflect";
-		command.amount = RawValue::expression(angle);
+		command.own.emplace<RawDeflect>().widest = RawValue::expression(angle);
 		return command;
 	}
 

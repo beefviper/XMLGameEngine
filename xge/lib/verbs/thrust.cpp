@@ -13,13 +13,14 @@ namespace xge
 	// way across the screen whatever its heading.
 	static void readThrust(const XmlNode& node, const std::string& where, RawCommand& command)
 	{
-		command.amount = readValue(node, where);
+		command.own.emplace<RawThrust>().amount = readValue(node, where);
 	}
 
 	static Command makeThrust(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
-		if (!raw.direction.empty()) { return CmdThrustAcross{ directionFromName(raw.direction, raw.verb), evaluate(raw.amount), raw.burn }; }
-		return CmdThrust{ evaluate(raw.amount), raw.burn };
+		const float amount = evaluate(ownOf<RawThrust>(raw).amount);
+		if (!raw.direction.empty()) { return CmdThrustAcross{ directionFromName(raw.direction, raw.verb), amount, raw.burn }; }
+		return CmdThrust{ amount, raw.burn };
 	}
 
 	// `direction` is now being pushed by `amount` (0 =

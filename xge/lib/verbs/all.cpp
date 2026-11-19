@@ -254,6 +254,11 @@ namespace xge
 		return isWritten(value) ? evaluate(value) : otherwise;
 	}
 
+	float valueOr(const std::optional<RawValue>& value, float otherwise, const ValueEvaluator& evaluate)
+	{
+		return value ? evaluate(*value) : otherwise;
+	}
+
 	Direction directionFromName(const std::string& name, const std::string& verb)
 	{
 		if (name == "up")    { return Direction::Up; }

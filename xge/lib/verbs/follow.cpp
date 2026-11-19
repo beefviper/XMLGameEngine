@@ -26,20 +26,22 @@ namespace xge
 		{
 			if (child->getName() != "stagger" && child->getName() != "nearest") { fail(here, "unknown <" + child->getName() + ">; expected <stagger> and <nearest>"); }
 		}
-		if (auto stagger = findChild(&node, "stagger")) { command.seconds = readValue(*stagger, here); }
+		RawFollow& follow = command.own.emplace<RawFollow>();
+		if (auto stagger = findChild(&node, "stagger")) { follow.stagger = readValue(*stagger, here); }
 		if (auto nearest = findChild(&node, "nearest"))
 		{
 			if (node.getAttribute("object").empty()) { fail(here, "<nearest> picks among the objects object= names; this <follow> names none"); }
-			command.amount = readValue(*nearest, here);
+			follow.nearest = readValue(*nearest, here);
 		}
 	}
 
 	static Command makeFollow(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
-		const float stagger = valueOr(raw.seconds, 0.0f, evaluate);
+		const RawFollow& written = ownOf<RawFollow>(raw);
+		const float stagger = valueOr(written.stagger, 0.0f, evaluate);
 		if (stagger < 0.0f) { throw std::runtime_error("<follow path=\"" + raw.path + "\">: the <stagger> is below 0"); }
-		const bool all = !isWritten(raw.amount);
-		const int nearest = all ? 0 : static_cast<int>(std::lround(evaluate(raw.amount)));
+		const bool all = !written.nearest;
+		const int nearest = all ? 0 : static_cast<int>(std::lround(evaluate(*written.nearest)));
 		if (!all && nearest < 1) { throw std::runtime_error("<follow path=\"" + raw.path + "\">: <nearest> is under 1"); }
 		return CmdFollow{ raw.path, raw.object, stagger, nearest };
 	}

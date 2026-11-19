@@ -25,7 +25,7 @@ namespace xge
 	static Command makeKnock(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
 		const std::optional<RawValue>& written = ownOf<RawKnock>(raw).bounce;
-		const float bounce = written ? evaluate(*written) : 1.0f;
+		const float bounce = valueOr(written, 1.0f, evaluate);
 		if (!(bounce >= 0.0f && bounce <= 1.0f))
 		{
 			throw std::runtime_error("<knock> has a bounce of " + formatDisplayNumber(bounce) + "; expected 0 up to 1");

@@ -20,13 +20,15 @@ namespace xge
 	{
 		// Optionally only when lined up, within so many pixels.
 		requireAttribute(node, "object", where);
-		if (auto lined = findChild(&node, "lined")) { command.distance = readValue(*lined, where + " > <aim>"); }
+		RawAim& aim = command.own.emplace<RawAim>();
+		if (auto lined = findChild(&node, "lined")) { aim.lined = readValue(*lined, where + " > <aim>"); }
 	}
 
 	static Command makeAim(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
-		const bool lined = isWritten(raw.distance);
-		const float within = lined ? evaluate(raw.distance) : 0.0f;
+		const std::optional<RawValue>& written = ownOf<RawAim>(raw).lined;
+		const bool lined = written.has_value();
+		const float within = lined ? evaluate(*written) : 0.0f;
 		if (within < 0.0f) { throw std::runtime_error("<aim object=\"" + raw.object + "\">: the <lined> is below 0"); }
 		return CmdAim{ raw.object, lined, within };
 	}

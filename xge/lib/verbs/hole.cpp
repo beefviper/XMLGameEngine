@@ -18,14 +18,16 @@ namespace xge
 	{
 		// Its radius as its content, then how rough its edge is.
 		const std::string here = where + " > <hole>";
-		command.amount = readLeadValue(node, { "rough" }, "its radius, then <rough> if wanted", where);
-		if (auto roughNode = findChild(&node, "rough")) { command.distance = readValue(*roughNode, here); }
+		RawHole& hole = command.own.emplace<RawHole>();
+		hole.radius = readLeadValue(node, { "rough" }, "its radius, then <rough> if wanted", where);
+		if (auto roughNode = findChild(&node, "rough")) { hole.rough = readValue(*roughNode, here); }
 	}
 
 	static Command makeHole(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
-		const float radius = evaluate(raw.amount);
-		const float rough = valueOr(raw.distance, 0.0f, evaluate);
+		const RawHole& written = ownOf<RawHole>(raw);
+		const float radius = evaluate(written.radius);
+		const float rough = valueOr(written.rough, 0.0f, evaluate);
 		if (!(radius > 0.0f)) { throw std::runtime_error("<hole> has a radius of " + formatDisplayNumber(radius) + "; expected above 0"); }
 		if (!(rough >= 0.0f && rough <= 1.0f)) { throw std::runtime_error("<hole> has a <rough> of " + formatDisplayNumber(rough) + "; expected 0 up to 1"); }
 		return CmdHole{ radius, rough };

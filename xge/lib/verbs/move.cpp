@@ -17,16 +17,18 @@ namespace xge
 	{
 		// Its step, then on a cell map how long it waits before it repeats.
 		requireAttribute(node, "direction", where);
-		command.amount = readLeadValue(node, { "wait" }, "its step, then <wait> if wanted", where);
-		if (auto wait = findChild(&node, "wait")) { command.seconds = readValue(*wait, where + " > <move>"); }
+		RawMove& move = command.own.emplace<RawMove>();
+		move.step = readLeadValue(node, { "wait" }, "its step, then <wait> if wanted", where);
+		if (auto wait = findChild(&node, "wait")) { move.wait = readValue(*wait, where + " > <move>"); }
 	}
 
 	static Command makeMove(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
-		CmdMove move{ directionFromName(raw.direction, raw.verb), evaluate(raw.amount) };
-		if (isWritten(raw.seconds))
+		const RawMove& written = ownOf<RawMove>(raw);
+		CmdMove move{ directionFromName(raw.direction, raw.verb), evaluate(written.step) };
+		if (written.wait)
 		{
-			move.wait = evaluate(raw.seconds);
+			move.wait = evaluate(*written.wait);
 			if (move.wait < 0.0f) { throw std::runtime_error("<move> has a <wait> of " + formatDisplayNumber(move.wait) + "; expected 0 or more"); }
 		}
 		return move;

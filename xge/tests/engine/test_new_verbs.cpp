@@ -41,7 +41,7 @@ namespace
 		RawCommand command = tag(verb);
 		command.direction = direction;
 		if (verb == "hop") { command.own.emplace<RawHop>().distance = RawValue::expression(amount); }
-		else { command.amount = RawValue::expression(amount); }
+		else { command.own.emplace<RawMove>().step = RawValue::expression(amount); }
 		return command;
 	}
 }

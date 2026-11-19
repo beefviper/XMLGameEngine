@@ -26,7 +26,7 @@ namespace xge
 	static Command makeInc(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
 		// By its amount, or by 1 when it has none.
-		return CmdIncrement{ VariableName::of(raw.variable), ownOf<RawInc>(raw).by ? evaluate(*ownOf<RawInc>(raw).by) : 1.0f };
+		return CmdIncrement{ VariableName::of(raw.variable), valueOr(ownOf<RawInc>(raw).by, 1.0f, evaluate) };
 	}
 
 	static void checkInc(const CmdIncrement& increment, const Checking& checking)

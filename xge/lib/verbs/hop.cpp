@@ -42,7 +42,7 @@ namespace xge
 		if (dash == std::string::npos)
 		{
 			// Nothing written: none (a hop on a cell map, one cell).
-			CmdHop hop{ directionFromName(name, raw.verb), written.distance ? evaluate(*written.distance) : 0.0f, {}, hopSeconds(written, evaluate), 0.0f, {} };
+			CmdHop hop{ directionFromName(name, raw.verb), valueOr(written.distance, 0.0f, evaluate), {}, hopSeconds(written, evaluate), 0.0f, {} };
 			hop.arc = arcOf(written, "hop", hop.seconds, evaluate);
 			hop.step = stepToward(hop.direction, hop.distance);
 			hop.onto = written.onto;

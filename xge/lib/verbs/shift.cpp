@@ -16,13 +16,14 @@ namespace xge
 		requireAttribute(node, "object", where);
 		const PartialVector2 by = readPartialVector2(node, where);
 		if (!by.x && !by.y) { fail(where, "<shift> moves by an <x> across, a <y> down, or both; it has neither"); }
-		if (by.x) { command.positionX = *by.x; }
-		if (by.y) { command.positionY = *by.y; }
+		RawShift& shift = command.own.emplace<RawShift>();
+		shift.x = by.x;
+		shift.y = by.y;
 	}
 
 	static Command makeShift(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
-		return CmdShift{ raw.object, { valueOr(raw.positionX, 0.0f, evaluate), valueOr(raw.positionY, 0.0f, evaluate) } };
+		return CmdShift{ raw.object, { valueOr(ownOf<RawShift>(raw).x, 0.0f, evaluate), valueOr(ownOf<RawShift>(raw).y, 0.0f, evaluate) } };
 	}
 
 	static void checkShift(const CmdShift& shift, const Checking& checking)

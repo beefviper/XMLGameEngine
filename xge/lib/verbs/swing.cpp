@@ -21,16 +21,18 @@ namespace xge
 		std::unique_ptr<XmlNode> degrees = findChild(&node, "degrees");
 		std::unique_ptr<XmlNode> seconds = findChild(&node, "seconds");
 		if (!degrees || !seconds) { fail(where, "<swing> gives how far it turns as <degrees>, and how long the stroke takes as <seconds>"); }
-		command.distance = readValue(*degrees, where + " > <swing> > <degrees>");
-		command.seconds = readValue(*seconds, where + " > <swing> > <seconds>");
+		RawSwing& swing = command.own.emplace<RawSwing>();
+		swing.degrees = readValue(*degrees, where + " > <swing> > <degrees>");
+		swing.seconds = readValue(*seconds, where + " > <swing> > <seconds>");
 	}
 
 	static Command makeSwing(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
 		const Direction direction = rotationFromName(raw.direction, raw.verb);
-		const float seconds = evaluate(raw.seconds);
+		const RawSwing& written = ownOf<RawSwing>(raw);
+		const float seconds = evaluate(written.seconds);
 		if (!(seconds > 0.0f)) { throw std::runtime_error("<swing> takes <seconds> of " + formatDisplayNumber(seconds) + "; expected more than 0"); }
-		const float degrees = evaluate(raw.distance);
+		const float degrees = evaluate(written.degrees);
 		if (!(degrees > 0.0f)) { throw std::runtime_error("<swing> takes <degrees> of " + formatDisplayNumber(degrees) + "; expected more than 0"); }
 		return CmdSwing{ direction == Direction::Left ? -degrees : degrees, seconds };
 	}

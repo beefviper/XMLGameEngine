@@ -14,12 +14,12 @@ namespace xge
 	// <deflect>: Off a paddle, at an angle by where along it the touch was.
 	static void readDeflect(const XmlNode& node, const std::string& where, RawCommand& command)
 	{
-		command.amount = readValue(node, where);
+		command.own.emplace<RawDeflect>().widest = readValue(node, where);
 	}
 
 	static Command makeDeflect(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
-		const float maxAngle = evaluate(raw.amount);
+		const float maxAngle = evaluate(ownOf<RawDeflect>(raw).widest);
 		if (!(maxAngle >= 0.0f && maxAngle < 90.0f))
 		{
 			throw std::runtime_error("<deflect> has an angle of " + formatDisplayNumber(maxAngle) + "; expected 0 up to (not including) 90 degrees");

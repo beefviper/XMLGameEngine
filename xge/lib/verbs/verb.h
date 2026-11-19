@@ -225,6 +225,7 @@ namespace xge
 	bool isWritten(const RawValue& value) noexcept;
 	// The value, or `otherwise` when nothing was written.
 	float valueOr(const RawValue& value, float otherwise, const ValueEvaluator& evaluate);
+	float valueOr(const std::optional<RawValue>& value, float otherwise, const ValueEvaluator& evaluate);
 
 	// up, down, left or right; anything else throws, naming the verb.
 	Direction directionFromName(const std::string& name, const std::string& verb);

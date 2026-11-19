@@ -14,13 +14,14 @@ namespace xge
 	{
 		// On a cell map a quarter turn, with nothing written.
 		requireAttribute(node, "direction", where);
-		if (hasContent(node)) { command.amount = readValue(node, where); }
+		RawTurn& turn = command.own.emplace<RawTurn>();
+		if (hasContent(node)) { turn.rate = readValue(node, where); }
 	}
 
 	static Command makeTurn(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
 		// Nothing written: none (a turn on a cell map, a quarter).
-		return CmdTurn{ rotationFromName(raw.direction, raw.verb), valueOr(raw.amount, 0.0f, evaluate) };
+		return CmdTurn{ rotationFromName(raw.direction, raw.verb), valueOr(ownOf<RawTurn>(raw).rate, 0.0f, evaluate) };
 	}
 
 	// A turn is now held (rate 0 = just released);
