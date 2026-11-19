@@ -96,6 +96,27 @@ The rename is the author's to approve as a table before anything is touched.
 
 Each is a step in the plan only where it removes code.
 
+## Special rules (plan CR8)
+
+Where one mechanic bends shared code for itself, and what each becomes. **The author** reads this before any moves.
+
+| Where | What it does | Proposal |
+|---|---|---|
+| `game/scenes.cpp` (4), `game/object.cpp` (2) | Renames know which verbs' `variable=`, `into=`, `from=` and `object=` name a variable, an object or an exact object, by listing verbs (inc, dec, copy, rank, set, spawn, send, trigger) | Each verb's table says what its names are (`.into = Names::object`); renames ask the verb |
+| `object.cpp` `nameSelfIn` | A `<trigger>` with no object= means self | The same table: trigger's `object=` defaults to self |
+| `load/expr.cpp` | `<set>` and `<spawn>` are always made again as they run | `Verb::alwaysLive` |
+| `load/xml.cpp`, `load/expr.cpp` (3) | A state's `<starts>` (the deal) reads send, distribute and order by hand into its own `RawStart` | `<starts>` becomes a list of commands read by `readCommand` and run once as the state begins |
+| `load/expr.cpp` | A `<pick>` of a held class makes its object a hand | Stays: a fact about the object worked out from its actions, now read from `RawPick` |
+| `verbs/all.cpp` | A hint for the old `<accelerate>` | Removed |
+| `verbs/all.cpp` | The shared send reader asks whether it is a send or a distribute | The two verbs pass what they allow |
+| `load/expr.cpp` | `condition` in a list | Stays: the list's own flow, not a verb |
+| `game/cells.cpp` `goThrough` | `<through />` sets a game-wide flag that the cell step reads back after the touch's rules | The rules a touch runs return what they asked (through, refused) |
+| `hasAim` | A second facing, as a vector, set by a diagonal move and `<aim>`, cleared by four other verbs | Facing holds the vector itself; the flag goes |
+| `placed`, `hopPending`, lockstep | A move made by a command, a hop waiting for the frame, a block moving as one | Stay: parts any object can have, each read in one place |
+| `isHand`, `onCells` in verbs | A verb does a different thing to a hand or a piece on cells | Stays: each is the verb's own choice, in its file |
+
+Verb-name checks outside `verbs/`: 14 now, 2 after (pick, condition).
+
 ## Open
 
 - The names table.
