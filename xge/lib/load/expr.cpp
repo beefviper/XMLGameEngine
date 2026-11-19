@@ -344,7 +344,7 @@ namespace xge
 			}
 
 			const Picture picture = buildPicture(rawObject.sprite, "object '" + rawObject.name + "'", &firstPassBitmaps[rawObject.name],
-				rawObject.hasHeading ? &firstPassTurned[rawObject.name] : nullptr, &rawObject);
+				rawObject.rawHeading ? &firstPassTurned[rawObject.name] : nullptr, &rawObject);
 			objectShapeKinds[rawObject.name] = picture.kind;
 			objectSizes[rawObject.name] = measureShapeSize(picture);
 			firstPassPictures[rawObject.name] = picture;
@@ -352,7 +352,7 @@ namespace xge
 			if (rawObject.hasAnimation)
 			{
 				firstPassAnimation[rawObject.name] = buildAnimationBitmaps(rawObject.animation.frames, "object '" + rawObject.name + "' > <animation>",
-					rawObject.hasHeading ? &firstPassAnimationTurned[rawObject.name] : nullptr);
+					rawObject.rawHeading ? &firstPassAnimationTurned[rawObject.name] : nullptr);
 			}
 		}
 		for (auto& [name, size] : objectSizes)

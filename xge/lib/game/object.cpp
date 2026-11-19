@@ -852,7 +852,8 @@ namespace xge
 			// Its own numbers, worked out once or live (update="live"):
 			// self in them is this object too.
 			for (auto& each : object.variable) { value(each.second); }
-			for (RawValue* half : { &object.rawPosition.x, &object.rawPosition.y, &object.rawHeading }) { value(*half); }
+			for (RawValue* half : { &object.rawPosition.x, &object.rawPosition.y }) { value(*half); }
+			if (object.rawHeading) { value(*object.rawHeading); }
 			// The numbers its texts show (<number>self.value</number>).
 			for (RawTextPiece& piece : object.sprite.text) { value(piece.value); }
 			for (RawSprite& look : object.looks)
@@ -901,11 +902,18 @@ namespace xge
 		};
 
 		object.name = to;
-		for (RawValue* each : { &object.rawPosition.x, &object.rawPosition.y, &object.rawVelocity.x, &object.rawVelocity.y,
-			&object.rawAcceleration.x, &object.rawAcceleration.y, &object.rawHeading, &object.rawPivot.x, &object.rawPivot.y, &object.rawDrag, &object.rawFriction, &object.rawMass, &object.rawSurfaceDrag, &object.rawSurfaceGrip, &object.rawSeek, &object.rawLight,
+		for (RawValue* each : { &object.rawPosition.x, &object.rawPosition.y, &object.rawVelocity.x, &object.rawVelocity.y, &object.rawSeek,
 			&object.rawAltitude, &object.rawRise, &object.rawFall, &object.rawAltitudeBounce })
 		{
 			value(*each);
+		}
+		for (std::optional<RawVector2>* each : { &object.rawAcceleration, &object.rawPivot })
+		{
+			if (*each) { value((*each)->x); value((*each)->y); }
+		}
+		for (std::optional<RawValue>* each : { &object.rawHeading, &object.rawDrag, &object.rawFriction, &object.rawMass, &object.rawSurfaceDrag, &object.rawSurfaceGrip, &object.rawLight })
+		{
+			if (*each) { value(**each); }
 		}
 		for (auto& [name, each] : object.rawPulls) { value(each); }
 		for (auto& [name, each] : object.variable) { value(each); }

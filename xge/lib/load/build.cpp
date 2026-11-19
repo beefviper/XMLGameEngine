@@ -91,7 +91,7 @@ namespace xge
 				look.name = rawLook.name;
 				std::shared_ptr<const Turnable> turned;
 				look.picture = buildPicture(rawLook, where + " > <sprite name=\"" + rawLook.name + "\">", &look.bitmap,
-					rawObject.hasHeading ? &turned : nullptr);
+					rawObject.rawHeading ? &turned : nullptr);
 				if (turned) { look.turnables = { turned }; }
 				if (!rawLook.frames.empty())
 				{
@@ -99,7 +99,7 @@ namespace xge
 					const std::string here = where + " > <animation name=\"" + rawLook.name + "\">";
 					look.turnables.clear();
 					Object::Frames& moving = look.frames.edit();
-					moving.bitmaps = buildAnimationBitmaps(rawLook.frames, here, rawObject.hasHeading ? &look.turnables : nullptr);
+					moving.bitmaps = buildAnimationBitmaps(rawLook.frames, here, rawObject.rawHeading ? &look.turnables : nullptr);
 					moving.seconds = animationSecondsOf(rawLook.interval, here);
 					moving.times = animationTimesOf(rawLook.times, moving.seconds, here);
 					moving.once = rawLook.once;
@@ -238,7 +238,7 @@ namespace xge
 		using Follow = Object::Follow;
 		if (rawObject.rawPosition.x.live) { parts->give(parts->follows, object.id).each.push_back({ Follow::Part::X, "", rawObject.rawPosition.x }); }
 		if (rawObject.rawPosition.y.live) { parts->give(parts->follows, object.id).each.push_back({ Follow::Part::Y, "", rawObject.rawPosition.y }); }
-		if (rawObject.hasHeading && rawObject.rawHeading.live) { parts->give(parts->follows, object.id).each.push_back({ Follow::Part::Heading, "", rawObject.rawHeading }); }
+		if (rawObject.rawHeading && rawObject.rawHeading->live) { parts->give(parts->follows, object.id).each.push_back({ Follow::Part::Heading, "", *rawObject.rawHeading }); }
 		for (const auto& [name, value] : rawObject.variable)
 		{
 			if (value.live) { parts->give(parts->follows, object.id).each.push_back({ Follow::Part::Variable, name, value }); }
@@ -249,17 +249,17 @@ namespace xge
 
 		startFor(object).velocity = object.velocity;
 
-		if (rawObject.hasAcceleration)
+		if (rawObject.rawAcceleration)
 		{
-			object.acceleration.x = evaluate(rawObject.rawAcceleration.x, where);
-			object.acceleration.y = evaluate(rawObject.rawAcceleration.y, where);
+			object.acceleration.x = evaluate(rawObject.rawAcceleration->x, where);
+			object.acceleration.y = evaluate(rawObject.rawAcceleration->y, where);
 		}
 		startFor(object).acceleration = object.acceleration;
 
-		if (rawObject.hasHeading)
+		if (rawObject.rawHeading)
 		{
 			object.turning.hasHeading = true;
-			float degrees = std::fmod(evaluateStart(rawObject.rawHeading, where), 360.0f);
+			float degrees = std::fmod(evaluateStart(*rawObject.rawHeading, where), 360.0f);
 			if (degrees < 0.0f) { degrees += 360.0f; }
 			object.heading = degrees;
 		}
@@ -279,38 +279,38 @@ namespace xge
 	// seeking, light and dark, altitude, a tether and which way it faces.
 	void game_expr::buildMotion(RawObject& rawObject, Object& object, const std::string& where)
 	{
-		if (rawObject.hasDrag)
+		if (rawObject.rawDrag)
 		{
-			object.motion.drag = lossRate(evaluate(rawObject.rawDrag, where), where + " > <drag>");
+			object.motion.drag = lossRate(evaluate(*rawObject.rawDrag, where), where + " > <drag>");
 		}
 
 		if (rawObject.hasSurface)
 		{
 			Object::Surface surface;
-			if (rawObject.hasSurfaceDrag)
+			if (rawObject.rawSurfaceDrag)
 			{
-				surface.drag = lossRate(evaluate(rawObject.rawSurfaceDrag, where + " > <surface> > <drag>"), where + " > <surface> > <drag>");
+				surface.drag = lossRate(evaluate(*rawObject.rawSurfaceDrag, where + " > <surface> > <drag>"), where + " > <surface> > <drag>");
 			}
-			if (rawObject.hasSurfaceGrip)
+			if (rawObject.rawSurfaceGrip)
 			{
-				surface.grip = lossRate(evaluate(rawObject.rawSurfaceGrip, where + " > <surface> > <grip>"), where + " > <surface> > <grip>");
+				surface.grip = lossRate(evaluate(*rawObject.rawSurfaceGrip, where + " > <surface> > <grip>"), where + " > <surface> > <grip>");
 			}
 			parts->surfaces.add(object.id, parts->orderOf(object.id), surface);
 		}
 
-		if (rawObject.hasFriction)
+		if (rawObject.rawFriction)
 		{
 			parts->rests.add(object.id, parts->orderOf(object.id), {});
-			object.motion.friction = evaluate(rawObject.rawFriction, where);
+			object.motion.friction = evaluate(*rawObject.rawFriction, where);
 			if (object.motion.friction < 0.0f)
 			{
 				throw std::runtime_error(where + ": <friction> is " + std::to_string(object.motion.friction) + "; expected 0 or more");
 			}
 		}
 
-		if (rawObject.hasMass)
+		if (rawObject.rawMass)
 		{
-			object.motion.mass = evaluate(rawObject.rawMass, where);
+			object.motion.mass = evaluate(*rawObject.rawMass, where);
 			if (!(object.motion.mass > 0.0f))
 			{
 				throw std::runtime_error(where + ": <mass> is " + formatDisplayNumber(object.motion.mass) + "; expected more than 0");
@@ -332,9 +332,9 @@ namespace xge
 			}
 		}
 
-		if (rawObject.hasLight)
+		if (rawObject.rawLight)
 		{
-			object.light = evaluate(rawObject.rawLight, where + " > <light>");
+			object.light = evaluate(*rawObject.rawLight, where + " > <light>");
 			if (object.light < 0.0f) { throw std::runtime_error(where + ": <light> reaches " + formatDisplayNumber(object.light) + " pixels; expected 0 or more"); }
 			startFor(object).light = object.light;
 			if (!rawObject.lightPast.empty()) { parts->lightPasts.add(object.id, parts->orderOf(object.id), { rawObject.lightPast }); }
@@ -363,7 +363,7 @@ namespace xge
 
 		if (rawObject.sprite.kind == "tether")
 		{
-			if (rawObject.hasHeading || !rawObject.looks.empty() || rawObject.hasAnimation)
+			if (rawObject.rawHeading || !rawObject.looks.empty() || rawObject.hasAnimation)
 			{
 				throw std::runtime_error(where + ": a <tether> is drawn where its ends are; it has no <heading>, other looks or <animation>");
 			}
@@ -602,7 +602,7 @@ namespace xge
 	{
 		if (!rawObject.mirror.empty())
 		{
-			if (rawObject.hasHeading) { throw std::runtime_error(where + ": <mirror> flips a picture that does not turn; it has a <heading>"); }
+			if (rawObject.rawHeading) { throw std::runtime_error(where + ": <mirror> flips a picture that does not turn; it has a <heading>"); }
 			object.mirror.on = true;
 			object.mirror.way = rawObject.mirror == "right" ? Direction::Right : Direction::Left;
 			object.mirror.goingLeft = object.facing == Direction::Left;
@@ -610,9 +610,9 @@ namespace xge
 			object.faceMirror();
 		}
 
-		if (rawObject.hasGrip)
+		if (rawObject.rawGrip)
 		{
-			object.motion.grip = lossRate(evaluate(rawObject.rawGrip, where + " > <grip>"), where + " > <grip>");
+			object.motion.grip = lossRate(evaluate(*rawObject.rawGrip, where + " > <grip>"), where + " > <grip>");
 		}
 		for (const Timer& timer : object.kind->timers)
 		{
@@ -691,7 +691,7 @@ namespace xge
 		// <pivot>: the point it turns about, from the middle of the picture as
 		// drawn; its <position> is where that point is on the screen, so the
 		// square of the turned picture goes where puts it there.
-		if (rawObject.hasPivot)
+		if (rawObject.rawPivot)
 		{
 			if (object.drawn.turnables.empty() || !object.drawn.bitmap)
 			{
@@ -713,7 +713,7 @@ namespace xge
 			{
 				middle = { static_cast<float>(drawn.picture->width) / 2.0f, static_cast<float>(drawn.picture->height) / 2.0f };
 			}
-			const Vector2f pivot{ evaluate(rawObject.rawPivot.x, where + " > <pivot>"), evaluate(rawObject.rawPivot.y, where + " > <pivot>") };
+			const Vector2f pivot{ evaluate(rawObject.rawPivot->x, where + " > <pivot>"), evaluate(rawObject.rawPivot->y, where + " > <pivot>") };
 			object.turning.hasPivot = true;
 			object.turning.pivotFromMiddle = pivot - middle;
 			object.pivotDegrees = wholeDegrees(object.heading);

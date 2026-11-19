@@ -429,10 +429,17 @@ namespace xge
 				for (std::vector<RawCommand>& frame : object.animation.frameCommands) { commands(frame, context); }
 				for (RawValue& time : object.animation.times) { value(time, context); }
 				for (RawSprite& frame : object.animation.frames) { sprite(frame, context); }
-				for (RawValue* part : { &object.rawPosition.x, &object.rawPosition.y, &object.rawVelocity.x, &object.rawVelocity.y,
-					&object.rawAcceleration.x, &object.rawAcceleration.y, &object.rawHeading, &object.rawPivot.x, &object.rawPivot.y, &object.rawDrag, &object.rawFriction, &object.rawMass, &object.rawSurfaceDrag, &object.rawSurfaceGrip })
+				for (RawValue* part : { &object.rawPosition.x, &object.rawPosition.y, &object.rawVelocity.x, &object.rawVelocity.y })
 				{
 					value(*part, context);
+				}
+				for (std::optional<RawVector2>* part : { &object.rawAcceleration, &object.rawPivot })
+				{
+					if (*part) { value((*part)->x, context); value((*part)->y, context); }
+				}
+				for (std::optional<RawValue>* part : { &object.rawHeading, &object.rawDrag, &object.rawFriction, &object.rawMass, &object.rawSurfaceDrag, &object.rawSurfaceGrip })
+				{
+					if (*part) { value(**part, context); }
 				}
 				timers(object.timers, context);
 
@@ -469,7 +476,7 @@ namespace xge
 				}
 				object.seekTarget = names_.object(object.seekTarget, context);
 				value(object.rawSeek, context);
-				value(object.rawLight, context);
+				if (object.rawLight) { value(*object.rawLight, context); }
 				value(object.rawAltitude, context);
 				value(object.rawRise, context);
 				value(object.rawFall, context);

@@ -363,8 +363,8 @@ namespace xge
 			rawObject.hasSurface = true;
 			for (std::unique_ptr<XmlNode> child = surface.getFirstChild(); child != nullptr; child = child->getNextSibling())
 			{
-				if (child->getName() == "drag") { rawObject.hasSurfaceDrag = true; rawObject.rawSurfaceDrag = readValue(*child, here); }
-				else { rawObject.hasSurfaceGrip = true; rawObject.rawSurfaceGrip = readValue(*child, here); }
+				if (child->getName() == "drag") { rawObject.rawSurfaceDrag = readValue(*child, here); }
+				else { rawObject.rawSurfaceGrip = readValue(*child, here); }
 			}
 		}
 
@@ -809,7 +809,6 @@ namespace xge
 		// it does not shine through.
 		void readLight(const XmlNode& light, RawObject& rawObject, const std::string& where)
 		{
-			rawObject.hasLight = true;
 			const std::string here = where + " > <light>";
 			rawObject.lightPast.clear();
 			for (std::unique_ptr<XmlNode> past = light.getFirstChild(); past != nullptr; past = past->getNextSibling())
@@ -1825,12 +1824,12 @@ namespace xge
 
 		constexpr SimplePart simpleParts[]
 		{
-			{ "acceleration", [](const XmlNode& node, RawObject& into, const std::string& where) { into.hasAcceleration = true; into.rawAcceleration = readVector2(node, where); } },
-			{ "heading", [](const XmlNode& node, RawObject& into, const std::string& where) { into.hasHeading = true; into.rawHeading = readValue(node, where); } },
-			{ "pivot", [](const XmlNode& node, RawObject& into, const std::string& where) { into.hasPivot = true; into.rawPivot = readVector2(node, where); } },
-			{ "drag", [](const XmlNode& node, RawObject& into, const std::string& where) { into.hasDrag = true; into.rawDrag = readValue(node, where); } },
-			{ "friction", [](const XmlNode& node, RawObject& into, const std::string& where) { into.hasFriction = true; into.rawFriction = readValue(node, where); } },
-			{ "mass", [](const XmlNode& node, RawObject& into, const std::string& where) { into.hasMass = true; into.rawMass = readValue(node, where); } },
+			{ "acceleration", [](const XmlNode& node, RawObject& into, const std::string& where) { into.rawAcceleration = readVector2(node, where); } },
+			{ "heading", [](const XmlNode& node, RawObject& into, const std::string& where) { into.rawHeading = readValue(node, where); } },
+			{ "pivot", [](const XmlNode& node, RawObject& into, const std::string& where) { into.rawPivot = readVector2(node, where); } },
+			{ "drag", [](const XmlNode& node, RawObject& into, const std::string& where) { into.rawDrag = readValue(node, where); } },
+			{ "friction", [](const XmlNode& node, RawObject& into, const std::string& where) { into.rawFriction = readValue(node, where); } },
+			{ "mass", [](const XmlNode& node, RawObject& into, const std::string& where) { into.rawMass = readValue(node, where); } },
 			{ "surface", [](const XmlNode& node, RawObject& into, const std::string& where) { readSurface(node, into, where); } },
 			{ "facing", [](const XmlNode& node, RawObject& into, const std::string&) { into.facing = readText(node); } },
 			{ "maze", [](const XmlNode& node, RawObject& into, const std::string& where) { into.maze = readMaze(node, where); } },
@@ -1851,7 +1850,7 @@ namespace xge
 			{ "poses", readPoses },
 			{ "joins", readJoins },
 			{ "mirror", [](const XmlNode& node, RawObject& into, const std::string&) { into.mirror = readText(node); } },
-			{ "grip", [](const XmlNode& node, RawObject& into, const std::string& where) { into.hasGrip = true; into.rawGrip = readValue(node, where + " > <grip>"); } },
+			{ "grip", [](const XmlNode& node, RawObject& into, const std::string& where) { into.rawGrip = readValue(node, where + " > <grip>"); } },
 			// An inner group's touches add to and change its outer group's.
 			{ "collisions", [](const XmlNode& node, RawObject& into, const std::string& where) { into.rawCollisionData = readCollisions(node, where, into.rawCollisionData); } },
 			// An inner group's timers come after its outer group's.

@@ -615,38 +615,32 @@ namespace xge
 		// but not in the game until a <spawn> makes one (Object::exists).
 		bool exists{ true };
 
+		// <surface>: it is ground, which may slow or grip what is on it.
+		bool hasSurface{ false };
+
 		// <most>: how many spawned of it can exist at once (0: no limit).
 		int most{ 0 };
 		RawVector2 rawPosition;
 		RawVector2 rawVelocity;
-		RawVector2 rawAcceleration;  // only when hasAcceleration
-		bool hasAcceleration{ false };
-		RawValue rawHeading;         // only when hasHeading
-		bool hasHeading{ false };
-		RawVector2 rawPivot;         // only when hasPivot: the point of the picture its heading turns about
-		bool hasPivot{ false };
-		RawValue rawDrag;            // only when hasDrag
-		bool hasDrag{ false };
-		RawValue rawFriction;        // only when hasFriction
-		bool hasFriction{ false };
-		RawValue rawMass;            // only when hasMass
-		bool hasMass{ false };
-		// <surface>: ground, and the drag and grip it gives (each only when
-		// its has... is true).
-		bool hasSurface{ false };
-		RawValue rawSurfaceDrag;
-		bool hasSurfaceDrag{ false };
-		RawValue rawSurfaceGrip;
-		bool hasSurfaceGrip{ false };
+		// Each of these only when written.
+		std::optional<RawVector2> rawAcceleration;
+		std::optional<RawValue> rawHeading;
+		std::optional<RawVector2> rawPivot;  // the point of the picture its heading turns about
+		std::optional<RawValue> rawDrag;
+		std::optional<RawValue> rawFriction;
+		std::optional<RawValue> rawMass;
+		// <surface>: the drag and grip it gives as ground (hasSurface,
+		// above), each if written.
+		std::optional<RawValue> rawSurfaceDrag;
+		std::optional<RawValue> rawSurfaceGrip;
 		// <pull object="sun">strength</pull>s: what pulls it, and how hard.
 		std::vector<std::pair<std::string, RawValue>> rawPulls;
 		// <seek object="ship">degrees</seek>: what it turns toward, and how
 		// fast; seekTarget empty for none.
 		std::string seekTarget;
 		RawValue rawSeek;
-		// <light>radius</light>, only when hasLight.
-		RawValue rawLight;
-		bool hasLight{ false };
+		// <light>radius</light>, only when written.
+		std::optional<RawValue> rawLight;
 		// <light>'s <past class>es: what its light does not shine through.
 		std::vector<std::string> lightPast;
 		// <dark>unlit</dark> or <dark>unseen</dark>; "" for neither.
@@ -671,9 +665,8 @@ namespace xge
 		// flipped left to right; "" for never.
 		std::string mirror;
 		// <grip>: how much of the way to what its moves ask for its velocity
-		// goes each frame, only when hasGrip; otherwise 1, all of it.
-		RawValue rawGrip;
-		bool hasGrip{ false };
+		// goes each frame, only when written; otherwise 1, all of it.
+		std::optional<RawValue> rawGrip;
 		// <moves>: on a map with <cells />, the moves a piece of a board
 		// game may make when <place>d (see Object::MoveSet); a set with a
 		// sprite= is the one for that look, the one without for the others.
