@@ -2542,15 +2542,18 @@ namespace xge
 			// Room for them all at once, growing as a vector does: each move of
 			// a written object moves all its text.
 			if (out.capacity() < out.size() + tiles.size()) { out.reserve(std::max(out.size() + tiles.size(), out.capacity() * 2)); }
+			// Every member is the same but for its name and tile, so the
+			// first is made and the rest are copies of it.
+			std::optional<RawObject> first;
 			int count = 0;
 			for (const auto& [column, row] : tiles)
 			{
 				++count;
 				const std::string memberName = map.name + "." + name + "." + std::to_string(count);
-				const std::string here = "object '" + memberName + "' (a member of " + where + ")";
-				RawObject member = makeMember(group, own, memberName, here, {});
+				if (!first) { first = makeMember(group, own, memberName, "object '" + memberName + "' (a member of " + where + ")", {}); }
+				RawObject& member = out.emplace_back(*first);
+				member.name = memberName;
 				placeOnMap(member, map, column, row, character);
-				out.push_back(std::move(member));
 			}
 			if (count == 0) { fail(where, "picks '" + std::string(1, character) + "', which is on no tile of map '" + map.name + "'"); }
 			return;
