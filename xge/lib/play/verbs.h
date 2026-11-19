@@ -71,26 +71,16 @@ namespace xge
 		return motionOf(object, t) - object.motion.gained * (t * 0.5f);
 	}
 
-	// <bounce />: off what it touched, as off a surface standing still:
-	// mirrored about the touch's normal, keeping `share` of the speed it
-	// came in at; one already going away keeps on. A box's side faces
-	// straight out, so off a box this is the plain flip.
-	// With <friction>, it rubs along the surface and may come to rest on it
-	// (see Object::Rest).
-	void bounce(Parts& parts, Object& object, const Object& other, const Touch& touch, float share);
-
-	// <bounce /> off a screen edge, which faces straight in.
-	void bounceOffEdge(Object& object, Edge edge, float share);
+	// After `mover` has met `surface`, which does not move of itself (going
+	// at `surfaceAt` where they touch, `out` the way out of it to the
+	// mover), going at `before` as it came: its <friction> rubs it along the
+	// surface and may bring it to rest there (Object::Rest). What a <bounce>
+	// and a <knock> share.
+	void rub(Object& mover, Object::Rest* rest, const Object& surface, const Vector2f& out, const Vector2f& surfaceAt, const Vector2f& before, float settle);
 
 	// <deflect>maxDegrees</deflect>: back off `other` at an angle set by
 	// where on the touched side it hit.
 	void deflect(Object& object, const Object& other, Edge edge, float maxDegrees);
-
-	// <knock>: the object knocks `other`, both with a mass (see
-	// knockedApart); `touch` is the object's own view of it. Two that went
-	// into each other are put apart along the touch, the lighter moved
-	// more. Whether they were coming together.
-	bool knock(Parts& parts, Object& object, Object& other, const Touch& touch, float bounce);
 
 	// <hole>: clears the pixels of the object's own picture within `radius`
 	// of where `other` struck it - the solid pixel nearest the middle of

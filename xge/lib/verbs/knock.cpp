@@ -5,7 +5,6 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/executor.h"
 #include "load/reading.h"
 #include "play/geometry.h"
 #include "play/verbs.h"
@@ -13,7 +12,6 @@
 #include <algorithm>
 #include <optional>
 #include <stdexcept>
-#include <variant>
 
 namespace xge
 {
@@ -35,13 +33,54 @@ namespace xge
 		return CmdKnock{ bounce };
 	}
 
+	// Both with a mass (see knockedApart); `touch` is the object's own view
+	// of it. Two that went into each other are put apart along the touch,
+	// the lighter moved more.
+	static void knockApart(Parts& parts, Object& object, Object& other, const Touch& touch, float bounce)
+	{
+		// Each one's speed at the point they touch: a thing turning about
+		// its pivot (a flipper swinging) moves faster the further out the
+		// point lies, and lends that speed (Object::velocityAt).
+		const Vector2f way = touch.normal * -1.0f;
+		const Vector2f objectAt = object.velocityAt(touch.point);
+		const Vector2f otherAt = other.velocityAt(touch.point);
+		// Against one that does not move, the one that does settles on it.
+		const float settle = other.motion.mass <= 0.0f ? settleSpeed(object.acceleration, way)
+			: object.motion.mass <= 0.0f ? settleSpeed(other.acceleration, way * -1.0f) : 0.0f;
+		const std::optional<Knocked> after = knockedApart(objectAt, object.motion.mass, otherAt, other.motion.mass, way, bounce, settle);
+
+		// Gone into each other: apart again, each by its share, whether or not
+		// they are still closing (a ball the frame's sweep left inside a
+		// flipper turning away from it is not left there).
+		if (touch.depth > 0.0f && (object.motion.mass > 0.0f || other.motion.mass > 0.0f))
+		{
+			const float objectShare = object.motion.mass <= 0.0f ? 0.0f : other.motion.mass <= 0.0f ? 1.0f : other.motion.mass / (object.motion.mass + other.motion.mass);
+			object.position -= way * (touch.depth * objectShare);
+			other.position += way * (touch.depth * (1.0f - objectShare));
+		}
+
+		if (!after)
+		{
+			return;
+		}
+
+		const Vector2f objectWas = object.velocity;
+		const Vector2f otherWas = other.velocity;
+		object.velocity += after->first - objectAt;
+		other.velocity += after->second - otherAt;
+
+		// One against something that does not move: its friction.
+		if (other.motion.mass <= 0.0f && object.motion.mass > 0.0f) { rub(object, parts.rests.find(object.id), other, touch.normal, otherAt, objectWas, settle); }
+		else if (object.motion.mass <= 0.0f && other.motion.mass > 0.0f) { rub(other, parts.rests.find(other.id), object, way, objectAt, otherWas, settle); }
+	}
+
 	// <knock>: see CmdKnock. Into a thing with no mass, through it, to
 	// everything with a mass resting against its far side.
-	static void knockOrThrough(CommandExecutor& executor, Object& object, Object& other, const Touch& touch, float bounce)
+	static void knockOrThrough(Game& game, Object& object, Object& other, const Touch& touch, float bounce)
 	{
 		if (other.motion.mass > 0.0f)
 		{
-			xge::knock(executor.game.parts(), object, other, touch, bounce);
+			knockApart(game.parts(), object, other, touch, bounce);
 			return;
 		}
 
@@ -51,9 +90,9 @@ namespace xge
 		const Edge farSide = touch.edge;
 		const Box base{ other.position, sizeOf(other) };
 		const Vector2f way = touch.normal * -1.0f;
-		for (Object& thing : executor.game.getCurrentObjects())
+		for (Object& thing : game.getCurrentObjects())
 		{
-			if (&thing == &object || &thing == &other || !(thing.motion.mass > 0.0f) || !thing.collisionsOn || thing.isAirborne() || !executor.game.isShown(thing))
+			if (&thing == &object || &thing == &other || !(thing.motion.mass > 0.0f) || !thing.collisionsOn || thing.isAirborne() || !game.isShown(thing))
 			{
 				continue;
 			}
@@ -78,23 +117,17 @@ namespace xge
 			felt.along = 0.5f;
 			felt.time = touch.time;
 			felt.through = &other.objClass.str();
-			executor.game.reactTo(thing, object, felt);
+			game.reactTo(thing, object, felt);
 		}
 	}
 
-	static bool runKnock(const Command& command, const Doer& doer)
+	static bool runKnock(const CmdKnock& knock, const Doer& doer)
 	{
-		CommandExecutor& executor = *doer.executor;
-		const CmdKnock& knock = std::get<CmdKnock>(command);
-		if (doer.self && doer.touch) { knockOrThrough(executor, *doer.self, *doer.other, *doer.touch, knock.bounce); }
+		if (doer.self && doer.touch) { knockOrThrough(doer.game(), *doer.self, *doer.other, *doer.touch, knock.bounce); }
 		return true;
 	}
 
-	static void printKnock(std::ostream& o, const Command& command)
-	{
-		const CmdKnock& k = std::get<CmdKnock>(command);
-		o << "knock(" << k.bounce << ")";
-	}
+	static void printKnock(std::ostream& o, const CmdKnock& knock) { o << "knock(" << knock.bounce << ")"; }
 
 	extern const Verb knockVerb;
 	const Verb knockVerb{
@@ -102,7 +135,7 @@ namespace xge
 		.forms = { { "<knock>", places::touch, kindOf<CmdKnock>() } },
 		.read = readKnock,
 		.make = makeKnock,
-		.run = runKnock,
-		.print = printKnock,
+		.run = runAs<runKnock>,
+		.print = printAs<printKnock>,
 	};
 }

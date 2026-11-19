@@ -6,6 +6,7 @@
 #include "verbs/verb.h"
 
 #include "load/reading.h"
+#include "play/executor.h"
 
 #include <array>
 #include <cmath>
@@ -125,6 +126,8 @@ namespace xge
 
 	// The tag read, readCommand without the line.
 	static RawCommand readCommandHere(const XmlNode& node, const std::string& where);
+
+	Game& Doer::game() const noexcept { return executor->game; }
 
 	RawCommand readCommand(const XmlNode& node, const std::string& where)
 	{

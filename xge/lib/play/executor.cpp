@@ -296,21 +296,6 @@ namespace xge
 		xge::restart(object, game.startOf(object), game.parts().drives.find(object.id));
 	}
 
-	void CommandExecutor::bounceScreenEdge(Object& object, Edge edge, float share)
-	{
-		// An object in lockstep (e.g. the invader block in spaceinvaders) bounces as a
-		// whole block sideways instead of just moving this one object.
-		// circleRectangleCollision never had lockstep behaviour, so that path
-		// (executeObjectCollision) always goes straight to bounceOffEdge.
-		if (object.kind->collisionData.lockstep && (edge == Edge::Left || edge == Edge::Right))
-		{
-			game.updateLockstepObjects(object);
-			return;
-		}
-
-		xge::bounceOffEdge(object, edge, share);
-	}
-
 	void CommandExecutor::moveByStep(Object& object, Direction direction, float step)
 	{
 		const auto apply = [&](Object& target)

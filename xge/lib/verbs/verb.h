@@ -26,6 +26,7 @@
 namespace xge
 {
 	class CommandExecutor;
+	class Game;
 	class XmlNode;
 	struct Checking;
 
@@ -96,6 +97,12 @@ namespace xge
 		const Object::CellMatch* match{ nullptr };
 		// What runs it, and the game it runs in (CommandExecutor::run).
 		CommandExecutor* executor{ nullptr };
+
+		// A rule about touching another object: self, other and the touch.
+		bool touching() const noexcept { return self && other && touch; }
+		// A rule about the window's edge: self and that edge.
+		bool atEdge() const noexcept { return self && screenEdge.has_value(); }
+		Game& game() const noexcept;
 	};
 
 	// One way a verb is written: how a message names it, where it may go

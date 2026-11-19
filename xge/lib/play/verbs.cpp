@@ -89,126 +89,67 @@ namespace xge
 		float crossOf(const Vector2f& a, const Vector2f& b) noexcept { return a.x * b.y - a.y * b.x; }
 		float lengthOf(const Vector2f& a) noexcept { return std::hypot(a.x, a.y); }
 
-		// After `mover` has met `surface`, which does not move of itself
-		// (going at `surfaceAt` where they touch, `out` the way out of it to
-		// the mover), going at `before` as it came: its <friction>.
-		// - Rubbing: its speed along the surface is cut by up to friction
-		//   times the speed the touch took off straight into it.
-		// - Settling: a touch slower than `settle` (knockedApart's) is it
-		//   lying there. If what it lies on is still, and either its own pull
-		//   cannot slide it along that surface (the pull along it no more than
-		//   friction times the pull into it) or it lay on another surface a
-		//   frame or two ago and its pull points between the two (wedged in a
-		//   corner), it comes to rest: still, and not pulled, until something
-		//   moves it or what it rests on moves (applyAcceleration).
-		void rub(Object& mover, Object::Rest* rest, const Object& surface, const Vector2f& out, const Vector2f& surfaceAt, const Vector2f& before, float settle)
-		{
-			if (!rest || !(mover.motion.friction > 0.0f)) { return; }
-
-			const Vector2f cameIn = before - surfaceAt;
-			Vector2f now = mover.velocity - surfaceAt;
-			const float pushed = dotOf(now, out) - dotOf(cameIn, out);
-			const Vector2f along = now - out * dotOf(now, out);
-			const float sliding = lengthOf(along);
-			if (sliding > 0.0f && pushed > 0.0f)
-			{
-				now = now - along * (std::min(sliding, mover.motion.friction * pushed) / sliding);
-			}
-			mover.velocity = surfaceAt + now;
-
-			if (!(-dotOf(cameIn, out) < settle)) { return; }
-
-			// Settled on another within the last two sixtieths of a second.
-			const bool another = rest->settledAge <= 2.0f / 60.0f + kTimeSlack && dotOf(rest->settledNormal, out) < 0.95f;
-			const Vector2f other = rest->settledNormal;
-			const Object::Support otherSupport = rest->settledOn;
-			const Object::Support support{ surface.name, surface.position, surface.heading };
-			rest->settledOn = support;
-			rest->settledNormal = out;
-			rest->settledAge = 0.0f;
-
-			const bool still = surface.turning.spin == 0.0f && surfaceAt.x == 0.0f && surfaceAt.y == 0.0f;
-			if (!still || !(lengthOf(now) < settle)) { return; }
-
-			const Vector2f pull = mover.acceleration;
-			const float into = -dotOf(pull, out);
-			if (!(into > 0.0f)) { return; }
-			rest->on.clear();
-			if (lengthOf(pull + out * into) > mover.motion.friction * into)
-			{
-				if (!another) { return; }
-				const Vector2f up = pull * -1.0f;
-				const float first = crossOf(other, up);
-				const float second = crossOf(up, out);
-				if (!(dotOf(pull, other) < 0.0f && first != 0.0f && second != 0.0f && (first > 0.0f) == (second > 0.0f))) { return; }
-				rest->on.push_back(otherSupport);
-			}
-			rest->on.push_back(support);
-
-			mover.velocity = {};
-			rest->resting = true;
-			rest->at = mover.position;
-		}
 	}
 
-	bool knock(Parts& parts, Object& object, Object& other, const Touch& touch, float bounce)
+	// After `mover` has met `surface`, which does not move of itself
+	// (going at `surfaceAt` where they touch, `out` the way out of it to
+	// the mover), going at `before` as it came: its <friction>.
+	// - Rubbing: its speed along the surface is cut by up to friction
+	//   times the speed the touch took off straight into it.
+	// - Settling: a touch slower than `settle` (knockedApart's) is it
+	//   lying there. If what it lies on is still, and either its own pull
+	//   cannot slide it along that surface (the pull along it no more than
+	//   friction times the pull into it) or it lay on another surface a
+	//   frame or two ago and its pull points between the two (wedged in a
+	//   corner), it comes to rest: still, and not pulled, until something
+	//   moves it or what it rests on moves (applyAcceleration).
+	void rub(Object& mover, Object::Rest* rest, const Object& surface, const Vector2f& out, const Vector2f& surfaceAt, const Vector2f& before, float settle)
 	{
-		// Each one's speed at the point they touch: a thing turning about
-		// its pivot (a flipper swinging) moves faster the further out the
-		// point lies, and lends that speed (Object::velocityAt).
-		const Vector2f way = touch.normal * -1.0f;
-		const Vector2f objectAt = object.velocityAt(touch.point);
-		const Vector2f otherAt = other.velocityAt(touch.point);
-		// Against one that does not move, the one that does settles on it.
-		const float settle = other.motion.mass <= 0.0f ? settleSpeed(object.acceleration, way)
-			: object.motion.mass <= 0.0f ? settleSpeed(other.acceleration, way * -1.0f) : 0.0f;
-		const std::optional<Knocked> after = knockedApart(objectAt, object.motion.mass, otherAt, other.motion.mass, way, bounce, settle);
+		if (!rest || !(mover.motion.friction > 0.0f)) { return; }
 
-		// Gone into each other: apart again, each by its share, whether or not
-		// they are still closing (a ball the frame's sweep left inside a
-		// flipper turning away from it is not left there).
-		if (touch.depth > 0.0f && (object.motion.mass > 0.0f || other.motion.mass > 0.0f))
+		const Vector2f cameIn = before - surfaceAt;
+		Vector2f now = mover.velocity - surfaceAt;
+		const float pushed = dotOf(now, out) - dotOf(cameIn, out);
+		const Vector2f along = now - out * dotOf(now, out);
+		const float sliding = lengthOf(along);
+		if (sliding > 0.0f && pushed > 0.0f)
 		{
-			const float objectShare = object.motion.mass <= 0.0f ? 0.0f : other.motion.mass <= 0.0f ? 1.0f : other.motion.mass / (object.motion.mass + other.motion.mass);
-			object.position -= way * (touch.depth * objectShare);
-			other.position += way * (touch.depth * (1.0f - objectShare));
+			now = now - along * (std::min(sliding, mover.motion.friction * pushed) / sliding);
 		}
+		mover.velocity = surfaceAt + now;
 
-		if (!after)
+		if (!(-dotOf(cameIn, out) < settle)) { return; }
+
+		// Settled on another within the last two sixtieths of a second.
+		const bool another = rest->settledAge <= 2.0f / 60.0f + kTimeSlack && dotOf(rest->settledNormal, out) < 0.95f;
+		const Vector2f other = rest->settledNormal;
+		const Object::Support otherSupport = rest->settledOn;
+		const Object::Support support{ surface.name, surface.position, surface.heading };
+		rest->settledOn = support;
+		rest->settledNormal = out;
+		rest->settledAge = 0.0f;
+
+		const bool still = surface.turning.spin == 0.0f && surfaceAt.x == 0.0f && surfaceAt.y == 0.0f;
+		if (!still || !(lengthOf(now) < settle)) { return; }
+
+		const Vector2f pull = mover.acceleration;
+		const float into = -dotOf(pull, out);
+		if (!(into > 0.0f)) { return; }
+		rest->on.clear();
+		if (lengthOf(pull + out * into) > mover.motion.friction * into)
 		{
-			return false;
+			if (!another) { return; }
+			const Vector2f up = pull * -1.0f;
+			const float first = crossOf(other, up);
+			const float second = crossOf(up, out);
+			if (!(dotOf(pull, other) < 0.0f && first != 0.0f && second != 0.0f && (first > 0.0f) == (second > 0.0f))) { return; }
+			rest->on.push_back(otherSupport);
 		}
+		rest->on.push_back(support);
 
-		const Vector2f objectWas = object.velocity;
-		const Vector2f otherWas = other.velocity;
-		object.velocity += after->first - objectAt;
-		other.velocity += after->second - otherAt;
-
-		// One against something that does not move: its friction.
-		if (other.motion.mass <= 0.0f && object.motion.mass > 0.0f) { rub(object, parts.rests.find(object.id), other, touch.normal, otherAt, objectWas, settle); }
-		else if (object.motion.mass <= 0.0f && other.motion.mass > 0.0f) { rub(other, parts.rests.find(other.id), object, way, objectAt, otherWas, settle); }
-
-		return true;
-	}
-
-	void bounce(Parts& parts, Object& object, const Object& other, const Touch& touch, float share)
-	{
-		// The way from the object into the other, a surface standing still:
-		// only the object's speed along that way changes. (A surface that
-		// moves and lends its speed is a <knock>.)
-		const Vector2f way = touch.normal * -1.0f;
-		const float settle = settleSpeed(object.acceleration, way);
-		const Vector2f was = object.velocity;
-		if (const std::optional<Knocked> after = knockedApart(object.velocity, 1.0f, Vector2f{}, 0.0f, way, share, settle))
-		{
-			object.velocity = after->first;
-			rub(object, parts.rests.find(object.id), other, touch.normal, Vector2f{}, was, settle);
-		}
-	}
-
-	void bounceOffEdge(Object& object, Edge edge, float share)
-	{
-		object.velocity = bounced(object.velocity, edge, share);
+		mover.velocity = {};
+		rest->resting = true;
+		rest->at = mover.position;
 	}
 
 	// How far the object's middle is from the middle of the touched side, as
