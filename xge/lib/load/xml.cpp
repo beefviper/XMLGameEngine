@@ -812,63 +812,33 @@ namespace xge
 		}
 
 		// An object's <pull>s and its <seek>, each naming what with object=.
-		void readPullAndSeek(const XmlNode& object, RawObject& rawObject, const std::string& where)
+		// A <light>: how far it reaches, then a <past class> for each class
+		// it does not shine through.
+		void readLight(const XmlNode& light, RawObject& rawObject, const std::string& where)
 		{
-			for (std::unique_ptr<XmlNode> child = object.getFirstChild(); child != nullptr; child = child->getNextSibling())
+			rawObject.hasLight = true;
+			const std::string here = where + " > <light>";
+			rawObject.lightPast.clear();
+			for (std::unique_ptr<XmlNode> past = light.getFirstChild(); past != nullptr; past = past->getNextSibling())
 			{
-				const std::string tag = child->getName();
-				if (tag != "pull" && tag != "seek") { continue; }
-				if (tag == "pull")
-				{
-					rawObject.rawPulls.emplace_back(child->getAttribute("object"), readValue(*child, where + " > <pull>"));
-				}
-				else
-				{
-					rawObject.seekTarget = child->getAttribute("object");
-					rawObject.rawSeek = readValue(*child, where + " > <seek>");
-				}
+				if (past->getName() == "past") { rawObject.lightPast.push_back(past->getAttribute("class")); }
 			}
+			rawObject.rawLight = rawObject.lightPast.empty() ? readValue(light, here)
+				: readLeadValue(light, { "past" }, "how far it reaches, then a <past class=\"...\" /> for each class it does not shine through", here);
 		}
 
-		// An object's <light>, <dark>, <altitude> and <shadow>.
-		void readSight(const XmlNode& object, RawObject& rawObject, const std::string& where)
+		// An <altitude>: its <start>, <rise>, <fall> and <bounce>, each if given.
+		void readAltitude(const XmlNode& altitude, RawObject& rawObject, const std::string& where)
 		{
-			if (auto light = findChild(&object, "light"))
+			const std::string here = where + " > <altitude>";
+			rawObject.hasAltitude = true;
+			for (std::unique_ptr<XmlNode> child = altitude.getFirstChild(); child != nullptr; child = child->getNextSibling())
 			{
-				rawObject.hasLight = true;
-				const std::string lightHere = where + " > <light>";
-				rawObject.lightPast.clear();
-				for (std::unique_ptr<XmlNode> past = light->getFirstChild(); past != nullptr; past = past->getNextSibling())
-				{
-					if (past->getName() == "past") { rawObject.lightPast.push_back(past->getAttribute("class")); }
-				}
-				rawObject.rawLight = rawObject.lightPast.empty() ? readValue(*light, lightHere)
-					: readLeadValue(*light, { "past" }, "how far it reaches, then a <past class=\"...\" /> for each class it does not shine through", lightHere);
-			}
-			if (auto dark = findChild(&object, "dark"))
-			{
-				rawObject.dark = readText(*dark);
-				if (rawObject.dark != "unlit" && rawObject.dark != "unseen")
-				{
-					fail(where + " > <dark>", "is '" + rawObject.dark + "'; expected unlit (shown only while lit) or unseen (shown once it has been lit)");
-				}
-			}
-			if (auto altitude = findChild(&object, "altitude"))
-			{
-				const std::string here = where + " > <altitude>";
-				rawObject.hasAltitude = true;
-				for (std::unique_ptr<XmlNode> child = altitude->getFirstChild(); child != nullptr; child = child->getNextSibling())
-				{
-					const std::string tag = child->getName();
-					if (tag == "start") { rawObject.rawAltitude = readValue(*child, here); }
-					else if (tag == "rise") { rawObject.rawRise = readValue(*child, here); }
-					else if (tag == "fall") { rawObject.rawFall = readValue(*child, here); }
-					else { rawObject.rawAltitudeBounce = readValue(*child, here); }
-				}
-			}
-			if (auto shadow = findChild(&object, "shadow"))
-			{
-				rawObject.shadowOf = shadow->getAttribute("object");
+				const std::string tag = child->getName();
+				if (tag == "start") { rawObject.rawAltitude = readValue(*child, here); }
+				else if (tag == "rise") { rawObject.rawRise = readValue(*child, here); }
+				else if (tag == "fall") { rawObject.rawFall = readValue(*child, here); }
+				else { rawObject.rawAltitudeBounce = readValue(*child, here); }
 			}
 		}
 
@@ -1338,38 +1308,24 @@ namespace xge
 			if (holder.empty() == pieces.empty()) { fail(where, "names its holder with object= or its pieces with class=, one of them"); }
 		}
 
-		// What an object's looks and steps do as it moves, as far as `node`
-		// says: its <poses>, <mirror> and <grip>.
-		void readMoves(const XmlNode& node, RawObject& object, const std::string& where)
+		// <poses>: the look for each way it moves, standing first.
+		void readPoses(const XmlNode& poses, RawObject& object, const std::string&)
 		{
-			if (auto holds = findChild(&node, "holds")) { readHolds(*holds, object.holder, where + " > <holds>"); }
-			if (auto owns = findChild(&node, "owns")) { readOwns(*owns, where + " > <owns>", object.handHolder, object.ownsClass); }
-			if (auto poses = findChild(&node, "poses"))
+			object.poses.clear();
+			for (std::unique_ptr<XmlNode> pose = poses.getFirstChild(); pose != nullptr; pose = pose->getNextSibling())
 			{
-				object.poses.clear();
-				for (std::unique_ptr<XmlNode> pose = poses->getFirstChild(); pose != nullptr; pose = pose->getNextSibling())
-				{
-					object.poses[pose->getName()] = pose->getAttribute("sprite");
-				}
+				object.poses[pose->getName()] = pose->getAttribute("sprite");
 			}
-			if (auto joins = findChild(&node, "joins"))
+		}
+
+		// <joins>: the look for each side the piece it is joined to lies, and alone.
+		void readJoins(const XmlNode& joins, RawObject& object, const std::string&)
+		{
+			object.joins.clear();
+			for (std::unique_ptr<XmlNode> join = joins.getFirstChild(); join != nullptr; join = join->getNextSibling())
 			{
-				object.joins.clear();
-				for (std::unique_ptr<XmlNode> join = joins->getFirstChild(); join != nullptr; join = join->getNextSibling())
-				{
-					object.joins[join->getName()] = join->getAttribute("sprite");
-				}
+				object.joins[join->getName()] = join->getAttribute("sprite");
 			}
-			if (auto mirror = findChild(&node, "mirror"))
-			{
-				object.mirror = readText(*mirror);
-			}
-			if (auto grip = findChild(&node, "grip"))
-			{
-				object.hasGrip = true;
-				object.rawGrip = readValue(*grip, where + " > <grip>");
-			}
-			readPieceMoves(node, object, where);
 		}
 
 
@@ -1903,6 +1859,22 @@ namespace xge
 			{ "waiting", [](const XmlNode&, RawObject& into, const std::string&) { into.isVisible = false; } },
 			{ "ready", [](const XmlNode&, RawObject& into, const std::string&) { into.isVisible = true; } },
 			{ "hidden", [](const XmlNode&, RawObject& into, const std::string&) { into.isDrawn = false; } },
+			{ "pull", [](const XmlNode& node, RawObject& into, const std::string& where) { into.rawPulls.emplace_back(node.getAttribute("object"), readValue(node, where + " > <pull>")); } },
+			{ "seek", [](const XmlNode& node, RawObject& into, const std::string& where) { into.seekTarget = node.getAttribute("object"); into.rawSeek = readValue(node, where + " > <seek>"); } },
+			{ "light", readLight },
+			{ "dark", [](const XmlNode& node, RawObject& into, const std::string&) { into.dark = readText(node); } },
+			{ "altitude", readAltitude },
+			{ "shadow", [](const XmlNode& node, RawObject& into, const std::string&) { into.shadowOf = node.getAttribute("object"); } },
+			{ "holds", [](const XmlNode& node, RawObject& into, const std::string& where) { readHolds(node, into.holder, where + " > <holds>"); } },
+			{ "owns", [](const XmlNode& node, RawObject& into, const std::string& where) { readOwns(node, where + " > <owns>", into.handHolder, into.ownsClass); } },
+			{ "poses", readPoses },
+			{ "joins", readJoins },
+			{ "mirror", [](const XmlNode& node, RawObject& into, const std::string&) { into.mirror = readText(node); } },
+			{ "grip", [](const XmlNode& node, RawObject& into, const std::string& where) { into.hasGrip = true; into.rawGrip = readValue(node, where + " > <grip>"); } },
+			// An inner group's touches add to and change its outer group's.
+			{ "collisions", [](const XmlNode& node, RawObject& into, const std::string& where) { into.rawCollisionData = readCollisions(node, where, into.rawCollisionData); } },
+			// An inner group's timers come after its outer group's.
+			{ "timers", [](const XmlNode& node, RawObject& into, const std::string& where) { for (RawTimer& timer : readTimers(&node, where)) { into.timers.push_back(std::move(timer)); } } },
 		};
 
 		const SimplePart* simplePart(std::string_view tag)
@@ -1997,17 +1969,13 @@ namespace xge
 			{
 				if (const SimplePart* part = simplePart(child->getName())) { part->read(*child, rawObject, where); }
 			}
-			readPullAndSeek(object, rawObject, where);
-			readSight(object, rawObject, where);
-			readMoves(object, rawObject, where);
+			readPieceMoves(object, rawObject, where);
 			if (auto chain = findChild(&object, "chain"))
 			{
 				if (!map || !map->cells) { fail(where, "has a <chain>, which is for an object on a map with <cells />"); }
 				rawObject.chain = chain->getAttribute("object");
 			}
-			rawObject.timers = readTimers(findChild(&object, "timers").get(), where);
 			rawObject.exists = rawObject.exists && readExists(object, where);
-			if (auto collisions = findChild(&object, "collisions")) { rawObject.rawCollisionData = readCollisions(*collisions, where); }
 			readActions(object, where, rawObject.action);
 			readObjectVariables(object, where, rawObject.variable);
 
@@ -2234,9 +2202,7 @@ namespace xge
 					if (given.x) { into.x = given.x; }
 					if (given.y) { into.y = given.y; }
 				}
-				else if (tag == "pull" || tag == "seek" || tag == "light" || tag == "dark" || tag == "altitude" || tag == "shadow") { /* below, all at once */ }
-				else if (tag == "collisions") { shared.rawCollisionData = readCollisions(*child, where, shared.rawCollisionData); }
-				else if (tag == "poses" || tag == "mirror" || tag == "grip" || tag == "joins" || tag == "moves" || tag == "marks" || tag == "holds" || tag == "owns") { /* below, all at once */ }
+				else if (tag == "moves" || tag == "marks") { /* below, all at once */ }
 				else if (tag == "turns")
 				{
 					shared.takesTurns = true;
@@ -2257,12 +2223,9 @@ namespace xge
 
 			own.sprites = changeSprites(own.sprites, group, where);
 			mergeAnimations(own.animations, readAnimations(group, where));
-			for (RawTimer& timer : readTimers(findChild(&group, "timers").get(), where)) { shared.timers.push_back(std::move(timer)); }
 			readActions(group, where, shared.action);
 			readObjectVariables(group, where, shared.variable);
-			readPullAndSeek(group, shared, where);
-			readSight(group, shared, where);
-			readMoves(group, shared, where);
+			readPieceMoves(group, shared, where);
 			if (const std::string objClass = getAttribute(&group, "class"); !objClass.empty()) { shared.objClass = objClass; }
 			return inner;
 		}
