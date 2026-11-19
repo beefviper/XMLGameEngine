@@ -45,7 +45,7 @@ Its own block of work, done before the tasks below: it touches every field of an
 
 - **The aim.** The engine does the same things with less: a resource is held once, an object carries only the parts it uses, a tag is written in few places, and the code reads from its names.
 - **What it must not do** is change what any game does. Every step here leaves every game playing exactly as before.
-- **One tag, twelve homes.** `<drag>` today is in the schema, the object reader, the group reader, `rawDrag` and `hasDrag` in `RawObject`, `load/build.cpp`, `Object::Motion`, the frame, the printer, two hand-kept lists of an object's numbers. CR1, CR5 and CR7 each take homes away; CR6 took `data.xsl`'s two and the describer's.
+- **One tag, twelve homes.** `<drag>` today is in the schema, the object reader, the group reader, `rawDrag` in `RawObject`, `load/build.cpp`, `Object::Motion`, the frame, the printer, two hand-kept lists of an object's numbers. CR1, CR5 and CR7 each take homes away; CR6 took `data.xsl`'s two and the describer's.
 
 ### Rules for this block
 
