@@ -2357,9 +2357,9 @@ namespace xge
 	// for neither. What a condition tests and compares with.
 	std::optional<float> numberOf(const Parts& parts, const Object& object, const std::string& name);
 
-	// `text` with every name in it that starts with `from` (a whole word,
-	// followed by a dot) starting with `to` instead.
-	std::string renameStart(const std::string& text, const std::string& from, const std::string& to);
+	// Every name in `text` that starts with `from` (a whole word, followed
+	// by a dot) made to start with `to` instead; whether any was.
+	bool renameStart(std::string& text, const std::string& from, const std::string& to);
 
 	// renameStart on every text in a value, its operations' operands too;
 	// whether any changed.

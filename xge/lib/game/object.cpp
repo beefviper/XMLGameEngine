@@ -546,22 +546,33 @@ namespace xge
 		});
 	}
 
-	std::string renameStart(const std::string& text, const std::string& from, const std::string& to)
+	bool renameStart(std::string& text, const std::string& from, const std::string& to)
 	{
 		const auto word = [](char c) { return std::isalnum(static_cast<unsigned char>(c)) != 0 || c == '_' || c == '.'; };
-		const std::string start = from + ".";
+		// A name that starts with `from` and a dot, at the start of a word.
+		const auto startsHere = [&](std::size_t i)
+		{
+			return text.compare(i, from.size(), from) == 0 && i + from.size() < text.size() && text[i + from.size()] == '.';
+		};
+		std::size_t found = text.find(from);
+		while (found != std::string::npos && (!startsHere(found) || (found > 0 && word(text[found - 1])))) { found = text.find(from, found + 1); }
+		if (found == std::string::npos) { return false; }
+
 		std::string out;
+		out.reserve(text.size() + to.size());
 		std::size_t i = 0;
 		while (i < text.size())
 		{
 			if (!word(text[i])) { out += text[i++]; continue; }
 			std::size_t end = i;
 			while (end < text.size() && word(text[end])) { ++end; }
-			const std::string token = text.substr(i, end - i);
-			out += token.compare(0, start.size(), start) == 0 ? to + "." + token.substr(start.size()) : token;
+			if (end - i > from.size() && startsHere(i)) { out.append(to).append(text, i + from.size(), end - i - from.size()); }
+			else { out.append(text, i, end - i); }
 			i = end;
 		}
-		return out;
+		if (out == text) { return false; }
+		text = std::move(out);
+		return true;
 	}
 
 	namespace
@@ -605,8 +616,7 @@ namespace xge
 		bool changed = false;
 		for (std::string* text : { &each.text, &each.min, &each.max, &each.offset })
 		{
-			std::string renamed = renameStart(*text, from, to);
-			if (renamed != *text) { *text = std::move(renamed); changed = true; }
+			changed = renameStart(*text, from, to) || changed;
 		}
 		if (each.operations)
 		{
@@ -648,8 +658,7 @@ namespace xge
 			if (command.verb == "trigger" && command.object.empty()) { command.object = name; changed = true; }
 			for (std::string* text : { &command.variable, &command.into })
 			{
-				std::string renamed = renameStart(*text, "self", name);
-				if (renamed != *text) { *text = std::move(renamed); changed = true; }
+				changed = renameStart(*text, "self", name) || changed;
 			}
 			for (RawValue* each : { &command.amount, &command.seconds, &command.distance, &command.ahead,
 				&command.positionX, &command.positionY, &command.velocityX, &command.velocityY, &command.accelerationX, &command.accelerationY, &command.column, &command.row, &command.member })
@@ -687,8 +696,7 @@ namespace xge
 			bool changed = false;
 			for (std::string* text : { &each.text, &each.offset, &each.min, &each.max })
 			{
-				std::string renamed = renameStart(*text, from, to);
-				if (renamed != *text) { *text = std::move(renamed); changed = true; }
+				changed = renameStart(*text, from, to) || changed;
 			}
 			if (each.operations)
 			{
@@ -711,8 +719,7 @@ namespace xge
 			{
 				if (*each == from) { *each = to; changed = true; }
 			}
-			std::string renamed = renameStart(condition.variableName, from, to);
-			if (renamed != condition.variableName) { condition.variableName = std::move(renamed); changed = true; }
+			changed = renameStart(condition.variableName, from, to) || changed;
 			changed = renameObjectInValue(condition.threshold, from, to) || changed;
 			for (std::vector<RawCondition>* list : { &condition.parts, &condition.inner })
 			{
@@ -735,8 +742,7 @@ namespace xge
 			}
 			for (std::string* text : { &command.variable, &command.into })
 			{
-				std::string renamed = renameStart(*text, from, to);
-				if (renamed != *text) { *text = std::move(renamed); changed = true; }
+				changed = renameStart(*text, from, to) || changed;
 			}
 			for (RawValue* each : { &command.amount, &command.seconds, &command.arc, &command.distance, &command.ahead, &command.positionX, &command.positionY,
 				&command.velocityX, &command.velocityY, &command.accelerationX, &command.accelerationY, &command.column, &command.row, &command.below, &command.member })
@@ -863,8 +869,7 @@ namespace xge
 		const auto exact = [&](std::string& each) { if (each == from) { each = to; said = true; } };
 		const auto start = [&](std::string& each)
 		{
-			std::string renamed = renameStart(each, from, to);
-			if (renamed != each) { each = std::move(renamed); said = true; }
+			said = renameStart(each, from, to) || said;
 		};
 		const std::function<void(RawCondition&)> check = [&](RawCondition& condition)
 		{

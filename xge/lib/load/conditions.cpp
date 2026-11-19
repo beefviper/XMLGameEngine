@@ -61,8 +61,7 @@ namespace xge
 			}
 			for (std::string* text : { &command.variable, &command.into })
 			{
-				std::string renamed = renameStart(*text, from, to);
-				if (renamed != *text) { *text = std::move(renamed); changed = true; }
+				changed = renameStart(*text, from, to) || changed;
 			}
 			for (RawValue* each : { &command.amount, &command.seconds, &command.distance, &command.ahead,
 				&command.positionX, &command.positionY, &command.velocityX, &command.velocityY, &command.accelerationX, &command.accelerationY, &command.column, &command.row, &command.member })
