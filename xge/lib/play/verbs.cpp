@@ -83,12 +83,4 @@ namespace xge
 		rest->at = mover.position;
 	}
 
-	// Only the touched edge's own axis is affected, so an object pressed
-	// against the bottom wall still slides left or right, and one moving away
-	// from the wall is not held back.
-	void stick(Object& object, const WindowDesc& window, Edge edge)
-	{
-		stickInside(object.position, object.velocity, object.size, { window.width, window.height }, edge);
-	}
-
 }

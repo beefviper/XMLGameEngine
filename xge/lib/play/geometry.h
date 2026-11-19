@@ -564,6 +564,10 @@ namespace xge
 	// tile rests against its top).
 	bool restsAgainst(const Box& thing, const Box& base, Edge side) noexcept;
 
+	// What carries it out through that edge of its own stops; the rest of
+	// its velocity is kept.
+	void stopGoingOut(Vector2f& velocity, Edge edge) noexcept;
+
 	// <stick />: pushed back inside the window on the touched edge's own axis,
 	// losing only the velocity carrying it into the edge; the other way it
 	// keeps going, so a thing pressed against the floor still slides.
@@ -648,9 +652,6 @@ namespace xge
 
 	// Along a heading, from the shooter's middle, out by half its longer side.
 	Shot shotAhead(const Box& shooter, const Vector2f& shotSize, float heading, float speed) noexcept;
-
-	// From the middle of the side the shooter faces, just clear of it.
-	Shot shotFacing(const Box& shooter, const Vector2f& shotSize, Direction facing, float speed) noexcept;
 
 	// From the shooter's top, the shot's middle over the shooter's, so a thin
 	// shot leaves the middle of the gun (the shot keeps its own velocity).

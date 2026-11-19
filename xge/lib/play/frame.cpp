@@ -1284,7 +1284,7 @@ namespace xge
 				{
 					if (touchesScreenEdge(object, window, edge) && rules.sticksAt(object, edge))
 					{
-						stick(object, window, edge);
+						stickInside(object.position, object.velocity, object.size, { window.width, window.height }, edge);
 					}
 				}
 			}

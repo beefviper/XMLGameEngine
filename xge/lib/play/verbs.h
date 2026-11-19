@@ -76,8 +76,4 @@ namespace xge
 	// surface and may bring it to rest there (Object::Rest). What a <bounce>
 	// and a <knock> share.
 	void rub(Object& mover, Object::Rest* rest, const Object& surface, const Vector2f& out, const Vector2f& surfaceAt, const Vector2f& before, float settle);
-
-	// <stick />: pushed back inside the window on that edge's axis, losing
-	// only the velocity carrying it into the edge.
-	void stick(Object& object, const WindowDesc& window, Edge edge);
 }

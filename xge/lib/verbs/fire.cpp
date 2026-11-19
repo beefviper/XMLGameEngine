@@ -70,7 +70,7 @@ namespace xge
 		{
 			// From the middle of the side it faces, just clear of it, moving that
 			// way at the projectile's own speed.
-			shot = shotFacing(from, shotSize, shooter.facing, speed);
+			shot = shotAlong(from, shotSize, stepToward(shooter.facing, 1.0f), speed);
 		}
 		else
 		{

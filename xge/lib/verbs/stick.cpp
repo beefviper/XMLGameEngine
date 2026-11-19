@@ -5,7 +5,7 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
-#include "play/verbs.h"
+#include "play/geometry.h"
 
 namespace xge
 {
@@ -17,17 +17,14 @@ namespace xge
 
 	// <stick /> in a rule about another object: only the velocity into
 	// the side it was touched on stops, so it slides along what it met.
-	static void stickAgainst(Object& object, Edge side)
-	{
-		Vector2f& velocity = object.velocity;
-		if ((side == Edge::Top && velocity.y < 0.0f) || (side == Edge::Bottom && velocity.y > 0.0f)) { velocity.y = 0.0f; }
-		if ((side == Edge::Left && velocity.x < 0.0f) || (side == Edge::Right && velocity.x > 0.0f)) { velocity.x = 0.0f; }
-	}
-
 	static bool runStick(const CmdStick&, const Doer& doer)
 	{
-		if (doer.self && doer.screenEdge) { xge::stick(*doer.self, doer.game().getWindowDesc(), *doer.screenEdge); }
-		else if (doer.self && doer.touch) { stickAgainst(*doer.self, doer.touch->edge); }
+		if (doer.atEdge())
+		{
+			const WindowDesc& window = doer.game().getWindowDesc();
+			stickInside(doer.self->position, doer.self->velocity, doer.self->size, { window.width, window.height }, *doer.screenEdge);
+		}
+		else if (doer.self && doer.touch) { stopGoingOut(doer.self->velocity, doer.touch->edge); }
 		return true;
 	}
 

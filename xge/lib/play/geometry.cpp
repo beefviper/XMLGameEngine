@@ -622,27 +622,27 @@ namespace xge
 		return false;
 	}
 
+	void stopGoingOut(Vector2f& velocity, Edge edge) noexcept
+	{
+		switch (edge)
+		{
+		case Edge::Left: velocity.x = std::max(velocity.x, 0.0f); break;
+		case Edge::Right: velocity.x = std::min(velocity.x, 0.0f); break;
+		case Edge::Top: velocity.y = std::max(velocity.y, 0.0f); break;
+		case Edge::Bottom: velocity.y = std::min(velocity.y, 0.0f); break;
+		}
+	}
+
 	void stickInside(Vector2f& position, Vector2f& velocity, const Vector2f& size, const Vector2f& window, Edge edge) noexcept
 	{
 		switch (edge)
 		{
-		case Edge::Left:
-			position.x = std::max(position.x, 0.0f);
-			velocity.x = std::max(velocity.x, 0.0f);
-			break;
-		case Edge::Right:
-			position.x = std::min(position.x, window.x - size.x);
-			velocity.x = std::min(velocity.x, 0.0f);
-			break;
-		case Edge::Top:
-			position.y = std::max(position.y, 0.0f);
-			velocity.y = std::max(velocity.y, 0.0f);
-			break;
-		case Edge::Bottom:
-			position.y = std::min(position.y, window.y - size.y);
-			velocity.y = std::min(velocity.y, 0.0f);
-			break;
+		case Edge::Left: position.x = std::max(position.x, 0.0f); break;
+		case Edge::Right: position.x = std::min(position.x, window.x - size.x); break;
+		case Edge::Top: position.y = std::max(position.y, 0.0f); break;
+		case Edge::Bottom: position.y = std::min(position.y, window.y - size.y); break;
 		}
+		stopGoingOut(velocity, edge);
 	}
 
 	void wrapAround(Vector2f& position, const Vector2f& size, const Vector2f& heading, const Vector2f& window, Edge edge) noexcept
@@ -822,22 +822,6 @@ namespace xge
 	{
 		const Vector2f way = ahead(heading);
 		return { shooter.middle() + way * (std::max(shooter.size.x, shooter.size.y) / 2.0f) - shotSize * 0.5f, way * speed };
-	}
-
-	Shot shotFacing(const Box& shooter, const Vector2f& shotSize, Direction facing, float speed) noexcept
-	{
-		const float middleX = shooter.left() + shooter.size.x / 2 - shotSize.x / 2;
-		const float middleY = shooter.top() + shooter.size.y / 2 - shotSize.y / 2;
-
-		switch (facing)
-		{
-		case Direction::Up:    return { { middleX, shooter.top() - shotSize.y }, { 0.0f, -speed } };
-		case Direction::Down:  return { { middleX, shooter.bottom() }, { 0.0f, speed } };
-		case Direction::Left:  return { { shooter.left() - shotSize.x, middleY }, { -speed, 0.0f } };
-		case Direction::Right: return { { shooter.right(), middleY }, { speed, 0.0f } };
-		}
-
-		return {};
 	}
 
 	Vector2f shotFromTop(const Box& shooter, const Vector2f& shotSize) noexcept
