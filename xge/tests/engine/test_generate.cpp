@@ -5,22 +5,24 @@
 //
 // Catch2 tests for xgecli --generate (xge/cli/source/generate.cpp, running the
 // stylesheets in games/generators/engine-cpp): the program it writes is the game
-// as the engine's own data, a main() that plays it with the engine's Game and
-// Engine on SFML, and the engine's files copied in unchanged, nothing of XML
-// or of the other libraries among them. That the data is the same game as
-// the file, field by field and frame by frame, is in
-// test_generated_games.cpp, which compiles it. The windows-cpp target
+// file as a tree of C++ data, a main() that plays it with the engine's Game and
+// Engine on SFML, and the engine's files copied in unchanged, its reader among
+// them but no XML library and none of the other libraries. That it plays as
+// the file does, frame by frame, is in test_generated_games.cpp, which
+// compiles it. The windows-cpp target
 // (games/generators/windows-cpp) writes pong_min as games/prototypes has it.
 
 #include "scratch.h"
 #include "game/game.h"
-#include "load/xml.h"
+#include "xml/document.h"
 #include "generate.h"
 
 #include <catch2/catch_test_macros.hpp>
 
 #include <filesystem>
 #include <fstream>
+#include <memory>
+#include <regex>
 #include <set>
 #include <sstream>
 #include <string>
@@ -87,13 +89,13 @@ namespace
 	}
 }
 
-TEST_CASE("generating pong_min writes the game as data, a main that runs the engine on it, and the engine's own files", "[generate]")
+TEST_CASE("generating pong_min writes the game as a tree of data, a main that runs the engine on it, and the engine's own files", "[generate]")
 {
 	TempFolder folder("xge_test_generate_pong_min");
 	const GeneratedProgram program = generateGame(requestFor(fs::current_path() / "descriptions/pong_min.xml", folder.path / "out"));
 	const fs::path out = folder.path / "out";
 
-	for (const char* file : { "source/pong_min.cpp", "source/main.cpp", "source/game_parts.h", "CMakeLists.txt", "README.md", ".gitignore" })
+	for (const char* file : { "source/pong_min.cpp", "source/main.cpp", "CMakeLists.txt", "README.md", ".gitignore" })
 	{
 		INFO(file);
 		CHECK(fs::exists(out / file));
@@ -109,31 +111,27 @@ TEST_CASE("generating pong_min writes the game as data, a main that runs the eng
 	CHECK(main.find("audio = std::make_unique<xge::SFMLAudio>();") != std::string::npos);
 	CHECK(main.find("engine.run();") != std::string::npos);
 
-	// the game is what the engine reads from the file, a line for each tag
+	// the game is the file as a tree, read by the engine's own reader
 	const std::string data = readFile(out / "source/pong_min.cpp");
 	CHECK(data.rfind("// pong_min.cpp\n// XML Game Engine\n", 0) == 0);
-	CHECK(data.find("#include \"game_parts.h\"") != std::string::npos);
-	CHECK(data.find("xge::GameData pongMinGame()\n{") != std::string::npos);
-	CHECK(data.find("\t// <object name=\"ball\">\n\tRawObject playingBallObject()\n\t{\n\t\tRawObject object;\n\t\tobject.name = \"ball\";") != std::string::npos);
-	CHECK(data.find("\t\tobject.sprite = sprite(\"rectangle\", \"\", [](RawSprite& look)") != std::string::npos);
-	CHECK(data.find("\t\tobject.rawCollisionData.enabled = true;") != std::string::npos);
-	CHECK(data.find("addEdgeRule(object.rawCollisionData, \"vertical\", { verb(\"bounce\") });") != std::string::npos);
-	CHECK(data.find("\tgame.objects = objects();") != std::string::npos);
-	CHECK(data.find("\t\tstate.objects = playingObjects();") != std::string::npos);
-	CHECK(data.find("std::vector<RawSound> sounds()") == std::string::npos);
-
-	// game_parts.h is the target's own, copied unchanged
-	CHECK(readFile(out / "source/game_parts.h") == readFile(fs::current_path() / "generators/engine-cpp/modules/game_parts.h"));
+	CHECK(data.find("#include \"load/xml.h\"\n#include \"xml/tree.h\"") != std::string::npos);
+	CHECK(data.find("xge::GameData pongMinGame()\n{\n\treturn xge::readGame(*xge::viewOfTree(file));\n}") != std::string::npos);
+	CHECK(data.find("{ { \"name\", \"ball\" } }") != std::string::npos);
+	CHECK(data.find("{ \"sprite\", ") != std::string::npos);
+	CHECK(data.find("\tconst TreeElement file{ \"game\", ") != std::string::npos);
 
 	// the build compiles the engine's files beside them, with the engine's warnings
 	const std::string cmake = readFile(out / "CMakeLists.txt");
 	CHECK(cmake.find("\tsource/pong_min.cpp\n") != std::string::npos);
 	CHECK(cmake.find("\tengine/game/game.cpp\n") != std::string::npos);
 	CHECK(cmake.find("\tengine/engine/engine.cpp\n") != std::string::npos);
+	CHECK(cmake.find("\tengine/load/xml.cpp\n") != std::string::npos);
+	CHECK(cmake.find("\tengine/xml/tree.cpp\n") != std::string::npos);
+	CHECK(cmake.find("game_parts") == std::string::npos);
 	CHECK(cmake.find("-Wall -Wextra -Wpedantic -Wshadow -Wconversion") != std::string::npos);
 }
 
-TEST_CASE("a generated program carries the engine's files unchanged, and none of its XML or library choosing", "[generate]")
+TEST_CASE("a generated program carries the engine's files unchanged, its reader among them, and no XML library or library choosing", "[generate]")
 {
 	TempFolder folder("xge_test_generate_engine_files");
 	const GeneratedProgram program = generateGame(requestFor(fs::current_path() / "descriptions/pong.xml", folder.path / "out"));
@@ -156,13 +154,14 @@ TEST_CASE("a generated program carries the engine's files unchanged, and none of
 	}
 	REQUIRE(copied.count("engine/engine.cpp") == 1);
 	REQUIRE(copied.count("game/game.cpp") == 1);
-	copied.insert("game_parts.h");
-	// Each verb's file holds its reader, so what a reader is given comes too
-	// (the node every XML library is read through, and the shared readers),
-	// but no XML library and nothing that reads a game.
-	CHECK(copied.count("xml/document.h") == 1);
-	CHECK(copied.count("load/reading.cpp") == 1);
-	for (const char* left : { "load/xml.h", "load/xml.cpp", "xml/document.cpp", "load/xsd.h", "window/window.cpp", "audio/audio.cpp", "engine/backends.cpp",
+	// The engine's reader comes, with the node it reads through and the tree
+	// the game is written as, but no XML library and nothing that opens a file.
+	for (const char* reader : { "xml/document.h", "xml/tree.cpp", "load/reading.cpp", "load/merge.cpp", "load/xml.cpp" })
+	{
+		INFO(reader);
+		CHECK(copied.count(reader) == 1);
+	}
+	for (const char* left : { "load/file.cpp", "xml/document.cpp", "xml/pugixml.cpp", "xml/tinyxml2.cpp", "xml/xerces.cpp", "xml/rapidxml.cpp", "load/xsd.h", "window/window.cpp", "audio/audio.cpp", "engine/backends.cpp",
 		"window/raylib.h", "window/sdl2.h", "window/opengl.h", "audio/raylib.h", "audio/sdl2.h", "engine/folder.h" })
 	{
 		INFO(left);
@@ -174,7 +173,7 @@ TEST_CASE("a generated program carries the engine's files unchanged, and none of
 	// from them alone.
 	for (const std::string& name : copied)
 	{
-		std::istringstream lines(readFile(name == "game_parts.h" ? folder.path / "out/source" / name : engine / name));
+		std::istringstream lines(readFile(engine / name));
 		for (std::string line; std::getline(lines, line);)
 		{
 			if (line.rfind("#include \"", 0) != 0)
@@ -198,31 +197,29 @@ TEST_CASE("a generated program copies the font and pictures its game uses", "[ge
 	CHECK(fs::exists(folder.path / "out/assets/Space Invaders Color Sprites.svg"));
 }
 
-TEST_CASE("a group is written as what it gives its members, then a line for each member or cell", "[generate]")
+TEST_CASE("the game file is written as a tree, an entry for each element", "[generate]")
 {
-	TempFolder folder("xge_test_generate_group");
-	generateGame(requestFor(fs::current_path() / "descriptions/spaceinvaders.xml", folder.path / "out"));
+	TempFolder folder("xge_test_generate_tree");
+	const fs::path file = fs::current_path() / "descriptions/spaceinvaders.xml";
+	generateGame(requestFor(file, folder.path / "out"));
 	const std::string data = readFile(folder.path / "out/source/spaceinvaders.cpp");
 
-	const GameData game = readGame((fs::current_path() / "descriptions/spaceinvaders.xml").string());
-	// The aliens are the playing state's own objects.
-	std::size_t members = 0;
-	const auto tally = [&](const std::vector<RawObject>& objects)
+	// An entry is { "name", attributes or nullptr, count, ... }; an attribute
+	// is { "name", "value" }, so the second field tells them apart.
+	const std::regex entry(R"(\{ "[^"]*", (nullptr|a\w+), \d+, )");
+	const auto written = static_cast<std::size_t>(std::distance(std::sregex_iterator(data.begin(), data.end(), entry), std::sregex_iterator()));
+
+	std::unique_ptr<XmlDocument> document = XmlDocumentFactory::create(XmlBackend::PugiXml);
+	REQUIRE(document->load(file.string()));
+	std::size_t elements = 0;
+	const auto tally = [&](const auto& self, const XmlNode& node) -> void
 	{
-		for (const RawObject& object : objects)
-		{
-			if (!object.groupName.empty())
-			{
-				++members;
-			}
-		}
+		++elements;
+		for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling()) { self(self, *child); }
 	};
-	tally(game.objects);
-	for (const RawState& state : game.states) { tally(state.objects); }
-	REQUIRE(members > 55);
-	CHECK(data.find("\tvoid playingAliensGroup(std::vector<RawObject>& all)") != std::string::npos);
-	CHECK(data.find("\t\tMember group;\n") != std::string::npos);
-	CHECK(count(data, "\t\taddCell(all, group, ") + count(data, "\t\taddMember(all, group, ") == members);
+	tally(tally, *document->getRootElement());
+	REQUIRE(elements > 500);
+	CHECK(written == elements);
 }
 
 TEST_CASE("a game the engine will not load is not generated, and the folder made for it goes", "[generate]")

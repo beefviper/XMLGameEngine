@@ -5,10 +5,9 @@
 <!-- date: Oct 5, 2026 -->
 
 <!-- The engine-cpp target: a game file in, a program of its own out, that
-     plays the game as xgecli and xgegui play it, on SFML 3. The game, its
-     pieces and from= worked out as the engine works them out (merge.xsl), is
-     written out as the engine's own data (data.xsl), and everything that
-     plays it is the engine's own code, copied in unchanged.
+     plays the game as xgecli and xgegui play it, on SFML 3. The game file is
+     written out as a tree of C++ data (tree.xsl), and everything that reads
+     and plays it is the engine's own code, copied in unchanged.
 
      Run by xgecli (xge/cli/source/generate.cpp) with libxslt, after
      the engine has read and checked the game, or by hand:
@@ -19,9 +18,9 @@
 
      (with "- -" written as two dashes). It writes the program's own files
      with EXSLT's exsl:document, relative to the output named: source/<game>.cpp
-     (the game, data.xsl), source/main.cpp, CMakeLists.txt, README.md and
+     (the game, tree.xsl), source/main.cpp, CMakeLists.txt, README.md and
      .gitignore (program.xsl). Its own output is a list of those and of what
-     xgecli copies in: game_parts.h (modules/, to source/), the engine's files
+     xgecli copies in: the engine's files
      (engine.xml; from xge/lib/ to engine/) and the game's assets (its font and
      pictures). -->
 <xsl:stylesheet version="1.0"
@@ -30,8 +29,7 @@
     extension-element-prefixes="exsl">
 
   <xsl:include href="text.xsl" />
-  <xsl:include href="merge.xsl" />
-  <xsl:include href="data.xsl" />
+  <xsl:include href="tree.xsl" />
   <xsl:include href="program.xsl" />
 
   <xsl:output method="xml" indent="yes" encoding="UTF-8" />
@@ -66,18 +64,9 @@
       <xsl:message terminate="yes">engine-cpp: this is not a game file (no &lt;game&gt;)</xsl:message>
     </xsl:if>
 
-    <!-- the game with its pieces and from= worked out (merge.xsl), written out -->
-    <xsl:variable name="laid-out">
-      <xsl:call-template name="merge-game" />
-    </xsl:variable>
-    <!-- and every sprite's <bitmap from> made the picture it takes -->
-    <xsl:variable name="merged">
-      <xsl:apply-templates select="exsl:node-set($laid-out)" mode="pictures" />
-    </xsl:variable>
+    <!-- the game file as a tree of C++ data (tree.xsl) -->
     <exsl:document href="source/{$name}.cpp" method="text" encoding="UTF-8">
-      <xsl:for-each select="exsl:node-set($merged)">
-        <xsl:call-template name="data-file" />
-      </xsl:for-each>
+      <xsl:call-template name="tree-file" />
     </exsl:document>
 
     <exsl:document href="source/main.cpp" method="text" encoding="UTF-8">
@@ -105,7 +94,6 @@ output/
       <file path="CMakeLists.txt" />
       <file path="README.md" />
       <file path=".gitignore" />
-      <module path="source/game_parts.h" from="game_parts.h" />
       <xsl:for-each select="$engine">
         <engine path="engine/{substring-after(., '/')}" from="{.}" />
       </xsl:for-each>

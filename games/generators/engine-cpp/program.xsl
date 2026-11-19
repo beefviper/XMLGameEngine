@@ -126,7 +126,6 @@ add_executable(</xsl:text>
 	source/</xsl:text>
     <xsl:value-of select="$name" />
     <xsl:text>.cpp
-	source/game_parts.h
 	# the engine's own code, as it is in xge/lib/
 </xsl:text>
     <xsl:for-each select="$engine">
@@ -196,19 +195,19 @@ endif()
   <xsl:template name="readme-file">
     <xsl:value-of select="concat('# ', $title, '&#10;&#10;Generated from `', $source, '` by `xgecli --generate engine-cpp`. It is the game xgecli and&#10;')" />
     <xsl:text>xgegui play, built as a program of its own on SFML 3: the stylesheets in the engine's
-`games/generators/engine-cpp/` write the game file out as C++ data in `source/</xsl:text>
+`games/generators/engine-cpp/` write the game file out as a tree of C++ data in `source/</xsl:text>
     <xsl:value-of select="$name" />
     <xsl:text>.cpp`,
-and everything that plays it (the frame, the physics and collisions, the keys, the
-pictures and the sounds) is the engine's own code, copied unchanged into `engine/`.
-Only reading XML and choosing among window and sound libraries are left out.
+which the engine's own reader reads, and everything that plays it (the frame, the
+physics and collisions, the keys, the pictures and the sounds) is the engine's own
+code, copied unchanged into `engine/`. Only XML libraries and choosing among window
+and sound libraries are left out.
 
 | File | What |
 |---|---|
 | `source/</xsl:text>
     <xsl:value-of select="concat($name, '.cpp` | the game, as the engine reads it from `', $source, '` |')" />
     <xsl:text>
-| `source/game_parts.h` | the small functions the game is written with, a tag each |
 | `source/main.cpp` | makes the game, an SFML window and SFML sound, and runs the engine's loop |
 | `engine/` | the engine's own files, as they are in its `xge/lib/` |
 | `assets/` | the fonts, pictures and recordings it opens (a font with its licence), copied beside the program when it is built |

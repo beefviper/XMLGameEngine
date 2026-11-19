@@ -94,6 +94,7 @@ set(data_generators
 	"games/generators/engine-cpp/merge.xsl"
 	"games/generators/engine-cpp/data.xsl"
 	"games/generators/engine-cpp/program.xsl"
+	"games/generators/engine-cpp/tree.xsl"
 	"games/generators/engine-cpp/engine.xml"
 	"games/generators/engine-cpp/modules/game_parts.h"
 	"games/generators/windows-cpp/generate.xsl"

@@ -96,10 +96,9 @@ This writes a C++ program on SFML 3 that is **the engine with the game built in*
 
 | Written | By | What |
 |---|---|---|
-| `source/<game>.cpp` | `merge.xsl`, then `data.xsl` | the game as the engine's own `GameData` (`game/data.h`), a line of C++ per tag, with the [pieces and every `from=`](objects.md#pieces-and-from) worked out first. One function returns it (`pongMinGame()`) |
-| `source/game_parts.h` | copied from `modules/` | the small functions those lines call |
+| `source/<game>.cpp` | `tree.xsl` | the game file as a tree of C++ data (`xml/tree.h`), an entry per element, which one function (`pongGame()`) reads with the engine's own reader (`load/xml.cpp`) |
 | `source/main.cpp`, `CMakeLists.txt`, `README.md`, `.gitignore` | `program.xsl` | makes the `Game`, an `SFMLWindow` and an `SFMLAudio` and runs `Engine::loop`; the build finds or fetches SFML 3 and lunasvg |
-| `engine/` | listed in `engine.xml` | the engine's files, copied unchanged from `xge/lib/` of the repository `xgecli` was built from, less XML reading and the other libraries |
+| `engine/` | listed in `engine.xml` | the engine's files, copied unchanged from `xge/lib/` of the repository `xgecli` was built from, less the XML libraries and the other libraries |
 | `assets/`, `LICENSE` | `xgecli` | the pictures and font it uses (with a font's licence), the repository's licence |
 
 `xgecli pong_min --generate windows-cpp` writes the game instead **as a person would write it**: a small program of its own on SFML 3 that uses none of the engine and never names it. Its numbers are constants, each object a `Thing` (where, how fast, how big), and its rules plain code in one `frame(seconds)` (keys held, moves by the time passed, edges, meetings) with a few small functions where they are used (`touching`, `deflect`). The stylesheets are in `games/generators/windows-cpp/`:
