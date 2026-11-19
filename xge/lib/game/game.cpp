@@ -2291,10 +2291,11 @@ namespace xge
 			const std::vector<LivePart>& live = liveParts();
 			for (std::size_t i = 0; i < objects.size(); ++i)
 			{
+				const std::string owner = Calc::nameOf(objects[i].name) + ".";
 				for (std::size_t part = 0; part < parts.size(); ++part)
 				{
 					if (live[part].has && !live[part].has(objectParts, objects[i])) { continue; }
-					const std::string name = Calc::nameOf(objects[i].name + "." + parts[part]);
+					const std::string name = owner + parts[part];
 					const auto found = expr.liveNumbers.find(name);
 					if (found != expr.liveNumbers.end() && expr.calc.has(name)) { liveLinks.push_back({ &found->second, i, part }); }
 				}

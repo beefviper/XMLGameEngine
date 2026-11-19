@@ -308,9 +308,10 @@ namespace xge
 		liveNumbers.reserve(rawObjects.size() * liveNumberParts().size());
 		for (const RawObject& rawObject : rawObjects)
 		{
+			const std::string owner = Calc::nameOf(rawObject.name) + ".";
 			for (const std::string& part : liveNumberParts())
 			{
-				if (!rawObject.variable.count(part)) { liveNumbers.try_emplace(Calc::nameOf(rawObject.name + "." + part), 0.0f); }
+				if (!rawObject.variable.count(part)) { liveNumbers.try_emplace(owner + part, 0.0f); }
 			}
 		}
 	}
@@ -662,7 +663,7 @@ namespace xge
 		}
 		for (const std::string& part : liveNumberParts())
 		{
-			if (!raw.variable.count(part)) { liveNumbers.try_emplace(Calc::nameOf(raw.name + "." + part), 0.0f); }
+			if (!raw.variable.count(part)) { liveNumbers.try_emplace(Calc::nameOf(raw.name) + "." + part, 0.0f); }
 		}
 		if (const auto size = objectSizes.find(from.name); size != objectSizes.end() && !objectSizes.count(raw.name))
 		{
