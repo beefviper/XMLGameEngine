@@ -143,6 +143,10 @@ namespace xge
 		// (a held move keeps going, a looping sound plays on). Whether it
 		// did. None: it is not held.
 		bool (*hold)(const Command& command, const Doer& doer) = nullptr;
+		// Answers a control that points (a mouse, a pad's stick), `fraction`
+		// (0 to 1) of the way `across` the window or down it. None: it does
+		// not follow one.
+		void (*point)(const Command& command, const Doer& doer, bool across, float fraction) = nullptr;
 		// How a command of it is printed (operator<< in game/command.cpp).
 		// None: the tag alone.
 		void (*print)(std::ostream& out, const Command& command) = nullptr;
@@ -157,6 +161,11 @@ namespace xge
 	template <auto Run> bool runAs(const Command& command, const Doer& doer)
 	{
 		return Run(std::get<decltype(commandOf(Run))>(command), doer);
+	}
+	template <typename Cmd> Cmd commandOf(void (*)(const Cmd&, const Doer&, bool, float));
+	template <auto Point> void pointAs(const Command& command, const Doer& doer, bool across, float fraction)
+	{
+		Point(std::get<decltype(commandOf(Point))>(command), doer, across, fraction);
 	}
 	template <auto Print> void printAs(std::ostream& out, const Command& command)
 	{

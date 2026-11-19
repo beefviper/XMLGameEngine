@@ -99,43 +99,4 @@ namespace xge
 		stickInside(object.position, object.velocity, object.size, { window.width, window.height }, edge);
 	}
 
-	void track(Object& object, bool horizontal, float fraction, float span)
-	{
-		const Vector2f size = sizeOf(object);
-		const float extent = horizontal ? size.x : size.y;
-		const float room = std::max(span - extent, 0.0f);
-		const float place = std::clamp(fraction * span - extent * 0.5f, 0.0f, room);
-		(horizontal ? object.position.x : object.position.y) = place;
-	}
-
-	void trackPath(Object& object, const Path& path, float fraction)
-	{
-		const Vector2f start = path.start.value_or(Vector2f{}); // a tracked path has one (verbs/track.cpp)
-		std::vector<Vector2f> corners{ start };
-		for (const PathStep& step : path.steps)
-		{
-			corners.push_back(step.home ? start : corners.back() + step.by);
-		}
-
-		float total = 0.0f;
-		for (std::size_t i = 1; i < corners.size(); ++i) { total += std::hypot(corners[i].x - corners[i - 1].x, corners[i].y - corners[i - 1].y); }
-
-		Vector2f at = corners.front();
-		float left = std::clamp(fraction, 0.0f, 1.0f) * total;
-		for (std::size_t i = 1; i < corners.size(); ++i)
-		{
-			const Vector2f leg = corners[i] - corners[i - 1];
-			const float length = std::hypot(leg.x, leg.y);
-			if (left <= length && length > 0.0f)
-			{
-				at = corners[i - 1] + leg * (left / length);
-				break;
-			}
-			left -= length;
-			at = corners[i];
-		}
-
-		object.position = at - sizeOf(object) * 0.5f;
-	}
-
 }

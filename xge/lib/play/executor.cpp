@@ -82,29 +82,20 @@ namespace xge
 			return;
 		}
 
-		const bool horizontal = axis == Axis::MouseX || axis == Axis::Pad1X || axis == Axis::Pad2X;
-		const WindowDesc& window = game.getWindowDesc();
+		const bool across = axis == Axis::MouseX || axis == Axis::Pad1X || axis == Axis::Pad2X;
 		Object* turn = game.takesTurns(trigger->object) ? game.onTurn(trigger->object) : nullptr;
 		if (game.takesTurns(trigger->object) && (!turn || !game.answers(*turn))) { return; }
 		Object& object = turn ? *turn : game.getObject(trigger->object);
 		if (!game.answersPicker(object)) { return; }
 		// from=: only while it shows that look.
 		if (!trigger->from.empty() && object.lookName() != trigger->from) { return; }
+		Doer doer;
+		doer.self = &object;
+		doer.executor = this;
 		for (const auto& action : object.kind->action[trigger->action])
 		{
-			const auto* along = std::get_if<CmdTrack>(&shapeOf(action));
-			if (!along) { continue; }
-			if (along->path.empty())
-			{
-				const float span = horizontal ? window.width : window.height;
-				if (game.isHand(object)) { game.trackHand(object, horizontal, fraction * span); }
-				else if (object.onCells) { game.trackCells(object, horizontal, fraction * span, along->onto); }
-				else { track(object, horizontal, fraction, span); }
-			}
-			else if (const auto path = game.getPaths().find(along->path); path != game.getPaths().end())
-			{
-				trackPath(object, path->second, fraction);
-			}
+			const Command& shape = shapeOf(action);
+			if (const Verb* verb = verbOf(shape); verb && verb->point) { verb->point(shape, doer, across, fraction); }
 		}
 	}
 
@@ -141,7 +132,7 @@ namespace xge
 			return true;
 		}
 
-		// <track /> runs on a pointing control (executeAxis), <hold> and
+		// <track /> answers a pointing control (Verb::point), <hold> and
 		// <think> in a <computer>: they have no run of their own.
 		const Verb* verb = verbOf(current);
 		if (!verb || !verb->run) { return true; }

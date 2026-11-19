@@ -80,14 +80,4 @@ namespace xge
 	// <stick />: pushed back inside the window on that edge's axis, losing
 	// only the velocity carrying it into the edge.
 	void stick(Object& object, const WindowDesc& window, Edge edge);
-	// <track />: the object's middle goes to `fraction` (0 to 1) of the way
-	// across `span` (the window's width, or its height when not
-	// `horizontal`), kept wholly inside it. Its speed is left alone.
-	void track(Object& object, bool horizontal, float fraction, float span);
-
-	// <track path="...">: the object's middle `fraction` (0 to 1, held to
-	// that) of the way along the path, measured along its legs from its
-	// <start>; a <home /> leg goes back to the start.
-	void trackPath(Object& object, const Path& path, float fraction);
-
 }
