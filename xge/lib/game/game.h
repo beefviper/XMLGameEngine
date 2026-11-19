@@ -29,6 +29,7 @@
 #include <deque>
 #include <memory>
 #include <optional>
+#include <tuple>
 #include <assert.h>
 
 namespace xge
@@ -1013,6 +1014,7 @@ namespace xge
 		void atEdge(Object& object, Edge edge) override;
 		bool sticksAt(const Object& object, Edge edge) override;
 		bool canCollide(const Object& a, const Object& b) override;
+		std::vector<std::size_t> answerGroups(const std::vector<Object>& among) override;
 		bool touchesByPicture(const Object& a, const Object& b) override;
 		bool hasRules(const Object& object) override { return !object.kind->collisionData.others.empty(); }
 		void touched(Object& a, Object& b, const Contact& contact) override;

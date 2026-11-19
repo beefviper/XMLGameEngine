@@ -110,6 +110,11 @@ namespace xge
 		// partners).
 		virtual bool canCollide(const Object& a, const Object& b) { (void)a; (void)b; return false; }
 
+		// For each object, a number shared by those canCollide answers alike
+		// against anything, so that two of them are asked about once (a maze
+		// of dots). Empty: every object its own.
+		virtual std::vector<std::size_t> answerGroups(const std::vector<Object>& objects) { (void)objects; return {}; }
+
 		// Whether the object has any rule for touching others at all: two
 		// with none never answer each other, so canCollide is not asked.
 		virtual bool hasRules(const Object& object) { (void)object; return true; }

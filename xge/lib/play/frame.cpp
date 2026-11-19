@@ -14,8 +14,10 @@
 #include <array>
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <optional>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -1121,11 +1123,39 @@ namespace xge
 
 			partnerLists.assign(objects.size(), {});
 			pictureLists.assign(objects.size(), {});
+
+			// Objects answered alike are asked about once a pair of groups,
+			// the answer kept in a table (while it stays small).
+			const std::vector<std::size_t> alike = answerGroups(objects);
+			std::vector<std::uint32_t> group(objects.size());
+			std::size_t groups = 0;
+			{
+				std::unordered_map<std::size_t, std::uint32_t> numbered;
+				for (std::size_t i = 0; i < alike.size(); ++i)
+				{
+					group[i] = numbered.emplace(alike[i], static_cast<std::uint32_t>(numbered.size())).first->second;
+				}
+				groups = numbered.size();
+			}
+			const bool table = !alike.empty() && groups <= 2048;
+			std::vector<signed char> answered(table ? groups * groups : 0, -1);
+			const auto canMeet = [&](std::size_t i, std::size_t j)
+			{
+				if (!table) { return canCollide(objects[i], objects[j]); }
+				signed char& answer = answered[group[i] * groups + group[j]];
+				if (answer < 0)
+				{
+					answer = canCollide(objects[i], objects[j]) ? 1 : 0;
+					answered[group[j] * groups + group[i]] = answer;
+				}
+				return answer == 1;
+			};
+
 			for (std::size_t i = 0; i < objects.size(); ++i)
 			{
 				const auto ask = [&](std::size_t j)
 				{
-					if (canCollide(objects[i], objects[j]))
+					if (canMeet(i, j))
 					{
 						partnerLists[i].push_back(j);
 						pictureLists[i].push_back(touchesByPicture(objects[i], objects[j]) ? 1 : 0);

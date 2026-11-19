@@ -2123,6 +2123,40 @@ namespace xge
 		return answers(a, b) || answers(b, a);
 	}
 
+	std::vector<std::size_t> Game::answerGroups(const std::vector<Object>& among)
+	{
+		// The names rules pick by (not only a class): what bears one of them
+		// is answered for alone, and so is what has such a rule.
+		std::set<std::string, std::less<>> picked;
+		for (const Object& object : among)
+		{
+			for (const CollisionRule& rule : object.kind->collisionData.others)
+			{
+				if (!rule.filterObject.empty()) { picked.insert(rule.filterObject); }
+			}
+		}
+		const auto alone = [&](const Object& object)
+		{
+			const auto& rules = object.kind->collisionData.others;
+			if (std::any_of(rules.begin(), rules.end(), [](const CollisionRule& rule) { return !rule.filterObject.empty(); })) { return true; }
+			return std::any_of(picked.begin(), picked.end(), [&](const std::string& name) { return object.named(name); });
+		};
+
+		// The rest by what canCollide reads of them: kind (its rules), class,
+		// and whether it is a piece or a shape on cells.
+		std::map<std::tuple<const void*, const void*, int>, std::size_t> groups;
+		std::vector<std::size_t> numbers(among.size());
+		for (std::size_t i = 0; i < among.size(); ++i)
+		{
+			const Object& object = among[i];
+			if (alone(object)) { numbers[i] = i; continue; }
+			const int cells = (object.onCells ? 1 : 0) + (isShape(object) ? 2 : 0);
+			const auto key = std::make_tuple(static_cast<const void*>(object.kind.get()), static_cast<const void*>(&object.objClass.str()), cells);
+			numbers[i] = groups.emplace(key, among.size() + groups.size()).first->second;
+		}
+		return numbers;
+	}
+
 	// A hitbox is for what hurts or is taken; what is stood on, stopped at,
 	// bounced off or ridden is met by the whole picture, so feet pulled in
 	// never sink into a floor.
