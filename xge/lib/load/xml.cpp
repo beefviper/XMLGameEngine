@@ -153,7 +153,7 @@ namespace xge
 		// and <height>.
 		void readCell(const XmlNode& cell, RawSprite& sprite, const std::string& here)
 		{
-			sprite.sheet = requireAttribute(cell, "sheet", here);
+			sprite.sheet = cell.getAttribute("sheet");
 			const auto x = findChild(&cell, "x");
 			const auto y = findChild(&cell, "y");
 			const auto width = findChild(&cell, "width");
@@ -817,7 +817,6 @@ namespace xge
 			{
 				const std::string tag = child->getName();
 				if (tag != "pull" && tag != "seek") { continue; }
-				requireAttribute(*child, "object", where + " > <" + tag + ">");
 				if (tag == "pull")
 				{
 					rawObject.rawPulls.emplace_back(child->getAttribute("object"), readValue(*child, where + " > <pull>"));
@@ -840,7 +839,7 @@ namespace xge
 				rawObject.lightPast.clear();
 				for (std::unique_ptr<XmlNode> past = light->getFirstChild(); past != nullptr; past = past->getNextSibling())
 				{
-					if (past->getName() == "past") { rawObject.lightPast.push_back(requireAttribute(*past, "class", lightHere + " > <past>")); }
+					if (past->getName() == "past") { rawObject.lightPast.push_back(past->getAttribute("class")); }
 				}
 				rawObject.rawLight = rawObject.lightPast.empty() ? readValue(*light, lightHere)
 					: readLeadValue(*light, { "past" }, "how far it reaches, then a <past class=\"...\" /> for each class it does not shine through", lightHere);
@@ -868,7 +867,6 @@ namespace xge
 			}
 			if (auto shadow = findChild(&object, "shadow"))
 			{
-				requireAttribute(*shadow, "object", where + " > <shadow>");
 				rawObject.shadowOf = shadow->getAttribute("object");
 			}
 		}
@@ -1401,7 +1399,7 @@ namespace xge
 
 			for (std::unique_ptr<XmlNode> variable = variablesNode->getFirstChild(); variable != nullptr; variable = variable->getNextSibling())
 			{
-				const std::string name = requireAttribute(*variable, "name", where);
+				const std::string name = variable->getAttribute("name");
 				refuseReserved(name, "a variable", where, false);
 				RawValue value = readValue(*variable, where + " > <variable name=\"" + name + "\">");
 
@@ -1666,7 +1664,7 @@ namespace xge
 			for (std::unique_ptr<XmlNode> child = collisions.getFirstChild(); child != nullptr; child = child->getNextSibling())
 			{
 				if (child->getName() != "solid") { continue; }
-				const std::string character = requireAttribute(*child, "char", collisionsHere + " > <solid>");
+				const std::string character = child->getAttribute("char");
 				if (character.size() != 1 || character == ".")
 				{
 					fail(collisionsHere + " > <solid>", "char=\"" + character + "\"; expected one character of the bitmap, '*' or one of its <color char>s");
@@ -1732,7 +1730,7 @@ namespace xge
 			{
 				for (std::unique_ptr<XmlNode> action = actions->getFirstChild(); action != nullptr; action = action->getNextSibling())
 				{
-					const std::string actionName = requireAttribute(*action, "name", where + " > <actions>");
+					const std::string actionName = action->getAttribute("name");
 					out[actionName] = readActionCommands(action->getFirstChild(), where + " > <action name=\"" + actionName + "\">");
 				}
 			}
@@ -1893,7 +1891,7 @@ namespace xge
 		{
 			RawObject rawObject;
 			rawObject.line = object.line();
-			rawObject.name = requireAttribute(object, "name", "<object>");
+			rawObject.name = object.getAttribute("name");
 			refuseReserved(rawObject.name, "an object", "<object name=\"" + rawObject.name + "\">");
 			rawObject.objClass = getAttribute(&object, "class");
 
@@ -1997,7 +1995,7 @@ namespace xge
 			if (auto chain = findChild(&object, "chain"))
 			{
 				if (!map || !map->cells) { fail(where, "has a <chain>, which is for an object on a map with <cells />"); }
-				rawObject.chain = requireAttribute(*chain, "object", where + " > <chain>");
+				rawObject.chain = chain->getAttribute("object");
 			}
 			rawObject.timers = readTimers(findChild(&object, "timers").get(), where);
 			// <waiting />: out of play until a <reveal>; <ready />, in play after
@@ -2280,7 +2278,7 @@ namespace xge
 				else if (tag == "chain")
 				{
 					if (!own.map || !own.map->cells) { fail(where, "has a <chain>, which is for a group on a map with <cells />"); }
-					shared.chain = requireAttribute(*child, "object", where + " > <chain>");
+					shared.chain = child->getAttribute("object");
 				}
 				else if (tag == "shape")
 				{
@@ -2485,8 +2483,8 @@ namespace xge
 				}
 				else if (tag == "cell")
 				{
-					const std::string rowText = requireAttribute(*child, "row", where + " > <cell>");
-					const std::string columnText = requireAttribute(*child, "column", where + " > <cell>");
+					const std::string rowText = child->getAttribute("row");
+					const std::string columnText = child->getAttribute("column");
 					const std::string here = where + " > <cell row=\"" + rowText + "\" column=\"" + columnText + "\">";
 
 					const auto place = [&](const std::string& text, int count) -> int
@@ -2583,7 +2581,7 @@ namespace xge
 
 		void readGroupHere(const XmlNode& group, std::vector<RawObject>& out, const GroupShared& outer)
 		{
-			const std::string name = requireAttribute(group, "name", "<group>");
+			const std::string name = group.getAttribute("name");
 			const std::string where = "group '" + name + "'";
 			refuseReserved(name, "a group", where);
 
@@ -3149,7 +3147,7 @@ namespace xge
 				if (node->getName() != "scene") { continue; }
 
 				RawScene scene;
-				scene.name = requireAttribute(*node, "name", stateWhere + " > <scenes>");
+				scene.name = node->getAttribute("name");
 				scene.from = node->getAttribute("from");
 				const std::string where = stateWhere + " > scene '" + scene.name + "'";
 				if (lists.count(scene.name)) { fail(stateWhere, "has two scenes called '" + scene.name + "'"); }
@@ -3169,8 +3167,8 @@ namespace xge
 					{
 						if (way->getName() != "way") { continue; }
 						const std::string wayWhere = where + " > <ways>";
-						const std::string name = requireAttribute(*way, "name", wayWhere);
-						const std::string to = requireAttribute(*way, "scene", wayWhere);
+						const std::string name = way->getAttribute("name");
+						const std::string to = way->getAttribute("scene");
 						const bool twice = std::any_of(scene.ways.begin(), scene.ways.end(), [&](const auto& each) { return each.first == name; });
 						if (twice) { fail(wayWhere, "has two ways called '" + name + "'"); }
 						scene.ways.emplace_back(name, to);
@@ -3243,7 +3241,7 @@ namespace xge
 		{
 			RawState rawState{};
 			rawState.line = state.line();
-			rawState.name = requireAttribute(state, "name", "<state>");
+			rawState.name = state.getAttribute("name");
 			refuseReserved(rawState.name, "a state", "<state name=\"" + rawState.name + "\">");
 			rawState.from = state.getAttribute("from");
 

@@ -14,7 +14,7 @@
   - `<lockstep />` and the window's `<fullscreen />` went the same way.
 - **A verb's one number is its content:** `<chase object="hero">2</chase>`; extras follow as named tags (`<hop direction="up">40<seconds>0.3</seconds></hop>`). One rule beats remembering which verbs wrap their number.
 - **Defaults for boilerplate:** background black, not fullscreen, 60 frames a second, and a written `<collisions>` is on. No `<collisions>` still touches nothing.
-- The schema fixes child order; the engine looks elements up by name. A game with no schema location is checked against the engine's own schema, so every game the engine loads has the shape the schema says.
+- The schema fixes child order; the engine looks elements up by name. A game with no schema location is checked against the engine's own schema, so every game the engine loads has the shape the schema says. So the reader trusts that shape: it does not repeat the schema's checks (unknown tags, missing children or attributes, enumeration words), and keeps only what a schema cannot say, such as two things of one name or a char= on no tile.
 
 ## Attributes name, content computes
 
