@@ -55,6 +55,7 @@ namespace xge
 	const Verb decVerb{
 		.name = "dec",
 		.forms = { { "<dec>", places::changes, kindOf<CmdDecrement>() } },
+		.names = { .variable = Naming::Variable },
 		.read = readDec,
 		.make = makeDec,
 		.check = checkAs<checkDec>,

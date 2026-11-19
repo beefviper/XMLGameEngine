@@ -83,6 +83,7 @@ namespace xge
 	const Verb sendVerb{
 		.name = "send",
 		.forms = { { "<send>", places::changes, kindOf<CmdSend>() } },
+		.names = { .into = Naming::Object, .from = Naming::Object },
 		.read = readSend,
 		.make = makeSend,
 		.check = checkAs<checkSend>,

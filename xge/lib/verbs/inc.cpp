@@ -55,6 +55,7 @@ namespace xge
 	const Verb incVerb{
 		.name = "inc",
 		.forms = { { "<inc>", places::changes, kindOf<CmdIncrement>() } },
+		.names = { .variable = Naming::Variable },
 		.read = readInc,
 		.make = makeInc,
 		.check = checkAs<checkInc>,

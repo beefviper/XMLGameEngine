@@ -209,6 +209,7 @@ namespace xge
 	const Verb spawnVerb{
 		.name = "spawn",
 		.forms = { { "<spawn>", places::changes, kindOf<CmdSpawn>() } },
+		.names = { .into = Naming::Object },
 		.read = readSpawn,
 		.make = makeSpawn,
 		.check = checkAs<checkSpawn>,

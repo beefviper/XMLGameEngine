@@ -49,6 +49,7 @@ namespace xge
 	const Verb copyVerb{
 		.name = "copy",
 		.forms = { { "<copy>", places::changes, kindOf<CmdCopy>() } },
+		.names = { .variable = Naming::Variable, .into = Naming::Variable },
 		.read = readCopy,
 		.make = makeCopy,
 		.check = checkAs<checkCopy>,

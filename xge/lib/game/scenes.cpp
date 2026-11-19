@@ -6,6 +6,7 @@
 #include "game/scenes.h"
 
 #include "load/spelling.h"
+#include "verbs/verb.h"
 
 #include <algorithm>
 #include <cctype>
@@ -312,11 +313,16 @@ namespace xge
 			{
 				for (RawCommand& command : commands)
 				{
-					if (command.verb == "inc" || command.verb == "dec" || command.verb == "copy" || command.verb == "rank" || command.verb == "set") { command.variable = names_.variableTarget(command.variable, context); }
-					if (command.verb == "copy") { command.into = names_.variableTarget(command.into, context); }
-					if (command.verb == "rank" || command.verb == "spawn" || command.verb == "send") { command.into = names_.object(command.into, context); }
-					if (command.verb == "send") { command.from = names_.object(command.from, context); }
-					command.object = names_.object(command.object, context);
+					const VerbNames names = namesOf(command);
+					const auto rename = [&](std::string& name, Naming naming)
+					{
+						if (naming == Naming::Variable) { name = names_.variableTarget(name, context); }
+						else if (naming != Naming::None) { name = names_.object(name, context); }
+					};
+					rename(command.object, names.object);
+					rename(command.variable, names.variable);
+					rename(command.into, names.into);
+					rename(command.from, names.from);
 					if (RawHunt* hunt = std::get_if<RawHunt>(&command.own))
 					{
 						hunt->partner = names_.object(hunt->partner, context);

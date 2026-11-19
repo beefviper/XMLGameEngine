@@ -81,6 +81,7 @@ namespace xge
 	const Verb setVerb{
 		.name = "set",
 		.forms = { { "<set>", places::changes, kindOf<CmdSet>() } },
+		.names = { .variable = Naming::Variable },
 		.read = readSet,
 		.make = makeSet,
 		.check = checkAs<checkSet>,

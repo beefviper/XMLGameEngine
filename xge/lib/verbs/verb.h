@@ -114,6 +114,23 @@ namespace xge
 		std::size_t kind{ 0 };
 	};
 
+	// What a command's attributes name, so that a scene, a copy and self
+	// rename them rightly. Left out, an attribute names nothing to rename.
+	enum class Naming
+	{
+		None,
+		Variable,   // an object's variable: "frog.lives"
+		Object,     // an object, or every member of a group
+		OneObject,  // just the object of that name; left out, the one running it
+	};
+	struct VerbNames
+	{
+		Naming object = Naming::Object;
+		Naming variable = Naming::None;
+		Naming into = Naming::None;
+		Naming from = Naming::None;
+	};
+
 	struct Verb
 	{
 		// The tag: "bounce".
@@ -125,6 +142,8 @@ namespace xge
 		std::size_t (*formOf)(const Command& command) = nullptr;
 		// Acts when a key is let go as well: a held verb stops.
 		bool onRelease = false;
+		// What its object=, variable=, into= and from= name.
+		VerbNames names{};
 		// What its tag says besides the names every command may have (see
 		// readCommand): the attributes it must have, its content and its
 		// children, into `command`. None: it says nothing more. Stops the
@@ -181,6 +200,8 @@ namespace xge
 
 	// The verb of that tag name; null when there is none.
 	const Verb* findVerb(std::string_view name) noexcept;
+	// What a written command's attributes name (VerbNames), by its verb.
+	VerbNames namesOf(const RawCommand& command) noexcept;
 
 	// The verb a command is of, and which of its forms; null for what is not
 	// a verb's (a condition in an action, a command made as it runs: see

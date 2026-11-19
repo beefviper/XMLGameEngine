@@ -5,6 +5,7 @@
 
 #include "game/object.h"
 #include "game/parts.h"
+#include "verbs/verb.h"
 
 #include "picture/color.h"
 #include "picture/font.h"
@@ -651,7 +652,7 @@ namespace xge
 	{
 		bool changed = false;
 		{
-			if (command.verb == "trigger" && command.object.empty()) { command.object = name; changed = true; }
+			if (namesOf(command).object == Naming::OneObject && command.object.empty()) { command.object = name; changed = true; }
 			for (std::string* text : { &command.variable, &command.into })
 			{
 				changed = renameStart(*text, "self", name) || changed;
@@ -879,7 +880,7 @@ namespace xge
 					check(*command.test);
 					commands(command.test->commands);
 				}
-				if (command.verb == "trigger") { exact(command.object); }
+				if (namesOf(command).object == Naming::OneObject) { exact(command.object); }
 				start(command.variable);
 				start(command.into);
 				command.forEachValue(value);

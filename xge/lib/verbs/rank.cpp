@@ -64,6 +64,7 @@ namespace xge
 	const Verb rankVerb{
 		.name = "rank",
 		.forms = { { "<rank>", places::changes, kindOf<CmdRank>() } },
+		.names = { .variable = Naming::Variable, .into = Naming::Object },
 		.read = readRank,
 		.make = makeRank,
 		.check = checkAs<checkRank>,

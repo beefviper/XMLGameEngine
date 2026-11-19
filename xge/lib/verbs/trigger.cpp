@@ -104,6 +104,7 @@ namespace xge
 		.name = "trigger",
 		.forms = { { "<trigger>", places::changes, kindOf<CmdTriggerAction>() } },
 		.onRelease = true,
+		.names = { .object = Naming::OneObject },
 		.read = readTrigger,
 		.make = makeTrigger,
 		.check = checkAs<checkTrigger>,
