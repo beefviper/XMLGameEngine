@@ -45,7 +45,7 @@ Its own block of work, done before the tasks below: it touches every field of an
 
 - **The aim.** The engine does the same things with less: a resource is held once, an object carries only the parts it uses, a tag is written in few places, and the code reads from its names.
 - **What it must not do** is change what any game does. Every step here leaves every game playing exactly as before.
-- **One tag, twelve homes.** `<drag>` today is in the schema, the object reader, the group reader, `rawDrag` in `RawObject`, `load/build.cpp`, `Object::Motion`, the frame, the printer, two hand-kept lists of an object's numbers. CR1, CR5 and CR7 each take homes away; CR6 took `data.xsl`'s two and the describer's.
+- **One tag, twelve homes.** `<drag>` today is in the schema, the object reader, the group reader, `rawDrag` in `RawObject`, `load/build.cpp`, `Object::Motion`, the frame and the printer. CR5 and CR7 take homes away; CR1 took two hand-kept lists of an object's numbers, CR6 `data.xsl`'s two and the describer's.
 
 ### Rules for this block
 
@@ -192,7 +192,7 @@ The author's order: the resource manager and the components first, since the res
 - **Why.** `RawCommand` is 3,328 bytes of 61 shared fields. This is A1 step 4, and it replaces that step.
 - **Needs** CR6.
 - **Steps.**
-  - [ ] **1. The shape, on three verbs (M).** `RawCommand` becomes the verb, its line, and the verb's own data (a `std::variant` of small structs beside each verb's `Cmd...` struct, or one struct serving as both where nothing is worked out). `<bounce>`, `<hop>` and `<spawn>` first. **The author** reads those three files before the rest move.
+  - [ ] **1. The shape, on three verbs (M).** Built, waiting for the author's read: `RawOwn` (`std::variant<std::monostate, RawBounce, RawHop, RawSpawn>`) in `RawCommand::own`, each with `eachValue` for `forEachValue`; a hunt's hop is a `RawHop` (`byHops` gone). `RawCommand` 3,328 to 4,112 bytes until step 3; Pac-Man's `--check` 1.96G to 1.86G. Was: `RawCommand` becomes the verb, its line, and the verb's own data (a `std::variant` of small structs beside each verb's `Cmd...` struct, or one struct serving as both where nothing is worked out). `<bounce>`, `<hop>` and `<spawn>` first. **The author** reads those three files before the rest move.
   - [ ] **2. The rest, ten verbs a commit (L in all).** A field two verbs used for different things (`seconds`, `amount`, `distance`) becomes each verb's own, named for what it is there. **Check after each commit:** `xgetest "[verbs]"`, `xgetest-generated`.
   - [ ] **3. The bag goes (S).** `RawCommand` has no shared value fields; CR1's `forEachValue` asks the verb. Load errors name the command's own line. **Check:** `[size]`.
 - **Files.** `xge/lib/game/command.h`, `xge/lib/verbs/*`, `load/reading.*`; `docs/designs/14-verbs.md`.

@@ -29,9 +29,11 @@ One place for everything the engine knows about a verb.
 - **Places as the engine has them, narrower than the schema's.** The schema sorts commands into groups and each place takes some groups; the engine also knows that a `<wrap />` does nothing against another object. Each form names its places from the same groups (`places::changes`, `places::self`...), and the test checks that no verb goes where the schema would refuse it.
 - **A condition in an action is not a verb.** It is the list's own flow, run and checked by the code that walks the list.
 - **Compiled as one.** Seventy-five small files each including the game's headers would more than double the time a generated program takes to build, so CMake compiles the folder as one unit (`UNITY_GROUP`). Hence a verb's functions are named for it (`makeBounce`, `runBounce`), not hidden in an unnamed namespace where two files' would collide.
-- **A generated program carries the readers unused.** It is C++ already and reads no XML, but it compiles the verbs' files, so it is also given what a reader needs: the abstract `XmlNode` (`xml/document.h`) and the shared readers (`load/reading.cpp`), which need no XML library. The other way was a second file per verb for its reader; one file a verb was worth a few unused functions.
+- **A generated program reads with them too.** It carries its game as a tree of C++ data read by the engine's own reader (`load/xml.cpp` through `xml/tree.h`), so a verb's reader is the one it runs, with no XML library.
 - Rejected: one table of all verbs in one file (the first plan): it centralises the list but leaves each verb's code where it was.
 
 ## Open
 
-- **Its own data.** `RawCommand` is one struct of about fifty fields shared by all, each meaning something different per verb. A verb owning its fields would end that (plan CR7).
+- **Its own data (plan CR7, begun).** `RawCommand` was one struct of about fifty fields shared by all, each meaning something different per verb (`amount` was a bounce's share, a hop's distance and a spawn's count). Now it holds the verb, its line, the names every command may have (`object`, `direction`, `into`...) and `own`, a `std::variant` of the verb's own data as written: `RawBounce`, `RawHop` (a hunt's hop too) and `RawSpawn` so far, beside `RawValue` in `game/command.h`. Each part is named for what it is and is a `std::optional` when it may be left out; each lists its numbers for `RawCommand::forEachValue`, the one walk renames and live numbers go by.
+  - Until the shared fields go, `RawCommand` is bigger (3,328 to 4,112 bytes): a spawn's eleven numbers sit inline in the variant. It is load-time data only.
+  - Open: the rest of the verbs, ten a commit, then the shared fields go.

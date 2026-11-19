@@ -161,10 +161,10 @@ namespace xge
 	// What a <hop> says besides its direction: one distance as its content,
 	// or an <x> across and a <y> up or down; then how long it takes, its
 	// <seconds>, and how high it goes, its <arc>. True for an <x> and a <y>.
-	bool readHopParts(const XmlNode& node, const std::string& where, RawCommand& command);
+	bool readHopParts(const XmlNode& node, const std::string& where, RawHop& hop);
 	// <onto class="hslot" />, one or more and nothing else: the cells a hop
 	// or a track on cells may go to.
-	void readOnto(const XmlNode& node, const std::string& here, RawCommand& command);
+	void readOnto(const XmlNode& node, const std::string& here, std::vector<std::string>& onto);
 	// A <count>'s or <trigger>'s cells: one <here /> or <around>, the latter
 	// holding <straight /> and an <alike variable> if wanted.
 	void readCellPlace(const XmlNode& node, const std::string& where, RawCommand& command);
@@ -187,9 +187,9 @@ namespace xge
 	// <here /> or <around /> as written in a <count> or a <trigger>.
 	CellPlace cellPlaceOf(const RawCommand& raw);
 	// How long a <hop> takes: no <seconds>, none at all.
-	float hopSeconds(const RawCommand& raw, const ValueEvaluator& evaluate);
+	float hopSeconds(const RawHop& hop, const ValueEvaluator& evaluate);
 	// How high a timed <hop> goes: no <arc>, not at all.
-	float arcOf(const RawCommand& raw, const char* what, float seconds, const ValueEvaluator& evaluate);
+	float arcOf(const RawHop& hop, const char* what, float seconds, const ValueEvaluator& evaluate);
 	// The speed of a <go>, <hunt> or <wander>, which may not be below 0.
 	float speedOf(const RawCommand& raw, const char* what, const ValueEvaluator& evaluate);
 	// What one holder holds, sent to another: a <distribute>, or a <send>
@@ -198,6 +198,9 @@ namespace xge
 
 	// --- What several verbs' print() share.
 
+	// What a <hop> says as printed: its distance or diagonal, its seconds
+	// and arc.
+	void printHopParts(std::ostream& out, const RawHop& hop);
 	// A <count>'s or <trigger>'s cells as printed: ", here", ", around
 	// straight alike hue", or nothing for none.
 	std::string cellPlaceText(const CellPlace& place);

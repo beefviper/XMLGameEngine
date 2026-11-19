@@ -40,7 +40,8 @@ namespace
 	{
 		RawCommand command = tag(verb);
 		command.direction = direction;
-		command.amount = RawValue::expression(amount);
+		if (verb == "hop") { command.own.emplace<RawHop>().distance = RawValue::expression(amount); }
+		else { command.amount = RawValue::expression(amount); }
 		return command;
 	}
 }

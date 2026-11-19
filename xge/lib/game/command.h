@@ -16,6 +16,7 @@
 #include <ostream>
 #include <optional>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -1083,6 +1084,78 @@ namespace xge
 	// <move direction="up">step</move>, ... - before its number is worked out.
 	// `verb` is the tag name; which of the other fields are used depends on it
 	// (see makeCommand).
+	// --- A verb's own data as written: what its tag says besides the names
+	// every command may have, each part named for what it is there. A verb
+	// without one yet reads into RawCommand's shared fields (plan CR7).
+	// Each lists its numbers for RawCommand::forEachValue.
+
+	// <bounce>N</bounce>: the share of its speed it keeps; left out, all.
+	struct RawBounce
+	{
+		std::optional<RawValue> share;
+
+		template <typename Own, typename Visit> static void eachValue(Own& own, Visit& visit)
+		{
+			if (own.share) { visit(*own.share); }
+		}
+	};
+
+	// <hop>: one distance as its content, or a diagonal's <x> across and <y>
+	// up or down; its <seconds> through the air (left out: at once) and the
+	// <arc> it is drawn off its way (left out: none). On cells, its <onto
+	// class>es: what it may land on (nothing else written: one cell). A
+	// <hunt>'s <hop> is one too, its direction chosen as it hunts.
+	struct RawHop
+	{
+		std::optional<RawValue> distance;
+		std::optional<RawVector2> diagonal;
+		std::optional<RawValue> seconds;
+		std::optional<RawValue> arc;
+		std::vector<std::string> onto;
+
+		template <typename Own, typename Visit> static void eachValue(Own& own, Visit& visit)
+		{
+			for (auto* each : { &own.distance, &own.seconds, &own.arc })
+			{
+				if (*each) { visit(**each); }
+			}
+			if (own.diagonal) { visit(own.diagonal->x); visit(own.diagonal->y); }
+		}
+	};
+
+	// <spawn object="...">: its <count> (left out: one); where the copy goes
+	// (<position>, a half may be <centered>; on a cell map a <column> and a
+	// <row>, or <free /> with the row it goes <below>), how it is going
+	// (<velocity>, <acceleration>), each half left out when not written; and
+	// of a group, <random /> or the <member> of that number.
+	struct RawSpawn
+	{
+		std::optional<RawValue> count;
+		std::optional<RawValue> positionX;
+		std::optional<RawValue> positionY;
+		std::optional<RawValue> velocityX;
+		std::optional<RawValue> velocityY;
+		std::optional<RawValue> accelerationX;
+		std::optional<RawValue> accelerationY;
+		std::optional<RawValue> column;
+		std::optional<RawValue> row;
+		bool free{ false };
+		std::optional<RawValue> freeBelow;
+		bool random{ false };
+		std::optional<RawValue> member;
+
+		template <typename Own, typename Visit> static void eachValue(Own& own, Visit& visit)
+		{
+			for (auto* each : { &own.count, &own.positionX, &own.positionY, &own.velocityX, &own.velocityY, &own.accelerationX, &own.accelerationY,
+				&own.column, &own.row, &own.freeBelow, &own.member })
+			{
+				if (*each) { visit(**each); }
+			}
+		}
+	};
+
+	using RawOwn = std::variant<std::monostate, RawBounce, RawHop, RawSpawn>;
+
 	struct RawCommand
 	{
 		std::string verb;
@@ -1111,36 +1184,18 @@ namespace xge
 		bool avoid{ false };   // think: <avoid />, a card player that keeps out of tricks
 		std::vector<std::string> onto; // hop, track on cells: each <onto class=...>
 		std::vector<std::string> players; // turns: each <player>'s state= (empty for none)
-		RawValue amount;       // follow (how many nearest; empty text: all), set (the value), move, hop, turn, thrust, deflect (the widest angle), knock (the bounce; empty text: 1), hole (the radius), spawn (how many), jump (height), climb, go, hunt and wander (the speed)
-		RawValue seconds;      // jump (empty text: the default), hop (empty text: at once), follow (the stagger; empty text: 0), swing (its stroke)
-		RawValue arc;          // jump, hop: the highest it is drawn off its way (empty text: none)
+		RawValue amount;       // follow (how many nearest; empty text: all), set (the value), move, turn, thrust, deflect (the widest angle), knock (the bounce; empty text: 1), hole (the radius), jump (height), climb, go, hunt and wander (the speed)
+		RawValue seconds;      // jump (empty text: the default), follow (the stagger; empty text: 0), swing (its stroke), move (its <wait>)
 		bool search{ false };  // hunt: <search />, the shortest way through the maze
-		bool byHops{ false };  // hunt: by a <hop> (its distance the amount, or its <x> and <y> positionX and positionY; its <seconds>)
 		RawValue distance;     // chase (near; empty text: 0), hunt (how many tiles near is near enough to retreat), aim (lined; empty text: any way), swing (its <degrees>)
 		RawValue ahead;        // hunt (tiles in front of the one hunted; empty text: 0)
-		// spawn: its <position>, <velocity> and <acceleration>, each half empty text when
-		// left out; a position half may be <centered>.
-		// hop: a diagonal one's <x> across and <y> up or down (positionX and
-		// positionY), each empty text when it gives one distance instead.
 		// shift: its <x> and <y>, each empty text when left out (0).
 		RawValue positionX;
 		RawValue positionY;
-		RawValue velocityX;
-		RawValue velocityY;
-		RawValue accelerationX;
-		RawValue accelerationY;
-		// spawn: <random />, and on a cell map its <column> and <row>, each
-		// empty text when left out, or <free />. move: its <wait> is `seconds`.
-		bool random{ false };
-		bool free{ false };
 		bool all{ false };     // send: <all />
 		int most{ 0 };         // pick: <most>, from how many holders a picker may hold one at once
-		RawValue column;
+		RawValue column;       // send: on a cell map, where it goes
 		RawValue row;
-		// spawn: the <below> of its <free>, empty text when left out, and
-		// its <member>.
-		RawValue below;
-		RawValue member;
 		// count, trigger on cells: <here /> or <around /> (place: "here",
 		// "around"), <straight /> in <around>, its <alike variable>.
 		std::string place;
@@ -1150,6 +1205,10 @@ namespace xge
 		// as the test's own (shared; copied before it is changed).
 		std::shared_ptr<RawCondition> test;
 
+		// The verb's own data, for a verb that has it: bounce, hop (and a
+		// hunt's hop) and spawn.
+		RawOwn own;
+
 		// Every number it holds, written or not: what self, a copy's name, a
 		// scene's names and live numbers are looked for in. Not its test's.
 		template <typename Visit> void forEachValue(Visit&& visit) { eachValue(*this, visit); }
@@ -1158,12 +1217,15 @@ namespace xge
 	private:
 		template <typename Command, typename Visit> static void eachValue(Command& command, Visit& visit)
 		{
-			for (auto* each : { &command.amount, &command.seconds, &command.arc, &command.distance, &command.ahead,
-				&command.positionX, &command.positionY, &command.velocityX, &command.velocityY, &command.accelerationX, &command.accelerationY,
-				&command.column, &command.row, &command.below, &command.member })
+			for (auto* each : { &command.amount, &command.seconds, &command.distance, &command.ahead, &command.positionX, &command.positionY, &command.column, &command.row })
 			{
 				visit(*each);
 			}
+			std::visit([&](auto& own)
+			{
+				using Own = std::remove_const_t<std::remove_reference_t<decltype(own)>>;
+				if constexpr (!std::is_same_v<Own, std::monostate>) { Own::eachValue(own, visit); }
+			}, command.own);
 		}
 	};
 

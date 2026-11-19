@@ -18,6 +18,7 @@
 #include <stdexcept>
 #include <string>
 #include <utility>
+#include <variant>
 
 namespace xge
 {
@@ -35,8 +36,7 @@ namespace xge
 				fail(here, "a hunt by hops has its <hop> and nothing else (no speed, <ahead>, <with> or <retreat>: those are for a maze)");
 			}
 			if (!hop->getAttribute("direction").empty()) { fail(here + " > <hop>", "has a direction=; the hunt chooses the way"); }
-			command.byHops = true;
-			readHopParts(*hop, here, command);
+			readHopParts(*hop, here, command.own.emplace<RawHop>());
 			return;
 		}
 
@@ -59,12 +59,12 @@ namespace xge
 
 	static Command makeHunt(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
-		if (raw.byHops)
+		if (const RawHop* hop = std::get_if<RawHop>(&raw.own))
 		{
-			const bool diagonal = !raw.positionX.text.empty() || raw.positionX.kind != RawValue::Kind::Expression;
-			const float distance = diagonal ? 0.0f : evaluate(raw.amount);
-			const float seconds = hopSeconds(raw, evaluate);
-			return CmdHuntHop{ raw.object, diagonal ? evaluate(raw.positionX) : distance, diagonal ? evaluate(raw.positionY) : distance, diagonal, seconds, arcOf(raw, "hop", seconds, evaluate) };
+			const bool diagonal = hop->diagonal.has_value();
+			const float distance = diagonal ? 0.0f : evaluate(*hop->distance);
+			const float seconds = hopSeconds(*hop, evaluate);
+			return CmdHuntHop{ raw.object, diagonal ? evaluate(hop->diagonal->x) : distance, diagonal ? evaluate(hop->diagonal->y) : distance, diagonal, seconds, arcOf(*hop, "hop", seconds, evaluate) };
 		}
 
 		CmdHunt hunt{ raw.object, speedOf(raw, "hunt", evaluate), 0.0f, raw.partner, raw.retreat, 0.0f, raw.search };
@@ -160,10 +160,11 @@ namespace xge
 
 	static void printHuntRaw(std::ostream& o, const RawCommand& command)
 	{
-		if (command.byHops)
+		if (const RawHop* hop = std::get_if<RawHop>(&command.own))
 		{
-			o << (command.byHops ? "(" + command.object + ", by hops of " : "." + command.direction + "(") << command.amount << ", " << command.positionX << " " << command.positionY
-				<< ", " << command.seconds << ")";
+			o << "(" << command.object << ", by hops of ";
+			printHopParts(o, *hop);
+			o << ")";
 		}
 		else
 		{

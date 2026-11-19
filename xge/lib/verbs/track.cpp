@@ -18,7 +18,7 @@ namespace xge
 	// CommandExecutor::executeAxis.
 	static void readTrack(const XmlNode& node, const std::string& where, RawCommand& command)
 	{
-		if (node.getFirstChild()) { readOnto(node, where + " > <track>", command); }
+		if (node.getFirstChild()) { readOnto(node, where + " > <track>", command.onto); }
 	}
 
 	static Command makeTrack(const RawCommand& raw, const ValueEvaluator&)

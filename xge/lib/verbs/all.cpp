@@ -105,6 +105,15 @@ namespace xge
 		return owner.form;
 	}
 
+	void printHopParts(std::ostream& out, const RawHop& hop)
+	{
+		if (hop.diagonal) { out << hop.diagonal->x << " " << hop.diagonal->y; }
+		else if (hop.distance) { out << *hop.distance; }
+		if (hop.seconds) { out << ", " << *hop.seconds << "s"; }
+		if (hop.arc) { out << ", arc " << *hop.arc; }
+		for (const std::string& onto : hop.onto) { out << ", onto " << onto; }
+	}
+
 	std::string cellPlaceText(const CellPlace& place)
 	{
 		if (!place.any()) { return {}; }
@@ -158,17 +167,17 @@ namespace xge
 		return node.getFirstChild() || !readText(node).empty();
 	}
 
-	bool readHopParts(const XmlNode& node, const std::string& where, RawCommand& command)
+	bool readHopParts(const XmlNode& node, const std::string& where, RawHop& hop)
 	{
 		const std::string here = where + " > <hop>";
-		if (auto seconds = findChild(&node, "seconds")) { command.seconds = readValue(*seconds, here); }
-		if (auto arc = findChild(&node, "arc")) { command.arc = readValue(*arc, here); }
+		if (auto seconds = findChild(&node, "seconds")) { hop.seconds = readValue(*seconds, here); }
+		if (auto arc = findChild(&node, "arc")) { hop.arc = readValue(*arc, here); }
 
 		// Nothing written: one cell, on a cell map.
 		if (!node.getFirstChild() && readText(node).empty()) { return false; }
 		if (!findChild(&node, "x") && !findChild(&node, "y"))
 		{
-			command.amount = readLeadValue(node, { "seconds", "arc" }, "its distance, or an <x> and a <y>, then <seconds> and <arc> if wanted", where);
+			hop.distance = readLeadValue(node, { "seconds", "arc" }, "its distance, or an <x> and a <y>, then <seconds> and <arc> if wanted", where);
 			return false;
 		}
 
@@ -182,19 +191,18 @@ namespace xge
 		}
 		const PartialVector2 step = readPartialVector2(node, where);
 		if (!step.x || !step.y || !readText(node).empty()) { fail(where, "<hop> gives one distance, or an <x> across and a <y> up or down, both"); }
-		command.positionX = *step.x;
-		command.positionY = *step.y;
+		hop.diagonal = RawVector2{ *step.x, *step.y };
 		return true;
 	}
 
 
-	void readOnto(const XmlNode& node, const std::string& here, RawCommand& command)
+	void readOnto(const XmlNode& node, const std::string& here, std::vector<std::string>& onto)
 	{
 		if (!readText(node).empty()) { fail(here, "has text; with <onto> it says nothing else"); }
 		for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
 		{
 			if (child->getName() != "onto") { fail(here, "unknown <" + child->getName() + ">; with <onto> it says nothing else"); }
-			command.onto.push_back(requireAttribute(*child, "class", here + " > <onto>"));
+			onto.push_back(requireAttribute(*child, "class", here + " > <onto>"));
 		}
 	}
 
@@ -271,19 +279,19 @@ namespace xge
 		return place;
 	}
 
-	float hopSeconds(const RawCommand& raw, const ValueEvaluator& evaluate)
+	float hopSeconds(const RawHop& hop, const ValueEvaluator& evaluate)
 	{
-		if (!isWritten(raw.seconds)) { return 0.0f; }
-		const float seconds = evaluate(raw.seconds);
+		if (!hop.seconds) { return 0.0f; }
+		const float seconds = evaluate(*hop.seconds);
 		if (!(seconds > 0.0f)) { throw std::runtime_error("<hop> has <seconds> of " + formatDisplayNumber(seconds) + "; expected more than 0"); }
 		return seconds;
 	}
 
-	float arcOf(const RawCommand& raw, const char* what, float seconds, const ValueEvaluator& evaluate)
+	float arcOf(const RawHop& hop, const char* what, float seconds, const ValueEvaluator& evaluate)
 	{
-		if (!isWritten(raw.arc)) { return 0.0f; }
+		if (!hop.arc) { return 0.0f; }
 		if (!(seconds > 0.0f)) { throw std::runtime_error(std::string("<") + what + "> has an <arc> but no <seconds>: only a hop that takes time leaves the ground"); }
-		const float arc = evaluate(raw.arc);
+		const float arc = evaluate(*hop.arc);
 		if (arc < 0.0f) { throw std::runtime_error(std::string("<") + what + "> has an <arc> of " + formatDisplayNumber(arc) + "; expected 0 or more"); }
 		return arc;
 	}

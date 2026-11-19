@@ -19,29 +19,50 @@
 #include <filesystem>
 #include <fstream>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
+#include <variant>
 #include <vector>
 
 using namespace xge;
 
 namespace
 {
+	// A number of a command: the shared one, or one of a verb's own data,
+	// made when it is not there yet.
+	using Place = RawValue& (*)(RawCommand&);
+
+	template <RawValue RawCommand::*Part> RawValue& shared(RawCommand& command) { return command.*Part; }
+
+	template <typename Own, std::optional<RawValue> Own::*Part> RawValue& own(RawCommand& command)
+	{
+		Own* data = std::get_if<Own>(&command.own);
+		if (!data) { data = &command.own.template emplace<Own>(); }
+		std::optional<RawValue>& value = data->*Part;
+		return value ? *value : value.emplace();
+	}
+
 	// Every number a command can hold, with the name a message gives it.
-	const std::vector<std::pair<const char*, RawValue RawCommand::*>> commandValues{
-		{ "amount", &RawCommand::amount }, { "seconds", &RawCommand::seconds }, { "arc", &RawCommand::arc },
-		{ "distance", &RawCommand::distance }, { "ahead", &RawCommand::ahead },
-		{ "positionX", &RawCommand::positionX }, { "positionY", &RawCommand::positionY },
-		{ "velocityX", &RawCommand::velocityX }, { "velocityY", &RawCommand::velocityY },
-		{ "accelerationX", &RawCommand::accelerationX }, { "accelerationY", &RawCommand::accelerationY },
-		{ "column", &RawCommand::column }, { "row", &RawCommand::row }, { "below", &RawCommand::below }, { "member", &RawCommand::member },
+	const std::vector<std::pair<const char*, Place>> commandValues{
+		{ "amount", shared<&RawCommand::amount> }, { "seconds", shared<&RawCommand::seconds> },
+		{ "distance", shared<&RawCommand::distance> }, { "ahead", shared<&RawCommand::ahead> },
+		{ "positionX", shared<&RawCommand::positionX> }, { "positionY", shared<&RawCommand::positionY> },
+		{ "column", shared<&RawCommand::column> }, { "row", shared<&RawCommand::row> },
+		{ "bounce's share", own<RawBounce, &RawBounce::share> },
+		{ "hop's distance", own<RawHop, &RawHop::distance> }, { "hop's seconds", own<RawHop, &RawHop::seconds> }, { "hop's arc", own<RawHop, &RawHop::arc> },
+		{ "spawn's count", own<RawSpawn, &RawSpawn::count> }, { "spawn's x", own<RawSpawn, &RawSpawn::positionX> }, { "spawn's y", own<RawSpawn, &RawSpawn::positionY> },
+		{ "spawn's velocity x", own<RawSpawn, &RawSpawn::velocityX> }, { "spawn's velocity y", own<RawSpawn, &RawSpawn::velocityY> },
+		{ "spawn's acceleration x", own<RawSpawn, &RawSpawn::accelerationX> }, { "spawn's acceleration y", own<RawSpawn, &RawSpawn::accelerationY> },
+		{ "spawn's column", own<RawSpawn, &RawSpawn::column> }, { "spawn's row", own<RawSpawn, &RawSpawn::row> },
+		{ "spawn's below", own<RawSpawn, &RawSpawn::freeBelow> }, { "spawn's member", own<RawSpawn, &RawSpawn::member> },
 	};
 
-	RawCommand commandWith(RawValue RawCommand::*part, const std::string& text)
+	RawCommand commandWith(Place place, const std::string& text)
 	{
 		RawCommand command;
 		command.verb = "spawn";
-		command.*part = RawValue::expression(text);
+		place(command) = RawValue::expression(text);
 		return command;
 	}
 
@@ -68,7 +89,7 @@ TEST_CASE("self in any of a command's numbers is the object running it", "[value
 		INFO(name);
 		RawCommand command = commandWith(part, "self.h + 1");
 		CHECK(nameSelfIn(command, "frog"));
-		CHECK((command.*part).text == "frog.h + 1");
+		CHECK(part(command).text == "frog.h + 1");
 	}
 }
 
@@ -79,7 +100,7 @@ TEST_CASE("an object's name in any of a command's numbers is renamed", "[values]
 		INFO(name);
 		std::vector<RawCommand> list{ commandWith(part, "bomb.h * 2") };
 		CHECK(renameObjectIn(list, "bomb", "shell"));
-		CHECK((list.front().*part).text == "shell.h * 2");
+		CHECK(part(list.front()).text == "shell.h * 2");
 	}
 }
 
@@ -93,7 +114,7 @@ TEST_CASE("a copy's own name in any of its commands' numbers is the copy's", "[v
 		object.action["drop"] = { commandWith(part, "bomb.h") };
 		const Renamed renamed = renameOwn(object, "bomb", "bomb.1");
 		CHECK(renamed.kind);
-		CHECK((object.action["drop"].front().*part).text == "bomb.1.h");
+		CHECK(part(object.action["drop"].front()).text == "bomb.1.h");
 	}
 }
 

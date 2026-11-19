@@ -10,6 +10,7 @@
 #include "load/reading.h"
 
 #include <stdexcept>
+#include <variant>
 
 namespace xge
 {
@@ -17,12 +18,14 @@ namespace xge
 	// of its speed.
 	static void readBounce(const XmlNode& node, const std::string& where, RawCommand& command)
 	{
-		if (hasContent(node)) { command.amount = readValue(node, where); }
+		RawBounce& bounce = command.own.emplace<RawBounce>();
+		if (hasContent(node)) { bounce.share = readValue(node, where); }
 	}
 
 	static Command makeBounce(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
-		const float share = valueOr(raw.amount, 1.0f, evaluate);
+		const RawBounce& bounce = std::get<RawBounce>(raw.own);
+		const float share = bounce.share ? evaluate(*bounce.share) : 1.0f;
 		if (!(share >= 0.0f))
 		{
 			throw std::runtime_error("<bounce> keeps a share of " + formatDisplayNumber(share) + " of its speed; expected 0 or more");
@@ -46,10 +49,8 @@ namespace xge
 
 	static void printBounceRaw(std::ostream& o, const RawCommand& command)
 	{
-		if (command.amount.kind != RawValue::Kind::Expression || !command.amount.text.empty())
-		{
-			o << "(" << command.amount << ")";
-		}
+		const RawBounce& bounce = std::get<RawBounce>(command.own);
+		if (bounce.share) { o << "(" << *bounce.share << ")"; }
 	}
 
 	extern const Verb bounceVerb;

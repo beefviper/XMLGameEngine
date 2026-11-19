@@ -14,6 +14,7 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <variant>
 
 namespace xge
 {
@@ -32,54 +33,57 @@ namespace xge
 				fail(here, "unknown <" + tag + ">; expected a <count>, <random /> or a <member>, a <position> (or a <column> and a <row>, or <free />), a <velocity> and an <acceleration>, each if wanted");
 			}
 		}
-		if (auto count = findChild(&node, "count")) { command.amount = readValue(*count, here + " > <count>"); }
-		command.random = findChild(&node, "random") != nullptr;
-		if (auto member = findChild(&node, "member")) { command.member = readValue(*member, here + " > <member>"); }
+		RawSpawn& spawn = command.own.emplace<RawSpawn>();
+		if (auto count = findChild(&node, "count")) { spawn.count = readValue(*count, here + " > <count>"); }
+		spawn.random = findChild(&node, "random") != nullptr;
+		if (auto member = findChild(&node, "member")) { spawn.member = readValue(*member, here + " > <member>"); }
 		if (auto free = findChild(&node, "free"))
 		{
-			command.free = true;
+			spawn.free = true;
 			for (std::unique_ptr<XmlNode> child = free->getFirstChild(); child != nullptr; child = child->getNextSibling())
 			{
 				if (child->getName() != "below") { fail(here + " > <free>", "unknown <" + child->getName() + ">; expected only a <below>: the row it goes under"); }
-				command.below = readValue(*child, here + " > <free> > <below>");
+				spawn.freeBelow = readValue(*child, here + " > <free> > <below>");
 			}
 		}
-		if (auto column = findChild(&node, "column")) { command.column = readValue(*column, here); }
-		if (auto row = findChild(&node, "row")) { command.row = readValue(*row, here); }
+		if (auto column = findChild(&node, "column")) { spawn.column = readValue(*column, here); }
+		if (auto row = findChild(&node, "row")) { spawn.row = readValue(*row, here); }
 		if (auto position = findChild(&node, "position"))
 		{
 			const PartialVector2 given = readPartialVector2(*position, here);
-			if (given.x) { command.positionX = *given.x; }
-			if (given.y) { command.positionY = *given.y; }
+			spawn.positionX = given.x;
+			spawn.positionY = given.y;
 		}
 		if (auto velocity = findChild(&node, "velocity"))
 		{
 			const PartialVector2 given = readPartialVector2(*velocity, here);
-			if (given.x) { command.velocityX = *given.x; }
-			if (given.y) { command.velocityY = *given.y; }
+			spawn.velocityX = given.x;
+			spawn.velocityY = given.y;
 		}
 		if (auto acceleration = findChild(&node, "acceleration"))
 		{
 			const PartialVector2 given = readPartialVector2(*acceleration, here);
-			if (given.x) { command.accelerationX = *given.x; }
-			if (given.y) { command.accelerationY = *given.y; }
+			spawn.accelerationX = given.x;
+			spawn.accelerationY = given.y;
 		}
 	}
 
 	static Command makeSpawn(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
+		const RawSpawn& written = std::get<RawSpawn>(raw.own);
 		CmdSpawn spawn;
 		spawn.target = raw.object;
-		if (isWritten(raw.amount))
+		if (written.count)
 		{
-			spawn.count = static_cast<int>(std::lround(evaluate(raw.amount)));
+			spawn.count = static_cast<int>(std::lround(evaluate(*written.count)));
 			if (spawn.count < 1) { throw std::runtime_error("<spawn object=\"" + raw.object + "\">: a <count> under 1"); }
 		}
 		// A <centered> half holds where the middle goes; left empty, the
 		// middle of the window.
-		const auto half = [&](const RawValue& value, std::optional<float>& into, bool* centered, const char* middle)
+		const auto half = [&](const std::optional<RawValue>& given, std::optional<float>& into, bool* centered, const char* middle)
 		{
-			if (!isWritten(value)) { return; }
+			if (!given) { return; }
+			const RawValue& value = *given;
 			if (value.kind == RawValue::Kind::Centered)
 			{
 				if (value.edge != RawValue::Edge::Middle) { throw std::runtime_error("<spawn object=\"" + raw.object + "\">: <left>, <right>, <top> and <bottom> are for an object's <position>"); }
@@ -93,20 +97,20 @@ namespace xge
 			}
 			into = evaluate(value);
 		};
-		half(raw.positionX, spawn.x, &spawn.centerX, "window.width.center");
-		half(raw.positionY, spawn.y, &spawn.centerY, "window.height.center");
-		half(raw.velocityX, spawn.velocityX, nullptr, "");
-		half(raw.velocityY, spawn.velocityY, nullptr, "");
-		half(raw.accelerationX, spawn.accelerationX, nullptr, "");
-		half(raw.accelerationY, spawn.accelerationY, nullptr, "");
-		half(raw.column, spawn.column, nullptr, "");
-		half(raw.row, spawn.row, nullptr, "");
-		half(raw.member, spawn.member, nullptr, "");
-		spawn.random = raw.random;
+		half(written.positionX, spawn.x, &spawn.centerX, "window.width.center");
+		half(written.positionY, spawn.y, &spawn.centerY, "window.height.center");
+		half(written.velocityX, spawn.velocityX, nullptr, "");
+		half(written.velocityY, spawn.velocityY, nullptr, "");
+		half(written.accelerationX, spawn.accelerationX, nullptr, "");
+		half(written.accelerationY, spawn.accelerationY, nullptr, "");
+		half(written.column, spawn.column, nullptr, "");
+		half(written.row, spawn.row, nullptr, "");
+		half(written.member, spawn.member, nullptr, "");
+		spawn.random = written.random;
 		spawn.into = raw.into;
-		spawn.free = raw.free;
+		spawn.free = written.free;
 		std::optional<float> below;
-		half(raw.below, below, nullptr, "");
+		half(written.freeBelow, below, nullptr, "");
 		spawn.freeBelow = below ? static_cast<int>(std::lround(*below)) : 0;
 		return spawn;
 	}
@@ -151,9 +155,30 @@ namespace xge
 
 	static void printSpawnRaw(std::ostream& o, const RawCommand& command)
 	{
-		o << "(" << command.object << ", " << command.amount << ", " << command.positionX << " " << command.positionY << ", " << command.velocityX << " " << command.velocityY << ", " << command.accelerationX << " " << command.accelerationY
-			<< (command.random ? ", random" : "") << (command.free ? ", free" : "") << " " << command.below << ", " << command.column << " " << command.row << (command.into.empty() ? "" : ", into " + command.into);
-		if (isWritten(command.member)) { o << ", member " << command.member; }
+		const RawSpawn& spawn = std::get<RawSpawn>(command.own);
+		const auto half = [&](const std::optional<RawValue>& value) { if (value) { o << *value; } else { o << "-"; } };
+		o << "(" << command.object << ", ";
+		half(spawn.count);
+		o << ", ";
+		half(spawn.positionX);
+		o << " ";
+		half(spawn.positionY);
+		o << ", ";
+		half(spawn.velocityX);
+		o << " ";
+		half(spawn.velocityY);
+		o << ", ";
+		half(spawn.accelerationX);
+		o << " ";
+		half(spawn.accelerationY);
+		o << (spawn.random ? ", random" : "") << (spawn.free ? ", free " : " ");
+		half(spawn.freeBelow);
+		o << ", ";
+		half(spawn.column);
+		o << " ";
+		half(spawn.row);
+		o << (command.into.empty() ? "" : ", into " + command.into);
+		if (spawn.member) { o << ", member " << *spawn.member; }
 		o << ")";
 	}
 

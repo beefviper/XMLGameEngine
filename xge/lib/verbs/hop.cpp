@@ -10,6 +10,7 @@
 
 #include <stdexcept>
 #include <string>
+#include <variant>
 
 namespace xge
 {
@@ -17,12 +18,13 @@ namespace xge
 	static void readHop(const XmlNode& node, const std::string& where, RawCommand& command)
 	{
 		requireAttribute(node, "direction", where);
+		RawHop& hop = command.own.emplace<RawHop>();
 		if (findChild(&node, "onto"))
 		{
-			readOnto(node, where + " > <hop>", command);
+			readOnto(node, where + " > <hop>", hop.onto);
 			if (command.direction.find('-') != std::string::npos) { fail(where, "<hop direction=\"" + command.direction + "\"> with <onto>: only up, down, left or right"); }
 		}
-		else if (readHopParts(node, where, command) && command.direction.find('-') == std::string::npos)
+		else if (readHopParts(node, where, hop) && command.direction.find('-') == std::string::npos)
 		{
 			fail(where, "<hop direction=\"" + command.direction + "\"> is not diagonal; it gives one distance");
 		}
@@ -30,16 +32,17 @@ namespace xge
 
 	static Command makeHop(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
+		const RawHop& written = std::get<RawHop>(raw.own);
 		// up-left and the rest: one of up/down, then one of left/right.
 		const std::string& name = raw.direction;
 		const auto dash = name.find('-');
 		if (dash == std::string::npos)
 		{
 			// Nothing written: none (a hop on a cell map, one cell).
-			CmdHop hop{ directionFromName(name, raw.verb), valueOr(raw.amount, 0.0f, evaluate), {}, hopSeconds(raw, evaluate), 0.0f, {} };
-			hop.arc = arcOf(raw, "hop", hop.seconds, evaluate);
+			CmdHop hop{ directionFromName(name, raw.verb), written.distance ? evaluate(*written.distance) : 0.0f, {}, hopSeconds(written, evaluate), 0.0f, {} };
+			hop.arc = arcOf(written, "hop", hop.seconds, evaluate);
 			hop.step = stepToward(hop.direction, hop.distance);
-			hop.onto = raw.onto;
+			hop.onto = written.onto;
 			return hop;
 		}
 
@@ -49,12 +52,11 @@ namespace xge
 		{
 			throw std::runtime_error("<hop> has direction=\"" + name + "\"; a diagonal is up-left, up-right, down-left or down-right");
 		}
-		const bool split = !raw.positionX.text.empty() || raw.positionX.kind != RawValue::Kind::Expression;
-		const float distance = split ? 0.0f : evaluate(raw.amount);
-		const float across = split ? evaluate(raw.positionX) : distance;
-		const float down = split ? evaluate(raw.positionY) : distance;
-		CmdHop hop{ upDown, distance, {}, hopSeconds(raw, evaluate), 0.0f, {} };
-		hop.arc = arcOf(raw, "hop", hop.seconds, evaluate);
+		const float distance = written.diagonal ? 0.0f : evaluate(*written.distance);
+		const float across = written.diagonal ? evaluate(written.diagonal->x) : distance;
+		const float down = written.diagonal ? evaluate(written.diagonal->y) : distance;
+		CmdHop hop{ upDown, distance, {}, hopSeconds(written, evaluate), 0.0f, {} };
+		hop.arc = arcOf(written, "hop", hop.seconds, evaluate);
 		hop.step = { leftRight == Direction::Left ? -across : across, upDown == Direction::Up ? -down : down };
 		return hop;
 	}
@@ -81,8 +83,9 @@ namespace xge
 
 	static void printHopRaw(std::ostream& o, const RawCommand& command)
 	{
-		o << (command.byHops ? "(" + command.object + ", by hops of " : "." + command.direction + "(") << command.amount << ", " << command.positionX << " " << command.positionY
-			<< ", " << command.seconds << ")";
+		o << "." << command.direction << "(";
+		printHopParts(o, std::get<RawHop>(command.own));
+		o << ")";
 	}
 
 	extern const Verb hopVerb;
