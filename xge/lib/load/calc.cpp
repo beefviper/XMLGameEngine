@@ -81,6 +81,11 @@ namespace xge
 		names.emplace(key, &constants.back());
 	}
 
+	std::string Calc::nameOf(std::string written)
+	{
+		return lowered(std::move(written));
+	}
+
 	void Calc::variable(const std::string& name, const float& value)
 	{
 		names.emplace(lowered(name), &value);

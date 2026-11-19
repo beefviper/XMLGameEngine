@@ -371,7 +371,9 @@ namespace xge
 		// Game writes them from where everything is (Game::evaluateNow).
 		// While loading they have no meaning yet, and a value that names one
 		// stops the load, unless it is a command's (see processCommands).
-		std::map<std::string, float> liveNumbers;
+		// Each is under its name as a text reads it (Calc::nameOf), and goes
+		// into calc the first time a text reads it.
+		std::unordered_map<std::string, float> liveNumbers;
 
 		// The texts already found to name none of liveNumbers while loading,
 		// so a text many objects share (a map's pieces) is looked through once.

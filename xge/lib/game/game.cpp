@@ -2291,7 +2291,7 @@ namespace xge
 				for (std::size_t part = 0; part < parts.size(); ++part)
 				{
 					if (live[part].has && !live[part].has(objectParts, objects[i])) { continue; }
-					const auto found = expr.liveNumbers.find(objects[i].name + "." + parts[part]);
+					const auto found = expr.liveNumbers.find(Calc::nameOf(objects[i].name + "." + parts[part]));
 					if (found != expr.liveNumbers.end()) { liveLinks.push_back({ &found->second, i, part }); }
 				}
 			}

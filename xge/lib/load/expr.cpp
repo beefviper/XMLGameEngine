@@ -304,15 +304,15 @@ namespace xge
 
 		// Where each object is and how it is going, and the touch a rule is
 		// answering, as names; worked out when they are used (Game::evaluateNow).
+		// An object's own variable of a part's name is read instead.
+		liveNumbers.reserve(rawObjects.size() * liveNumberParts().size());
 		for (const RawObject& rawObject : rawObjects)
 		{
 			for (const std::string& part : liveNumberParts())
 			{
-				const std::string name = rawObject.name + "." + part;
-				if (!objectVariables.count(name) && !liveNumbers.count(name)) { liveNumbers[name] = 0.0f; }
+				if (!rawObject.variable.count(part)) { liveNumbers.try_emplace(Calc::nameOf(rawObject.name + "." + part), 0.0f); }
 			}
 		}
-		for (auto& [name, number] : liveNumbers) { bind(name, number); }
 	}
 
 	// init's objects: every sprite measured once (its size a name), the
@@ -662,8 +662,7 @@ namespace xge
 		}
 		for (const std::string& part : liveNumberParts())
 		{
-			const std::string name = raw.name + "." + part;
-			if (!objectVariables.count(name) && liveNumbers.emplace(name, 0.0f).second) { bind(name, liveNumbers[name]); }
+			if (!raw.variable.count(part)) { liveNumbers.try_emplace(Calc::nameOf(raw.name + "." + part), 0.0f); }
 		}
 		if (const auto size = objectSizes.find(from.name); size != objectSizes.end() && !objectSizes.count(raw.name))
 		{
@@ -1032,6 +1031,10 @@ namespace xge
 					calc.variable(name, *waiting->second);
 					unbound.erase(waiting);
 				}
+				else if (const auto live = liveNumbers.find(name); live != liveNumbers.end())
+				{
+					calc.variable(name, live->second);
+				}
 			}
 
 			try
@@ -1068,9 +1071,7 @@ namespace xge
 
 	void game_expr::bind(const std::string& name, float& value)
 	{
-		std::string key = name;
-		std::transform(key.begin(), key.end(), key.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
-		unbound.emplace(std::move(key), &value);
+		unbound.emplace(Calc::nameOf(name), &value);
 	}
 
 	const std::vector<std::string>& game_expr::namesIn(const std::string& text) const

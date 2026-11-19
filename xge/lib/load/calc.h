@@ -33,6 +33,9 @@ namespace xge
 		// Whether the name reads anything (a constant or a variable).
 		bool has(const std::string& name) const;
 
+		// The name a text reads `written` as: case does not tell names apart.
+		static std::string nameOf(std::string written);
+
 		// The name a text is, lowercased, whether it names anything or not;
 		// none for a number.
 		static std::vector<std::string> namesIn(const std::string& text);
