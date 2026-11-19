@@ -1723,11 +1723,10 @@ namespace xge
 			bool climbOnce{ false };
 		};
 
-		// Where an <aim> pointed it: the way its next <fire>s go (a unit
-		// vector), while hasAim. A move, hop or jump by key, or a reset,
+		// Where an <aim> or a diagonal move pointed it: the way its next
+		// <fire>s go (a unit vector). A move, hop or jump by key, or a reset,
 		// drops it.
-		bool hasAim{ false };
-		Vector2f aim{};
+		std::optional<Vector2f> aim;
 
 		// A <follow> under way (see Path, Game::applyPaths): the path's name
 		// (empty: on none), which of its legs is being flown, what is left of

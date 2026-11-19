@@ -56,11 +56,11 @@ namespace xge
 		const Vector2f shotSize = sizeOf(*projectile);
 		const float speed = std::hypot(game.startOf(*projectile).velocity.x, game.startOf(*projectile).velocity.y);
 		std::optional<Shot> shot;
-		if (shooter.hasAim)
+		if (shooter.aim)
 		{
 			// Straight along the aim, from the middle of the shooter, just clear
 			// of it, at the projectile's own speed.
-			shot = shotAlong(from, shotSize, shooter.aim, speed);
+			shot = shotAlong(from, shotSize, *shooter.aim, speed);
 		}
 		else if (shooter.turning.hasHeading)
 		{

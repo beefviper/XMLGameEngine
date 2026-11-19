@@ -284,7 +284,9 @@ namespace xge
 		// `self`'s collision rules about `other`, which it has touched as
 		// `touch` says (its own edge, and the rest): the ones that hold run.
 		// Half of a touch; a knock passed through a floor is only this half.
-		void reactTo(Object& self, Object& other, const Touch& touch);
+		// What the rules that ran asked of a refused cell step.
+		struct Reaction { bool through{ false }; };
+		Reaction reactTo(Object& self, Object& other, const Touch& touch);
 		// A rule naming other, made for a copy (shot.3) of the object it was
 		// made for (shot): once, the first time that copy is touched.
 		// A test made about the object `from`, made about `to`, a copy of it.
@@ -609,8 +611,6 @@ namespace xge
 
 		// <split />: the chain the piece is in is cut there (see CmdSplit).
 		void splitChain(Object& piece);
-		// <through />: the refused cell step being asked about is made.
-		void stepThrough() { goThrough = true; }
 		// <shove />: the piece in the way of a refused step goes one cell on
 		// through the side met (`way`, the mover's side); false when it
 		// cannot (after its own touch).
@@ -847,8 +847,6 @@ namespace xge
 			int row{};
 		};
 		std::vector<Stepping> stepping;
-		// Set by a <through /> in the rules of a refused cell step.
-		bool goThrough = false;
 		// The pieces that have merged in this slide (or this press).
 		std::vector<const Object*> merged;
 		// <undo />: how every object was before each press that moved a

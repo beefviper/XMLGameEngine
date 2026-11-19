@@ -335,12 +335,11 @@ namespace xge
 			touch.point = middleOf(*blocker);
 			const int beforeColumn = whole(place(mover).column);
 			const int beforeRow = whole(place(mover).row);
-			goThrough = false;
-			reactTo(mover, *blocker, touch);
+			const Reaction moverAsked = reactTo(mover, *blocker, touch);
 			Touch back = touch;
 			back.edge = opposite(edge);
 			back.normal = outOf(edge);
-			reactTo(*blocker, mover, back);
+			const Reaction blockerAsked = reactTo(*blocker, mover, back);
 			// A shoved piece's own step is asked inside these rules.
 			stepping.resize(steppingBefore);
 
@@ -349,8 +348,7 @@ namespace xge
 			// has made its own step instead.
 			// A <through /> in the rules makes it anyway.
 			const bool moved = whole(place(mover).column) != beforeColumn || whole(place(mover).row) != beforeRow;
-			const bool through = goThrough;
-			goThrough = false;
+			const bool through = moverAsked.through || blockerAsked.through;
 			if (moved || !mover.exists) { return false; }
 			if (!through && (inTheWay(offMap) || offMap)) { return false; }
 		}
@@ -1516,11 +1514,7 @@ namespace xge
 		}
 		const int across = way == Edge::Left ? -1 : way == Edge::Right ? 1 : 0;
 		const int down = way == Edge::Top ? -1 : way == Edge::Bottom ? 1 : 0;
-		// Its own step is asked about in the middle of the mover's.
-		const bool through = goThrough;
-		const bool moved = stepCells(*shoved, across, down);
-		goThrough = through;
-		return moved;
+		return stepCells(*shoved, across, down);
 	}
 
 	bool Game::mergeCells(Object& mover, Object& other, const std::string& variable)

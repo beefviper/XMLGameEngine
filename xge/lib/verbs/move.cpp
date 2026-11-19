@@ -105,13 +105,13 @@ namespace xge
 		if (pressed && step != 0.0f)
 		{
 			object.facing = direction;
-			object.hasAim = false;
+			object.aim.reset();
 		}
 		else if (!pressed && (across == 0.0f) != (upDown == 0.0f))
 		{
 			// One of two let go: the way still held, straight.
 			object.facing = across < 0.0f ? Direction::Left : across > 0.0f ? Direction::Right : upDown < 0.0f ? Direction::Up : Direction::Down;
-			object.hasAim = false;
+			object.aim.reset();
 		}
 		// Two held across each other: an object with a <facing> faces the
 		// diagonal between them, and its <fire>s leave along it. Let go of
@@ -119,7 +119,6 @@ namespace xge
 		if (object.hasFacing && across != 0.0f && upDown != 0.0f)
 		{
 			object.aim = Vector2f{ across, upDown } * (1.0f / std::sqrt(2.0f));
-			object.hasAim = true;
 		}
 	}
 

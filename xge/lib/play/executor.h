@@ -119,6 +119,10 @@ namespace xge
 		void triggerAbout(Object& self, const CmdTriggerAction& trigger, bool byRule);
 
 
+		// A <through /> among the commands run: the refused cell step they
+		// answer is made anyway (Game::Reaction).
+		bool throughAsked{ false };
+
 	private:
 		bool lastTriggerRefused{ false };
 		std::vector<std::string> aboutReached;

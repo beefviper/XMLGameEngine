@@ -721,7 +721,7 @@ TEST_CASE("<aim> sends the next shots straight at the target, at any angle, unti
 	// A key that moves the gun drops the aim: from its top again.
 	CommandExecutor executor(loaded.game);
 	executor.executeInput(CmdTriggerAction{ "gun", "left" }, true);
-	CHECK_FALSE(loaded.game.getObject("gun").hasAim);
+	CHECK_FALSE(loaded.game.getObject("gun").aim.has_value());
 }
 
 TEST_CASE("<aim> with <lined> fires only along one of the eight ways, when the target is lined up", "[aim]")
@@ -772,7 +772,7 @@ TEST_CASE("two move keys held across each other face the diagonal, and a <fire> 
 	// Up let go, right still held: straight right.
 	executor.executeInput(CmdTriggerAction{ "gun", "up" }, false);
 	CHECK(loaded.game.getObject("gun").facing == Direction::Right);
-	CHECK_FALSE(loaded.game.getObject("gun").hasAim);
+	CHECK_FALSE(loaded.game.getObject("gun").aim.has_value());
 }
 
 TEST_CASE("<chase> and <aim> that name nothing are turned away when the game loads", "[chase][aim][errors]")

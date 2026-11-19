@@ -1542,7 +1542,7 @@ namespace xge
 				climb->activeClimb = {};
 			}
 			object.shifted = {};
-			object.hasAim = false;
+			object.aim.reset();
 			object.path.name.clear();
 			if (Maze* maze = parts.mazes.find(object.id)) { maze->walk = {}; }
 			object.blink = 0.0f;
@@ -2245,7 +2245,7 @@ namespace xge
 		return true;
 	}
 
-	void Game::reactTo(Object& self, Object& other, const Touch& touch)
+	Game::Reaction Game::reactTo(Object& self, Object& other, const Touch& touch)
 	{
 		CommandExecutor executor(*this);
 
@@ -2278,6 +2278,7 @@ namespace xge
 			}
 		}
 		self.motion.speedHeld = false;
+		return { executor.throughAsked };
 	}
 
 	void Game::refreshLive(void)

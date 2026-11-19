@@ -132,7 +132,7 @@ namespace xge
 		}
 		object.facing = hop.direction;
 		if (hop.step.x != 0.0f) { object.mirror.goingLeft = hop.step.x < 0.0f; }
-		object.hasAim = false;
+		object.aim.reset();
 		return true;
 	}
 

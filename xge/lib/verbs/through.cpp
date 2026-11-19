@@ -4,6 +4,7 @@
 // date: Nov 10, 2026
 
 #include "verbs/verb.h"
+#include "play/executor.h"
 #include "game/game.h"
 
 namespace xge
@@ -16,7 +17,7 @@ namespace xge
 
 	static bool runThrough(const CmdThrough&, const Doer& doer)
 	{
-		if (doer.self && doer.touch) { doer.game().stepThrough(); }
+		if (doer.self && doer.touch) { doer.executor->throughAsked = true; }
 		return true;
 	}
 

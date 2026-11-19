@@ -56,7 +56,7 @@ namespace xge
 		object.footing.climbing = false;
 		object.footing.jumping = false;
 		object.footing.grounded = false;
-		object.hasAim = false;
+		object.aim.reset();
 		const bool keyHeld = drive && std::any_of(drive->moveStep.begin(), drive->moveStep.end(), [](float step) { return step != 0.0f; });
 		if (!keyHeld)
 		{
