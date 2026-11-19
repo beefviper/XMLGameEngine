@@ -70,7 +70,7 @@ namespace xge
 
 	static Command makeSpawn(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
-		const RawSpawn& written = std::get<RawSpawn>(raw.own);
+		const RawSpawn& written = ownOf<RawSpawn>(raw);
 		CmdSpawn spawn;
 		spawn.target = raw.object;
 		if (written.count)
@@ -155,7 +155,7 @@ namespace xge
 
 	static void printSpawnRaw(std::ostream& o, const RawCommand& command)
 	{
-		const RawSpawn& spawn = std::get<RawSpawn>(command.own);
+		const RawSpawn& spawn = ownOf<RawSpawn>(command);
 		const auto half = [&](const std::optional<RawValue>& value) { if (value) { o << *value; } else { o << "-"; } };
 		o << "(" << command.object << ", ";
 		half(spawn.count);

@@ -10,6 +10,7 @@
 #include "load/reading.h"
 
 #include <string>
+#include <variant>
 
 namespace xge
 {
@@ -18,13 +19,14 @@ namespace xge
 	{
 		requireAttribute(node, "variable", where);
 		// The amount is optional: a bare <dec variable="..." /> is 1.
-		command.amount = hasContent(node) ? readValue(node, where) : RawValue::expression("1");
+		RawDec& own = command.own.emplace<RawDec>();
+		if (hasContent(node)) { own.by = readValue(node, where); }
 	}
 
 	static Command makeDec(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
 		// By its amount, or by 1 when it has none.
-		return CmdDecrement{ VariableName::of(raw.variable), valueOr(raw.amount, 1.0f, evaluate) };
+		return CmdDecrement{ VariableName::of(raw.variable), ownOf<RawDec>(raw).by ? evaluate(*ownOf<RawDec>(raw).by) : 1.0f };
 	}
 
 	static void checkDec(const Command& command, const Checking& checking)
@@ -53,7 +55,7 @@ namespace xge
 	static void printDecRaw(std::ostream& o, const RawCommand& command)
 	{
 		o << "(" << command.variable;
-		if (!(command.amount.kind == RawValue::Kind::Expression && (command.amount.text == "1" || command.amount.text.empty()))) { o << ", " << command.amount; }
+		if (const auto& by = ownOf<RawDec>(command).by) { o << ", " << *by; }
 		o << ")";
 	}
 

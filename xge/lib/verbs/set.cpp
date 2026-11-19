@@ -14,6 +14,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <variant>
 
 namespace xge
 {
@@ -21,7 +22,7 @@ namespace xge
 	static void readSet(const XmlNode& node, const std::string& where, RawCommand& command)
 	{
 		requireAttribute(node, "variable", where);
-		command.amount = readValue(node, where);
+		command.own = RawSet{ readValue(node, where) };
 	}
 
 	static Command makeSet(const RawCommand& raw, const ValueEvaluator& evaluate)
@@ -31,7 +32,7 @@ namespace xge
 		const std::string part = liveNumberPart(raw.variable);
 		VariableName target = part.empty() ? VariableName::of(raw.variable)
 			: VariableName{ raw.variable.substr(0, raw.variable.size() - part.size() - 1), part };
-		return CmdSet{ std::move(target), evaluate(raw.amount) };
+		return CmdSet{ std::move(target), evaluate(ownOf<RawSet>(raw).value) };
 	}
 
 	static void checkSet(const Command& command, const Checking& checking)
@@ -82,7 +83,7 @@ namespace xge
 
 	static void printSetRaw(std::ostream& o, const RawCommand& command)
 	{
-		o << "(" << command.variable << ", " << command.amount << ")";
+		o << "(" << command.variable << ", " << ownOf<RawSet>(command).value << ")";
 	}
 
 	extern const Verb setVerb;

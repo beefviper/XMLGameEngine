@@ -8,18 +8,19 @@
 #include "play/executor.h"
 #include "play/maze.h"
 #include "load/reading.h"
+#include <variant>
 
 namespace xge
 {
 	// <wander>: Through a maze, any way at each corner.
 	static void readWander(const XmlNode& node, const std::string& where, RawCommand& command)
 	{
-		command.amount = readValue(node, where);
+		command.own = RawWander{ readValue(node, where) };
 	}
 
 	static Command makeWander(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
-		return CmdWander{ speedOf(raw, "wander", evaluate) };
+		return CmdWander{ speedOf(ownOf<RawWander>(raw).speed, "wander", evaluate) };
 	}
 
 	static bool runWander(const Command& command, const Doer& doer, CommandExecutor& executor)
@@ -36,7 +37,7 @@ namespace xge
 
 	static void printWanderRaw(std::ostream& o, const RawCommand& command)
 	{
-		o << "(" << command.amount << ")";
+		o << "(" << ownOf<RawWander>(command).speed << ")";
 	}
 
 	extern const Verb wanderVerb;

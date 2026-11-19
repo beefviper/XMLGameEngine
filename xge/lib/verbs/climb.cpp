@@ -9,6 +9,7 @@
 #include "load/reading.h"
 
 #include <stdexcept>
+#include <variant>
 
 namespace xge
 {
@@ -17,7 +18,7 @@ namespace xge
 	{
 		requireAttribute(node, "direction", where);
 		requireAttribute(node, "class", where);
-		command.amount = readValue(node, where);
+		command.own = RawClimb{ readValue(node, where) };
 	}
 
 	static Command makeClimb(const RawCommand& raw, const ValueEvaluator& evaluate)
@@ -27,7 +28,7 @@ namespace xge
 		{
 			throw std::runtime_error("<climb> has direction=\"" + raw.direction + "\"; expected up or down");
 		}
-		return CmdClimb{ direction, evaluate(raw.amount), raw.objClass };
+		return CmdClimb{ direction, evaluate(ownOf<RawClimb>(raw).speed), raw.objClass };
 	}
 
 	static bool runClimb(const Command& command, const Doer& doer, CommandExecutor& executor)
@@ -50,7 +51,7 @@ namespace xge
 
 	static void printClimbRaw(std::ostream& o, const RawCommand& command)
 	{
-		o << "." << command.direction << "(" << command.amount << ", " << command.objClass << ")";
+		o << "." << command.direction << "(" << ownOf<RawClimb>(command).speed << ", " << command.objClass << ")";
 	}
 
 	extern const Verb climbVerb;

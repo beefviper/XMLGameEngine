@@ -11,6 +11,7 @@
 
 #include <cmath>
 #include <stdexcept>
+#include <variant>
 
 namespace xge
 {
@@ -19,12 +20,14 @@ namespace xge
 	{
 		requireAttribute(node, "object", where);
 		// How many is optional: a bare <reveal object="..." /> is one.
-		command.amount = hasContent(node) ? readValue(node, where) : RawValue::expression("1");
+		RawReveal& own = command.own.emplace<RawReveal>();
+		if (hasContent(node)) { own.count = readValue(node, where); }
 	}
 
 	static Command makeReveal(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
-		const int count = static_cast<int>(std::lround(evaluate(raw.amount)));
+		const std::optional<RawValue>& written = ownOf<RawReveal>(raw).count;
+		const int count = written ? static_cast<int>(std::lround(evaluate(*written))) : 1;
 		if (count < 1) { throw std::runtime_error("<reveal> of " + raw.object + " has a count under 1"); }
 		return CmdReveal{ raw.object, count };
 	}

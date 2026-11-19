@@ -174,6 +174,15 @@ namespace xge
 
 	// --- What several verbs' make() share.
 
+	// A command's own data as its verb reads it; one made with none (by
+	// hand, in a test) has its parts' defaults: each left out.
+	template <typename Own> const Own& ownOf(const RawCommand& command)
+	{
+		static const Own none{};
+		const Own* own = std::get_if<Own>(&command.own);
+		return own ? *own : none;
+	}
+
 	// Whether anything was written for a value.
 	bool isWritten(const RawValue& value) noexcept;
 	// The value, or `otherwise` when nothing was written.
@@ -191,7 +200,7 @@ namespace xge
 	// How high a timed <hop> goes: no <arc>, not at all.
 	float arcOf(const RawHop& hop, const char* what, float seconds, const ValueEvaluator& evaluate);
 	// The speed of a <go>, <hunt> or <wander>, which may not be below 0.
-	float speedOf(const RawCommand& raw, const char* what, const ValueEvaluator& evaluate);
+	float speedOf(const RawValue& written, const char* what, const ValueEvaluator& evaluate);
 	// What one holder holds, sent to another: a <distribute>, or a <send>
 	// that names no object.
 	Command makeSendHeld(const RawCommand& raw, const ValueEvaluator& evaluate);

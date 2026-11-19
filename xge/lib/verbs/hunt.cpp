@@ -67,7 +67,7 @@ namespace xge
 			return CmdHuntHop{ raw.object, diagonal ? evaluate(hop->diagonal->x) : distance, diagonal ? evaluate(hop->diagonal->y) : distance, diagonal, seconds, arcOf(*hop, "hop", seconds, evaluate) };
 		}
 
-		CmdHunt hunt{ raw.object, speedOf(raw, "hunt", evaluate), 0.0f, raw.partner, raw.retreat, 0.0f, raw.search };
+		CmdHunt hunt{ raw.object, speedOf(raw.amount, "hunt", evaluate), 0.0f, raw.partner, raw.retreat, 0.0f, raw.search };
 		if (isWritten(raw.ahead)) { hunt.ahead = evaluate(raw.ahead); }
 		if (!raw.retreat.empty())
 		{

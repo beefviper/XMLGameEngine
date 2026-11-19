@@ -16,6 +16,7 @@
 #include <ostream>
 #include <optional>
 #include <string>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 #include <variant>
@@ -1080,24 +1081,18 @@ namespace xge
 		std::string path;   // a recording (<path>), in place of notes
 	};
 
-	// One command tag from the XML - <bounce/>, <inc variable="a.b"/>,
-	// <move direction="up">step</move>, ... - before its number is worked out.
-	// `verb` is the tag name; which of the other fields are used depends on it
-	// (see makeCommand).
 	// --- A verb's own data as written: what its tag says besides the names
-	// every command may have, each part named for what it is there. A verb
-	// without one yet reads into RawCommand's shared fields (plan CR7).
-	// Each lists its numbers for RawCommand::forEachValue.
+	// every command may have, each part named for what it is there and a
+	// std::optional when it may be left out. A struct is named for its tag
+	// (RawInc for <inc>). A verb without one yet reads into RawCommand's
+	// shared fields (plan CR7). values() lists its numbers, for
+	// RawCommand::forEachValue.
 
 	// <bounce>N</bounce>: the share of its speed it keeps; left out, all.
 	struct RawBounce
 	{
 		std::optional<RawValue> share;
-
-		template <typename Own, typename Visit> static void eachValue(Own& own, Visit& visit)
-		{
-			if (own.share) { visit(*own.share); }
-		}
+		static auto values(auto& own) { return std::tie(own.share); }
 	};
 
 	// <hop>: one distance as its content, or a diagonal's <x> across and <y>
@@ -1112,15 +1107,7 @@ namespace xge
 		std::optional<RawValue> seconds;
 		std::optional<RawValue> arc;
 		std::vector<std::string> onto;
-
-		template <typename Own, typename Visit> static void eachValue(Own& own, Visit& visit)
-		{
-			for (auto* each : { &own.distance, &own.seconds, &own.arc })
-			{
-				if (*each) { visit(**each); }
-			}
-			if (own.diagonal) { visit(own.diagonal->x); visit(own.diagonal->y); }
-		}
+		static auto values(auto& own) { return std::tie(own.distance, own.diagonal, own.seconds, own.arc); }
 	};
 
 	// <spawn object="...">: its <count> (left out: one); where the copy goes
@@ -1143,18 +1130,62 @@ namespace xge
 		std::optional<RawValue> freeBelow;
 		bool random{ false };
 		std::optional<RawValue> member;
-
-		template <typename Own, typename Visit> static void eachValue(Own& own, Visit& visit)
+		static auto values(auto& own)
 		{
-			for (auto* each : { &own.count, &own.positionX, &own.positionY, &own.velocityX, &own.velocityY, &own.accelerationX, &own.accelerationY,
-				&own.column, &own.row, &own.freeBelow, &own.member })
-			{
-				if (*each) { visit(**each); }
-			}
+			return std::tie(own.count, own.positionX, own.positionY, own.velocityX, own.velocityY, own.accelerationX, own.accelerationY,
+				own.column, own.row, own.freeBelow, own.member);
 		}
 	};
 
-	using RawOwn = std::variant<std::monostate, RawBounce, RawHop, RawSpawn>;
+	// <inc variable="...">N</inc> and <dec>: by how much; left out, 1.
+	struct RawInc { std::optional<RawValue> by; static auto values(auto& own) { return std::tie(own.by); } };
+	struct RawDec { std::optional<RawValue> by; static auto values(auto& own) { return std::tie(own.by); } };
+
+	// <set variable="...">N</set>: what it is set to.
+	struct RawSet { RawValue value; static auto values(auto& own) { return std::tie(own.value); } };
+
+	// <jump>N</jump>: how high.
+	struct RawJump { RawValue height; static auto values(auto& own) { return std::tie(own.height); } };
+
+	// <knock>N</knock>: how much of the knock bounces back, 0 to 1; left out, all.
+	struct RawKnock { std::optional<RawValue> bounce; static auto values(auto& own) { return std::tie(own.bounce); } };
+
+	// <pass member="N" />: whose turn it is next; left out, the next player's.
+	struct RawPass { std::optional<RawValue> member; static auto values(auto& own) { return std::tie(own.member); } };
+
+	// <reveal object="...">N</reveal>: how many are turned up; left out, one.
+	struct RawReveal { std::optional<RawValue> count; static auto values(auto& own) { return std::tie(own.count); } };
+
+	// <go>, <wander> and <climb>: how fast, in pixels a second.
+	struct RawGo { RawValue speed; static auto values(auto& own) { return std::tie(own.speed); } };
+	struct RawWander { RawValue speed; static auto values(auto& own) { return std::tie(own.speed); } };
+	struct RawClimb { RawValue speed; static auto values(auto& own) { return std::tie(own.speed); } };
+
+	using RawOwn = std::variant<std::monostate, RawBounce, RawHop, RawSpawn,
+		RawInc, RawDec, RawSet, RawJump, RawKnock, RawPass, RawReveal, RawGo, RawWander, RawClimb>;
+
+	// Each number among a verb's own parts that was written: a RawValue, or
+	// an optional one, or pair, that holds something.
+	template <typename Visit, typename... Parts> void visitValues(Visit& visit, Parts&... parts)
+	{
+		const auto one = [&](auto& part)
+		{
+			using Part = std::remove_const_t<std::remove_reference_t<decltype(part)>>;
+			if constexpr (std::is_same_v<Part, RawValue>) { visit(part); }
+			else if constexpr (std::is_same_v<Part, std::optional<RawValue>>) { if (part) { visit(*part); } }
+			else
+			{
+				static_assert(std::is_same_v<Part, std::optional<RawVector2>>, "a verb's number is a RawValue, an optional one or an optional pair");
+				if (part) { visit(part->x); visit(part->y); }
+			}
+		};
+		(one(parts), ...);
+	}
+
+	// One command tag from the XML - <bounce/>, <inc variable="a.b"/>,
+	// <move direction="up">step</move>, ... - before its number is worked out.
+	// `verb` is the tag name; its own data is in `own`, or for a verb without
+	// it, in which of the other fields it uses (see makeCommand).
 
 	struct RawCommand
 	{
@@ -1184,7 +1215,7 @@ namespace xge
 		bool avoid{ false };   // think: <avoid />, a card player that keeps out of tricks
 		std::vector<std::string> onto; // hop, track on cells: each <onto class=...>
 		std::vector<std::string> players; // turns: each <player>'s state= (empty for none)
-		RawValue amount;       // follow (how many nearest; empty text: all), set (the value), move, turn, thrust, deflect (the widest angle), knock (the bounce; empty text: 1), hole (the radius), jump (height), climb, go, hunt and wander (the speed)
+		RawValue amount;       // follow (how many nearest; empty text: all), move, turn, thrust, deflect (the widest angle), hole (the radius), hunt (the speed)
 		RawValue seconds;      // jump (empty text: the default), follow (the stagger; empty text: 0), swing (its stroke), move (its <wait>)
 		bool search{ false };  // hunt: <search />, the shortest way through the maze
 		RawValue distance;     // chase (near; empty text: 0), hunt (how many tiles near is near enough to retreat), aim (lined; empty text: any way), swing (its <degrees>)
@@ -1224,7 +1255,10 @@ namespace xge
 			std::visit([&](auto& own)
 			{
 				using Own = std::remove_const_t<std::remove_reference_t<decltype(own)>>;
-				if constexpr (!std::is_same_v<Own, std::monostate>) { Own::eachValue(own, visit); }
+				if constexpr (!std::is_same_v<Own, std::monostate>)
+				{
+					std::apply([&](auto&... parts) { visitValues(visit, parts...); }, Own::values(own));
+				}
 			}, command.own);
 		}
 	};

@@ -8,6 +8,7 @@
 #include "play/executor.h"
 #include "play/maze.h"
 #include "load/reading.h"
+#include <variant>
 
 namespace xge
 {
@@ -15,12 +16,12 @@ namespace xge
 	static void readGo(const XmlNode& node, const std::string& where, RawCommand& command)
 	{
 		requireAttribute(node, "direction", where);
-		command.amount = readValue(node, where);
+		command.own = RawGo{ readValue(node, where) };
 	}
 
 	static Command makeGo(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
-		return CmdGo{ directionFromName(raw.direction, raw.verb), speedOf(raw, "go", evaluate) };
+		return CmdGo{ directionFromName(raw.direction, raw.verb), speedOf(ownOf<RawGo>(raw).speed, "go", evaluate) };
 	}
 
 	static bool runGo(const Command& command, const Doer& doer, CommandExecutor& executor)
@@ -43,7 +44,7 @@ namespace xge
 
 	static void printGoRaw(std::ostream& o, const RawCommand& command)
 	{
-		o << "." << command.direction << "(" << command.amount << (command.burn.empty() ? "" : ", burn " + command.burn) << ")";
+		o << "." << command.direction << "(" << ownOf<RawGo>(command).speed << (command.burn.empty() ? "" : ", burn " + command.burn) << ")";
 	}
 
 	extern const Verb goVerb;

@@ -9,6 +9,7 @@
 #include "load/reading.h"
 
 #include <stdexcept>
+#include <variant>
 
 namespace xge
 {
@@ -17,12 +18,12 @@ namespace xge
 	{
 		// The old <jump>, to a place: that is a <hop> with <seconds> now.
 		if (!getAttribute(&node, "direction").empty()) { fail(where, "<jump direction=...> to a place is now <hop direction=...> with <seconds>; <jump> is up off the ground, its height as its content"); }
-		command.amount = readValue(node, where);
+		command.own = RawJump{ readValue(node, where) };
 	}
 
 	static Command makeJump(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
-		const float height = evaluate(raw.amount);
+		const float height = evaluate(ownOf<RawJump>(raw).height);
 		if (!(height > 0.0f)) { throw std::runtime_error("<jump> has a height of " + formatDisplayNumber(height) + "; expected more than 0"); }
 		return CmdJump{ height };
 	}
@@ -40,7 +41,7 @@ namespace xge
 
 	static void printJumpRaw(std::ostream& o, const RawCommand& command)
 	{
-		o << "(" << command.amount << ")";
+		o << "(" << ownOf<RawJump>(command).height << ")";
 	}
 
 	extern const Verb jumpVerb;

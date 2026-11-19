@@ -10,20 +10,23 @@
 
 #include <cmath>
 #include <stdexcept>
+#include <variant>
 
 namespace xge
 {
 	// <pass>: The turn goes to the next player.
 	static void readPass(const XmlNode& node, const std::string&, RawCommand& command)
 	{
-		if (!node.getAttribute("member").empty()) { command.amount = RawValue::expression(node.getAttribute("member")); }
+		RawPass& own = command.own.emplace<RawPass>();
+		if (!node.getAttribute("member").empty()) { own.member = RawValue::expression(node.getAttribute("member")); }
 	}
 
 	static Command makePass(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
-		if (!isWritten(raw.amount)) { return CmdPass{ raw.object, -1 }; }
-		const float number = evaluate(raw.amount);
-		if (number < 0.0f || number != std::floor(number)) { throw std::runtime_error("<pass member=\"" + raw.amount.text + "\">: is " + formatDisplayNumber(number) + "; expected a member's number from 1, or 0 for nobody's turn"); }
+		const std::optional<RawValue>& member = ownOf<RawPass>(raw).member;
+		if (!member) { return CmdPass{ raw.object, -1 }; }
+		const float number = evaluate(*member);
+		if (number < 0.0f || number != std::floor(number)) { throw std::runtime_error("<pass member=\"" + member->text + "\">: is " + formatDisplayNumber(number) + "; expected a member's number from 1, or 0 for nobody's turn"); }
 		return CmdPass{ raw.object, static_cast<int>(number) };
 	}
 

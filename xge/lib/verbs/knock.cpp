@@ -13,18 +13,21 @@
 #include <algorithm>
 #include <optional>
 #include <stdexcept>
+#include <variant>
 
 namespace xge
 {
 	// <knock>: Two things with a mass trade their speed.
 	static void readKnock(const XmlNode& node, const std::string& where, RawCommand& command)
 	{
-		if (hasContent(node)) { command.amount = readValue(node, where); }
+		RawKnock& own = command.own.emplace<RawKnock>();
+		if (hasContent(node)) { own.bounce = readValue(node, where); }
 	}
 
 	static Command makeKnock(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
-		const float bounce = valueOr(raw.amount, 1.0f, evaluate);
+		const std::optional<RawValue>& written = ownOf<RawKnock>(raw).bounce;
+		const float bounce = written ? evaluate(*written) : 1.0f;
 		if (!(bounce >= 0.0f && bounce <= 1.0f))
 		{
 			throw std::runtime_error("<knock> has a bounce of " + formatDisplayNumber(bounce) + "; expected 0 up to 1");
@@ -94,10 +97,7 @@ namespace xge
 
 	static void printKnockRaw(std::ostream& o, const RawCommand& command)
 	{
-		if (command.amount.kind != RawValue::Kind::Expression || !command.amount.text.empty())
-		{
-			o << "(" << command.amount << ")";
-		}
+		if (const auto& bounce = ownOf<RawKnock>(command).bounce) { o << "(" << *bounce << ")"; }
 	}
 
 	extern const Verb knockVerb;

@@ -194,11 +194,11 @@ TEST_CASE("<inc> and <dec> change by 1 unless they are given an amount", "[new_v
 
 	RawCommand five = tag("inc");
 	five.variable = "frog.score";
-	five.amount = RawValue::expression("5");
+	five.own = RawInc{ RawValue::expression("5") };
 
 	RawCommand three = tag("dec");
 	three.variable = "frog.lives";
-	three.amount = RawValue::expression("3");
+	three.own = RawDec{ RawValue::expression("3") };
 
 	const auto commands = makeCommands({ bare, five, three }, evaluatePlainNumber);
 

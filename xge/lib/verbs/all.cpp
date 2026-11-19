@@ -296,9 +296,9 @@ namespace xge
 		return arc;
 	}
 
-	float speedOf(const RawCommand& raw, const char* what, const ValueEvaluator& evaluate)
+	float speedOf(const RawValue& written, const char* what, const ValueEvaluator& evaluate)
 	{
-		const float speed = evaluate(raw.amount);
+		const float speed = evaluate(written);
 		if (speed < 0.0f) { throw std::runtime_error(std::string("<") + what + ">: the speed is below 0"); }
 		return speed;
 	}

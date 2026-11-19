@@ -32,7 +32,7 @@ namespace xge
 
 	static Command makeHop(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
-		const RawHop& written = std::get<RawHop>(raw.own);
+		const RawHop& written = ownOf<RawHop>(raw);
 		// up-left and the rest: one of up/down, then one of left/right.
 		const std::string& name = raw.direction;
 		const auto dash = name.find('-');
@@ -84,7 +84,7 @@ namespace xge
 	static void printHopRaw(std::ostream& o, const RawCommand& command)
 	{
 		o << "." << command.direction << "(";
-		printHopParts(o, std::get<RawHop>(command.own));
+		printHopParts(o, ownOf<RawHop>(command));
 		o << ")";
 	}
 

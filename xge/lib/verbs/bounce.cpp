@@ -24,7 +24,7 @@ namespace xge
 
 	static Command makeBounce(const RawCommand& raw, const ValueEvaluator& evaluate)
 	{
-		const RawBounce& bounce = std::get<RawBounce>(raw.own);
+		const RawBounce& bounce = ownOf<RawBounce>(raw);
 		const float share = bounce.share ? evaluate(*bounce.share) : 1.0f;
 		if (!(share >= 0.0f))
 		{
@@ -49,7 +49,7 @@ namespace xge
 
 	static void printBounceRaw(std::ostream& o, const RawCommand& command)
 	{
-		const RawBounce& bounce = std::get<RawBounce>(command.own);
+		const RawBounce& bounce = ownOf<RawBounce>(command);
 		if (bounce.share) { o << "(" << *bounce.share << ")"; }
 	}
 
