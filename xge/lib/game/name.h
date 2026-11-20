@@ -104,6 +104,7 @@ namespace xge
 		Name of(std::string_view text)
 		{
 			if (text.empty()) { return {}; }
+			const std::lock_guard<std::mutex> lock(guard);
 			if (const auto found = index.find(text); found != index.end()) { return Name(found->second); }
 			const std::string& kept = held.emplace_back(text);
 			index.emplace(std::string_view(kept), &kept);
