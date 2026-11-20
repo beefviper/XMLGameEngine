@@ -710,14 +710,14 @@ namespace xge
 
 	// An object's own name (aliens.3.2) finds that object; the name of a
 	// <group> (aliens) finds its first member.
-	Object* Game::tryGetObject(const std::string& name) noexcept
+	Object* Game::tryGetObject(Name name) noexcept
 	{
 		if (const auto found = foundObjects.find(name); found != foundObjects.end())
 		{
 			return found->second;
 		}
 
-		Object* object = findObject(name);
+		Object* object = findObject(name.str());
 		foundObjects.emplace(name, object);
 		return object;
 	}
@@ -920,9 +920,9 @@ namespace xge
 
 	float* Game::variableOf(const VariableName& name) noexcept
 	{
-		Object* owner = tryGetObject(anyTurns ? turnOwner(name.owner) : name.owner);
+		Object* owner = anyTurns ? tryGetObject(turnOwner(name.owner)) : tryGetObject(name.owner);
 		if (!owner) { return nullptr; }
-		const auto found = owner->variable.findText(name.variable);
+		const auto found = owner->variable.find(name.variable);
 		return found == owner->variable.end() ? nullptr : &found->second;
 	}
 

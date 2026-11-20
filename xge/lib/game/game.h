@@ -135,7 +135,7 @@ namespace xge
 		// `to` crosses nothing in play of the classes `past` names (<sees>).
 		bool seesPast(const Object& from, const Object& to, const std::vector<std::string>& past);
 		Object& getObject(const std::string& name);
-		Object* tryGetObject(const std::string& name) noexcept;
+		Object* tryGetObject(Name name) noexcept;
 
 		// The object a handle names, among those in the game or spawned this
 		// frame; nullptr once it has been despawned and gone.
@@ -994,7 +994,7 @@ namespace xge
 		Parts objectParts;
 
 		// tryGetObject's answers: names never change while a game runs.
-		std::unordered_map<std::string, Object*> foundObjects;
+		std::unordered_map<Name, Object*> foundObjects;
 		Object* findObject(const std::string& name) noexcept;
 
 		// The objects a condition's class and name filter matches (both

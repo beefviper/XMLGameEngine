@@ -39,7 +39,7 @@ namespace xge
 		// A variable of an object's, or one of the numbers every object has
 		// (where it is, how it is going, its heading).
 		const std::vector<Object>& objects = checking.objects;
-		const std::string tag = "<set variable=\"" + (set.target.variable.empty() ? set.target.owner : set.target.written()) + "\">";
+		const std::string tag = "<set variable=\"" + (set.target.variable.empty() ? set.target.owner.str() : set.target.written()) + "\">";
 		refuseFollowed(checking, set.target, tag);
 		const std::string part = liveNumberPart(set.target.written());
 		const Object* holder = part.empty() ? nullptr : findObject(objects, set.target.owner);

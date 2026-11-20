@@ -224,8 +224,8 @@ namespace xge
 	// may be one of the numbers every object has (velocity.x, heading).
 	struct VariableName
 	{
-		std::string owner;
-		std::string variable;
+		Name owner;
+		Name variable;
 
 		// The name as written (player.score) taken apart at its last dot.
 		static VariableName of(const std::string& written);

@@ -34,7 +34,7 @@ namespace xge
 		// A variable belongs to an object: paddle1.score is paddle1's
 		// <variable name="score">.
 		const VariableName& target = decrement.target;
-		const std::string tag = "<dec variable=\"" + (target.variable.empty() ? target.owner : target.written()) + "\" />";
+		const std::string tag = "<dec variable=\"" + (target.variable.empty() ? target.owner.str() : target.written()) + "\" />";
 		checkVariable(checking, target, tag);
 		refuseFollowed(checking, target, tag);
 	}

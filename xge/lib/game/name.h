@@ -189,5 +189,5 @@ namespace xge
 template <>
 struct std::hash<xge::Name>
 {
-	std::size_t operator()(xge::Name name) const noexcept { return std::hash<std::string>{}(name.str()); }
+	std::size_t operator()(xge::Name name) const noexcept { return std::hash<const std::string*>{}(&name.str()); }
 };
