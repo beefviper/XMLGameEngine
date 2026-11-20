@@ -70,6 +70,7 @@ namespace xge
 		unholed.remove(id);
 		surfaces.remove(id);
 		onPaths.remove(id);
+		flights.remove(id);
 		starts.remove(id);
 		clocks.remove(id);
 	}
@@ -110,6 +111,7 @@ namespace xge
 		copyPart(unholed, from.unholed, id);
 		copyPart(surfaces, from.surfaces, id);
 		copyPart(onPaths, from.onPaths, id);
+		copyPart(flights, from.flights, id);
 		copyPart(starts, from.starts, id);
 		copyPart(clocks, from.clocks, id);
 	}

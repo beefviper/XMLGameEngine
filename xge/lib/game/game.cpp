@@ -1557,8 +1557,8 @@ namespace xge
 			object.riding = {};
 			parts.carries.remove(object.id);
 			object.hopPending = {};
-			object.flight = {};
-			object.flight.arc = 0.0f;
+			parts.flights.remove(object.id);
+			object.airborne = false;
 			object.footing.grounded = false;
 			object.footing.jumping = false;
 			object.footing.climbing = false;

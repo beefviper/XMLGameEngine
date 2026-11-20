@@ -277,16 +277,16 @@ namespace xge
 		// skidding while it slides another way to the one its keys ask for.
 		// Thrusting, before any of those, while a held <thrust> or
 		// <thrust direction> is on.
-		Object::Pose poseOf(const Object& object, const Drive& drive)
+		Object::Pose poseOf(const Object& object, const Drive& drive, const Object::Flight* flight)
 		{
 			if (!drive.thrustAhead.empty()
 				|| std::any_of(drive.thrust.begin(), drive.thrust.end(), [](float amount) { return amount != 0.0f; }))
 			{
 				return Object::Pose::Thrusting;
 			}
-			if (object.isAirborne())
+			if (flight)
 			{
-				return object.flight.flown * 2.0 < static_cast<double>(object.flight.seconds) ? Object::Pose::Rising : Object::Pose::Falling;
+				return flight->flown * 2.0 < static_cast<double>(flight->seconds) ? Object::Pose::Rising : Object::Pose::Falling;
 			}
 			const bool pulled = object.acceleration.y != 0.0f;
 			if (pulled && !object.footing.grounded)
@@ -318,7 +318,7 @@ namespace xge
 					const auto& step = driveOf(rules, object).moveStep;
 					const float wanted = step[static_cast<std::size_t>(Direction::Right)] - step[static_cast<std::size_t>(Direction::Left)];
 					if (wanted != 0.0f) { object.mirror.goingLeft = wanted < 0.0f; }
-					else if (object.isAirborne() && object.flight.whole.x != 0.0f) { object.mirror.goingLeft = object.flight.whole.x < 0.0f; }
+					else if (const Object::Flight* flight = object.airborne ? rules.parts().flights.find(object.id) : nullptr; flight && flight->whole.x != 0.0f) { object.mirror.goingLeft = flight->whole.x < 0.0f; }
 					else if (object.velocity.x != 0.0f) { object.mirror.goingLeft = object.velocity.x < 0.0f; }
 					object.faceMirror();
 				}
@@ -327,7 +327,7 @@ namespace xge
 				const auto& poses = object.looks.set->poses;
 				if (std::find(poses.begin(), poses.end(), object.looks.shown) == poses.end()) { continue; }
 
-				const std::size_t look = poses[static_cast<std::size_t>(poseOf(object, driveOf(rules, object)))];
+				const std::size_t look = poses[static_cast<std::size_t>(poseOf(object, driveOf(rules, object), rules.parts().flights.find(object.id)))];
 				if (look != object.looks.shown) { object.showLook(look); }
 			}
 		}
@@ -494,25 +494,31 @@ namespace xge
 				// A jump under way goes on by this step's share of it, and a
 				// step it ends inside lands it at its end; the step it lands,
 				// it counts as having moved, so it meets whatever it landed on.
-				if (object.isAirborne())
+				if (Object::Flight* flight = object.airborne ? rules.parts().flights.find(object.id) : nullptr)
 				{
-					const double whole = static_cast<double>(object.flight.seconds);
-					double flown = object.flight.flown + static_cast<double>(seconds);
+					const double whole = static_cast<double>(flight->seconds);
+					double flown = flight->flown + static_cast<double>(seconds);
 					if (flown >= whole - static_cast<double>(kTimeSlack)) { flown = whole; }
 					if (rules.inPlay(object))
 					{
-						const float share = static_cast<float>((flown - object.flight.flown) / whole);
-						const Vector2f target = object.position + object.flight.whole * share;
+						const float share = static_cast<float>((flown - flight->flown) / whole);
+						const Vector2f target = object.position + flight->whole * share;
 						if (insideWindow({ target, object.size }, windowSize)) { object.position = target; }
 					}
-					object.flight.flown = flown;
+					flight->flown = flown;
+					const bool landed = flown >= whole;
 
 					// An arc: drawn up off its way and back down, highest
 					// halfway, on the ground again as it lands.
-					if (object.flight.arc > 0.0f)
+					if (flight->arc > 0.0f)
 					{
 						const float t = static_cast<float>(flown / whole);
-						object.altitude = object.isAirborne() ? 4.0f * object.flight.arc * t * (1.0f - t) : 0.0f;
+						object.altitude = landed ? 0.0f : 4.0f * flight->arc * t * (1.0f - t);
+					}
+					if (landed)
+					{
+						rules.parts().flights.remove(object.id);
+						object.airborne = false;
 					}
 				}
 

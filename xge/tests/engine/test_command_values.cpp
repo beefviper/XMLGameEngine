@@ -161,5 +161,5 @@ TEST_CASE("a live number in a hop's arc is read as the hop is made", "[values]")
 	engine.update(kSixtieth);
 	const Object& frog = game.object("frog");
 	REQUIRE(frog.isAirborne());
-	CHECK(frog.flight.arc == 50.0f);
+	CHECK(game.parts().flights.get(frog.id).arc == 50.0f);
 }

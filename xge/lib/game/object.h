@@ -1259,6 +1259,8 @@ namespace xge
 		// Whether its start (position, velocity or a <variable>) draws a
 		// <random>: a reset then draws it again (Game::drawStartAgain).
 		bool startDrawsRandom{ false };
+		// A flight is under way (Flight).
+		bool airborne{ false };
 
 		// The state it belongs to (see WrittenObject::ownerState); its scene is
 		// the Moment's ownerScene.
@@ -1695,7 +1697,8 @@ namespace xge
 		};
 
 
-		// A timed <hop> under way (a flight): the whole way it goes, the
+		// A timed <hop> under way (a flight), a part (Parts::flights) while
+		// `airborne`: the whole way it goes, the
 		// seconds it takes, and the seconds flown so far (a double, so many
 		// short steps add up to the whole). Until `flown` reaches `seconds`
 		// the object is in the air: it touches no other object
@@ -1708,8 +1711,7 @@ namespace xge
 			float arc{};
 			double flown{};
 		};
-		Flight flight;
-		bool isAirborne() const noexcept { return flight.flown < static_cast<double>(flight.seconds); }
+		bool isAirborne() const noexcept { return airborne; }
 
 		// Standing, jumping and climbing. `grounded` is true for the frame
 		// after a <land /> stood the object on something (playOneFrame

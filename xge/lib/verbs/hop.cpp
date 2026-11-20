@@ -84,11 +84,9 @@ namespace xge
 			return false;
 		}
 
-		object.flight.whole = whole;
 		// None at all: it lands on the next step.
-		object.flight.seconds = std::max(seconds, kTimeSlack);
-		object.flight.flown = 0.0;
-		object.flight.arc = arc;
+		game.parts().flights.add(object.id, game.parts().orderOf(object.id), Object::Flight{ whole, std::max(seconds, kTimeSlack), arc, 0.0 });
+		object.airborne = true;
 		return true;
 	}
 
