@@ -6,14 +6,29 @@ How a game is loaded and played, the libraries behind it, how to build it, and w
 
 1. **Parse and validate** (`load/xml`). If the file names a schema it is validated: Xerces fully ("strong"); the other XML libraries with a small built-in validator for the XSD the schema uses ("weak", `load/xsd`), which parses a schema once for the program and again only when its file changes.
 2. **Work out the pieces and every `from=`** on the XML (`load/merge`).
-3. **Read** the tags into a `GameData` (`game/data.h`), a group as one raw object per member. A generated program starts here, with its `GameData` compiled in.
+3. **Read** the tags into a `GameData` (`game/data.h`), the game as written: a group as one `WrittenObject` per member. A generated program starts here, with its `GameData` compiled in.
 4. **Lay out states and scenes** (`layOutScenes`, `game/scenes.cpp`): owned objects named by path, every name written out in full.
-5. **Evaluate** (`load/expr`, `load/calc`): every value worked out (`<random>` drawn), objects, states and sounds built, every name checked, every object's size known (text and image files included) and the positions made from sizes finished. Nothing needs a window.
+5. **Evaluate** (`load/expr`, `load/calc`): every value worked out (`<random>` drawn), objects, states and sounds built ([an object](#an-object)), every name checked, every object's size known (text and image files included) and the positions made from sizes finished. Nothing needs a window.
 6. **Open the window and sound** (`Engine`): sounds made into samples, each object's picture handed to the window, the first state pushed. If sound will not start the game plays silently, with a warning.
+
+## An object
+
+- **What every object has** is in `Object` (`game/object.h`): its `Moment` (place, speed, look, light, variables and the rest that change as it plays), its picture, and its handle, an `ObjectId`.
+- **What alike objects share** and never change while playing (rules, actions, timers) is one `Kind`, held once for the members of a group or a piece and its copies.
+- **Everything else is a part**, kept in a `Store` (`game/store.h`), one store per kind of part (`Game::parts()`, `game/parts.h`). Only an object that uses a part has one: Pong's ball has no holder, hand or cells. A part that a reset puts back keeps its start in its store.
+- **A handle** is a slot and a generation. A slot freed by a despawn is used again a generation on, so an old handle finds nothing (`Game::find(ObjectId)`).
+- **Names** (an object's, its group's, a variable's) are `Name`s: ids into one table for the program, made once at load and compared as ids while playing (`game/name.h`).
+- **Pictures and sounds** are the game's `Resources` (`engine/resources.h`), each held once and named by an id, however many objects use it.
 
 ## Each frame
 
-`Engine::step` reads the keys (or the demo's, or the computer's) and runs the current state's bindings for each press and release, then its `on="hold"` bindings. Then `playOneFrame` (`play/frame.cpp`):
+`Engine::run` is the loop, three stages a frame:
+
+- **`input()`**: what came from outside, the window's keys, mouse and pads, or a demo's or replay's keys. Each press and release runs the current state's bindings for it.
+- **`update(seconds)`**: the computer's presses, the `on="hold"` bindings of held keys, then the game's own step (`Game::updateObjects`: spawns and scene changes settled, `playOneFrame`, settled again, joined pieces shown, positions that read a text's size placed again), then the sounds asked for and what the game keeps.
+- **`render()`**: what a `<show state>` shows still, then what is in play, except `<hidden />` objects.
+
+`playOneFrame` (`play/frame.cpp`):
 
 1. animations and blinking count;
 2. timers count, and those due run;
@@ -25,11 +40,9 @@ How a game is loaded and played, the libraries behind it, how to build it, and w
 8. conditions: the state's, then its current scene's;
 9. copies made join, despawned ones go.
 
-Then the sounds asked for play, loops start or stop, and the frame is drawn: what a `<show state>` shows still, then what is in play, except `<hidden />` objects.
-
 An object is **in play** when it is not out of play (`<waiting />`, dead, despawned) and belongs to the current state, its current scene, or the game, or is shown by the state. Timers count seconds, and every speed is a second.
 
-**Pace.** `Engine::run` is the loop. Each frame it takes what came in (`input()`: keys, mouse and pads, a demo's or replay's keys), steps the game by the real time that passed since the last (`update(seconds)`: the computer's presses, held keys, the game's frame, its sounds), then draws (`render()`). There is no fixed step and no sub-step: every sum takes the step's length ([time](../designs/29-time.md)).
+**Pace.** `update` steps the game by the real time that passed since the last frame. There is no fixed step and no sub-step: every sum takes the step's length ([time](../designs/29-time.md)).
 
 - `<framerate>` is the most frames a second: a frame waits until that much time has passed.
 - Every library waits for the screen's refresh (vsync) but sets no speed of its own, so a game plays at the same speed with any library and on any screen.
@@ -124,7 +137,7 @@ Design: [build-and-layout](../designs/51-build-and-layout.md).
 | | `load/xsd.cpp`, `load/spelling.cpp` | the weak validator; "did you mean" (`didYouMean`, `listOf`) |
 | the game | `game/game.cpp` | the interpreter: objects, the state stack, scenes, conditions, resets, paths, spawns, the answers to `FrameRules` |
 | | `game/scenes.cpp` | `layOutScenes`, states `from=` others |
-| | `game/command.cpp` | raw command tags into typed `Command`s (`makeCommand`, by the verb), printing them and objects; `operationShape` |
+| | `game/command.cpp` | written commands into typed `Command`s (`makeCommand`, by the verb), printing them and objects; `operationShape` |
 | | `verbs/` | a file per verb: its name, the places it may go, `read`, `make`, `check`, `run`, `hold` and `print`, and the work it does; `verb.h` says what a verb is, `all.cpp` lists them |
 | | `game/object.*`, `game/states.*`, `game/data.h`, `game/random.cpp` | the data model; the one random source |
 | | `game/name.h`, `game/variables.h`, `game/words.h` | `Name`, a name from a game file held once in the program's `NameStore` (`Name::of`, or a `std::string` made a `Name`) and compared as an id; `Variables`, an object's variables as one short list under `Name`s; `words`, the names the engine gives itself (`turn`, `worth`, `self`), made once |

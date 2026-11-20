@@ -68,7 +68,6 @@ Its own block of work, done before the tasks below: it touches every field of an
 | 6 | [CR6](#cr6-one-reader-not-two): one reader, not two | about 6,000 lines of second reader gone |
 | 7 | [CR7](#cr7-a-verb-owns-its-data): a verb owns its data | a command the size of what it says |
 | 8 | [CR8](#cr8-no-special-rules): no special rules | no mechanic bends the flow for itself |
-| 9 | [CR9](#cr9-names-and-comments): names and comments | the code reads from its names |
 
 The author's order: the resource manager and the components first, since the rest is easier once they are in.
 
@@ -205,14 +204,6 @@ The author's order: the resource manager and the components first, since the res
   - [x] **2. One a commit (M in all),** as agreed. Done: verb-name checks 14 to 2. **Check:** the grep's count falls to what the list says stays.
   - [x] **3. Things built twice (M).** Done: in [engine-structure](designs/16-engine-structure.md#special-rules-plan-cr8). Was: Read `play/verbs.*`, `play/executor.*`, `play/geometry.*` and `load/reading.*` for helpers that do one job under two names, and layers that only pass a call on. Each is merged or removed. **Check:** the list of what merged is in the commit messages.
   - [x] **4. Names as ids while playing (L, a family a commit).** The author: everywhere, not only where `[speed]` gains: a name is looked up once and held as an id. Done: variables, patterns, commands, the game's functions and parts, what rules, conditions, live numbers and timers read, each kept by `Name` once found; the frame is about 10% faster (`[speed]` without the timed searches, 7.4 to 6.7 ms) and string work fell from a third of play to 5%. What is left, and why, is in [engine-structure](designs/16-engine-structure.md#text-looked-up-while-playing-plan-cr8-step-4).
-
-### CR9. Names and comments
-
-- **Steps.**
-  - [x] **1. The author: the names table.** Propose the renames in one table in [engine-structure](designs/16-engine-structure.md#names-plan-cr9): `Raw...`/`raw...` to `Written...`, and any type, part or function whose name no longer says what it is after CR2 to CR8. Stop for the author.
-  - [x] **2. The renames, a family a commit (M).** By tool, not by hand; the generator's files and the docs with them. **Check:** all tests; `xgetest-generated`.
-  - [ ] **3. Comments, a folder a commit (M).** In `xge/lib`: a comment that repeats the code or stands in for a name goes, the name is fixed instead; one-line landmarks over sections and functions stay; a "why" that the code cannot say stays, short. Comments in `game/` are 19% of its lines today. **Check:** the share per folder before and after in the commit.
-  - [ ] **4. The rule is written down (S).** [AGENTS.md](../AGENTS.md) "Rules" gains the names-over-comments line, and [engine](reference/engine.md) describes the engine as it now is: resources, components, input, update, render. This section is deleted from the plan.
 
 ## Tasks
 

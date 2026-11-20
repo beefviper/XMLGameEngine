@@ -7,7 +7,7 @@
 - **Problem:** a Frogger lane is three logs sharing shape, speed, row and rule, differing only in start. As separate objects, 42 of Frogger's 59 objects repeated their neighbours.
 - **Chosen: a `<group>` beside `<object>`, with one rule: whatever a member leaves out it takes from its group.** Then it must be complete like an object. Position and velocity can come in halves (the group gives `<y>`, each member `<x>`).
 - A member may give its own sprites, animation, position and velocity, never collisions, actions, variables or timers: members act alike, and one that acts differently is an object beside the group.
-- **Members are ordinary objects.** A group is read as one raw object per member; the engine remembers only `groupName`. The group's name means every member wherever a name is taken.
+- **Members are ordinary objects.** A group is read as one written object per member; the engine remembers only `groupName`. The group's name means every member wherever a name is taken.
 - Frogger and Space Race got about 30% smaller.
 
 | Option | Verdict |

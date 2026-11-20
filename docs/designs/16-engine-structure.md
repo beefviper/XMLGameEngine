@@ -95,6 +95,8 @@ The author approved these as a table, and each was made by tool, one commit a ro
 
 Kept, as they say what they are: `start`, `before`, `Moment`, `Kind`, `Doer`, `Compared`, `CommandExecutor`, and the `xxxOf` (reads a part) and `xxxFor` (gives one) pairs.
 
+Then the comments, a folder at a time: those that told history, repeated a reference page, described arithmetic in strings the language no longer has, or had been left stacked on the wrong function went. The share of comment lines fell most in `xml/` (16% to 10%) and least in `game/` and `verbs/` (19% and 13%, mostly verb notes that say why). The rule is in [AGENTS.md](../../AGENTS.md#rules).
+
 ## What we looked at
 
 - **A full ECS with systems free to run in any order,** as large engines have: built for tens of thousands of alike things. Taken and not taken as [above](#how-a-step-runs-over-them).
