@@ -449,6 +449,7 @@ namespace xge
 		objectParts.placeNowhere();
 		for (std::size_t i = 0; i < objects.size(); ++i) { objectParts.placeAt(objects[i].id, i); }
 		foundObjects.clear();
+		fullNames.clear();
 		filtered.clear();
 		liveLinked = false;
 		liveLinks.clear();
@@ -672,6 +673,14 @@ namespace xge
 	}
 
 	Name Game::fullName(Name name) const
+	{
+		if (const auto known = fullNames.find(name); known != fullNames.end()) { return known->second; }
+		const Name full = findFullName(name);
+		fullNames.emplace(name, full);
+		return full;
+	}
+
+	Name Game::findFullName(Name name) const
 	{
 		const auto calls = [&](const Object& object, Name wanted) { return object.named(wanted); };
 		if (std::any_of(objects.begin(), objects.end(), [&](const Object& object) { return calls(object, name); })) { return name; }
@@ -1440,20 +1449,32 @@ namespace xge
 	{
 		for (const auto& [variableName, value] : object.variable)
 		{
-			const auto held = expr.objectVariables.find(object.name + "." + variableName);
-			if (held != expr.objectVariables.end()) { held->second = value; }
+			if (float* held = heldFor(object.name, variableName)) { *held = value; }
 		}
+	}
+
+	float* Game::heldFor(Name owner, Name variable)
+	{
+		// A copy spawned under a new name adds its own.
+		if (heldSlotsOf != expr.objectVariables.size())
+		{
+			heldSlots.clear();
+			heldSlotsOf = expr.objectVariables.size();
+		}
+		const auto [at, added] = heldSlots.try_emplace({ owner, variable }, nullptr);
+		if (added)
+		{
+			const auto found = expr.objectVariables.find(owner + "." + variable);
+			if (found != expr.objectVariables.end()) { at->second = &found->second; }
+		}
+		return at->second;
 	}
 
 	void Game::refreshBoundTexts(Name ownerName, Name variableName, float value)
 	{
 		// Expressions read the variable too (a timer's <every>, worked out again
 		// each round), so they see the new value.
-		const auto expressionVariable = expr.objectVariables.find(ownerName + "." + variableName);
-		if (expressionVariable != expr.objectVariables.end())
-		{
-			expressionVariable->second = value;
-		}
+		if (float* held = heldFor(ownerName, variableName)) { *held = value; }
 
 		for (auto& object : objects)
 		{
@@ -2297,17 +2318,14 @@ namespace xge
 			liveLinked = true;
 			liveLinkedAt = expr.liveRead;
 			liveLinks.clear();
-			const std::vector<std::string>& parts = liveNumberParts();
 			const std::vector<LivePart>& live = liveParts();
 			for (std::size_t i = 0; i < objects.size(); ++i)
 			{
-				const std::string owner = Calc::nameOf(objects[i].name) + ".";
-				for (std::size_t part = 0; part < parts.size(); ++part)
+				const std::vector<float*>& numbers = liveNumbersFor(objects[i].name);
+				for (std::size_t part = 0; part < numbers.size(); ++part)
 				{
-					if (live[part].has && !live[part].has(objectParts, objects[i])) { continue; }
-					const std::string name = owner + parts[part];
-					const auto found = expr.liveNumbers.find(name);
-					if (found != expr.liveNumbers.end() && expr.calc.has(name)) { liveLinks.push_back({ &found->second, i, part }); }
+					if (!numbers[part] || (live[part].has && !live[part].has(objectParts, objects[i]))) { continue; }
+					liveLinks.push_back({ numbers[part], i, part });
 				}
 			}
 		}
@@ -2319,16 +2337,37 @@ namespace xge
 		}
 	}
 
+	const std::vector<float*>& Game::liveNumbersFor(Name owner)
+	{
+		// Calc reads more of them: each is found again.
+		if (liveNumbersAt != expr.liveRead)
+		{
+			liveNumbersOf.clear();
+			liveNumbersAt = expr.liveRead;
+		}
+		const auto [at, added] = liveNumbersOf.try_emplace(owner);
+		if (added)
+		{
+			const std::string prefix = Calc::nameOf(owner) + ".";
+			for (const std::string& part : liveNumberParts())
+			{
+				const std::string name = prefix + part;
+				const auto found = expr.liveNumbers.find(name);
+				at->second.push_back(found != expr.liveNumbers.end() && expr.calc.has(name) ? &found->second : nullptr);
+			}
+		}
+		return at->second;
+	}
+
 	void Game::follow(void)
 	{
 		for (Object& object : getCurrentObjects())
 		{
 			const Object::Follows* follows = objectParts.follows.find(object.id);
 			if (!follows || !object.exists) { continue; }
-			const std::string where = "object '" + object.name + "'";
 			for (const Object::Follow& each : follows->each)
 			{
-				const float value = evaluateNow(each.value, where);
+				const float value = evaluateFor(each.value, object);
 				switch (each.part)
 				{
 				case Object::Follow::Part::X: object.position.x = value + object.layout.cellOffset.x; break;
@@ -2369,6 +2408,13 @@ namespace xge
 	{
 		refreshLive();
 		return expr.evaluate(value, where);
+	}
+
+	float Game::evaluateFor(const RawValue& value, const Object& object)
+	{
+		// Where it is written is told only when it fails.
+		try { return evaluateNow(value, std::string{}); }
+		catch (const std::runtime_error& error) { throw std::runtime_error("object '" + object.name + "'" + error.what()); }
 	}
 
 	Command Game::makeNow(const CmdLive& live, const Object* self, const Object* other)
@@ -2560,11 +2606,11 @@ namespace xge
 			const auto readOwn = [&](const Object* owner, const std::vector<Name>& reads)
 			{
 				if (!owner) { return; }
-				for (const std::string& variable : reads)
+				for (const Name variable : reads)
 				{
-					const auto slot = expr.objectVariables.find(owner->name + "." + variable);
-					const auto found = owner->variable.findText(variable);
-					if (slot != expr.objectVariables.end() && found != owner->variable.end()) { slot->second = found->second; }
+					float* const held = heldFor(owner->name, variable);
+					const auto found = owner->variable.find(variable);
+					if (held && found != owner->variable.end()) { *held = found->second; }
 				}
 			};
 			readOwn(self, condition.selfReads);

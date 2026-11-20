@@ -294,6 +294,8 @@ namespace xge
 		// A value worked out now, from where everything is and how it is
 		// going (see game_expr::liveNumbers), and every variable as it is.
 		float evaluateNow(const RawValue& value, const std::string& where);
+		// The same for a value of that object's, saying it is the object's.
+		float evaluateFor(const RawValue& value, const Object& object);
 		// A path step's half that names something that changes, worked out
 		// for the follower as the step sets off (self is the follower).
 		float stepHalf(const RawValue& value, const Object& follower);
@@ -813,7 +815,7 @@ namespace xge
 		struct HeldCells
 		{
 			bool on{ false };
-			std::unordered_map<std::string, std::unordered_map<long long, Object*>> maps;
+			std::unordered_map<Name, std::unordered_map<long long, Object*>> maps;
 		};
 		struct CellsStill
 		{
@@ -922,6 +924,12 @@ namespace xge
 		// Only those a text has read are kept up (game_expr::liveRead).
 		struct LiveLink { float* number; std::size_t object; std::size_t part; };
 		std::vector<LiveLink> liveLinks;
+		// For an object's name, the number each live part is read through
+		// (null: no text reads it), found by text once while calc reads the
+		// same live numbers.
+		std::unordered_map<Name, std::vector<float*>> liveNumbersOf;
+		std::size_t liveNumbersAt = 0;
+		const std::vector<float*>& liveNumbersFor(Name owner);
 		bool liveLinked = false;
 		std::size_t liveLinkedAt = 0;
 		std::set<std::string> liveWarned;
@@ -929,6 +937,11 @@ namespace xge
 		// The copy of an object's variables that texts read (load/calc), made
 		// what the object holds: after a reset puts them back.
 		void holdVariablesForExpressions(const Object& object);
+		// Where expressions read that object's variable (player.score), found
+		// by its text once; null when none reads it.
+		float* heldFor(Name owner, Name variable);
+		std::unordered_map<VariableName, float*, VariableName::Hash> heldSlots;
+		std::size_t heldSlotsOf = 0;
 
 		// Shows `value` in every text object bound to ownerName.variableName.
 		void refreshBoundTexts(Name ownerName, Name variableName, float value);
@@ -992,6 +1005,8 @@ namespace xge
 
 		// tryGetObject's answers: names never change while a game runs.
 		std::unordered_map<Name, Object*> foundObjects;
+		// What fullName found for a name, until the objects change.
+		mutable std::unordered_map<Name, Name> fullNames;
 		Object* findObject(Name name) noexcept;
 
 		// The objects a condition's class and name filter matches (both
@@ -1101,6 +1116,7 @@ namespace xge
 		// group, or else the one path that ends with it (robots for
 		// playing.room1.robots, for a test or a front end); else itself.
 		Name fullName(Name name) const;
+		Name findFullName(Name name) const;
 
 		// Works out what is shown in every text bound to a variable, after many have changed.
 		void refreshAllBoundTexts(void);

@@ -232,6 +232,16 @@ namespace xge
 
 		// As written.
 		std::string written() const { return owner + "." + variable; }
+
+		friend bool operator==(const VariableName&, const VariableName&) = default;
+		// Told apart by the two names' ids.
+		struct Hash
+		{
+			std::size_t operator()(const VariableName& name) const noexcept
+			{
+				return std::hash<Name>{}(name.owner) * 31u + std::hash<Name>{}(name.variable);
+			}
+		};
 	};
 
 	// <inc variable="ownerName.variableName" /> - add 1 (or, for <inc variable="...">5</inc>,
