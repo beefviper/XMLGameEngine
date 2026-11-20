@@ -16,10 +16,8 @@
 
 namespace xge
 {
-	// The SFML 3 Audio backend. Nothing outside this file, audio/sfml.cpp and
-	// AudioFactory::create (the one place that constructs one) ever names an
-	// SFML audio type - see audio/audio.h. Each sound is an sf::SoundBuffer of the
-	// engine's samples and one sf::Sound playing it, its one voice.
+	// Each sound is an sf::SoundBuffer of the engine's samples and one
+	// sf::Sound, its voice.
 	class SFMLAudio : public Audio
 	{
 	public:

@@ -57,13 +57,8 @@ namespace xge
 		float decay{ 0.0f };
 	};
 
-	// A sound from the game file's <sounds>, worked out: its name (what
-	// <play sound="..." /> asks for), whether it loops (<loop />: it plays
-	// over and over until it is silenced), how loud (0 to 1) and its notes in
-	// the order they play, each in its part (the parts play together, as a
-	// sound chip's channels do). Nothing about any audio library is in it; an Audio
-	// backend (audio/audio.h) is given these and turns each into samples with
-	// samplesOf() below.
+	// A <sound> worked out: whether it loops, how loud (0 to 1), and its notes
+	// in order, each in its part; the parts play together.
 	struct SoundDesc
 	{
 		std::string name;
@@ -90,10 +85,8 @@ namespace xge
 	// time it plays (its random numbers are seeded per note).
 	std::vector<std::int16_t> synthesize(const SoundDesc& sound, unsigned sampleRate = kSoundSampleRate);
 
-	// The samples a backend plays for a sound, made the same way for every
-	// backend: the one place a sound becomes samples. A sound with a path is
-	// its recording (readWave, audio/wave.h) at its volume; any other is
-	// synthesize() above.
+	// The one place a sound becomes samples: its recording at its volume, or
+	// synthesize().
 	std::vector<std::int16_t> samplesOf(const SoundDesc& sound);
 
 	// Everything that decides a sound's samples, as text with its numbers

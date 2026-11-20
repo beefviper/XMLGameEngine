@@ -18,14 +18,9 @@
 
 namespace xge
 {
-	// The SDL2 Audio backend. Nothing outside this file, audio/sdl2.cpp and
-	// AudioFactory::create (the one place that constructs one) ever names an
-	// SDL audio type - see audio/audio.h. SDL2 itself only opens a sound device and
-	// asks for samples when it wants them (no SDL_mixer is used), so this
-	// keeps its own small mixer: each sound is one voice, a list of samples
-	// and how far through them it is, and the device's callback adds up every
-	// voice that is playing. Uses SDL's audio subsystem only, so it lives
-	// alongside SDL2Window (window/sdl2.h), which uses the video one.
+	// SDL2 only opens a device and asks for samples (no SDL_mixer), so this
+	// mixes itself: each sound is a voice, its samples and how far through,
+	// and the device's callback adds up the voices playing.
 	class SDL2Audio : public Audio
 	{
 	public:

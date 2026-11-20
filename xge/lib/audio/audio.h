@@ -14,57 +14,33 @@
 
 namespace xge
 {
-	// What Engine needs from a sound library: take the game's sounds once, and
-	// play one by name when the game asks for it - expressed entirely in
-	// engine-level terms (SoundDesc, audio/sound.h), so no audio library's types leak
-	// into Engine or Game, the same as Window (window/window.h) does for drawing.
-	// Three libraries implement it today - SFML 3, raylib and SDL2 (see
-	// audio/sfml.h, audio/raylib.h, audio/sdl2.h) - and NullAudio below plays
-	// nothing. The audio library is chosen separately from the window library:
-	// any of them goes with any window, the OpenGL one (which has no sound of
-	// its own) included.
-	//
-	// Every sound is made into samples by the engine (samplesOf(), audio/sound.h),
-	// once a game however many sounds sound the same, the same for every backend; a backend only hands those samples to its
-	// library. Each sound has one voice, like a channel of an old sound chip:
-	// playing a sound that is still playing starts it again from the
-	// beginning, and different sounds play over each other.
+	// A sound library, in the engine's terms only; any goes with any window.
+	// The engine makes every sound's samples (samplesOf); a backend only hands
+	// them on. Each sound has one voice, like a sound chip's channel: played
+	// again, it starts over; different sounds play over each other.
 	class Audio
 	{
 	public:
 		virtual ~Audio() = default;
 
-		// Called once, right after the audio is created (see Engine's
-		// constructors and Engine::replaceAudio): makes every sound the game
-		// file describes ready to play, its samples asked of the game's
-		// `resources` (Resources::samples). Replaces whatever was loaded
-		// before.
+		// Every sound of the game made ready, in place of any before.
 		virtual void load(const std::vector<SoundDesc>& sounds, Resources& resources) = 0;
 
-		// Starts the sound of that name (again, from the beginning, if it is
-		// already playing). A name that was not loaded does nothing: a game
-		// file is checked for those when it loads (see load/expr.cpp).
+		// From the start, even if it is playing; an unknown name does nothing.
 		virtual void play(const std::string& name) = 0;
 
-		// Starts the sound of that name playing over and over, from its end
-		// straight back to its start, until stop() or stopAll(). One that is
-		// already looping carries on undisturbed.
+		// Over and over until stopped; one already looping carries on.
 		virtual void loop(const std::string& name) = 0;
 
-		// Silences the sound of that name, if it is playing.
 		virtual void stop(const std::string& name) = 0;
 
-		// Silences everything that is playing.
 		virtual void stopAll() = 0;
 
-		// Called once a frame (Engine::step), for a library that has to be
-		// handed more of a looping sound as it plays (raylib).
+		// Once a frame, for a library handed a loop as it plays (raylib).
 		virtual void update() {}
 	};
 
-	// Plays nothing. What the tests use (they must not need a sound card), what
-	// "-a none" asks for, and what Engine falls back to when the library asked
-	// for cannot start.
+	// Plays nothing: for the tests, "-a none", and when a library cannot start.
 	class NullAudio : public Audio
 	{
 	public:
@@ -83,13 +59,8 @@ namespace xge
 		None
 	};
 
-	// Builds the concrete Audio for the given backend - the one place that knows
-	// about all of them, as WindowFactory (window/window.h) is for windows. Adding
-	// another would only need a branch added here and in AudioBackend.
-	//
-	// As for windows (window/window.h), a program is built with some of the sound
-	// libraries (the ones whose window backend it has, options.cmake), and
-	// available() says which. None is always there.
+	// The one place that knows every backend. A program has the sound
+	// libraries of the window backends it is built with; None always.
 	class AudioFactory
 	{
 	public:
