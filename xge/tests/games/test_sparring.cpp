@@ -31,7 +31,7 @@ namespace
 		}
 
 		Object& boxer(int player) { return game.getObject("boxer" + std::to_string(player)); }
-		float points(int player) { return boxer(player).variable["points"]; }
+		float points(int player) { return boxer(player).variable.at("points"); }
 
 		// The two boxers `gap` apart, the first at 200.
 		void apart(float gap)
@@ -128,7 +128,7 @@ TEST_CASE("sparring.xml: two bodies never pass through each other", "[sparring]"
 TEST_CASE("sparring.xml: the tenth point wins", "[sparring]")
 {
 	Ring ring;
-	ring.boxer(2).variable["points"] = 9.0f;
+	ring.boxer(2).variable.at("points") = 9.0f;
 	ring.apart(30.0f);
 	ring.act(2, "jab");
 	ring.frames(10);

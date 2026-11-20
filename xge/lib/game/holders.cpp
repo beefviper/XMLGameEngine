@@ -31,7 +31,7 @@ namespace xge
 		// An item's variable of that name (0: it has none).
 		float valueOf(const Object& item, const std::string& variable)
 		{
-			const auto value = item.variable.find(variable);
+			const auto value = item.variable.findText(variable);
 			return value == item.variable.end() ? 0.0f : value->second;
 		}
 
@@ -99,7 +99,7 @@ namespace xge
 				std::vector<float> values;
 				for (const std::string& name : holderOf(holder).orderBy)
 				{
-					const auto found = of.variable.find(name);
+					const auto found = of.variable.findText(name);
 					values.push_back(found == of.variable.end() ? 0.0f : found->second);
 				}
 				return values;
@@ -128,7 +128,7 @@ namespace xge
 	{
 		if (!holderOf(holder).counts.empty() && holderOf(holder).counts != "worth")
 		{
-			const auto value = item.variable.find(holderOf(holder).counts);
+			const auto value = item.variable.findText(holderOf(holder).counts);
 			return value == item.variable.end() ? 0.0f : value->second;
 		}
 		return itemOf(item).worths.empty() ? 0.0f : itemOf(item).worths.front();
@@ -429,11 +429,11 @@ namespace xge
 		const Object* top = holderOf(holder).items.empty() ? nullptr : itemAt(holderOf(holder).items.back());
 		for (auto& [name, value] : holder.variable)
 		{
-			if (name.rfind("top.", 0) != 0) { continue; }
+			if (name.str().rfind("top.", 0) != 0) { continue; }
 			float now = 0.0f;
 			if (top)
 			{
-				if (const auto own = top->variable.find(name.substr(4)); own != top->variable.end()) { now = own->second; }
+				if (const auto own = top->variable.findText(name.str().substr(4)); own != top->variable.end()) { now = own->second; }
 			}
 			if (now != value) { value = now; refreshBoundTexts(holder.name, name, now); }
 		}
@@ -451,7 +451,7 @@ namespace xge
 			if (!item || !itemOf(*item).faceUp || itemOf(*item).worths.empty()) { continue; }
 			if (byVariable)
 			{
-				const auto value = item->variable.find(counted);
+				const auto value = item->variable.findText(counted);
 				total += value == item->variable.end() ? 0.0f : value->second;
 				continue;
 			}
@@ -1170,7 +1170,7 @@ namespace xge
 			{
 				const Object* item = itemAt(number);
 				if (!item) { return false; }
-				const auto value = item->variable.find(each.variable);
+				const auto value = item->variable.findText(each.variable);
 				total += value == item->variable.end() ? 0.0f : value->second;
 			}
 			if (total != each.amount) { return false; }
@@ -1238,7 +1238,7 @@ namespace xge
 		using Rule = HolderRule::VarRule::Kind;
 		const auto valueOf = [](const Object& of, const std::string& name)
 		{
-			const auto found = of.variable.find(name);
+			const auto found = of.variable.findText(name);
 			return found == of.variable.end() ? 0.0f : found->second;
 		};
 		for (const HolderRule::VarRule& each : rules)

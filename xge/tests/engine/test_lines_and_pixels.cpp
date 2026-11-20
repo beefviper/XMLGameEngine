@@ -614,21 +614,21 @@ TEST_CASE("thrust against the pull, and opposite thrusts cancel", "[acceleration
 TEST_CASE("thrust burns 60 of its variable a second, one a frame, and does nothing once it is gone", "[acceleration]")
 {
 	Flight flight;
-	REQUIRE(flight.ship().variable["fuel"] == 3.0f);
+	REQUIRE(flight.ship().variable.at("fuel") == 3.0f);
 
 	flight.key("burn", true);
 	flight.frames(2);
-	CHECK(flight.ship().variable["fuel"] == 1.0f);
+	CHECK(flight.ship().variable.at("fuel") == 1.0f);
 	CHECK_THAT(flight.ship().velocity.y, WithinAbs(2 * (30.0f - 90.0f), 1e-3f));
 
 	flight.frames(1);
-	CHECK(flight.ship().variable["fuel"] == 0.0f);
+	CHECK(flight.ship().variable.at("fuel") == 0.0f);
 	const float withLastFuel = flight.ship().velocity.y;
 	CHECK_THAT(withLastFuel, WithinAbs(3 * (30.0f - 90.0f), 1e-3f));
 
 	// Still holding it, with nothing left: only the pull is left.
 	flight.frames(2);
-	CHECK(flight.ship().variable["fuel"] == 0.0f);
+	CHECK(flight.ship().variable.at("fuel") == 0.0f);
 	CHECK_THAT(flight.ship().velocity.y, WithinAbs(withLastFuel + 2 * 30.0f, 1e-3f));
 }
 
@@ -644,7 +644,7 @@ TEST_CASE("a held thrust is forgotten by a reset and the pull is given back by i
 	CHECK(flight.ship().velocity.y == 0.0f);
 	CHECK(flight.ship().acceleration.y == 1800.0f);
 	CHECK_FALSE(flight.game.parts().drives.has(flight.ship().id));
-	CHECK(flight.ship().variable["fuel"] == 3.0f);
+	CHECK(flight.ship().variable.at("fuel") == 3.0f);
 }
 
 TEST_CASE("a condition on speed, as the touch happened, picks which rule about the floor runs", "[rules]")
@@ -658,8 +658,8 @@ TEST_CASE("a condition on speed, as the touch happened, picks which rule about t
 
 		flight.frames(30);
 
-		CHECK(flight.ship().variable["landed"] == 1.0f);
-		CHECK(flight.ship().variable["crashed"] == 0.0f);
+		CHECK(flight.ship().variable.at("landed") == 1.0f);
+		CHECK(flight.ship().variable.at("crashed") == 0.0f);
 	}
 
 	SECTION("fast, it crashes")
@@ -671,8 +671,8 @@ TEST_CASE("a condition on speed, as the touch happened, picks which rule about t
 
 		flight.frames(30);
 
-		CHECK(flight.ship().variable["landed"] == 0.0f);
-		CHECK(flight.ship().variable["crashed"] == 1.0f);
+		CHECK(flight.ship().variable.at("landed") == 0.0f);
+		CHECK(flight.ship().variable.at("crashed") == 1.0f);
 	}
 
 	SECTION("sideways speed counts too")
@@ -684,7 +684,7 @@ TEST_CASE("a condition on speed, as the touch happened, picks which rule about t
 
 		flight.frames(30);
 
-		CHECK(flight.ship().variable["crashed"] == 1.0f);
+		CHECK(flight.ship().variable.at("crashed") == 1.0f);
 	}
 
 	SECTION("exactly the limit is at least it, not below it")
@@ -696,8 +696,8 @@ TEST_CASE("a condition on speed, as the touch happened, picks which rule about t
 
 		flight.frames(30);
 
-		CHECK(flight.ship().variable["crashed"] == 1.0f);
-		CHECK(flight.ship().variable["landed"] == 0.0f);
+		CHECK(flight.ship().variable.at("crashed") == 1.0f);
+		CHECK(flight.ship().variable.at("landed") == 0.0f);
 	}
 }
 
@@ -711,7 +711,7 @@ TEST_CASE("stop brings an object to rest for good, and a reset gives it its moti
 
 	flight.frames(30);
 
-	REQUIRE(flight.ship().variable["landed"] == 1.0f);
+	REQUIRE(flight.ship().variable.at("landed") == 1.0f);
 	CHECK(flight.ship().velocity.x == 0.0f);
 	CHECK(flight.ship().velocity.y == 0.0f);
 	CHECK(flight.ship().acceleration.y == 0.0f);
@@ -720,11 +720,11 @@ TEST_CASE("stop brings an object to rest for good, and a reset gives it its moti
 	const Vector2f where = flight.ship().position;
 	flight.frames(60);
 	CHECK(flight.ship().position == where);
-	CHECK(flight.ship().variable["landed"] == 1.0f);
+	CHECK(flight.ship().variable.at("landed") == 1.0f);
 
 	flight.game.resetObject("ship");
 	CHECK(flight.ship().acceleration.y == 1800.0f);
-	CHECK(flight.ship().variable["landed"] == 0.0f);
+	CHECK(flight.ship().variable.at("landed") == 0.0f);
 }
 
 TEST_CASE("the new tags read back the way they were written", "[rules][xml]")

@@ -194,7 +194,7 @@ TEST_CASE("clearing the first wall builds a second, and clearing that wins", "[b
 {
 	Game game{ "descriptions/breakout.xml" };
 	play(game);
-	game.getObject("status").variable["score"] = 448.0f;
+	game.getObject("status").variable.at("score") = 448.0f;
 
 	clearWall(game);
 	game.updateObjects(xge::kSixtieth);

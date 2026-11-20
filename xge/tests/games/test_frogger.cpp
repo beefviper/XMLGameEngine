@@ -60,9 +60,9 @@ namespace
 		}
 
 		Object& frog() { return game.getObject("frog"); }
-		float lives() { return frog().variable["lives"]; }
-		float score() { return frog().variable["score"]; }
-		float homes() { return frog().variable["homes"]; }
+		float lives() { return frog().variable.at("lives"); }
+		float score() { return frog().variable.at("score"); }
+		float homes() { return frog().variable.at("homes"); }
 
 		void hop(const char* direction)
 		{
@@ -380,7 +380,7 @@ TEST_CASE("the time runs out a frog", "[frogger][timers]")
 	Table table;
 	table.frames(60 * 40 + 2 + 100);
 	CHECK(table.lives() == 2.0f);
-	CHECK(table.game.getObject("clock").variable["time"] >= 39.0f);
+	CHECK(table.game.getObject("clock").variable.at("time") >= 39.0f);
 }
 
 TEST_CASE("all five pads is a win", "[frogger][pads]")

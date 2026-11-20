@@ -60,8 +60,8 @@ namespace
 
 		std::string state() { return game.getCurrentState().name; }
 		std::string wave() { return game.currentScene("playing"); }
-		float score() { return game.getObject("status").variable["score"]; }
-		float downed() { return game.getObject("tally").variable["downed"]; }
+		float score() { return game.getObject("status").variable.at("score"); }
+		float downed() { return game.getObject("tally").variable.at("downed"); }
 
 		void frames(int count)
 		{
@@ -256,20 +256,20 @@ TEST_CASE("each post fires along its own heading, and a hit ship scores and coun
 TEST_CASE("the quota moves the game on from wave to wave, with the tally and the rays put back, and the third quota wins", "[atlantis][scenes]")
 {
 	City city;
-	city.game.getObject("tally").variable["downed"] = 12;
+	city.game.getObject("tally").variable.at("downed") = 12;
 	city.frames(1);
 	CHECK(city.wave() == "playing.wave2");
 	CHECK(city.downed() == 0);
 
-	city.game.getObject("tally").variable["downed"] = 15;
+	city.game.getObject("tally").variable.at("downed") = 15;
 	city.frames(1);
 	CHECK(city.wave() == "playing.wave2");
-	city.game.getObject("tally").variable["downed"] = 16;
+	city.game.getObject("tally").variable.at("downed") = 16;
 	city.frames(1);
 	CHECK(city.wave() == "playing.wave3");
 	CHECK(city.state() == "playing");
 
-	city.game.getObject("tally").variable["downed"] = 20;
+	city.game.getObject("tally").variable.at("downed") = 20;
 	city.frames(1);
 	CHECK(city.state() == "over");
 	CHECK(city.game.getObject("over.message").lookName() == "won");

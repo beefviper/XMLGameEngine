@@ -43,7 +43,7 @@ namespace
 		}
 
 		Object& rocket(int player) { return game.getObject("rocket" + std::to_string(player)); }
-		float score(int player) { return rocket(player).variable["score"]; }
+		float score(int player) { return rocket(player).variable.at("score"); }
 
 		void key(int player, const char* direction, bool down)
 		{

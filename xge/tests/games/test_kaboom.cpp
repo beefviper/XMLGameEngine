@@ -64,14 +64,14 @@ namespace
 		}
 
 		Object& bucket() { return game.getObject("bucket"); }
-		float score() { return bucket().variable["score"]; }
-		float buckets() { return bucket().variable["buckets"]; }
+		float score() { return bucket().variable.at("score"); }
+		float buckets() { return bucket().variable.at("buckets"); }
 		std::string state() { return game.getCurrentState().name; }
 		std::string wave() { return game.currentScene("playing"); }
 
 		// For tests that play on whatever happens: enough buckets that no run
 		// of bad luck ends the game.
-		void keepPlaying() { bucket().variable["buckets"] = 1000.0f; }
+		void keepPlaying() { bucket().variable.at("buckets") = 1000.0f; }
 
 		void key(const char* direction, bool down)
 		{
@@ -280,13 +280,13 @@ TEST_CASE("the score moves the game on from wave to wave and to a win", "[kaboom
 	const float ends[] = { 10, 50, 140, 300, 550, 1000, 1700 };
 	for (int wave = 0; wave < 7; ++wave)
 	{
-		table.bucket().variable["score"] = ends[wave];
+		table.bucket().variable.at("score") = ends[wave];
 		table.frames(1);
 		CHECK(table.state() == "playing");
 		CHECK(table.wave() == "playing.wave" + std::to_string(wave + 2));
 	}
 
-	table.bucket().variable["score"] = 2900;
+	table.bucket().variable.at("score") = 2900;
 	table.frames(1);
 	CHECK(table.state() == "over");
 	CHECK(table.game.getObject("over.message").lookName() == "won");
@@ -299,7 +299,7 @@ TEST_CASE("a wave left is away: its bomber stops where he was and drops nothing 
 	table.frames(static_cast<int>(0.7f * kFramerate) * 2 + 1);
 	REQUIRE(table.falling().size() == 2);
 
-	table.bucket().variable["score"] = 10;
+	table.bucket().variable.at("score") = 10;
 	table.frames(1);
 	REQUIRE(table.wave() == "playing.wave2");
 
@@ -351,10 +351,10 @@ TEST_CASE("space starts a new game from the end screen with everything back", "[
 	engine.handleKeyReleased(KeyCode::Space);
 	REQUIRE(game.getCurrentState().name == "playing");
 
-	game.getObject("bucket").variable["score"] = 10;
+	game.getObject("bucket").variable.at("score") = 10;
 	for (int i = 0; i < 90; ++i) { engine.input(); engine.update(xge::kSixtieth); }
 	REQUIRE(game.currentScene("playing") == "playing.wave2");
-	game.getObject("bucket").variable["buckets"] = 0;
+	game.getObject("bucket").variable.at("buckets") = 0;
 	engine.input(); engine.update(xge::kSixtieth);
 	REQUIRE(game.getCurrentState().name == "over");
 	CHECK(game.getObject("over.message").lookName() == "lost");
@@ -363,8 +363,8 @@ TEST_CASE("space starts a new game from the end screen with everything back", "[
 	engine.handleKeyReleased(KeyCode::Space);
 	CHECK(game.getCurrentState().name == "title");
 	CHECK(game.currentScene("playing") == "playing.wave1");
-	CHECK(game.getObject("bucket").variable["buckets"] == 3);
-	CHECK(game.getObject("bucket").variable["score"] == 0);
+	CHECK(game.getObject("bucket").variable.at("buckets") == 3);
+	CHECK(game.getObject("bucket").variable.at("score") == 0);
 	for (const auto& object : game.getCurrentObjects())
 	{
 		if (object.objClass == "bomb") { CHECK_FALSE(object.isVisible); }
@@ -388,7 +388,7 @@ TEST_CASE("the keys carry on from wave to wave, and Pause pauses over the game d
 	CHECK(bucket.position.x == Approx(startX + 9));
 
 	// The next wave is the same state: the held key carries on.
-	bucket.variable["score"] = 10;
+	bucket.variable.at("score") = 10;
 	game.updateObjects(xge::kSixtieth);
 	REQUIRE(game.currentScene("playing") == "playing.wave2");
 	CHECK(bucket.position.x == Approx(startX + 18));
@@ -441,7 +441,7 @@ TEST_CASE("the last wave is harder: the same player loses buckets in it", "[kabo
 	// a minute of the last wave the bombs come faster than a bucket can always
 	// reach them, so it is not the walkover the first wave is for this player.
 	Table table("wave8");
-	table.bucket().variable["buckets"] = 1000.0f;
+	table.bucket().variable.at("buckets") = 1000.0f;
 
 	for (int frame = 0; frame < 60 * kFramerate && table.state() == "playing"; ++frame)
 	{

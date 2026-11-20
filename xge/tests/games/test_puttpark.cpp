@@ -138,7 +138,7 @@ TEST_CASE("puttpark.xml: a post kicks the ball off faster than it came", "[puttp
 	Park park;
 	// Straight to the third hole.
 	park.game.enterScene("playing.hole3");
-	park.get("card").variable["placed"] = 0.0f;
+	park.get("card").variable.at("placed") = 0.0f;
 	park.frames(3);
 	REQUIRE(park.card("hole") == 3.0f);
 	park.putt(40);

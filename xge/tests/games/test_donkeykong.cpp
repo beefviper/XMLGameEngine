@@ -64,7 +64,7 @@ namespace
 		{
 			tap(KeyCode::Space);
 			REQUIRE(state() == "playing");
-			kong().variable["wait"] = 1000.0f;
+			kong().variable.at("wait") = 1000.0f;
 			game.clocksOf(kong())->at(0).counting = true; game.clocksOf(kong())->at(0).secondsLeft = 1000.0;
 			frames(5);
 		}
@@ -340,7 +340,7 @@ TEST_CASE("saving Pauline scores the bonus, starts the climb again with Kong qui
 
 	for (int save = 1; save <= 3; ++save)
 	{
-		play.kong().variable["wait"] = 1000.0f + static_cast<float>(save);
+		play.kong().variable.at("wait") = 1000.0f + static_cast<float>(save);
 		play.standAt(340.0f, "perch");
 		play.engine.handleKeyPressed(KeyCode::A);
 		for (int i = 0; i < 30 && play.variable("rescues") < static_cast<float>(save); ++i) { play.frames(1); }
@@ -404,7 +404,7 @@ TEST_CASE("each state owns what it draws, and game over draws the girders still 
 	CHECK_FALSE(play.game.isShown(play.man()));
 
 	play.start();
-	play.man().variable["lives"] = 0;
+	play.man().variable.at("lives") = 0;
 	play.frames(1);
 	REQUIRE(play.state() == "over");
 	CHECK(play.game.getObject("over.message").lookName() == "lost");
@@ -445,7 +445,7 @@ TEST_CASE("the bonus counts down, and running out costs a life", "[donkeykong]")
 	play.frames(2 * 60 + 5);
 	CHECK(play.variable("bonus") == 4900);
 
-	play.man().variable["bonus"] = 100.0f;
+	play.man().variable.at("bonus") = 100.0f;
 	play.frames(2 * 60 + 5);
 	play.frames(155); // he tumbles first, the girders standing still
 	CHECK(play.variable("lives") == 2);
@@ -517,7 +517,7 @@ TEST_CASE("an unlucky barrel goes down a ladder and rolls on the other way; a lu
 
 	// On Kong's girder, rolling right towards the ladder at 568.
 	Object& unlucky = play.barrelAt(500.0f, "top", 150.0f);
-	unlucky.variable["luck"] = 0.0f;
+	unlucky.variable.at("luck") = 0.0f;
 	bool climbed = false;
 	for (int i = 0; i < 120 && !climbed; ++i)
 	{
@@ -536,7 +536,7 @@ TEST_CASE("an unlucky barrel goes down a ladder and rolls on the other way; a lu
 
 	// One with luck stays on its girder past the same ladder.
 	Object& lucky = play.barrelAt(500.0f, "top", 150.0f);
-	lucky.variable["luck"] = 0.9f;
+	lucky.variable.at("luck") = 0.9f;
 	bool anyClimb = false;
 	for (int i = 0; i < 50; ++i)
 	{
@@ -554,7 +554,7 @@ TEST_CASE("a barrel in the oil drum lets out a fireball, which costs a life and 
 	play.start();
 	play.standAt(420.0f, "perch");
 	Object& barrel = play.barrelAt(60.0f, "floor", -150.0f);
-	barrel.variable["luck"] = 0.9f;
+	barrel.variable.at("luck") = 0.9f;
 	const std::string barrelName = barrel.name;
 	play.frames(30);
 	CHECK_FALSE(play.game.tryGetObject(barrelName));
@@ -564,7 +564,7 @@ TEST_CASE("a barrel in the oil drum lets out a fireball, which costs a life and 
 
 	// One sent at Jumpman on the floor.
 	play.standAt(300.0f, "floor");
-	fire.variable["luck"] = 0.9f;
+	fire.variable.at("luck") = 0.9f;
 	fire.position = { 276.0f, play.feet() - fire.size.y };
 	fire.velocity = { 60.0f, 0.0f };
 	play.frames(30);
@@ -577,7 +577,7 @@ TEST_CASE("a barrel in the oil drum lets out a fireball, which costs a life and 
 	const std::string climberName = play.game.spawn("fireball")->name;
 	play.game.settleSpawns();
 	Object& climber = play.game.getObject(climberName);
-	climber.variable["luck"] = 0.0f;
+	climber.variable.at("luck") = 0.0f;
 	climber.position = { 480.0f, play.top("floor", 490.0f) - climber.size.y };
 	climber.velocity = { 60.0f, 0.0f };
 	bool climbed = false;
@@ -602,7 +602,7 @@ TEST_CASE("with the hammer a fireball is smashed for 500", "[donkeykong]")
 	const std::string fireName = play.game.spawn("fireball")->name;
 	play.game.settleSpawns();
 	Object& fire = play.game.getObject(fireName);
-	fire.variable["luck"] = 0.9f;
+	fire.variable.at("luck") = 0.9f;
 	fire.position = { 276.0f, play.feet() - fire.size.y };
 	fire.velocity = { 60.0f, 0.0f };
 	play.frames(30);

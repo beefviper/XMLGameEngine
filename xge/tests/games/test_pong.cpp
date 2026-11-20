@@ -154,7 +154,7 @@ TEST_CASE("at eleven, game over is written over the game still, and Space starts
 {
 	Pong pong;
 	pong.tap(KeyCode::Space);
-	pong.object("paddle2").variable["score"] = 11;
+	pong.object("paddle2").variable.at("score") = 11;
 	pong.frames(1);
 	REQUIRE(pong.state() == "over");
 	CHECK(pong.shown("gameover"));

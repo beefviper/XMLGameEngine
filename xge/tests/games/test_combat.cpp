@@ -184,7 +184,7 @@ TEST_CASE("after two minutes sixteen the most hits win, and space plays again", 
 	play.tap(KeyCode::Pause);
 	CHECK(play.state() == "playing");
 
-	play.tank2().variable["hits"] = 3;
+	play.tank2().variable.at("hits") = 3;
 	play.frames(135 * 60);
 	CHECK(play.state() == "playing");
 	play.frames(62);
@@ -234,7 +234,7 @@ TEST_CASE("each state owns what it draws, and a win draws the field still under 
 	CHECK_FALSE(play.game.isShown(play.tank1()));
 
 	play.start();
-	play.tank1().variable["hits"] = 5;
+	play.tank1().variable.at("hits") = 5;
 	play.game.pushState("over");
 	play.frames(1);
 	REQUIRE(play.state() == "over");

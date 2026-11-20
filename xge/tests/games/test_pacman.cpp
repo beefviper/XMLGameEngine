@@ -73,7 +73,7 @@ namespace
 		}
 
 		Object& pacman() { return game.getObject("playing.pacman"); }
-		float status(const char* variable) { return game.getObject("playing.status").variable[variable]; }
+		float status(const char* variable) { return game.getObject("playing.status").variable.at(variable); }
 		Object& ghost(const std::string& name) { return game.getObject("playing.maze." + name + ".1"); }
 		std::string state() { return game.getCurrentState().name; }
 
@@ -621,14 +621,14 @@ TEST_CASE("pacman: a life is won at 10,000 points, once, and the best score is k
 {
 	PacmanPlay maze;
 	maze.onlyGhost("");
-	maze.game.getObject("playing.status").variable["score"] = 10000.0f;
+	maze.game.getObject("playing.status").variable.at("score") = 10000.0f;
 	maze.frames(1);
 	CHECK(maze.status("lives") == 4.0f);
 	maze.frames(5);
 	CHECK(maze.status("lives") == 4.0f);
-	CHECK(maze.game.getObject("best").variable["score"] == 10000.0f);
+	CHECK(maze.game.getObject("best").variable.at("score") == 10000.0f);
 	maze.game.resetAll();
-	CHECK(maze.game.getObject("best").variable["score"] == 10000.0f);
+	CHECK(maze.game.getObject("best").variable.at("score") == 10000.0f);
 }
 
 TEST_CASE("map: what a <map> turns away", "[map]")

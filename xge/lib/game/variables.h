@@ -5,22 +5,27 @@
 
 #pragma once
 
+#include "game/name.h"
+
 #include <cstddef>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
 namespace xge
 {
-	// An object's <variable>s by name, in name order: one list, held
-	// together, read as a std::map is. A name is added only as the game
-	// loads or a verb sets one it did not have, so the list stays short.
-	// A number found in it is good only until a name is added.
+	// An object's <variable>s, in name order: one list, held together, read
+	// as a std::map is. Each is under a Name, so a step that holds the Name
+	// finds it by id; by its text is for loading, messages and tests. A
+	// name is added only as the game loads or a verb sets one it did not
+	// have, so the list stays short. A number found in it is good only
+	// until a name is added.
 	class Variables
 	{
 	public:
-		using value_type = std::pair<std::string, float>;
+		using value_type = std::pair<Name, float>;
 		using iterator = std::vector<value_type>::iterator;
 		using const_iterator = std::vector<value_type>::const_iterator;
 
@@ -31,69 +36,75 @@ namespace xge
 		bool empty() const noexcept { return entries.empty(); }
 		std::size_t size() const noexcept { return entries.size(); }
 
-		iterator find(const std::string& name) noexcept
+		iterator find(Name name) noexcept
 		{
 			for (iterator at = entries.begin(); at != entries.end(); ++at)
 			{
-				const int order = at->first.compare(name);
-				if (order == 0) { return at; }
-				if (order > 0) { break; }
+				if (at->first == name) { return at; }
 			}
 			return entries.end();
 		}
-		const_iterator find(const std::string& name) const noexcept
+		const_iterator find(Name name) const noexcept
 		{
 			for (const_iterator at = entries.begin(); at != entries.end(); ++at)
 			{
-				const int order = at->first.compare(name);
-				if (order == 0) { return at; }
-				if (order > 0) { break; }
+				if (at->first == name) { return at; }
 			}
 			return entries.end();
 		}
-		std::size_t count(const std::string& name) const noexcept { return find(name) == end() ? 0 : 1; }
+		std::size_t count(Name name) const noexcept { return find(name) == end() ? 0 : 1; }
 
-		float& at(const std::string& name)
-		{
-			const iterator found = find(name);
-			if (found == entries.end()) { throw std::out_of_range("no variable '" + name + "'"); }
-			return found->second;
-		}
-		const float& at(const std::string& name) const
+		// The value under that name, or `otherwise` without one.
+		float valueOr(Name name, float otherwise) const noexcept
 		{
 			const const_iterator found = find(name);
-			if (found == entries.end()) { throw std::out_of_range("no variable '" + name + "'"); }
-			return found->second;
+			return found == end() ? otherwise : found->second;
 		}
 
-		// The number of that name, added as 0 if it has none.
-		float& operator[](const std::string& name) { return try_emplace(name, 0.0f).first->second; }
+		float& operator[](Name name) { return try_emplace(name, 0.0f).first->second; }
 
-		// The number of that name, added as `value` if it has none.
-		std::pair<iterator, bool> try_emplace(const std::string& name, float value)
+		std::pair<iterator, bool> try_emplace(Name name, float value)
 		{
-			const iterator at = place(name);
-			if (at != entries.end() && at->first == name) { return { at, false }; }
+			if (const iterator found = find(name); found != entries.end()) { return { found, false }; }
+			iterator at = entries.begin();
+			while (at != entries.end() && at->first.str() < name.str()) { ++at; }
 			return { entries.emplace(at, name, value), true };
+		}
+
+		// By its text: for loading, messages and tests.
+		iterator findText(std::string_view name) noexcept
+		{
+			for (iterator at = entries.begin(); at != entries.end(); ++at)
+			{
+				if (at->first.str() == name) { return at; }
+			}
+			return entries.end();
+		}
+		const_iterator findText(std::string_view name) const noexcept
+		{
+			for (const_iterator at = entries.begin(); at != entries.end(); ++at)
+			{
+				if (at->first.str() == name) { return at; }
+			}
+			return entries.end();
+		}
+		std::size_t countText(std::string_view name) const noexcept { return findText(name) == end() ? 0 : 1; }
+		float& at(std::string_view name)
+		{
+			const iterator found = findText(name);
+			if (found == entries.end()) { throw std::out_of_range("no variable '" + std::string(name) + "'"); }
+			return found->second;
+		}
+		const float& at(std::string_view name) const
+		{
+			const const_iterator found = findText(name);
+			if (found == entries.end()) { throw std::out_of_range("no variable '" + std::string(name) + "'"); }
+			return found->second;
 		}
 
 		friend bool operator==(const Variables&, const Variables&) = default;
 
 	private:
-		// Where that name is, or would go: the lists are short, so a walk.
-		iterator place(const std::string& name) noexcept
-		{
-			iterator at = entries.begin();
-			while (at != entries.end() && at->first.compare(name) < 0) { ++at; }
-			return at;
-		}
-		const_iterator place(const std::string& name) const noexcept
-		{
-			const_iterator at = entries.begin();
-			while (at != entries.end() && at->first.compare(name) < 0) { ++at; }
-			return at;
-		}
-
 		std::vector<value_type> entries;
 	};
 }

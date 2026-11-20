@@ -703,8 +703,8 @@ namespace xge
 			{
 				if (!a || !b) { return false; }
 				if (check.alike.empty()) { return kindOf(*a) == kindOf(*b); }
-				const auto one = a->variable.find(check.alike);
-				const auto two = b->variable.find(check.alike);
+				const auto one = a->variable.findText(check.alike);
+				const auto two = b->variable.findText(check.alike);
 				return one != a->variable.end() && two != b->variable.end() && one->second == two->second;
 			};
 
@@ -1518,8 +1518,8 @@ namespace xge
 	{
 		if (!mover.exists || !other.exists || !mover.onCells || !other.onCells) { return false; }
 		if (std::find(merged.begin(), merged.end(), &mover) != merged.end() || std::find(merged.begin(), merged.end(), &other) != merged.end()) { return false; }
-		const auto mine = mover.variable.find(variable);
-		const auto theirs = other.variable.find(variable);
+		const auto mine = mover.variable.findText(variable);
+		const auto theirs = other.variable.findText(variable);
 		if (mine == mover.variable.end() || theirs == other.variable.end() || mine->second != theirs->second) { return false; }
 
 		const float sum = mine->second + theirs->second;
@@ -1594,8 +1594,8 @@ namespace xge
 		const auto alike = [&](const Object& other)
 		{
 			if (place.alike.empty()) { return true; }
-			const auto mine = piece.variable.find(place.alike);
-			const auto theirs = other.variable.find(place.alike);
+			const auto mine = piece.variable.findText(place.alike);
+			const auto theirs = other.variable.findText(place.alike);
 			return mine != piece.variable.end() && theirs != other.variable.end() && mine->second == theirs->second;
 		};
 		const int column = whole(this->place(piece).column);

@@ -521,7 +521,7 @@ namespace xge
 
 	std::optional<float> numberOf(const Parts& parts, const Object& object, const std::string& name)
 	{
-		if (const auto own = object.variable.find(name); own != object.variable.end()) { return own->second; }
+		if (const auto own = object.variable.findText(name); own != object.variable.end()) { return own->second; }
 		const LivePart* part = livePartNamed(name);
 		if (!part || (name == "heading" && !object.turning.hasHeading)) { return std::nullopt; }
 		return part->of(const_cast<Parts&>(parts), const_cast<Object&>(object)); // only read

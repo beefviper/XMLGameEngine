@@ -50,8 +50,8 @@ namespace xge
 			if (!turnsOf(object).takes) { continue; }
 			anyTurns = true;
 			const bool first = started.insert(object.groupName).second;
-			object.variable["turn"] = first ? 1.0f : 0.0f;
-			refreshBoundTexts(object.name, "turn", object.variable["turn"]);
+			object.variable[nameOf("turn")] = first ? 1.0f : 0.0f;
+			refreshBoundTexts(object.name, "turn", object.variable[nameOf("turn")]);
 			if (first) { object.showLook(0); }
 			else if (!turnsOf(object).sprite.empty()) { showLook(object, turnsOf(object).sprite); }
 		}
@@ -62,7 +62,7 @@ namespace xge
 		const std::string full = fullName(name);
 		for (Object& object : objects)
 		{
-			if (turnsOf(object).takes && (object.inGroup(name) || object.inGroup(full)) && object.variable["turn"] != 0.0f) { return &object; }
+			if (turnsOf(object).takes && (object.inGroup(name) || object.inGroup(full)) && object.variable[nameOf("turn")] != 0.0f) { return &object; }
 		}
 		return nullptr;
 	}
@@ -76,7 +76,7 @@ namespace xge
 	bool Game::answers(const Object& member) const
 	{
 		if (!turnsOf(member).takes) { return true; }
-		const auto onIt = member.variable.find("turn");
+		const auto onIt = member.variable.findText("turn");
 		if (onIt == member.variable.end() || onIt->second == 0.0f) { return false; }
 		// A member the computer thinks for answers only its presses; any other
 		// answers whoever presses (a member played by <computer> conditions).
@@ -85,7 +85,7 @@ namespace xge
 
 	bool Game::passPlayers(Object& member)
 	{
-		if (!turnsOf(member).takes || member.variable["turn"] == 0.0f) { return false; }
+		if (!turnsOf(member).takes || member.variable[nameOf("turn")] == 0.0f) { return false; }
 		// Not while a holder waits for the call its wild card asks of the
 		// one who laid it.
 		for (Object* holder : shownHolders())
@@ -126,7 +126,7 @@ namespace xge
 		for (Object* each : members)
 		{
 			const bool on = each == next;
-			if (on == (each->variable["turn"] != 0.0f)) { continue; }
+			if (on == (each->variable[nameOf("turn")] != 0.0f)) { continue; }
 			setVariable(each->name, "turn", on ? 1.0f : 0.0f);
 			// Onto its turn it leaves its off-turn look, for its first; a look
 			// given it while it waited (a pass's "again") stays.
@@ -144,7 +144,7 @@ namespace xge
 		for (const Object& object : objects)
 		{
 			if (!turnsOf(object).takes || turnsOf(object).ownsClass.empty() || !object.exists || !isShown(object)) { continue; }
-			const auto onIt = object.variable.find("turn");
+			const auto onIt = object.variable.findText("turn");
 			if (onIt != object.variable.end() && onIt->second != 0.0f) { return turnsOf(object).ownsClass; }
 		}
 		return {};

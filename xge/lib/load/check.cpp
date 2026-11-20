@@ -303,7 +303,7 @@ namespace xge
 				+ ". A variable that changes belongs to an object (paddle1.score is paddle1's <variable name=\"score\">); the game's own <variables> are fixed numbers");
 		}
 		const std::string& variableName = target.variable;
-		if (!owner->variable.count(variableName))
+		if (!owner->variable.countText(variableName))
 		{
 			std::vector<std::string> names;
 			for (const auto& entry : owner->variable) { names.push_back(entry.first); }

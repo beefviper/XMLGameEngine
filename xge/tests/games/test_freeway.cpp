@@ -56,7 +56,7 @@ namespace
 		}
 
 		Object& chicken(int player) { return game.getObject("chicken" + std::to_string(player)); }
-		float score(int player) { return chicken(player).variable["score"]; }
+		float score(int player) { return chicken(player).variable.at("score"); }
 
 		void hop(int player, const char* direction)
 		{
@@ -67,9 +67,9 @@ namespace
 
 		void timeUp(float one, float two)
 		{
-			chicken(1).variable["score"] = one;
-			chicken(2).variable["score"] = two;
-			game.getObject("clock").variable["seconds"] = 0.0f;
+			chicken(1).variable.at("score") = one;
+			chicken(2).variable.at("score") = two;
+			game.getObject("clock").variable.at("seconds") = 0.0f;
 			frames(2);
 		}
 
@@ -224,7 +224,7 @@ TEST_CASE("being hit knocks the chicken back a lane and costs nothing else", "[f
 {
 	Table table;
 	table.clearTraffic();
-	table.chicken(2).variable["score"] = 3.0f;
+	table.chicken(2).variable.at("score") = 3.0f;
 
 	// Halfway across, with a car of lane 5 on top of it.
 	table.chicken(2).position.y = rowY(5);
@@ -273,9 +273,9 @@ TEST_CASE("the clock counts down from 136, and the one with more crossings wins 
 	{
 		Table table;
 		table.clearTraffic();
-		CHECK(table.game.getObject("clock").variable["seconds"] == 136.0f);
+		CHECK(table.game.getObject("clock").variable.at("seconds") == 136.0f);
 		table.frames(60);
-		CHECK(table.game.getObject("clock").variable["seconds"] == 135.0f);
+		CHECK(table.game.getObject("clock").variable.at("seconds") == 135.0f);
 		CHECK(table.game.getCurrentState().name == "playing");
 	}
 	{
@@ -315,7 +315,7 @@ TEST_CASE("space starts a new game from the end screen, with both scores and the
 	CHECK(table.score(2) == 0.0f);
 	CHECK(table.game.getObject("score1").drawn.picture->text == "0");
 	CHECK(table.game.getObject("score2").drawn.picture->text == "0");
-	CHECK(table.game.getObject("clock").variable["seconds"] == 136.0f);
+	CHECK(table.game.getObject("clock").variable.at("seconds") == 136.0f);
 	CHECK(table.game.getObject("over.winner").lookName() == "draw");
 }
 

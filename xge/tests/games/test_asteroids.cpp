@@ -67,8 +67,8 @@ namespace
 
 		Object& ship() { return game.getObject("ship"); }
 		Object& named(const std::string& name) { return game.getObject(name); }
-		float score() { return ship().variable["score"]; }
-		float lives() { return ship().variable["lives"]; }
+		float score() { return ship().variable.at("score"); }
+		float lives() { return ship().variable.at("lives"); }
 		std::string state() { return game.getCurrentState().name; }
 
 		// The members of one of the playing state's groups that exist (its
@@ -1054,7 +1054,7 @@ TEST_CASE("each state owns what it draws, and game over draws the field still un
 	CHECK_FALSE(field.game.isShown(field.named("title")));
 	CHECK(field.game.isShown(field.named("best")));
 
-	field.ship().variable["lives"] = 0.0f;
+	field.ship().variable.at("lives") = 0.0f;
 	field.frames(1);
 	REQUIRE(field.state() == "over");
 	CHECK(field.game.isStill(field.ship()));
@@ -1069,8 +1069,8 @@ TEST_CASE("playing again puts everything back: rocks, shots, score and ships", "
 	field.group("bigrocks")[0]->isVisible = false;
 	field.spawn("mediumrocks");
 	field.spawn("shot");
-	field.ship().variable["score"] = 55.0f;
-	field.ship().variable["lives"] = 0.0f;
+	field.ship().variable.at("score") = 55.0f;
+	field.ship().variable.at("lives") = 0.0f;
 	field.ship().heading = 90.0f;
 	field.game.resetAll();
 
@@ -1167,7 +1167,7 @@ TEST_CASE("the small saucer aims at the ship and is a thousand points; the highe
 	field.frames(1);
 	CHECK(saucer.isVisible);
 	CHECK_FALSE(small.isVisible);
-	CHECK(field.named("saucers").variable["due"] == 0.0f);
+	CHECK(field.named("saucers").variable.at("due") == 0.0f);
 
 	// At 8000 a luck below a fifth sends the small one, once the big is gone.
 	saucer.isVisible = false;
@@ -1224,13 +1224,13 @@ TEST_CASE("every ten thousand points is another ship, and the best score follows
 {
 	Field field;
 	field.clearTheMiddle();
-	field.ship().variable["score"] = 10020.0f;
+	field.ship().variable.at("score") = 10020.0f;
 	field.frames(1);
 	CHECK(field.lives() == 4.0f);
-	CHECK(field.ship().variable["next"] == 20000.0f);
+	CHECK(field.ship().variable.at("next") == 20000.0f);
 	field.frames(1);
 	CHECK(field.lives() == 4.0f);
-	CHECK(field.named("best").variable["score"] == 10020.0f);
+	CHECK(field.named("best").variable.at("score") == 10020.0f);
 }
 
 // ------------------------------------------------------------ mistakes

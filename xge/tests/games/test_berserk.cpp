@@ -97,7 +97,7 @@ namespace
 		Object& man() { return object("player"); }
 		// His shot, a copy of the bullet piece, while one is out.
 		Object& bullet() { return object("bullet.1"); }
-		float variable(const char* name) { return man().variable[name]; }
+		float variable(const char* name) { return man().variable.at(name); }
 		float lives() { return variable("lives"); }
 		float score() { return variable("score"); }
 
@@ -158,7 +158,7 @@ namespace
 		void standingFrame()
 		{
 			frames(1);
-			man().variable["lives"] = 3.0f;
+			man().variable.at("lives") = 3.0f;
 			for (auto& object : game.getCurrentObjects())
 			{
 				if (object.objClass == "robot") { object.velocity = { 0.0f, 0.0f }; }
@@ -428,7 +428,7 @@ TEST_CASE("robots stand a while, then come for the man, and one that walks into 
 	const auto apart = [&](const Object& object) { return std::hypot(object.position.x - play.man().position.x, object.position.y - play.man().position.y); };
 	const float before = apart(play.object(robot));
 	play.frames(150);
-	play.man().variable["lives"] = 3.0f;
+	play.man().variable.at("lives") = 3.0f;
 	CHECK(apart(play.object(robot)) < before);
 
 	// One walked into the wall between the first two cells of row one is gone,
@@ -523,7 +523,7 @@ TEST_CASE("the first room's robots never fire; the next room's fire at the man, 
 	}
 
 	// And one that meets the man ends a life (a wall in the way would do as much).
-	play.man().variable["lives"] = 3.0f;
+	play.man().variable.at("lives") = 3.0f;
 	play.man().position = { shot->position.x - 4.0f, shot->position.y - 8.0f };
 	const std::string shotName = shot->name;
 	play.frames(3);
@@ -655,7 +655,7 @@ TEST_CASE("a room left keeps where it was, and is put back as it started when th
 	Object& robot = play.object(Play::robot(1, 1));
 	const Vector2f started = robot.position;
 	play.frames(200);
-	play.man().variable["lives"] = 3.0f;
+	play.man().variable.at("lives") = 3.0f;
 
 	// Away, it stands where it was left.
 	play.leaveByTheLeft();
@@ -785,12 +785,12 @@ TEST_CASE("Otto comes at once and faster when every robot is gone, goes when the
 	play.killRobots(1);
 	play.frames(2);
 	REQUIRE(play.object("otto").isVisible);
-	CHECK(play.object("otto").variable["speed"] == Approx(120.0f)); // and faster than when he lingers
+	CHECK(play.object("otto").variable.at("speed") == Approx(120.0f)); // and faster than when he lingers
 
 	// He goes when the man leaves the room, and room two's robots keep him away.
 	play.leaveByTheLeft();
 	CHECK(play.room() == 2);
-	CHECK(play.object("otto").variable["speed"] == Approx(66.0f)); // and he is slow again
+	CHECK(play.object("otto").variable.at("speed") == Approx(66.0f)); // and he is slow again
 	CHECK_FALSE(play.object("otto").isVisible);
 	play.frames(2);
 	CHECK_FALSE(play.object("otto").isVisible);
@@ -818,7 +818,7 @@ TEST_CASE("an extra man at every two thousand points", "[berserk]")
 	play.begin();
 
 	// A robot is fifty points; the fortieth makes the man.
-	play.man().variable["lifepoints"] = 1950.0f;
+	play.man().variable.at("lifepoints") = 1950.0f;
 	play.shootRobot(Play::robot(1, 1));
 	CHECK(play.lives() == 4.0f);
 	CHECK(play.variable("lifepoints") == 0.0f);
@@ -833,7 +833,7 @@ TEST_CASE("no men left is game over, over the room standing still, and Space pla
 	play.leaveByTheLeft();
 	REQUIRE(play.room() == 2);
 
-	play.man().variable["lives"] = 1.0f;
+	play.man().variable.at("lives") = 1.0f;
 	play.touchTheWall();
 	play.frames(92);
 	CHECK(play.state() == "over");

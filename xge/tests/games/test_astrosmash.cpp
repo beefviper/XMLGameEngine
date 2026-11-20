@@ -54,15 +54,15 @@ namespace
 		Object& ship() { return game.getObject("ship"); }
 		// The shot in flight, a copy of the shot piece.
 		Object& shot() { return game.getObject("shot.1"); }
-		float score() { return ship().variable["score"]; }
-		float lives() { return ship().variable["lives"]; }
+		float score() { return ship().variable.at("score"); }
+		float lives() { return ship().variable.at("lives"); }
 		bool inFlight() { return copies::count(game, "shot") == 1; }
 
 		// For tests that play for a while: enough lives that no run of bad luck
 		// ends the game.
 		void keepPlaying()
 		{
-			ship().variable["lives"] = 1000.0f;
+			ship().variable.at("lives") = 1000.0f;
 		}
 
 		void press(const char* action)
@@ -366,8 +366,8 @@ TEST_CASE("every 1,000 points is a spare base, and the peak stays when the score
 	table.frames(2);
 	CHECK(table.score() == 1005.0f);
 	CHECK(table.lives() == 5.0f);
-	CHECK(table.ship().variable["spare"] == 2000.0f);
-	CHECK(table.ship().variable["peak"] == 1005.0f);
+	CHECK(table.ship().variable.at("spare") == 2000.0f);
+	CHECK(table.ship().variable.at("peak") == 1005.0f);
 
 	table.ship().position.x = 700.0f;
 	Object& rock = table.game.getObject("boulders.1.1");
@@ -375,7 +375,7 @@ TEST_CASE("every 1,000 points is a spare base, and the peak stays when the score
 	rock.position.y = kWindowHeight - 40.0f - rock.size.y - 1.0f;
 	table.frames(3);
 	CHECK(table.score() == 1000.0f);
-	CHECK(table.ship().variable["peak"] == 1005.0f);
+	CHECK(table.ship().variable.at("peak") == 1005.0f);
 	CHECK(table.lives() == 5.0f);
 }
 
@@ -383,7 +383,7 @@ TEST_CASE("the last base ends the game", "[astrosmash]")
 {
 	Table table;
 	table.parkRocks();
-	table.ship().variable["lives"] = 1.0f;
+	table.ship().variable.at("lives") = 1.0f;
 
 	Object& rock = table.game.getObject("pebbles.1.1");
 	rock.velocity = { 0.0f, 180.0f };
@@ -400,7 +400,7 @@ TEST_CASE("space starts a new game from game over with everything back", "[astro
 	table.parkRocks();
 	table.fireAt("boulders.3.1");
 	table.frames(1);
-	table.ship().variable["lives"] = 0.0f;
+	table.ship().variable.at("lives") = 0.0f;
 	table.frames(1);
 	REQUIRE(table.game.getCurrentState().name == "over");
 
@@ -515,7 +515,7 @@ TEST_CASE("paused and the endings draw the sky still underneath, with the score"
 	table.game.popState();
 	CHECK(table.game.isShown(rock));
 
-	table.ship().variable["lives"] = 0.0f;
+	table.ship().variable.at("lives") = 0.0f;
 	table.frames(1);
 	REQUIRE(table.game.getCurrentState().name == "over");
 	CHECK(table.game.isStill(table.ship()));

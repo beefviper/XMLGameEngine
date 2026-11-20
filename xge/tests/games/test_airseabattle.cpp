@@ -168,7 +168,7 @@ TEST_CASE("the battle lasts 2:16", "[airseabattle]")
 	play.tap(KeyCode::Pause);
 	CHECK(play.game.getObject("status").variable.at("time") == Approx(134.0f));
 
-	play.game.getObject("status").variable["time"] = 1;
+	play.game.getObject("status").variable.at("time") = 1;
 	play.frames(61);
 	CHECK(play.state() == "over");
 	CHECK(play.game.getObject("over.outcome").lookName() == "draw"); // no hits either side
@@ -182,9 +182,9 @@ TEST_CASE("at time up the scores are compared, and the screen says who won", "[a
 	{
 		AirSeaBattle play;
 		play.start();
-		play.game.getObject("gun1").variable["score"] = yellow;
-		play.game.getObject("gun2").variable["score"] = white;
-		play.game.getObject("status").variable["time"] = 1;
+		play.game.getObject("gun1").variable.at("score") = yellow;
+		play.game.getObject("gun2").variable.at("score") = white;
+		play.game.getObject("status").variable.at("time") = 1;
 		play.frames(62);
 		REQUIRE(play.state() == "over");
 		return play.game.getObject("over.outcome").lookName();
@@ -234,8 +234,8 @@ TEST_CASE("each end screen draws the battle still under TIME UP and its message"
 	CHECK_FALSE(play.game.isShown(play.game.getObject("timeup")));
 
 	play.start();
-	play.game.getObject("gun1").variable["score"] = 7;
-	play.game.getObject("status").variable["time"] = 1;
+	play.game.getObject("gun1").variable.at("score") = 7;
+	play.game.getObject("status").variable.at("time") = 1;
 	play.frames(62);
 	REQUIRE(play.state() == "over");
 	CHECK(play.game.isStill(play.game.getObject("score1")));

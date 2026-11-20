@@ -272,23 +272,23 @@ TEST_CASE("an object put somewhere has moved: it touches what it is put on, with
 
 	// Standing still apart: nothing.
 	game.updateObjects(xge::kSixtieth);
-	CHECK(a.variable["hits"] == 0.0f);
+	CHECK(a.variable.at("hits") == 0.0f);
 
 	// Put on b, as a teleport would: a touch, though neither has a velocity.
 	a.position = { 101.0f, 51.0f };
 	game.updateObjects(xge::kSixtieth);
-	CHECK(a.variable["hits"] == 1.0f);
+	CHECK(a.variable.at("hits") == 1.0f);
 
 	// Left there, nothing has moved since: not touched again.
 	game.updateObjects(xge::kSixtieth);
-	CHECK(a.variable["hits"] == 1.0f);
+	CHECK(a.variable.at("hits") == 1.0f);
 
 	// b put on a: b has moved, so the pair is looked at.
 	game.getObject("b").position = { 200.0f, 0.0f };
 	game.updateObjects(xge::kSixtieth);
 	game.getObject("b").position = { 100.0f, 50.0f };
 	game.updateObjects(xge::kSixtieth);
-	CHECK(a.variable["hits"] == 2.0f);
+	CHECK(a.variable.at("hits") == 2.0f);
 
 	std::filesystem::remove(path);
 }
@@ -323,7 +323,7 @@ TEST_CASE("a rule names the object it touched other, whichever of its class that
 	CHECK(play.get("p1").variable.at("score") == 0.0f);
 
 	// p1, shielded: the rule's test is about p1, so nothing.
-	play.get("p1").variable["shield"] = 1.0f;
+	play.get("p1").variable.at("shield") = 1.0f;
 	play.get("p1").position = { 585, 402 };
 	play.get("p1").velocity = { 120, 0 };
 	play.frames(5);

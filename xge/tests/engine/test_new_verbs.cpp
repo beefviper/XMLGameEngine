@@ -166,8 +166,8 @@ TEST_CASE("a rule about another object can reset, move, count and ride", "[new_v
 
 	runTouching(pair.executor, Command{ CmdIncrement{ { "frog", "score" } } }, pair.frog, pair.hedge, Edge::Top);
 	runTouching(pair.executor, Command{ CmdDecrement{ { "frog", "lives" } } }, pair.frog, pair.hedge, Edge::Top);
-	CHECK(pair.frog.variable["score"] == 1.0f);
-	CHECK(pair.frog.variable["lives"] == 2.0f);
+	CHECK(pair.frog.variable.at("score") == 1.0f);
+	CHECK(pair.frog.variable.at("lives") == 2.0f);
 
 	pair.hedge.velocity = { 2.5f, 0.0f };
 	runTouching(pair.executor, Command{ CmdRide{} }, pair.frog, pair.hedge, Edge::Top);
@@ -221,10 +221,10 @@ TEST_CASE("an <inc> or <dec> amount is added to or taken off the variable", "[ne
 
 	runTouching(pair.executor, Command{ CmdIncrement{ { "frog", "score" }, 5.0f } }, pair.frog, pair.hedge, Edge::Top);
 	runTouching(pair.executor, Command{ CmdIncrement{ { "frog", "score" }, 2.5f } }, pair.frog, pair.hedge, Edge::Top);
-	CHECK(pair.frog.variable["score"] == 7.5f);
+	CHECK(pair.frog.variable.at("score") == 7.5f);
 
 	runTouching(pair.executor, Command{ CmdDecrement{ { "frog", "lives" }, 2.0f } }, pair.frog, pair.hedge, Edge::Top);
-	CHECK(pair.frog.variable["lives"] == 1.0f);
+	CHECK(pair.frog.variable.at("lives") == 1.0f);
 }
 
 TEST_CASE("an amount shows in how <inc> and <dec> print, and a plain one does not", "[new_verbs][command_parsing]")

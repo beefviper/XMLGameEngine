@@ -94,7 +94,7 @@ namespace xge
 			{
 				for (const std::string& by : pattern.by)
 				{
-					if (by == "worth" || std::any_of(objects.begin(), objects.end(), [&](const Object& object) { return itemOf(object).is && object.variable.count(by); })) { continue; }
+					if (by == "worth" || std::any_of(objects.begin(), objects.end(), [&](const Object& object) { return itemOf(object).is && object.variable.countText(by); })) { continue; }
 					throw std::runtime_error("<patterns name=\"" + set.name + "\"> > <pattern name=\"" + pattern.name + "\">: variable=\"" + by + "\"; nothing held has a variable of that name");
 				}
 			}
@@ -837,8 +837,8 @@ namespace xge
 		{
 			if (!value.drawsRandom()) { continue; }
 			const float drawn = expr.evaluate(value, where);
-			object.variable[name] = drawn;
-			startFor(object).variable[name] = drawn;
+			object.variable[nameOf(name)] = drawn;
+			startFor(object).variable[nameOf(name)] = drawn;
 			refreshBoundTexts(object.name, name, drawn);
 		}
 
@@ -913,7 +913,7 @@ namespace xge
 	{
 		Object* owner = tryGetObject(anyTurns ? turnOwner(name.owner) : name.owner);
 		if (!owner) { return nullptr; }
-		const auto found = owner->variable.find(name.variable);
+		const auto found = owner->variable.findText(name.variable);
 		return found == owner->variable.end() ? nullptr : &found->second;
 	}
 
@@ -1185,7 +1185,7 @@ namespace xge
 			}
 			else if (object && std::regex_match(line, match, variableLine))
 			{
-				const auto variable = object->variable.find(match[1].str());
+				const auto variable = object->variable.findText(match[1].str());
 				if (variable == object->variable.end()) { continue; }
 				try
 				{
@@ -1204,7 +1204,7 @@ namespace xge
 	{
 		Object* from = tryGetObject(entry.owner);
 		const std::string& by = entry.variable;
-		if (!from || !from->variable.count(by))
+		if (!from || !from->variable.countText(by))
 		{
 			std::cout << "warning: <rank variable=\"" << entry.written() << "\" into=\"" << table << "\" />: no such variable\n";
 			return;
@@ -1221,7 +1221,7 @@ namespace xge
 		// Its place is the first one it beats; an equal score stays above it.
 		const float score = from->variable.at(by);
 		const auto place = std::find_if(places.begin(), places.end(),
-			[&](const Object* each) { return each->variable.count(by) && each->variable.at(by) < score; });
+			[&](const Object* each) { return each->variable.countText(by) && each->variable.at(by) < score; });
 		if (place == places.end())
 		{
 			return;
@@ -1309,7 +1309,7 @@ namespace xge
 	void Game::showTimeLeft(Object& object, const Timer& timer, const Timer::Clock& clock)
 	{
 		const float left = clock.done || !clock.counting ? 0.0f : static_cast<float>(std::ceil(std::max(0.0, clock.secondsLeft - static_cast<double>(kTimeSlack))));
-		const auto found = object.variable.find(timer.name);
+		const auto found = object.variable.findText(timer.name);
 		if (found == object.variable.end() || found->second == left) { return; }
 		found->second = left;
 		refreshBoundTexts(object.name, timer.name, left);
@@ -1463,7 +1463,7 @@ namespace xge
 			return false;
 		}
 
-		auto variableIt = owner->variable.find(variableName);
+		auto variableIt = owner->variable.findText(variableName);
 		if (variableIt == owner->variable.end())
 		{
 			return false;
@@ -1612,7 +1612,7 @@ namespace xge
 		for (auto& object : objects)
 		{
 			// A group of players taking turns: the one on its turn.
-			const bool offTurn = turnsOf(object).takes && object.inGroup(target) && object.variable["turn"] == 0.0f;
+			const bool offTurn = turnsOf(object).takes && object.inGroup(target) && object.variable[nameOf("turn")] == 0.0f;
 			if (object.named(target) && !offTurn && (from.empty() || object.lookName() == from))
 			{
 				const std::string before = isHand(object) ? object.lookName() : std::string();
@@ -1918,7 +1918,7 @@ namespace xge
 			{
 				continue;
 			}
-			const auto value = owner->variable.find(piece.variable);
+			const auto value = owner->variable.findText(piece.variable);
 			if (value != owner->variable.end())
 			{
 				piece.shown = showPiece(piece.kind, value->second, piece.choices);
@@ -2188,7 +2188,7 @@ namespace xge
 	// if it has any left (one a frame at 60, as it always did).
 	bool Game::burn(Object& object, const std::string& variable)
 	{
-		const auto fuel = object.variable.find(variable);
+		const auto fuel = object.variable.findText(variable);
 		if (fuel == object.variable.end() || fuel->second <= 0.0f) { return false; }
 		setVariable(object.name, variable, std::max(0.0f, fuel->second - stepSeconds * 60.0f));
 		return true;
@@ -2333,7 +2333,7 @@ namespace xge
 				}
 				case Object::Follow::Part::Variable:
 				{
-					const auto held = object.variable.find(each.variable);
+					const auto held = object.variable.findText(each.variable);
 					if (held != object.variable.end() && held->second != value)
 					{
 						held->second = value;
@@ -2468,7 +2468,7 @@ namespace xge
 		for (const auto& [name, plays] : memberThinks)
 		{
 			const Object* member = tryGetObject(name);
-			if (!member || !member->exists || !isShown(*member) || member->variable.find("turn")->second == 0.0f) { continue; }
+			if (!member || !member->exists || !isShown(*member) || member->variable.findText("turn")->second == 0.0f) { continue; }
 			play(plays);
 		}
 		// Its turn is over (or the game was put back): the next is planned anew.
@@ -2543,7 +2543,7 @@ namespace xge
 			{
 				if (const Object* owner = tryGetObject(read.owner))
 				{
-					if (const auto found = owner->variable.find(read.variable); found != owner->variable.end()) { *read.slot = found->second; }
+					if (const auto found = owner->variable.findText(read.variable); found != owner->variable.end()) { *read.slot = found->second; }
 				}
 			}
 			const Object* self = condition.saysSelf && !condition.madeFor.empty() ? (testing ? testing : tryGetObject(condition.madeFor)) : nullptr;
@@ -2554,7 +2554,7 @@ namespace xge
 				for (const std::string& variable : reads)
 				{
 					const auto slot = expr.objectVariables.find(owner->name + "." + variable);
-					const auto found = owner->variable.find(variable);
+					const auto found = owner->variable.findText(variable);
 					if (slot != expr.objectVariables.end() && found != owner->variable.end()) { slot->second = found->second; }
 				}
 			};

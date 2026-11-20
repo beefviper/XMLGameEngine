@@ -496,7 +496,7 @@ namespace xge
 			{
 				const std::string variableName = entry.first;
 				addFloat(variables, text(variableName),
-					[object, variableName]() { return static_cast<double>(object().variable[variableName]); },
+					[object, variableName]() { return static_cast<double>(object().variable.at(variableName)); },
 					[this, object, variableName](double v) { game().setVariable(object().name, variableName, static_cast<float>(v)); },
 					1, 2);
 			}

@@ -31,7 +31,7 @@ namespace
 	// A held member's row or column in its pack, from 1.
 	int cardAxis(const xge::Object& item, const char* axis)
 	{
-		const auto value = item.variable.find(axis);
+		const auto value = item.variable.findText(axis);
 		return value == item.variable.end() ? 0 : static_cast<int>(value->second);
 	}
 
@@ -462,7 +462,7 @@ TEST_CASE("a pack's rows and columns are row and column, and the names <rows nam
 		Played play(plain.path);
 		for (const Object& object : play.game.getCurrentObjects())
 		{
-			if (play.game.itemOf(object).is) { CHECK_FALSE(object.variable.count("rank")); }
+			if (play.game.itemOf(object).is) { CHECK_FALSE(object.variable.countText("rank")); }
 		}
 	}
 	// A name its group gives that a member has a variable of already stops the load.
@@ -513,13 +513,14 @@ TEST_CASE("klondike.xml: placing rules are conditions on the arriving card again
 	CHECK(takes.emptyRules[0].kind == Kind::AtMost);
 
 	// So a worth of 3 goes on a top of suit 1 (3 < 4) and of 6 does not.
+	NameStore names;
 	Object top;
-	top.variable["suit"] = 1.0f;
+	top.variable[names.of("suit")] = 1.0f;
 	Object low;
-	low.variable["rank"] = 2.0f;
-	low.variable["worth"] = 3.0f;
+	low.variable[names.of("rank")] = 2.0f;
+	low.variable[names.of("worth")] = 3.0f;
 	Object high = low;
-	high.variable["worth"] = 6.0f;
+	high.variable.at("worth") = 6.0f;
 	const std::vector<HolderRule::VarRule> below{ takes.rules[2] };
 	CHECK(Game::acceptsBy(below, low, &top));
 	CHECK_FALSE(Game::acceptsBy(below, high, &top));
@@ -1024,10 +1025,10 @@ TEST_CASE("blackjack.xml: the bet stays from 10 to 100 and within your chips", "
 	CHECK(play.table("bet") == 10.0f);
 	for (int i = 0; i < 15; ++i) { play.press(KeyCode::D); play.frames(1); }
 	CHECK(play.table("bet") == 100.0f);
-	play.get("table").variable["bank"] = 40.0f;
+	play.get("table").variable.at("bank") = 40.0f;
 	play.frames(2);
 	CHECK(play.table("bet") == 40.0f);
-	play.get("table").variable["bank"] = 5.0f;
+	play.get("table").variable.at("bank") = 5.0f;
 	play.frames(2);
 	CHECK(play.state() == "over");
 }
@@ -1269,7 +1270,7 @@ TEST_CASE("holdem.xml: raises stop at three a round; out of chips between hands 
 	CHECK(play.table("raises") <= 3.0f);
 	CHECK(play.street() != "preflop");
 
-	play.get("cpu").variable["chips"] = 0.0f;
+	play.get("cpu").variable.at("chips") = 0.0f;
 	play.game.showLook(play.get("hand"), "done");
 	play.frames(2);
 	CHECK(play.state() == "over");

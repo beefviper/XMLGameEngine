@@ -52,8 +52,8 @@ namespace
 		}
 
 		Object& lander() { return game.getObject("lander"); }
-		float fuel() { return lander().variable["fuel"]; }
-		float score() { return game.getObject("status").variable["score"]; }
+		float fuel() { return lander().variable.at("fuel"); }
+		float score() { return game.getObject("status").variable.at("score"); }
 		bool wrecked() { return !lander().isVisible; }
 		std::string state() { return game.getCurrentState().name; }
 
@@ -180,7 +180,7 @@ TEST_CASE("the engine pushes the way the lander points and burns 60 units of fue
 TEST_CASE("with no fuel the engine does nothing and the moon keeps pulling", "[lunarlander]")
 {
 	Moon moon;
-	moon.lander().variable["fuel"] = 0.0f;
+	moon.lander().variable.at("fuel") = 0.0f;
 	moon.lander().velocity = {};
 
 	moon.key("thrust", true);

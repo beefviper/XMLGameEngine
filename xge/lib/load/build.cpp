@@ -209,8 +209,8 @@ namespace xge
 		for (auto& rawVariable : rawObject.variable)
 		{
 			const float value = evaluateStart(rawVariable.second, where);
-			object.variable[rawVariable.first] = value;
-			startFor(object).variable[rawVariable.first] = value;
+			object.variable[nameStore.of(rawVariable.first)] = value;
+			startFor(object).variable[nameStore.of(rawVariable.first)] = value;
 
 			// Keep the cross-object symbol table entry (registered above,
 			// before any expression compiled) up to date with the real
@@ -399,8 +399,8 @@ namespace xge
 			if (timer.name.empty()) { continue; }
 			// A named timer's time left (see init): where it starts.
 			const float left = std::ceil(timer.seconds);
-			object.variable[timer.name] = left;
-			startFor(object).variable[timer.name] = left;
+			object.variable[nameStore.of(timer.name)] = left;
+			startFor(object).variable[nameStore.of(timer.name)] = left;
 			objectVariables[rawObject.name + "." + timer.name] = left;
 		}
 	}

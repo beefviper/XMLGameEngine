@@ -228,14 +228,14 @@ TEST_CASE("a step runs its commands as it sets off, and an object on a path fini
 
 	loaded.game.follow(a, "count");
 	loaded.frames(1);
-	CHECK(a.variable["n"] == 1.0f);
+	CHECK(a.variable.at("n") == 1.0f);
 
 	// A second <follow> while it is on its way does nothing.
 	loaded.game.follow(a, "count");
 	loaded.frames(3);
-	CHECK(a.variable["n"] == 11.0f);
+	CHECK(a.variable.at("n") == 11.0f);
 	loaded.frames(3);
-	CHECK(a.variable["n"] == 11.0f);
+	CHECK(a.variable.at("n") == 11.0f);
 	CHECK_FALSE(a.isFollowing());
 	CHECK(isHome(loaded.game, a));
 }
@@ -341,8 +341,8 @@ TEST_CASE("a step's commands can name the one flying it as self, whoever sent it
 		"<member><position><x>100</x></position></member><member><position><x>120</x></position></member></group>";
 	Loaded loaded(paths, box("a", 0, 0, "<timers><timer><after>0.1</after><follow path=\"count\" object=\"b\" /></timer></timers>") + group);
 	loaded.frames(2);
-	CHECK(loaded.game.getObject("b.1").variable["n"] == 100.0f);
-	CHECK(loaded.game.getObject("b.2").variable["n"] == 120.0f);
+	CHECK(loaded.game.getObject("b.1").variable.at("n") == 100.0f);
+	CHECK(loaded.game.getObject("b.2").variable.at("n") == 120.0f);
 
 	// One that cannot be sent along it says nothing of it; one that can and
 	// has no such variable stops the load, naming it.
@@ -384,7 +384,7 @@ TEST_CASE("galaxian.xml loads 46 aliens in six rows, a ship and six paths", "[ga
 	CHECK(play.state() == "title");
 	CHECK(play.count([](const Object& object) { return object.isVisible; }) == 46);
 	CHECK(play.game.getPaths().size() == 6);
-	CHECK(play.object("ship").variable["lives"] == 3.0f);
+	CHECK(play.object("ship").variable.at("lives") == 3.0f);
 
 	// The dive swings out 48 to the left, then turns toward the ship in two
 	// steps worked out as they start; down it adds up to the window's height
@@ -524,9 +524,9 @@ TEST_CASE("a flagship dives with the two escorts nearest it, and a diver shot pa
 	// In the formation an escort pays 50; diving, even taken along, 100,
 	// from the dive's first step until it wraps.
 	Object& escort = play.object("escorts.1.1");
-	CHECK(play.object("escorts.6.1").variable["pays"] == 50.0f);
+	CHECK(play.object("escorts.6.1").variable.at("pays") == 50.0f);
 	play.frames(1);
-	CHECK(escort.variable["pays"] == 100.0f);
+	CHECK(escort.variable.at("pays") == 100.0f);
 	// A shot, spawned as the gun does, joins at the end of the frame.
 	Object* fired = play.game.spawn(play.object("shot").name);
 	REQUIRE(fired);
@@ -534,9 +534,9 @@ TEST_CASE("a flagship dives with the two escorts nearest it, and a diver shot pa
 	// Put on it (the purples are just below, in the way of one fired).
 	shot.position = { escort.position.x + escort.size.x / 2.0f, escort.position.y + escort.size.y / 2.0f };
 	shot.velocity = {};
-	const float before = play.object("ship").variable["score"];
+	const float before = play.object("ship").variable.at("score");
 	play.frames(2);
-	CHECK(play.object("ship").variable["score"] - before == 100.0f);
+	CHECK(play.object("ship").variable.at("score") - before == 100.0f);
 }
 
 TEST_CASE("a shot alien scores, and when the fleet is down the next one flies in", "[galaxian]")
@@ -551,7 +551,7 @@ TEST_CASE("a shot alien scores, and when the fleet is down the next one flies in
 	play.tap(KeyCode::Space);
 	play.frames(60);
 	CHECK_FALSE(alien.isVisible);
-	CHECK(ship.variable["score"] == 30.0f);
+	CHECK(ship.variable.at("score") == 30.0f);
 
 	for (auto& object : play.game.getCurrentObjects())
 	{
@@ -562,8 +562,8 @@ TEST_CASE("a shot alien scores, and when the fleet is down the next one flies in
 	CHECK(play.count([](const Object& object) { return object.isFollowing(); }) == 46);
 	CHECK(play.object("flagships.1.1").position.y < 0.0f);
 	// the ship and its score are the state's, not the fleet's: kept
-	CHECK(ship.variable["score"] == 30.0f);
-	CHECK(ship.variable["lives"] == 3.0f);
+	CHECK(ship.variable.at("score") == 30.0f);
+	CHECK(ship.variable.at("lives") == 3.0f);
 }
 
 TEST_CASE("a hit ship bursts, out of play, and only then is it lost", "[galaxian]")
@@ -578,7 +578,7 @@ TEST_CASE("a hit ship bursts, out of play, and only then is it lost", "[galaxian
 	CommandExecutor(play.game).triggerObjectAction(ship.name, "lose", true, true);
 	play.game.settleSpawns();
 	CHECK_FALSE(ship.isVisible);
-	CHECK(ship.variable["lives"] == 3.0f);
+	CHECK(ship.variable.at("lives") == 3.0f);
 	bool burst = false;
 	for (const Object& object : play.game.getCurrentObjects())
 	{
@@ -589,7 +589,7 @@ TEST_CASE("a hit ship bursts, out of play, and only then is it lost", "[galaxian
 	// Its burst over, a ship is lost and a fresh one is back in the middle.
 	play.frames(80);
 	CHECK(ship.isVisible);
-	CHECK(ship.variable["lives"] == 2.0f);
+	CHECK(ship.variable.at("lives") == 2.0f);
 	CHECK(ship.position.x != Approx(100.0f));
 }
 
@@ -640,13 +640,13 @@ TEST_CASE("the best score follows the score up, and a new game keeps it", "[gala
 	CHECK(play.game.isShown(best));
 
 	Object& ship = play.object("ship");
-	ship.variable["score"] = 240.0f;
+	ship.variable.at("score") = 240.0f;
 	play.frames(1);
 	CHECK(best.variable.at("score") == 240.0f);
 	CHECK(best.drawn.picture->text == "240");
 
 	// Game over, then Space: the score starts again, the best does not.
-	ship.variable["lives"] = 0.0f;
+	ship.variable.at("lives") = 0.0f;
 	play.frames(1);
 	REQUIRE(play.state() == "over");
 	CHECK(play.game.isStill(best));
@@ -658,10 +658,10 @@ TEST_CASE("the best score follows the score up, and a new game keeps it", "[gala
 
 	// A lower score leaves it alone; a higher one moves it on.
 	play.tap(KeyCode::Space);
-	ship.variable["score"] = 100.0f;
+	ship.variable.at("score") = 100.0f;
 	play.frames(1);
 	CHECK(best.variable.at("score") == 240.0f);
-	ship.variable["score"] = 300.0f;
+	ship.variable.at("score") = 300.0f;
 	play.frames(1);
 	CHECK(best.variable.at("score") == 300.0f);
 }
@@ -678,8 +678,8 @@ TEST_CASE("a game above the fifth best asks for initials and takes its place in 
 	{
 		play.tap(KeyCode::Space);
 		REQUIRE(play.state() == "playing");
-		play.object("ship").variable["score"] = score;
-		play.object("ship").variable["lives"] = 0.0f;
+		play.object("ship").variable.at("score") = score;
+		play.object("ship").variable.at("lives") = 0.0f;
 		play.frames(2); // game over, then above the fifth
 	};
 
@@ -727,7 +727,7 @@ TEST_CASE("a game above the fifth best asks for initials and takes its place in 
 	// Not above the fifth: no initials.
 	for (int i = 4; i <= 5; ++i)
 	{
-		play.object(("table." + std::to_string(i)).c_str()).variable["score"] = 50.0f;
+		play.object(("table." + std::to_string(i)).c_str()).variable.at("score") = 50.0f;
 	}
 	playTo(50.0f);
 	CHECK(play.state() == "over");
@@ -741,9 +741,9 @@ TEST_CASE("what Galaxian keeps lasts in a file from one run to the next", "[gala
 		Play play("descriptions/galaxian.xml");
 		play.engine.keepIn(file.string());
 		CHECK_FALSE(std::filesystem::exists(file)); // nothing to read yet
-		play.object("table.1").variable["score"] = 500.0f;
-		play.object("table.1").variable["first"] = 6.0f;
-		play.object("best").variable["score"] = 500.0f;
+		play.object("table.1").variable.at("score") = 500.0f;
+		play.object("table.1").variable.at("first") = 6.0f;
+		play.object("best").variable.at("score") = 500.0f;
 		play.game.resetAll();
 		play.frames(1); // a new game writes it
 		REQUIRE(std::filesystem::exists(file));
@@ -775,7 +775,7 @@ TEST_CASE("two players take turns, each with a game of their own", "[galaxian][t
 	play.frames(121);
 	REQUIRE(play.state() == "playing");
 	Object& ship = play.object("ship");
-	ship.variable["score"] = 120.0f;
+	ship.variable.at("score") = 120.0f;
 	ship.position.x = 40.0f;
 
 	// A ship lost: player 2's turn, with a game of their own from the start.
@@ -789,7 +789,7 @@ TEST_CASE("two players take turns, each with a game of their own", "[galaxian][t
 	CHECK(play.object("score").drawn.picture->text == "0");
 	play.tap(KeyCode::Space);
 	REQUIRE(play.state() == "playing");
-	ship.variable["score"] = 30.0f;
+	ship.variable.at("score") = 30.0f;
 
 	// Player 2 loses one: player 1's game comes back as they left it.
 	play.game.addTo({ "ship", "lives" }, -1.0f);
@@ -806,10 +806,10 @@ TEST_CASE("two players take turns, each with a game of their own", "[galaxian][t
 	// goes on to player 2, who plays on alone.
 	for (int i = 1; i <= 5; ++i)
 	{
-		play.object(("table." + std::to_string(i)).c_str()).variable["score"] = 1000.0f;
+		play.object(("table." + std::to_string(i)).c_str()).variable.at("score") = 1000.0f;
 	}
 	play.tap(KeyCode::Space);
-	ship.variable["lives"] = 0.0f;
+	ship.variable.at("lives") = 0.0f;
 	play.frames(1);
 	REQUIRE(play.state() == "over");
 	play.tap(KeyCode::Space);
@@ -822,7 +822,7 @@ TEST_CASE("two players take turns, each with a game of their own", "[galaxian][t
 	CHECK(play.game.currentPlayer() == 2);
 
 	// Player 2 out too: a new game.
-	ship.variable["lives"] = 0.0f;
+	ship.variable.at("lives") = 0.0f;
 	play.frames(1);
 	REQUIRE(play.state() == "over");
 	play.tap(KeyCode::Space);
@@ -835,7 +835,7 @@ TEST_CASE("one player: <pass /> does nothing and <out /> lets what follows run",
 	Play play("descriptions/galaxian.xml");
 	play.tap(KeyCode::Space);
 	Object& ship = play.object("ship");
-	ship.variable["score"] = 10.0f;
+	ship.variable.at("score") = 10.0f;
 	play.game.addTo({ "ship", "lost" });
 	play.frames(1);
 	CHECK(play.state() == "playing");
@@ -843,9 +843,9 @@ TEST_CASE("one player: <pass /> does nothing and <out /> lets what follows run",
 	CHECK(ship.variable.at("lost") == 0.0f);
 	for (int i = 1; i <= 5; ++i)
 	{
-		play.object(("table." + std::to_string(i)).c_str()).variable["score"] = 1000.0f;
+		play.object(("table." + std::to_string(i)).c_str()).variable.at("score") = 1000.0f;
 	}
-	ship.variable["lives"] = 0.0f;
+	ship.variable.at("lives") = 0.0f;
 	play.frames(1);
 	REQUIRE(play.state() == "over");
 	play.tap(KeyCode::Space);
@@ -869,7 +869,7 @@ TEST_CASE("a demo given to Galaxian plays to its end, or until a key is pressed,
 	};
 
 	Play play(given());
-	play.object("best").variable["score"] = 70.0f;
+	play.object("best").variable.at("score") = 70.0f;
 	play.game.requestDemo();
 	play.frames(1);
 	REQUIRE(play.engine.isPlayingDemo());
@@ -894,11 +894,11 @@ TEST_CASE("a demo given to Galaxian plays to its end, or until a key is pressed,
 	// A key pressed: the demo ends, without the key doing anything, and
 	// the game is as it was before it.
 	Play stopped(given());
-	stopped.object("best").variable["score"] = 70.0f;
+	stopped.object("best").variable.at("score") = 70.0f;
 	stopped.game.requestDemo();
 	stopped.frames(100);
 	REQUIRE(stopped.engine.isPlayingDemo());
-	stopped.object("best").variable["score"] = 900.0f; // as if the demo had scored
+	stopped.object("best").variable.at("score") = 900.0f; // as if the demo had scored
 	stopped.typed = { { KeyCode::Num2, true }, { KeyCode::Num2, false } };
 	stopped.frames(1);
 	CHECK_FALSE(stopped.engine.isPlayingDemo());

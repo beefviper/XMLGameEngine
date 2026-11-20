@@ -236,7 +236,7 @@ TEST_CASE("other rules and conditions see the copies by the name of what they we
 	// None yet: none remaining.
 	play.frames(1);
 	CHECK(play.get("target").variable.at("done") == 1.0f);
-	play.get("target").variable["done"] = 0;
+	play.get("target").variable.at("done") = 0;
 
 	play.tap(KeyCode::Space);
 	play.frames(1);

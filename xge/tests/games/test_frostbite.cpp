@@ -283,7 +283,7 @@ TEST_CASE("the cold takes a degree a second; at zero Bailey freezes, loses a lif
 	CHECK(play.degrees() == 42);
 
 	play.bailey().position.x = 300;
-	play.game.getObject("thermometer").variable["degrees"] = 1;
+	play.game.getObject("thermometer").variable.at("degrees") = 1;
 	play.frames(kFramerate + 1);
 	CHECK(play.state() == "frozen");
 	CHECK(play.variable("lives") == 4);
@@ -299,7 +299,7 @@ TEST_CASE("a finished igloo opens its door; walking in is a bonus and the next n
 	Frostbite play;
 	play.startStill();
 
-	play.bailey().variable["blocks"] = 15;
+	play.bailey().variable.at("blocks") = 15;
 	play.frames(1);
 	Object& door = play.game.getObject("night1.door");
 	REQUIRE(door.isVisible);
@@ -320,8 +320,8 @@ TEST_CASE("a finished igloo opens its door; walking in is a bonus and the next n
 	CHECK(std::abs(play.game.getObject("night2.row1.1.1").velocity.x) == Approx(72.0f * 1.4f));
 
 	// Two nights home, and in at the third night's door: a win.
-	play.bailey().variable["nights"] = 2;
-	play.bailey().variable["blocks"] = 15;
+	play.bailey().variable.at("nights") = 2;
+	play.bailey().variable.at("blocks") = 15;
 	play.frames(1);
 	REQUIRE(play.game.getObject("night2.door").isVisible);
 	play.engine.handleKeyPressed(KeyCode::D);
@@ -360,7 +360,7 @@ TEST_CASE("no lives left is game over, and Space starts over with the ice white 
 	play.jump(KeyCode::S);
 	REQUIRE(play.rowIs("row1", "blue"));
 
-	play.bailey().variable["lives"] = 0;
+	play.bailey().variable.at("lives") = 0;
 	play.frames(1);
 	CHECK(play.state() == "over");
 	CHECK(play.game.getObject("over.message").lookName() == "lost");
@@ -411,7 +411,7 @@ TEST_CASE("each state owns what it draws, and frozen draws the ice still under i
 	CHECK_FALSE(play.game.isStill(play.bailey()));
 
 	play.startStill();
-	play.bailey().variable["lives"] = 0;
+	play.bailey().variable.at("lives") = 0;
 	play.frames(1);
 	REQUIRE(play.state() == "over");
 	CHECK(play.game.getObject("over.message").lookName() == "lost");

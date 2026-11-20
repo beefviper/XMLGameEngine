@@ -38,7 +38,7 @@ namespace xge
 		{
 			if (!object.inGroup(rank.table)) { continue; }
 			any = true;
-			if (!object.variable.count(variableName))
+			if (!object.variable.countText(variableName))
 			{
 				throw std::runtime_error(checking.where + ": " + tag + ": '" + object.name + "' has no variable named '" + variableName + "' to be ranked by");
 			}

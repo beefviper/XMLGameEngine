@@ -121,7 +121,7 @@ TEST_CASE("demonattack.xml loads a cannon, a shot and three waves of demons", "[
 	CHECK(play.alive("wave2") == 4);
 	CHECK(play.alive("wave3") == 3);
 	CHECK_FALSE(play.object("laser").isVisible);
-	CHECK(play.object("player").variable["lives"] == 3.0f);
+	CHECK(play.object("player").variable.at("lives") == 3.0f);
 }
 
 TEST_CASE("the cannon slides on A and D and the arrows", "[demonattack]")
@@ -152,12 +152,12 @@ TEST_CASE("a shot kills a flapping demon and scores thirty, and the last one mov
 
 	shoot(play, "playing.wave1.demons.1");
 	CHECK_FALSE(play.object("playing.wave1.demons.1").isVisible);
-	CHECK(play.object("player").variable["score"] == 30.0f);
+	CHECK(play.object("player").variable.at("score") == 30.0f);
 	CHECK(play.alive("wave1") == 5);
 
 	clearWave(play, "wave1");
 	CHECK(play.wave() == "playing.wave2");
-	CHECK(play.object("player").variable["lives"] == 4.0f);
+	CHECK(play.object("player").variable.at("lives") == 4.0f);
 }
 
 TEST_CASE("the shot follows the cannon as it flies", "[demonattack]")
@@ -190,7 +190,7 @@ TEST_CASE("a demon of the second wave splits in two small ones, which score when
 
 	shoot(play, "playing.wave2.demons.1");
 	CHECK_FALSE(play.object("playing.wave2.demons.1").isVisible);
-	CHECK(play.object("player").variable["score"] == 50.0f);
+	CHECK(play.object("player").variable.at("score") == 50.0f);
 
 	// three demons and the two small ones where it was
 	CHECK(play.alive("wave2") == 5);
@@ -219,11 +219,11 @@ TEST_CASE("a big demon of the third wave takes two shots", "[demonattack]")
 
 	shoot(play, "playing.wave3.demons.1");
 	CHECK(play.object("playing.wave3.demons.1").isVisible);
-	CHECK(play.object("player").variable["score"] == 20.0f);
+	CHECK(play.object("player").variable.at("score") == 20.0f);
 
 	shoot(play, "playing.wave3.demons.1");
 	CHECK_FALSE(play.object("playing.wave3.demons.1").isVisible);
-	CHECK(play.object("player").variable["score"] == 120.0f);
+	CHECK(play.object("player").variable.at("score") == 120.0f);
 
 	clearWave(play, "wave3");
 	CHECK(play.state() == "over");
@@ -244,19 +244,19 @@ TEST_CASE("a demon on the cannon costs a life, and three is game over", "[demona
 	play.engine.handleKeyReleased(KeyCode::D);
 	// The cannon bursts, out of play, and only then is the life gone.
 	CHECK_FALSE(player.isVisible);
-	CHECK(player.variable["lives"] == 3.0f);
+	CHECK(player.variable.at("lives") == 3.0f);
 	play.frames(70);
 	CHECK(player.isVisible);
-	CHECK(player.variable["lives"] == 2.0f);
+	CHECK(player.variable.at("lives") == 2.0f);
 
-	player.variable["lives"] = 0.0f;
+	player.variable.at("lives") = 0.0f;
 	play.frames(2);
 	CHECK(play.state() == "over");
 	CHECK(play.game.getObject("over.message").lookName() == "lost");
 
 	play.tap(KeyCode::Space);
 	CHECK(play.state() == "title");
-	CHECK(player.variable["lives"] == 3.0f);
+	CHECK(player.variable.at("lives") == 3.0f);
 }
 
 TEST_CASE("the demons drop bombs on the cannon, and a hit costs a life", "[demonattack]")
@@ -278,10 +278,10 @@ TEST_CASE("the demons drop bombs on the cannon, and a hit costs a life", "[demon
 	REQUIRE(bomb);
 	CHECK(bomb->velocity.y > 0);
 
-	const float lives = player.variable["lives"];
+	const float lives = player.variable.at("lives");
 	player.position.x = bomb->position.x - 15.0f;
 	play.frames(250);
-	CHECK(player.variable["lives"] < lives);
+	CHECK(player.variable.at("lives") < lives);
 }
 
 TEST_CASE("only the wave being played runs: the later waves wait where they start, at their own speeds", "[demonattack][scenes]")
@@ -302,7 +302,7 @@ TEST_CASE("only the wave being played runs: the later waves wait where they star
 	// A new game starts at the first wave again, everything as it was.
 	clearWave(play, "wave1");
 	REQUIRE(play.wave() == "playing.wave2");
-	play.object("player").variable["lives"] = 0.0f;
+	play.object("player").variable.at("lives") = 0.0f;
 	play.frames(2);
 	REQUIRE(play.state() == "over");
 	CHECK(play.game.getObject("over.message").lookName() == "lost");

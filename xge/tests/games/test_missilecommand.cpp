@@ -222,7 +222,7 @@ TEST_CASE("each wave ends when enough missiles are done with, and the third wins
 	play.start();
 	play.holdMissiles("wave1");
 
-	play.game.getObject("status").variable["spent"] = 12;
+	play.game.getObject("status").variable.at("spent") = 12;
 	play.frames(2);
 	CHECK(play.state() == "playing");
 	CHECK(play.wave() == "playing.wave2");
@@ -231,13 +231,13 @@ TEST_CASE("each wave ends when enough missiles are done with, and the third wins
 	CHECK(play.inPlay("playing.wave2.missiles") == 6);
 
 	play.holdMissiles("wave2");
-	play.game.getObject("status").variable["spent"] = 18;
+	play.game.getObject("status").variable.at("spent") = 18;
 	play.frames(2);
 	CHECK(play.wave() == "playing.wave3");
 	CHECK(play.inPlay("playing.wave3.missiles") == 8);
 
 	play.holdMissiles("wave3");
-	play.game.getObject("status").variable["spent"] = 24;
+	play.game.getObject("status").variable.at("spent") = 24;
 	play.frames(2);
 	CHECK(play.state() == "over");
 	CHECK(play.game.getObject("over.message").lookName() == "won");
@@ -284,7 +284,7 @@ TEST_CASE("each wave's missiles fall at its own speed and in its own color, and 
 	CHECK(play.status("wave") == 1.0f);
 	play.start();
 	play.holdMissiles("wave1");
-	play.game.getObject("status").variable["spent"] = 12;
+	play.game.getObject("status").variable.at("spent") = 12;
 	play.frames(2);
 	CHECK(play.status("wave") == 2.0f);
 }

@@ -212,7 +212,7 @@ TEST_CASE("qbert.xml: a disc carries Q*bert back to the top once, and Coily chas
 	// On the left cube of the sixth row, up and left onto the disc beside
 	// the fifth: back on the top, no life lost, and Coily, a snake by now,
 	// after him.
-	coily.variable["snake"] = 1.0f;
+	coily.variable.at("snake") = 1.0f;
 	qbert.position = { 40, 158 };
 	play.frames(2);
 	const float before = play.get("player").variable.at("score");

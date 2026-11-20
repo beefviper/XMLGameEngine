@@ -815,7 +815,7 @@ TEST_CASE("<copy> puts one variable's number into another, and <keeps> passes ob
 
 		// From a key: the number as it is now, shown by what is bound to it.
 		CommandExecutor executor(game);
-		game.getObject("player").variable["score"] = 3;
+		game.getObject("player").variable.at("score") = 3;
 		executor.executeInput(Command{ CmdCopy{ { "player", "score" }, { "best", "score" } } }, true);
 		CHECK(loaded.variable("best", "score") == 3);
 		CHECK(game.getObject("shown").drawn.picture->text == "3");
@@ -1112,7 +1112,7 @@ TEST_CASE("a condition can test a total over what it matches: how many, the sum,
 	// Against another variable, read as it is now.
 	Coins against("class=\"coin\" variable=\"v\" total=\"sum\"><atleast>flag.gap</atleast>");
 	CHECK(against.fires());
-	against.object("flag").variable["gap"] = 17.0f;
+	against.object("flag").variable.at("gap") = 17.0f;
 	CHECK_FALSE(against.fires());
 }
 

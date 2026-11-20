@@ -602,14 +602,14 @@ TEST_CASE("Lunar Lander: the engine hums while thrust is held, and stops when le
 
 	// Out of fuel, nothing pushes, and nothing hums.
 	log.stopped.clear();
-	game.getObject("lander").variable["fuel"] = 0.0f;
+	game.getObject("lander").variable.at("fuel") = 0.0f;
 	engine.input(); engine.update(xge::kSixtieth);
 	CHECK(game.loopingSounds().empty());
 	CHECK(log.stopped == std::vector<std::string>{ "thrust" });
 
 	// A front end pausing silences everything; the next frame plays again what is still on.
 	log.looped.clear();
-	game.getObject("lander").variable["fuel"] = 100.0f;
+	game.getObject("lander").variable.at("fuel") = 100.0f;
 	game.requestSound("thrust");
 	engine.input(); engine.update(xge::kSixtieth);
 	CHECK(log.looped == std::vector<std::string>{ "thrust" });
@@ -895,7 +895,7 @@ TEST_CASE("Pac-Man's music: the opening tune plays over READY!, the siren loops 
 	CHECK(log.played.size() == 1); // coming back to play is not beginning it
 
 	// The last life lost: the siren stops and the loss plays, once.
-	game.getObject("status").variable["lives"] = 0.0f;
+	game.getObject("status").variable.at("lives") = 0.0f;
 	engine.input(); engine.update(xge::kSixtieth);
 	REQUIRE(game.getCurrentState().name == "over");
 	CHECK(log.stopped == std::vector<std::string>{ "siren", "siren" });

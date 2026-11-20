@@ -336,7 +336,7 @@ TEST_CASE("the clock counts down a second at a time, and running out ends the ga
 	play.frames(120);
 	CHECK(play.status("time") == Approx(time - 2.0f));
 
-	play.game.getObject("status").variable["time"] = 1;
+	play.game.getObject("status").variable.at("time") = 1;
 	play.frames(61);
 	CHECK(play.state() == "over");
 	CHECK(play.game.getObject("over.message").lookName() == "lost");

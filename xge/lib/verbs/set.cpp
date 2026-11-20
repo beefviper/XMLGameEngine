@@ -43,7 +43,7 @@ namespace xge
 		refuseFollowed(checking, set.target, tag);
 		const std::string part = liveNumberPart(set.target.written());
 		const Object* holder = part.empty() ? nullptr : findObject(objects, set.target.owner);
-		if (part.empty() || (holder && holder->variable.count(part)))
+		if (part.empty() || (holder && holder->variable.countText(part)))
 		{
 			checkVariable(checking, set.target, tag);
 			return;
