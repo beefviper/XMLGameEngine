@@ -144,9 +144,9 @@ namespace xge
 			};
 			if (spawn.free)
 			{
-				if (!game.putInFreeCell(*made, spawn.into, spawn.freeBelow)) { return false; }
+				if (!game.cellMaps().putInFreeCell(*made, spawn.into, spawn.freeBelow)) { return false; }
 			}
-			else if (!game.putOnCells(*made, cell(spawn.column, game.mapOf(*made).column, self ? game.place(*self).column : 0.0f), cell(spawn.row, game.mapOf(*made).row, self ? game.place(*self).row : 0.0f), spawn.into)) { return false; }
+			else if (!game.cellMaps().putOnCells(*made, cell(spawn.column, game.mapOf(*made).column, self ? game.place(*self).column : 0.0f), cell(spawn.row, game.mapOf(*made).row, self ? game.place(*self).row : 0.0f), spawn.into)) { return false; }
 			if (spawn.velocityX) { made->velocity.x = *spawn.velocityX; }
 			if (spawn.velocityY) { made->velocity.y = *spawn.velocityY; }
 			if (spawn.accelerationX) { made->acceleration.x = *spawn.accelerationX; }

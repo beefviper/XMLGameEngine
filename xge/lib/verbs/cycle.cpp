@@ -23,7 +23,7 @@ namespace xge
 
 	static bool runCycle(const CmdCycle& cycle, const Doer& doer)
 	{
-		if (doer.self) { doer.game().cycleCells(*doer.self, cycle.backward); }
+		if (doer.self) { doer.game().cellMaps().cycleCells(*doer.self, cycle.backward); }
 		return true;
 	}
 

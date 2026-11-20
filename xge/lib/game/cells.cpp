@@ -3,6 +3,7 @@
 // author: beefviper
 // date: Oct 30, 2026
 
+#include "game/cells.h"
 #include "game/game.h"
 #include "play/executor.h"
 #include "play/geometry.h"
@@ -96,7 +97,7 @@ namespace xge
 		return nullptr;
 	}
 
-	Object* Game::cellHolder(Name map, int column, int row, const std::vector<Object*>& mover)
+	Object* CellMaps::cellHolder(Name map, int column, int row, const std::vector<Object*>& mover)
 	{
 		const auto cellKey = [](int c, int r) { return static_cast<long long>(c) * 100000 + r; };
 		if (heldCells.on && mover.empty())
@@ -106,18 +107,18 @@ namespace xge
 			{
 				// The first piece in each cell, as the scan below finds it.
 				std::unordered_map<long long, Object*> cells;
-				for (Object& object : objects)
+				for (Object& object : game.getCurrentObjects())
 				{
-					if (object.exists && object.onCells && !isShape(object) && mapOf(object).name == map && isShown(object))
+					if (object.exists && object.onCells && !game.isShape(object) && game.mapOf(object).name == map && game.isShown(object))
 					{
-						cells.emplace(cellKey(whole(place(object).column), whole(place(object).row)), &object);
+						cells.emplace(cellKey(whole(game.place(object).column), whole(game.place(object).row)), &object);
 					}
 				}
-				for (Object& object : spawned)
+				for (Object& object : game.spawning())
 				{
-					if (object.exists && object.onCells && !isShape(object) && mapOf(object).name == map)
+					if (object.exists && object.onCells && !game.isShape(object) && game.mapOf(object).name == map)
 					{
-						cells.emplace(cellKey(whole(place(object).column), whole(place(object).row)), &object);
+						cells.emplace(cellKey(whole(game.place(object).column), whole(game.place(object).row)), &object);
 					}
 				}
 				found = heldCells.maps.emplace(map, std::move(cells)).first;
@@ -127,126 +128,126 @@ namespace xge
 		}
 		const auto holds = [&](Object& object)
 		{
-			return object.exists && object.onCells && !isShape(object) && mapOf(object).name == map
-				&& whole(place(object).column) == column && whole(place(object).row) == row
+			return object.exists && object.onCells && !game.isShape(object) && game.mapOf(object).name == map
+				&& whole(game.place(object).column) == column && whole(game.place(object).row) == row
 				&& std::find(mover.begin(), mover.end(), &object) == mover.end();
 		};
-		for (Object& object : objects)
+		for (Object& object : game.getCurrentObjects())
 		{
-			if (holds(object) && isShown(object)) { return &object; }
+			if (holds(object) && game.isShown(object)) { return &object; }
 		}
 		// Spawned this frame: in play once the frame is over.
-		for (Object& object : spawned)
+		for (Object& object : game.spawning())
 		{
 			if (holds(object)) { return &object; }
 		}
 		return nullptr;
 	}
 
-	std::vector<Object*> Game::cellsOf(Object& mover)
+	std::vector<Object*> CellMaps::cellsOf(Object& mover)
 	{
-		if (!isShape(mover)) { return { &mover }; }
+		if (!game.isShape(mover)) { return { &mover }; }
 		std::vector<Object*> cells;
-		for (const Name part : cellPart(mover).shapeParts)
+		for (const Name part : game.cellPart(mover).shapeParts)
 		{
-			if (Object* cell = findSpawning(part)) { cells.push_back(cell); }
+			if (Object* cell = game.findSpawning(part)) { cells.push_back(cell); }
 		}
 		return cells;
 	}
 
-	void Game::putInCell(Object& object, int column, int row)
+	void CellMaps::putInCell(Object& object, int column, int row)
 	{
-		placeFor(object).column = static_cast<float>(column);
-		placeFor(object).row = static_cast<float>(row);
-		mapFor(object).column = column - 1;
-		mapFor(object).row = row - 1;
+		game.placeFor(object).column = static_cast<float>(column);
+		game.placeFor(object).row = static_cast<float>(row);
+		game.mapFor(object).column = column - 1;
+		game.mapFor(object).row = row - 1;
 		const Vector2f size = sizeOf(object);
-		object.position = mapOf(object).origin + Vector2f{ (static_cast<float>(column) - 0.5f) * mapOf(object).tile.x - size.x / 2.0f,
-			(static_cast<float>(row) - 0.5f) * mapOf(object).tile.y - size.y / 2.0f };
+		object.position = game.mapOf(object).origin + Vector2f{ (static_cast<float>(column) - 0.5f) * game.mapOf(object).tile.x - size.x / 2.0f,
+			(static_cast<float>(row) - 0.5f) * game.mapOf(object).tile.y - size.y / 2.0f };
 	}
 
-	bool Game::moveToMap(Object& object, Name map)
+	bool CellMaps::moveToMap(Object& object, Name map)
 	{
-		if (mapOf(object).name == map) { return true; }
-		const auto onIt = [&](const Object& each) { return each.onCells && mapOf(each).name == map; };
+		if (game.mapOf(object).name == map) { return true; }
+		const auto onIt = [&](const Object& each) { return each.onCells && game.mapOf(each).name == map; };
 		const Object* like = nullptr;
-		for (const Object& each : objects)
+		for (const Object& each : game.getCurrentObjects())
 		{
 			if (onIt(each)) { like = &each; break; }
 		}
 		if (!like)
 		{
-			for (const Object& each : spawned)
+			for (const Object& each : game.spawning())
 			{
 				if (onIt(each)) { like = &each; break; }
 			}
 		}
 		if (!like) { return false; }
 		// Copied out first: `like` may sit in a list that grows.
-		const Vector2f origin = mapOf(*like).origin;
-		const Vector2f tile = mapOf(*like).tile;
-		const int columns = mapOf(*like).columns;
-		const int rows = mapOf(*like).rows;
-		std::vector<Object::CellCheck> checks = cellPart(*like).checks;
-		mapFor(object).name = map;
-		mapFor(object).origin = origin;
-		mapFor(object).tile = tile;
-		mapFor(object).columns = columns;
-		mapFor(object).rows = rows;
-		cellPartFor(object).checks = std::move(checks);
-		cellPartFor(object).held = false;
+		const Vector2f origin = game.mapOf(*like).origin;
+		const Vector2f tile = game.mapOf(*like).tile;
+		const int columns = game.mapOf(*like).columns;
+		const int rows = game.mapOf(*like).rows;
+		std::vector<Object::CellCheck> checks = game.cellPart(*like).checks;
+		game.mapFor(object).name = map;
+		game.mapFor(object).origin = origin;
+		game.mapFor(object).tile = tile;
+		game.mapFor(object).columns = columns;
+		game.mapFor(object).rows = rows;
+		game.cellPartFor(object).checks = std::move(checks);
+		game.cellPartFor(object).held = false;
 		return true;
 	}
 
-	bool Game::putOnCells(Object& made, int column, int row, Name map)
+	bool CellMaps::putOnCells(Object& made, int column, int row, Name map)
 	{
 		const auto fits = [&](int c, int r)
 		{
-			return c >= 1 && r >= 1 && c <= mapOf(made).columns && r <= mapOf(made).rows && !cellHolder(mapOf(made).name, c, r, { &made });
+			return c >= 1 && r >= 1 && c <= game.mapOf(made).columns && r <= game.mapOf(made).rows && !cellHolder(game.mapOf(made).name, c, r, { &made });
 		};
 
 		const auto takeBack = [&]()
 		{
-			writtenCopies.erase(made.name);
-			spawned.pop_back();
+			game.forgetCopy(made.name);
+			game.spawning().pop_back();
 			return false;
 		};
 
 		if (!map.empty() && !moveToMap(made, map)) { return takeBack(); }
 
-		if (!isShape(made))
+		if (!game.isShape(made))
 		{
 			if (!fits(column, row)) { return takeBack(); }
 			putInCell(made, column, row);
 			return true;
 		}
 
-		for (const Object::ShapeCell& cell : cellPart(made).shape)
+		for (const Object::ShapeCell& cell : game.cellPart(made).shape)
 		{
 			if (!fits(column + cell.column, row + cell.row)) { return takeBack(); }
 		}
 		putInCell(made, column, row);
-		for (const Object::ShapeCell& cell : cellPart(made).shape)
+		for (const Object::ShapeCell& cell : game.cellPart(made).shape)
 		{
-			Object* part = spawn(cell.piece, true);
+			Object* part = game.spawn(cell.piece, true);
 			if (!part) { continue; }
-			moveToMap(*part, mapOf(made).name);
-			cellPartFor(*part).shapeOwner = made.name;
+			moveToMap(*part, game.mapOf(made).name);
+			game.cellPartFor(*part).shapeOwner = made.name;
 			putInCell(*part, column + cell.column, row + cell.row);
-			cellPartFor(made).shapeParts.push_back(part->name);
+			game.cellPartFor(made).shapeParts.push_back(part->name);
 		}
 		return true;
 	}
 
-	bool Game::sendCells(Name target, Name from, Name into, std::optional<int> column, std::optional<int> row)
+	bool CellMaps::sendCells(Name target, Name from, Name into, std::optional<int> column, std::optional<int> row)
 	{
 		// The first of that name on `from` that moves as one: a shape, or a
 		// piece that is no shape's cell.
 		Object* piece = nullptr;
-		for (Object& object : objects)
+		for (Object& object : game.getCurrentObjects())
 		{
-			if (object.exists && object.onCells && mapOf(object).name == from && cellPart(object).shapeOwner.empty()
-				&& (object.name == target || object.inGroup(target)) && isShown(object))
+			if (object.exists && object.onCells && game.mapOf(object).name == from && game.cellPart(object).shapeOwner.empty()
+				&& (object.name == target || object.inGroup(target)) && game.isShown(object))
 			{
 				piece = &object;
 				break;
@@ -255,29 +256,29 @@ namespace xge
 		if (!piece) { return false; }
 
 		const std::vector<Object*> cells = cellsOf(*piece);
-		const int left = column.value_or(whole(place(*piece).column));
-		const int top = row.value_or(whole(place(*piece).row));
-		const int fromLeft = whole(place(*piece).column);
-		const int fromTop = whole(place(*piece).row);
+		const int left = column.value_or(whole(game.place(*piece).column));
+		const int top = row.value_or(whole(game.place(*piece).row));
+		const int fromLeft = whole(game.place(*piece).column);
+		const int fromTop = whole(game.place(*piece).row);
 
 		// Where each cell goes, kept as it lies from the shape's top left.
 		Object probe = *piece;
 		if (!moveToMap(probe, into)) { return false; }
 		for (Object* cell : cells)
 		{
-			const int c = left + whole(place(*cell).column) - fromLeft;
-			const int r = top + whole(place(*cell).row) - fromTop;
-			if (c < 1 || r < 1 || c > mapOf(probe).columns || r > mapOf(probe).rows || cellHolder(into, c, r, cells)) { return false; }
+			const int c = left + whole(game.place(*cell).column) - fromLeft;
+			const int r = top + whole(game.place(*cell).row) - fromTop;
+			if (c < 1 || r < 1 || c > game.mapOf(probe).columns || r > game.mapOf(probe).rows || cellHolder(into, c, r, cells)) { return false; }
 		}
 
 		for (Object* cell : cells)
 		{
-			const int c = left + whole(place(*cell).column) - fromLeft;
-			const int r = top + whole(place(*cell).row) - fromTop;
+			const int c = left + whole(game.place(*cell).column) - fromLeft;
+			const int r = top + whole(game.place(*cell).row) - fromTop;
 			moveToMap(*cell, into);
 			putInCell(*cell, c, r);
 		}
-		if (isShape(*piece))
+		if (game.isShape(*piece))
 		{
 			moveToMap(*piece, into);
 			putInCell(*piece, left, top);
@@ -285,7 +286,7 @@ namespace xge
 		return true;
 	}
 
-	bool Game::stepCells(Object& mover, int across, int down)
+	bool CellMaps::stepCells(Object& mover, int across, int down)
 	{
 		if (!mover.onCells || (across == 0 && down == 0)) { return false; }
 		const std::vector<Object*> cells = cellsOf(mover);
@@ -295,7 +296,7 @@ namespace xge
 		// growing there: it is no blocker.
 		std::vector<Object*> passing = cells;
 		const std::vector<Object*> links = chainOf(mover);
-		if (!links.empty() && place(mover).chainGrow == 0) { passing.push_back(links.back()); }
+		if (!links.empty() && game.place(mover).chainGrow == 0) { passing.push_back(links.back()); }
 
 		// The first thing in the way, or the map's edge.
 		const auto inTheWay = [&](bool& offMap) -> Object*
@@ -303,14 +304,14 @@ namespace xge
 			offMap = false;
 			for (Object* cell : cells)
 			{
-				const int column = whole(place(*cell).column) + across;
-				const int row = whole(place(*cell).row) + down;
-				if (column < 1 || row < 1 || column > mapOf(mover).columns || row > mapOf(mover).rows)
+				const int column = whole(game.place(*cell).column) + across;
+				const int row = whole(game.place(*cell).row) + down;
+				if (column < 1 || row < 1 || column > game.mapOf(mover).columns || row > game.mapOf(mover).rows)
 				{
 					offMap = true;
 					return nullptr;
 				}
-				if (Object* holder = cellHolder(mapOf(mover).name, column, row, passing)) { return holder; }
+				if (Object* holder = cellHolder(game.mapOf(mover).name, column, row, passing)) { return holder; }
 			}
 			return nullptr;
 		};
@@ -319,7 +320,7 @@ namespace xge
 
 		if (offMap)
 		{
-			atEdge(mover, edge);
+			game.meetEdge(mover, edge);
 			return false;
 		}
 		if (blocker)
@@ -327,16 +328,16 @@ namespace xge
 			// While the rules run, the cells it steps into are not free for
 			// a <spawn><free /> (Snake's next food).
 			const std::size_t steppingBefore = stepping.size();
-			for (Object* cell : cells) { stepping.push_back({ mapOf(mover).name, whole(place(*cell).column) + across, whole(place(*cell).row) + down }); }
+			for (Object* cell : cells) { stepping.push_back({ game.mapOf(mover).name, whole(game.place(*cell).column) + across, whole(game.place(*cell).row) + down }); }
 			Touch touch = touchAcross(edge);
 			touch.point = middleOf(*blocker);
-			const int beforeColumn = whole(place(mover).column);
-			const int beforeRow = whole(place(mover).row);
-			const Reaction moverAsked = reactTo(mover, *blocker, touch);
+			const int beforeColumn = whole(game.place(mover).column);
+			const int beforeRow = whole(game.place(mover).row);
+			const Game::Reaction moverAsked = game.reactTo(mover, *blocker, touch);
 			Touch back = touch;
 			back.edge = opposite(edge);
 			back.normal = outOf(edge);
-			const Reaction blockerAsked = reactTo(*blocker, mover, back);
+			const Game::Reaction blockerAsked = game.reactTo(*blocker, mover, back);
 			// A shoved piece's own step is asked inside these rules.
 			stepping.resize(steppingBefore);
 
@@ -344,53 +345,53 @@ namespace xge
 			// the step go on; one that moved the mover (a centipede turning)
 			// has made its own step instead.
 			// A <through /> in the rules makes it anyway.
-			const bool moved = whole(place(mover).column) != beforeColumn || whole(place(mover).row) != beforeRow;
+			const bool moved = whole(game.place(mover).column) != beforeColumn || whole(game.place(mover).row) != beforeRow;
 			const bool through = moverAsked.through || blockerAsked.through;
 			if (moved || !mover.exists) { return false; }
 			if (!through && (inTheWay(offMap) || offMap)) { return false; }
 		}
 
-		const int fromColumn = whole(place(mover).column);
-		const int fromRow = whole(place(mover).row);
-		for (Object* cell : cells) { putInCell(*cell, whole(place(*cell).column) + across, whole(place(*cell).row) + down); }
-		if (isShape(mover)) { putInCell(mover, whole(place(mover).column) + across, whole(place(mover).row) + down); }
-		if (!cellPart(mover).chain.empty()) { followChain(mover, links, fromColumn, fromRow); }
+		const int fromColumn = whole(game.place(mover).column);
+		const int fromRow = whole(game.place(mover).row);
+		for (Object* cell : cells) { putInCell(*cell, whole(game.place(*cell).column) + across, whole(game.place(*cell).row) + down); }
+		if (game.isShape(mover)) { putInCell(mover, whole(game.place(mover).column) + across, whole(game.place(mover).row) + down); }
+		if (!game.cellPart(mover).chain.empty()) { followChain(mover, links, fromColumn, fromRow); }
 		return true;
 	}
 
-	bool Game::isLink(const Object& piece, Name chain)
+	bool CellMaps::isLink(const Object& piece, Name chain)
 	{
 		if (piece.named(chain)) { return true; }
 		if (!piece.isCopy()) { return false; }
-		const Object* of = findSpawning(piece.copyOf);
+		const Object* of = game.findSpawning(piece.copyOf);
 		return piece.copyOf == chain || (of && of != &piece && of->named(chain));
 	}
 
-	std::vector<Object*> Game::chainOf(Object& head)
+	std::vector<Object*> CellMaps::chainOf(Object& head)
 	{
-		if (cellPart(head).chain.empty()) { return {}; }
+		if (game.cellPart(head).chain.empty()) { return {}; }
 
 		// As kept: a link no longer there is dropped.
 		std::vector<Object*> links;
-		if (place(head).chainKnown)
+		if (game.place(head).chainKnown)
 		{
 			std::vector<Name> kept;
-			for (const Name name : place(head).chainLinks)
+			for (const Name name : game.place(head).chainLinks)
 			{
-				Object* link = findSpawning(name);
+				Object* link = game.findSpawning(name);
 				if (!link || !link->exists) { continue; }
 				links.push_back(link);
 				kept.push_back(name);
 			}
-			placeFor(head).chainLinks = std::move(kept);
+			game.placeFor(head).chainLinks = std::move(kept);
 			return links;
 		}
 
 		// Found from where they lie: from the head, the next one beside
 		// the last, until there is none.
-		placeFor(head).chainLinks.clear();
-		int column = whole(place(head).column);
-		int row = whole(place(head).row);
+		game.placeFor(head).chainLinks.clear();
+		int column = whole(game.place(head).column);
+		int row = whole(game.place(head).row);
 		for (;;)
 		{
 			Object* next = nullptr;
@@ -399,48 +400,48 @@ namespace xge
 				for (Object& object : list)
 				{
 					if (next) { return; }
-					if (!object.exists || !object.onCells || mapOf(object).name != mapOf(head).name || &object == &head || !isLink(object, cellPart(head).chain)) { continue; }
+					if (!object.exists || !object.onCells || game.mapOf(object).name != game.mapOf(head).name || &object == &head || !isLink(object, game.cellPart(head).chain)) { continue; }
 					if (std::find(links.begin(), links.end(), &object) != links.end()) { continue; }
-					if (std::abs(whole(place(object).column) - column) + std::abs(whole(place(object).row) - row) == 1) { next = &object; }
+					if (std::abs(whole(game.place(object).column) - column) + std::abs(whole(game.place(object).row) - row) == 1) { next = &object; }
 				}
 			};
-			look(objects);
-			look(spawned);
+			look(game.getCurrentObjects());
+			look(game.spawning());
 			if (!next) { break; }
 			links.push_back(next);
-			placeFor(head).chainLinks.push_back(next->name);
-			column = whole(place(*next).column);
-			row = whole(place(*next).row);
+			game.placeFor(head).chainLinks.push_back(next->name);
+			column = whole(game.place(*next).column);
+			row = whole(game.place(*next).row);
 		}
-		placeFor(head).chainKnown = true;
+		game.placeFor(head).chainKnown = true;
 		return links;
 	}
 
-	void Game::followChain(Object& head, const std::vector<Object*>& links, int column, int row)
+	void CellMaps::followChain(Object& head, const std::vector<Object*>& links, int column, int row)
 	{
 		// Each link into the cell of the one ahead of it.
 		for (Object* link : links)
 		{
-			const int nowColumn = whole(place(*link).column);
-			const int nowRow = whole(place(*link).row);
+			const int nowColumn = whole(game.place(*link).column);
+			const int nowRow = whole(game.place(*link).row);
 			putInCell(*link, column, row);
 			column = nowColumn;
 			row = nowRow;
 		}
-		if (place(head).chainGrow <= 0) { return; }
+		if (game.place(head).chainGrow <= 0) { return; }
 
 		// Growing: a new link where the tail was.
-		--placeFor(head).chainGrow;
-		Object* grown = spawn(cellPart(head).chain, true);
+		--game.placeFor(head).chainGrow;
+		Object* grown = game.spawn(game.cellPart(head).chain, true);
 		if (!grown) { return; }
-		moveToMap(*grown, mapOf(head).name);
+		moveToMap(*grown, game.mapOf(head).name);
 		putInCell(*grown, column, row);
-		placeFor(head).chainLinks.push_back(grown->name);
+		game.placeFor(head).chainLinks.push_back(grown->name);
 	}
 
-	void Game::splitChain(Object& piece)
+	void CellMaps::splitChain(Object& piece)
 	{
-		if (cellPart(piece).chain.empty()) { return; }
+		if (game.cellPart(piece).chain.empty()) { return; }
 
 		// The head it is, or the head it follows.
 		Object* head = nullptr;
@@ -449,114 +450,114 @@ namespace xge
 		{
 			for (Object& object : list)
 			{
-				if (head || !object.exists || cellPart(object).chain.empty()) { continue; }
-				if (&object == &piece && (place(object).chainKnown || place(object).going)) { head = &object; return; }
-				const auto found = std::find(place(object).chainLinks.begin(), place(object).chainLinks.end(), piece.name);
-				if (found != place(object).chainLinks.end())
+				if (head || !object.exists || game.cellPart(object).chain.empty()) { continue; }
+				if (&object == &piece && (game.place(object).chainKnown || game.place(object).going)) { head = &object; return; }
+				const auto found = std::find(game.place(object).chainLinks.begin(), game.place(object).chainLinks.end(), piece.name);
+				if (found != game.place(object).chainLinks.end())
 				{
 					head = &object;
-					at = static_cast<std::size_t>(found - place(object).chainLinks.begin()) + 1;
+					at = static_cast<std::size_t>(found - game.place(object).chainLinks.begin()) + 1;
 					return;
 				}
 			}
 		};
-		lead(objects);
-		lead(spawned);
+		lead(game.getCurrentObjects());
+		lead(game.spawning());
 		if (!head) { return; }
 		chainOf(*head);
 
 		// at: where the piece is, 0 for the head itself.
-		const std::vector<Name> links = place(*head).chainLinks;
+		const std::vector<Name> links = game.place(*head).chainLinks;
 		std::vector<Name> behind(links.begin() + static_cast<std::ptrdiff_t>(std::min(at, links.size())), links.end());
-		placeFor(*head).chainLinks.resize(at == 0 ? 0 : at - 1);
-		placeFor(*head).chainKnown = true;
+		game.placeFor(*head).chainLinks.resize(at == 0 ? 0 : at - 1);
+		game.placeFor(*head).chainKnown = true;
 
-		Object* next = behind.empty() ? nullptr : findSpawning(behind.front());
+		Object* next = behind.empty() ? nullptr : game.findSpawning(behind.front());
 		if (next)
 		{
-			placeFor(*next).chainLinks.assign(behind.begin() + 1, behind.end());
-			placeFor(*next).chainKnown = true;
-			placeFor(*next).chainGrow = 0;
-			placeFor(*next).going = place(*head).going;
-			placeFor(*next).goEvery = place(*head).goEvery;
-			placeFor(*next).goWait = place(*head).goWait;
+			game.placeFor(*next).chainLinks.assign(behind.begin() + 1, behind.end());
+			game.placeFor(*next).chainKnown = true;
+			game.placeFor(*next).chainGrow = 0;
+			game.placeFor(*next).going = game.place(*head).going;
+			game.placeFor(*next).goEvery = game.place(*head).goEvery;
+			game.placeFor(*next).goWait = game.place(*head).goWait;
 			// The way it was going: toward the cell of the piece cut out,
 			// across; or, just turning down or up, the head's way.
-			const int across = whole(place(piece).column) - whole(place(*next).column);
-			placeFor(*next).goWay = across > 0 ? Direction::Right : across < 0 ? Direction::Left : place(*head).goWay;
-			next->facing = place(*next).goWay;
+			const int across = whole(game.place(piece).column) - whole(game.place(*next).column);
+			game.placeFor(*next).goWay = across > 0 ? Direction::Right : across < 0 ? Direction::Left : game.place(*head).goWay;
+			next->facing = game.place(*next).goWay;
 			next->variable = head->variable;
-			if (const Name look = head->lookName(); !look.empty()) { showLook(*next, look); }
+			if (const Name look = head->lookName(); !look.empty()) { game.showLook(*next, look); }
 		}
 		if (&piece == head)
 		{
-			placeFor(piece).going = false;
-			placeFor(piece).chainLinks.clear();
+			game.placeFor(piece).going = false;
+			game.placeFor(piece).chainLinks.clear();
 		}
 	}
 
-	bool Game::goCells(Object& mover, Direction way, float speed)
+	bool CellMaps::goCells(Object& mover, Direction way, float speed)
 	{
 		// Never straight back into its own first link.
 		const std::vector<Object*> links = chainOf(mover);
 		const Vector2f step = stepToward(way, 1.0f);
-		if (!links.empty() && whole(place(*links.front()).column) == whole(place(mover).column) + whole(step.x)
-			&& whole(place(*links.front()).row) == whole(place(mover).row) + whole(step.y))
+		if (!links.empty() && whole(game.place(*links.front()).column) == whole(game.place(mover).column) + whole(step.x)
+			&& whole(game.place(*links.front()).row) == whole(game.place(mover).row) + whole(step.y))
 		{
 			return false;
 		}
 
-		placeFor(mover).goEvery = speed > 0.0f ? 1.0f / speed : 0.0f;
-		if (!place(mover).going || place(mover).goWait > place(mover).goEvery) { placeFor(mover).goWait = place(mover).goEvery; }
-		placeFor(mover).going = speed > 0.0f;
-		placeFor(mover).goWay = way;
+		game.placeFor(mover).goEvery = speed > 0.0f ? 1.0f / speed : 0.0f;
+		if (!game.place(mover).going || game.place(mover).goWait > game.place(mover).goEvery) { game.placeFor(mover).goWait = game.place(mover).goEvery; }
+		game.placeFor(mover).going = speed > 0.0f;
+		game.placeFor(mover).goWay = way;
 		mover.facing = way;
 		return true;
 	}
 
-	bool Game::putInFreeCell(Object& made, Name map, int below)
+	bool CellMaps::putInFreeCell(Object& made, Name map, int below)
 	{
 		if (!map.empty() && !moveToMap(made, map))
 		{
-			writtenCopies.erase(made.name);
-			spawned.pop_back();
+			game.forgetCopy(made.name);
+			game.spawning().pop_back();
 			return false;
 		}
 		// Every cell the whole of it fits in, one of them at random.
 		std::vector<std::pair<int, int>> free;
-		for (int row = below + 1; row <= mapOf(made).rows; ++row)
+		for (int row = below + 1; row <= game.mapOf(made).rows; ++row)
 		{
-			for (int column = 1; column <= mapOf(made).columns; ++column)
+			for (int column = 1; column <= game.mapOf(made).columns; ++column)
 			{
-				const bool taken = cellHolder(mapOf(made).name, column, row, { &made })
-					|| std::any_of(stepping.begin(), stepping.end(), [&](const Stepping& each) { return each.map == mapOf(made).name && each.column == column && each.row == row; });
+				const bool taken = cellHolder(game.mapOf(made).name, column, row, { &made })
+					|| std::any_of(stepping.begin(), stepping.end(), [&](const Stepping& each) { return each.map == game.mapOf(made).name && each.column == column && each.row == row; });
 				if (!taken) { free.emplace_back(column, row); }
 			}
 		}
 		if (free.empty())
 		{
-			writtenCopies.erase(made.name);
-			spawned.pop_back();
+			game.forgetCopy(made.name);
+			game.spawning().pop_back();
 			return false;
 		}
 		const std::size_t pick = std::min(free.size() - 1, static_cast<std::size_t>(randomBetween(0.0f, static_cast<float>(free.size()))));
 		return putOnCells(made, free[pick].first, free[pick].second);
 	}
 
-	void Game::slideCells(Object& mover, Direction way)
+	void CellMaps::slideCells(Object& mover, Direction way)
 	{
 		const Vector2f step = stepToward(way, 1.0f);
-		for (int most = mapOf(mover).columns + mapOf(mover).rows; most > 0; --most)
+		for (int most = game.mapOf(mover).columns + game.mapOf(mover).rows; most > 0; --most)
 		{
 			if (!stepCells(mover, whole(step.x), whole(step.y))) { return; }
 		}
 	}
 
-	bool Game::turnCells(Object& shape, bool clockwise)
+	bool CellMaps::turnCells(Object& shape, bool clockwise)
 	{
-		if (!isShape(shape)) { return false; }
-		const int size = cellPart(shape).shapeSize;
-		std::vector<Object::ShapeCell> turned = cellPart(shape).shape;
+		if (!game.isShape(shape)) { return false; }
+		const int size = game.cellPart(shape).shapeSize;
+		std::vector<Object::ShapeCell> turned = game.cellPart(shape).shape;
 		for (Object::ShapeCell& cell : turned)
 		{
 			const int column = cell.column;
@@ -566,9 +567,9 @@ namespace xge
 
 		const std::vector<Object*> cells = cellsOf(shape);
 		if (cells.size() != turned.size()) { return false; }
-		const int column = whole(place(shape).column);
-		const int row = whole(place(shape).row);
-		for (const auto& [kickAcross, kickUp] : kicksFor(size, static_cast<int>(cellPart(shape).shape.size()), cellPart(shape).quarter, clockwise))
+		const int column = whole(game.place(shape).column);
+		const int row = whole(game.place(shape).row);
+		for (const auto& [kickAcross, kickUp] : kicksFor(size, static_cast<int>(game.cellPart(shape).shape.size()), game.cellPart(shape).quarter, clockwise))
 		{
 			const int left = column + kickAcross;
 			const int top = row - kickUp;
@@ -576,12 +577,12 @@ namespace xge
 				{
 					const int c = left + cell.column;
 					const int r = top + cell.row;
-					return c >= 1 && r >= 1 && c <= mapOf(shape).columns && r <= mapOf(shape).rows && !cellHolder(mapOf(shape).name, c, r, cells);
+					return c >= 1 && r >= 1 && c <= game.mapOf(shape).columns && r <= game.mapOf(shape).rows && !cellHolder(game.mapOf(shape).name, c, r, cells);
 				});
 			if (!fits) { continue; }
 
-			cellPartFor(shape).shape = turned;
-			cellPartFor(shape).quarter = (cellPartFor(shape).quarter + (clockwise ? 1 : 3)) % 4;
+			game.cellPartFor(shape).shape = turned;
+			game.cellPartFor(shape).quarter = (game.cellPartFor(shape).quarter + (clockwise ? 1 : 3)) % 4;
 			putInCell(shape, left, top);
 			for (std::size_t i = 0; i < cells.size(); ++i) { putInCell(*cells[i], left + turned[i].column, top + turned[i].row); }
 			return true;
@@ -589,48 +590,48 @@ namespace xge
 		return false;
 	}
 
-	void Game::settle(Object& mover)
+	void CellMaps::settle(Object& mover)
 	{
 		if (!mover.onCells) { return; }
-		const Name map = mapOf(mover).name;
-		if (isShape(mover))
+		const Name map = game.mapOf(mover).name;
+		if (game.isShape(mover))
 		{
 			// Cells with <joins> stay joined to one another.
 			const std::vector<Object*> cells = cellsOf(mover);
 			for (Object* cell : cells)
 			{
-				cellPartFor(*cell).shapeOwner.clear();
+				game.cellPartFor(*cell).shapeOwner.clear();
 				if (!cell->looks.set->hasJoins) { continue; }
-				placeFor(*cell).joinedWith.clear();
+				game.placeFor(*cell).joinedWith.clear();
 				for (const Object* other : cells)
 				{
-					if (other != cell) { placeFor(*cell).joinedWith.push_back(other->name); }
+					if (other != cell) { game.placeFor(*cell).joinedWith.push_back(other->name); }
 				}
 			}
-			cellPartFor(mover).shapeParts.clear();
-			despawn(mover);
+			game.cellPartFor(mover).shapeParts.clear();
+			game.despawn(mover);
 		}
 		askChecks(map);
 	}
 
-	void Game::askChecks(Name map)
+	void CellMaps::askChecks(Name map)
 	{
 		// Every piece of a map carries its checks; any one says them.
 		std::vector<Object::CellCheck> checks;
 		int columns = 0;
 		int rows = 0;
-		for (const Object& object : objects)
+		for (const Object& object : game.getCurrentObjects())
 		{
-			if (mapOf(object).name == map && object.onCells)
+			if (game.mapOf(object).name == map && object.onCells)
 			{
-				checks = cellPart(object).checks;
-				columns = mapOf(object).columns;
-				rows = mapOf(object).rows;
+				checks = game.cellPart(object).checks;
+				columns = game.mapOf(object).columns;
+				rows = game.mapOf(object).rows;
 				break;
 			}
 		}
 
-		CommandExecutor executor(*this);
+		CommandExecutor executor(game);
 		for (const Object::CellCheck& check : checks)
 		{
 			if (check.kind == "line")
@@ -646,7 +647,7 @@ namespace xge
 				for (int column = 1; column <= columns; ++column)
 				{
 					Object* holder = cellHolder(map, column, row, {});
-					if (!holder || !cellPart(*holder).shapeOwner.empty() || (!check.objClass.empty() && holder->objClass != check.objClass)) { break; }
+					if (!holder || !game.cellPart(*holder).shapeOwner.empty() || (!check.objClass.empty() && holder->objClass != check.objClass)) { break; }
 					match.pieces.push_back(holder->name);
 				}
 				if (static_cast<int>(match.pieces.size()) != columns)
@@ -662,8 +663,8 @@ namespace xge
 				// Still full (nothing cleared it): on up.
 				const bool stillFull = std::all_of(match.pieces.begin(), match.pieces.end(), [&](const Name name)
 					{
-						const Object* piece = findSpawning(name);
-						return piece && piece->exists && whole(place(*piece).row) == row;
+						const Object* piece = game.findSpawning(name);
+						return piece && piece->exists && whole(game.place(*piece).row) == row;
 					});
 				if (stillFull) { --row; }
 			}
@@ -683,7 +684,7 @@ namespace xge
 		return piece.groupName.empty() ? piece.name : piece.groupName;
 	}
 
-	void Game::askLines(const Object::CellCheck& check, Name map, int columns, int rows, CommandExecutor& executor)
+	void CellMaps::askLines(const Object::CellCheck& check, Name map, int columns, int rows, CommandExecutor& executor)
 	{
 		// Every line of so many alike at once, then again on what its
 		// commands leave (a fall makes new lines: Columns' chains), until
@@ -694,7 +695,7 @@ namespace xge
 			{
 				if (column < 1 || row < 1 || column > columns || row > rows) { return nullptr; }
 				Object* holder = cellHolder(map, column, row, {});
-				if (!holder || !cellPart(*holder).shapeOwner.empty() || (!check.objClass.empty() && holder->objClass != check.objClass)) { return nullptr; }
+				if (!holder || !game.cellPart(*holder).shapeOwner.empty() || (!check.objClass.empty() && holder->objClass != check.objClass)) { return nullptr; }
 				return holder;
 			};
 			// By group, or by the value of a variable they share (a germ and a
@@ -702,7 +703,7 @@ namespace xge
 			const auto alike = [&](const Object* a, const Object* b)
 			{
 				if (!a || !b) { return false; }
-				if (check.alike.empty()) { return kindOf(*a) == kindOf(*b); }
+				if (check.alike.empty()) { return game.kindOf(*a) == game.kindOf(*b); }
 				const auto one = a->variable.find(check.alike);
 				const auto two = b->variable.find(check.alike);
 				return one != a->variable.end() && two != b->variable.end() && one->second == two->second;
@@ -746,23 +747,23 @@ namespace xge
 			}
 			const bool taken = std::any_of(match.pieces.begin(), match.pieces.end(), [&](const Name name)
 				{
-					const Object* piece = findSpawning(name);
+					const Object* piece = game.findSpawning(name);
 					return !piece || !piece->exists;
 				});
 			if (!taken) { return; }
 		}
 	}
 
-	void Game::fallCells(Name map, Name objClass)
+	void CellMaps::fallCells(Name map, Name objClass)
 	{
 		const Object* any = nullptr;
-		for (const Object& object : objects)
+		for (const Object& object : game.getCurrentObjects())
 		{
-			if (object.onCells && mapOf(object).name == map) { any = &object; break; }
+			if (object.onCells && game.mapOf(object).name == map) { any = &object; break; }
 		}
 		if (!any) { return; }
-		const int columns = mapOf(*any).columns;
-		const int rows = mapOf(*any).rows;
+		const int columns = game.mapOf(*any).columns;
+		const int rows = game.mapOf(*any).rows;
 
 		// From the bottom up, each loose piece, with the pieces joined to it,
 		// drops as far as all of them can; anything else (a shape's cell; with a class
@@ -777,12 +778,12 @@ namespace xge
 				for (int column = 1; column <= columns; ++column)
 				{
 					Object* holder = cellHolder(map, column, row, {});
-					if (!holder || !cellPart(*holder).shapeOwner.empty() || (!objClass.empty() && holder->objClass != objClass) || std::find(done.begin(), done.end(), holder) != done.end()) { continue; }
+					if (!holder || !game.cellPart(*holder).shapeOwner.empty() || (!objClass.empty() && holder->objClass != objClass) || std::find(done.begin(), done.end(), holder) != done.end()) { continue; }
 					std::vector<Object*> together{ holder };
-					for (const Name name : place(*holder).joinedWith)
+					for (const Name name : game.place(*holder).joinedWith)
 					{
-						Object* other = findSpawning(name);
-						if (other && other->exists && other->onCells && mapOf(*other).name == map && cellPart(*other).shapeOwner.empty() && (objClass.empty() || other->objClass == objClass)
+						Object* other = game.findSpawning(name);
+						if (other && other->exists && other->onCells && game.mapOf(*other).name == map && game.cellPart(*other).shapeOwner.empty() && (objClass.empty() || other->objClass == objClass)
 							&& std::find(together.begin(), together.end(), other) == together.end())
 						{
 							together.push_back(other);
@@ -795,13 +796,13 @@ namespace xge
 					{
 						return std::all_of(together.begin(), together.end(), [&](const Object* piece)
 							{
-								const int below = whole(place(*piece).row) + by;
-								return below <= rows && !cellHolder(map, whole(place(*piece).column), below, together);
+								const int below = whole(game.place(*piece).row) + by;
+								return below <= rows && !cellHolder(map, whole(game.place(*piece).column), below, together);
 							});
 					};
 					while (fits(drop + 1)) { ++drop; }
 					if (drop == 0) { continue; }
-					for (Object* piece : together) { putInCell(*piece, whole(place(*piece).column), whole(place(*piece).row) + drop); }
+					for (Object* piece : together) { putInCell(*piece, whole(game.place(*piece).column), whole(game.place(*piece).row) + drop); }
 					moved = true;
 				}
 			}
@@ -809,7 +810,7 @@ namespace xge
 		}
 	}
 
-	void Game::showJoins()
+	void CellMaps::showJoins()
 	{
 		const auto join = [&](Object& piece)
 		{
@@ -818,19 +819,19 @@ namespace xge
 			if (std::find(looks.begin(), looks.end(), piece.looks.shown) == looks.end()) { return; }
 
 			// Falling, the other cells of its shape; settled, those it came with.
-			std::vector<Name> partners = place(piece).joinedWith;
-			if (!cellPart(piece).shapeOwner.empty())
+			std::vector<Name> partners = game.place(piece).joinedWith;
+			if (!game.cellPart(piece).shapeOwner.empty())
 			{
-				const Object* shape = findSpawning(cellPart(piece).shapeOwner);
-				partners = shape ? cellPart(*shape).shapeParts : std::vector<Name>{};
+				const Object* shape = game.findSpawning(game.cellPart(piece).shapeOwner);
+				partners = shape ? game.cellPart(*shape).shapeParts : std::vector<Name>{};
 			}
 			Object::Join way = Object::Join::Alone;
 			for (const Name name : partners)
 			{
-				const Object* other = findSpawning(name);
-				if (!other || other == &piece || !other->exists || mapOf(*other).name != mapOf(piece).name) { continue; }
-				const int across = whole(place(*other).column) - whole(place(piece).column);
-				const int down = whole(place(*other).row) - whole(place(piece).row);
+				const Object* other = game.findSpawning(name);
+				if (!other || other == &piece || !other->exists || game.mapOf(*other).name != game.mapOf(piece).name) { continue; }
+				const int across = whole(game.place(*other).column) - whole(game.place(piece).column);
+				const int down = whole(game.place(*other).row) - whole(game.place(piece).row);
 				if (std::abs(across) + std::abs(down) != 1) { continue; }
 				way = across < 0 ? Object::Join::Left : across > 0 ? Object::Join::Right : down < 0 ? Object::Join::Up : Object::Join::Down;
 				break;
@@ -838,15 +839,15 @@ namespace xge
 			const std::size_t look = looks[static_cast<std::size_t>(way)];
 			if (look != piece.looks.shown) { piece.showLook(look); }
 		};
-		for (Object& object : objects) { join(object); }
+		for (Object& object : game.getCurrentObjects()) { join(object); }
 	}
 
-	void Game::cycleCells(Object& shape, bool backward)
+	void CellMaps::cycleCells(Object& shape, bool backward)
 	{
-		if (!isShape(shape)) { return; }
+		if (!game.isShape(shape)) { return; }
 		const std::vector<Object*> cells = cellsOf(shape);
 		const std::size_t count = cells.size();
-		if (count < 2 || count != cellPart(shape).shape.size()) { return; }
+		if (count < 2 || count != game.cellPart(shape).shape.size()) { return; }
 
 		// The cell at place i goes to place i + 1 (backward: i - 1); the places stay.
 		std::vector<Name> parts(count);
@@ -854,52 +855,52 @@ namespace xge
 		for (std::size_t i = 0; i < count; ++i)
 		{
 			const std::size_t to = backward ? (i + count - 1) % count : (i + 1) % count;
-			parts[to] = cellPart(shape).shapeParts[i];
-			pieces[to] = cellPart(shape).shape[i].piece;
+			parts[to] = game.cellPart(shape).shapeParts[i];
+			pieces[to] = game.cellPart(shape).shape[i].piece;
 		}
-		const int column = whole(place(shape).column);
-		const int row = whole(place(shape).row);
+		const int column = whole(game.place(shape).column);
+		const int row = whole(game.place(shape).row);
 		for (std::size_t i = 0; i < count; ++i)
 		{
-			cellPartFor(shape).shapeParts[i] = parts[i];
-			cellPartFor(shape).shape[i].piece = pieces[i];
-			if (Object* cell = findSpawning(parts[i])) { putInCell(*cell, column + cellPart(shape).shape[i].column, row + cellPart(shape).shape[i].row); }
+			game.cellPartFor(shape).shapeParts[i] = parts[i];
+			game.cellPartFor(shape).shape[i].piece = pieces[i];
+			if (Object* cell = game.findSpawning(parts[i])) { putInCell(*cell, column + game.cellPart(shape).shape[i].column, row + game.cellPart(shape).shape[i].row); }
 		}
 	}
 
-	void Game::clearCells(const Object::CellMatch& match)
+	void CellMaps::clearCells(const Object::CellMatch& match)
 	{
 		for (const Name name : match.pieces)
 		{
-			if (Object* piece = findSpawning(name)) { despawn(*piece); }
+			if (Object* piece = game.findSpawning(name)) { game.despawn(*piece); }
 		}
 	}
 
-	void Game::collapseCells(const Object::CellMatch& match)
+	void CellMaps::collapseCells(const Object::CellMatch& match)
 	{
 		const auto down = [&](Object& object)
 		{
-			if (object.exists && object.onCells && !isShape(object) && cellPart(object).shapeOwner.empty() && mapOf(object).name == match.map && whole(place(object).row) < match.row)
+			if (object.exists && object.onCells && !game.isShape(object) && game.cellPart(object).shapeOwner.empty() && game.mapOf(object).name == match.map && whole(game.place(object).row) < match.row)
 			{
-				putInCell(object, whole(place(object).column), whole(place(object).row) + 1);
+				putInCell(object, whole(game.place(object).column), whole(game.place(object).row) + 1);
 			}
 		};
-		for (Object& object : objects) { down(object); }
-		for (Object& object : spawned) { down(object); }
+		for (Object& object : game.getCurrentObjects()) { down(object); }
+		for (Object& object : game.spawning()) { down(object); }
 	}
 
-	void Game::holdCellMove(Object& object, const CmdMove& move, bool pressed)
+	void CellMaps::holdCellMove(Object& object, const CmdMove& move, bool pressed)
 	{
 		if (!pressed)
 		{
-			if (cellPartFor(object).held && cellPartFor(object).heldWay == move.direction) { cellPartFor(object).held = false; }
+			if (game.cellPartFor(object).held && game.cellPartFor(object).heldWay == move.direction) { game.cellPartFor(object).held = false; }
 			return;
 		}
 
-		cellPartFor(object).held = move.step > 0.0f;
-		cellPartFor(object).heldWay = move.direction;
-		cellPartFor(object).heldEvery = move.step > 0.0f ? 1.0f / move.step : 0.0f;
-		cellPartFor(object).heldWait = move.wait > 0.0f ? move.wait : cellPartFor(object).heldEvery;
+		game.cellPartFor(object).held = move.step > 0.0f;
+		game.cellPartFor(object).heldWay = move.direction;
+		game.cellPartFor(object).heldEvery = move.step > 0.0f ? 1.0f / move.step : 0.0f;
+		game.cellPartFor(object).heldWait = move.wait > 0.0f ? move.wait : game.cellPartFor(object).heldEvery;
 
 		const Vector2f step = stepToward(move.direction, 1.0f);
 		stepCells(object, whole(step.x), whole(step.y));
@@ -920,7 +921,7 @@ namespace xge
 				{
 					placeFor(objects[i]).goWait += place(objects[i]).goEvery;
 					const Vector2f step = stepToward(place(objects[i]).goWay, 1.0f);
-					stepCells(objects[i], whole(step.x), whole(step.y));
+					cellMapping.stepCells(objects[i], whole(step.x), whole(step.y));
 				}
 			}
 			if (!counts(i) || !cellPart(objects[i]).held) { continue; }
@@ -929,15 +930,15 @@ namespace xge
 			{
 				cellPartFor(objects[i]).heldWait += cellPartFor(objects[i]).heldEvery;
 				const Vector2f step = stepToward(cellPart(objects[i]).heldWay, 1.0f);
-				stepCells(objects[i], whole(step.x), whole(step.y));
+				cellMapping.stepCells(objects[i], whole(step.x), whole(step.y));
 			}
 		}
 	}
 
-	const Object::MoveSet* Game::moveSetOf(const Object& piece) const noexcept
+	const Object::MoveSet* CellMaps::moveSetOf(const Object& piece) const noexcept
 	{
 		const Object::MoveSet* any = nullptr;
-		for (const Object::MoveSet& set : pieceMoves(piece).sets)
+		for (const Object::MoveSet& set : game.pieceMoves(piece).sets)
 		{
 			if (set.look && *set.look == piece.looks.shown) { return &set; }
 			if (!set.look && !any) { any = &set; }
@@ -945,60 +946,60 @@ namespace xge
 		return any;
 	}
 
-	std::vector<Game::PieceMoveTo> Game::movesOf(Object& piece, bool jumpsOnly)
+	std::vector<CellMaps::PieceMoveTo> CellMaps::movesOf(Object& piece, bool jumpsOnly)
 	{
 		std::vector<PieceMoveTo> found;
 		const Object::MoveSet* set = moveSetOf(piece);
 		if (!set || !piece.onCells || !piece.exists) { return found; }
-		const int column = whole(place(piece).column);
-		const int row = whole(place(piece).row);
-		const auto onMap = [&](int c, int r) { return c >= 1 && r >= 1 && c <= mapOf(piece).columns && r <= mapOf(piece).rows; };
+		const int column = whole(game.place(piece).column);
+		const int row = whole(game.place(piece).row);
+		const auto onMap = [&](int c, int r) { return c >= 1 && r >= 1 && c <= game.mapOf(piece).columns && r <= game.mapOf(piece).rows; };
 		for (const Object::PieceMove& move : set->moves)
 		{
 			if (jumpsOnly && !move.jump) { continue; }
 			const int by = move.jump ? 2 : 1;
 			const int toColumn = column + move.x * by;
 			const int toRow = row + move.y * by;
-			if (!onMap(toColumn, toRow) || cellHolder(mapOf(piece).name, toColumn, toRow, { &piece })) { continue; }
+			if (!onMap(toColumn, toRow) || cellHolder(game.mapOf(piece).name, toColumn, toRow, { &piece })) { continue; }
 			if (!move.jump)
 			{
 				found.push_back({ toColumn, toRow, nullptr });
 				continue;
 			}
-			Object* over = cellHolder(mapOf(piece).name, column + move.x, row + move.y, { &piece });
+			Object* over = cellHolder(game.mapOf(piece).name, column + move.x, row + move.y, { &piece });
 			if (over && over->objClass == move.objClass) { found.push_back({ toColumn, toRow, over }); }
 		}
 		return found;
 	}
 
-	std::vector<Game::PieceMoveTo> Game::legalMoves(Object& piece, bool jumpsOnly)
+	std::vector<CellMaps::PieceMoveTo> CellMaps::legalMoves(Object& piece, bool jumpsOnly)
 	{
 		const Object::MoveSet* set = moveSetOf(piece);
 		if (!set) { return {}; }
 		if (!jumpsOnly && set->forced)
 		{
 			// Any piece of its side that can jump makes jumps the only moves.
-			for (Object& other : objects)
+			for (Object& other : game.getCurrentObjects())
 			{
-				if (pieceMoves(other).sets.empty() || other.objClass != piece.objClass || mapOf(other).name != mapOf(piece).name || !isShown(other)) { continue; }
+				if (game.pieceMoves(other).sets.empty() || other.objClass != piece.objClass || game.mapOf(other).name != game.mapOf(piece).name || !game.isShown(other)) { continue; }
 				if (!movesOf(other, true).empty()) { jumpsOnly = true; break; }
 			}
 		}
 		return movesOf(piece, jumpsOnly);
 	}
 
-	void Game::countMoves()
+	void CellMaps::countMoves()
 	{
 		// Nothing moves while they are counted.
 		const CellsStill still(*this);
 		// The cells a class may put a piece in are the same for each of its
 		// pieces: worked out once.
 		std::vector<std::pair<std::string, float>> puts;
-		for (Object& piece : objects)
+		for (Object& piece : game.getCurrentObjects())
 		{
-			Object::Moves* moves = objectParts.moves.find(piece.id);
+			Object::Moves* moves = game.parts().moves.find(piece.id);
 			if (!moves || moves->sets.empty()) { continue; }
-			if (!isShown(piece)) { moves->count = 0.0f; continue; }
+			if (!game.isShown(piece)) { moves->count = 0.0f; continue; }
 			float count = static_cast<float>(movesOf(piece, false).size());
 			const Object::MoveSet* set = moveSetOf(piece);
 			if (set && set->puts())
@@ -1015,21 +1016,21 @@ namespace xge
 		}
 	}
 
-	Object* Game::putTemplate(Name objClass)
+	Object* CellMaps::putTemplate(Name objClass)
 	{
 		const std::vector<Object*> all = putTemplates(objClass);
 		return all.empty() ? nullptr : all.front();
 	}
 
-	std::vector<Object*> Game::putTemplates(Name objClass)
+	std::vector<Object*> CellMaps::putTemplates(Name objClass)
 	{
 		// One of each group: pieces of a group are alike.
 		std::vector<Object*> found;
 		std::vector<std::string> groups;
-		for (std::size_t i = 0; i < loadedCount && i < objects.size(); ++i)
+		for (std::size_t i = 0; i < game.loadedObjectCount() && i < game.getCurrentObjects().size(); ++i)
 		{
-			Object& object = objects[i];
-			if (object.objClass != objClass || !object.onCells || isShape(object)) { continue; }
+			Object& object = game.getCurrentObjects()[i];
+			if (object.objClass != objClass || !object.onCells || game.isShape(object)) { continue; }
 			const std::string group = object.groupName.empty() ? object.name : object.groupName;
 			if (std::find(groups.begin(), groups.end(), group) != groups.end()) { continue; }
 			groups.push_back(group);
@@ -1038,23 +1039,23 @@ namespace xge
 		return found;
 	}
 
-	std::vector<Object*> Game::flanked(const Object& kind, int column, int row, bool& can)
+	std::vector<Object*> CellMaps::flanked(const Object& kind, int column, int row, bool& can)
 	{
 		std::vector<Object*> trapped;
 		can = false;
-		const auto onMap = [&](int c, int r) { return c >= 1 && r >= 1 && c <= mapOf(kind).columns && r <= mapOf(kind).rows; };
+		const auto onMap = [&](int c, int r) { return c >= 1 && r >= 1 && c <= game.mapOf(kind).columns && r <= game.mapOf(kind).rows; };
 		if (!onMap(column, row)) { return trapped; }
 		const Object::MoveSet* set = moveSetOf(kind);
 		// On a piece of a class it goes on (which it takes the place of), or
 		// else in a free cell.
-		Object* under = cellHolder(mapOf(kind).name, column, row, {});
+		Object* under = cellHolder(game.mapOf(kind).name, column, row, {});
 		if (set && !set->on.empty())
 		{
 			if (!under || std::find(set->on.begin(), set->on.end(), under->objClass) == set->on.end()) { return trapped; }
 		}
 		else if (under) { return trapped; }
 		// Falling: only onto the floor or onto a piece.
-		if (set && set->fall && row < mapOf(kind).rows && !cellHolder(mapOf(kind).name, column, row + 1, {})) { return trapped; }
+		if (set && set->fall && row < game.mapOf(kind).rows && !cellHolder(game.mapOf(kind).name, column, row + 1, {})) { return trapped; }
 		if (!set || set->flanks.empty())
 		{
 			can = true;
@@ -1071,7 +1072,7 @@ namespace xge
 					std::vector<Object*> line;
 					for (int c = column + dx, r = row + dy; onMap(c, r); c += dx, r += dy)
 					{
-						Object* there = cellHolder(mapOf(kind).name, c, r, {});
+						Object* there = cellHolder(game.mapOf(kind).name, c, r, {});
 						if (!there) { break; }
 						if (there->objClass == flank.objClass && there->objClass != kind.objClass)
 						{
@@ -1094,16 +1095,16 @@ namespace xge
 		return trapped;
 	}
 
-	std::vector<std::pair<int, int>> Game::putCells(const Object& kind)
+	std::vector<std::pair<int, int>> CellMaps::putCells(const Object& kind)
 	{
 		// Any piece of its class that fits the cell.
 		std::vector<const Object*> kinds;
 		for (const Object* each : putTemplates(kind.objClass)) { kinds.push_back(each); }
 		if (kinds.empty()) { kinds.push_back(&kind); }
 		std::vector<std::pair<int, int>> cells;
-		for (int row = 1; row <= mapOf(kind).rows; ++row)
+		for (int row = 1; row <= game.mapOf(kind).rows; ++row)
 		{
-			for (int column = 1; column <= mapOf(kind).columns; ++column)
+			for (int column = 1; column <= game.mapOf(kind).columns; ++column)
 			{
 				for (const Object* each : kinds)
 				{
@@ -1120,10 +1121,10 @@ namespace xge
 		return cells;
 	}
 
-	bool Game::putPiece(Object& picker, const CmdPut& put)
+	bool CellMaps::putPiece(Object& picker, const CmdPut& put)
 	{
-		if (!picker.onCells || !pickerOf(picker).picked.empty()) { return false; }
-		const int column = whole(place(picker).column);
+		if (!picker.onCells || !game.pickerOf(picker).picked.empty()) { return false; }
+		const int column = whole(game.place(picker).column);
 		// The first piece of the class that may go there.
 		Object* kind = nullptr;
 		int row = 0;
@@ -1131,14 +1132,14 @@ namespace xge
 		std::vector<Object*> trapped;
 		for (Object* each : putTemplates(put.objClass))
 		{
-			row = whole(place(picker).row);
+			row = whole(game.place(picker).row);
 			// Falling: wherever the picker is in its column, to the lowest free cell.
 			if (const Object::MoveSet* set = moveSetOf(*each); set && set->fall)
 			{
 				row = 0;
-				for (int at = mapOf(*each).rows; at >= 1 && row == 0; --at)
+				for (int at = game.mapOf(*each).rows; at >= 1 && row == 0; --at)
 				{
-					if (!cellHolder(mapOf(*each).name, column, at, {})) { row = at; }
+					if (!cellHolder(game.mapOf(*each).name, column, at, {})) { row = at; }
 				}
 				if (row == 0) { continue; }
 			}
@@ -1158,19 +1159,19 @@ namespace xge
 		const Name closeClass = kindSet ? kindSet->closeClass : Name();
 		const Name closeObject = kindSet ? kindSet->closeObject : Name();
 		const Name name = kind->name;
-		const Name map = mapOf(*kind).name;
-		const int columns = mapOf(*kind).columns;
-		const int rows = mapOf(*kind).rows;
-		if (Object* under = cellHolder(map, column, row, {})) { despawn(*under); }
+		const Name map = game.mapOf(*kind).name;
+		const int columns = game.mapOf(*kind).columns;
+		const int rows = game.mapOf(*kind).rows;
+		if (Object* under = cellHolder(map, column, row, {})) { game.despawn(*under); }
 		std::vector<std::pair<int, int>> cells{ { column, row } };
 		for (Object* each : trapped)
 		{
-			cells.emplace_back(whole(place(*each).column), whole(place(*each).row));
-			despawn(*each);
+			cells.emplace_back(whole(game.place(*each).column), whole(game.place(*each).row));
+			game.despawn(*each);
 		}
 		for (const auto& [c, r] : cells)
 		{
-			if (Object* made = spawn(name)) { putInCell(*made, c, r); }
+			if (Object* made = game.spawn(name)) { putInCell(*made, c, r); }
 		}
 
 		// <close> in its moves: each piece of that class beside it now walled in, no place
@@ -1201,15 +1202,15 @@ namespace xge
 				Object* box = onMap(c, r) ? cellHolder(map, c, r, {}) : nullptr;
 				if (!box || box->objClass != closeClass) { continue; }
 				if (!put_(c + 1, r) || !put_(c - 1, r) || !put_(c, r + 1) || !put_(c, r - 1)) { continue; }
-				despawn(*box);
-				if (Object* made = spawn(closeObject)) { putInCell(*made, c, r); }
+				game.despawn(*box);
+				if (Object* made = game.spawn(closeObject)) { putInCell(*made, c, r); }
 				closed = true;
 			}
 		}
-		pickerFor(picker).fromColumn = column;
-		pickerFor(picker).fromRow = row;
-		pickerFor(picker).toColumn = column;
-		pickerFor(picker).toRow = row;
+		game.pickerFor(picker).fromColumn = column;
+		game.pickerFor(picker).fromRow = row;
+		game.pickerFor(picker).toColumn = column;
+		game.pickerFor(picker).toRow = row;
 		// The map's checks asked about what it has now (a line made).
 		askChecks(map);
 		countMoves();
@@ -1218,78 +1219,78 @@ namespace xge
 		return !closed;
 	}
 
-	float Game::countClass(Name objClass)
+	float CellMaps::countClass(Name objClass)
 	{
 		float count = 0.0f;
-		for (Object& object : objects)
+		for (Object& object : game.getCurrentObjects())
 		{
-			if (object.objClass == objClass && object.exists && isShown(object)) { count += 1.0f; }
+			if (object.objClass == objClass && object.exists && game.isShown(object)) { count += 1.0f; }
 		}
-		for (const Object& object : spawned)
+		for (const Object& object : game.spawning())
 		{
 			if (object.objClass == objClass && object.exists) { count += 1.0f; }
 		}
 		return count;
 	}
 
-	bool Game::pickPiece(Object& picker, Name objClass, bool only)
+	bool CellMaps::pickPiece(Object& picker, Name objClass, bool only)
 	{
-		if (pickerOf(picker).inChain || !picker.onCells) { return false; }
+		if (game.pickerOf(picker).inChain || !picker.onCells) { return false; }
 		if (only)
 		{
 			Object* one = nullptr;
-			for (Object& piece : objects)
+			for (Object& piece : game.getCurrentObjects())
 			{
-				if (pieceMoves(piece).sets.empty() || piece.objClass != objClass || !piece.onCells || !isShown(piece) || legalMoves(piece, false).empty()) { continue; }
+				if (game.pieceMoves(piece).sets.empty() || piece.objClass != objClass || !piece.onCells || !game.isShown(piece) || legalMoves(piece, false).empty()) { continue; }
 				if (one) { return false; }
 				one = &piece;
 			}
-			if (!one || pickerOf(picker).picked == one->name) { return false; }
-			pickerFor(picker).picked = one->name;
+			if (!one || game.pickerOf(picker).picked == one->name) { return false; }
+			game.pickerFor(picker).picked = one->name;
 			return true;
 		}
-		const int column = whole(place(picker).column);
-		const int row = whole(place(picker).row);
-		for (Object& piece : objects)
+		const int column = whole(game.place(picker).column);
+		const int row = whole(game.place(picker).row);
+		for (Object& piece : game.getCurrentObjects())
 		{
-			if (&piece == &picker || pieceMoves(piece).sets.empty() || piece.objClass != objClass || !piece.onCells || !isShown(piece)
-				|| whole(place(piece).column) != column || whole(place(piece).row) != row)
+			if (&piece == &picker || game.pieceMoves(piece).sets.empty() || piece.objClass != objClass || !piece.onCells || !game.isShown(piece)
+				|| whole(game.place(piece).column) != column || whole(game.place(piece).row) != row)
 			{
 				continue;
 			}
 			if (legalMoves(piece, false).empty()) { return false; }
-			pickerFor(picker).picked = piece.name;
+			game.pickerFor(picker).picked = piece.name;
 			return true;
 		}
 		return false;
 	}
 
-	bool Game::placePiece(Object& picker)
+	bool CellMaps::placePiece(Object& picker)
 	{
-		if (pickerOf(picker).picked.empty() || !picker.onCells) { return false; }
-		Object* piece = findSpawning(pickerOf(picker).picked);
-		if (!piece || !piece->exists || !isShown(*piece))
+		if (game.pickerOf(picker).picked.empty() || !picker.onCells) { return false; }
+		Object* piece = game.findSpawning(game.pickerOf(picker).picked);
+		if (!piece || !piece->exists || !game.isShown(*piece))
 		{
-			pickerFor(picker).picked.clear();
-			pickerFor(picker).inChain = false;
+			game.pickerFor(picker).picked.clear();
+			game.pickerFor(picker).inChain = false;
 			return false;
 		}
-		const int column = whole(place(picker).column);
-		const int row = whole(place(picker).row);
-		const std::vector<PieceMoveTo> moves = legalMoves(*piece, pickerOf(picker).inChain);
+		const int column = whole(game.place(picker).column);
+		const int row = whole(game.place(picker).row);
+		const std::vector<PieceMoveTo> moves = legalMoves(*piece, game.pickerOf(picker).inChain);
 		const auto move = std::find_if(moves.begin(), moves.end(), [&](const PieceMoveTo& each) { return each.column == column && each.row == row; });
 		if (move == moves.end()) { return false; }
 
 		const Object::MoveSet* set = moveSetOf(*piece);
 		const bool jumped = move->taken != nullptr;
-		if (!pickerOf(picker).inChain)
+		if (!game.pickerOf(picker).inChain)
 		{
-			pickerFor(picker).fromColumn = whole(place(*piece).column);
-			pickerFor(picker).fromRow = whole(place(*piece).row);
+			game.pickerFor(picker).fromColumn = whole(game.place(*piece).column);
+			game.pickerFor(picker).fromRow = whole(game.place(*piece).row);
 		}
-		pickerFor(picker).toColumn = column;
-		pickerFor(picker).toRow = row;
-		if (move->taken) { despawn(*move->taken); }
+		game.pickerFor(picker).toColumn = column;
+		game.pickerFor(picker).toRow = row;
+		if (move->taken) { game.despawn(*move->taken); }
 		putInCell(*piece, column, row);
 
 		// Promoted on reaching its row: that ends its move.
@@ -1303,32 +1304,32 @@ namespace xge
 		// A jump that can be followed by another must be: the turn goes on.
 		if (jumped && !promoted && !movesOf(*piece, true).empty())
 		{
-			pickerFor(picker).inChain = true;
+			game.pickerFor(picker).inChain = true;
 			countMoves();
 			return false;
 		}
-		pickerFor(picker).picked.clear();
-		pickerFor(picker).inChain = false;
+		game.pickerFor(picker).picked.clear();
+		game.pickerFor(picker).inChain = false;
 		countMoves();
 		return true;
 	}
 
-	bool Game::dropPiece(Object& picker)
+	bool CellMaps::dropPiece(Object& picker)
 	{
-		if (pickerOf(picker).picked.empty() || pickerOf(picker).inChain) { return false; }
-		pickerFor(picker).picked.clear();
+		if (game.pickerOf(picker).picked.empty() || game.pickerOf(picker).inChain) { return false; }
+		game.pickerFor(picker).picked.clear();
 		return true;
 	}
 
 	// The cells holding a piece in play of one of these classes.
-	std::vector<std::pair<int, int>> Game::ontoCells(const std::vector<Name>& onto)
+	std::vector<std::pair<int, int>> CellMaps::ontoCells(const std::vector<Name>& onto)
 	{
 		std::vector<std::pair<int, int>> cells;
-		for (const Object& object : objects)
+		for (const Object& object : game.getCurrentObjects())
 		{
-			if (!object.onCells || !isShown(object)) { continue; }
+			if (!object.onCells || !game.isShown(object)) { continue; }
 			if (std::find(onto.begin(), onto.end(), object.objClass) == onto.end()) { continue; }
-			cells.emplace_back(whole(place(object).column), whole(place(object).row));
+			cells.emplace_back(whole(game.place(object).column), whole(game.place(object).row));
 		}
 		return cells;
 	}
@@ -1338,13 +1339,13 @@ namespace xge
 	// row ahead that has one, the cell in it nearest the column kept (the
 	// one the first of these hops started from, as a text cursor keeps
 	// its column). Refused when there is none that way.
-	bool Game::hopOnto(Object& mover, Direction direction, const std::vector<Name>& onto)
+	bool CellMaps::hopOnto(Object& mover, Direction direction, const std::vector<Name>& onto)
 	{
-		const int column = whole(place(mover).column);
-		const int row = whole(place(mover).row);
+		const int column = whole(game.place(mover).column);
+		const int row = whole(game.place(mover).row);
 		const bool upDown = direction == Direction::Up || direction == Direction::Down;
 		const int ahead = direction == Direction::Down || direction == Direction::Right ? 1 : -1;
-		if (!upDown || pickerFor(mover).keptAt != std::pair<int, int>{ column, row }) { pickerFor(mover).keptColumn = column; }
+		if (!upDown || game.pickerFor(mover).keptAt != std::pair<int, int>{ column, row }) { game.pickerFor(mover).keptColumn = column; }
 
 		std::optional<std::pair<int, int>> best;
 		int bestAlong = 0;
@@ -1353,7 +1354,7 @@ namespace xge
 		{
 			if (!upDown && r != row) { continue; }
 			const int along = upDown ? (r - row) * ahead : (c - column) * ahead;
-			const int across = upDown ? std::abs(c - pickerOf(mover).keptColumn) : 0;
+			const int across = upDown ? std::abs(c - game.pickerOf(mover).keptColumn) : 0;
 			if (along <= 0) { continue; }
 			if (!best || along < bestAlong || (along == bestAlong && (across < bestAcross || (across == bestAcross && c < best->first))))
 			{
@@ -1365,29 +1366,29 @@ namespace xge
 		if (!best) { return false; }
 		putInCell(mover, best->first, best->second);
 		mover.facing = direction;
-		pickerFor(mover).keptAt = upDown ? *best : std::pair<int, int>{};
+		game.pickerFor(mover).keptAt = upDown ? *best : std::pair<int, int>{};
 		return true;
 	}
 
-	void Game::trackCells(Object& object, bool horizontal, float at, const std::vector<Name>& onto)
+	void CellMaps::trackCells(Object& object, bool horizontal, float at, const std::vector<Name>& onto)
 	{
 		// <onto>: the cell nearest where it points, of those holding such a
 		// piece, while it points over the map.
 		if (!onto.empty())
 		{
-			(horizontal ? pickerFor(object).pointer.x : pickerFor(object).pointer.y) = at;
+			(horizontal ? game.pickerFor(object).pointer.x : game.pickerFor(object).pointer.y) = at;
 			const auto middle = [&](int column, int row)
 			{
-				return Vector2f{ mapOf(object).origin.x + (static_cast<float>(column) - 0.5f) * mapOf(object).tile.x,
-					mapOf(object).origin.y + (static_cast<float>(row) - 0.5f) * mapOf(object).tile.y };
+				return Vector2f{ game.mapOf(object).origin.x + (static_cast<float>(column) - 0.5f) * game.mapOf(object).tile.x,
+					game.mapOf(object).origin.y + (static_cast<float>(row) - 0.5f) * game.mapOf(object).tile.y };
 			};
-			Vector2f point = pickerOf(object).pointer;
-			const Vector2f here = middle(whole(place(object).column), whole(place(object).row));
+			Vector2f point = game.pickerOf(object).pointer;
+			const Vector2f here = middle(whole(game.place(object).column), whole(game.place(object).row));
 			if (point.x < 0.0f) { point.x = here.x; }
 			if (point.y < 0.0f) { point.y = here.y; }
-			if (point.x < mapOf(object).origin.x || point.y < mapOf(object).origin.y
-				|| point.x > mapOf(object).origin.x + mapOf(object).tile.x * static_cast<float>(mapOf(object).columns)
-				|| point.y > mapOf(object).origin.y + mapOf(object).tile.y * static_cast<float>(mapOf(object).rows)) { return; }
+			if (point.x < game.mapOf(object).origin.x || point.y < game.mapOf(object).origin.y
+				|| point.x > game.mapOf(object).origin.x + game.mapOf(object).tile.x * static_cast<float>(game.mapOf(object).columns)
+				|| point.y > game.mapOf(object).origin.y + game.mapOf(object).tile.y * static_cast<float>(game.mapOf(object).rows)) { return; }
 			std::optional<std::pair<int, int>> best;
 			float bestDistance = 0.0f;
 			for (const auto& [c, r] : ontoCells(onto))
@@ -1400,26 +1401,26 @@ namespace xge
 					bestDistance = distance;
 				}
 			}
-			if (best && (best->first != whole(place(object).column) || best->second != whole(place(object).row))) { putInCell(object, best->first, best->second); }
+			if (best && (best->first != whole(game.place(object).column) || best->second != whole(game.place(object).row))) { putInCell(object, best->first, best->second); }
 			return;
 		}
-		const float from = horizontal ? mapOf(object).origin.x : mapOf(object).origin.y;
-		const float tile = horizontal ? mapOf(object).tile.x : mapOf(object).tile.y;
+		const float from = horizontal ? game.mapOf(object).origin.x : game.mapOf(object).origin.y;
+		const float tile = horizontal ? game.mapOf(object).tile.x : game.mapOf(object).tile.y;
 		if (tile <= 0.0f || at < from) { return; }
 		const int cell = static_cast<int>((at - from) / tile) + 1;
-		if (cell > (horizontal ? mapOf(object).columns : mapOf(object).rows)) { return; }
-		const int column = horizontal ? cell : whole(place(object).column);
-		const int row = horizontal ? whole(place(object).row) : cell;
-		if (column != whole(place(object).column) || row != whole(place(object).row)) { putInCell(object, column, row); }
+		if (cell > (horizontal ? game.mapOf(object).columns : game.mapOf(object).rows)) { return; }
+		const int column = horizontal ? cell : whole(game.place(object).column);
+		const int row = horizontal ? whole(game.place(object).row) : cell;
+		if (column != whole(game.place(object).column) || row != whole(game.place(object).row)) { putInCell(object, column, row); }
 	}
 
-	void Game::showMarks()
+	void CellMaps::showMarks()
 	{
-		for (std::size_t i = 0; i < objects.size(); ++i)
+		for (std::size_t i = 0; i < game.getCurrentObjects().size(); ++i)
 		{
 			// Not in play now (a pause over it): its marks stay as they are.
-			if (pickerOf(objects[i]).marks.sets.empty() || !isShown(objects[i])) { continue; }
-			Object& picker = objects[i];
+			if (game.pickerOf(game.getCurrentObjects()[i]).marks.sets.empty() || !game.isShown(game.getCurrentObjects()[i])) { continue; }
+			Object& picker = game.getCurrentObjects()[i];
 
 			// What is marked now: the set for its look, and the one for any.
 			std::vector<Object::Marked> want;
@@ -1428,35 +1429,35 @@ namespace xge
 				{
 					if (variable.empty()) { return true; }
 					VariableName name = VariableName::of(variable);
-					name.owner = fullName(name.owner);
-					const float* value = variableOf(name);
+					name.owner = game.fullName(name.owner);
+					const float* value = game.variableOf(name);
 					return value && *value != 0.0f;
 				};
-				Object* held = pickerOf(picker).picked.empty() ? nullptr : findSpawning(pickerOf(picker).picked);
-				for (const Object::MarkSet& set : pickerOf(picker).marks.sets)
+				Object* held = game.pickerOf(picker).picked.empty() ? nullptr : game.findSpawning(game.pickerOf(picker).picked);
+				for (const Object::MarkSet& set : game.pickerOf(picker).marks.sets)
 				{
 					if (set.look && *set.look != picker.looks.shown) { continue; }
 					for (const Object::Mark& mark : set.marks)
 					{
 						if (!on(mark.variable)) { continue; }
 						// No class=: the pieces of the player on its turn.
-						const Name markClass = mark.objClass.empty() ? turnClass() : mark.objClass;
+						const Name markClass = mark.objClass.empty() ? game.turnClass() : mark.objClass;
 						switch (mark.kind)
 						{
 						case Object::Mark::Kind::Held:
-							if (held) { want.push_back({ mark.object, whole(place(*held).column), whole(place(*held).row) }); }
+							if (held) { want.push_back({ mark.object, whole(game.place(*held).column), whole(game.place(*held).row) }); }
 							break;
 						case Object::Mark::Kind::Moves:
 							if (held)
 							{
-								for (const PieceMoveTo& move : legalMoves(*held, pickerOf(picker).inChain)) { want.push_back({ mark.object, move.column, move.row }); }
+								for (const PieceMoveTo& move : legalMoves(*held, game.pickerOf(picker).inChain)) { want.push_back({ mark.object, move.column, move.row }); }
 							}
 							break;
 						case Object::Mark::Kind::Movable:
-							for (Object& piece : objects)
+							for (Object& piece : game.getCurrentObjects())
 							{
-								if (pieceMoves(piece).sets.empty() || piece.objClass != markClass || !piece.onCells || !isShown(piece) || legalMoves(piece, false).empty()) { continue; }
-								want.push_back({ mark.object, whole(place(piece).column), whole(place(piece).row) });
+								if (game.pieceMoves(piece).sets.empty() || piece.objClass != markClass || !piece.onCells || !game.isShown(piece) || legalMoves(piece, false).empty()) { continue; }
+								want.push_back({ mark.object, whole(game.place(piece).column), whole(game.place(piece).row) });
 							}
 							break;
 						case Object::Mark::Kind::Put:
@@ -1467,13 +1468,13 @@ namespace xge
 							}
 							break;
 						case Object::Mark::Kind::Last:
-							if (pickerOf(picker).toColumn > 0)
+							if (game.pickerOf(picker).toColumn > 0)
 							{
-								want.push_back({ mark.object, pickerOf(picker).fromColumn, pickerOf(picker).fromRow });
+								want.push_back({ mark.object, game.pickerOf(picker).fromColumn, game.pickerOf(picker).fromRow });
 								// A piece put: one cell.
-								if (pickerOf(picker).toColumn != pickerOf(picker).fromColumn || pickerOf(picker).toRow != pickerOf(picker).fromRow)
+								if (game.pickerOf(picker).toColumn != game.pickerOf(picker).fromColumn || game.pickerOf(picker).toRow != game.pickerOf(picker).fromRow)
 								{
-									want.push_back({ mark.object, pickerOf(picker).toColumn, pickerOf(picker).toRow });
+									want.push_back({ mark.object, game.pickerOf(picker).toColumn, game.pickerOf(picker).toRow });
 								}
 							}
 							break;
@@ -1481,40 +1482,40 @@ namespace xge
 					}
 				}
 			}
-			if (want == pickerOf(objects[i]).marks.marked) { continue; }
+			if (want == game.pickerOf(game.getCurrentObjects()[i]).marks.marked) { continue; }
 
 			// Made again: the old copies out, a new one in each cell marked.
-			std::vector<Name> old = std::move(pickerFor(objects[i]).marks.copies);
-			pickerFor(objects[i]).marks.copies.clear();
-			pickerFor(objects[i]).marks.marked = want;
-			for (const Name copy : old) { despawn(copy); }
+			std::vector<Name> old = std::move(game.pickerFor(game.getCurrentObjects()[i]).marks.copies);
+			game.pickerFor(game.getCurrentObjects()[i]).marks.copies.clear();
+			game.pickerFor(game.getCurrentObjects()[i]).marks.marked = want;
+			for (const Name copy : old) { game.despawn(copy); }
 			std::vector<Name> made;
 			for (const Object::Marked& mark : want)
 			{
-				Object* copy = spawn(mark.object);
+				Object* copy = game.spawn(mark.object);
 				if (!copy || !copy->onCells) { continue; }
 				putInCell(*copy, mark.column, mark.row);
 				made.push_back(copy->name);
 			}
-			pickerFor(objects[i]).marks.copies = std::move(made);
+			game.pickerFor(game.getCurrentObjects()[i]).marks.copies = std::move(made);
 		}
 	}
 
-	bool Game::shoveCells(Object& piece, Edge way)
+	bool CellMaps::shoveCells(Object& piece, Edge way)
 	{
 		if (!piece.onCells || !piece.exists) { return false; }
 		// A shape's cell is shoved with its shape.
 		Object* shoved = &piece;
-		if (!cellPart(piece).shapeOwner.empty())
+		if (!game.cellPart(piece).shapeOwner.empty())
 		{
-			if (Object* owner = find(cellPart(piece).shapeOwner)) { shoved = owner; }
+			if (Object* owner = game.find(game.cellPart(piece).shapeOwner)) { shoved = owner; }
 		}
 		const int across = way == Edge::Left ? -1 : way == Edge::Right ? 1 : 0;
 		const int down = way == Edge::Top ? -1 : way == Edge::Bottom ? 1 : 0;
 		return stepCells(*shoved, across, down);
 	}
 
-	bool Game::mergeCells(Object& mover, Object& other, Name variable)
+	bool CellMaps::mergeCells(Object& mover, Object& other, Name variable)
 	{
 		if (!mover.exists || !other.exists || !mover.onCells || !other.onCells) { return false; }
 		if (std::find(merged.begin(), merged.end(), &mover) != merged.end() || std::find(merged.begin(), merged.end(), &other) != merged.end()) { return false; }
@@ -1523,24 +1524,24 @@ namespace xge
 		if (mine == mover.variable.end() || theirs == other.variable.end() || mine->second != theirs->second) { return false; }
 
 		const float sum = mine->second + theirs->second;
-		despawn(other);
-		setVariable(mover.name, variable, sum);
+		game.despawn(other);
+		game.setVariable(mover.name, variable, sum);
 		merged.push_back(&mover);
 		return true;
 	}
 
-	bool Game::slideClass(Name objClass, Direction way)
+	bool CellMaps::slideClass(Name objClass, Direction way)
 	{
 		std::vector<Object*> pieces;
-		for (Object& object : objects)
+		for (Object& object : game.getCurrentObjects())
 		{
-			if (object.objClass == objClass && object.exists && object.onCells && !isShape(object) && !awayFromHome(object) && isShown(object)) { pieces.push_back(&object); }
+			if (object.objClass == objClass && object.exists && object.onCells && !game.isShape(object) && !game.awayFromHome(object) && game.isShown(object)) { pieces.push_back(&object); }
 		}
 		// The one nearest that way first, so the rest slide up behind it.
 		const auto key = [this, way](const Object* piece)
 		{
-			const int column = whole(place(*piece).column);
-			const int row = whole(place(*piece).row);
+			const int column = whole(game.place(*piece).column);
+			const int row = whole(game.place(*piece).row);
 			switch (way)
 			{
 			case Direction::Left: return column * 1000 + row;
@@ -1556,16 +1557,16 @@ namespace xge
 		for (Object* piece : pieces)
 		{
 			if (!piece->exists) { continue; }
-			const int column = whole(place(*piece).column);
-			const int row = whole(place(*piece).row);
+			const int column = whole(game.place(*piece).column);
+			const int row = whole(game.place(*piece).row);
 			slideCells(*piece, way);
-			moved = moved || !piece->exists || whole(place(*piece).column) != column || whole(place(*piece).row) != row;
+			moved = moved || !piece->exists || whole(game.place(*piece).column) != column || whole(game.place(*piece).row) != row;
 		}
 		merged.clear();
 		return moved;
 	}
 
-	std::vector<Object*> Game::piecesAbout(const Object& piece, Name objClass, const CellPlace& place)
+	std::vector<Object*> CellMaps::piecesAbout(const Object& piece, Name objClass, const CellPlace& place)
 	{
 		std::vector<Object*> found;
 		if (!piece.onCells || !place.any()) { return found; }
@@ -1588,8 +1589,8 @@ namespace xge
 
 		const auto sameLayout = [&](const Object& other)
 		{
-			return std::abs(mapOf(other).origin.x - mapOf(piece).origin.x) < 0.5f && std::abs(mapOf(other).origin.y - mapOf(piece).origin.y) < 0.5f
-				&& std::abs(mapOf(other).tile.x - mapOf(piece).tile.x) < 0.5f && std::abs(mapOf(other).tile.y - mapOf(piece).tile.y) < 0.5f;
+			return std::abs(game.mapOf(other).origin.x - game.mapOf(piece).origin.x) < 0.5f && std::abs(game.mapOf(other).origin.y - game.mapOf(piece).origin.y) < 0.5f
+				&& std::abs(game.mapOf(other).tile.x - game.mapOf(piece).tile.x) < 0.5f && std::abs(game.mapOf(other).tile.y - game.mapOf(piece).tile.y) < 0.5f;
 		};
 		const auto alike = [&](const Object& other)
 		{
@@ -1598,20 +1599,20 @@ namespace xge
 			const auto theirs = other.variable.find(place.alike);
 			return mine != piece.variable.end() && theirs != other.variable.end() && mine->second == theirs->second;
 		};
-		const int column = whole(this->place(piece).column);
-		const int row = whole(this->place(piece).row);
+		const int column = whole(game.place(piece).column);
+		const int row = whole(game.place(piece).row);
 		const auto look = [&](Object& other, bool joined, int wantColumn, int wantRow)
 		{
-			if (&other == &piece || !other.exists || !other.onCells || isShape(other) || awayFromHome(other)) { return; }
-			if (!joined && !isShown(other)) { return; }
+			if (&other == &piece || !other.exists || !other.onCells || game.isShape(other) || game.awayFromHome(other)) { return; }
+			if (!joined && !game.isShown(other)) { return; }
 			if (!objClass.empty() && other.objClass != objClass) { return; }
-			if (whole(this->place(other).column) != wantColumn || whole(this->place(other).row) != wantRow || !sameLayout(other) || !alike(other)) { return; }
+			if (whole(game.place(other).column) != wantColumn || whole(game.place(other).row) != wantRow || !sameLayout(other) || !alike(other)) { return; }
 			found.push_back(&other);
 		};
 		for (const auto& [across, down] : offsets)
 		{
-			for (Object& other : objects) { look(other, false, column + across, row + down); }
-			for (Object& other : spawned) { look(other, true, column + across, row + down); }
+			for (Object& other : game.getCurrentObjects()) { look(other, false, column + across, row + down); }
+			for (Object& other : game.spawning()) { look(other, true, column + across, row + down); }
 		}
 		return found;
 	}
@@ -1629,7 +1630,7 @@ namespace xge
 
 	void Game::pressBegins()
 	{
-		merged.clear();
+		cellMapping.merged.clear();
 		if (!keepsUndo) { return; }
 		undoneThisPress = false;
 		pressKept = keepAll();

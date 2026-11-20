@@ -218,7 +218,7 @@ namespace xge
 		settle();
 		playOneFrame(getCurrentObjects(), windowDesc, *this, seconds);
 		settle();
-		showJoins();
+		cellMapping.showJoins();
 		placeByResizedTexts();
 	}
 
@@ -767,11 +767,6 @@ namespace xge
 	const State& Game::getCurrentState(void) const
 	{
 		return currentState.top();
-	}
-
-	std::vector<Object>& Game::getCurrentObjects(void) noexcept
-	{
-		return objects;
 	}
 
 	void Game::setCurrentState(const int& index)

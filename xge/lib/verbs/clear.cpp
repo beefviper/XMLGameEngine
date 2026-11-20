@@ -16,7 +16,7 @@ namespace xge
 
 	static bool runClear(const CmdClear&, const Doer& doer)
 	{
-		if (doer.match) { doer.game().clearCells(*doer.match); }
+		if (doer.match) { doer.game().cellMaps().clearCells(*doer.match); }
 		return true;
 	}
 

@@ -22,7 +22,7 @@ namespace xge
 
 	static bool runMerge(const CmdMerge& merge, const Doer& doer)
 	{
-		return doer.self && doer.touch && doer.other && doer.game().mergeCells(*doer.self, *doer.other, merge.variable);
+		return doer.self && doer.touch && doer.other && doer.game().cellMaps().mergeCells(*doer.self, *doer.other, merge.variable);
 	}
 
 	static void printMerge(std::ostream& o, const CmdMerge& merge)

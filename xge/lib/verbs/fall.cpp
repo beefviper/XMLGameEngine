@@ -16,7 +16,7 @@ namespace xge
 
 	static bool runFall(const CmdFall& fall, const Doer& doer)
 	{
-		if (doer.match) { doer.game().fallCells(doer.match->map, fall.objClass); }
+		if (doer.match) { doer.game().cellMaps().fallCells(doer.match->map, fall.objClass); }
 		return true;
 	}
 

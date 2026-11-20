@@ -23,8 +23,8 @@ namespace xge
 	static bool runSlide(const CmdSlide& slide, const Doer& doer)
 	{
 		Game& game = doer.game();
-		if (!slide.objClass.empty()) { return game.slideClass(slide.objClass, slide.direction); }
-		if (doer.self && doer.self->onCells) { game.slideCells(*doer.self, slide.direction); }
+		if (!slide.objClass.empty()) { return game.cellMaps().slideClass(slide.objClass, slide.direction); }
+		if (doer.self && doer.self->onCells) { game.cellMaps().slideCells(*doer.self, slide.direction); }
 		return true;
 	}
 

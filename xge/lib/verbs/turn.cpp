@@ -36,7 +36,7 @@ namespace xge
 		if (!doer.self || !doer.action) { return true; }
 		Game& game = doer.game();
 		// A shape on a cell map: a quarter turn on the press.
-		if (game.isShape(*doer.self)) { return !doer.pressed || game.turnCells(*doer.self, turn.direction == Direction::Right); }
+		if (game.isShape(*doer.self)) { return !doer.pressed || game.cellMaps().turnCells(*doer.self, turn.direction == Direction::Right); }
 		holdTurn(game, *doer.self, turn.direction, doer.pressed ? turn.rate : 0.0f);
 		return true;
 	}

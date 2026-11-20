@@ -31,7 +31,7 @@ namespace xge
 		Game& game = doer.game();
 		CmdPut put = putCommand;
 		if (put.objClass.empty()) { put.objClass = game.turnClass(); }
-		return doer.self && !put.objClass.empty() && game.putPiece(*doer.self, put);
+		return doer.self && !put.objClass.empty() && game.cellMaps().putPiece(*doer.self, put);
 	}
 
 	static void printPut(std::ostream& o, const CmdPut& put)

@@ -95,7 +95,7 @@ namespace xge
 		// On a cell map: whole cells (one, with no distance), refused (and
 		// touching) when it cannot go.
 		if (game.isHand(object)) { return game.hopHand(object, hop.direction); }
-		if (object.onCells && !hop.onto.empty()) { return game.hopOnto(object, hop.direction, hop.onto); }
+		if (object.onCells && !hop.onto.empty()) { return game.cellMaps().hopOnto(object, hop.direction, hop.onto); }
 		if (object.onCells)
 		{
 			const auto cells = [](float pixels, float distance)
@@ -108,7 +108,7 @@ namespace xge
 			if (way.x == 0.0f && way.y == 0.0f) { way = stepToward(hop.direction, 1.0f); }
 			const int across = way.x == 0.0f ? 0 : cells(way.x, hop.distance);
 			const int down = way.y == 0.0f ? 0 : cells(way.y, hop.distance);
-			if (!game.stepCells(object, across, down)) { return false; }
+			if (!game.cellMaps().stepCells(object, across, down)) { return false; }
 			object.facing = hop.direction;
 			return true;
 		}

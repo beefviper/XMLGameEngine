@@ -69,7 +69,7 @@ namespace xge
 		// Members of a held class, holder to holder; else a piece, map to map.
 		if (send.held) { return game.sendHeld(send.from, send.into, send.count, send.all, send.sprite); }
 		const auto cell = [](const std::optional<float>& given) { return given ? std::optional<int>(static_cast<int>(std::lround(*given))) : std::nullopt; };
-		return game.sendCells(send.target, send.from, send.into, cell(send.column), cell(send.row));
+		return game.cellMaps().sendCells(send.target, send.from, send.into, cell(send.column), cell(send.row));
 	}
 
 	static void printSend(std::ostream& o, const CmdSend& send)

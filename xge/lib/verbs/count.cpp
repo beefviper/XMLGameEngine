@@ -26,8 +26,8 @@ namespace xge
 	static bool runCount(const CmdCount& count, const Doer& doer)
 	{
 		Game& game = doer.game();
-		if (!count.place.any()) { game.setNumber(count.target, game.countClass(count.objClass)); }
-		else if (doer.self) { game.setNumber(count.target, static_cast<float>(game.piecesAbout(*doer.self, count.objClass, count.place).size())); }
+		if (!count.place.any()) { game.setNumber(count.target, game.cellMaps().countClass(count.objClass)); }
+		else if (doer.self) { game.setNumber(count.target, static_cast<float>(game.cellMaps().piecesAbout(*doer.self, count.objClass, count.place).size())); }
 		return true;
 	}
 

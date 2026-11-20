@@ -102,7 +102,7 @@ namespace xge
 		const WindowDesc& window = game.getWindowDesc();
 		const float span = across ? window.width : window.height;
 		if (game.isHand(object)) { game.trackHand(object, across, fraction * span); }
-		else if (object.onCells) { game.trackCells(object, across, fraction * span, track.onto); }
+		else if (object.onCells) { game.cellMaps().trackCells(object, across, fraction * span, track.onto); }
 		else { trackWindow(object, across, fraction, span); }
 	}
 

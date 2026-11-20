@@ -16,7 +16,7 @@ namespace xge
 
 	static bool runCollapse(const CmdCollapse&, const Doer& doer)
 	{
-		if (doer.match) { doer.game().collapseCells(*doer.match); }
+		if (doer.match) { doer.game().cellMaps().collapseCells(*doer.match); }
 		return true;
 	}
 

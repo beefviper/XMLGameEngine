@@ -16,7 +16,7 @@ namespace xge
 
 	static bool runShove(const CmdShove&, const Doer& doer)
 	{
-		return doer.self && doer.touch && doer.other && doer.game().shoveCells(*doer.other, doer.touch->edge);
+		return doer.self && doer.touch && doer.other && doer.game().cellMaps().shoveCells(*doer.other, doer.touch->edge);
 	}
 
 	static void printShove(std::ostream& o, const CmdShove&)

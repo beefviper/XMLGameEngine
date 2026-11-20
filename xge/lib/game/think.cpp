@@ -798,7 +798,7 @@ namespace xge
 			if (object.objClass == think.objClass && !game.pieceMoves(object).sets.empty() && object.onCells && game.isShown(object)) { first = &object; break; }
 		}
 		// None on the board yet (pieces put): the one a put copies.
-		if (!first) { first = game.putTemplate(think.objClass); }
+		if (!first) { first = game.cellMaps().putTemplate(think.objClass); }
 		if (!first || game.pieceMoves(*first).sets.empty())
 		{
 			made->done = true;
@@ -827,12 +827,12 @@ namespace xge
 			const Object& object = game.getCurrentObjects()[i];
 			if (object.onCells && game.mapOf(object).name == game.mapOf(*first).name && !game.pieceMoves(object).sets.empty() && object.objClass != think.objClass) { other = object.objClass; }
 		}
-		board.kinds[0] = board.kindOf(game.putTemplate(think.objClass));
-		board.kinds[1] = other.empty() ? nullptr : board.kindOf(game.putTemplate(other));
+		board.kinds[0] = board.kindOf(game.cellMaps().putTemplate(think.objClass));
+		board.kinds[1] = other.empty() ? nullptr : board.kindOf(game.cellMaps().putTemplate(other));
 		for (int side = 0; side < 2; ++side)
 		{
 			if (side == 1 && other.empty()) { break; }
-			for (const Object* each : game.putTemplates(side == 0 ? think.objClass : other))
+			for (const Object* each : game.cellMaps().putTemplates(side == 0 ? think.objClass : other))
 			{
 				const PieceKind* kind = board.kindOf(each);
 				board.allKinds[side].push_back(kind);
@@ -853,7 +853,7 @@ namespace xge
 			}
 		}
 		// The map's checks, as its pieces written carry them (a copy may not).
-		const Object* written = game.putTemplate(think.objClass);
+		const Object* written = game.cellMaps().putTemplate(think.objClass);
 		if (!written) { written = first; }
 		for (const Object::CellCheck& check : game.cellPart(*written).checks)
 		{
@@ -1029,7 +1029,7 @@ namespace xge
 		{
 			const int across = column > atColumn ? 1 : column < atColumn ? -1 : 0;
 			const int down = atColumn != column ? 0 : (row > atRow ? 1 : -1);
-			game.putInCell(*picker, atColumn + across, atRow + down);
+			game.cellMaps().putInCell(*picker, atColumn + across, atRow + down);
 			return std::nullopt;
 		}
 		++next;

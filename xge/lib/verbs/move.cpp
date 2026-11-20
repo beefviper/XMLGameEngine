@@ -127,7 +127,7 @@ namespace xge
 		// In an action a move is held, like a key; anywhere else it is one step.
 		if (!doer.self) { return true; }
 		Game& game = doer.game();
-		if (doer.action && doer.self->onCells) { game.holdCellMove(*doer.self, move, doer.pressed); }
+		if (doer.action && doer.self->onCells) { game.cellMaps().holdCellMove(*doer.self, move, doer.pressed); }
 		else if (doer.action) { holdMove(*doer.self, game.driveFor(*doer.self), move.direction, move.step, doer.pressed); }
 		else { stepBy(game, *doer.self, move.direction, move.step); }
 		return true;

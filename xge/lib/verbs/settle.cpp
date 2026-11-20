@@ -16,7 +16,7 @@ namespace xge
 
 	static bool runSettle(const CmdSettle&, const Doer& doer)
 	{
-		if (doer.self) { doer.game().settle(*doer.self); }
+		if (doer.self) { doer.game().cellMaps().settle(*doer.self); }
 		return true;
 	}
 

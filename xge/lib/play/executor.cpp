@@ -170,7 +170,7 @@ namespace xge
 		if (aboutDepth == 0) { aboutReached.clear(); }
 		++aboutDepth;
 		lastTriggerRefused = false;
-		for (Object* piece : game.piecesAbout(self, trigger.objClass, trigger.place))
+		for (Object* piece : game.cellMaps().piecesAbout(self, trigger.objClass, trigger.place))
 		{
 			if (!trigger.from.empty() && piece->lookName() != trigger.from) { continue; }
 			if (std::find(aboutReached.begin(), aboutReached.end(), piece->name) != aboutReached.end()) { continue; }

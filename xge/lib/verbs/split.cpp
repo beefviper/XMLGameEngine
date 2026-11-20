@@ -16,7 +16,7 @@ namespace xge
 
 	static bool runSplit(const CmdSplit&, const Doer& doer)
 	{
-		if (doer.self) { doer.game().splitChain(*doer.self); }
+		if (doer.self) { doer.game().cellMaps().splitChain(*doer.self); }
 		return true;
 	}
 
