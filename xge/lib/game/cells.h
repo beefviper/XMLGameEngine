@@ -173,8 +173,34 @@ namespace xge
 		// The pieces that have merged in this slide (or this press).
 		std::vector<const Object*> merged;
 
+		// <undo />: back as before the last press that moved a piece on
+		// cells; false when there is none left. A press begins and ends
+		// (Engine::runAsPress) so that each one that moves a piece is kept.
+		// Kept only in a game with an <undo /> (keepUndo, at load), and
+		// forgotten on a new level.
+		bool undo();
+		void pressBegins();
+		void pressEnds();
+		void keepUndo() noexcept { keepsUndo = true; }
+		void forgetUndo() noexcept { undoSteps.clear(); }
+
 	private:
 		Game& game;
+		// How every object was before each press that moved a piece on
+		// cells, the last last; the one taken as this press began; whether
+		// the game has an <undo /> at all, and this press undid.
+		struct Kept
+		{
+			Name name;
+			Moment moment;
+			Object::Cells::Place place;
+			std::size_t look{};
+		};
+		std::vector<std::vector<Kept>> undoSteps;
+		std::vector<Kept> pressKept;
+		bool keepsUndo = false;
+		bool undoneThisPress = false;
+		std::vector<Kept> keepAll() const;
 		// While nothing moves (counting the moves, laying out the marks):
 		// who holds each cell, found once per map and looked up after
 		// (cellHolder with no mover), instead of looking at every object

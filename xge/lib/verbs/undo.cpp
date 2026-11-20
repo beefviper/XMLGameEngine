@@ -16,7 +16,7 @@ namespace xge
 
 	static bool runUndo(const CmdUndo&, const Doer& doer)
 	{
-		return doer.game().undo();
+		return doer.game().cellMaps().undo();
 	}
 
 	static void printUndo(std::ostream& o, const CmdUndo&)

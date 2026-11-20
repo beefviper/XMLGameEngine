@@ -91,7 +91,7 @@ namespace xge
 			{
 				for (const auto& [key, commands] : *keys)
 				{
-					for (const Command& command : commands) { keepsUndo = keepsUndo || std::holds_alternative<CmdUndo>(shapeOf(command)); }
+					for (const Command& command : commands) { if (std::holds_alternative<CmdUndo>(shapeOf(command))) { cellMapping.keepUndo(); } }
 				}
 			}
 		}
@@ -1933,7 +1933,7 @@ namespace xge
 		const Name scene = command.way.empty() ? command.scene : wayLeadsTo(command.way);
 		if (!scene.empty()) { enterScene(scene); }
 		// A new level: nothing to undo into the last.
-		undoSteps.clear();
+		cellMapping.forgetUndo();
 	}
 
 	void Game::reset(const CmdResetScene& command)

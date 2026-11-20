@@ -554,12 +554,11 @@ namespace xge
 		// A <condition> in an action: whether its test holds now.
 		bool testHolds(const Condition& condition, const Object* self, const Object* other) { return holdsFor(condition, self, other); }
 
-		// <undo />: back as before the last press that moved a piece on
-		// cells; false when there is none left. A press begins and ends
-		// (Engine::runAsPress) so that each one that moves a piece is kept.
-		bool undo();
-		void pressBegins();
-		void pressEnds();
+		// The copy of an object's variables that texts read (load/calc), made
+		// what the object holds: after a reset puts them back.
+		void shareVariables(const Object& object);
+		// What is in play changed: what runs in the state is looked at again.
+		void stageChanged(void) noexcept { ++stage; }
 
 		// Joins the objects spawned to the game's, and takes out the copies
 		// despawned: what updateObjects does before and after a frame. A
@@ -590,24 +589,9 @@ namespace xge
 		const std::map<std::string, Path>& getPaths(void) const noexcept;
 
 	private:
-		// <undo />: how every object was before each press that moved a
-		// piece on cells, the last last; the one taken as this press began;
-		// whether the game has an <undo /> at all, and this press undid.
-		struct Kept
-		{
-			Name name;
-			Moment moment;
-			Object::Cells::Place place;
-			std::size_t look{};
-		};
-		std::vector<std::vector<Kept>> undoSteps;
-		std::vector<Kept> pressKept;
-		bool keepsUndo = false;
 		// A text's words changed its size since the positions made from text
 		// sizes were last worked out (resolveSizeDependentPositions).
 		bool textsResized = false;
-		bool undoneThisPress = false;
-		std::vector<Kept> keepAll() const;
 		void cellMoves(float seconds) override;
 		Thinker thinker;
 		CellMaps cellMapping{ *this };
@@ -640,9 +624,6 @@ namespace xge
 		std::size_t liveLinkedAt = 0;
 		std::set<std::string> liveWarned;
 
-		// The copy of an object's variables that texts read (load/calc), made
-		// what the object holds: after a reset puts them back.
-		void shareVariables(const Object& object);
 		// Where expressions read that object's variable (player.score), found
 		// by its text once; null when none reads it.
 		float* expressionSlot(Name owner, Name variable);
@@ -680,7 +661,6 @@ namespace xge
 		std::vector<char> runsInTop;
 		std::vector<unsigned long> runsInTopStage;
 		unsigned long stage = 1;
-		void stageChanged(void) noexcept { ++stage; }
 
 		// How many objects the file wrote: these keep their places in
 		// `objects` for the whole game, and the copies spawned come after.

@@ -1617,26 +1617,26 @@ namespace xge
 		return found;
 	}
 
-	std::vector<Game::Kept> Game::keepAll() const
+	std::vector<CellMaps::Kept> CellMaps::keepAll() const
 	{
 		std::vector<Kept> kept;
-		kept.reserve(objects.size());
-		for (const Object& object : objects)
+		kept.reserve(game.getCurrentObjects().size());
+		for (const Object& object : game.getCurrentObjects())
 		{
-			kept.push_back({ object.name, static_cast<const Moment&>(object), place(object), object.looks.shown });
+			kept.push_back({ object.name, static_cast<const Moment&>(object), game.place(object), object.looks.shown });
 		}
 		return kept;
 	}
 
-	void Game::pressBegins()
+	void CellMaps::pressBegins()
 	{
-		cellMapping.merged.clear();
+		merged.clear();
 		if (!keepsUndo) { return; }
 		undoneThisPress = false;
 		pressKept = keepAll();
 	}
 
-	void Game::pressEnds()
+	void CellMaps::pressEnds()
 	{
 		if (!keepsUndo || pressKept.empty()) { return; }
 		std::vector<Kept> before = std::move(pressKept);
@@ -1646,46 +1646,46 @@ namespace xge
 		// Kept only when a piece on cells moved, came or went.
 		bool changed = false;
 		std::size_t at = 0;
-		for (const Object& object : objects)
+		for (const Object& object : game.getCurrentObjects())
 		{
 			const Kept* was = at < before.size() && before[at].name == object.name ? &before[at] : nullptr;
 			++at;
 			if (!object.onCells) { continue; }
-			if (!was || was->moment.exists != object.exists || was->place.column != place(object).column || was->place.row != place(object).row)
+			if (!was || was->moment.exists != object.exists || was->place.column != game.place(object).column || was->place.row != game.place(object).row)
 			{
 				changed = true;
 				break;
 			}
 		}
-		changed = changed || before.size() != objects.size() || !spawned.empty();
+		changed = changed || before.size() != game.getCurrentObjects().size() || !game.spawning().empty();
 		if (changed) { undoSteps.push_back(std::move(before)); }
 	}
 
-	bool Game::undo()
+	bool CellMaps::undo()
 	{
 		if (undoSteps.empty()) { return false; }
 		std::vector<Kept> back = std::move(undoSteps.back());
 		undoSteps.pop_back();
 		undoneThisPress = true;
 
-		for (Object& made : spawned) { made.exists = false; }
-		for (Object& object : objects)
+		for (Object& made : game.spawning()) { made.exists = false; }
+		for (Object& object : game.getCurrentObjects())
 		{
 			const auto was = std::find_if(back.begin(), back.end(), [&](const Kept& kept) { return kept.name == object.name; });
 			if (was == back.end())
 			{
 				// Made since: gone again.
-				if (object.exists) { despawn(object); }
+				if (object.exists) { game.despawn(object); }
 				continue;
 			}
 			static_cast<Moment&>(object) = was->moment;
-			if (Object::Cells* cells = objectParts.cells.find(object.id)) { cells->place = was->place; }
+			if (Object::Cells* cells = game.parts().cells.find(object.id)) { cells->place = was->place; }
 			object.placed = true;
 			if (object.looks.shown != was->look && was->look < object.looks.all().size()) { object.showLook(was->look); }
-			for (const auto& [variable, value] : was->moment.variable) { setVariable(object.name, variable, value); }
-			shareVariables(object);
+			for (const auto& [variable, value] : was->moment.variable) { game.setVariable(object.name, variable, value); }
+			game.shareVariables(object);
 		}
-		stageChanged();
+		game.stageChanged();
 		return true;
 	}
 }

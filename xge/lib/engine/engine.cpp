@@ -516,9 +516,9 @@ namespace xge
 
 	void Engine::runAsPress(const std::vector<Command>& commands)
 	{
-		game.pressBegins();
+		game.cellMaps().pressBegins();
 		runPress(commands);
-		game.pressEnds();
+		game.cellMaps().pressEnds();
 	}
 
 	void Engine::runPress(const std::vector<Command>& commands)
