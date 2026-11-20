@@ -314,7 +314,7 @@ namespace xge
 		std::sort(rest.begin(), rest.end(), byWorth);
 		for (const int i : rest) { order.push_back(items[static_cast<std::size_t>(i)]); }
 		holderOf(holder).items = order;
-		refreshBoundTexts(holder.name, words::deadwood, holderOf(holder).deadwood);
+		variableChanged(holder.name, words::deadwood, holderOf(holder).deadwood);
 	}
 
 	bool Game::isTrump(const HolderRule& rule, const Object& item)
@@ -437,7 +437,7 @@ namespace xge
 			{
 				if (const auto own = top->variable.findText(name.str().substr(4)); own != top->variable.end()) { now = own->second; }
 			}
-			if (now != value) { value = now; refreshBoundTexts(holder.name, name, now); }
+			if (now != value) { value = now; variableChanged(holder.name, name, now); }
 		}
 
 		// Points: each face-up item at its lowest worth, then each that may
@@ -474,9 +474,9 @@ namespace xge
 		}
 		holderOf(holder).points = total;
 		if (!counted.empty()) { setVariable(holder.name, counted, total); }
-		refreshBoundTexts(holder.name, words::cards, holderOf(holder).itemCount);
-		refreshBoundTexts(holder.name, words::held, holderOf(holder).itemCount);
-		refreshBoundTexts(holder.name, words::points, holderOf(holder).points);
+		variableChanged(holder.name, words::cards, holderOf(holder).itemCount);
+		variableChanged(holder.name, words::held, holderOf(holder).itemCount);
+		variableChanged(holder.name, words::points, holderOf(holder).points);
 
 		// A holder with <melds>: laid out in its groups, and its deadwood.
 		if (!holderOf(holder).melds.empty() && std::all_of(holderOf(holder).items.begin(), holderOf(holder).items.end(), [&](int number) { return itemAt(number) != nullptr; })) { layOutMelds(holder); }
@@ -488,7 +488,7 @@ namespace xge
 			if (owned)
 			{
 				holderOf(holder).tricks = reckonTricks(holder, holderOf(*trick).takes);
-				refreshBoundTexts(holder.name, words::tricks, holderOf(holder).tricks);
+				variableChanged(holder.name, words::tricks, holderOf(holder).tricks);
 			}
 		}
 
@@ -499,8 +499,8 @@ namespace xge
 			const Object* best = trickWinning(holder);
 			holderOf(holder).lead = lead ? static_cast<float>(followed(holderOf(holder).takes, *lead)) : 0.0f;
 			holderOf(holder).winner = best ? static_cast<float>(itemOf(*best).laidBy) : 0.0f;
-			refreshBoundTexts(holder.name, words::lead, holderOf(holder).lead);
-			refreshBoundTexts(holder.name, words::winner, holderOf(holder).winner);
+			variableChanged(holder.name, words::lead, holderOf(holder).lead);
+			variableChanged(holder.name, words::winner, holderOf(holder).winner);
 		}
 
 		// Scored holders, this one and those that score its items with theirs,
@@ -922,17 +922,17 @@ namespace xge
 				holderOf(holder).odds = std::round(won * 100.0f / static_cast<float>(trials));
 			}
 		}
-		refreshBoundTexts(holder.name, words::pattern, holderOf(holder).pattern);
-		refreshBoundTexts(holder.name, words::strength, holderOf(holder).strength);
-		refreshBoundTexts(holder.name, words::odds, holderOf(holder).odds);
+		variableChanged(holder.name, words::pattern, holderOf(holder).pattern);
+		variableChanged(holder.name, words::strength, holderOf(holder).strength);
+		variableChanged(holder.name, words::odds, holderOf(holder).odds);
 	}
 
 	void Game::refreshCall(Object& holder)
 	{
 		const Object* top = holderOf(holder).items.empty() ? nullptr : itemAt(holderOf(holder).items.back());
 		holderOf(holder).calling = !holderOf(holder).takes.wildRules.empty() && top && isWild(holderOf(holder).takes, *top) && holderOf(holder).called == 0.0f ? 1.0f : 0.0f;
-		refreshBoundTexts(holder.name, words::calling, holderOf(holder).calling);
-		refreshBoundTexts(holder.name, words::called, holderOf(holder).called);
+		variableChanged(holder.name, words::calling, holderOf(holder).calling);
+		variableChanged(holder.name, words::called, holderOf(holder).called);
 	}
 
 	int Game::takeTop(Object& holder)

@@ -492,7 +492,7 @@ namespace xge
 		return nullptr;
 	}
 
-	const std::vector<std::string>& liveNumberParts()
+	const std::vector<std::string>& livePartNames()
 	{
 		static const std::vector<std::string> names = []
 		{

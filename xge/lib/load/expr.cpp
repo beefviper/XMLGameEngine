@@ -237,7 +237,7 @@ namespace xge
 				{
 					throw std::runtime_error(here + ": the object has a <variable> of that name too, and " + rawObject.name + "." + timer.name + " is the timer's time left");
 				}
-				const auto& liveNames = liveNumberParts();
+				const auto& liveNames = livePartNames();
 				if (std::find(liveNames.begin(), liveNames.end(), timer.name) != liveNames.end())
 				{
 					throw std::runtime_error(here + ": " + rawObject.name + "." + timer.name + " is already where the object is or how it moves; give the timer another name");
@@ -306,11 +306,11 @@ namespace xge
 		// Where each object is and how it is going, and the touch a rule is
 		// answering, as names; worked out when they are used (Game::evaluateNow).
 		// An object's own variable of a part's name is read instead.
-		liveNumbers.reserve(rawObjects.size() * liveNumberParts().size());
+		liveNumbers.reserve(rawObjects.size() * livePartNames().size());
 		for (const RawObject& rawObject : rawObjects)
 		{
 			const std::string owner = Calc::nameOf(rawObject.name) + ".";
-			for (const std::string& part : liveNumberParts())
+			for (const std::string& part : livePartNames())
 			{
 				if (!rawObject.variable.count(part)) { liveNumbers.try_emplace(owner + part, 0.0f); }
 			}
@@ -661,7 +661,7 @@ namespace xge
 			const std::string name = raw.name + "." + variable;
 			if (objectVariables.emplace(name, 0.0f).second) { bind(name, objectVariables[name]); }
 		}
-		for (const std::string& part : liveNumberParts())
+		for (const std::string& part : livePartNames())
 		{
 			if (!raw.variable.count(part)) { liveNumbers.try_emplace(Calc::nameOf(raw.name) + "." + part, 0.0f); }
 		}

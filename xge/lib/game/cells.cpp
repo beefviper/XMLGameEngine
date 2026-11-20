@@ -1682,7 +1682,7 @@ namespace xge
 			object.placed = true;
 			if (object.looks.shown != was->look && was->look < object.looks.all().size()) { object.showLook(was->look); }
 			for (const auto& [variable, value] : was->moment.variable) { setVariable(object.name, variable, value); }
-			holdVariablesForExpressions(object);
+			shareVariables(object);
 		}
 		stageChanged();
 		return true;

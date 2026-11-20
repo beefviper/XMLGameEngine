@@ -933,15 +933,16 @@ namespace xge
 
 		// The copy of an object's variables that texts read (load/calc), made
 		// what the object holds: after a reset puts them back.
-		void holdVariablesForExpressions(const Object& object);
+		void shareVariables(const Object& object);
 		// Where expressions read that object's variable (player.score), found
 		// by its text once; null when none reads it.
-		float* heldFor(Name owner, Name variable);
-		std::unordered_map<VariableName, float*, VariableName::Hash> heldSlots;
-		std::size_t heldSlotsOf = 0;
+		float* expressionSlot(Name owner, Name variable);
+		std::unordered_map<VariableName, float*, VariableName::Hash> expressionSlots;
+		std::size_t expressionSlotsOf = 0;
 
-		// Shows `value` in every text object bound to ownerName.variableName.
-		void refreshBoundTexts(Name ownerName, Name variableName, float value);
+		// An object's variable is now `value`: expressions read it, and every
+		// text that shows it is made again.
+		void variableChanged(Name ownerName, Name variableName, float value);
 
 		WindowDesc windowDesc;
 
@@ -1123,7 +1124,7 @@ namespace xge
 		Name findFullName(Name name) const;
 
 		// Works out what is shown in every text bound to a variable, after many have changed.
-		void refreshAllBoundTexts(void);
+		void relabelAll(void);
 
 		// Puts a text that shows variables together again from what they hold now.
 		void relabel(Object& object);

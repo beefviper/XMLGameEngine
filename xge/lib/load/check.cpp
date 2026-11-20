@@ -546,7 +546,7 @@ namespace xge
 		// engine keeps; a misspelt one read nothing, and nothing ever matched.
 		void checkHeldVariables(const Parts& parts, const std::vector<Object>& objects)
 		{
-			std::set<std::string> variableSet(liveNumberParts().begin(), liveNumberParts().end());
+			std::set<std::string> variableSet(livePartNames().begin(), livePartNames().end());
 			for (const Object& object : objects)
 			{
 				for (const auto& [name, value] : object.variable) { variableSet.insert(name); }

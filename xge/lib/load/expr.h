@@ -364,7 +364,7 @@ namespace xge
 		// and only ever assigns through an existing key afterwards.
 		std::map<std::string, float> objectVariables;
 
-		// The numbers every object has while the game runs (liveNumberParts:
+		// The numbers every object has while the game runs (livePartNames:
 		// ball.x, ball.velocity.y, ...), bound into symbolTable as the variables
 		// are. Before a value is worked out while the game runs,
 		// Game writes them from where everything is (Game::evaluateNow).

@@ -323,7 +323,7 @@ namespace xge
 			}
 			std::vector<std::string> names(own.begin(), own.end());
 			std::vector<std::string> all = names;
-			all.insert(all.end(), liveNumberParts().begin(), liveNumberParts().end());
+			all.insert(all.end(), livePartNames().begin(), livePartNames().end());
 			throw std::runtime_error(where + ": variable=\"" + condition.variableName + "\": nothing the condition looks at has a variable or number of that name"
 				+ didYouMean(condition.variableName, all) + (names.empty() ? std::string("; it has no <variables>") : "; its variables are: " + listOf(names)));
 		}

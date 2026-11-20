@@ -2367,14 +2367,14 @@ namespace xge
 	const LivePart* livePartNamed(const std::string& part);
 
 	// The names of liveParts, in its order.
-	const std::vector<std::string>& liveNumberParts();
+	const std::vector<std::string>& livePartNames();
 
-	// The part of liveNumberParts() `name` ends with (after a dot), or ""
+	// The part of livePartNames() `name` ends with (after a dot), or ""
 	// when it ends with none.
 	std::string liveNumberPart(const std::string& name);
 
 	// An object's number of that name as it is now: its own variable, or
-	// else one of liveNumberParts() (a heading only if it has one); nothing
+	// else one of livePartNames() (a heading only if it has one); nothing
 	// for neither. What a condition tests and compares with.
 	std::optional<float> numberOf(const Parts& parts, const Object& object, const std::string& name);
 

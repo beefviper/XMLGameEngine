@@ -52,7 +52,7 @@ namespace xge
 			anyTurns = true;
 			const bool first = started.insert(object.groupName).second;
 			object.variable[words::turn] = first ? 1.0f : 0.0f;
-			refreshBoundTexts(object.name, words::turn, object.variable[words::turn]);
+			variableChanged(object.name, words::turn, object.variable[words::turn]);
 			if (first) { object.showLook(0); }
 			else if (!turnsOf(object).sprite.empty()) { showLook(object, turnsOf(object).sprite); }
 		}

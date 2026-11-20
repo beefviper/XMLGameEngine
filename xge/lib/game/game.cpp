@@ -74,7 +74,7 @@ namespace xge
 		for (std::size_t i = 0; i < objects.size(); ++i) { objectParts.placeAt(objects[i].id, i); }
 		expr.whenLiveRead = [this] { refreshLive(); };
 		keep(keeps);
-		refreshAllBoundTexts();
+		relabelAll();
 		// Every picture's size is known now, with no window: the engine draws
 		// text and reads image files itself.
 		for (Object& object : objects)
@@ -857,7 +857,7 @@ namespace xge
 			const float drawn = expr.evaluate(value, where);
 			object.variable[Name::of(name)] = drawn;
 			startFor(object).variable[Name::of(name)] = drawn;
-			refreshBoundTexts(object.name, Name::of(name), drawn);
+			variableChanged(object.name, Name::of(name), drawn);
 		}
 
 		// The position, then the velocity, the order they are drawn in when the
@@ -1081,7 +1081,7 @@ namespace xge
 			pushState(state);
 		}
 		++stateChanges;
-		refreshAllBoundTexts();
+		relabelAll();
 	}
 
 	bool Game::keepsAnything(void) const noexcept
@@ -1215,7 +1215,7 @@ namespace xge
 				}
 			}
 		}
-		refreshAllBoundTexts();
+		relabelAll();
 	}
 
 	void Game::rank(const VariableName& entry, Name table)
@@ -1261,7 +1261,7 @@ namespace xge
 		{
 			for (const auto& [name, value] : each->variable)
 			{
-				refreshBoundTexts(each->name, name, value);
+				variableChanged(each->name, name, value);
 			}
 		}
 	}
@@ -1330,7 +1330,7 @@ namespace xge
 		const auto found = object.variable.find(timer.name);
 		if (found == object.variable.end() || found->second == left) { return; }
 		found->second = left;
-		refreshBoundTexts(object.name, timer.name, left);
+		variableChanged(object.name, timer.name, left);
 	}
 
 	void Game::animationEnded(std::size_t index, std::size_t look)
@@ -1444,23 +1444,23 @@ namespace xge
 		}
 	}
 
-	void Game::holdVariablesForExpressions(const Object& object)
+	void Game::shareVariables(const Object& object)
 	{
 		for (const auto& [variableName, value] : object.variable)
 		{
-			if (float* held = heldFor(object.name, variableName)) { *held = value; }
+			if (float* held = expressionSlot(object.name, variableName)) { *held = value; }
 		}
 	}
 
-	float* Game::heldFor(Name owner, Name variable)
+	float* Game::expressionSlot(Name owner, Name variable)
 	{
 		// A copy spawned under a new name adds its own.
-		if (heldSlotsOf != expr.objectVariables.size())
+		if (expressionSlotsOf != expr.objectVariables.size())
 		{
-			heldSlots.clear();
-			heldSlotsOf = expr.objectVariables.size();
+			expressionSlots.clear();
+			expressionSlotsOf = expr.objectVariables.size();
 		}
-		const auto [at, added] = heldSlots.try_emplace({ owner, variable }, nullptr);
+		const auto [at, added] = expressionSlots.try_emplace({ owner, variable }, nullptr);
 		if (added)
 		{
 			const auto found = expr.objectVariables.find(owner + "." + variable);
@@ -1469,11 +1469,11 @@ namespace xge
 		return at->second;
 	}
 
-	void Game::refreshBoundTexts(Name ownerName, Name variableName, float value)
+	void Game::variableChanged(Name ownerName, Name variableName, float value)
 	{
 		// Expressions read the variable too (a timer's <every>, worked out again
 		// each round), so they see the new value.
-		if (float* held = heldFor(ownerName, variableName)) { *held = value; }
+		if (float* held = expressionSlot(ownerName, variableName)) { *held = value; }
 
 		for (auto& object : objects)
 		{
@@ -1499,7 +1499,7 @@ namespace xge
 		}
 
 		variableIt->second = value;
-		refreshBoundTexts(owner->name, variableName, value);
+		variableChanged(owner->name, variableName, value);
 		return true;
 	}
 
@@ -1606,7 +1606,7 @@ namespace xge
 				if (candidate.isCopy()) { despawn(candidate); continue; }
 				drawStartAgain(candidate);
 				resetObjectState(candidate, objectParts, expr.resources);
-				holdVariablesForExpressions(candidate);
+				shareVariables(candidate);
 				stageChanged();
 			}
 		}
@@ -1882,7 +1882,7 @@ namespace xge
 			if (object.kept) { continue; }
 			drawStartAgain(object);
 			resetObjectState(object, objectParts, expr.resources);
-			holdVariablesForExpressions(object);
+			shareVariables(object);
 			stageChanged();
 		}
 
@@ -1896,7 +1896,7 @@ namespace xge
 		// that all of them are back to their starting values (same notify
 		// pattern as resetObject/setVariable, just over every bound
 		// display instead of one object's worth).
-		refreshAllBoundTexts();
+		relabelAll();
 
 		// Collapse the whole state stack. title -> playing -> over ->
 		// title -> ... is push-only (see pushState/setCurrentState) - only
@@ -1915,7 +1915,7 @@ namespace xge
 		startPlayers();
 	}
 
-	void Game::refreshAllBoundTexts(void)
+	void Game::relabelAll(void)
 	{
 		for (auto& object : objects)
 		{
@@ -2019,7 +2019,7 @@ namespace xge
 			if (object.isCopy()) { despawn(object); continue; }
 			drawStartAgain(object);
 			resetObjectState(object, objectParts, expr.resources);
-			holdVariablesForExpressions(object);
+			shareVariables(object);
 			stageChanged();
 
 			// Back where it started, it is no longer carried.
@@ -2030,7 +2030,7 @@ namespace xge
 		{
 			if (each.name == scene) { sceneTimers[scene] = each.timers; }
 		}
-		refreshAllBoundTexts();
+		relabelAll();
 	}
 
 	void Game::updateLockstepObjects(const Object& object) noexcept
@@ -2348,7 +2348,7 @@ namespace xge
 		if (added)
 		{
 			const std::string prefix = Calc::nameOf(owner) + ".";
-			for (const std::string& part : liveNumberParts())
+			for (const std::string& part : livePartNames())
 			{
 				const std::string name = prefix + part;
 				const auto found = expr.liveNumbers.find(name);
@@ -2384,7 +2384,7 @@ namespace xge
 					if (held != object.variable.end() && held->second != value)
 					{
 						held->second = value;
-						refreshBoundTexts(object.name, each.variable, value);
+						variableChanged(object.name, each.variable, value);
 					}
 					break;
 				}
@@ -2607,7 +2607,7 @@ namespace xge
 				if (!owner) { return; }
 				for (const Name variable : reads)
 				{
-					float* const held = heldFor(owner->name, variable);
+					float* const held = expressionSlot(owner->name, variable);
 					const auto found = owner->variable.find(variable);
 					if (held && found != owner->variable.end()) { *held = found->second; }
 				}
