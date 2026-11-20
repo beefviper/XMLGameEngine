@@ -169,7 +169,7 @@ TEST_CASE("a path is flown a step at a time at its speed, and home takes the obj
 	Loaded loaded(kSquare, box("a", 50, 50) + box("b", 0, 0));
 	Object& a = loaded.game.object("a");
 	loaded.game.follow(a, "square");
-	CHECK(a.isFollowing());
+	CHECK(loaded.game.isFollowing(a));
 
 	loaded.frames(5);
 	CHECK(a.position.x == Approx(60.0f));
@@ -181,9 +181,9 @@ TEST_CASE("a path is flown a step at a time at its speed, and home takes the obj
 
 	// Home is the diagonal back, at the same speed: about 7.07 frames.
 	loaded.frames(7);
-	CHECK(a.isFollowing());
+	CHECK(loaded.game.isFollowing(a));
 	loaded.frames(2);
-	CHECK_FALSE(a.isFollowing());
+	CHECK_FALSE(loaded.game.isFollowing(a));
 	CHECK(isHome(loaded.game, a));
 	CHECK(a.velocity.x == 0.0f);
 	CHECK(a.velocity.y == 0.0f);
@@ -205,8 +205,8 @@ TEST_CASE("a path with a start puts the object there first, and a stagger sends 
 	Object& third = loaded.game.object("b.3");
 	CHECK(first.position.x == Approx(-20.0f));
 	CHECK(third.position.x == Approx(-20.0f));
-	CHECK(second.path.wait == 0.5f);
-	CHECK(third.path.wait == 1.0f);
+	CHECK(loaded.game.parts().onPaths.get(second.id).wait == 0.5f);
+	CHECK(loaded.game.parts().onPaths.get(third.id).wait == 1.0f);
 
 	loaded.frames(4);
 	CHECK(first.position.x == Approx(0.0f));
@@ -216,7 +216,7 @@ TEST_CASE("a path with a start puts the object there first, and a stagger sends 
 	CHECK(isHome(loaded.game, first));
 	CHECK(isHome(loaded.game, second));
 	CHECK(isHome(loaded.game, third));
-	CHECK_FALSE(third.isFollowing());
+	CHECK_FALSE(loaded.game.isFollowing(third));
 }
 
 TEST_CASE("a step runs its commands as it sets off, and an object on a path finishes it before another", "[paths]")
@@ -236,7 +236,7 @@ TEST_CASE("a step runs its commands as it sets off, and an object on a path fini
 	CHECK(a.variable.at("n") == 11.0f);
 	loaded.frames(3);
 	CHECK(a.variable.at("n") == 11.0f);
-	CHECK_FALSE(a.isFollowing());
+	CHECK_FALSE(loaded.game.isFollowing(a));
 	CHECK(isHome(loaded.game, a));
 }
 
@@ -248,14 +248,14 @@ TEST_CASE("a reset ends a path, and an object out of play is not moved along it"
 	loaded.game.follow(a, "square");
 	loaded.frames(3);
 	loaded.game.resetObject("a");
-	CHECK_FALSE(a.isFollowing());
+	CHECK_FALSE(loaded.game.isFollowing(a));
 	CHECK(isHome(loaded.game, a));
 
 	loaded.game.follow(a, "square");
 	loaded.frames(3);
 	a.isVisible = false;
 	loaded.frames(3);
-	CHECK(a.isFollowing());
+	CHECK(loaded.game.isFollowing(a));
 	CHECK(a.position.x == Approx(56.0f));
 }
 
@@ -263,14 +263,14 @@ TEST_CASE("a <follow> in a timer sends its own object, and in a state needs obje
 {
 	Loaded loaded(kSquare, box("a", 50, 50, "<timers><timer><after>0.1</after><follow path=\"square\" /></timer></timers>") + box("b", 0, 0));
 	loaded.frames(1);
-	CHECK(loaded.game.object("a").isFollowing());
-	CHECK_FALSE(loaded.game.object("b").isFollowing());
+	CHECK(loaded.game.isFollowing(loaded.game.object("a")));
+	CHECK_FALSE(loaded.game.isFollowing(loaded.game.object("b")));
 
 	Loaded fromState(kSquare, box("a", 50, 50) + box("b", 0, 0),
 		"<timers><timer><after>0.1</after><follow path=\"square\" object=\"b\" /></timer></timers>");
 	fromState.frames(1);
-	CHECK(fromState.game.object("b").isFollowing());
-	CHECK_FALSE(fromState.game.object("a").isFollowing());
+	CHECK(fromState.game.isFollowing(fromState.game.object("b")));
+	CHECK_FALSE(fromState.game.isFollowing(fromState.game.object("a")));
 }
 
 TEST_CASE("<nearest> in a <follow> sends only that many, the nearest to the one doing it", "[paths]")
@@ -281,10 +281,10 @@ TEST_CASE("<nearest> in a <follow> sends only that many, the nearest to the one 
 	Loaded loaded(kSquare, box("a", 135, 0,
 		"<timers><timer><after>0.1</after><follow path=\"square\" object=\"b\"><nearest>2</nearest></follow></timer></timers>") + group);
 	loaded.frames(1);
-	CHECK_FALSE(loaded.game.object("b.1").isFollowing());
-	CHECK(loaded.game.object("b.2").isFollowing());
-	CHECK(loaded.game.object("b.3").isFollowing());
-	CHECK_FALSE(loaded.game.object("a").isFollowing());
+	CHECK_FALSE(loaded.game.isFollowing(loaded.game.object("b.1")));
+	CHECK(loaded.game.isFollowing(loaded.game.object("b.2")));
+	CHECK(loaded.game.isFollowing(loaded.game.object("b.3")));
+	CHECK_FALSE(loaded.game.isFollowing(loaded.game.object("a")));
 }
 
 TEST_CASE("<shift> moves objects and the places they go home to; one on a path only has its place moved", "[paths]")
@@ -303,7 +303,7 @@ TEST_CASE("<shift> moves objects and the places they go home to; one on a path o
 	CHECK(a.position.x == Approx(63.0f));
 	CHECK(a.shifted.x == Approx(8.0f));
 	loaded.frames(40);
-	CHECK_FALSE(a.isFollowing());
+	CHECK_FALSE(loaded.game.isFollowing(a));
 	CHECK(isHome(loaded.game, a));
 
 	// A reset puts it back where the file says.
@@ -423,15 +423,15 @@ TEST_CASE("the fleet flies in on its paths, one behind another, and settles into
 	// The first frame sends all six rows off from where their paths start;
 	// the last row of blues waits there behind the first, a line of twenty.
 	play.frames(1);
-	CHECK(play.count([](const Object& object) { return object.isFollowing(); }) == 46);
+	CHECK(play.count([&](const Object& object) { return play.game.isFollowing(object); }) == 46);
 	CHECK(play.object("blues2.10.1").position.x == Approx(567.0f));
 	CHECK(play.object("blues1.10.1").position.x == Approx(-40.0f));
 	CHECK(play.object("blues3.1.1").position.x == Approx(-40.0f));
-	CHECK(play.object("blues1.10.1").path.wait > play.object("blues1.2.1").path.wait);
-	CHECK(play.object("blues3.1.1").path.wait > play.object("blues1.10.1").path.wait);
+	CHECK(play.game.parts().onPaths.get(play.object("blues1.10.1").id).wait > play.game.parts().onPaths.get(play.object("blues1.2.1").id).wait);
+	CHECK(play.game.parts().onPaths.get(play.object("blues3.1.1").id).wait > play.game.parts().onPaths.get(play.object("blues1.10.1").id).wait);
 
 	play.frames(400);
-	CHECK(play.count([](const Object& object) { return object.isFollowing(); }) == 0);
+	CHECK(play.count([&](const Object& object) { return play.game.isFollowing(object); }) == 0);
 	CHECK(play.count([&](const Object& object) { return isHome(play.game, object); }) == 46);
 }
 
@@ -458,7 +458,7 @@ TEST_CASE("a diver weaves down, drops bombs, goes off the bottom and comes back 
 	bool cameFromTop = false;
 	int bombs = 0;
 	int frames = 0;
-	while (diver.isFollowing() && frames < 1000)
+	while (play.game.isFollowing(diver) && frames < 1000)
 	{
 		play.frames(1);
 		++frames;
@@ -473,7 +473,7 @@ TEST_CASE("a diver weaves down, drops bombs, goes off the bottom and comes back 
 		}
 	}
 
-	CHECK_FALSE(diver.isFollowing());
+	CHECK_FALSE(play.game.isFollowing(diver));
 	CHECK(diver.isVisible);
 	CHECK(isHome(play.game, diver));
 	CHECK(lowest > 600.0f);
@@ -501,7 +501,7 @@ TEST_CASE("the formation sways from side to side, and a diver comes home to wher
 	}
 	CHECK(rightmost - leftmost > 20.0f);
 	CHECK(rightmost - leftmost < 60.0f);
-	CHECK(play.count([&](const Object& object) { return object.isFollowing() || isHome(play.game, object); }) == play.count([](const Object& object) { return object.isVisible; }));
+	CHECK(play.count([&](const Object& object) { return play.game.isFollowing(object) || isHome(play.game, object); }) == play.count([](const Object& object) { return object.isVisible; }));
 }
 
 TEST_CASE("a flagship dives with the two escorts nearest it, and a diver shot pays more", "[galaxian]")
@@ -515,11 +515,11 @@ TEST_CASE("a flagship dives with the two escorts nearest it, and a diver shot pa
 	int following = 0;
 	for (auto& object : play.game.getCurrentObjects())
 	{
-		if (object.isFollowing() && object.name.str().rfind("playing.fleet.escorts.", 0) == 0) { ++following; }
+		if (play.game.isFollowing(object) && object.name.str().rfind("playing.fleet.escorts.", 0) == 0) { ++following; }
 	}
 	CHECK(following == 2);
-	CHECK(play.object("escorts.1.1").isFollowing());
-	CHECK_FALSE(play.object("escorts.6.1").isFollowing());
+	CHECK(play.game.isFollowing(play.object("escorts.1.1")));
+	CHECK_FALSE(play.game.isFollowing(play.object("escorts.6.1")));
 
 	// In the formation an escort pays 50; diving, even taken along, 100,
 	// from the dive's first step until it wraps.
@@ -555,11 +555,11 @@ TEST_CASE("a shot alien scores, and when the fleet is down the next one flies in
 
 	for (auto& object : play.game.getCurrentObjects())
 	{
-		if (object.objClass == "alien") { object.isVisible = false; object.path.name.clear(); }
+		if (object.objClass == "alien") { object.isVisible = false; play.game.parts().onPaths.remove(object.id); }
 	}
 	play.frames(1);
 	CHECK(play.count([](const Object& object) { return object.isVisible; }) == 46);
-	CHECK(play.count([](const Object& object) { return object.isFollowing(); }) == 46);
+	CHECK(play.count([&](const Object& object) { return play.game.isFollowing(object); }) == 46);
 	CHECK(play.object("flagships.1.1").position.y < 0.0f);
 	// the ship and its score are the state's, not the fleet's: kept
 	CHECK(ship.variable.at("score") == 30.0f);
@@ -614,7 +614,7 @@ TEST_CASE("paused, the fleet is drawn still underneath and stops where it is", "
 	play.frames(30);
 
 	Object& alien = play.object("blues1.1.1");
-	REQUIRE(alien.isFollowing());
+	REQUIRE(play.game.isFollowing(alien));
 	const Vector2f where = alien.position;
 	play.tap(KeyCode::Pause);
 	REQUIRE(play.state() == "paused");
@@ -1019,7 +1019,7 @@ TEST_CASE("no alien is drawn in its place before it has flown in, at the start o
 			for (auto& object : play.game.getCurrentObjects())
 			{
 				if (object.objClass != "alien" || !play.game.isShown(object)) { continue; }
-				if (object.isFollowing()) { flown.insert(object.name); }
+				if (play.game.isFollowing(object)) { flown.insert(object.name); }
 				else if (!flown.count(object.name)) { ++early; }
 			}
 		}
@@ -1029,7 +1029,7 @@ TEST_CASE("no alien is drawn in its place before it has flown in, at the start o
 		// The fleet shot down: the condition puts the next one back.
 		for (auto& object : play.game.getCurrentObjects())
 		{
-			if (object.objClass == "alien") { object.isVisible = false; object.path.name.clear(); }
+			if (object.objClass == "alien") { object.isVisible = false; play.game.parts().onPaths.remove(object.id); }
 		}
 	}
 }

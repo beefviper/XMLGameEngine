@@ -69,6 +69,7 @@ namespace xge
 		follows.remove(id);
 		unholed.remove(id);
 		surfaces.remove(id);
+		onPaths.remove(id);
 		starts.remove(id);
 		clocks.remove(id);
 	}
@@ -108,6 +109,7 @@ namespace xge
 		copyPart(follows, from.follows, id);
 		copyPart(unholed, from.unholed, id);
 		copyPart(surfaces, from.surfaces, id);
+		copyPart(onPaths, from.onPaths, id);
 		copyPart(starts, from.starts, id);
 		copyPart(clocks, from.clocks, id);
 	}

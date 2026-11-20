@@ -1742,8 +1742,8 @@ namespace xge
 		// drops it.
 		std::optional<Vector2f> aim;
 
-		// A <follow> under way (see Path, Game::applyPaths): the path's name
-		// (empty: on none), which of its legs is being flown, what is left of
+		// A <follow> under way, a part (Parts::onPaths; see Path,
+		// Game::applyPaths): the path's name, which of its legs is being flown, what is left of
 		// that step to go, whether the leg has set off yet (its commands run
 		// once, as it does), and how many seconds are left to wait before the
 		// first leg (a <stagger>). A reset, a <die /> or a <reveal> ends it.
@@ -1755,8 +1755,6 @@ namespace xge
 			bool legStarted{ false };
 			float wait{};
 		};
-		OnPath path;
-		bool isFollowing() const noexcept { return !path.name.empty(); }
 
 		// The looks <become> switches between: each named sprite as the window
 		// backends draw it (its Picture, and the bitmap for a bitmap or a

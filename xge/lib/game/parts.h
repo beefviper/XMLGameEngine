@@ -58,6 +58,7 @@ namespace xge
 		Store<Object::Follows> follows;
 		Store<Object::Unholed> unholed;
 		Store<Object::Surface> surfaces;
+		Store<Object::OnPath> onPaths;
 		// How each object started (see Moment), what a reset puts back:
 		// every object has one, given as it loads.
 		Store<Moment> starts;

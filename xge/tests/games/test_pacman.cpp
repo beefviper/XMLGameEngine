@@ -345,9 +345,9 @@ TEST_CASE("pacman: the ghosts in the house come out one by one", "[pacman][hunt]
 	maze.frames(30);
 	CHECK(middleOf(pinky).y > door);
 	maze.frames(40);
-	CHECK(pinky.isFollowing());
-	for (int i = 0; i < 200 && pinky.isFollowing(); ++i) { maze.frames(1); }
-	CHECK_FALSE(pinky.isFollowing());
+	CHECK(maze.game.isFollowing(pinky));
+	for (int i = 0; i < 200 && maze.game.isFollowing(pinky); ++i) { maze.frames(1); }
+	CHECK_FALSE(maze.game.isFollowing(pinky));
 	CHECK(middleOf(pinky).y == Approx(tile(14, 11).y));
 	CHECK(middleOf(inky).y > door);
 }
@@ -415,21 +415,21 @@ TEST_CASE("pacman: Inky comes out after thirty dots and Clyde after sixty more; 
 	clyde.isVisible = true;
 	maze.pacman().position = { 2000.0f, 2000.0f };
 	maze.frames(2);
-	CHECK_FALSE(inky.isFollowing());
+	CHECK_FALSE(maze.game.isFollowing(inky));
 
 	maze.game.setVariable("playing.status", "eaten", 29.0f);
 	maze.frames(1);
-	CHECK_FALSE(inky.isFollowing());
+	CHECK_FALSE(maze.game.isFollowing(inky));
 	maze.game.setVariable("playing.status", "eaten", 30.0f);
 	maze.frames(1);
-	CHECK(inky.isFollowing());
-	CHECK_FALSE(clyde.isFollowing());
+	CHECK(maze.game.isFollowing(inky));
+	CHECK_FALSE(maze.game.isFollowing(clyde));
 	maze.game.setVariable("playing.status", "eaten", 89.0f);
 	maze.frames(1);
-	CHECK_FALSE(clyde.isFollowing());
+	CHECK_FALSE(maze.game.isFollowing(clyde));
 	maze.game.setVariable("playing.status", "eaten", 90.0f);
 	maze.frames(1);
-	CHECK(clyde.isFollowing());
+	CHECK(maze.game.isFollowing(clyde));
 	CHECK(maze.status("released") == 3.0f);
 
 	// With no dot eaten for four seconds, thirty are counted.
@@ -438,10 +438,10 @@ TEST_CASE("pacman: Inky comes out after thirty dots and Clyde after sixty more; 
 	idle.onlyGhost("inky");
 	idle.frames(4 * 60 - 10);
 	CHECK(idle.status("eaten") == 0.0f);
-	CHECK_FALSE(idle.ghost("inky").isFollowing());
+	CHECK_FALSE(idle.game.isFollowing(idle.ghost("inky")));
 	idle.frames(12);
 	CHECK(idle.status("eaten") == 30.0f);
-	CHECK(idle.ghost("inky").isFollowing());
+	CHECK(idle.game.isFollowing(idle.ghost("inky")));
 }
 
 TEST_CASE("pacman: a ghost goes at half speed in the tunnel", "[pacman][hunt]")
@@ -517,9 +517,9 @@ TEST_CASE("pacman: a pellet turns the ghosts blue, and a blue ghost is eaten", "
 		home = blinky.lookName() == "normal";
 	}
 	CHECK(home);
-	CHECK(blinky.isFollowing());
+	CHECK(maze.game.isFollowing(blinky));
 	maze.frames(50);
-	CHECK_FALSE(blinky.isFollowing());
+	CHECK_FALSE(maze.game.isFollowing(blinky));
 	CHECK(middleOf(blinky).y == Approx(tile(14, 11).y));
 	CHECK(walkOf(maze, blinky).mode == Walk::Mode::Hunt);
 }

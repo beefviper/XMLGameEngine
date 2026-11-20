@@ -18,16 +18,16 @@ namespace xge
 	//
 	// Everything else about it is left as it was, so whatever brings it back
 	// (fire() re-launching a bullet, reset()) starts from a known place.
-	static void die(Object& object)
+	static void die(Object& object, Parts& parts)
 	{
 		object.collisionsOn = false;
 		object.isVisible = false;
-		object.path.name.clear();
+		parts.onPaths.remove(object.id);
 	}
 
 	static bool runDie(const CmdDie&, const Doer& doer)
 	{
-		if (doer.self) { xge::die(*doer.self); }
+		if (doer.self) { xge::die(*doer.self, doer.game().parts()); }
 		return true;
 	}
 

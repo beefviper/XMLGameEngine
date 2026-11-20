@@ -97,6 +97,8 @@ namespace xge
 		// one: left as it was, out of reach of a <fire>, a <release> or a
 		// <reveal> that names it by a name every scene's has.
 		bool isAway(const Object& object) const;
+		// Whether it is flying a <follow>'s path.
+		bool isFollowing(const Object& object) const noexcept { return objectParts.onPaths.has(object.id); }
 
 		// The current scene of that state (its path, playing.room1), or empty
 		// for a state with no scenes.

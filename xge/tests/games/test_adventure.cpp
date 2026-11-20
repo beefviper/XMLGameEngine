@@ -38,7 +38,6 @@ namespace
 	{
 		object.collisionsOn = false;
 		object.isVisible = false;
-		object.path.name.clear();
 	}
 
 	struct Adventure

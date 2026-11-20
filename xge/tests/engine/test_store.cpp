@@ -217,6 +217,20 @@ TEST_CASE("board moves, a swing and a light's pasts are parts of only the object
 	CHECK(hauntedhouse.game.parts().lightPasts.size() > 0);
 }
 
+TEST_CASE("a path under way is a part of only the objects flying one", "[store][paths]")
+{
+	{
+		played::Played pong("descriptions/pong.xml");
+		pong.frames(60);
+		CHECK(pong.game.parts().onPaths.size() == 0);
+	}
+	played::Played galaxian("descriptions/galaxian.xml");
+	galaxian.tap(KeyCode::Space);
+	galaxian.frames(2);
+	CHECK(galaxian.game.parts().onPaths.size() > 0);
+	CHECK(galaxian.game.parts().onPaths.size() < galaxian.game.getCurrentObjects().size());
+}
+
 TEST_CASE("the members of a group share one kind: its rules and actions are held once", "[store][kind]")
 {
 	played::Played invaders("descriptions/spaceinvaders.xml");

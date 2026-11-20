@@ -453,7 +453,7 @@ namespace xge
 		for (Object& object : objects)
 		{
 			Maze* maze = rules.parts().mazes.find(object.id);
-			if (!maze || maze->walk.mode == Walk::Mode::None || object.isFollowing() || object.isAirborne() || !rules.inPlay(object))
+			if (!maze || maze->walk.mode == Walk::Mode::None || rules.parts().onPaths.has(object.id) || object.isAirborne() || !rules.inPlay(object))
 			{
 				continue;
 			}

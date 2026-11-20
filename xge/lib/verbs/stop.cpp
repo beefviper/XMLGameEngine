@@ -21,13 +21,13 @@ namespace xge
 	// Neither its own pull nor a thruster still held is left (a reset gives
 	// them back). Being in motion is what makes collisions run, so an object
 	// that has stopped is no longer asked about what it is resting on.
-	static void stop(Object& object)
+	static void stop(Object& object, Parts& parts)
 	{
 		object.velocity = {};
 		object.acceleration = {};
 		object.footing.climbing = false;
 		object.footing.jumping = false;
-		object.path.name.clear();
+		parts.onPaths.remove(object.id);
 	}
 
 	static bool runStop(const CmdStop&, const Doer& doer)
@@ -35,7 +35,7 @@ namespace xge
 		Game& game = doer.game();
 		if (doer.self)
 		{
-			xge::stop(*doer.self);
+			xge::stop(*doer.self, game.parts());
 			if (Object::Climb* climb = game.parts().climbs.find(doer.self->id)) { climb->activeClimb = {}; }
 			game.stopDrive(*doer.self);
 			if (Maze* maze = game.mazeOf(*doer.self)) { maze->walk = {}; }
