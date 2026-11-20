@@ -1,6 +1,6 @@
 # The engine's structure
 
-**Status:** Decided in outline, not built. The work is the [C++ review](../plan.md#the-c-review) section of the plan; points marked open there are the author's.
+**Status:** Built, except the later steps of components (CR3), which are the [C++ review](../plan.md#the-c-review) section of the plan.
 
 ## What we want
 
@@ -17,7 +17,7 @@ The language had a pass that asked of every word whether it was needed. The C++ 
 | Textures | Each window keeps a texture per object name and builds it again whenever the object's picture changes: in 600 frames Space Invaders builds 1,109 textures (9 MB of pixels) for its 16 pictures, Pac-Man keeps 777 textures for 35 |
 | `before` | A whole `Moment` (its variables map and three vectors included) copied for every object every frame, read in one place for its position and two flags |
 | The reader | Looks each child up by name from the first child again (about 40 lookups an object), making a new node object for every sibling it passes, after the whole tree was copied once |
-| One tag | Written in about twelve places ([the trail of `<drag>`](../plan.md#the-c-review)) |
+| One tag | Written in about twelve places: `<drag>` was in the schema, the object reader, the group reader, the written object, `load/build.cpp`, `Object::Motion`, the frame, the printer and the generator's second reader |
 | Comments | 19% of the lines in `game/`, 12% in `load/` |
 
 `xgetest-long "[size]"` prints these, each game started and played 600 frames into a window that keeps textures as the backends do:
@@ -32,6 +32,19 @@ The language had a pass that asked of every word whether it was needed. The C++ 
 With textures kept a picture (CR2 step 5) the same games keep 11, 27, 43 and 20 textures, and build 14, 29, 57 and 20 of them.
 
 A4 put an object's fields into parts by feature, which made it readable. It did not make it smaller: every object still holds every part. Each part's size and how many objects use it: [object-parts](17-object-parts.md).
+
+## What was done
+
+| Task | Result |
+|---|---|
+| CR1 | sizes on record (`xgetest-long "[size]"`); one walk over a command's values (`forEachValue`) in place of six hand lists, five of which missed `<arc>` and `<below>` |
+| CR2 | `Resources` (`engine/resources.h`): each picture and sound held once, named by an id; windows keep a texture a picture |
+| CR4 | `Engine::run` is `input()`, `update(seconds)`, `render()`; `Game::updateObjects` and `playOneFrame` are named stages only |
+| CR5 | every game checked by a schema; the reader trusts it (`fail(` 251 to 156) and walks each element once (`Children`); Pac-Man's `--check` 3.69G to 2.07G instructions |
+| CR6 | the generator's second reader (`data.xsl`, `merge.xsl`, about 6,000 lines) gone: a generated program holds its game as a tree and runs the engine's reader |
+| CR7 | each verb owns its data; `WrittenCommand` 3,328 to 2,496 bytes |
+| CR8 | verb-name checks 14 to 2; names as ids while playing, frames about 10% faster |
+| CR9 | the names below; comments cut a folder at a time |
 
 ## Decided by the author
 

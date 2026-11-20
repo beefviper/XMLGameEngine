@@ -45,72 +45,17 @@ Its own block of work, done before the tasks below: it touches every field of an
 
 - **The aim.** The engine does the same things with less: a resource is held once, an object carries only the parts it uses, a tag is written in few places, and the code reads from its names.
 - **What it must not do** is change what any game does. Every step here leaves every game playing exactly as before.
-- **One tag, twelve homes.** `<drag>` today is in the schema, the object reader, the group reader, `writtenDrag` in `WrittenObject`, `load/build.cpp`, `Object::Motion`, the frame and the printer. CR5 and CR7 take homes away; CR1 took two hand-kept lists of an object's numbers, CR6 `data.xsl`'s two and the describer's.
 
 ### Rules for this block
 
 - **No game changes.** `xgetest`, `xgetest-generated` and `xgetest-long` pass unchanged after every step. A test is edited only where it names a C++ type or field that moved.
-- **Measure.** `xgetest-long "[speed]"` and `"[size]"` (CR1 step 1) before and after each task, back to back on one machine. Load time, frame time and bytes do not rise; where a task says they fall, the numbers go in the commit message.
+- **Measure.** `xgetest-long "[speed]"` and `"[size]"` before and after each task, back to back on one machine. Load time, frame time and bytes do not rise; where a task says they fall, the numbers go in the commit message.
 - **One move a commit.** A part, a resource kind or a verb's data moves in its own commit, so a break is found by `git bisect`.
 - **Names over comments,** in every line this block writes or moves: a comment that says what a good name would say is replaced by the name. One-line comments stay as landmarks over a section or a function, and wherever the code cannot say why.
 - **How a step is checked.** Build as [AGENTS.md](../AGENTS.md#build-and-test) says, then `cd build && ctest -j4`, `xgetest-generated`, and `xgetest-long` (random keys, damaged files, `[speed]`, `[size]`). A step is done when its **Check** and all of these pass with zero warnings, and its box is ticked in the same commit.
 - A step marked "the author" stops for the author.
 
-### Order
-
-| # | Task | Gains |
-|---|---|---|
-| 1 | [CR1](#cr1-a-measure-and-the-lists-that-disagree): a measure, and the lists that disagree | sizes on record; suspected bugs settled |
-| 2 | [CR2](#cr2-a-resource-manager): a resource manager | one picture, sound and texture each, however many use it |
-| 3 | [CR3](#cr3-parts-as-components): parts as components | an object the size of what it uses |
-| 4 | [CR4](#cr4-input-update-render): input, update, render | the run reads as it is |
-| 5 | [CR5](#cr5-the-reader-in-one-pass): the reader in one pass | no search per tag; the schema trusted |
-| 6 | [CR6](#cr6-one-reader-not-two): one reader, not two | about 6,000 lines of second reader gone |
-| 7 | [CR7](#cr7-a-verb-owns-its-data): a verb owns its data | a command the size of what it says |
-| 8 | [CR8](#cr8-no-special-rules): no special rules | no mechanic bends the flow for itself |
-
-The author's order: the resource manager and the components first, since the rest is easier once they are in.
-
-### CR1. A measure, and the lists that disagree
-
-- **Steps.**
-  - [x] **1. Sizes on record (S).** `xgetest-long "[size]"` (`xge/tests/long/test_size.cpp`) prints `sizeof` `Object`, `WrittenObject`, `WrittenCommand` and `Command`, and for Pong, Space Invaders, Pac-Man and Klondike the objects, the pictures they hold (count and bytes) and the textures a window keeping them as the backends do is asked for. The numbers are in [engine-structure](designs/16-engine-structure.md#what-was-measured).
-  - [x] **2. Do the lists hide bugs (S).** Done: `test_command_values.cpp`. Five of the six lists missed `<arc>` and `<below>`: self, a copy's own name and a scene's names were never put in them, and a live number in them was read once. Light and seek were walked by the scenes elsewhere; grip by nothing. Was: Six places list "every value in a command" by hand (`game/object.cpp` in `nameSelfIn` and the two renames, `load/conditions.cpp`, `game/scenes.cpp`, `load/expr.cpp` for `live`), and only one names `arc` and `below`; the scenes' list of an object's numbers lacks seek, light and altitude. Write tests first: `self` in a `<hop>`'s `<arc>`, a spawned copy's own name in a `<spawn>`'s `<below>`, a scene object's `<light>` and `<seek>` naming another object of its scene, a live number in an `<arc>`. **Check:** each test passes or fails; the failures are the bugs.
-  - [x] **3. One walk (S).** Done: `WrittenCommand::forEachValue` and `WrittenObject::forEachValue`, used by all six; Pac-Man's `--check` 2.07G to 1.96G. Names (`object`, `partner`, `variable`...) stay listed where each is renamed, since each place treats them differently (exact, at the start, as a look). Was: `forEachValue` and `forEachName` for `WrittenCommand` and for `WrittenObject` (beside each struct), used by all six. **Check:** step 2's tests pass; nothing else changes.
-
-### CR2. A resource manager
-
-- **Why.** Pictures are shared by five caches in four places (`drawOnce` and the flips in `Evaluator`, each `Turnable`'s turned pictures, a static map of image files), lines and polygons are drawn per object, circles, rectangles and texts are drawn again whenever a window asks, and each window keeps a texture per object and builds it again on every change of picture ([what was measured](designs/16-engine-structure.md#what-was-measured)).
-- **The shape.** One class, `Resources` (`xge/lib/engine/resources.h`, `.cpp`), owned by the `Game` (in its `Evaluator`, as `Game::resources()`):
-
-  ```cpp
-  struct PictureId { std::uint32_t index{}; };          // 0 is "none"; SoundId, FontId, SheetId, SchemaId alike
-  class Resources
-  {
-  public:
-      PictureId pictureFile(const std::string& path);    // read once
-      template <typename Draw>
-      PictureId picture(const std::string& key, Draw&& draw);   // the same key gives the same id
-      PictureId own(Bitmap made);                        // one object's alone (a holed picture)
-      void release(PictureId owned);                     // only for what own() gave
-      const Bitmap& bitmap(PictureId id) const;
-      std::size_t pictureCount() const;                  // and pictureBytes(), for [size]
-  };
-  ```
-
-  - A key is text holding everything that decides the pixels and nothing else (the kind, its rows or lines or file and part, colours, scale, flip, style, font and size), as `drawOnce`'s keys were. Not a `PictureKey` struct: that would be one more place listing every field of every sprite kind, which this review is removing. Turned, flipped and recoloured pictures are keys too (the key it was made from, then the turn).
-  - Numbers in a key are written exactly (`std::to_chars`), so two descriptions share a picture only when they draw the same pixels.
-  - Ids are never reused while a game is loaded, so an id held anywhere stays right. `own` and `release` are the one exception and are used only by `<hole>`.
-  - A window keeps its textures by `PictureId`. It is told which ids are on screen and makes a texture the first time it sees one.
-- **Steps.**
-  - [x] **1. The manager, with image files (M).** `Resources` with `pictureFile()`; `Game` owns one; the static map and its mutex in `picture/image.cpp` went (`readPictureFile` reads, the manager keeps). An `<image>`'s pixels are read as the game loads into `Picture::image`. `xge/tests/engine/test_resources.cpp`.
-  - [x] **2. Drawn pictures (M, one kind a commit).** `drawOnce` (rows, sheet cells, SVGs) asks the manager; lines and polygons are drawn once a description. Circles, rectangles and texts are drawn at the window's scale when a window asks, so they move with step 5. `test_resources.cpp`: 20 alike share one picture, a colour makes two. The four `[size]` games hold the same pictures as before (none of them draws lines).
-  - [x] **3. Made pictures (M, one kind a commit).** Done: turned (keyed by the drawing's key and the degrees), flipped (`Resources::flippedLeftRight`); palettes were already drawn through `drawOnce`; holed went with step 4 and drawn at the window's size goes with step 5. Was:** Turned (`Turnable` in `picture/bitmap.h`, which keeps its own map today), flipped (`flipsOf`), palette swaps (`makePalettes`), redrawn at the window's size, and holed (`own`, released when its object is reset or despawned). **Check:** cases in `test_resources.cpp`: two objects with one picture turned to the same heading share one turned picture; a `<hole>` in one of two alike shields leaves the other's picture untouched, and `pictureCount()` returns to what it was after a reset. `test_holes.cpp`, `test_picture_scale.cpp`, `test_flippers.cpp` pass.
-  - [x] **4. Objects hold ids (M).** Done: `PictureId` is one pointer to where the `Resources` keep the picture, read like it, so a collision or a test reads `*object.drawn.bitmap` with no manager at hand; holed pictures and a tether's line are `own`ed, `replace`d and `release`d. Only `Object::drawnPicture`, what windows take, still hands out a shared pointer (step 5). Was: `std::shared_ptr<const Bitmap>` leaves `Object` and its parts (`Looks`, `Animation`, `Drawn`, `Mirror`) for `PictureId`; `Object::drawnPicture` asks the manager. **Check:** `grep -rn "shared_ptr<const Bitmap>" xge/lib/game xge/lib/play` finds nothing; all tests.
-  - [x] **5. Textures by picture (M, one backend a commit).** Done: every window keeps one texture a picture id (`Window::Textures`), each object only a sprite or a handle to it; the picture window draws from the picture and keeps none. `[size]` counts textures the same way: Pong 29 to 11, Pac-Man 777 to 43, Space Invaders builds 29 in 600 frames, not 1,109. Direct3D passed a MinGW syntax pass here and waits for a build on Windows. Was: Null window first, with a count of textures asked for; then SFML, SDL2, raylib, OpenGL, Vulkan, Qt (`xge/gui`); the Direct3D windows are changed blind and wait for the author's build. The contract in `window/window.h` and `docs/reference/engine.md` "What a window must do" is rewritten first. **Check:** a case in `test_resources.cpp`: the null window is asked for 1 texture by the 20-member game; `test_backends.cpp` under `xvfb-run` for each backend built; a line in Waiting for a look on Windows for Direct3D.
-  - [x] **6. Sounds, fonts, sheets, schemas (M, one a commit).** Done: `Resources::samples` (a recording read once at load, notes when an audio library asks; `Audio::load` takes the game's `Resources`), `Resources::sheet` (let go once loaded), and a schema parsed once for the program (`validateWithKeptSchema`, `load/xsd`), since a game is read before any `Engine` exists. Fonts were already opened once for the program, with a lock, and are read where no game is at hand (text measuring, on the computer's thread too), so they stay. Was: Sound samples (`samplesOf` in `audio/sound.cpp`), font files (`picture/font.cpp`), sheets (`SheetPicture`), and the parsed schema (`XsdLiteValidator` in `load/xsd.*`). The schema outlives one game, so it is held by the `Engine`'s manager, which each game's manager asks. **Check:** cases in `test_resources.cpp`: two objects playing one sound share one set of samples; loading two games one after another reads `xgedef.xsd` once (a counter on the manager).
-- **Files.** `xge/lib/engine/resources.*` (new, in `ENGINE_SOURCES` and `games/generators/engine-cpp/engine.xml`), `load/pictures.cpp`, `picture/*`, `game/object.h`, `window/*`, `audio/*`, `xge/gui/source/`; `docs/reference/engine.md`, `docs/agents/pictures.md`.
-- **Done when** no file but `resources.cpp` makes a `Bitmap` that outlives a function, and `[size]` shows pictures and textures counted by what is different, not by object.
+CR1, CR2 and CR4 to CR9 are done; what each did is in [engine-structure](designs/16-engine-structure.md). CR3 is what is left.
 
 ### CR3. Parts as components
 
@@ -159,52 +104,6 @@ The author's order: the resource manager and the components first, since the res
 - **Files.** `xge/lib/game/store.h` (new), `game/object.h`, `game/game.*`, `game/*.cpp`, `play/*`, `verbs/*`, `load/build.cpp`; `xge/tests/engine/test_store.cpp` (new); `docs/reference/engine.md`, `docs/agents/play.md`.
 - **Done when** what is the same for every object of a kind is held once (step 5a), an object holds only what changes for it while playing, and no object holds a part its file never asked for; `sizeof(Object)` is then under 600 bytes (held by a `static_assert` in the `[size]` test). The author (after seeing where 2.5 KB went: three copies of the `Moment`, about fifteen empty strings, and per-kind data copied into every object) agreed this goal in place of the first one, under 1,200.
 
-### CR4. Input, update, render
-
-- **Why.** `Engine::step` polls the window, plays held keys, runs the computer, steps the game and asks for sounds, and `loop` then renders. The author wants the three stages spelled out so another (post-processing) can go between.
-- **Steps.**
-  - [x] **1. `Engine::run` (M).** Done: `run()` is `input()`, `update(seconds)`, `render()`; the computer's presses went into `update`, which they need the step's length for, as held keys do. Was: `run()` is the loop: `input()`, `update(seconds)`, `render()`, in those words. `input` is everything that comes from outside (window events, pads, the demo's keys, the computer's presses); `update` is the game's step and what follows from it (sounds asked for, things kept); `render` draws. `loop` and `step` go, with their callers in `xge/cli`, `xge/gui` and the tests' `played.h`. **Check:** all tests; `xgetest "[window]"` under `xvfb-run`.
-  - [x] **2. The game's own step the same way (S).** Done: `Game::updateObjects` is `settle`, `playOneFrame`, `settle`, `showJoins`, `placeByResizedTexts`; `playOneFrame` (`play/frame.cpp`) is named stages only (`advanceAnimations`, `meetEdgesWithoutSweep`, `stickAtEdges`, `rememberWhereAll` came out of it); speed unchanged. Was: `Game::updateObjects` reads as its stages in order (timers, the frame, conditions, spawns settled), each a named call, with no work between the calls. **Check:** all tests; `[speed]`.
-- **Files.** `xge/lib/engine/engine.*`, `xge/cli/source/`, `xge/gui/source/`, `xge/tests/helpers/played.h`; `docs/reference/engine.md`.
-
-### CR5. The reader in one pass
-
-- **Why.** `findChild` (`load/reading.cpp`) starts from the first child every time and makes a node object per sibling passed; `readObjectHere` calls it about 40 times. The group reader repeats the object reader tag by tag. And the reader re-checks the file's shape because a file that names no schema loads unchecked.
-- **Measured first.** Searching tags is a few percent of Pac-Man's load (777 objects); the rest was the objects handled one by one. Done before the steps: a map's members are copies of its first, scene objects are moved rather than copied, collision partners are asked once per group of alike objects, and live numbers go into `calc` only when a text reads them and are kept up only then. Pac-Man's `--check` went from 3.69G to 2.53G instructions, and the play benchmark (`[speed]`'s four games under callgrind) from 40.6G to 18.0G.
-- **Steps.**
-  - [x] **1. Every game is checked (S).** Done: one naming none is checked against the `xgedef.xsd` beside or above it, else the working folder's; 70 test cases whose snippets the schema turns away were put in schema order or now expect the schema's message (the loader's friendlier ones, like "`<show set=...>` is gone", are no longer reached). Was: a file that names no schema is checked against the engine's own `xgedef.xsd`. **Check:** a test loads a wrong file with no schema named and gets the schema's message; `test_schema_checker.cpp`.
-  - [x] **2. The reader trusts the shape (M).** Done in seven commits: `fail(` in `load/xml.cpp` 251 to 156, `requireAttribute(` 20 to 3 (the keys file, read unchecked, keeps its own). Was: remove what the schema already refuses: unknown tags, missing required children, wrong enumeration words, numbers that are not numbers (the bare `std::stof` and `std::stoi` in `readWindow` and elsewhere become safe). Keep every check a schema cannot make. One group of readers a commit. **Check:** `test_schema_checker.cpp`'s sweep still refuses every damaged game; the count of `fail(` in `load/xml.cpp` goes in the commit.
-  - [x] **3. An object's simple parts as a table (M).** Done: `simpleParts` in `load/xml.cpp`, 27 parts, read alike by the object and group readers (members give none of them); `findChild(` 146 to 120; Pac-Man's `--check` barely moved (2.091G to 2.088G), as the measure foretold. `hasX` as `std::optional` waits for CR6: `data.xsl` writes every `hasX`, and goes if the author says yes. Was: rows of tag, where it lands and how it is read, used by the object, group and member readers alike, each walking its children once in order. `hasX` beside a value becomes `std::optional`. **Check:** `xgetest-generated`; `[speed]` load time falls.
-  - [x] **4. No search left (M).** Done: `Children` (`load/reading.h`) walks an element once; the object, state, scene, map and top-level readers and `<collisions>` use it, and `findChild(` in `load/xml.cpp` went from 120 to 74, each left asking one or a few optional children of a small element (a sprite's shape, a cell, the window, a style, a sheet). `copyElement`: the file is copied into elements once; layOut, the kit and spawnedBy share them (`elementOf`). Pac-Man's `--check` 2.088G to 2.069G. Was: the other readers (states, conditions, sprites, holders, maps) walk their children once. `findChild` stays only where one optional child is asked of a small element. Each `copyElement` in `load/xml.cpp` is shown to be needed or removed. **Check:** a count of `findChild(` before and after in the commit; `[speed]`.
-- **Files.** `xge/lib/load/xml.cpp`, `load/reading.*`, `game/object.h`; `docs/agents/play.md` "Loading".
-
-### CR6. One reader, not two
-
-- [x] **1. The author: yes or no.** **Yes, for `engine-cpp`** (the author): it was only what was left once `windows-cpp` became stand-alone, so it can work the way the engine does. `windows-cpp` (A5) stays small and hand-written-looking, untouched. Was: `engine-cpp` would write the game's tree (after `from=` is worked out) as a C++ table, and the generated program would run `load/xml.cpp` over it through a small `XmlNode`. `data.xsl` (4,138 lines), `merge.xsl` (768), `modules/game_parts.h` (588) and the describer in `test_generated_games.cpp` (551) go; the generator leaves [changing the language](agents/readme.md#changing-the-language). It stays XSLT, with no XML library in the program. The cost: the program carries the reader and reads its table at start. If no, skip to CR7 and A1 step 4 stays parked.
-- [x] **2. The tree and its node (M).** Done: `xml/tree.h` (`TreeElement`, `viewOfTree`); `load/xml.cpp` reads a checked `<game>` element (`readGame(root)`) and `load/file.cpp` loads and checks a file; `test_tree.cpp` reads Pong, Pac-Man, Klondike and Mario Bros. from trees. Was: A static tree type and an `XmlNode` over it (`xge/lib/xml/`), with a test that reads Pong from one.
-- [x] **3. The stylesheet (M).** Done: `tree.xsl` writes each element as a static `TreeElement` array; the program includes the reader, `load/merge.cpp` and `xml/tree.cpp`, and nothing else changed. Was: `games/generators/engine-cpp/tree.xsl` writes it; `xgetest-generated` plays each generated game beside the engine's as it does now.
-- [x] **4. The second reader goes (S).** Done: `data.xsl`, `merge.xsl`, `game_parts.h`, the describer and `<module>` in `generate.cpp` gone. Was: Delete the four files and their mentions in `engine.xml`, `assets.cmake`, the agent notes and [generator](designs/40-generator.md).
-- [x] **5. `hasX` beside a value becomes `std::optional` (S).** Done: an object's acceleration, heading, pivot, drag, friction, mass, surface drag and grip, light and grip; a picture's scale, svg part and line thickness; a path's start and a holder's picked sends. `WrittenObject` stays 14,608 bytes. `hasAnimation` and `hasAltitude` stay: each says a whole part was written, and its values keep their defaults. Was: from CR5 step 3, once `data.xsl` no longer writes them.
-
-### CR7. A verb owns its data
-
-- **Why.** `WrittenCommand` is 3,328 bytes of 61 shared fields. This is A1 step 4, and it replaces that step.
-- **Needs** CR6.
-- **Steps.**
-  - [x] **1. The shape, on three verbs (M).** Done; the author: "good for now", though still busy and its names not easy to follow. Built: `WrittenOwn` (`std::variant<std::monostate, WrittenBounce, WrittenHop, WrittenSpawn>`) in `WrittenCommand::own`, each with `eachValue` for `forEachValue`; a hunt's hop is a `WrittenHop` (`byHops` gone). `WrittenCommand` 3,328 to 4,112 bytes until step 3; Pac-Man's `--check` 1.96G to 1.86G. Was: `WrittenCommand` becomes the verb, its line, and the verb's own data (a `std::variant` of small structs beside each verb's `Cmd...` struct, or one struct serving as both where nothing is worked out). `<bounce>`, `<hop>` and `<spawn>` first. **The author** reads those three files before the rest move.
-  - [x] **2. The rest, ten verbs a commit (L in all).** Done, with the work each verb does moved into its file and typed `run`/`print`/`check` (the author: "do them all like that"); `hold` and `point` join the table for held keys and the mouse. Was: A field two verbs used for different things (`seconds`, `amount`, `distance`) becomes each verb's own, named for what it is there. **Check after each commit:** `xgetest "[verbs]"`, `xgetest-generated`.
-  - [x] **3. The bag goes (S).** Done: `WrittenCommand` 3,328 to 2,496 bytes; Pac-Man's `--check` 1.86G to 1.72G; load errors already name the line (`onLineOf`). Was: `WrittenCommand` has no shared value fields; CR1's `forEachValue` asks the verb. Load errors name the command's own line. **Check:** `[size]`.
-- **Files.** `xge/lib/game/command.h`, `xge/lib/verbs/*`, `load/reading.*`; `docs/designs/14-verbs.md`.
-
-### CR8. No special rules
-
-- **Why.** Places where one mechanic was given its own branch because it was quicker that day.
-- **Steps.**
-  - [x] **1. The list (S).** Done: in [engine-structure](designs/16-engine-structure.md#special-rules-plan-cr8); the author: "sounds good". Was: Find them: `grep -rn 'verb == "' xge/lib` (18: `send`, `order`, `trigger`, `set`, `spawn`, `shift` and others), tests of a kind or class by name in `play/` and `game/`, flags set by one mechanic and read by the frame (`goThrough`, `placed`, `hasAim`), and early returns in the frame for one feature. For each: what it is for, and the proposal, either a property on `Verb` or on a part that anything could have, or removal. The list goes in [engine-structure](designs/16-engine-structure.md). **The author** reads it.
-  - [x] **2. One a commit (M in all),** as agreed. Done: verb-name checks 14 to 2. **Check:** the grep's count falls to what the list says stays.
-  - [x] **3. Things built twice (M).** Done: in [engine-structure](designs/16-engine-structure.md#special-rules-plan-cr8). Was: Read `play/verbs.*`, `play/executor.*`, `play/geometry.*` and `load/reading.*` for helpers that do one job under two names, and layers that only pass a call on. Each is merged or removed. **Check:** the list of what merged is in the commit messages.
-  - [x] **4. Names as ids while playing (L, a family a commit).** The author: everywhere, not only where `[speed]` gains: a name is looked up once and held as an id. Done: variables, patterns, commands, the game's functions and parts, what rules, conditions, live numbers and timers read, each kept by `Name` once found; the frame is about 10% faster (`[speed]` without the timed searches, 7.4 to 6.7 ms) and string work fell from a third of play to 5%. What is left, and why, is in [engine-structure](designs/16-engine-structure.md#text-looked-up-while-playing-plan-cr8-step-4).
-
 ## Tasks
 
 Every task has the same shape: why, then numbered steps with a box each, then the files and what "done" means.
@@ -215,19 +114,6 @@ Every task has the same shape: why, then numbered steps with a box each, then th
 - **A step marked "the author" stops for the author:** do not go past it without an answer.
 
 ### Architecture
-
-#### A1. A verb is one file
-
-- **Needs** nothing. A5 needs only what is already done.
-- **Done so far.** Each verb is a file in `xge/lib/verbs/` with its name, forms and places, `onRelease`, `read`, `make`, `check` and `run`; `verbs/all.cpp` lists them; `xgetest "[verbs]"` holds the list against the schema. Why a written list: [verbs](designs/14-verbs.md).
-- **Careful.** The folder is compiled as one unit: name a file's functions for its verb (`readBounce`), never in an unnamed namespace. A refused verb returns false and ends its list: keep each `run`'s answer exactly. The generated programs compile the same files.
-- **Steps.**
-  - [x] **1. A place for printing (S).** `Verb` (`verbs/verb.h`) gains an optional `print` for a `Command` and one for a `WrittenCommand`. `operator<<` for each (`game/command.cpp`) asks the verb first and falls back to its own cases. Nothing moves yet. **Check:** `xgetest-generated` (it compares these dumps, so the text must not change by a character).
-  - [x] **2. Move the printing, ten verbs a commit (M in all).** Each verb's two cases move into its file. Repeat until the cases in `command.cpp` are gone, then remove the fallback. **Check after each commit:** `xgetest-generated`.
-  - [x] **3. A verb's own helpers move beside it (S).** `hop`, `startFlight`, `huntByHop`, `spawnProjectile`, `aim`, `chase`, `land`, `knock` in `play/executor.cpp`: for each, `grep` for its callers; one used by a single verb moves into that verb's file, one used by several stays. One helper a commit. **Check:** `xgetest-long "[speed]"` before and after (load and frame times must not rise).
-  - [ ] **4. Moved to [CR7](#cr7-a-verb-owns-its-data).** Was: the author: whether each verb owns its data (L if yes). `Command` would become `{ const Verb* verb; data }` and `WrittenCommand`'s shared fields the verb's own, which is where "`seconds` means a move's wait" ends. It changed `data.xsl` and the describer heavily, so it waited for CR6. Ask before starting. With it, each command carries its own line, and the load's name checks can say the command's line rather than its holder's (B7, done; the author wants that).
-- **Files.** `xge/lib/verbs/*`, `xge/lib/game/command.cpp`, `xge/lib/play/executor.*`; `docs/designs/14-verbs.md` ("Open" shrinks), `docs/agents/play.md` "Loading".
-- **Done when** adding a verb is one file in `xge/lib/verbs/`, one line in `all.cpp` and `engine.xml`, its `Cmd*` struct, the schema element and the docs.
 
 #### A5. A game written out as if by hand
 
