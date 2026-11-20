@@ -27,18 +27,18 @@ namespace xge
 	// just released), and the variable it burns; playOneFrame
 	// applies every direction being held once a frame. Unlike a move's velocity
 	// there is nothing to recombine: each direction adds its own amount.
-	static void pushAcross(Game& game, Object& object, Direction direction, float amount, const std::string& burn)
+	static void pushAcross(Game& game, Object& object, Direction direction, float amount, Name burn)
 	{
 		const auto index = static_cast<std::size_t>(direction);
 		Drive& drive = game.driveFor(object);
 		drive.thrust[index] = amount;
-		drive.thrustBurn[index] = amount == 0.0f ? std::string{} : burn;
+		drive.thrustBurn[index] = amount == 0.0f ? Name{} : burn;
 	}
 
 	// Thrust along the heading is now held (amount 0 = just
 	// released) by that action, and the variable it burns. Each action's
 	// thrust is its own, so two held at once add up.
-	static void pushAhead(Game& game, Object& object, const std::string& action, float amount, const std::string& burn)
+	static void pushAhead(Game& game, Object& object, Name action, float amount, Name burn)
 	{
 		if (amount == 0.0f)
 		{

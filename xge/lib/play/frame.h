@@ -88,7 +88,7 @@ namespace xge
 
 		// A thruster burns one unit of the object's `variable`; false
 		// (and nothing burnt) when there is none left.
-		virtual bool burn(Object& object, const std::string& variable)
+		virtual bool burn(Object& object, Name variable)
 		{
 			(void)object; (void)variable;
 			return true;

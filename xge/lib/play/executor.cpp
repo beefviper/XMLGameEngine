@@ -18,6 +18,17 @@
 
 namespace xge
 {
+	namespace
+	{
+		// The verbs of an object's action of that name; none if it has none.
+		const std::vector<Command>& actionOf(const Object& object, Name name)
+		{
+			static const std::vector<Command> none;
+			const auto found = object.kind->action.find(name);
+			return found == object.kind->action.end() ? none : found->second;
+		}
+	}
+
 	const Command& CommandExecutor::now(const Command& command, Command& made, const Object* self, const Object* other)
 	{
 		if (const auto* live = std::get_if<CmdLive>(&command))
@@ -114,8 +125,8 @@ namespace xge
 
 		Object& object = game.getObject(trigger->object);
 		doer.self = &object;
-		doer.action = &trigger->action.str();
-		for (const auto& written : object.kind->action[trigger->action])
+		doer.action = &trigger->action;
+		for (const auto& written : actionOf(object, trigger->action))
 		{
 			Command madeNow;
 			const Command& actionCommand = now(written, madeNow, &object, nullptr);
@@ -124,7 +135,7 @@ namespace xge
 		return true;
 	}
 
-	void CommandExecutor::triggerObjectAction(const std::string& objectName, const std::string& actionName, bool keyPressed, bool byRule, const std::string& from)
+	void CommandExecutor::triggerObjectAction(Name objectName, Name actionName, bool keyPressed, bool byRule, Name from)
 	{
 		const auto showing = [&](const Object& object) { return from.empty() || object.lookName() == from; };
 		lastTriggerRefused = false;
@@ -169,7 +180,7 @@ namespace xge
 		--aboutDepth;
 	}
 
-	bool CommandExecutor::runAction(Object& object, const std::string& actionName, bool keyPressed, bool byRule)
+	bool CommandExecutor::runAction(Object& object, Name actionName, bool keyPressed, bool byRule)
 	{
 		// An object out of play does not act on a key: a ship that is not
 		// there does not fire, and a cannon not yet brought in does nothing.
@@ -195,7 +206,7 @@ namespace xge
 		doer.pressed = keyPressed;
 		doer.byRule = byRule;
 		doer.action = &actionName;
-		for (const auto& written : object.kind->action[actionName])
+		for (const auto& written : actionOf(object, actionName))
 		{
 			// Refused: what comes after it answers a press that did nothing.
 			if (!run(written, doer)) { return true; }

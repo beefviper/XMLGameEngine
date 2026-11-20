@@ -110,8 +110,8 @@ namespace xge
 	// after the state's own.
 	struct Scene
 	{
-		std::string name;
-		std::map<std::string, std::string> ways; // a way's name: the path of the scene it leads to
+		Name name;
+		std::map<Name, Name> ways; // a way's name: the path of the scene it leads to
 		std::vector<Condition> conditions;
 		std::vector<Timer> timers;
 	};
@@ -119,9 +119,9 @@ namespace xge
 	class State
 	{
 	public:
-		std::string name;
+		Name name;
 		int line{ 0 }; // RawState::line, for the messages of the checks made once all is loaded
-		std::vector<std::string> show;
+		std::vector<Name> show;
 		std::map<KeyCode, std::vector<Command>> input;    // pressed (RawState::input)
 		std::map<KeyCode, std::vector<Command>> holding;  // on="hold": every frame while down
 		std::map<KeyCode, std::vector<Command>> letGo;    // on="release": once, let go
@@ -140,12 +140,12 @@ namespace xge
 		std::vector<Condition> computer;
 
 		// The states drawn still underneath it (RawState::showStates).
-		std::vector<std::string> showStates;
+		std::vector<Name> showStates;
 
 		// Its music (<music sound="..." />, "" for none): a loop plays while
 		// this is the current state, a sound that does not loop plays as it
 		// begins (Game::pushState).
-		std::string music;
+		Name music;
 
 		// Its scenes, in the order written; the first is current at the start.
 		std::vector<Scene> scenes;

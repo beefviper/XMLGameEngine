@@ -477,8 +477,8 @@ namespace xge
 
 			state.name = rawState.name;
 			state.line = rawState.line;
-			state.show = rawState.show;
-			state.showStates = rawState.showStates;
+			state.show = NameStore::program().of(rawState.show);
+			state.showStates = NameStore::program().of(rawState.showStates);
 			state.music = rawState.music;
 
 			for (std::size_t moment = 0; moment < keyMoments.size(); ++moment)
@@ -536,7 +536,7 @@ namespace xge
 						throw std::runtime_error(sceneWhere + ": <way name=\"" + way + "\" scene=\"" + to + "\" /> names no scene of state '" + rawState.name + "'"
 							+ didYouMean(to, names) + ". Its scenes are: " + listOf(names));
 					}
-					scene.ways[way] = rawState.name + "." + leads->name;
+					scene.ways[Name(way)] = Name(rawState.name + "." + leads->name);
 				}
 				for (const RawCondition& rawCondition : flattened(rawScene.conditions))
 				{

@@ -87,25 +87,25 @@ namespace xge
 	struct Condition
 	{
 		int line{ 0 }; // RawCondition::line
-		std::string filterClass;
+		Name filterClass;
 		// "self": the object testing it (a rule's, an action's), as are
 		// distanceTo and sees; `selfReads` are the variables of its own a
 		// live number reads (self.worth).
-		std::string filterObject;
+		Name filterObject;
 		bool saysSelf{ false };
-		std::string madeFor;   // the object it was made for at load: self, when none tests it
-		std::string madeAgainst;   // the same for other, in a rule about touching
-		std::vector<std::string> otherReads;
-		std::vector<std::string> selfReads;
-		std::string variableName;
+		Name madeFor;   // the object it was made for at load: self, when none tests it
+		Name madeAgainst;   // the same for other, in a rule about touching
+		std::vector<Name> otherReads;
+		std::vector<Name> selfReads;
+		Name variableName;
 		Total total{ Total::None };
-		std::string distanceTo; // measured to the nearest one in play of this name or group
-		std::string sprite;     // only those showing this look
+		Name distanceTo; // measured to the nearest one in play of this name or group
+		Name sprite;     // only those showing this look
 		// <sees>: each one holds while the straight line from its middle to
 		// the middle of the nearest of `sees` in play crosses nothing in play
 		// of a class in `past` (measured as 1, or 0 when it crosses).
-		std::string sees;
-		std::vector<std::string> past;
+		Name sees;
+		std::vector<Name> past;
 		RawCondition::Join join{ RawCondition::Join::None };
 		std::vector<Condition> parts;
 		Compare compare{ Compare::AtLeast };
@@ -120,8 +120,8 @@ namespace xge
 		// worked out, so a variable changed in any way is seen.
 		struct Read
 		{
-			std::string owner;
-			std::string variable;
+			Name owner;
+			Name variable;
 			float* slot{ nullptr };
 		};
 		std::vector<Read> reads;
@@ -131,7 +131,7 @@ namespace xge
 		// condition may match, run for each one that holds.
 		struct Each
 		{
-			std::string object;
+			Name object;
 			std::vector<Command> commands;
 		};
 		std::vector<Each> each;

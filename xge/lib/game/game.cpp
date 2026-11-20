@@ -4,6 +4,7 @@
 // date: Sept 18, 2020
 
 #include "game/game.h"
+#include "game/words.h"
 #include "game/players.h"
 
 #include "play/executor.h"
@@ -50,7 +51,6 @@ namespace xge
 		rawObjects = std::move(data.objects);
 		rawSounds = std::move(data.sounds);
 		rawPaths = std::move(data.paths);
-		worthName = nameOf("worth");
 		for (const RawPatterns& raw : data.patterns)
 		{
 			Patterns& set = patterns.emplace_back();
@@ -60,7 +60,7 @@ namespace xge
 				set.patterns.push_back({ nameOf(rawPattern.name), rawPattern.parts, NameStore::program().of(rawPattern.by) });
 			}
 		}
-		const std::vector<std::string> keeps = std::move(data.keeps);
+		const std::vector<Name> keeps = NameStore::program().of(data.keeps);
 		demo = std::move(data.demo);
 
 		// Room for what is spawned, so that the file's objects stay where
@@ -103,7 +103,7 @@ namespace xge
 			{
 				for (const Name by : pattern.by)
 				{
-					if (by == worthName || std::any_of(objects.begin(), objects.end(), [&](const Object& object) { return itemOf(object).is && object.variable.count(by); })) { continue; }
+					if (by == words::worth || std::any_of(objects.begin(), objects.end(), [&](const Object& object) { return itemOf(object).is && object.variable.count(by); })) { continue; }
 					throw std::runtime_error("<patterns name=\"" + set.name + "\"> > <pattern name=\"" + pattern.name + "\">: variable=\"" + by + "\"; nothing held has a variable of that name");
 				}
 			}
@@ -144,7 +144,7 @@ namespace xge
 		{
 			if (raw.think.empty()) { continue; }
 			const Command made = makeCommand(raw.think.front(), [&](const RawValue& value) { return expr.evaluate(value, "object '" + raw.name + "' > <think>"); });
-			if (const auto* plays = std::get_if<CmdThink>(&shapeOf(made))) { memberThinks.emplace(raw.name, *plays); }
+			if (const auto* plays = std::get_if<CmdThink>(&shapeOf(made))) { memberThinks.emplace(nameOf(raw.name), *plays); }
 		}
 		startPlayers();
 		loadedCount = objects.size();
@@ -235,7 +235,7 @@ namespace xge
 		resolveSizeDependentPositions();
 	}
 
-	bool Game::isDescription(const std::string& name)
+	bool Game::isDescription(Name name)
 	{
 		const auto known = descriptions.find(name);
 		if (known != descriptions.end()) { return known->second; }
@@ -251,7 +251,7 @@ namespace xge
 		return descriptions[name] = any && all;
 	}
 
-	Object* Game::spawn(const std::string& target, bool random, std::optional<int> member)
+	Object* Game::spawn(Name target, bool random, std::optional<int> member)
 	{
 		// What it is a copy of: the object of that name, or the group's
 		// members in turn; never a copy (only the file's objects are
@@ -263,7 +263,7 @@ namespace xge
 		}
 		if (from.empty())
 		{
-			const std::string full = fullName(target);
+			const Name full = fullName(target);
 			if (full != target) { return spawn(full, random, member); }
 			return nullptr;
 		}
@@ -281,10 +281,10 @@ namespace xge
 		}
 
 		// The first of its numbers that no object has now.
-		std::string name;
+		Name name;
 		for (std::size_t number = 1; name.empty(); ++number)
 		{
-			const std::string candidate = original.name + "." + std::to_string(number);
+			const Name candidate = nameOf(original.name + "." + std::to_string(number));
 			const auto taken = [&](const Object& each) { return each.name == candidate; };
 			if (std::none_of(objects.begin(), objects.end(), taken) && std::none_of(spawned.begin(), spawned.end(), taken)) { name = candidate; }
 		}
@@ -376,10 +376,10 @@ namespace xge
 		stageChanged();
 	}
 
-	void Game::despawn(const std::string& target)
+	void Game::despawn(Name target)
 	{
 		// The name as written, or the end of a path (bomb for playing.bomb).
-		const std::string name = fullName(target);
+		const Name name = fullName(target);
 		for (auto& object : objects)
 		{
 			if (object.exists && (object.named(name))) { despawn(object); }
@@ -496,7 +496,7 @@ namespace xge
 		return sounds;
 	}
 
-	void Game::requestSound(const std::string& name)
+	void Game::requestSound(Name name)
 	{
 		// Within a frame the last word wins: a loop silenced and asked for
 		// again (one of two keys let go, the other still down) plays on.
@@ -533,7 +533,7 @@ namespace xge
 		return on;
 	}
 
-	void Game::silenceSound(const std::string& name)
+	void Game::silenceSound(Name name)
 	{
 		loops.erase(name);
 		soundRequests.erase(std::remove(soundRequests.begin(), soundRequests.end(), name), soundRequests.end());
@@ -548,7 +548,7 @@ namespace xge
 		return std::exchange(silenceRequests, {});
 	}
 
-	bool Game::soundLoops(const std::string& name) const noexcept
+	bool Game::soundLoops(Name name) const noexcept
 	{
 		return std::any_of(sounds.begin(), sounds.end(), [&](const SoundDesc& sound) { return sound.loop && sound.name == name; });
 	}
@@ -558,7 +558,7 @@ namespace xge
 		return windowDesc;
 	}
 
-	const Object* Game::nearestInPlay(const Object& from, const std::string& name)
+	const Object* Game::nearestInPlay(const Object& from, Name name)
 	{
 		return xge::nearestInPlay(objects, from, name, [this](const Object& other) { return isShown(other); });
 	}
@@ -593,7 +593,7 @@ namespace xge
 			if (current != currentScenes.end() && current->second == object.ownerScene) { return true; }
 		}
 
-		return std::any_of(state.show.begin(), state.show.end(), [&](const std::string& shown) { return object.named(shown); });
+		return std::any_of(state.show.begin(), state.show.end(), [&](Name shown) { return object.named(shown); });
 	}
 
 	bool Game::isStill(const Object& object) noexcept
@@ -602,7 +602,7 @@ namespace xge
 		const State& top = currentState.top();
 		if (top.showStates.empty() || !object.isVisible || !object.exists || runsIn(object, top)) { return false; }
 
-		for (const std::string& name : top.showStates)
+		for (const Name name : top.showStates)
 		{
 			const auto state = std::find_if(states.begin(), states.end(), [&](const State& candidate) { return candidate.name == name; });
 			if (state != states.end() && runsIn(object, *state)) { return true; }
@@ -626,10 +626,10 @@ namespace xge
 		return current == currentScenes.end() || current->second != object.ownerScene;
 	}
 
-	std::string Game::currentScene(const std::string& state) const
+	Name Game::currentScene(Name state) const
 	{
 		const auto current = currentScenes.find(state);
-		return current == currentScenes.end() ? std::string{} : current->second;
+		return current == currentScenes.end() ? Name{} : current->second;
 	}
 
 	void Game::startScenes(void)
@@ -644,16 +644,16 @@ namespace xge
 		}
 	}
 
-	void Game::enterScene(const std::string& scene)
+	void Game::enterScene(Name scene)
 	{
-		const std::string state = scene.substr(0, scene.find('.'));
+		const Name state = nameOf(scene.str().substr(0, scene.str().find('.')));
 		if (!sceneTimers.count(scene))
 		{
 			// The file is checked for this when it loads; this is for a caller in C++.
 			throw std::out_of_range("no scene named '" + scene + "'");
 		}
 
-		std::string& current = currentScenes[state];
+		Name& current = currentScenes[state];
 		if (current == scene) { return; }
 		current = scene;
 		++sceneChanges;
@@ -663,17 +663,17 @@ namespace xge
 		// own, or the game's) belongs to the scene it is carried into.
 		for (const Object& carrier : objects)
 		{
-			const std::string& what = carrying(carrier);
+			const Name what = carrying(carrier);
 			if (what.empty() || !carrier.ownerScene.empty()) { continue; }
 			Object* carried = tryGetObject(what);
-			if (carried && carried->ownerState == state && !carried->ownerScene.empty()) { carried->ownerScene = nameOf(scene); }
+			if (carried && carried->ownerState == state && !carried->ownerScene.empty()) { carried->ownerScene = scene; }
 		}
 		stageChanged();
 	}
 
-	std::string Game::fullName(const std::string& name) const
+	Name Game::fullName(Name name) const
 	{
-		const auto calls = [&](const Object& object, const std::string& wanted) { return object.named(wanted); };
+		const auto calls = [&](const Object& object, Name wanted) { return object.named(wanted); };
 		if (std::any_of(objects.begin(), objects.end(), [&](const Object& object) { return calls(object, name); })) { return name; }
 
 		const std::string end = "." + name;
@@ -695,10 +695,10 @@ namespace xge
 				else if (dots(calling) == dots(found)) { tied = true; }
 			}
 		}
-		return found.empty() || tied ? name : found;
+		return found.empty() || tied ? name : Name(found);
 	}
 
-	Object& Game::getObject(const std::string& name)
+	Object& Game::getObject(Name name)
 	{
 		Object* object = tryGetObject(name);
 		if (!object)
@@ -717,12 +717,12 @@ namespace xge
 			return found->second;
 		}
 
-		Object* object = findObject(name.str());
+		Object* object = findObject(name);
 		foundObjects.emplace(name, object);
 		return object;
 	}
 
-	Object* Game::findObject(const std::string& name) noexcept
+	Object* Game::findObject(Name name) noexcept
 	{
 		const auto exact = std::find_if(std::begin(objects), std::end(objects), [&](const Object& obj) { return obj.name == name; });
 		if (exact != std::end(objects))
@@ -737,11 +737,11 @@ namespace xge
 		}
 
 		// The end of one path: robots for playing.room1.robots.
-		const std::string full = fullName(name);
+		const Name full = fullName(name);
 		return full == name ? nullptr : findObject(full);
 	}
 
-	float Game::getVariable(const std::string& name)
+	float Game::getVariable(Name name)
 	{
 		const auto result = variables.find(name);
 
@@ -773,12 +773,12 @@ namespace xge
 		beginMusic();
 	}
 
-	void Game::setCurrentState(const std::string& name)
+	void Game::setCurrentState(Name name)
 	{
 		pushState(name);
 	}
 
-	void Game::pushState(const std::string& name)
+	void Game::pushState(Name name)
 	{
 		auto result = std::find_if(std::begin(states), std::end(states), [&](State& state) { return state.name == name; });
 		if (result == std::end(states))
@@ -799,7 +799,7 @@ namespace xge
 
 	void Game::beginMusic(void)
 	{
-		const std::string& music = currentState.top().music;
+		const Name music = currentState.top().music;
 		if (!music.empty() && !soundLoops(music))
 		{
 			requestSound(music);
@@ -848,7 +848,7 @@ namespace xge
 			const float drawn = expr.evaluate(value, where);
 			object.variable[nameOf(name)] = drawn;
 			startFor(object).variable[nameOf(name)] = drawn;
-			refreshBoundTexts(object.name, name, drawn);
+			refreshBoundTexts(object.name, nameOf(name), drawn);
 		}
 
 		// The position, then the velocity, the order they are drawn in when the
@@ -860,7 +860,7 @@ namespace xge
 		startFor(object).velocity = { expr.evaluate(raw->rawVelocity.x, where), expr.evaluate(raw->rawVelocity.y, where) };
 	}
 
-	void Game::popState(const std::string& name)
+	void Game::popState(Name name)
 	{
 		if (name.empty())
 		{
@@ -961,13 +961,13 @@ namespace xge
 
 	void Game::startTurns(const std::vector<std::string>& playerStates)
 	{
-		turnsState = currentState.empty() ? std::string{} : currentState.top().name;
+		turnsState = currentState.empty() ? Name{} : currentState.top().name;
 		Turn start;
 		putTurnAway(start);
 		turns.assign(playerStates.size(), start);
 		for (std::size_t i = 0; i < playerStates.size(); ++i)
 		{
-			turns[i].state = playerStates[i];
+			turns[i].state = nameOf(playerStates[i]);
 		}
 		turn = 0;
 		beginTurn();
@@ -1066,7 +1066,7 @@ namespace xge
 			currentState.pop();
 		}
 		stageChanged();
-		const std::string& state = turns[turn].state;
+		const Name state = turns[turn].state;
 		if (!state.empty())
 		{
 			pushState(state);
@@ -1145,8 +1145,8 @@ namespace xge
 			<< indent << "  <seconds>" << seconds << "</seconds>\n";
 		if (!currentState.empty())
 		{
-			const std::string& state = currentState.top().name;
-			const std::string scene = currentScene(state);
+			const Name state = currentState.top().name;
+			const Name scene = currentScene(state);
 			out << indent << "  <state name=\"" << xmlEscaped(state) << '"';
 			if (!scene.empty()) { out << " scene=\"" << xmlEscaped(scene) << '"'; }
 			out << " />\n";
@@ -1183,7 +1183,7 @@ namespace xge
 			std::smatch match;
 			if (std::regex_match(line, match, objectLine))
 			{
-				object = tryGetObject(match[1].str());
+				object = tryGetObject(Name(match[1].str()));
 				if (object && !object->kept) { object = nullptr; }
 				if (object && match[2].matched)
 				{
@@ -1209,7 +1209,7 @@ namespace xge
 		refreshAllBoundTexts();
 	}
 
-	void Game::rank(const VariableName& entry, const std::string& table)
+	void Game::rank(const VariableName& entry, Name table)
 	{
 		Object* from = tryGetObject(entry.owner);
 		const std::string& by = entry.variable;
@@ -1220,7 +1220,7 @@ namespace xge
 		}
 
 		// The places, the best first, in the order the group's members are written.
-		const std::string group = fullName(table);
+		const Name group = fullName(table);
 		std::vector<Object*> places;
 		for (auto& object : objects)
 		{
@@ -1257,13 +1257,13 @@ namespace xge
 		}
 	}
 
-	void Game::keep(const std::vector<std::string>& names)
+	void Game::keep(const std::vector<Name>& names)
 	{
 		// A name is an object or a group (every member of it), written out in
 		// full the way a command's are.
-		for (const std::string& given : names)
+		for (const Name given : names)
 		{
-			const std::string name = fullName(given);
+			const Name name = fullName(given);
 			bool found = false;
 			for (auto& object : objects)
 			{
@@ -1399,7 +1399,7 @@ namespace xge
 
 		// The current state's timers. A command can change the state, which
 		// ends this state's turn for the frame.
-		const std::string stateName = currentState.top().name;
+		const Name stateName = currentState.top().name;
 		auto found = stateTimers.find(stateName);
 		if (found == stateTimers.end())
 		{
@@ -1428,7 +1428,7 @@ namespace xge
 		count(found->second, "state '" + stateName + "' > <timer>");
 
 		// Then its current scene's.
-		const std::string scene = currentScene(stateName);
+		const Name scene = currentScene(stateName);
 		const auto sceneFound = sceneTimers.find(scene);
 		if (unchanged() && sceneFound != sceneTimers.end())
 		{
@@ -1445,7 +1445,7 @@ namespace xge
 		}
 	}
 
-	void Game::refreshBoundTexts(const std::string& ownerName, const std::string& variableName, float value)
+	void Game::refreshBoundTexts(Name ownerName, Name variableName, float value)
 	{
 		// Expressions read the variable too (a timer's <every>, worked out again
 		// each round), so they see the new value.
@@ -1464,7 +1464,7 @@ namespace xge
 		}
 	}
 
-	bool Game::setVariable(const std::string& objectName, const std::string& variableName, float value)
+	bool Game::setVariable(Name objectName, Name variableName, float value)
 	{
 		Object* owner = tryGetObject(anyTurns ? turnOwner(objectName) : objectName);
 		if (!owner)
@@ -1472,7 +1472,7 @@ namespace xge
 			return false;
 		}
 
-		auto variableIt = owner->variable.findText(variableName);
+		auto variableIt = owner->variable.find(variableName);
 		if (variableIt == owner->variable.end())
 		{
 			return false;
@@ -1566,9 +1566,9 @@ namespace xge
 		}
 	}
 
-	void Game::resetObject(const std::string& given)
+	void Game::resetObject(Name given)
 	{
-		const std::string name = fullName(given);
+		const Name name = fullName(given);
 		Object* object = tryGetObject(name);
 		if (!object)
 		{
@@ -1615,7 +1615,7 @@ namespace xge
 		}
 	}
 
-	void Game::become(const std::string& target, const std::string& sprite, const std::string& from, const std::string& style)
+	void Game::become(Name target, Name sprite, Name from, Name style)
 	{
 		bool handChanged = false;
 		for (auto& object : objects)
@@ -1624,7 +1624,7 @@ namespace xge
 			const bool offTurn = turnsOf(object).takes && object.inGroup(target) && object.variable[nameOf("turn")] == 0.0f;
 			if (object.named(target) && !offTurn && (from.empty() || object.lookName() == from))
 			{
-				const std::string before = isHand(object) ? object.lookName() : std::string();
+				const Name before = isHand(object) ? object.lookName() : Name();
 				// A holder given a look of what it holds, not its own: what
 				// it holds turned to it (a dealer's hidden card shown).
 				const bool own = std::any_of(object.looks.all().begin(), object.looks.all().end(), [&](const Object::Look& look) { return look.name == sprite; });
@@ -1642,7 +1642,7 @@ namespace xge
 		if (handChanged) { layOutItems(); }
 	}
 
-	void Game::reveal(const std::string& target, int count)
+	void Game::reveal(Name target, int count)
 	{
 		for (auto& object : objects)
 		{
@@ -1673,7 +1673,7 @@ namespace xge
 		return paths;
 	}
 
-	void Game::follow(Object& object, const std::string& path, float wait)
+	void Game::follow(Object& object, Name path, float wait)
 	{
 		const Path& chosen = paths.at(path);
 		if (object.isFollowing())
@@ -1681,7 +1681,7 @@ namespace xge
 			return;
 		}
 
-		object.path.name = nameOf(path);
+		object.path.name = path;
 		object.path.leg = 0;
 		object.path.left = {};
 		object.path.legStarted = false;
@@ -1693,7 +1693,7 @@ namespace xge
 		}
 	}
 
-	void Game::follow(const std::string& target, const std::string& path, float stagger, int nearest, const Object* from)
+	void Game::follow(Name target, Name path, float stagger, int nearest, const Object* from)
 	{
 		std::vector<Object*> going;
 		for (auto& object : objects)
@@ -1724,9 +1724,9 @@ namespace xge
 		}
 	}
 
-	void Game::shift(const std::string& target, Vector2f by)
+	void Game::shift(Name target, Vector2f by)
 	{
-		const std::string name = fullName(target);
+		const Name name = fullName(target);
 		for (auto& object : objects)
 		{
 			if (!object.named(name)) { continue; }
@@ -1927,7 +1927,7 @@ namespace xge
 			{
 				continue;
 			}
-			const auto value = owner->variable.findText(piece.variable);
+			const auto value = owner->variable.find(piece.variable);
 			if (value != owner->variable.end())
 			{
 				piece.shown = showPiece(piece.kind, value->second, piece.choices);
@@ -1951,7 +1951,7 @@ namespace xge
 		}
 	}
 
-	std::string Game::wayLeadsTo(const std::string& way) const
+	Name Game::wayLeadsTo(Name way) const
 	{
 		if (!currentState.empty())
 		{
@@ -1970,7 +1970,7 @@ namespace xge
 
 	void Game::enter(const CmdEnterScene& command)
 	{
-		const std::string scene = command.way.empty() ? command.scene.str() : wayLeadsTo(command.way);
+		const Name scene = command.way.empty() ? command.scene : wayLeadsTo(command.way);
 		if (!scene.empty()) { enterScene(scene); }
 		// A new level: nothing to undo into the last.
 		undoSteps.clear();
@@ -1978,11 +1978,11 @@ namespace xge
 
 	void Game::reset(const CmdResetScene& command)
 	{
-		const std::string scene = command.way.empty() ? command.scene.str() : wayLeadsTo(command.way);
+		const Name scene = command.way.empty() ? command.scene : wayLeadsTo(command.way);
 		if (!scene.empty()) { resetScene(scene); }
 	}
 
-	void Game::resetScene(const std::string& scene)
+	void Game::resetScene(Name scene)
 	{
 		const auto owner = std::find_if(states.begin(), states.end(), [&](const State& state)
 			{
@@ -2039,7 +2039,7 @@ namespace xge
 		// Shared by a collision rule's class/object filter and a state
 		// condition's: empty filterClass/filterObject match anything; either or
 		// both narrow it to a specific class and/or one specific named object.
-		bool matchesClassOrObjectFilter(const std::string& filterClass, const std::string& filterObject, const Object& candidate)
+		bool matchesClassOrObjectFilter(const std::string& filterClass, const Name filterObject, const Object& candidate)
 		{
 			if (!filterClass.empty() && filterClass != candidate.objClass) { return false; }
 			if (!filterObject.empty() && !candidate.named(filterObject)) { return false; }
@@ -2049,11 +2049,11 @@ namespace xge
 		// The name is the object's, or one of its groups', under the path of
 		// the scene or state it belongs to: not the name its state gives that
 		// piece in every scene.
-		bool namedByPath(const Object& object, const std::string& name)
+		bool namedByPath(const Object& object, const Name name)
 		{
-			const std::string& owner = object.ownerScene.empty() ? object.ownerState : object.ownerScene;
+			const Name owner = object.ownerScene.empty() ? object.ownerState : object.ownerScene;
 			return !name.empty() && !owner.empty() && object.named(name)
-				&& name.compare(0, owner.size() + 1, owner + ".") == 0;
+				&& name.str().compare(0, owner.size() + 1, owner + ".") == 0;
 		}
 
 		bool collisionRuleMatches(const CollisionRule& rule, const Object& other)
@@ -2071,7 +2071,7 @@ namespace xge
 		const std::vector<EdgeGuard>& guards = object.kind->collisionData.edges[edgeIndex(edge)].guards;
 		// sprite= asks for the look it had as it met the edge, not one an
 		// earlier rule changed (or the next would answer a turn again).
-		const std::string look = object.lookName();
+		const Name look = object.lookName();
 		for (std::size_t i = 0; i < commands.size();)
 		{
 			// unless= is looked at as it comes, after the rules before it
@@ -2088,7 +2088,7 @@ namespace xge
 		}
 	}
 
-	bool Game::isEdgeRulePassedOver(const Object& object, const std::string& look, const EdgeGuard& guard)
+	bool Game::isEdgeRulePassedOver(const Object& object, Name look, const EdgeGuard& guard)
 	{
 		return (!guard.sprite.empty() && look != guard.sprite)
 			|| (!guard.unlessClass.empty() && isTouchingClass(object, object, guard.unlessClass))
@@ -2149,7 +2149,7 @@ namespace xge
 		{
 			const auto& rules = object.kind->collisionData.others;
 			if (std::any_of(rules.begin(), rules.end(), [](const CollisionRule& rule) { return !rule.filterObject.empty(); })) { return true; }
-			return std::any_of(picked.begin(), picked.end(), [&](const std::string& name) { return object.named(name); });
+			return std::any_of(picked.begin(), picked.end(), [&](Name name) { return object.named(name); });
 		};
 
 		// The rest by what canCollide reads of them: kind (its rules), class,
@@ -2195,9 +2195,9 @@ namespace xge
 
 	// A thruster burns 60 units a second of the object's own `variable`,
 	// if it has any left (one a frame at 60, as it always did).
-	bool Game::burn(Object& object, const std::string& variable)
+	bool Game::burn(Object& object, Name variable)
 	{
-		const auto fuel = object.variable.findText(variable);
+		const auto fuel = object.variable.find(variable);
 		if (fuel == object.variable.end() || fuel->second <= 0.0f) { return false; }
 		setVariable(object.name, variable, std::max(0.0f, fuel->second - stepSeconds * 60.0f));
 		return true;
@@ -2206,7 +2206,7 @@ namespace xge
 	// Whether `object` is touching, right now, any other object in play that is
 	// of class `objClass` - `excluding` (the one it is in the middle of a
 	// collision with) is left out, and so is `object` itself.
-	bool Game::isTouchingClass(const Object& object, const Object& excluding, const std::string& objClass)
+	bool Game::isTouchingClass(const Object& object, const Object& excluding, Name objClass)
 	{
 		return std::any_of(objects.begin(), objects.end(), [&](const Object& other)
 			{
@@ -2218,7 +2218,7 @@ namespace xge
 			});
 	}
 
-	void Game::retargetCheck(Condition& check, const std::string& from, const std::string& to)
+	void Game::retargetCheck(Condition& check, Name from, Name to)
 	{
 		for (Condition& part : check.parts) { retargetCheck(part, from, to); }
 		if (check.filterObject == from) { check.filterObject = to; }
@@ -2238,13 +2238,13 @@ namespace xge
 		}
 	}
 
-	bool Game::seesPast(const Object& from, const Object& to, const std::vector<std::string>& past)
+	bool Game::seesPast(const Object& from, const Object& to, const std::vector<Name>& past)
 	{
 		const Vector2f start = from.position + from.size * 0.5f;
 		const Vector2f end = to.position + to.size * 0.5f;
-		for (const std::string& objClass : past)
+		for (const Name objClass : past)
 		{
-			for (const std::size_t index : matching(objClass, ""))
+			for (const std::size_t index : matching(objClass, Name{}))
 			{
 				const Object& other = objects[index];
 				if (&other == &from || &other == &to || !other.isVisible || !isShown(other)) { continue; }
@@ -2342,7 +2342,7 @@ namespace xge
 				}
 				case Object::Follow::Part::Variable:
 				{
-					const auto held = object.variable.findText(each.variable);
+					const auto held = object.variable.find(each.variable);
 					if (held != object.variable.end() && held->second != value)
 					{
 						held->second = value;
@@ -2405,7 +2405,7 @@ namespace xge
 		{
 			return setVariable(target.owner, target.variable, value);
 		}
-		const std::string& owner = target.owner;
+		const Name owner = target.owner;
 		const LivePart* part = livePartNamed(target.variable);
 		if (!part)
 		{
@@ -2477,7 +2477,7 @@ namespace xge
 		for (const auto& [name, plays] : memberThinks)
 		{
 			const Object* member = tryGetObject(name);
-			if (!member || !member->exists || !isShown(*member) || member->variable.findText("turn")->second == 0.0f) { continue; }
+			if (!member || !member->exists || !isShown(*member) || member->variable.find(words::turn)->second == 0.0f) { continue; }
 			play(plays);
 		}
 		// Its turn is over (or the game was put back): the next is planned anew.
@@ -2515,7 +2515,7 @@ namespace xge
 		return false;
 	}
 
-	const std::vector<std::size_t>& Game::matching(const std::string& filterClass, const std::string& filterObject)
+	const std::vector<std::size_t>& Game::matching(Name filterClass, Name filterObject)
 	{
 		auto found = filtered.find({ filterClass, filterObject });
 		if (found == filtered.end())
@@ -2552,12 +2552,12 @@ namespace xge
 			{
 				if (const Object* owner = tryGetObject(read.owner))
 				{
-					if (const auto found = owner->variable.findText(read.variable); found != owner->variable.end()) { *read.slot = found->second; }
+					if (const auto found = owner->variable.find(read.variable); found != owner->variable.end()) { *read.slot = found->second; }
 				}
 			}
 			const Object* self = condition.saysSelf && !condition.madeFor.empty() ? (testing ? testing : tryGetObject(condition.madeFor)) : nullptr;
 			const Object* other = condition.saysSelf && !condition.madeAgainst.empty() ? (testingOther ? testingOther : tryGetObject(condition.madeAgainst)) : nullptr;
-			const auto readOwn = [&](const Object* owner, const std::vector<std::string>& reads)
+			const auto readOwn = [&](const Object* owner, const std::vector<Name>& reads)
 			{
 				if (!owner) { return; }
 				for (const std::string& variable : reads)
@@ -2663,11 +2663,11 @@ namespace xge
 		return best != nullptr;
 	}
 
-	const std::string& Game::selfIn(const Condition& condition, const std::string& name) const noexcept
+	Name Game::selfIn(const Condition& condition, Name name) const noexcept
 	{
 		if (!condition.saysSelf) { return name; }
-		if (name == "self") { return testing ? testing->name.str() : condition.madeFor; }
-		if (name == "other") { return testingOther ? testingOther->name.str() : condition.madeAgainst; }
+		if (name == words::self) { return testing ? testing->name : condition.madeFor; }
+		if (name == words::other) { return testingOther ? testingOther->name : condition.madeAgainst; }
 		return name;
 	}
 

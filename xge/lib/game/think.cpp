@@ -808,7 +808,7 @@ namespace xge
 		board.rows = mapOf(*first).rows;
 		board.grid.assign(static_cast<std::size_t>(board.columns * board.rows), 0);
 		// The other side: what its pieces' jumps take.
-		std::string other;
+		Name other;
 		for (const Object::MoveSet& set : pieceMoves(*first).sets)
 		{
 			for (const Object::PieceMove& move : set.moves)
@@ -831,7 +831,7 @@ namespace xge
 		for (int side = 0; side < 2; ++side)
 		{
 			if (side == 1 && other.empty()) { break; }
-			for (const Object* each : putTemplates(side == 0 ? think.objClass.str() : other))
+			for (const Object* each : putTemplates(side == 0 ? think.objClass : other))
 			{
 				const PieceKind* kind = board.kindOf(each);
 				board.allKinds[side].push_back(kind);
@@ -842,7 +842,7 @@ namespace xge
 					if (!set->closeClass.empty() && board.closeClass[side].empty())
 					{
 						board.closeClass[side] = set->closeClass;
-						const std::string owned = fullName(set->closeObject);
+						const Name owned = fullName(set->closeObject);
 						for (const Object& object : objects)
 						{
 							if (object.named(owned)) { board.ownClass[side] = object.objClass; break; }
@@ -981,7 +981,7 @@ namespace xge
 	std::optional<KeyCode> Game::think(const CmdThink& think, float seconds)
 	{
 		Object* picker = nullptr;
-		const std::string name = fullName(think.picker);
+		const Name name = fullName(think.picker);
 		for (Object& object : objects)
 		{
 			if (object.exists && object.named(name)) { picker = &object; break; }

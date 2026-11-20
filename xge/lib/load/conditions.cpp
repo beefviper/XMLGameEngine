@@ -160,7 +160,7 @@ namespace xge
 					{
 						return (own && sameName(read.owner, selfName)) || (theirs && sameName(read.owner, otherName));
 					}), made.reads.end());
-				const auto reads = [&](const std::string& prefix, const std::string& whose, std::vector<std::string>& into)
+				const auto reads = [&](const std::string& prefix, const std::string& whose, std::vector<Name>& into)
 				{
 					if (whose.empty()) { return; }
 					for (const std::string* text : rawCondition.threshold.expressions())
@@ -204,7 +204,7 @@ namespace xge
 		condition.distanceTo = rawCondition.distance;
 		condition.sprite = rawCondition.sprite;
 		condition.sees = rawCondition.sees;
-		condition.past = rawCondition.past;
+		condition.past = NameStore::program().of(rawCondition.past);
 		if (rawCondition.total == "count") { condition.total = Total::Count; }
 		else if (rawCondition.total == "sum") { condition.total = Total::Sum; }
 		else if (rawCondition.total == "highest") { condition.total = Total::Highest; }

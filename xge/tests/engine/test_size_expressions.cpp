@@ -170,7 +170,7 @@ TEST_CASE("an object can be placed by another object's size", "[size_expressions
 
 	// The title is a text: placed by its size at once, and again if it changes.
 	CHECK(game.usesSize(logo));
-	CHECK(game.parts().sizeUses.get(logo.id).sizesOf == std::vector<std::string>{ "title.title" }); // the title is the main menu's
+	CHECK(game.parts().sizeUses.get(logo.id).sizesOf == std::vector<Name>{ Name("title.title") }); // the title is the main menu's
 	REQUIRE(title.size.x > 0.0f);
 	CHECK(logo.position.x == title.size.x + 10.0f);
 	CHECK(logo.position.y == title.size.y);

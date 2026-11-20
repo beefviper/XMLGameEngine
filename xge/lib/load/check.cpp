@@ -448,7 +448,7 @@ namespace xge
 				{
 					const Object::Pull* pull = parts.pulls.find(object.id);
 					const Object::Aloft* aloft = parts.alofts.find(object.id);
-					for (const auto& [name, strength] : pull ? pull->toward : std::vector<std::pair<std::string, float>>{})
+					for (const auto& [name, strength] : pull ? pull->toward : std::vector<std::pair<Name, float>>{})
 					{
 						if (!findObject(objects, name))
 						{
@@ -464,7 +464,7 @@ namespace xge
 						throw std::runtime_error("object '" + object.name + "' > <seek>: there is no object named '" + pull->seek + "'" + didYouMean(pull->seek, objectNames(objects)));
 					}
 					const Object::Tether* tether = parts.tethers.find(object.id);
-					for (const std::string* end : { tether ? &tether->from : nullptr, tether ? &tether->to : nullptr })
+					for (const Name* end : { tether ? &tether->from : nullptr, tether ? &tether->to : nullptr })
 					{
 						if (!end) { continue; }
 						if (!end->empty() && !findObject(objects, *end))
@@ -586,7 +586,7 @@ namespace xge
 					if (!counts.empty() && std::none_of(objects.begin(), objects.end(), [&](const Object& other)
 						{
 							const Holder* its = parts.holders.find(other.id);
-							return (its ? its->counts : std::string{}) != counts && numberOf(parts, other, counts);
+							return (its ? its->counts : Name{}) != counts && numberOf(parts, other, counts);
 						}))
 					{
 						throw std::runtime_error("object '" + object.name + "' > <counts variable=\"" + counts + "\">: no object has a variable or number of that name" + didYouMean(counts, gameVariables));

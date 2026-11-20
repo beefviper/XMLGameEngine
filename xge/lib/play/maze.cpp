@@ -197,7 +197,7 @@ namespace xge
 			static constexpr int kMostTilesAStep = 64;
 
 			// The nearest in play of that name or group, other than the walker.
-			const Object* nearest(const std::string& name) const
+			const Object* nearest(Name name) const
 			{
 				return nearestInPlay(objects, walker, name, [this](const Object& other) { return rules.inPlay(other); });
 			}

@@ -83,7 +83,7 @@ namespace xge
 		}
 	}
 
-	Object* Game::findAnywhere(const std::string& name) noexcept
+	Object* Game::findAnywhere(Name name) noexcept
 	{
 		for (Object& object : objects)
 		{
@@ -96,7 +96,7 @@ namespace xge
 		return nullptr;
 	}
 
-	Object* Game::cellHolder(const std::string& map, int column, int row, const std::vector<Object*>& mover)
+	Object* Game::cellHolder(Name map, int column, int row, const std::vector<Object*>& mover)
 	{
 		const auto cellKey = [](int c, int r) { return static_cast<long long>(c) * 100000 + r; };
 		if (heldCells.on && mover.empty())
@@ -147,7 +147,7 @@ namespace xge
 	{
 		if (!isShape(mover)) { return { &mover }; }
 		std::vector<Object*> cells;
-		for (const std::string& part : cellPart(mover).shapeParts)
+		for (const Name part : cellPart(mover).shapeParts)
 		{
 			if (Object* cell = findAnywhere(part)) { cells.push_back(cell); }
 		}
@@ -165,7 +165,7 @@ namespace xge
 			(static_cast<float>(row) - 0.5f) * mapOf(object).tile.y - size.y / 2.0f };
 	}
 
-	bool Game::moveToMap(Object& object, const std::string& map)
+	bool Game::moveToMap(Object& object, Name map)
 	{
 		if (mapOf(object).name == map) { return true; }
 		const auto onIt = [&](const Object& each) { return each.onCells && mapOf(each).name == map; };
@@ -188,7 +188,7 @@ namespace xge
 		const int columns = mapOf(*like).columns;
 		const int rows = mapOf(*like).rows;
 		std::vector<Object::CellCheck> checks = cellPart(*like).checks;
-		mapFor(object).name = nameOf(map);
+		mapFor(object).name = map;
 		mapFor(object).origin = origin;
 		mapFor(object).tile = tile;
 		mapFor(object).columns = columns;
@@ -198,7 +198,7 @@ namespace xge
 		return true;
 	}
 
-	bool Game::putOnCells(Object& made, int column, int row, const std::string& map)
+	bool Game::putOnCells(Object& made, int column, int row, Name map)
 	{
 		const auto fits = [&](int c, int r)
 		{
@@ -238,7 +238,7 @@ namespace xge
 		return true;
 	}
 
-	bool Game::sendCells(const std::string& target, const std::string& from, const std::string& into, std::optional<int> column, std::optional<int> row)
+	bool Game::sendCells(Name target, Name from, Name into, std::optional<int> column, std::optional<int> row)
 	{
 		// The first of that name on `from` that moves as one: a shape, or a
 		// piece that is no shape's cell.
@@ -358,7 +358,7 @@ namespace xge
 		return true;
 	}
 
-	bool Game::isLink(const Object& piece, const std::string& chain)
+	bool Game::isLink(const Object& piece, Name chain)
 	{
 		if (piece.named(chain)) { return true; }
 		if (!piece.isCopy()) { return false; }
@@ -374,8 +374,8 @@ namespace xge
 		std::vector<Object*> links;
 		if (place(head).chainKnown)
 		{
-			std::vector<std::string> kept;
-			for (const std::string& name : place(head).chainLinks)
+			std::vector<Name> kept;
+			for (const Name name : place(head).chainLinks)
 			{
 				Object* link = findAnywhere(name);
 				if (!link || !link->exists) { continue; }
@@ -466,8 +466,8 @@ namespace xge
 		chainOf(*head);
 
 		// at: where the piece is, 0 for the head itself.
-		const std::vector<std::string> links = place(*head).chainLinks;
-		std::vector<std::string> behind(links.begin() + static_cast<std::ptrdiff_t>(std::min(at, links.size())), links.end());
+		const std::vector<Name> links = place(*head).chainLinks;
+		std::vector<Name> behind(links.begin() + static_cast<std::ptrdiff_t>(std::min(at, links.size())), links.end());
 		placeFor(*head).chainLinks.resize(at == 0 ? 0 : at - 1);
 		placeFor(*head).chainKnown = true;
 
@@ -486,7 +486,7 @@ namespace xge
 			placeFor(*next).goWay = across > 0 ? Direction::Right : across < 0 ? Direction::Left : place(*head).goWay;
 			next->facing = place(*next).goWay;
 			next->variable = head->variable;
-			if (const std::string look = head->lookName(); !look.empty()) { showLook(*next, look); }
+			if (const Name look = head->lookName(); !look.empty()) { showLook(*next, look); }
 		}
 		if (&piece == head)
 		{
@@ -514,7 +514,7 @@ namespace xge
 		return true;
 	}
 
-	bool Game::putInFreeCell(Object& made, const std::string& map, int below)
+	bool Game::putInFreeCell(Object& made, Name map, int below)
 	{
 		if (!map.empty() && !moveToMap(made, map))
 		{
@@ -592,7 +592,7 @@ namespace xge
 	void Game::settle(Object& mover)
 	{
 		if (!mover.onCells) { return; }
-		const std::string map = mapOf(mover).name;
+		const Name map = mapOf(mover).name;
 		if (isShape(mover))
 		{
 			// Cells with <joins> stay joined to one another.
@@ -613,7 +613,7 @@ namespace xge
 		askChecks(map);
 	}
 
-	void Game::askChecks(const std::string& map)
+	void Game::askChecks(Name map)
 	{
 		// Every piece of a map carries its checks; any one says them.
 		std::vector<Object::CellCheck> checks;
@@ -660,7 +660,7 @@ namespace xge
 					if (!executor.run(command, Doer::finding(match))) { break; }
 				}
 				// Still full (nothing cleared it): on up.
-				const bool stillFull = std::all_of(match.pieces.begin(), match.pieces.end(), [&](const std::string& name)
+				const bool stillFull = std::all_of(match.pieces.begin(), match.pieces.end(), [&](const Name name)
 					{
 						const Object* piece = findAnywhere(name);
 						return piece && piece->exists && whole(place(*piece).row) == row;
@@ -683,7 +683,7 @@ namespace xge
 		return piece.groupName.empty() ? piece.name : piece.groupName;
 	}
 
-	void Game::askLines(const Object::CellCheck& check, const std::string& map, int columns, int rows, CommandExecutor& executor)
+	void Game::askLines(const Object::CellCheck& check, Name map, int columns, int rows, CommandExecutor& executor)
 	{
 		// Every line of so many alike at once, then again on what its
 		// commands leave (a fall makes new lines: Columns' chains), until
@@ -703,8 +703,8 @@ namespace xge
 			{
 				if (!a || !b) { return false; }
 				if (check.alike.empty()) { return kindOf(*a) == kindOf(*b); }
-				const auto one = a->variable.findText(check.alike);
-				const auto two = b->variable.findText(check.alike);
+				const auto one = a->variable.find(check.alike);
+				const auto two = b->variable.find(check.alike);
 				return one != a->variable.end() && two != b->variable.end() && one->second == two->second;
 			};
 
@@ -744,7 +744,7 @@ namespace xge
 			{
 				if (!executor.run(command, Doer::finding(match))) { break; }
 			}
-			const bool taken = std::any_of(match.pieces.begin(), match.pieces.end(), [&](const std::string& name)
+			const bool taken = std::any_of(match.pieces.begin(), match.pieces.end(), [&](const Name name)
 				{
 					const Object* piece = findAnywhere(name);
 					return !piece || !piece->exists;
@@ -753,7 +753,7 @@ namespace xge
 		}
 	}
 
-	void Game::fallCells(const std::string& map, const std::string& objClass)
+	void Game::fallCells(Name map, Name objClass)
 	{
 		const Object* any = nullptr;
 		for (const Object& object : objects)
@@ -779,7 +779,7 @@ namespace xge
 					Object* holder = cellHolder(map, column, row, {});
 					if (!holder || !cellPart(*holder).shapeOwner.empty() || (!objClass.empty() && holder->objClass != objClass) || std::find(done.begin(), done.end(), holder) != done.end()) { continue; }
 					std::vector<Object*> together{ holder };
-					for (const std::string& name : place(*holder).joinedWith)
+					for (const Name name : place(*holder).joinedWith)
 					{
 						Object* other = findAnywhere(name);
 						if (other && other->exists && other->onCells && mapOf(*other).name == map && cellPart(*other).shapeOwner.empty() && (objClass.empty() || other->objClass == objClass)
@@ -818,14 +818,14 @@ namespace xge
 			if (std::find(looks.begin(), looks.end(), piece.looks.shown) == looks.end()) { return; }
 
 			// Falling, the other cells of its shape; settled, those it came with.
-			std::vector<std::string> partners = place(piece).joinedWith;
+			std::vector<Name> partners = place(piece).joinedWith;
 			if (!cellPart(piece).shapeOwner.empty())
 			{
 				const Object* shape = findAnywhere(cellPart(piece).shapeOwner);
-				partners = shape ? cellPart(*shape).shapeParts : std::vector<std::string>{};
+				partners = shape ? cellPart(*shape).shapeParts : std::vector<Name>{};
 			}
 			Object::Join way = Object::Join::Alone;
-			for (const std::string& name : partners)
+			for (const Name name : partners)
 			{
 				const Object* other = findAnywhere(name);
 				if (!other || other == &piece || !other->exists || mapOf(*other).name != mapOf(piece).name) { continue; }
@@ -849,8 +849,8 @@ namespace xge
 		if (count < 2 || count != cellPart(shape).shape.size()) { return; }
 
 		// The cell at place i goes to place i + 1 (backward: i - 1); the places stay.
-		std::vector<std::string> parts(count);
-		std::vector<std::string> pieces(count);
+		std::vector<Name> parts(count);
+		std::vector<Name> pieces(count);
 		for (std::size_t i = 0; i < count; ++i)
 		{
 			const std::size_t to = backward ? (i + count - 1) % count : (i + 1) % count;
@@ -869,7 +869,7 @@ namespace xge
 
 	void Game::clearCells(const Object::CellMatch& match)
 	{
-		for (const std::string& name : match.pieces)
+		for (const Name name : match.pieces)
 		{
 			if (Object* piece = findAnywhere(name)) { despawn(*piece); }
 		}
@@ -1015,13 +1015,13 @@ namespace xge
 		}
 	}
 
-	Object* Game::putTemplate(const std::string& objClass)
+	Object* Game::putTemplate(Name objClass)
 	{
 		const std::vector<Object*> all = putTemplates(objClass);
 		return all.empty() ? nullptr : all.front();
 	}
 
-	std::vector<Object*> Game::putTemplates(const std::string& objClass)
+	std::vector<Object*> Game::putTemplates(Name objClass)
 	{
 		// One of each group: pieces of a group are alike.
 		std::vector<Object*> found;
@@ -1155,10 +1155,10 @@ namespace xge
 		// its cell; what it is put on goes too. (Names and cells first: a
 		// spawn may move the pieces spawned this frame.)
 		const Object::MoveSet* kindSet = moveSetOf(*kind);
-		const std::string closeClass = kindSet ? kindSet->closeClass : std::string();
-		const std::string closeObject = kindSet ? kindSet->closeObject : std::string();
-		const std::string name = kind->name;
-		const std::string map = mapOf(*kind).name;
+		const Name closeClass = kindSet ? kindSet->closeClass : Name();
+		const Name closeObject = kindSet ? kindSet->closeObject : Name();
+		const Name name = kind->name;
+		const Name map = mapOf(*kind).name;
 		const int columns = mapOf(*kind).columns;
 		const int rows = mapOf(*kind).rows;
 		if (Object* under = cellHolder(map, column, row, {})) { despawn(*under); }
@@ -1218,7 +1218,7 @@ namespace xge
 		return !closed;
 	}
 
-	float Game::countClass(const std::string& objClass)
+	float Game::countClass(Name objClass)
 	{
 		float count = 0.0f;
 		for (Object& object : objects)
@@ -1232,7 +1232,7 @@ namespace xge
 		return count;
 	}
 
-	bool Game::pickPiece(Object& picker, const std::string& objClass, bool only)
+	bool Game::pickPiece(Object& picker, Name objClass, bool only)
 	{
 		if (pickerOf(picker).inChain || !picker.onCells) { return false; }
 		if (only)
@@ -1440,7 +1440,7 @@ namespace xge
 					{
 						if (!on(mark.variable)) { continue; }
 						// No class=: the pieces of the player on its turn.
-						const std::string markClass = mark.objClass.empty() ? turnClass() : mark.objClass;
+						const Name markClass = mark.objClass.empty() ? turnClass() : mark.objClass;
 						switch (mark.kind)
 						{
 						case Object::Mark::Kind::Held:
@@ -1484,11 +1484,11 @@ namespace xge
 			if (want == pickerOf(objects[i]).marks.marked) { continue; }
 
 			// Made again: the old copies out, a new one in each cell marked.
-			std::vector<std::string> old = std::move(pickerFor(objects[i]).marks.copies);
+			std::vector<Name> old = std::move(pickerFor(objects[i]).marks.copies);
 			pickerFor(objects[i]).marks.copies.clear();
 			pickerFor(objects[i]).marks.marked = want;
-			for (const std::string& copy : old) { despawn(copy); }
-			std::vector<std::string> made;
+			for (const Name copy : old) { despawn(copy); }
+			std::vector<Name> made;
 			for (const Object::Marked& mark : want)
 			{
 				Object* copy = spawn(mark.object);
@@ -1514,12 +1514,12 @@ namespace xge
 		return stepCells(*shoved, across, down);
 	}
 
-	bool Game::mergeCells(Object& mover, Object& other, const std::string& variable)
+	bool Game::mergeCells(Object& mover, Object& other, Name variable)
 	{
 		if (!mover.exists || !other.exists || !mover.onCells || !other.onCells) { return false; }
 		if (std::find(merged.begin(), merged.end(), &mover) != merged.end() || std::find(merged.begin(), merged.end(), &other) != merged.end()) { return false; }
-		const auto mine = mover.variable.findText(variable);
-		const auto theirs = other.variable.findText(variable);
+		const auto mine = mover.variable.find(variable);
+		const auto theirs = other.variable.find(variable);
 		if (mine == mover.variable.end() || theirs == other.variable.end() || mine->second != theirs->second) { return false; }
 
 		const float sum = mine->second + theirs->second;
@@ -1529,7 +1529,7 @@ namespace xge
 		return true;
 	}
 
-	bool Game::slideClass(const std::string& objClass, Direction way)
+	bool Game::slideClass(Name objClass, Direction way)
 	{
 		std::vector<Object*> pieces;
 		for (Object& object : objects)
@@ -1565,7 +1565,7 @@ namespace xge
 		return moved;
 	}
 
-	std::vector<Object*> Game::piecesAbout(const Object& piece, const std::string& objClass, const CellPlace& place)
+	std::vector<Object*> Game::piecesAbout(const Object& piece, Name objClass, const CellPlace& place)
 	{
 		std::vector<Object*> found;
 		if (!piece.onCells || !place.any()) { return found; }

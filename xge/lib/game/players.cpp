@@ -11,6 +11,7 @@
 #include "game/players.h"
 #include "game/data.h"
 #include "game/game.h"
+#include "game/words.h"
 
 #include <algorithm>
 #include <map>
@@ -51,32 +52,32 @@ namespace xge
 			anyTurns = true;
 			const bool first = started.insert(object.groupName).second;
 			object.variable[nameOf("turn")] = first ? 1.0f : 0.0f;
-			refreshBoundTexts(object.name, "turn", object.variable[nameOf("turn")]);
+			refreshBoundTexts(object.name, words::turn, object.variable[words::turn]);
 			if (first) { object.showLook(0); }
 			else if (!turnsOf(object).sprite.empty()) { showLook(object, turnsOf(object).sprite); }
 		}
 	}
 
-	Object* Game::onTurn(const std::string& name)
+	Object* Game::onTurn(Name name)
 	{
-		const std::string full = fullName(name);
+		const Name full = fullName(name);
 		for (Object& object : objects)
 		{
-			if (turnsOf(object).takes && (object.inGroup(name) || object.inGroup(full)) && object.variable[nameOf("turn")] != 0.0f) { return &object; }
+			if (turnsOf(object).takes && (object.inGroup(name) || object.inGroup(full)) && object.variable[words::turn] != 0.0f) { return &object; }
 		}
 		return nullptr;
 	}
 
-	bool Game::takesTurns(const std::string& name) const
+	bool Game::takesTurns(Name name) const
 	{
-		const std::string full = fullName(name);
+		const Name full = fullName(name);
 		return std::any_of(objects.begin(), objects.end(), [&](const Object& object) { return turnsOf(object).takes && (object.inGroup(name) || object.inGroup(full)); });
 	}
 
 	bool Game::answers(const Object& member) const
 	{
 		if (!turnsOf(member).takes) { return true; }
-		const auto onIt = member.variable.findText("turn");
+		const auto onIt = member.variable.find(words::turn);
 		if (onIt == member.variable.end() || onIt->second == 0.0f) { return false; }
 		// A member the computer thinks for answers only its presses; any other
 		// answers whoever presses (a member played by <computer> conditions).
@@ -107,9 +108,9 @@ namespace xge
 		return true;
 	}
 
-	bool Game::passPlayersTo(const std::string& group, int number)
+	bool Game::passPlayersTo(Name group, int number)
 	{
-		const std::string full = fullName(group);
+		const Name full = fullName(group);
 		std::vector<Object*> members;
 		for (Object& object : objects)
 		{
@@ -127,7 +128,7 @@ namespace xge
 		{
 			const bool on = each == next;
 			if (on == (each->variable[nameOf("turn")] != 0.0f)) { continue; }
-			setVariable(each->name, "turn", on ? 1.0f : 0.0f);
+			setVariable(each->name, words::turn, on ? 1.0f : 0.0f);
 			// Onto its turn it leaves its off-turn look, for its first; a look
 			// given it while it waited (a pass's "again") stays.
 			if (on && (turnsOf(*each).sprite.empty() || each->lookName() == turnsOf(*each).sprite)) { each->showLook(0); }
@@ -139,12 +140,12 @@ namespace xge
 		layOutItems();
 	}
 
-	std::string Game::turnClass()
+	Name Game::turnClass()
 	{
 		for (const Object& object : objects)
 		{
 			if (!turnsOf(object).takes || turnsOf(object).ownsClass.empty() || !object.exists || !isShown(object)) { continue; }
-			const auto onIt = object.variable.findText("turn");
+			const auto onIt = object.variable.find(words::turn);
 			if (onIt != object.variable.end() && onIt->second != 0.0f) { return turnsOf(object).ownsClass; }
 		}
 		return {};
@@ -166,10 +167,10 @@ namespace xge
 		return true;
 	}
 
-	std::string Game::turnOwner(const std::string& owner)
+	Name Game::turnOwner(Name owner)
 	{
 		if (!takesTurns(owner)) { return owner; }
 		const Object* on = onTurn(owner);
-		return on ? on->name.str() : owner;
+		return on ? on->name : owner;
 	}
 }

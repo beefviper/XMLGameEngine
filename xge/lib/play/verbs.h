@@ -33,7 +33,7 @@ namespace xge
 	// leaving `from` out, among those `inPlay` takes; null if there is none.
 	// What <chase>, <aim>, <hunt>, <pull>, <seek> and distance= look for.
 	template <typename InPlay>
-	const Object* nearestInPlay(const std::vector<Object>& objects, const Object& from, const std::string& name, InPlay inPlay)
+	const Object* nearestInPlay(const std::vector<Object>& objects, const Object& from, Name name, InPlay inPlay)
 	{
 		const Vector2f here = middleOf(from);
 		const Object* nearest = nullptr;

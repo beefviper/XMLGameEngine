@@ -71,10 +71,9 @@ namespace xge
 		return names;
 	}
 
-	const std::string& Object::lookName() const
+	Name Object::lookName() const
 	{
-		static const std::string none;
-		return looks.all().empty() ? none : looks.all()[looks.shown].name;
+		return looks.all().empty() ? Name{} : looks.all()[looks.shown].name;
 	}
 
 	void Object::showLook(std::size_t index)

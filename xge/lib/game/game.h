@@ -103,23 +103,23 @@ namespace xge
 
 		// The current scene of that state (its path, playing.room1), or empty
 		// for a state with no scenes.
-		std::string currentScene(const std::string& state) const;
+		Name currentScene(Name state) const;
 
 		// <enter scene="playing.room2" />: that scene becomes its state's
 		// current one, and what the state's own objects (or the game's) carry
 		// out of the last one goes with them. Throws std::out_of_range for a
 		// scene the game does not have.
-		void enterScene(const std::string& scene);
+		void enterScene(Name scene);
 
 		// <reset scene="playing.room1" />: every object that started in that
 		// scene back as it started (into it, if it was carried out), and its
 		// timers started over.
-		void resetScene(const std::string& scene);
+		void resetScene(Name scene);
 
 		// Where the current scene's way of that name leads (a scene's path),
 		// or empty, with a warning, when the current state's current scene
 		// has no such way.
-		std::string wayLeadsTo(const std::string& way) const;
+		Name wayLeadsTo(Name way) const;
 
 		// <enter> and <reset scene> as written: by a scene's path, or by a
 		// way of the current scene.
@@ -129,12 +129,12 @@ namespace xge
 		// The object of that name or <group> in play (shown, not hidden or
 		// dead) whose middle is nearest `from`'s, leaving `from` out; null if
 		// there is none. What <chase> and <aim> look for.
-		const Object* nearestInPlay(const Object& from, const std::string& name);
+		const Object* nearestInPlay(const Object& from, Name name);
 
 		// Whether the straight line from the middle of `from` to the middle of
 		// `to` crosses nothing in play of the classes `past` names (<sees>).
-		bool seesPast(const Object& from, const Object& to, const std::vector<std::string>& past);
-		Object& getObject(const std::string& name);
+		bool seesPast(const Object& from, const Object& to, const std::vector<Name>& past);
+		Object& getObject(Name name);
 		Object* tryGetObject(Name name) noexcept;
 
 		// The object a handle names, among those in the game or spawned this
@@ -206,7 +206,7 @@ namespace xge
 		const Moment& startOf(const Object& object) const noexcept { return xge::startOf(objectParts, object); }
 		// Its look of that name, its timers that follow it started over
 		// (showLookNamed); false if it has none.
-		bool showLook(Object& object, const std::string& name) { return showLookNamed(objectParts, object, name); }
+		bool showLook(Object& object, Name name) { return showLookNamed(objectParts, object, name); }
 		// How far each of its timers has counted: none for one without.
 		std::vector<Timer::Clock>* clocksOf(const Object& object) noexcept { return objectParts.clocks.find(object.id); }
 		Moment& startFor(const Object& object) { return objectParts.give(objectParts.starts, object.id); }
@@ -227,7 +227,7 @@ namespace xge
 			return found ? found->pieces : none;
 		}
 		// Whether one of its text's pieces shows that variable of that object.
-		bool showsVariable(const Object& object, const std::string& ownerName, const std::string& variableName) const noexcept
+		bool showsVariable(const Object& object, Name ownerName, Name variableName) const noexcept
 		{
 			const std::vector<TextPiece>& pieces = textPiecesOf(object);
 			return std::any_of(pieces.begin(), pieces.end(),
@@ -255,11 +255,10 @@ namespace xge
 		Object::Picker& pickerFor(const Object& object) { return objectParts.give(objectParts.pickers, object.id); }
 
 		// The name of what it carries (<carry />), empty for nothing.
-		const std::string& carrying(const Object& object) const noexcept
+		Name carrying(const Object& object) const noexcept
 		{
-			static const std::string nothing;
 			const Object::Carry* carry = objectParts.carries.find(object.id);
-			return carry ? carry->what : nothing;
+			return carry ? carry->what : Name{};
 		}
 
 		// Its maze part (<maze>), nullptr for one that walks none.
@@ -270,7 +269,7 @@ namespace xge
 		Drive& driveFor(const Object& object) { return objectParts.give(objectParts.drives, object.id); }
 		void stopDrive(const Object& object) { objectParts.drives.remove(object.id); }
 		const Parts& parts() const noexcept { return objectParts; }
-		float getVariable(const std::string& name);
+		float getVariable(Name name);
 
 		// The state on top of the stack. Only good until the stack changes: a
 		// caller that runs commands (which may push or pop) copies what it needs.
@@ -290,7 +289,7 @@ namespace xge
 		// A rule naming other, made for a copy (shot.3) of the object it was
 		// made for (shot): once, the first time that copy is touched.
 		// A test made about the object `from`, made about `to`, a copy of it.
-		void retargetCheck(Condition& check, const std::string& from, const std::string& to);
+		void retargetCheck(Condition& check, Name from, Name to);
 
 		// A value worked out now, from where everything is and how it is
 		// going (see game_expr::liveNumbers), and every variable as it is.
@@ -329,18 +328,18 @@ namespace xge
 		// by <computer> conditions, answer any press).
 		// <pass /> in a member's action: the next member's turn (false:
 		// not its turn, or a holder waits for a wild card's call).
-		Object* onTurn(const std::string& name);
-		bool takesTurns(const std::string& name) const;
+		Object* onTurn(Name name);
+		bool takesTurns(Name name) const;
 		bool answers(const Object& member) const;
 		bool passPlayers(Object& member);
 		// <pass member=>: the turn of the group's member of that number
 		// (from 1; 0: nobody's turn). And the owner a verb's variable names:
 		// a group that takes turns means the member on its turn.
-		bool passPlayersTo(const std::string& group, int number);
-		std::string turnOwner(const std::string& owner);
+		bool passPlayersTo(Name group, int number);
+		Name turnOwner(Name owner);
 		// The pieces (<owns class=>) of the player on its turn, in a board
 		// game played by a group that takes turns; empty when there is none.
-		std::string turnClass();
+		Name turnClass();
 		// Whether a press reaches `picker` now: while the computer thinks for
 		// it (a <think object=> whose condition holds now), only the
 		// computer's presses do.
@@ -349,11 +348,11 @@ namespace xge
 		void pressingForComputer(bool pressing) noexcept { computerPresses = pressing; }
 
 		void setCurrentState(const int& index);
-		void setCurrentState(const std::string& name);
+		void setCurrentState(Name name);
 
 		// Throws std::out_of_range for a name that is not one of the game's
 		// states (a game file is checked for that when it loads).
-		void pushState(const std::string& name);
+		void pushState(Name name);
 
 		// Does nothing when only the state the game started in is left.
 		void popState(void) noexcept;
@@ -368,7 +367,7 @@ namespace xge
 		// Pops the current state and pushes `name` in its place (the first
 		// state too: it is replaced, never left empty). An empty name is a
 		// plain pop.
-		void popState(const std::string& name);
+		void popState(Name name);
 
 		// Goes up by one every time the state stack changes (any push or pop,
 		// including resets and condition-driven changes), so Engine can tell
@@ -384,7 +383,7 @@ namespace xge
 		// (takeSoundRequests). Game itself never makes a noise, so it runs and
 		// is tested without a sound device. A sound asked for twice in one
 		// frame (two bricks broken at once) is played once.
-		void requestSound(const std::string& name);
+		void requestSound(Name name);
 
 		// The sounds asked for since the last call, in the order asked, and
 		// forgets them.
@@ -402,19 +401,19 @@ namespace xge
 		std::set<std::string> soundsOn(void) const;
 
 		// <silence sound="..." />: stops a sound, looping or not.
-		void silenceSound(const std::string& name);
+		void silenceSound(Name name);
 
 		// The sounds silenced since the last call, and forgets them.
 		std::vector<std::string> takeSilenceRequests(void);
 
 		// Whether the sound of that name loops; false for no such sound.
-		bool soundLoops(const std::string& name) const noexcept;
+		bool soundLoops(Name name) const noexcept;
 
 		// Sets an object's own <variable> to a value (for a front end that lets
 		// the user edit one), and refreshes every text display bound to it, the
 		// same way <inc /> does. Returns false when there is no such object or
 		// variable.
-		bool setVariable(const std::string& objectName, const std::string& variableName, float value);
+		bool setVariable(Name objectName, Name variableName, float value);
 
 		// A member of a lockstep block (see <lockstep> in <collisions>) hit the left or
 		// right screen edge: the whole block turns around and steps once in
@@ -501,7 +500,7 @@ namespace xge
 		// <rank variable="entry.score" into="table" />: the entry takes its
 		// place among the members of the group (the best first), by that
 		// variable, the ones below it moving down a place (see CmdRank).
-		void rank(const VariableName& entry, const std::string& table);
+		void rank(const VariableName& entry, Name table);
 
 		// <reset object="objectName" /> from a state's <input>/<condition> (see
 		// CmdResetObject): restores that object's position, velocity, and every
@@ -509,7 +508,7 @@ namespace xge
 		// bound to one of those variables. Used e.g. to zero the paddles' scores
 		// before a new game starts, so a stale <condition> doesn't instantly
 		// re-fire.
-		void resetObject(const std::string& name);
+		void resetObject(Name name);
 
 		// Bare <reset /> in a state's list (an <input>, a <condition>, a
 		// state's <timer>; an object's own bare <reset /> only puts that
@@ -525,11 +524,11 @@ namespace xge
 
 		// <become sprite="..." style="..." object="name" />: every object of
 		// that name or group that has the look shows it, in that palette.
-		void become(const std::string& target, const std::string& sprite, const std::string& from = {}, const std::string& style = {});
+		void become(Name target, Name sprite, Name from = {}, Name style = {});
 
 		// <reveal object="name">count</reveal>: the first `count` objects of
 		// that name or group that are out of play come back where they started.
-		void reveal(const std::string& target, int count);
+		void reveal(Name target, int count);
 
 		// <spawn object="name">: a new object, a copy of the one of that name
 		// as the file says it starts (or, for a group, of its members in
@@ -541,7 +540,7 @@ namespace xge
 		// one starts): until then it is not in play. The caller puts it where
 		// it goes. Null, and nothing made, when the object has a <most> and
 		// that many copies of it exist, or when no object has that name.
-		Object* spawn(const std::string& target, bool random = false, std::optional<int> member = std::nullopt);
+		Object* spawn(Name target, bool random = false, std::optional<int> member = std::nullopt);
 
 		// <despawn />: the object is no longer in the game. A copy that was
 		// spawned is gone for good when the frame is over; one the file wrote
@@ -550,13 +549,13 @@ namespace xge
 		void despawn(Object& object);
 
 		// <despawn object="name" />: every object of that name or group.
-		void despawn(const std::string& target);
+		void despawn(Name target);
 
 		// Whether the objects of that name (or group) are all ones the file
 		// says do not exist at the start (<exists>false</exists>): what a
 		// <fire> or a <release> makes copies of, rather than taking from a
 		// pool of them.
-		bool isDescription(const std::string& name);
+		bool isDescription(Name name);
 
 		// The objects spawned and not yet joined (spawn), for a front end or
 		// a test that wants to see one before the frame is over.
@@ -571,13 +570,13 @@ namespace xge
 		// for a shape, whose cells are spawned with it); false, and the
 		// copy taken back, when a cell it needs is off the map or full.
 		// `map`: another map of cells it goes on instead of its own.
-		bool putOnCells(Object& made, int column, int row, const std::string& map = {});
+		bool putOnCells(Object& made, int column, int row, Name map = {});
 
 		// <send>: the first piece of that name or group on map `from` (a
 		// shape with its cells, or a loose piece) goes to map `into`, in
 		// that cell (left out: the one it is in); false when there is none
 		// or it has no room there.
-		bool sendCells(const std::string& target, const std::string& from, const std::string& into, std::optional<int> column, std::optional<int> row);
+		bool sendCells(Name target, Name from, Name into, std::optional<int> column, std::optional<int> row);
 
 		// The object (a shape, its cells with it) a whole number of cells
 		// across and down; false, after the touch, when refused.
@@ -618,16 +617,16 @@ namespace xge
 		// <merge variable>: the piece in the way, holding the same number,
 		// is taken away and its number added to the mover's; false when
 		// they differ or either has merged in this slide.
-		bool mergeCells(Object& mover, Object& other, const std::string& variable);
+		bool mergeCells(Object& mover, Object& other, Name variable);
 		// <slide class>: every piece of that class, nearest that way first;
 		// false when none moved.
-		bool slideClass(const std::string& objClass, Direction way);
+		bool slideClass(Name objClass, Direction way);
 		// A <condition> in an action: whether its test holds now.
 		bool testHolds(const Condition& condition, const Object* self, const Object* other) { return holdsFor(condition, self, other); }
 		// The pieces of that class (any, when empty) in the cells about
 		// `piece` that `place` names, on every map of cells laid where its
 		// own is, in reading order.
-		std::vector<Object*> piecesAbout(const Object& piece, const std::string& objClass, const CellPlace& place);
+		std::vector<Object*> piecesAbout(const Object& piece, Name objClass, const CellPlace& place);
 
 		// <undo />: back as before the last press that moved a piece on
 		// cells; false when there is none left. A press begins and ends
@@ -638,11 +637,11 @@ namespace xge
 
 		// A <spawn><free />: in a free cell, at random (none: taken back,
 		// false).
-		bool putInFreeCell(Object& made, const std::string& map = {}, int below = 0);
+		bool putInFreeCell(Object& made, Name map = {}, int below = 0);
 
 		// <fall />: every loose piece of the map, with the pieces joined to
 		// it, down onto what is under it.
-		void fallCells(const std::string& map, const std::string& objClass);
+		void fallCells(Name map, Name objClass);
 		// <joins>: each piece that has them shows the look for where the
 		// piece it is joined to lies; at the end of every frame.
 		void showJoins();
@@ -658,7 +657,7 @@ namespace xge
 		// or while the one it holds must jump on.
 		// `only`: the one piece of the class with a move, wherever it is,
 		// when just one has.
-		bool pickPiece(Object& picker, const std::string& objClass, bool only = false);
+		bool pickPiece(Object& picker, Name objClass, bool only = false);
 		// <drop /> on a picker: the piece held is put back (it stays where
 		// it is); false with none held, or in the middle of a run of jumps.
 		bool dropPiece(Object& picker);
@@ -668,8 +667,8 @@ namespace xge
 		// The piece a <put> of that class copies: the first written of the
 		// class on a map of cells; null for none. putTemplates: the first of
 		// each group of the class (a put takes the first that fits).
-		Object* putTemplate(const std::string& objClass);
-		std::vector<Object*> putTemplates(const std::string& objClass);
+		Object* putTemplate(Name objClass);
+		std::vector<Object*> putTemplates(Name objClass);
 		// The pieces a new piece of `kind`'s class put in that cell of
 		// `kind`'s map would trap by its <flank>s; `can` is whether it may
 		// go there at all (a free cell, and something trapped when it has
@@ -679,7 +678,7 @@ namespace xge
 		std::vector<std::pair<int, int>> putCells(const Object& kind);
 		// <count class>: the objects of that class in play, those spawned
 		// this frame too.
-		float countClass(const std::string& objClass);
+		float countClass(Name objClass);
 		// <track /> by a pointer, for a piece on a map of cells: into the
 		// cell under `at` (a pixel across, or down), when it is on the map.
 		void trackCells(Object& object, bool horizontal, float at, const std::vector<Name>& onto = {});
@@ -687,9 +686,9 @@ namespace xge
 		// Items (game/holders.cpp): a hand's verbs, each false when refused;
 		// moving it among the holders; the deal at the start of a game.
 		bool takeItems(Object& hand);
-		bool layItems(Object& hand, const std::string& holder);
+		bool layItems(Object& hand, Name holder);
 		bool dropItems(Object& hand);
-		bool sendPicked(Object& hand, const std::string& from = {}, const std::string& faces = {});
+		bool sendPicked(Object& hand, Name from = {}, Name faces = {});
 		// For tests: the next <starts> puts these items on top of the starting
 		// holder after shuffling, the first on top, before the holders are dealt.
 		std::vector<int> stackedStart;
@@ -698,23 +697,23 @@ namespace xge
 		// into `into`, showing `sprite` if given; a holder's items at
 		// random; a holder's items turned to a look of theirs. False when
 		// refused (nothing to send, no such holder or look).
-		bool sendHeld(const std::string& from, const std::string& into, int count, bool all, const std::string& sprite);
-		bool orderHeld(const std::string& holder);
-		bool turnHeld(Object& holder, const std::string& sprite);
-		bool callValue(Object& hand, const std::string& holder);
+		bool sendHeld(Name from, Name into, int count, bool all, Name sprite);
+		bool orderHeld(Name holder);
+		bool turnHeld(Object& holder, Name sprite);
+		bool callValue(Object& hand, Name holder);
 		bool hopHand(Object& hand, Direction direction);
 		void trackHand(Object& hand, bool horizontal, float at);
 		void sendStarts();
 		void layOutItems();
 		bool isCovered(const Object& item, const Object& own);   // overlapped by a later-drawn item of another shown holder
 		Object* itemAt(int number);
-		Object* holderNamed(const std::string& name);
+		Object* holderNamed(Name name);
 		void turnItem(Object& item, bool up);
 		void putInHolder(Object& holder, int number);
 		int takeTop(Object& holder);
 		void showTop(Object& holder);
 		// Shows the held member that look of its two, face (the first) or back.
-		void showHeld(Object& item, const std::string& look);
+		void showHeld(Object& item, Name look);
 		Vector2f itemPlace(const Object& holder, std::size_t index);
 		bool holderTakes(Object& holder, const std::vector<int>& items, const Object* from = nullptr);
 		float itemPoints(const Object& holder, const Object& item);
@@ -754,7 +753,7 @@ namespace xge
 		// with its <think>; whether the computer is pressing now.
 		void startPlayers();
 		void handTurn(const std::vector<Object*>& members, Object* next);
-		std::map<std::string, CmdThink> memberThinks;
+		std::map<Name, CmdThink> memberThinks;
 		bool anyTurns{ false };
 		bool computerPresses{ false };
 		std::vector<Object*> shownHolders();
@@ -786,15 +785,15 @@ namespace xge
 		// is on one already (it finishes that first), after waiting `wait`
 		// seconds. Throws std::out_of_range for a path the game does not have
 		// (a game file is checked for that when it loads).
-		void follow(Object& object, const std::string& path, float wait = 0.0f);
+		void follow(Object& object, Name path, float wait = 0.0f);
 
 		// <follow path="..." object="name"><stagger>s</stagger></follow>: every
 		// object of that name or group that is in play sets off, each `stagger`
 		// seconds after the one before, in the order written.
-		void follow(const std::string& target, const std::string& path, float stagger, int nearest = 0, const Object* from = nullptr);
+		void follow(Name target, Name path, float stagger, int nearest = 0, const Object* from = nullptr);
 		// <shift>: every object of that name or group, and the place it goes
 		// home to, moved by `by`; one on a path only has its place moved.
-		void shift(const std::string& target, Vector2f by);
+		void shift(Name target, Vector2f by);
 
 		// Every path the game file describes (<paths>), worked out.
 		const std::map<std::string, Path>& getPaths(void) const noexcept;
@@ -805,8 +804,8 @@ namespace xge
 		// pieces of `mover` (null for none); the cells of a mover (a shape's,
 		// or itself); putting one in a cell; its map's checks, asked; and a
 		// held move's next step, each frame (FrameRules::cellMoves).
-		Object* findAnywhere(const std::string& name) noexcept;
-		Object* cellHolder(const std::string& map, int column, int row, const std::vector<Object*>& mover);
+		Object* findAnywhere(Name name) noexcept;
+		Object* cellHolder(Name map, int column, int row, const std::vector<Object*>& mover);
 		// While nothing moves (counting the moves, laying out the marks):
 		// who holds each cell, found once per map and looked up after
 		// (cellHolder with no mover), instead of looking at every object
@@ -830,19 +829,19 @@ namespace xge
 		void putInCell(Object& object, int column, int row);
 		// Onto another map of cells: its place, tile, size and checks, as
 		// any piece of that map has them (false for a map with none).
-		bool moveToMap(Object& object, const std::string& map);
-		void askChecks(const std::string& map);
+		bool moveToMap(Object& object, Name map);
+		void askChecks(Name map);
 		// A <chain>: whether a piece is one of its links; the links of a
 		// head in order (found from where they lie when not yet known); and
 		// the links brought after a head that has stepped from that cell.
-		bool isLink(const Object& piece, const std::string& chain);
+		bool isLink(const Object& piece, Name chain);
 		std::vector<Object*> chainOf(Object& head);
 		void followChain(Object& head, const std::vector<Object*>& links, int column, int row);
 		// The cells a refused step was going into, while its touch's rules
 		// run: no <free /> spawn goes there.
 		struct Stepping
 		{
-			std::string map;
+			Name map;
 			int column{};
 			int row{};
 		};
@@ -854,7 +853,7 @@ namespace xge
 		// whether the game has an <undo /> at all, and this press undid.
 		struct Kept
 		{
-			std::string name;
+			Name name;
 			Moment moment;
 			Object::Cells::Place place;
 			std::size_t look{};
@@ -870,7 +869,7 @@ namespace xge
 		// What a piece is, for a <line> of alike: its group, or for a copy
 		// the group of what it copies.
 		std::string kindOf(const Object& piece) noexcept;
-		void askLines(const Object::CellCheck& check, const std::string& map, int columns, int rows, CommandExecutor& executor);
+		void askLines(const Object::CellCheck& check, Name map, int columns, int rows, CommandExecutor& executor);
 		void cellMoves(float seconds) override;
 		// A board game piece's moves that it can make now: where each ends,
 		// and the piece it jumps (null for a step). Only its jumps when
@@ -911,7 +910,7 @@ namespace xge
 
 		// Marks the objects (and every member of the groups) of these names
 		// as kept (Object::kept); a name that is no object stops the load.
-		void keep(const std::vector<std::string>& names);
+		void keep(const std::vector<Name>& names);
 
 		// Writes where every object is and how it is going into the
 		// expressions' live numbers, before one is worked out as the game runs.
@@ -932,7 +931,7 @@ namespace xge
 		void holdVariablesForExpressions(const Object& object);
 
 		// Shows `value` in every text object bound to ownerName.variableName.
-		void refreshBoundTexts(const std::string& ownerName, const std::string& variableName, float value);
+		void refreshBoundTexts(Name ownerName, Name variableName, float value);
 
 		WindowDesc windowDesc;
 
@@ -952,8 +951,6 @@ namespace xge
 		std::vector<SoundDesc> sounds;
 		std::vector<RawPath> rawPaths;
 		std::vector<Patterns> patterns;
-		// "worth", what a pattern by an item's worths names.
-		Name worthName;
 		std::map<std::string, Path> paths;
 		std::vector<std::string> soundRequests;
 		std::vector<std::string> silenceRequests;
@@ -983,7 +980,7 @@ namespace xge
 		// drawStartAgain draws a <random> from), and, for a group spawned
 		// from, which of its members is next.
 		std::map<std::string, RawObject> copyRaws;
-		std::map<std::string, std::size_t> spawnTurns;
+		std::map<Name, std::size_t> spawnTurns;
 		std::map<std::string, bool> descriptions;
 
 		// After objects have joined or left: every answer kept by an
@@ -995,12 +992,12 @@ namespace xge
 
 		// tryGetObject's answers: names never change while a game runs.
 		std::unordered_map<Name, Object*> foundObjects;
-		Object* findObject(const std::string& name) noexcept;
+		Object* findObject(Name name) noexcept;
 
 		// The objects a condition's class and name filter matches (both
 		// fixed while a game runs), by index, kept per filter.
 		std::map<std::pair<std::string, std::string>, std::vector<std::size_t>> filtered;
-		const std::vector<std::size_t>& matching(const std::string& filterClass, const std::string& filterObject);
+		const std::vector<std::size_t>& matching(Name filterClass, Name filterObject);
 		unsigned long resets = 0;
 		RawDemo demo;
 		bool demoAsked = false;
@@ -1012,7 +1009,7 @@ namespace xge
 		void animationEnded(std::size_t index, std::size_t look) override;
 		void frameCameUp(std::size_t index, std::size_t look, std::size_t picture) override;
 		void followPaths(float seconds) override { applyPaths(seconds); }
-		bool burn(Object& object, const std::string& variable) override;
+		bool burn(Object& object, Name variable) override;
 		void atEdge(Object& object, Edge edge) override;
 		bool sticksAt(const Object& object, Edge edge) override;
 		bool canCollide(const Object& a, const Object& b) override;
@@ -1032,11 +1029,11 @@ namespace xge
 
 		// Whether `object` is right now touching any other object in play of
 		// this class - what a collision rule's unless= asks.
-		bool isTouchingClass(const Object& object, const Object& excluding, const std::string& objClass);
+		bool isTouchingClass(const Object& object, const Object& excluding, Name objClass);
 
 		// Whether an edge rule with sprite= or unless= is passed over right
 		// now: the object shows another look, or touches that class.
-		bool isEdgeRulePassedOver(const Object& object, const std::string& look, const EdgeGuard& guard);
+		bool isEdgeRulePassedOver(const Object& object, Name look, const EdgeGuard& guard);
 
 		// Checked once per frame against the current state's <conditions>; the
 		// first one whose target variable has reached its threshold fires its
@@ -1048,13 +1045,13 @@ namespace xge
 		// Every state's <timers> as they are counting (State::timers is how
 		// they start); kept here, by state name, because the state stack
 		// holds copies of states. A reset starts them all over.
-		std::map<std::string, std::vector<Timer>> stateTimers;
+		std::map<Name, std::vector<Timer>> stateTimers;
 
 		// Each state's current scene, by state name, and every scene's
 		// timers as they are counting, by its path. Goes up by one each time
 		// a scene is entered (a timer or condition list stops for the frame).
-		std::map<std::string, std::string> currentScenes;
-		std::map<std::string, std::vector<Timer>> sceneTimers;
+		std::map<Name, Name> currentScenes;
+		std::map<Name, std::vector<Timer>> sceneTimers;
 		unsigned long sceneChanges = 0;
 
 		// A <demo /> in a game with no <demo> stops the load.
@@ -1068,15 +1065,15 @@ namespace xge
 		{
 			std::vector<Object> objects;
 			Parts parts;
-			std::map<std::string, std::vector<Timer>> stateTimers;
-			std::map<std::string, std::string> currentScenes;
-			std::map<std::string, std::vector<Timer>> sceneTimers;
-			std::string state;
+			std::map<Name, std::vector<Timer>> stateTimers;
+			std::map<Name, Name> currentScenes;
+			std::map<Name, std::vector<Timer>> sceneTimers;
+			Name state;
 			bool out = false;
 		};
 		std::vector<Turn> turns;
 		std::size_t turn = 0;
-		std::string turnsState;
+		Name turnsState;
 		bool turnHandedOver = false;
 		std::function<void()> turnPutAway;
 		void putTurnAway(Turn& into) const;
@@ -1103,7 +1100,7 @@ namespace xge
 		// The full name a name means: itself, when it names an object or a
 		// group, or else the one path that ends with it (robots for
 		// playing.room1.robots, for a test or a front end); else itself.
-		std::string fullName(const std::string& name) const;
+		Name fullName(Name name) const;
 
 		// Works out what is shown in every text bound to a variable, after many have changed.
 		void refreshAllBoundTexts(void);
@@ -1127,7 +1124,7 @@ namespace xge
 		const Object* testing{ nullptr };
 		const Object* testingOther{ nullptr };
 		// A name in the condition, with self the object testing it.
-		const std::string& selfIn(const Condition& condition, const std::string& name) const noexcept;
+		Name selfIn(const Condition& condition, Name name) const noexcept;
 		// The parts of holds.
 		bool considers(const Condition& condition, const Object& object) const;
 		float comparedWith(const Condition& condition);

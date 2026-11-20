@@ -65,7 +65,7 @@ namespace xge
 		}
 		else if (self && (become.from.empty() || self->lookName() == become.from))
 		{
-			const std::string before = game.isHand(*self) ? self->lookName() : std::string();
+			const Name before = game.isHand(*self) ? self->lookName() : Name();
 			if (!become.sprite.empty()) { game.showLook(*self, become.sprite); }
 			if (!become.style.empty()) { wearPaletteNamed(*self, become.style); }
 			// A hand sits centred on its card by its look's size.

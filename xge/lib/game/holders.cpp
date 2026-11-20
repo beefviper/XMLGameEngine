@@ -9,6 +9,7 @@
 
 #include "game/data.h"
 #include "game/game.h"
+#include "game/words.h"
 #include "game/random.h"
 #include "play/verbs.h"
 
@@ -63,7 +64,7 @@ namespace xge
 		return at < itemIndex.size() && itemIndex[at] < objects.size() ? &objects[itemIndex[at]] : nullptr;
 	}
 
-	Object* Game::holderNamed(const std::string& name)
+	Object* Game::holderNamed(Name name)
 	{
 		const std::string full = fullName(name);
 		for (Object& object : objects)
@@ -73,7 +74,7 @@ namespace xge
 		return nullptr;
 	}
 
-	void Game::showHeld(Object& item, const std::string& look)
+	void Game::showHeld(Object& item, Name look)
 	{
 		const auto found = std::find_if(item.looks.all().begin(), item.looks.all().end(), [&](const Object::Look& each) { return each.name == look; });
 		if (found != item.looks.all().end()) { turnItem(item, found == item.looks.all().begin()); }
@@ -114,7 +115,7 @@ namespace xge
 		}
 		holderOf(holder).items.insert(at, number);
 		// A suit that <breaks>, broken.
-		const std::vector<std::string>& breaks = holderOf(holder).takes.breaks;
+		const std::vector<Name>& breaks = holderOf(holder).takes.breaks;
 		if (std::find(breaks.begin(), breaks.end(), followedName(holderOf(holder).takes, *item)) != breaks.end()
 			&& std::find(holderOf(holder).broken.begin(), holderOf(holder).broken.end(), followed(holderOf(holder).takes, *item)) == holderOf(holder).broken.end())
 		{
@@ -129,7 +130,7 @@ namespace xge
 	{
 		if (!holderOf(holder).counts.empty() && holderOf(holder).counts != "worth")
 		{
-			const auto value = item.variable.findText(holderOf(holder).counts);
+			const auto value = item.variable.find(holderOf(holder).counts);
 			return value == item.variable.end() ? 0.0f : value->second;
 		}
 		return itemOf(item).worths.empty() ? 0.0f : itemOf(item).worths.front();
@@ -160,7 +161,7 @@ namespace xge
 			for (const Object* starter : group)
 			{
 				// By worth, an item counting any of its worths; else the variable's value.
-				const auto valuesOf = [&](const Object& item) { return by == worthName ? itemOf(item).worths : std::vector<float>{ valueOf(item, by) }; };
+				const auto valuesOf = [&](const Object& item) { return by == words::worth ? itemOf(item).worths : std::vector<float>{ valueOf(item, by) }; };
 				for (const float start : valuesOf(*starter))
 				{
 					std::vector<bool> used(n, false);
@@ -313,7 +314,7 @@ namespace xge
 		std::sort(rest.begin(), rest.end(), byWorth);
 		for (const int i : rest) { order.push_back(items[static_cast<std::size_t>(i)]); }
 		holderOf(holder).items = order;
-		refreshBoundTexts(holder.name, "deadwood", holderOf(holder).deadwood);
+		refreshBoundTexts(holder.name, words::deadwood, holderOf(holder).deadwood);
 	}
 
 	bool Game::isTrump(const HolderRule& rule, const Object& item)
@@ -444,15 +445,15 @@ namespace xge
 		float total = 0.0f;
 		std::vector<const Object*> shown;
 		// <counts variable>: a variable of each other than its worth, as it is.
-		const std::string& counted = holderOf(holder).counts;
-		const bool byVariable = !counted.empty() && counted != "worth";
+		const Name counted = holderOf(holder).counts;
+		const bool byVariable = !counted.empty() && counted != words::worth;
 		for (const int number : holderOf(holder).items)
 		{
 			const Object* item = itemAt(number);
 			if (!item || !itemOf(*item).faceUp || itemOf(*item).worths.empty()) { continue; }
 			if (byVariable)
 			{
-				const auto value = item->variable.findText(counted);
+				const auto value = item->variable.find(counted);
 				total += value == item->variable.end() ? 0.0f : value->second;
 				continue;
 			}
@@ -473,9 +474,9 @@ namespace xge
 		}
 		holderOf(holder).points = total;
 		if (!counted.empty()) { setVariable(holder.name, counted, total); }
-		refreshBoundTexts(holder.name, "cards", holderOf(holder).itemCount);
-		refreshBoundTexts(holder.name, "held", holderOf(holder).itemCount);
-		refreshBoundTexts(holder.name, "points", holderOf(holder).points);
+		refreshBoundTexts(holder.name, words::cards, holderOf(holder).itemCount);
+		refreshBoundTexts(holder.name, words::held, holderOf(holder).itemCount);
+		refreshBoundTexts(holder.name, words::points, holderOf(holder).points);
 
 		// A holder with <melds>: laid out in its groups, and its deadwood.
 		if (!holderOf(holder).melds.empty() && std::all_of(holderOf(holder).items.begin(), holderOf(holder).items.end(), [&](int number) { return itemAt(number) != nullptr; })) { layOutMelds(holder); }
@@ -487,7 +488,7 @@ namespace xge
 			if (owned)
 			{
 				holderOf(holder).tricks = reckonTricks(holder, holderOf(*trick).takes);
-				refreshBoundTexts(holder.name, "tricks", holderOf(holder).tricks);
+				refreshBoundTexts(holder.name, words::tricks, holderOf(holder).tricks);
 			}
 		}
 
@@ -498,8 +499,8 @@ namespace xge
 			const Object* best = trickWinning(holder);
 			holderOf(holder).lead = lead ? static_cast<float>(followed(holderOf(holder).takes, *lead)) : 0.0f;
 			holderOf(holder).winner = best ? static_cast<float>(itemOf(*best).laidBy) : 0.0f;
-			refreshBoundTexts(holder.name, "lead", holderOf(holder).lead);
-			refreshBoundTexts(holder.name, "winner", holderOf(holder).winner);
+			refreshBoundTexts(holder.name, words::lead, holderOf(holder).lead);
+			refreshBoundTexts(holder.name, words::winner, holderOf(holder).winner);
 		}
 
 		// Scored holders, this one and those that score its items with theirs,
@@ -779,7 +780,7 @@ namespace xge
 	void Game::markOddsRead()
 	{
 		// Generous: a name that might mean the holder counts as reading it.
-		const auto means = [](const Object& holder, const std::string& name)
+		const auto means = [](const Object& holder, const Name name)
 		{
 			if (name.empty()) { return false; }
 			if (holder.named(name)) { return true; }
@@ -811,10 +812,10 @@ namespace xge
 				for (const std::string& name : expr.namesIn(text))
 				{
 					const std::size_t dot = name.rfind('.');
-					read = read || (dot != std::string::npos && name.compare(dot + 1, std::string::npos, "odds") == 0 && means(holder, name.substr(0, dot)));
+					read = read || (dot != std::string::npos && name.compare(dot + 1, std::string::npos, "odds") == 0 && means(holder, Name(name.substr(0, dot))));
 				}
 			}
-			for (const Object& other : objects) { read = read || showsVariable(other, holder.name, "odds"); }
+			for (const Object& other : objects) { read = read || showsVariable(other, holder.name, words::odds); }
 			for (const State& state : states)
 			{
 				read = read || readIn(holder, state.conditions, readIn) || readIn(holder, state.computer, readIn);
@@ -921,17 +922,17 @@ namespace xge
 				holderOf(holder).odds = std::round(won * 100.0f / static_cast<float>(trials));
 			}
 		}
-		refreshBoundTexts(holder.name, "pattern", holderOf(holder).pattern);
-		refreshBoundTexts(holder.name, "strength", holderOf(holder).strength);
-		refreshBoundTexts(holder.name, "odds", holderOf(holder).odds);
+		refreshBoundTexts(holder.name, words::pattern, holderOf(holder).pattern);
+		refreshBoundTexts(holder.name, words::strength, holderOf(holder).strength);
+		refreshBoundTexts(holder.name, words::odds, holderOf(holder).odds);
 	}
 
 	void Game::refreshCall(Object& holder)
 	{
 		const Object* top = holderOf(holder).items.empty() ? nullptr : itemAt(holderOf(holder).items.back());
 		holderOf(holder).calling = !holderOf(holder).takes.wildRules.empty() && top && isWild(holderOf(holder).takes, *top) && holderOf(holder).called == 0.0f ? 1.0f : 0.0f;
-		refreshBoundTexts(holder.name, "calling", holderOf(holder).calling);
-		refreshBoundTexts(holder.name, "called", holderOf(holder).called);
+		refreshBoundTexts(holder.name, words::calling, holderOf(holder).calling);
+		refreshBoundTexts(holder.name, words::called, holderOf(holder).called);
 	}
 
 	int Game::takeTop(Object& holder)
@@ -974,15 +975,15 @@ namespace xge
 		}
 
 		// Each group's held members, in random order, into the holder it starts in.
-		std::map<std::string, std::vector<int>> starts;
-		std::vector<std::string> order;
+		std::map<Name, std::vector<int>> starts;
+		std::vector<Name> order;
 		for (Object& object : objects)
 		{
 			if (!itemOf(object).is) { continue; }
 			if (!starts.count(itemOf(object).startHolder)) { order.push_back(itemOf(object).startHolder); }
 			starts[itemOf(object).startHolder].push_back(itemOf(object).number);
 		}
-		for (const std::string& name : order)
+		for (const Name name : order)
 		{
 			Object* holder = holderNamed(name);
 			if (!holder) { throw std::runtime_error("<starts> > <send into=\"" + name + "\">: there is no holder called '" + name + "'"); }
@@ -1171,7 +1172,7 @@ namespace xge
 			{
 				const Object* item = itemAt(number);
 				if (!item) { return false; }
-				const auto value = item->variable.findText(each.variable);
+				const auto value = item->variable.find(each.variable);
 				total += value == item->variable.end() ? 0.0f : value->second;
 			}
 			if (total != each.amount) { return false; }
@@ -1299,7 +1300,7 @@ namespace xge
 		// <holds> items from that many holders.
 		if (!handOf(hand).held.empty())
 		{
-			const auto taken = [&](const std::string& name) { return name == handOf(hand).from || std::any_of(handOf(hand).also.begin(), handOf(hand).also.end(), [&](const auto& each) { return each.second == name; }); };
+			const auto taken = [&](const Name name) { return name == handOf(hand).from || std::any_of(handOf(hand).also.begin(), handOf(hand).also.end(), [&](const auto& each) { return each.second == name; }); };
 			if (static_cast<int>(handOf(hand).also.size()) + 1 >= handOf(hand).holds || taken(holder->name)) { return false; }
 			const int number = holderOf(*holder).items.back();
 			const Object* top = itemAt(number);
@@ -1359,8 +1360,8 @@ namespace xge
 		const Object* holder = isHand(hand) ? holderNamed(handOf(hand).holder) : nullptr;
 		if (holder && holderOf(*holder).pickedSends > 0)
 		{
-			const std::string sound = holderOf(*holder).pickedSound;
-			if (sendPicked(hand, "", "") && !sound.empty()) { requestSound(sound); }
+			const Name sound = holderOf(*holder).pickedSound;
+			if (sendPicked(hand) && !sound.empty()) { requestSound(sound); }
 			return false;
 		}
 		return takeItems(hand);
@@ -1397,7 +1398,7 @@ namespace xge
 		layOutItems();
 	}
 
-	bool Game::layItems(Object& hand, const std::string& onto)
+	bool Game::layItems(Object& hand, Name onto)
 	{
 		if (!isHand(hand) || handOf(hand).held.empty()) { return false; }
 		std::vector<Object*> choices;
@@ -1409,7 +1410,7 @@ namespace xge
 		}
 		else
 		{
-			const std::string full = fullName(onto);
+			const Name full = fullName(onto);
 			for (Object& object : objects)
 			{
 				if (isHolder(object) && object.named(full) && isShown(object)) { choices.push_back(&object); }
@@ -1437,7 +1438,7 @@ namespace xge
 		if (!isHand(hand) || handOf(hand).held.empty()) { return false; }
 		Object* from = holderNamed(handOf(hand).from);
 		if (!from) { return false; }
-		const std::string pointed = handOf(hand).holder;
+		const Name pointed = handOf(hand).holder;
 		const int at = handOf(hand).at;
 		const int item = handOf(hand).held.front();
 		// Items taken from other holders go back to theirs first.
@@ -1465,14 +1466,14 @@ namespace xge
 		return true;
 	}
 
-	bool Game::sendPicked(Object& hand, const std::string& fromHolder, const std::string& faces)
+	bool Game::sendPicked(Object& hand, Name fromHolder, Name faces)
 	{
 		if (!isHand(hand) || !handOf(hand).held.empty() || (fromHolder.empty() && handOf(hand).mouse && !handOf(hand).over)) { return false; }
 		// From the holder named, or else the one pointed at.
-		Object* holder = holderNamed(fromHolder.empty() ? handOf(hand).holder : fromHolder);
+		Object* holder = holderNamed(fromHolder.empty() ? Name(handOf(hand).holder) : fromHolder);
 		if (!holder || holderOf(*holder).pickedSends <= 0) { return false; }
 		// Into the holder it names, or else the hand's own.
-		const std::string& intoName = holderOf(*holder).pickedInto.empty() ? handOf(hand).own : holderOf(*holder).pickedInto;
+		const Name intoName = holderOf(*holder).pickedInto.empty() ? handOf(hand).own : holderOf(*holder).pickedInto;
 		Object* into = intoName.empty() ? nullptr : holderNamed(intoName);
 		if (!into) { return false; }
 		if (!holderOf(*holder).items.empty())
@@ -1524,7 +1525,7 @@ namespace xge
 	{
 		// Which way up an item showing that look is: its face (its first
 		// look) up; another of its looks down; none of its looks, nothing.
-		std::optional<bool> faceFor(const Object& item, const std::string& sprite)
+		std::optional<bool> faceFor(const Object& item, const Name sprite)
 		{
 			for (std::size_t i = 0; i < item.looks.all().size(); ++i)
 			{
@@ -1534,13 +1535,13 @@ namespace xge
 		}
 	}
 
-	bool Game::sendHeld(const std::string& fromName, const std::string& intoName, int count, bool all, const std::string& sprite)
+	bool Game::sendHeld(Name fromName, Name intoName, int count, bool all, Name sprite)
 	{
 		Object* into = holderNamed(intoName);
 		if (!into)
 		{
 			// A group's: each member's own holder in turn, an item a round.
-			std::vector<std::pair<int, std::string>> owners;
+			std::vector<std::pair<int, Name>> owners;
 			for (const Object& object : objects)
 			{
 				if (isHand(object) && !handOf(object).own.empty() && (object.inGroup(intoName) || object.inGroup(fullName(intoName)))) { owners.emplace_back(handOf(object).seat, handOf(object).own); }
@@ -1618,7 +1619,7 @@ namespace xge
 		return true;
 	}
 
-	bool Game::orderHeld(const std::string& name)
+	bool Game::orderHeld(Name name)
 	{
 		Object* holder = holderNamed(name);
 		if (!holder) { return false; }
@@ -1643,7 +1644,7 @@ namespace xge
 		return true;
 	}
 
-	bool Game::turnHeld(Object& holder, const std::string& sprite)
+	bool Game::turnHeld(Object& holder, Name sprite)
 	{
 		for (const int number : holderOf(holder).items)
 		{
@@ -1808,7 +1809,7 @@ namespace xge
 		layOutItems();
 	}
 
-	bool Game::callValue(Object& hand, const std::string& name)
+	bool Game::callValue(Object& hand, Name name)
 	{
 		if (!isHand(hand) || !handOf(hand).held.empty() || handOf(hand).own.empty() || (handOf(hand).mouse && !handOf(hand).over)) { return false; }
 		Object* holder = holderNamed(name);

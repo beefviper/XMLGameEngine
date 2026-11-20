@@ -32,7 +32,7 @@ namespace xge
 	{
 		Game& game = doer.game();
 		Object* const self = doer.self;
-		return self && (game.isHand(*self) ? game.pickItems(*self) : game.pickPiece(*self, pick.objClass.empty() ? game.turnClass() : pick.objClass.str(), pick.only));
+		return self && (game.isHand(*self) ? game.pickItems(*self) : game.pickPiece(*self, pick.objClass.empty() ? game.turnClass() : pick.objClass, pick.only));
 	}
 
 	static void printPick(std::ostream& o, const CmdPick& pick)

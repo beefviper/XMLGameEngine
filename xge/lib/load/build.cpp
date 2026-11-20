@@ -232,7 +232,7 @@ namespace xge
 		object.position = startFor(object).position + object.layout.cellOffset;
 		startFor(object).position = object.position;
 
-		if (!positionSizeDependencies.empty()) { parts->sizeUses.add(object.id, parts->orderOf(object.id), { positionSizeDependencies, {} }); }
+		if (!positionSizeDependencies.empty()) { parts->sizeUses.add(object.id, parts->orderOf(object.id), { NameStore::program().of(positionSizeDependencies), {} }); }
 
 		// What it follows, worked out again every frame (Game::follow).
 		using Follow = Object::Follow;
@@ -337,7 +337,7 @@ namespace xge
 			object.light = evaluate(*rawObject.rawLight, where + " > <light>");
 			if (object.light < 0.0f) { throw std::runtime_error(where + ": <light> reaches " + formatDisplayNumber(object.light) + " pixels; expected 0 or more"); }
 			startFor(object).light = object.light;
-			if (!rawObject.lightPast.empty()) { parts->lightPasts.add(object.id, parts->orderOf(object.id), { rawObject.lightPast }); }
+			if (!rawObject.lightPast.empty()) { parts->lightPasts.add(object.id, parts->orderOf(object.id), { NameStore::program().of(rawObject.lightPast) }); }
 		}
 		if (rawObject.dark == "unlit") { object.dark.kind = Object::Darkness::Unlit; }
 		else if (rawObject.dark == "unseen") { object.dark.kind = Object::Darkness::Unseen; }
@@ -512,7 +512,7 @@ namespace xge
 			set.promoteRow = rawSet.promoteRow;
 			for (const RawObject::RawMoveSet::RawFlank& flank : rawSet.flanks) { set.flanks.push_back({ flank.objClass, flank.straight }); }
 			set.fall = rawSet.fall;
-			set.on = rawSet.on;
+			set.on = NameStore::program().of(rawSet.on);
 			set.closeClass = rawSet.closeClass;
 			set.closeObject = rawSet.closeObject;
 			parts->give(parts->moves, object.id).sets.push_back(std::move(set));
@@ -572,7 +572,7 @@ namespace xge
 			holder.emptyLeave = std::max(0, static_cast<int>(std::lround(number(raw.emptyLeave))));
 			holder.spreadWidth = number(raw.spreadWidth);
 			holder.carry = raw.carry;
-			holder.orderBy = raw.orderBy;
+			holder.orderBy = NameStore::program().of(raw.orderBy);
 			holder.counts = raw.counts;
 			holder.lift = number(raw.lift);
 			holder.pointsMost = raw.hasPoints ? number(raw.pointsMost) : 0.0f;

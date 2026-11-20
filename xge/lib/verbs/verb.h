@@ -92,7 +92,7 @@ namespace xge
 		bool byRule{ true };
 		// In an object's action of this name: a <move> is held, and the
 		// controls (<hop>, <jump>, <climb>, <thrust>...) work.
-		const std::string* action{ nullptr };
+		const Name* action{ nullptr };
 		// In a cell map's check: what it found.
 		const Object::CellMatch* match{ nullptr };
 		// What runs it, and the game it runs in (CommandExecutor::run).

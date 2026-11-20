@@ -110,8 +110,8 @@ namespace xge
 	{
 		std::size_t first{ 0 };
 		std::size_t count{ 0 };
-		std::string sprite;
-		std::string unlessClass;
+		Name sprite;
+		Name unlessClass;
 		// Its <condition>s and <any>s, gathered as an <all> (join None when
 		// it has none), and what they are made into: it runs only while it holds.
 		RawCondition rawCheck;
@@ -197,15 +197,15 @@ namespace xge
 	struct CollisionRule
 	{
 		int line{ 0 }; // RawCollisionRule::line
-		std::string filterClass;
-		std::string filterObject;
-		std::string unlessClass;
-		std::string throughClass;          // see RawCollisionRule
+		Name filterClass;
+		Name filterObject;
+		Name unlessClass;
+		Name throughClass;          // see RawCollisionRule
 
-		std::string whileSprite;
+		Name whileSprite;
 		std::vector<Edge> sides;           // empty: any side
-		std::string hitbox;                // see RawCollisionRule
-		std::string by;
+		Name hitbox;                // see RawCollisionRule
+		Name by;
 		std::optional<Condition> check;    // see RawCollisionRule::check
 		std::vector<Command> commands;
 		// For one naming other: its commands as made for each other thing
@@ -492,15 +492,15 @@ namespace xge
 	// look, when sprite is empty).
 	struct MazeWall
 	{
-		std::string objClass;
-		std::string sprite;
+		Name objClass;
+		Name sprite;
 	};
 
 	// A <slow class="tunnel">0.5</slow> of a <maze>: on a tile holding
 	// something of that class, the walker goes at that share of its speed.
 	struct MazeSlow
 	{
-		std::string objClass;
+		Name objClass;
 		float share{ 1.0f };
 	};
 
@@ -530,9 +530,9 @@ namespace xge
 		// item of the others, whatever was led.
 		// trickBy: the variable followed, as written.
 		bool follow{ false };
-		std::string trickBy;
-		std::vector<std::string> breaks;
-		std::vector<std::string> trumps;
+		Name trickBy;
+		std::vector<Name> breaks;
+		std::vector<Name> trumps;
 		// <accepts> of a <holds>: rules on the arriving member's variable.
 		// `kind` compares it with `amount`, or, `top`, with the top one's
 		// `topVariable` (empty: the same variable) plus `amount`
@@ -543,10 +543,10 @@ namespace xge
 		{
 			enum class Kind { Equal, Unequal, Above, Below, AtLeast, AtMost, Total };
 			Kind kind{ Kind::Equal };
-			std::string variable;
+			Name variable;
 			float amount{};
 			bool top{ false };
-			std::string topVariable;
+			Name topVariable;
 		};
 		std::vector<VarRule> rules;
 		std::vector<VarRule> emptyRules;
@@ -556,14 +556,14 @@ namespace xge
 		// `wildVariable` (from 1), which its top then counts as.
 		std::vector<VarRule> anyRules;
 		std::vector<VarRule> wildRules;
-		std::string wildVariable;
+		Name wildVariable;
 	};
 
 	// A held member (an item; see load/expr.cpp): the worths it may count
 	// for, lowest first, and the holder it starts in.
 	struct ItemOf
 	{
-		std::string startHolder;
+		Name startHolder;
 		std::vector<float> worths;
 	};
 
@@ -918,7 +918,7 @@ namespace xge
 	// (Parts::mazes), for an object written with <maze>. See play/maze.h.
 	struct Maze
 	{
-		std::string map;
+		Name map;
 		std::vector<MazeWall> walls;
 		std::vector<MazeSlow> slows;
 		Walk walk;
@@ -931,8 +931,8 @@ namespace xge
 	{
 		RawTextPiece::Kind kind{ RawTextPiece::Kind::Words };
 		std::string shown;
-		std::string owner;
-		std::string variable;
+		Name owner;
+		Name variable;
 		std::vector<std::string> choices;
 	};
 
@@ -964,13 +964,13 @@ namespace xge
 		// A <thrust direction> held each way, and the variable (if any)
 		// each one burns.
 		std::array<float, 4> thrust{};
-		std::array<std::string, 4> thrustBurn{};
+		std::array<Name, 4> thrustBurn{};
 		// Turning held (only Left and Right are used): degrees a second.
 		std::array<float, 4> turn{};
 		// Thrust held along the heading, for each action that thrusts,
 		// with the variable it burns, so that forward and back held
 		// together add up.
-		std::map<std::string, std::pair<float, std::string>> thrustAhead;
+		std::map<Name, std::pair<float, Name>> thrustAhead;
 	};
 
 	// A hand: the holder it points at (its full name) and the item of it
@@ -980,17 +980,17 @@ namespace xge
 	// (Parts::hands), for an object whose action picks up held items.
 	struct Hand
 	{
-		std::string own;        // holder=: its own holder, as written, or none
+		Name own;        // holder=: its own holder, as written, or none
 		int seat{};             // <seat>: which player (0 none)
 		int team{};             // <team>: its side; a partner is another hand on it (0 none)
 		int holds{ 1 };         // <holds>: from how many holders it holds items at once
 		// Holding items from more than one holder: each item taken after
 		// the first, and the holder it came from.
-		std::vector<std::pair<int, std::string>> also;
-		std::string holder;
+		std::vector<std::pair<int, Name>> also;
+		Name holder;
 		int at{ -1 };
 		std::vector<int> held;
-		std::string from;
+		Name from;
 		bool mouse{ false };    // moved by the mouse last, not the keys
 		bool over{ false };     // the mouse is over the holder pointed at (or an item of it)
 		Vector2f grab{};
@@ -1001,33 +1001,33 @@ namespace xge
 	// numbers. Laid out by Game::layOutItems, never moved by the frame.
 	struct Holder
 	{
-		std::string holdsClass;   // <holds class sprite>, as written
-		std::string holdsSprite;
-		std::string topSprite;    // <top sprite>: what a member left on top shows
+		Name holdsClass;   // <holds class sprite>, as written
+		Name holdsSprite;
+		Name topSprite;    // <top sprite>: what a member left on top shows
 		Vector2f spread{};        // <spread>: each item on from the one below
 		Vector2f lookSpread{};    // <spread sprite>: each item showing that look
-		std::string spreadSprite;
+		Name spreadSprite;
 		int startCount{};
 		int startMore{};
 		bool startShuffled{ false };
-		std::string pickedInto;
+		Name pickedInto;
 		int pickedSends{};
-		std::string emptyFrom;
+		Name emptyFrom;
 		bool emptyRandom{ false };
 		int emptyLeave{};
-		std::string pickedSound;
-		std::vector<std::string> orderBy;
+		Name pickedSound;
+		std::vector<Name> orderBy;
 		float spreadWidth{};
 		bool carry{ false };
 		float lift{};
 		float pointsMost{};     // 0: no limit
-		std::string counts;     // <counts variable>: as written (empty: none)
+		Name counts;     // <counts variable>: as written (empty: none)
 		std::vector<int> broken;  // the suits of its <breaks> laid on it since the items were gathered
-		std::string score;      // as written
-		std::string scoreWith;
+		Name score;      // as written
+		Name scoreWith;
 		int scoreFull{};
 		int scoreBest{};
-		std::string melds;      // as written
+		Name melds;      // as written
 		int meldsBest{};
 		bool scoreDue{ false };  // its items changed since it was last scored
 		HolderRule takes;
@@ -1153,7 +1153,7 @@ namespace xge
 	struct Kind
 	{
 		CollisionData collisionData;
-		std::map<std::string, std::vector<Command>> action;
+		std::map<Name, std::vector<Command>> action;
 		std::vector<Timer> timers;   // their clocks are each object's (Parts::clocks)
 		int written{ 0 };   // RawObject::kind
 	};
@@ -1225,13 +1225,13 @@ namespace xge
 		NameList outerGroups;
 
 		// Whether `group` is this object's group or one around it.
-		bool inGroup(const std::string& group) const
+		bool inGroup(Name group) const
 		{
 			return !group.empty() && (groupName == group || std::find(outerGroups.begin(), outerGroups.end(), group) != outerGroups.end());
 		}
 
 		// Whether `name` names it: its own name, or a group it is in.
-		bool named(const std::string& wanted) const { return name == wanted || inGroup(wanted); }
+		bool named(Name wanted) const { return name == wanted || inGroup(wanted); }
 		Name objClass;
 
 		// A spawned copy: the name of the object it was spawned from, which
@@ -1484,13 +1484,13 @@ namespace xge
 		// A set with no steps or jumps is one of pieces put.
 		struct Flank
 		{
-			std::string objClass;
+			Name objClass;
 			bool straight{ false };
 		};
 		struct PieceMove
 		{
 			bool jump{ false };
-			std::string objClass;
+			Name objClass;
 			int x{};
 			int y{};
 		};
@@ -1503,9 +1503,9 @@ namespace xge
 			int promoteRow{};
 			std::vector<Flank> flanks;
 			bool fall{ false };
-			std::vector<std::string> on;
-			std::string closeClass;
-			std::string closeObject;
+			std::vector<Name> on;
+			Name closeClass;
+			Name closeObject;
 			bool puts() const noexcept { return moves.empty(); }
 		};
 		struct Moves
@@ -1524,9 +1524,9 @@ namespace xge
 		{
 			enum class Kind { Held, Moves, Movable, Put, Last };
 			Kind kind{ Kind::Held };
-			std::string object;
-			std::string objClass;
-			std::string variable;
+			Name object;
+			Name objClass;
+			Name variable;
 		};
 		struct MarkSet
 		{
@@ -1539,7 +1539,7 @@ namespace xge
 		struct Item
 		{
 			bool is{ false };
-			std::string startHolder;
+			Name startHolder;
 			std::vector<float> worths;
 			int number{};
 			int laidBy{};           // the seat of the hand that last laid it (0 none)
@@ -1554,8 +1554,8 @@ namespace xge
 		struct Turns
 		{
 			bool takes{ false };
-			std::string sprite;
-			std::string ownsClass;
+			Name sprite;
+			Name ownsClass;
 		};
 
 		// Drawn after everything with a smaller one; 0 keeps the file's order
@@ -1563,7 +1563,7 @@ namespace xge
 		int drawOrder{};
 		struct Marked
 		{
-			std::string object;
+			Name object;
 			int column{};
 			int row{};
 			bool operator==(const Marked&) const = default;
@@ -1574,7 +1574,7 @@ namespace xge
 		{
 			std::vector<MarkSet> sets;
 			std::vector<Marked> marked;
-			std::vector<std::string> copies;
+			std::vector<Name> copies;
 		};
 		// A picker (it runs <pick>) and a cursor that moves <onto> pieces, with
 		// its <marks>. A part (Parts::pickers): one written with <marks> has it
@@ -1583,7 +1583,7 @@ namespace xge
 		{
 			// The piece it holds ("" for none), and whether that piece is in
 			// the middle of a run of jumps, which it must finish.
-			std::string picked;
+			Name picked;
 			bool inChain{ false };
 			// The cells the last move it placed went from and to (0 for none).
 			int fromColumn{};
@@ -1605,19 +1605,19 @@ namespace xge
 		struct CellCheck
 		{
 			std::string kind;
-			std::string objClass;
+			Name objClass;
 			std::vector<Command> commands;
 			int count{ 0 };
 			bool straight{ false };
-			std::string alike;
+			Name alike;
 		};
 		// What a check found: the map, the row (counting from 1) and the
 		// pieces, which its <clear /> and <collapse /> act on.
 		struct CellMatch
 		{
-			std::string map;
+			Name map;
 			int row{};
-			std::vector<std::string> pieces;
+			std::vector<Name> pieces;
 		};
 
 		// A <shape>: the cells it fills, from its top left (column and row
@@ -1631,7 +1631,7 @@ namespace xge
 		{
 			int column{};
 			int row{};
-			std::string piece;
+			Name piece;
 		};
 
 		// What a piece on a map with <cells /> has beyond its place: its
@@ -1660,19 +1660,19 @@ namespace xge
 				// from where they lie when empty), and how many it is to grow
 				// by. Its links are known (found, or given by a <split />): a
 				// link lost is dropped, never looked for again where they lie.
-				std::vector<std::string> chainLinks;
+				std::vector<Name> chainLinks;
 				int chainGrow{};
 				bool chainKnown{ false };
 
 				// A piece with <joins>, settled: the other cells of the shape
 				// it came in, which it falls with while they are there.
-				std::vector<std::string> joinedWith;
+				std::vector<Name> joinedWith;
 			};
 			Place place;
 			Place start;
 
 			// <chain object>: what its links are (see RawObject::chain).
-			std::string chain;
+			Name chain;
 			// The map's <checks>, made ready (each piece of the map has them).
 			std::vector<CellCheck> checks;
 			// A <shape> (ShapeCell above): its cells now and at the start,
@@ -1682,10 +1682,10 @@ namespace xge
 			std::vector<ShapeCell> shapeStart;
 			int shapeSize{};
 			int quarter{};
-			std::vector<std::string> shapeParts;
+			std::vector<Name> shapeParts;
 			// A cell of a shape in play: the shape's name (empty once it has
 			// settled, or for a piece that was never in a shape).
-			std::string shapeOwner;
+			Name shapeOwner;
 			// A held <move>: the way, the seconds until its next step, and the
 			// seconds between steps (see CmdMove::wait).
 			bool held{ false };
@@ -1732,7 +1732,7 @@ namespace xge
 		struct Climb
 		{
 			std::array<float, 2> activeClimb{};
-			std::string climbClass;
+			Name climbClass;
 			// A climb a rule or timer started, not a key: let go at the end.
 			bool climbOnce{ false };
 		};
@@ -1767,7 +1767,7 @@ namespace xge
 		// shown `frameSeconds`, and `bitmap` the first.
 		struct Look
 		{
-			std::string name;
+			Name name;
 			HeldPicture picture;
 			PictureId bitmap;
 			// A look that moves: its frames (none for a still look).
@@ -1781,7 +1781,7 @@ namespace xge
 		};
 
 		// The name of the look showing ("" for an object with none).
-		const std::string& lookName() const;
+		Name lookName() const;
 
 		// The names its <hitbox>es have, each once.
 		std::vector<std::string> hitboxNames() const;
@@ -1795,7 +1795,7 @@ namespace xge
 		// nothing changes its colors.
 		struct Palette
 		{
-			std::string name;
+			Name name;
 			PictureId bitmap;
 			std::vector<PictureId> animation;
 			std::vector<Look> looks;
@@ -1952,7 +1952,7 @@ namespace xge
 		// way it faced.
 		struct Support
 		{
-			std::string name;
+			Name name;
 			Vector2f at;
 			float heading{};
 		};
@@ -1982,13 +1982,13 @@ namespace xge
 			// <pull>: it is pulled toward the middle of the nearest of each
 			// name or group in play, by that much speed a frame (gravity
 			// toward a sun, a tractor beam, a magnet).
-			std::vector<std::pair<std::string, float>> toward;
+			std::vector<std::pair<Name, float>> toward;
 
 			// <seek>: it turns the way it is going toward the middle of the
 			// nearest of `seek` in play, by at most seekRate degrees, at the
 			// same speed, and its heading with it if it has one: a homing
 			// missile. Empty for none.
-			std::string seek;
+			Name seek;
 			float seekRate{};
 		};
 
@@ -2022,7 +2022,7 @@ namespace xge
 			bool has{ false };
 			float fall{};
 			float bounce{};
-			std::string shadowOf;
+			Name shadowOf;
 		};
 
 		// The size of what it shows now, in whole pixels, as every window
@@ -2061,9 +2061,9 @@ namespace xge
 		// from. A part (Parts::carries), given by the first <carry />.
 		struct Carry
 		{
-			std::string what;
+			Name what;
 			Vector2f offset{};
-			std::string dropped;
+			Name dropped;
 		};
 
 		// The object's own bounding box (width/height) in whole pixels, as
@@ -2088,7 +2088,7 @@ namespace xge
 		// position can be worked out again later and the offset added back.
 		struct SizeUse
 		{
-			std::vector<std::string> sizesOf;
+			std::vector<Name> sizesOf;
 			std::vector<Vector2f> sizesUsed;
 		};
 		struct Layout
@@ -2108,7 +2108,7 @@ namespace xge
 		{
 			enum class Part { X, Y, Heading, Variable, Seconds };
 			Part part{ Part::Variable };
-			std::string variable;
+			Name variable;
 			RawValue value;
 			// Seconds: whose they are, the look (index into looks.all()) or the
 			// object's one animation (npos), and which picture's (index into
@@ -2136,7 +2136,7 @@ namespace xge
 		// A part (Parts::lightPasts), for a light with <past>es only.
 		struct LightPast
 		{
-			std::vector<std::string> classes;
+			std::vector<Name> classes;
 		};
 
 		// How it is drawn: what it shows now and what the backends and a
@@ -2192,8 +2192,8 @@ namespace xge
 		// following it. A part (Parts::tethers), for a <tether> sprite only.
 		struct Tether
 		{
-			std::string from;
-			std::string to;
+			Name from;
+			Name to;
 			int thickness{ 1 };
 			Color color{};
 			// The line as last drawn, the tether's own picture.

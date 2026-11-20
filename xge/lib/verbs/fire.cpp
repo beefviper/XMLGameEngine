@@ -31,7 +31,7 @@ namespace xge
 
 	static void checkFire(const CmdFire& fire, const Checking& checking)
 	{
-		const std::string& shot = fire.projectileName;
+		const Name shot = fire.projectileName;
 		checkObject(checking, shot, "<fire>");
 		// What it sends is a copy of a piece, never an object already there.
 		for (const Object& object : checking.objects)
@@ -47,7 +47,7 @@ namespace xge
 	// in flight. From a shooter with a heading the shot leaves its nose the
 	// way it faces, at the projectile's own speed; from any other it leaves
 	// the top centre, at the projectile's own velocity.
-	static bool fireProjectile(Game& game, Object& shooter, const std::string& projectileName)
+	static bool fireProjectile(Game& game, Object& shooter, Name projectileName)
 	{
 		Object* projectile = game.spawn(projectileName);
 		if (!projectile) { return false; }

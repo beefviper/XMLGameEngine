@@ -80,11 +80,11 @@ namespace xge
 		// a rule, a timer or a condition rather than a key, so a <climb> in
 		// it takes the object along one ladder and then lets go.
 		// Sets lastTriggerRefused.
-		void triggerObjectAction(const std::string& objectName, const std::string& actionName, bool keyPressed, bool byRule, const std::string& from = {});
+		void triggerObjectAction(Name objectName, Name actionName, bool keyPressed, bool byRule, Name from = {});
 		// One object's action of that name, as triggerObjectAction runs it
 		// for that object or for each member of a group. Whether it ran and
 		// a verb in it was refused.
-		bool runAction(Object& object, const std::string& actionName, bool keyPressed, bool byRule);
+		bool runAction(Object& object, Name actionName, bool keyPressed, bool byRule);
 		// A <trigger> with <here /> or <around />: the action of each piece of
 		// its class in those cells about `self`, each piece once however the
 		// actions it runs trigger more (aboutReached, aboutDepth).

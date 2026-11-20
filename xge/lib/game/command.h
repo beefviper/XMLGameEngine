@@ -212,7 +212,7 @@ namespace xge
 
 	// <fall /> - in a cell map's check: every loose piece of the map drops
 	// down its column onto what is under it.
-	struct CmdFall { std::string objClass; }; // only pieces of this class fall; empty: all
+	struct CmdFall { Name objClass; }; // only pieces of this class fall; empty: all
 
 	// <cycle /> - a shape's cells each move on to the next cell of its
 	// outline, in reading order, the last to the first.

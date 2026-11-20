@@ -389,7 +389,7 @@ namespace xge
 				Vector2f change = object.acceleration;
 
 				// A thruster with no fuel does nothing.
-				const auto burnFuel = [&](const std::string& burn)
+				const auto burnFuel = [&](const Name burn)
 				{
 					return burn.empty() || rules.burn(object, burn);
 				};
