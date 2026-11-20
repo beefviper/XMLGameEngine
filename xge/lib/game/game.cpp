@@ -2499,7 +2499,7 @@ namespace xge
 			thought = true;
 			CmdThink each = written;
 			if (each.objClass.empty()) { each.objClass = turnClass(); }
-			if (const auto key = think(each, seconds)) { taps.insert(*key); }
+			if (const auto key = thinker.think(*this, each, seconds)) { taps.insert(*key); }
 		};
 		for (const Condition& condition : currentState.top().computer)
 		{
@@ -2520,7 +2520,7 @@ namespace xge
 		// Its turn is over (or the game was put back): the next is planned anew.
 		if (!thought)
 		{
-			stopThinking();
+			thinker.stop();
 			itemWait = kItemPace;
 		}
 		return held;

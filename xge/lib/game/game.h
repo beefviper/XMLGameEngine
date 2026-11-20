@@ -14,6 +14,7 @@
 #include "game/object.h"
 #include "audio/sound.h"
 #include "game/states.h"
+#include "game/think.h"
 
 #include <functional>
 #include <iostream>
@@ -34,7 +35,6 @@
 
 namespace xge
 {
-	struct ThinkJob;
 
 	class CommandExecutor;
 
@@ -67,7 +67,16 @@ namespace xge
 		// A computer's <think> searches on a thread of its own, so the game
 		// goes on (drawn, heard) while it thinks; off, it searches in the
 		// frame, the same each run (the tests). Engine::loop turns it on.
-		void thinkInBackground(bool aside) noexcept;
+		void thinkInBackground(bool aside) noexcept { thinker.inBackground(aside); }
+
+		// The full name a name means: itself, when it names an object or a
+		// group, or else the one path that ends with it (robots for
+		// playing.room1.robots, for a test or a front end); else itself.
+		Name fullName(Name name) const;
+		// Puts a piece in that cell of its map of cells.
+		void putInCell(Object& object, int column, int row);
+		// The copies spawned this frame, which join the game when it ends.
+		const std::deque<Object>& spawning() const noexcept { return spawned; }
 
 		// Works out the <position> of every object that uses the size of a text
 		// (name.width / name.height, its own or another's) again, when one of
@@ -825,7 +834,6 @@ namespace xge
 		};
 		HeldCells heldCells;
 		std::vector<Object*> cellsOf(Object& mover);
-		void putInCell(Object& object, int column, int row);
 		// Onto another map of cells: its place, tile, size and checks, as
 		// any piece of that map has them (false for a map with none).
 		bool moveToMap(Object& object, Name map);
@@ -880,26 +888,7 @@ namespace xge
 			int row{};
 			Object* taken{ nullptr };
 		};
-		// <think> (game/think.cpp): the search under way, then the plan the
-		// computer is carrying out, the cells the picker goes to in turn (the
-		// piece, then each cell of its move), and the frames until its next
-		// step.
-		struct Thinking
-		{
-			std::shared_ptr<ThinkJob> job;
-			bool planned{ false };
-			std::vector<std::pair<int, int>> cells;
-			std::size_t next{};
-			float wait{};
-		};
-		Thinking thinking;
-		// Whether a search runs on a thread of its own (a game in a window)
-		// or at once, in the frame (the tests: the same each run).
-		bool thinkAside{ false };
-		std::optional<KeyCode> think(const CmdThink& think, float seconds);
-		std::shared_ptr<ThinkJob> startThinking(const CmdThink& think, const Object& picker);
-		static void runThinking(ThinkJob& job);
-		void stopThinking();
+		Thinker thinker;
 		const Object::MoveSet* moveSetOf(const Object& piece) const noexcept;
 		std::vector<PieceMoveTo> movesOf(Object& piece, bool jumpsOnly);
 		std::vector<PieceMoveTo> legalMoves(Object& piece, bool jumpsOnly);
@@ -1117,10 +1106,6 @@ namespace xge
 		// own, and the current state's in play or in its current scene.
 		bool inScope(const Object& object) const;
 
-		// The full name a name means: itself, when it names an object or a
-		// group, or else the one path that ends with it (robots for
-		// playing.room1.robots, for a test or a front end); else itself.
-		Name fullName(Name name) const;
 		Name findFullName(Name name) const;
 
 		// Works out what is shown in every text bound to a variable, after many have changed.

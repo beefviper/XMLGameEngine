@@ -18,6 +18,7 @@
 // needs of each kind of piece, so the search can run beside the game, on a
 // thread of its own, while the game goes on drawing and playing sounds.
 
+#include "game/think.h"
 #include "game/game.h"
 #include "game/random.h"
 
@@ -782,34 +783,34 @@ namespace xge
 	};
 
 	// The table of the board as it is now, and the search to be made on it.
-	std::shared_ptr<ThinkJob> Game::startThinking(const CmdThink& think, const Object& picker)
+	std::shared_ptr<ThinkJob> Thinker::start(Game& game, const CmdThink& think, const Object& picker)
 	{
-		auto job = std::make_shared<ThinkJob>();
-		job->think = think;
-		job->pickerRow = whole(place(picker).row);
-		Board& board = job->board;
-		board.parts = &objectParts;
+		auto made = std::make_shared<ThinkJob>();
+		made->think = think;
+		made->pickerRow = whole(game.place(picker).row);
+		Board& board = made->board;
+		board.parts = &game.parts();
 		// The board: the map of cells its pieces are on (the first piece of
 		// its class with moves), and everything on that map.
 		const Object* first = nullptr;
-		for (const Object& object : objects)
+		for (const Object& object : game.getCurrentObjects())
 		{
-			if (object.objClass == think.objClass && !pieceMoves(object).sets.empty() && object.onCells && isShown(object)) { first = &object; break; }
+			if (object.objClass == think.objClass && !game.pieceMoves(object).sets.empty() && object.onCells && game.isShown(object)) { first = &object; break; }
 		}
 		// None on the board yet (pieces put): the one a put copies.
-		if (!first) { first = putTemplate(think.objClass); }
-		if (!first || pieceMoves(*first).sets.empty())
+		if (!first) { first = game.putTemplate(think.objClass); }
+		if (!first || game.pieceMoves(*first).sets.empty())
 		{
-			job->done = true;
-			return job;
+			made->done = true;
+			return made;
 		}
 
-		board.columns = mapOf(*first).columns;
-		board.rows = mapOf(*first).rows;
+		board.columns = game.mapOf(*first).columns;
+		board.rows = game.mapOf(*first).rows;
 		board.grid.assign(static_cast<std::size_t>(board.columns * board.rows), 0);
 		// The other side: what its pieces' jumps take.
 		Name other;
-		for (const Object::MoveSet& set : pieceMoves(*first).sets)
+		for (const Object::MoveSet& set : game.pieceMoves(*first).sets)
 		{
 			for (const Object::PieceMove& move : set.moves)
 			{
@@ -821,17 +822,17 @@ namespace xge
 			}
 		}
 		// Neither: any other class of pieces with moves on the map.
-		for (std::size_t i = 0; i < objects.size() && other.empty(); ++i)
+		for (std::size_t i = 0; i < game.getCurrentObjects().size() && other.empty(); ++i)
 		{
-			const Object& object = objects[i];
-			if (object.onCells && mapOf(object).name == mapOf(*first).name && !pieceMoves(object).sets.empty() && object.objClass != think.objClass) { other = object.objClass; }
+			const Object& object = game.getCurrentObjects()[i];
+			if (object.onCells && game.mapOf(object).name == game.mapOf(*first).name && !game.pieceMoves(object).sets.empty() && object.objClass != think.objClass) { other = object.objClass; }
 		}
-		board.kinds[0] = board.kindOf(putTemplate(think.objClass));
-		board.kinds[1] = other.empty() ? nullptr : board.kindOf(putTemplate(other));
+		board.kinds[0] = board.kindOf(game.putTemplate(think.objClass));
+		board.kinds[1] = other.empty() ? nullptr : board.kindOf(game.putTemplate(other));
 		for (int side = 0; side < 2; ++side)
 		{
 			if (side == 1 && other.empty()) { break; }
-			for (const Object* each : putTemplates(side == 0 ? think.objClass : other))
+			for (const Object* each : game.putTemplates(side == 0 ? think.objClass : other))
 			{
 				const PieceKind* kind = board.kindOf(each);
 				board.allKinds[side].push_back(kind);
@@ -842,8 +843,8 @@ namespace xge
 					if (!set->closeClass.empty() && board.closeClass[side].empty())
 					{
 						board.closeClass[side] = set->closeClass;
-						const Name owned = fullName(set->closeObject);
-						for (const Object& object : objects)
+						const Name owned = game.fullName(set->closeObject);
+						for (const Object& object : game.getCurrentObjects())
 						{
 							if (object.named(owned)) { board.ownClass[side] = object.objClass; break; }
 						}
@@ -852,9 +853,9 @@ namespace xge
 			}
 		}
 		// The map's checks, as its pieces written carry them (a copy may not).
-		const Object* written = putTemplate(think.objClass);
+		const Object* written = game.putTemplate(think.objClass);
 		if (!written) { written = first; }
-		for (const Object::CellCheck& check : cellPart(*written).checks)
+		for (const Object::CellCheck& check : game.cellPart(*written).checks)
 		{
 			if (check.kind == "line") { board.lines.push_back({ check.objClass, check.count, check.straight }); }
 		}
@@ -862,27 +863,27 @@ namespace xge
 		// What is on the board: in play, and put this frame (a piece put
 		// joins the game at the end of the frame its put was made in).
 		std::vector<const Object*> there;
-		for (const Object& object : objects)
+		for (const Object& object : game.getCurrentObjects())
 		{
-			if (isShown(object)) { there.push_back(&object); }
+			if (game.isShown(object)) { there.push_back(&object); }
 		}
-		for (const Object& object : spawned)
+		for (const Object& object : game.spawning())
 		{
 			if (object.exists) { there.push_back(&object); }
 		}
 		for (const Object* each : there)
 		{
 			const Object& object = *each;
-			if (!object.onCells || mapOf(object).name != mapOf(*first).name || &object == &picker) { continue; }
-			const int column = whole(place(object).column);
-			const int row = whole(place(object).row);
+			if (!object.onCells || game.mapOf(object).name != game.mapOf(*first).name || &object == &picker) { continue; }
+			const int column = whole(game.place(object).column);
+			const int row = whole(game.place(object).row);
 			if (!board.onBoard(column, row)) { continue; }
 			Piece piece;
 			piece.object = board.kindOf(&object);
 			piece.column = column;
 			piece.row = row;
 			piece.look = object.looks.shown;
-			if (!pieceMoves(object).sets.empty())
+			if (!game.pieceMoves(object).sets.empty())
 			{
 				if (object.objClass == think.objClass) { piece.side = 0; }
 				else if (other.empty() || object.objClass == other) { piece.side = 1; }
@@ -894,26 +895,26 @@ namespace xge
 		board.prepare();
 
 		// Thought about beside the game, or at once.
-		if (thinkAside)
+		if (aside)
 		{
-			std::thread([job] { runThinking(*job); }).detach();
+			std::thread([made] { run(*made); }).detach();
 		}
 		else
 		{
-			runThinking(*job);
+			run(*made);
 		}
-		return job;
+		return made;
 	}
 
 	// Every move it can make now, each played out: the best, all of them
 	// that are as good.
-	void Game::runThinking(ThinkJob& job)
+	void Thinker::run(ThinkJob& asked)
 	{
 		try
 		{
-			Board& board = job.board;
-			const CmdThink& think = job.think;
-			Search search{ board, think, job.stop, {} };
+			Board& board = asked.board;
+			const CmdThink& think = asked.think;
+			Search search{ board, think, asked.stop, {} };
 			const std::vector<Move> moves = board.moves(0);
 			std::vector<const Move*> best;
 			const float infinity = std::numeric_limits<float>::infinity();
@@ -955,79 +956,83 @@ namespace xge
 				if (move->put)
 				{
 					const Object::MoveSet* set = Board::setOf(*board.kinds[0], board.kinds[0]->look);
-					if (set && set->fall) { cells.front().second = job.pickerRow; }
+					if (set && set->fall) { cells.front().second = asked.pickerRow; }
 				}
-				job.best.push_back(std::move(cells));
+				asked.best.push_back(std::move(cells));
 			}
 		}
 		catch (...)
 		{
-			job.best.clear();
+			asked.best.clear();
 		}
-		job.done = true;
+		asked.done = true;
 	}
 
-	void Game::stopThinking()
+	void Thinker::forget()
 	{
-		if (thinking.job) { thinking.job->stop = true; }
-		thinking = {};
+		job.reset();
+		planned = false;
+		cells.clear();
+		next = 0;
+		wait = 0.0f;
 	}
 
-	void Game::thinkInBackground(bool aside) noexcept
+	void Thinker::stop()
 	{
-		thinkAside = aside;
+		if (job) { job->stop = true; }
+		forget();
 	}
 
-	std::optional<KeyCode> Game::think(const CmdThink& think, float seconds)
+	std::optional<KeyCode> Thinker::think(Game& game, const CmdThink& think, float seconds)
 	{
 		Object* picker = nullptr;
-		const Name name = fullName(think.picker);
-		for (Object& object : objects)
+		const Name name = game.fullName(think.picker);
+		for (Object& object : game.getCurrentObjects())
 		{
 			if (object.exists && object.named(name)) { picker = &object; break; }
 		}
-		if (picker && isHand(*picker)) { return thinkHeld(think, *picker, seconds); }
+		if (picker && game.isHand(*picker)) { return game.thinkHeld(think, *picker, seconds); }
 		if (!picker || !picker->onCells || think.objClass.empty()) { return std::nullopt; }
 
 		// Its move is thought about first (the frame its turn came is drawn
 		// before, the sounds of the move before it heard); then made.
-		if (!thinking.planned)
+		if (!planned)
 		{
-			if (!thinking.job) { thinking.job = startThinking(think, *picker); }
-			if (!thinking.job->done) { return std::nullopt; }
-			const std::vector<std::vector<std::pair<int, int>>> best = std::move(thinking.job->best);
-			thinking = {};
-			thinking.planned = true;
+			if (!job) { job = start(game, think, *picker); }
+			if (!job->done) { return std::nullopt; }
+			const std::vector<std::vector<std::pair<int, int>>> best = std::move(job->best);
+			forget();
+			planned = true;
 			if (!best.empty())
 			{
 				const std::size_t pick = std::min(best.size() - 1, static_cast<std::size_t>(randomBetween(0.0f, static_cast<float>(best.size()))));
-				thinking.cells = best[pick];
+				cells = best[pick];
 			}
-			thinking.wait = pace;
+			wait = pace;
 		}
-		thinking.wait -= seconds;
-		if (thinking.wait > kTimeSlack) { return std::nullopt; }
-		thinking.wait = pace;
+		wait -= seconds;
+		if (wait > kTimeSlack) { return std::nullopt; }
+		wait = pace;
 
 		// Done, and still its turn (a press refused): think again.
-		if (thinking.next >= thinking.cells.size())
+		if (next >= cells.size())
 		{
-			thinking.planned = false;
+			planned = false;
 			return std::nullopt;
 		}
 
 		// A cell at a time to the next cell of the move, then the button.
-		const auto [column, row] = thinking.cells[thinking.next];
-		const int atColumn = whole(place(*picker).column);
-		const int atRow = whole(place(*picker).row);
+		const auto [column, row] = cells[next];
+		const int atColumn = whole(game.place(*picker).column);
+		const int atRow = whole(game.place(*picker).row);
 		if (atColumn != column || atRow != row)
 		{
 			const int across = column > atColumn ? 1 : column < atColumn ? -1 : 0;
 			const int down = atColumn != column ? 0 : (row > atRow ? 1 : -1);
-			putInCell(*picker, atColumn + across, atRow + down);
+			game.putInCell(*picker, atColumn + across, atRow + down);
 			return std::nullopt;
 		}
-		++thinking.next;
+		++next;
 		return think.button;
 	}
 }
