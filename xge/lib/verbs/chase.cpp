@@ -41,11 +41,9 @@ namespace xge
 		checkObject(checking, chase.target, "<chase>");
 	}
 
-	// Heads for the nearest of `chase.target` in play: straight at its middle
-	// at `chase.speed`, or, within `chase.stopWithin` of it, stops (inside
-	// this step, if it gets there). It faces the
-	// way it goes, and a heading turns to it. With none in play it carries on
-	// as it was.
+	// Straight at the nearest one's middle, stopping within `stopWithin` of
+	// it (inside this step, if it gets there), facing the way it goes. With
+	// none in play it carries on as it was.
 	static void chaseNearest(Game& game, Object& object, const CmdChase& command)
 	{
 		const Object* target = game.nearestInPlay(object, command.target);

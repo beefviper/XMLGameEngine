@@ -23,10 +23,8 @@ namespace xge
 		return CmdThrust{ amount, written.burn };
 	}
 
-	// `direction` is now being pushed by `amount` (0 =
-	// just released), and the variable it burns; playOneFrame
-	// applies every direction being held once a frame. Unlike a move's velocity
-	// there is nothing to recombine: each direction adds its own amount.
+	// Held by `amount` (0: let go), burning `burn`; the frame adds every
+	// direction held, each its own amount, with nothing to recombine.
 	static void pushAcross(Game& game, Object& object, Direction direction, float amount, Name burn)
 	{
 		const auto index = static_cast<std::size_t>(direction);
