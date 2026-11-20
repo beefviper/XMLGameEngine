@@ -27,9 +27,7 @@ namespace xge
 
 	std::string RapidXmlNode::getName() const
 	{
-		// name()/value() never return null in RapidXML - an element with no
-		// name falls back to its own static empty string - so this is safe
-		// even for a default-constructed node.
+		// RapidXML's name() is never null, even for an empty node.
 		return node ? node->name() : std::string{};
 	}
 
@@ -72,10 +70,7 @@ namespace xge
 	{
 		if (!node) { return nullptr; }
 
-		// The first child that is an element, whatever its tag name is - see
-		// the matching comment on XmlNode::getFirstChild() (xml/document.h).
-		// RapidXML's first_node()/next_sibling() only filter by name when one
-		// is passed in, and would otherwise stop on the text of <x>100</x>.
+		// Unnamed, first_node() would stop on the text of <x>100</x>.
 		const rapidxml::xml_node<>* child = node->first_node();
 		while (child && child->type() != rapidxml::node_element) { child = child->next_sibling(); }
 		return child ? std::make_unique<RapidXmlNode>(child, file, lines) : nullptr;
@@ -109,12 +104,8 @@ namespace xge
 
 		try
 		{
-			// RapidXML parses in place and needs a mutable, zero-terminated
-			// buffer - fileContent (above) is that buffer, and it has to
-			// outlive this document (see the class comment in
-			// xml/rapidxml.h). std::string::data() returns a mutable char*
-			// as of C++17, and a std::string's buffer is already guaranteed
-			// null-terminated at data()[size()].
+			// Parsed in place: fileContent is the mutable, zero-terminated
+			// buffer it needs.
 			document.parse<0>(fileContent.data());
 		}
 		catch (const rapidxml::parse_error& e)

@@ -14,27 +14,9 @@
 
 namespace xge
 {
-	// What load/xml needs from one parsed XML element - a tag name,
-	// attribute lookup, its own text, and unfiltered first-child/next-sibling
-	// traversal -
-	// expressed with no particular XML library's types, so load/xml.cpp
-	// never has to name Xerces/TinyXML2/PugiXML/RapidXML directly - same
-	// shape as Window/Object in window/window.h for the graphics backends.
-	//
-	// getFirstChild()/getNextSibling() return the first/next element
-	// regardless of its tag name (this schema's own elements aren't
-	// guaranteed to stay in a fixed order - see xgedef.xsd),
-	// so load/xml.cpp's own findChild() walks siblings itself, comparing
-	// getName() against the child name it wants, rather than assuming a
-	// fixed position.
-	//
-	// getFirstChild()/getNextSibling() return a fresh, independently-owned
-	// node (nullptr if there isn't one) rather than a raw pointer into some
-	// shared cache: load/xml.cpp keeps several of these alive at once while
-	// it walks a subtree (e.g. xc_sprite, xc_pos, xc_vel, xc_collisions all
-	// derived from the same object element and read from out of order), so
-	// plain unique_ptr ownership is simpler than a backend having to keep
-	// every node it ever handed out alive in a cache of its own.
+	// One parsed element, in no XML library's types, so load/xml.cpp names
+	// none of them. A child is handed out as a node of its own: the reader
+	// keeps several alive at once while it walks.
 	class XmlNode
 	{
 	public:
@@ -42,29 +24,19 @@ namespace xge
 
 		virtual std::string getName() const = 0;
 
-		// "" if the attribute isn't present - never fails, matching every
-		// backend's own C++ library convention (XPath-less flat attributes,
-		// no distinction needed here between "empty value" and "missing").
+		// "" when it is not there.
 		virtual std::string getAttribute(const std::string& name) const = 0;
 
 		// Every attribute it has, name and value, in the order written: what
 		// load/merge needs to copy an element.
 		virtual std::vector<std::pair<std::string, std::string>> getAttributes() const = 0;
 
-		// The element's own text: every text and CDATA child joined together,
-		// exactly as written - not trimmed, so an element that only holds
-		// child elements and the whitespace between them gives back that
-		// whitespace. "" if it has none. (<x>100</x> gives "100"; the text
-		// of <x><random/></x> is just its whitespace.)
+		// Its text and CDATA joined, as written and not trimmed: <x>100</x>
+		// gives "100", <x><random/></x> only its whitespace.
 		virtual std::string getText() const = 0;
 
-		// The first child element regardless of its tag name, or the next
-		// sibling element regardless of its tag name - nullptr if there is
-		// none. Deliberately unfiltered by name (unlike a typical library's
-		// own name-filtered traversal) - see the class comment above for why
-		// (load/xml.cpp's own findChild() does the name filtering instead).
-		// Only elements are visited: the text, comments and processing
-		// instructions between them are not, in any backend.
+		// The first child or next sibling element of any tag, null for none;
+		// the reader picks by name itself. Only elements are visited.
 		virtual std::unique_ptr<XmlNode> getFirstChild() const = 0;
 		virtual std::unique_ptr<XmlNode> getNextSibling() const = 0;
 
@@ -73,13 +45,8 @@ namespace xge
 		virtual int line() const { return 0; }
 	};
 
-	// What load/xml needs from a whole parsed document - load it, find out
-	// whether that worked, and get the root element to start walking from.
-	// A backend that can't validate against an XSD schema (only Xerces can,
-	// among the four below) just treats "load" as "well-formed XML parsed
-	// successfully" - see xml/xerces.cpp vs xml/tinyxml2.cpp/xml_pugixml.cpp/
-	// xml/rapidxml.cpp. load/xml.cpp falls back to its own XsdLiteValidator
-	// (load/xsd.h) for those three instead - see load/xml.cpp.
+	// A parsed document. Only Xerces checks it against the schema as it
+	// loads; for the others load/xml.cpp runs load/xsd.h's check.
 	class XmlDocument
 	{
 	public:
@@ -112,27 +79,18 @@ namespace xge
 		RapidXml
 	};
 
-	// How strongly a document's contents were checked against
-	// xgedef.xsd, for load/xml.cpp to report back through
-	// Game::printGame() - see load/xml.cpp for how each value gets decided,
-	// and load/xsd.h for what "Weak" actually checks.
+	// How a document was checked against xgedef.xsd.
 	enum class SchemaValidation
 	{
-		None,   // no xsi:noNamespaceSchemaLocation on the document at all - nothing to validate against
-		Weak,   // checked by this project's own XsdLiteValidator (see load/xsd.h) - every backend but Xerces
-		Strong  // checked by Xerces's real XSD engine (see xml/xerces.cpp)
+		None,   // no schema to check against
+		Weak,   // by load/xsd.h's own check: every backend but Xerces
+		Strong  // by Xerces's XSD engine
 	};
 
 	std::ostream& operator<<(std::ostream& o, SchemaValidation validation);
 
-	// Builds the concrete XmlDocument for the given backend - the one place
-	// that knows about all four (see WindowFactory in window/window.h for the exact
-	// same pattern on the graphics side). Adding a fifth backend only needs a
-	// branch added here.
-	//
-	// As for windows (window/window.h), a program is built with some of the XML
-	// libraries, not necessarily all of them (options.cmake: Xerces alone by
-	// default, every one when the tests are built), and available() says which.
+	// The one place that knows every backend. A program is built with some
+	// of them (options.cmake: Xerces alone by default, all for the tests).
 	class XmlDocumentFactory
 	{
 	public:

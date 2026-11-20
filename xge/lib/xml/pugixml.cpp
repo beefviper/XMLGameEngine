@@ -62,9 +62,7 @@ namespace xge
 
 	std::unique_ptr<XmlNode> PugiXmlNode::getFirstChild() const
 	{
-		// The first child that is an element, whatever its tag name is - see
-		// the matching comment on XmlNode::getFirstChild() (xml/document.h).
-		// A plain first_child() would stop on the text of <x>100</x>.
+		// first_child() would stop on the text of <x>100</x>.
 		pugi::xml_node child = node.first_child();
 		while (child && child.type() != pugi::node_element) { child = child.next_sibling(); }
 		return child ? std::make_unique<PugiXmlNode>(child, lines) : nullptr;

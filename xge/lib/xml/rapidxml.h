@@ -11,9 +11,6 @@
 
 namespace xge
 {
-	// The RapidXML XmlNode wrapper. Nothing outside this file, xml/rapidxml.cpp,
-	// and XmlDocumentFactory::create ever names a RapidXML type - see
-	// xml/document.h.
 	class RapidXmlNode : public XmlNode
 	{
 	public:
@@ -35,15 +32,9 @@ namespace xge
 		const std::vector<std::size_t>* lines;
 	};
 
-	// The RapidXML XmlDocument backend - well-formedness parsing only, no
-	// schema validation (see xml/xerces.h for the one backend that has it -
-	// RapidXML has no XSD validator at all).
-	//
-	// RapidXML parses in place: xml_document<>::parse() takes a mutable,
-	// zero-terminated buffer, and every node/attribute name and value it
-	// hands back just points into that same buffer - so the buffer has to
-	// stay alive as long as the document does. fileContent below is that
-	// buffer: read once in load() and never touched again afterwards.
+	// Parses only; the schema check is load/xsd.h's. RapidXML parses in
+	// place, so every name and value points into fileContent, which lives
+	// as long as the document.
 	class RapidXmlDocument : public XmlDocument
 	{
 	public:

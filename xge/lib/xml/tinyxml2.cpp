@@ -61,9 +61,6 @@ namespace xge
 	{
 		if (!element) { return nullptr; }
 
-		// No-argument overload - "the first child element, whatever its tag
-		// name is" - see the matching comment on XmlNode::getFirstChild()
-		// (xml/document.h).
 		const tinyxml2::XMLElement* child = element->FirstChildElement();
 		return child ? std::make_unique<TinyXml2Node>(child) : nullptr;
 	}

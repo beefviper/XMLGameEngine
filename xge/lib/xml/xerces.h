@@ -20,9 +20,6 @@ namespace xc = xercesc;
 
 namespace xge
 {
-	// The Xerces XmlNode wrapper. Nothing outside this file, xml/xerces.cpp,
-	// and XmlDocumentFactory::create (the one place that constructs one)
-	// ever names a Xerces type - see xml/document.h.
 	// The line each element's tag was read on, which the DOM does not keep.
 	using XercesLines = std::unordered_map<const xc::DOMNode*, int>;
 
@@ -56,14 +53,7 @@ namespace xge
 			const xc::RefVectorOf<xc::XMLAttr>& attrList, const XMLSize_t attrCount, const bool isEmpty, const bool isRoot) override;
 	};
 
-	// The Xerces XmlDocument backend - the only one of the four (see also
-	// xml/tinyxml2.h, xml/pugixml.h, xml/rapidxml.h) that can validate against
-	// xgedef.xsd by itself; the other three only check
-	// well-formedness, and load/xml.cpp runs load/xsd.h's validator for them.
-	// Absorbs what used to be the standalone load/xml class's own Xerces
-	// lifecycle (XMLPlatformUtils::Initialize/Terminate, the DOM parser, the
-	// SAX error handler) - load/xml.cpp itself no longer names a Xerces type
-	// anywhere, same as Engine no longer naming an SFML/Raylib/SDL2 type.
+	// The one backend that checks a document against xgedef.xsd itself.
 	class XercesXmlDocument : public XmlDocument
 	{
 	public:

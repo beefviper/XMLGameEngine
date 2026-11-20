@@ -32,9 +32,7 @@ namespace xge
 			return transcodeStr;
 		}
 
-		// RAII std::string -> XMLCh* transcode, released automatically -
-		// exactly what load/xml.cpp's own StrToXMLCh used to be, just no
-		// longer needed anywhere outside this file.
+		// Text as Xerces's XMLCh, released when it goes.
 		class StrToXMLCh
 		{
 		public:
@@ -234,15 +232,9 @@ namespace xge
 		{
 			domParser->parse(filename.c_str());
 		}
-		// parse() throws for failures below the SAX/validation layer
-		// entirely - most commonly the file not existing or not being
-		// readable - which parserErrorHandler above never sees, so this
-		// has to be caught here instead (same reasoning, and the same
-		// three catches, as the official Xerces-C++ samples - e.g.
-		// DOMCount.cpp - wrap their own call to parse() with). Without
-		// this, a bad filename crashed the whole program instead of
-		// reporting "XML file failed to load" the same way a malformed
-		// file already does below.
+		// parse() throws for what the error handler never sees, such as a
+		// file that cannot be read; the same three catches as Xerces's own
+		// samples.
 		catch (const xc::XMLException& ex)
 		{
 			errorMessage = "XML file failed to parse: " + xmlChToStr(ex.getMessage());
@@ -261,10 +253,7 @@ namespace xge
 
 		const auto* documentElement = domParser->getDocument() ? domParser->getDocument()->getDocumentElement() : nullptr;
 
-		// Only to read the schema-location attribute below, to decide which
-		// of the four messages (matching load/xml.cpp's own original
-		// behaviour) applies - not part of the real document tree walk,
-		// which starts from getRootElement() instead.
+		// Only to read the schema location, which picks the message.
 		const XercesXmlNode rootProbe(documentElement);
 		const std::string schemaLocation = rootProbe.getAttribute("xsi:noNamespaceSchemaLocation");
 		const auto errorCount = domParser->getErrorCount();

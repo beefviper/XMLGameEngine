@@ -11,9 +11,6 @@
 
 namespace xge
 {
-	// The TinyXML2 XmlNode wrapper. Nothing outside this file, xml/tinyxml2.cpp,
-	// and XmlDocumentFactory::create ever names a TinyXML2 type - see
-	// xml/document.h.
 	class TinyXml2Node : public XmlNode
 	{
 	public:
@@ -31,9 +28,7 @@ namespace xge
 		const tinyxml2::XMLElement* element;
 	};
 
-	// The TinyXML2 XmlDocument backend - well-formedness parsing only, no
-	// schema validation (see xml/xerces.h for the one backend that has it -
-	// TinyXML2 has no XSD validator at all).
+	// Parses only; the schema check is load/xsd.h's.
 	class TinyXml2Document : public XmlDocument
 	{
 	public:
