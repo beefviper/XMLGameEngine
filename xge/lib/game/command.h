@@ -552,7 +552,7 @@ namespace xge
 	// <play sound="bounce" /> - starts one of the game's <sounds> (see audio/sound.h
 	// and audio/audio.h). Anywhere a command can go: a collision rule, an object's
 	// action (on the press), a key in a state, a condition. The game only asks
-	// for it (Game::requestSound); Engine hands it to the Audio backend.
+	// for it (Sounds::request); Engine hands it to the Audio backend.
 	struct CmdPlay
 	{
 		Name sound;

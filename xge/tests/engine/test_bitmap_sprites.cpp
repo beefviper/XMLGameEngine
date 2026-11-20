@@ -1285,7 +1285,7 @@ TEST_CASE("the march keeps step with the aliens: a note a step, quicker as they 
 	Invasion invasion;
 	Game& game = invasion.game;
 	game.object("player").collisionsOn = false; // no bomb holds the march still
-	(void)game.takeSoundRequests();
+	(void)game.sounds().takeRequests();
 
 	// The frames between march notes over the next `count` frames.
 	const auto gaps = [&](int count)
@@ -1297,7 +1297,7 @@ TEST_CASE("the march keeps step with the aliens: a note a step, quicker as they 
 		{
 			frames(game, 1);
 			++since;
-			const std::vector<std::string> asked = game.takeSoundRequests();
+			const std::vector<std::string> asked = game.sounds().takeRequests();
 			if (std::any_of(asked.begin(), asked.end(), [](const std::string& sound) { return sound.rfind("march", 0) == 0; }))
 			{
 				if (heard) { between.push_back(since); }
@@ -1321,7 +1321,7 @@ TEST_CASE("the march keeps step with the aliens: a note a step, quicker as they 
 		++gone;
 	}
 	frames(game, 40);
-	(void)game.takeSoundRequests(); // the notes of those 40
+	(void)game.sounds().takeRequests(); // the notes of those 40
 	const std::vector<int> quicker = gaps(150);
 	REQUIRE(quicker.size() >= 3);
 	CHECK(std::all_of(quicker.begin(), quicker.end(), [](int gap) { return gap == 23; }));

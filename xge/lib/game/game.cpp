@@ -69,7 +69,7 @@ namespace xge
 		expr.parts = &objectParts;
 		expr.styles = data.styles;
 		expr.sheets = data.sheets;
-		expr.init(windowDesc, writtenVariables, variables, writtenStates, states, writtenObjects, objects, writtenSounds, sounds, writtenPaths, paths);
+		expr.init(windowDesc, writtenVariables, variables, writtenStates, states, writtenObjects, objects, writtenSounds, soundDescs, writtenPaths, paths);
 		expr.finishLoading();
 		for (std::size_t i = 0; i < objects.size(); ++i) { objectParts.placeAt(objects[i].id, i); }
 		expr.whenLiveRead = [this] { refreshLive(); };
@@ -486,7 +486,7 @@ namespace xge
 			std::cout << state << '\n';
 		}
 
-		for (const auto& sound : sounds)
+		for (const auto& sound : soundDescs)
 		{
 			std::cout << sound << '\n';
 		}
@@ -494,64 +494,7 @@ namespace xge
 
 	const std::vector<SoundDesc>& Game::getSounds(void) const noexcept
 	{
-		return sounds;
-	}
-
-	void Game::requestSound(Name name)
-	{
-		// Within a frame the last word wins: a loop silenced and asked for
-		// again (one of two keys let go, the other still down) plays on.
-		if (soundLoops(name))
-		{
-			loops.insert(name);
-			silenceRequests.erase(std::remove(silenceRequests.begin(), silenceRequests.end(), name), silenceRequests.end());
-			return;
-		}
-
-		if (std::find(soundRequests.begin(), soundRequests.end(), name) == soundRequests.end())
-		{
-			soundRequests.push_back(name);
-		}
-	}
-
-	std::vector<std::string> Game::takeSoundRequests(void)
-	{
-		return std::exchange(soundRequests, {});
-	}
-
-	const std::set<std::string>& Game::loopingSounds(void) const noexcept
-	{
-		return loops;
-	}
-
-	std::set<std::string> Game::soundsOn(void) const
-	{
-		std::set<std::string> on = loops;
-		if (!currentState.empty() && !currentState.top().music.empty() && soundLoops(currentState.top().music))
-		{
-			on.insert(currentState.top().music);
-		}
-		return on;
-	}
-
-	void Game::silenceSound(Name name)
-	{
-		loops.erase(name);
-		soundRequests.erase(std::remove(soundRequests.begin(), soundRequests.end(), name), soundRequests.end());
-		if (std::find(silenceRequests.begin(), silenceRequests.end(), name) == silenceRequests.end())
-		{
-			silenceRequests.push_back(name);
-		}
-	}
-
-	std::vector<std::string> Game::takeSilenceRequests(void)
-	{
-		return std::exchange(silenceRequests, {});
-	}
-
-	bool Game::soundLoops(Name name) const noexcept
-	{
-		return std::any_of(sounds.begin(), sounds.end(), [&](const SoundDesc& sound) { return sound.loop && sound.name == name; });
+		return soundDescs;
 	}
 
 	WindowDesc& Game::getWindowDesc(void) noexcept
@@ -804,9 +747,9 @@ namespace xge
 	void Game::beginMusic(void)
 	{
 		const Name music = currentState.top().music;
-		if (!music.empty() && !soundLoops(music))
+		if (!music.empty() && !soundBoard.loops(music))
 		{
-			requestSound(music);
+			soundBoard.request(music);
 		}
 	}
 
@@ -1070,7 +1013,7 @@ namespace xge
 	{
 		// What was playing stops; the turn is played in the state the turns
 		// started in, with the player's own state over it.
-		loops.clear();
+		soundBoard.stopLoops();
 		while (currentState.size() > 1 && currentState.top().name != turnsState)
 		{
 			currentState.pop();
@@ -1860,7 +1803,7 @@ namespace xge
 	{
 		// A new game starts quiet: whatever loop the last one left on (music,
 		// a thrust held into the game over) stops.
-		loops.clear();
+		soundBoard.stopLoops();
 		++resets;
 		turns.clear();
 		turnHandedOver = false;

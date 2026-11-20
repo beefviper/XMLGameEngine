@@ -95,21 +95,21 @@ TEST_CASE("a brick scores its colour's worth and sounds its colour's pitch", "[b
 
 	hit(game, "yellow.5.2");
 	CHECK(status(game, "score") == 1.0f);
-	CHECK(game.takeSoundRequests() == std::vector<std::string>{ "yellow" });
+	CHECK(game.sounds().takeRequests() == std::vector<std::string>{ "yellow" });
 	CHECK_FALSE(game.isShown(game.object("yellow.5.2")));
 	CHECK(game.isShown(game.object("yellow.4.2"))); // its neighbour was not touched
 
 	hit(game, "green.5.2");
 	CHECK(status(game, "score") == 4.0f);
-	CHECK(game.takeSoundRequests() == std::vector<std::string>{ "green" });
+	CHECK(game.sounds().takeRequests() == std::vector<std::string>{ "green" });
 
 	hit(game, "orange.5.2");
 	CHECK(status(game, "score") == 9.0f);
-	CHECK(game.takeSoundRequests() == std::vector<std::string>{ "orange" });
+	CHECK(game.sounds().takeRequests() == std::vector<std::string>{ "orange" });
 
 	hit(game, "red.5.2");
 	CHECK(status(game, "score") == 16.0f);
-	CHECK(game.takeSoundRequests() == std::vector<std::string>{ "red" });
+	CHECK(game.sounds().takeRequests() == std::vector<std::string>{ "red" });
 	CHECK(bricksIn(game) == 108);
 }
 
@@ -142,7 +142,7 @@ TEST_CASE("the fourth and the twelfth hit of the paddle make Breakout's ball fas
 		game.updateObjects(xge::kSixtieth);
 		speeds.push_back(speed(game));
 	}
-	CHECK(game.takeSoundRequests().front() == "paddle");
+	CHECK(game.sounds().takeRequests().front() == "paddle");
 	CHECK(speeds[2] == Approx(240.0f));
 	CHECK(speeds[3] == Approx(300.0f));
 	CHECK(speeds[10] == Approx(300.0f));
@@ -161,7 +161,7 @@ TEST_CASE("once the ball reaches the top wall, the paddle is half as wide", "[br
 	ball.velocity = { 0.0f, -180.0f };
 	for (int frame = 0; frame < 3; ++frame) { game.updateObjects(xge::kSixtieth); }
 	CHECK(ball.velocity.y > 0.0f);
-	CHECK(game.takeSoundRequests() == std::vector<std::string>{ "wall" });
+	CHECK(game.sounds().takeRequests() == std::vector<std::string>{ "wall" });
 	CHECK(game.object("player").lookName() == "half");
 
 	game.resetAll();
@@ -181,7 +181,7 @@ TEST_CASE("three balls lost is the end of Breakout", "[breakout]")
 		ball.velocity = { 0.0f, 240.0f };
 		game.updateObjects(xge::kSixtieth);
 		CHECK(status(game, "balls") == 3.0f - static_cast<float>(lost));
-		CHECK(game.takeSoundRequests() == std::vector<std::string>{ "lost" });
+		CHECK(game.sounds().takeRequests() == std::vector<std::string>{ "lost" });
 		CHECK(ball.position.y < 400.0f); // served again from the middle
 		if (lost < 3) { CHECK(game.getCurrentState().name == "playing"); }
 	}

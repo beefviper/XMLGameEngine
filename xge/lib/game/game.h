@@ -18,6 +18,7 @@
 #include "game/cells.h"
 #include "game/holders.h"
 #include "game/players.h"
+#include "game/sounds.h"
 
 #include <functional>
 #include <iostream>
@@ -75,6 +76,7 @@ namespace xge
 		CellMaps& cellMaps() noexcept { return cellMapping; }
 		Holders& holders() noexcept { return itemHolders; }
 		Players& players() noexcept { return playerGroups; }
+		Sounds& sounds() noexcept { return soundBoard; }
 
 		// The full name a name means: itself, when it names an object or a
 		// group, or else the one path that ends with it (robots for
@@ -394,37 +396,6 @@ namespace xge
 		// Audio backend loads (see audio/audio.h, Engine).
 		const std::vector<SoundDesc>& getSounds(void) const noexcept;
 
-		// <play sound="..." />: the game only asks for a sound, and Engine,
-		// which owns the Audio, plays what was asked for once a frame
-		// (takeSoundRequests). Game itself never makes a noise, so it runs and
-		// is tested without a sound device. A sound asked for twice in one
-		// frame (two bricks broken at once) is played once.
-		void requestSound(Name name);
-
-		// The sounds asked for since the last call, in the order asked, and
-		// forgets them.
-		std::vector<std::string> takeSoundRequests(void);
-
-		// A sound that loops (<loop />) is not asked for once but switched on:
-		// requestSound puts it among the loopingSounds, where it stays, playing
-		// over and over, until silenceSound takes it out (a <silence>, the key
-		// that started it let go, or a reset of the whole game). Engine plays
-		// what is in the list each frame and stops what has left it.
-		const std::set<std::string>& loopingSounds(void) const noexcept;
-
-		// The loops that should be playing now: the loopingSounds, and the
-		// current state's <music> when it loops. What Engine plays.
-		std::set<std::string> soundsOn(void) const;
-
-		// <silence sound="..." />: stops a sound, looping or not.
-		void silenceSound(Name name);
-
-		// The sounds silenced since the last call, and forgets them.
-		std::vector<std::string> takeSilenceRequests(void);
-
-		// Whether the sound of that name loops; false for no such sound.
-		bool soundLoops(Name name) const noexcept;
-
 		// Sets an object's own <variable> to a value (for a front end that lets
 		// the user edit one), and refreshes every text display bound to it, the
 		// same way <inc /> does. Returns false when there is no such object or
@@ -642,6 +613,7 @@ namespace xge
 		CellMaps cellMapping{ *this };
 		Holders itemHolders{ *this };
 		Players playerGroups{ *this };
+		Sounds soundBoard{ *this };
 
 
 		// Marks the objects (and every member of the groups) of these names
@@ -693,13 +665,10 @@ namespace xge
 		std::vector<WrittenObject> writtenObjects;
 		std::vector<Object> objects;
 		std::vector<WrittenSound> writtenSounds;
-		std::vector<SoundDesc> sounds;
+		std::vector<SoundDesc> soundDescs;
 		std::vector<WrittenPath> writtenPaths;
 		std::vector<Patterns> patterns;
 		std::map<std::string, Path> paths;
-		std::vector<std::string> soundRequests;
-		std::vector<std::string> silenceRequests;
-		std::set<std::string> loops;
 		std::stack<State> currentState;
 		unsigned long stateChanges = 0;
 

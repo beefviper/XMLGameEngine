@@ -101,13 +101,13 @@ namespace xge
 
 	void Engine::playRequestedSounds(void)
 	{
-		for (const std::string& name : game.takeSilenceRequests())
+		for (const std::string& name : game.sounds().takeSilenced())
 		{
 			audio->stop(name);
 			playingLoops.erase(name);
 		}
 
-		const std::set<std::string> wanted = game.soundsOn();
+		const std::set<std::string> wanted = game.sounds().playing();
 		for (const std::string& name : playingLoops)
 		{
 			if (!wanted.count(name)) { audio->stop(name); }
@@ -118,7 +118,7 @@ namespace xge
 		}
 		playingLoops = wanted;
 
-		for (const std::string& name : game.takeSoundRequests())
+		for (const std::string& name : game.sounds().takeRequests())
 		{
 			audio->play(name);
 		}

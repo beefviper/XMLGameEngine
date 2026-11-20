@@ -167,7 +167,7 @@ namespace
 			for (int i = 0; i < frames; ++i)
 			{
 				game.updateObjects(xge::kSixtieth);
-				for (auto& name : game.takeSoundRequests()) { asked.push_back(name); }
+				for (auto& name : game.sounds().takeRequests()) { asked.push_back(name); }
 			}
 			return asked;
 		}
@@ -399,12 +399,12 @@ TEST_CASE("Pong: a point scored asks for the score sound", "[sound][pong]")
 TEST_CASE("a sound asked for twice in a frame is played once", "[sound]")
 {
 	Game game{ "descriptions/pong.xml" };
-	game.requestSound("wall");
-	game.requestSound("paddle");
-	game.requestSound("wall");
+	game.sounds().request("wall");
+	game.sounds().request("paddle");
+	game.sounds().request("wall");
 
-	CHECK(game.takeSoundRequests() == std::vector<std::string>{ "wall", "paddle" });
-	CHECK(game.takeSoundRequests().empty());
+	CHECK(game.sounds().takeRequests() == std::vector<std::string>{ "wall", "paddle" });
+	CHECK(game.sounds().takeRequests().empty());
 }
 
 TEST_CASE("Engine loads the game's sounds into its Audio and plays what each frame asks for", "[sound][engine]")
@@ -442,7 +442,7 @@ TEST_CASE("Engine without an Audio is silent, and replaceAudio hands the sounds 
 	engine.replaceAudio([&] { return std::make_unique<RecordingAudio>(log); });
 	CHECK(log.loaded.size() == 3);
 
-	game.requestSound("score");
+	game.sounds().request("score");
 	engine.input(); engine.update(xge::kSixtieth);
 	CHECK(log.played == std::vector<std::string>{ "score" });
 
@@ -531,26 +531,26 @@ TEST_CASE("a sound that loops stays on until it is silenced, and is asked for on
 {
 	Game game{ "descriptions/lunarlander.xml" };
 
-	CHECK(game.soundLoops("thrust"));
-	CHECK_FALSE(game.soundLoops("land"));
-	CHECK_FALSE(game.soundLoops("nothing"));
+	CHECK(game.sounds().loops("thrust"));
+	CHECK_FALSE(game.sounds().loops("land"));
+	CHECK_FALSE(game.sounds().loops("nothing"));
 
-	game.requestSound("thrust");
-	game.requestSound("thrust");
-	game.requestSound("land");
-	CHECK(game.loopingSounds() == std::set<std::string>{ "thrust" });
-	CHECK(game.takeSoundRequests() == std::vector<std::string>{ "land" });
-	CHECK(game.loopingSounds() == std::set<std::string>{ "thrust" }); // still on next frame
+	game.sounds().request("thrust");
+	game.sounds().request("thrust");
+	game.sounds().request("land");
+	CHECK(game.sounds().looping() == std::set<std::string>{ "thrust" });
+	CHECK(game.sounds().takeRequests() == std::vector<std::string>{ "land" });
+	CHECK(game.sounds().looping() == std::set<std::string>{ "thrust" }); // still on next frame
 
-	game.silenceSound("thrust");
-	CHECK(game.loopingSounds().empty());
-	CHECK(game.takeSilenceRequests() == std::vector<std::string>{ "thrust" });
-	CHECK(game.takeSilenceRequests().empty());
+	game.sounds().silence("thrust");
+	CHECK(game.sounds().looping().empty());
+	CHECK(game.sounds().takeSilenced() == std::vector<std::string>{ "thrust" });
+	CHECK(game.sounds().takeSilenced().empty());
 
 	// A new game starts quiet.
-	game.requestSound("thrust");
+	game.sounds().request("thrust");
 	game.resetAll();
-	CHECK(game.loopingSounds().empty());
+	CHECK(game.sounds().looping().empty());
 }
 
 TEST_CASE("Lunar Lander: the engine hums while thrust is held, and stops when let go, paused or out of fuel", "[sound][engine][lunarlander]")
@@ -592,7 +592,7 @@ TEST_CASE("Lunar Lander: the engine hums while thrust is held, and stops when le
 	engine.handleKeyReleased(KeyCode::Pause);
 	engine.input(); engine.update(xge::kSixtieth);
 	REQUIRE(game.getCurrentState().name == "paused");
-	CHECK(game.loopingSounds().empty());
+	CHECK(game.sounds().looping().empty());
 	CHECK(log.stopped == std::vector<std::string>{ "thrust" });
 	engine.handleKeyPressed(KeyCode::Pause);
 	engine.handleKeyReleased(KeyCode::Pause);
@@ -604,13 +604,13 @@ TEST_CASE("Lunar Lander: the engine hums while thrust is held, and stops when le
 	log.stopped.clear();
 	game.object("lander").variable.at("fuel") = 0.0f;
 	engine.input(); engine.update(xge::kSixtieth);
-	CHECK(game.loopingSounds().empty());
+	CHECK(game.sounds().looping().empty());
 	CHECK(log.stopped == std::vector<std::string>{ "thrust" });
 
 	// A front end pausing silences everything; the next frame plays again what is still on.
 	log.looped.clear();
 	game.object("lander").variable.at("fuel") = 100.0f;
-	game.requestSound("thrust");
+	game.sounds().request("thrust");
 	engine.input(); engine.update(xge::kSixtieth);
 	CHECK(log.looped == std::vector<std::string>{ "thrust" });
 	engine.silence();

@@ -1362,7 +1362,7 @@ namespace xge
 		if (holder && game.holderOf(*holder).pickedSends > 0)
 		{
 			const Name sound = game.holderOf(*holder).pickedSound;
-			if (sendPicked(hand) && !sound.empty()) { game.requestSound(sound); }
+			if (sendPicked(hand) && !sound.empty()) { game.sounds().request(sound); }
 			return false;
 		}
 		return takeItems(hand);

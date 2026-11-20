@@ -31,8 +31,8 @@ namespace xge
 	static bool runPlay(const CmdPlay& play, const Doer& doer)
 	{
 		Game& game = doer.game();
-		if (doer.pressed) { game.requestSound(play.sound); }
-		else if (game.soundLoops(play.sound)) { game.silenceSound(play.sound); }
+		if (doer.pressed) { game.sounds().request(play.sound); }
+		else if (game.sounds().loops(play.sound)) { game.sounds().silence(play.sound); }
 		return true;
 	}
 
@@ -40,8 +40,8 @@ namespace xge
 	static bool keepPlaying(const CmdPlay& play, const Doer& doer)
 	{
 		Game& game = doer.game();
-		if (!game.soundLoops(play.sound)) { return false; }
-		game.requestSound(play.sound);
+		if (!game.sounds().loops(play.sound)) { return false; }
+		game.sounds().request(play.sound);
 		return true;
 	}
 

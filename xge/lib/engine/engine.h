@@ -203,7 +203,7 @@ namespace xge
 		// Throws std::logic_error when there is no window (see replaceWindow).
 		void requireWindow(void) const;
 
-		// Plays what the game asked for this frame (Game::requestSound), stops
+		// Plays what the game asked for this frame (Sounds::request), stops
 		// what it silenced, and keeps its looping sounds playing.
 		void playRequestedSounds(void);
 

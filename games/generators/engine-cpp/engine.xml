@@ -164,6 +164,8 @@
   <file>lib/game/holders.cpp</file>
   <file>lib/game/players.h</file>
   <file>lib/game/players.cpp</file>
+  <file>lib/game/sounds.h</file>
+  <file>lib/game/sounds.cpp</file>
   <file>lib/audio/audio.h</file>
   <file>lib/audio/sfml.h</file>
   <file>lib/audio/sfml.cpp</file>

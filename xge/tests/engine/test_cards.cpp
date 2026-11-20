@@ -332,12 +332,12 @@ TEST_CASE("klondike.xml: a click takes, and sounds, only over a card", "[cards][
 	const Vector2f waste = table.holder("waste").position;
 	mouse(waste.x + 20.0f, waste.y + 30.0f, false);
 	table.frames(1);
-	(void)table.game.takeSoundRequests();
+	(void)table.game.sounds().takeRequests();
 	// On the green, away from every holder: nothing taken, no sound.
 	mouse(20.0f, 580.0f, false);
 	mouse(20.0f, 580.0f, true);
 	CHECK(table.handOf(table.hand()).held.empty());
-	CHECK(table.game.takeSoundRequests().empty());
+	CHECK(table.game.sounds().takeRequests().empty());
 	mouse(20.0f, 580.0f, false);
 	table.frames(1);
 	// Off the playfield (a bar beside the picture, the title bar), even
@@ -352,12 +352,12 @@ TEST_CASE("klondike.xml: a click takes, and sounds, only over a card", "[cards][
 	// Held down off it and brought over the card: still no press.
 	mouse(waste.x + 20.0f, waste.y + 30.0f, true);
 	CHECK(table.handOf(table.hand()).held.empty());
-	CHECK(table.game.takeSoundRequests().empty());
+	CHECK(table.game.sounds().takeRequests().empty());
 	mouse(waste.x + 20.0f, waste.y + 30.0f, false);
 	// Pressed on the card: taken, with its sound.
 	mouse(waste.x + 20.0f, waste.y + 30.0f, true);
 	CHECK(table.handOf(table.hand()).held.size() == 1);
-	CHECK(table.game.takeSoundRequests() == std::vector<std::string>{ "card" });
+	CHECK(table.game.sounds().takeRequests() == std::vector<std::string>{ "card" });
 }
 
 TEST_CASE("klondike.xml: all 52 home wins, and a new game deals again", "[cards]")

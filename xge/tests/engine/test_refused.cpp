@@ -28,17 +28,17 @@ TEST_CASE("spaceinvaders.xml: a press of fire while the bullet is in flight make
 	play.tap(KeyCode::Space);
 	REQUIRE(play.state() == "playing");
 	play.frames(1);
-	(void)play.game.takeSoundRequests();
+	(void)play.game.sounds().takeRequests();
 
 	play.tap(KeyCode::Space);
 	play.game.settleSpawns();
 	CHECK(copies::count(play.game, "bullet") == 1);
-	CHECK(play.game.takeSoundRequests() == std::vector<std::string>{ "shoot" });
+	CHECK(play.game.sounds().takeRequests() == std::vector<std::string>{ "shoot" });
 
 	play.frames(2);
-	(void)play.game.takeSoundRequests();
+	(void)play.game.sounds().takeRequests();
 	play.tap(KeyCode::Space);
-	CHECK(play.game.takeSoundRequests().empty());
+	CHECK(play.game.sounds().takeRequests().empty());
 }
 
 TEST_CASE("qbert.xml: a key pressed in the air changes neither Q*bert's look nor makes a sound", "[refused][qbert]")
@@ -47,18 +47,18 @@ TEST_CASE("qbert.xml: a key pressed in the air changes neither Q*bert's look nor
 	play.tap(KeyCode::Space);
 	REQUIRE(play.state() == "playing");
 	play.frames(1);
-	(void)play.game.takeSoundRequests();
+	(void)play.game.sounds().takeRequests();
 
 	play.tap(KeyCode::D);
 	CHECK(play.get("qbert").lookName() == "front");
-	CHECK(play.game.takeSoundRequests().size() == 1);
+	CHECK(play.game.sounds().takeRequests().size() == 1);
 
 	play.frames(4);
 	REQUIRE(play.get("qbert").isAirborne());
-	(void)play.game.takeSoundRequests();
+	(void)play.game.sounds().takeRequests();
 	play.tap(KeyCode::A);
 	CHECK(play.get("qbert").lookName() == "front");
-	CHECK(play.game.takeSoundRequests().empty());
+	CHECK(play.game.sounds().takeRequests().empty());
 }
 
 TEST_CASE("an action runs what comes before a refused verb, and nothing after it", "[refused]")
@@ -80,9 +80,9 @@ TEST_CASE("an action runs what comes before a refused verb, and nothing after it
 	Played play(scratch.path);
 
 	play.tap(KeyCode::Space);
-	CHECK(play.game.takeSoundRequests() == std::vector<std::string>{ "click", "bang" });
+	CHECK(play.game.sounds().takeRequests() == std::vector<std::string>{ "click", "bang" });
 	play.tap(KeyCode::Space);
-	CHECK(play.game.takeSoundRequests() == std::vector<std::string>{ "click" });
+	CHECK(play.game.sounds().takeRequests() == std::vector<std::string>{ "click" });
 }
 
 namespace

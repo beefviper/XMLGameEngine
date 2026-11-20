@@ -28,7 +28,7 @@ namespace xge
 
 	static bool runSilence(const CmdSilence& silence, const Doer& doer)
 	{
-		doer.game().silenceSound(silence.sound);
+		doer.game().sounds().silence(silence.sound);
 		return true;
 	}
 
