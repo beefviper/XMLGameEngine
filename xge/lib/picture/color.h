@@ -11,13 +11,7 @@
 
 namespace xge
 {
-	// Backend-agnostic RGBA color. Every backend converts one of these to its
-	// own native color type at draw time (a one-line conversion - see
-	// window/sfml.cpp / window/raylib.cpp / window/sdl2.cpp). The name ->
-	// RGBA mapping itself isn't backend-specific (every backend agrees on
-	// what "color.red" means), so it lives here once instead of being
-	// duplicated three times - this used to be SFML-only, as utils.h's
-	// sfmlColor().
+	// A colour in no library's type; each window converts it as it draws.
 	struct Color
 	{
 		std::uint8_t r{};
@@ -26,9 +20,7 @@ namespace xge
 		std::uint8_t a{ 255 };
 	};
 
-	// Matches a sprite's color argument (e.g. "color.black"). Unrecognized
-	// names come back fully transparent, same as the old sfmlColor()'s
-	// sf::Color::Transparent default.
+	// "color.black" and the rest; any other name is transparent.
 	Color colorFromName(const std::string& name) noexcept;
 
 	// Whether a name is one of the colors above, and all of their names, for

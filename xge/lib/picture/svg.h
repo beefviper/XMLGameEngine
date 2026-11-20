@@ -25,27 +25,14 @@ namespace xge
 		bool isWhole() const noexcept { return !(width > 0.0f && height > 0.0f); }
 	};
 
-	// Draws an SVG file into a Bitmap, with no window or graphics library
-	// involved, so every backend shows an SVG sprite the way it shows any
-	// other picture the engine drew itself, and a collision of type "pixel"
-	// tests the pixels that are shown. This is the one place the engine uses
-	// its SVG library (lunasvg); nothing outside picture/svg.cpp includes it.
-	//
-	// `region` is the part of the drawing to take (all of it if it is whole),
-	// and `scale` is how many real pixels one unit of the drawing is, so a
-	// 32 unit square at a scale of 2 is a 64 pixel bitmap (it is the region
-	// size times the scale, rounded up to whole pixels). The pixels keep their
-	// own colors and transparency, antialiased, with the alpha not
-	// premultiplied; whatever the drawing leaves empty is transparent.
-	//
-	// `hide` lists the ids of elements to leave out, for a sheet of sprites
-	// that carries a backdrop or a grid of its own; an id nothing has is
-	// simply ignored.
-	//
-	// Throws std::runtime_error, saying which file, if it cannot be read or is
-	// not an SVG, and std::invalid_argument for a scale that is not above 0 or
-	// a region with no width or height (or a negative one, or one with no part
-	// inside the drawing).
+	// An SVG drawn into a Bitmap by the engine (lunasvg, used only here), so
+	// every window shows it alike and a pixel collision tests what is shown.
+	// `scale` is pixels to a unit of the drawing (a 32 unit square at 2 is
+	// 64 pixels, rounded up); the alpha is not premultiplied. `hide` names
+	// elements to leave out, such as a sheet's backdrop. Throws
+	// std::runtime_error for a file that is not a readable SVG, and
+	// std::invalid_argument for a scale not above 0 or a region with nothing
+	// of the drawing in it.
 	Bitmap rasterizeSvg(const std::string& path, const SvgRegion& region, float scale, const std::vector<std::string>& hide = {});
 
 	// An SVG file's width and height, in the units its drawing is written
