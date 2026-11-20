@@ -51,7 +51,7 @@ namespace xge
 			if (!turnsOf(object).takes) { continue; }
 			anyTurns = true;
 			const bool first = started.insert(object.groupName).second;
-			object.variable[nameOf("turn")] = first ? 1.0f : 0.0f;
+			object.variable[words::turn] = first ? 1.0f : 0.0f;
 			refreshBoundTexts(object.name, words::turn, object.variable[words::turn]);
 			if (first) { object.showLook(0); }
 			else if (!turnsOf(object).sprite.empty()) { showLook(object, turnsOf(object).sprite); }
@@ -86,7 +86,7 @@ namespace xge
 
 	bool Game::passPlayers(Object& member)
 	{
-		if (!turnsOf(member).takes || member.variable[nameOf("turn")] == 0.0f) { return false; }
+		if (!turnsOf(member).takes || member.variable[words::turn] == 0.0f) { return false; }
 		// Not while a holder waits for the call its wild card asks of the
 		// one who laid it.
 		for (Object* holder : shownHolders())
@@ -127,7 +127,7 @@ namespace xge
 		for (Object* each : members)
 		{
 			const bool on = each == next;
-			if (on == (each->variable[nameOf("turn")] != 0.0f)) { continue; }
+			if (on == (each->variable[words::turn] != 0.0f)) { continue; }
 			setVariable(each->name, words::turn, on ? 1.0f : 0.0f);
 			// Onto its turn it leaves its off-turn look, for its first; a look
 			// given it while it waited (a pass's "again") stays.

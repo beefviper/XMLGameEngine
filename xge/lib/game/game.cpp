@@ -54,10 +54,10 @@ namespace xge
 		for (const RawPatterns& raw : data.patterns)
 		{
 			Patterns& set = patterns.emplace_back();
-			set.name = nameOf(raw.name);
+			set.name = Name::of(raw.name);
 			for (const RawPatterns::Pattern& rawPattern : raw.patterns)
 			{
-				set.patterns.push_back({ nameOf(rawPattern.name), rawPattern.parts, NameStore::program().of(rawPattern.by) });
+				set.patterns.push_back({ Name::of(rawPattern.name), rawPattern.parts, NameStore::program().of(rawPattern.by) });
 			}
 		}
 		const std::vector<Name> keeps = NameStore::program().of(data.keeps);
@@ -144,7 +144,7 @@ namespace xge
 		{
 			if (raw.think.empty()) { continue; }
 			const Command made = makeCommand(raw.think.front(), [&](const RawValue& value) { return expr.evaluate(value, "object '" + raw.name + "' > <think>"); });
-			if (const auto* plays = std::get_if<CmdThink>(&shapeOf(made))) { memberThinks.emplace(nameOf(raw.name), *plays); }
+			if (const auto* plays = std::get_if<CmdThink>(&shapeOf(made))) { memberThinks.emplace(Name::of(raw.name), *plays); }
 		}
 		startPlayers();
 		loadedCount = objects.size();
@@ -284,7 +284,7 @@ namespace xge
 		Name name;
 		for (std::size_t number = 1; name.empty(); ++number)
 		{
-			const Name candidate = nameOf(original.name + "." + std::to_string(number));
+			const Name candidate = Name::of(original.name + "." + std::to_string(number));
 			const auto taken = [&](const Object& each) { return each.name == candidate; };
 			if (std::none_of(objects.begin(), objects.end(), taken) && std::none_of(spawned.begin(), spawned.end(), taken)) { name = candidate; }
 		}
@@ -348,7 +348,7 @@ namespace xge
 		}
 
 		made.copyOf = original.name;
-		made.groupName = nameOf(copy.groupName);
+		made.groupName = Name::of(copy.groupName);
 		made.outerGroups = NameStore::program().listOf(copy.outerGroups);
 		made.ownerState = original.ownerState;
 		made.ownerScene = original.ownerScene;
@@ -647,7 +647,7 @@ namespace xge
 
 	void Game::enterScene(Name scene)
 	{
-		const Name state = nameOf(scene.str().substr(0, scene.str().find('.')));
+		const Name state = Name::of(scene.str().substr(0, scene.str().find('.')));
 		if (!sceneTimers.count(scene))
 		{
 			// The file is checked for this when it loads; this is for a caller in C++.
@@ -855,9 +855,9 @@ namespace xge
 		{
 			if (!value.drawsRandom()) { continue; }
 			const float drawn = expr.evaluate(value, where);
-			object.variable[nameOf(name)] = drawn;
-			startFor(object).variable[nameOf(name)] = drawn;
-			refreshBoundTexts(object.name, nameOf(name), drawn);
+			object.variable[Name::of(name)] = drawn;
+			startFor(object).variable[Name::of(name)] = drawn;
+			refreshBoundTexts(object.name, Name::of(name), drawn);
 		}
 
 		// The position, then the velocity, the order they are drawn in when the
@@ -976,7 +976,7 @@ namespace xge
 		turns.assign(playerStates.size(), start);
 		for (std::size_t i = 0; i < playerStates.size(); ++i)
 		{
-			turns[i].state = nameOf(playerStates[i]);
+			turns[i].state = Name::of(playerStates[i]);
 		}
 		turn = 0;
 		beginTurn();
@@ -1641,7 +1641,7 @@ namespace xge
 		for (auto& object : objects)
 		{
 			// A group of players taking turns: the one on its turn.
-			const bool offTurn = turnsOf(object).takes && object.inGroup(target) && object.variable[nameOf("turn")] == 0.0f;
+			const bool offTurn = turnsOf(object).takes && object.inGroup(target) && object.variable[words::turn] == 0.0f;
 			if (object.named(target) && !offTurn && (from.empty() || object.lookName() == from))
 			{
 				const Name before = isHand(object) ? object.lookName() : Name();

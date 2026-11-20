@@ -459,7 +459,7 @@ namespace xge
 
 		addText(node, tr("class"),
 			[object]() { return text(object().objClass); },
-			[this, object](const QString& value) { object().objClass = game().nameOf(value.toStdString()); });
+			[this, object](const QString& value) { object().objClass = xge::Name::of(value.toStdString()); });
 		addBool(node, tr("visible"),
 			[object]() { return object().isVisible ? 1.0 : 0.0; },
 			[object](double value) { object().isVisible = value != 0; });
@@ -568,7 +568,7 @@ namespace xge
 				[object, part]() { return text(object().drawn.picture.shows().*part); },
 				[this, object, part](const QString& value)
 				{
-					object().drawn.picture.edit().*part = game().nameOf(value.toStdString());
+					object().drawn.picture.edit().*part = xge::Name::of(value.toStdString());
 					object().drawn.visualDirty = true;
 					object().size = object().pictureSize();
 				});
