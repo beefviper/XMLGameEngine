@@ -151,11 +151,9 @@ namespace xge
 	// (see Touch::normal): the other is sent off with what the object was
 	// carrying into it, shared out by their <mass>es, and the object keeps
 	// what is left. Only what has a mass is moved; one without is as
-	// heavy as can be (a wall, a paddle, a man's head). A knock on a thing
-	// with no mass goes through it: whatever with a mass rests against its
-	// far side is knocked instead, and runs its own rules about the object
-	// as touched on that side (Mario bumping a floor from below flips what
-	// walks on it). `bounce` (0 to 1, 1 when left out) is how much of the
+	// heavy as can be (a wall, a paddle). A knock on a thing with no mass
+	// goes through it: whatever with a mass rests against its far side is
+	// knocked instead, and runs its own rules as touched on that side. `bounce` (0 to 1, 1 when left out) is how much of the
 	// coming together turns into going apart: 1 is pool balls, 0 leaves the
 	// knocked thing going no faster than what knocked it. Nothing happens
 	// unless they are coming together. See CommandExecutor::knock.
@@ -315,20 +313,11 @@ namespace xge
 		float amount{ 1.0f };
 	};
 
-	// <hop direction="up">distance</hop> (also down, left, right) - only ever in an
-	// object's own <action>: a one-shot
-	// jump of `distance` pixels, made once for each press of the key (see
-	// CommandExecutor::triggerObjectAction and playOneFrame). Unlike
-	// <move>, holding the key does nothing more, and a state change never
-	// resumes it. A diagonal one (up-left, up-right, down-left, down-right)
-	// goes `distance` along both, or <x> across and <y> up or down: a hop
-	// from cube to cube of Q*bert's pyramid. `direction` is the way it then
-	// faces (the up or down of a diagonal), `step` the whole of the hop.
-	// With <seconds> after the distance it takes that
-	// long, through the air: touching nothing until it
-	// lands, and a second hop waits for the landing. 0: at once. Its <arc>
-	// is how high it is drawn above its way at the halfway point (a parabola
-	// through its altitude, up then down): a timed hop that leaves the ground.
+	// <hop direction="up">distance</hop> - in an object's own <action>: one
+	// step of `distance` pixels a press (a diagonal goes it along both, or
+	// <x> and <y>). `direction` is the way it then faces, `step` the whole
+	// hop. With <seconds> it takes that long through the air, touching
+	// nothing until it lands; its <arc> is how high it is drawn at half way.
 	struct CmdHop
 	{
 		Direction direction{};
@@ -887,13 +876,9 @@ namespace xge
 	struct LoadedCommand;
 
 	// A command whose numbers name something that changes while the game
-	// runs (a variable of an object, where an object is or how it is going,
-	// the touch a rule is answering): made again from what was written each
-	// time it runs, so a variable can always be changed. `loaded` is the
-	// command as it was made at load, which says what kind of command it is
-	// (see shapeOf). See Game::makeNow. One that says self (`namesSelf`)
-	// is made for the object running it, as it runs; one that says other
-	// (`namesOther`), for the one it touched.
+	// runs: made again from what was written each time it runs
+	// (Game::makeNow). `loaded` is it as made at load, which says its kind
+	// (shapeOf); `namesSelf` and `namesOther` say whom it is made for.
 	struct CmdLive
 	{
 		std::shared_ptr<const WrittenCommand> written;
@@ -922,23 +907,11 @@ namespace xge
 	struct WrittenOperation;
 
 	// A value in the XML: an element's content wherever a number is wanted.
-	// It is one of
-	//   * a math expression written out as text (`window.width.center -
-	//     title.width / 2`);
-	//   * one tag that makes the number, such as
-	//     <random><min>-7</min><max>7</max></random>;
-	//   * an operation (<subtract>, <clamp>, ...): arithmetic whose operands are
-	//     themselves numbers, operations included (Formula);
-	//   * in a <position> only, <centered>: the object's middle at the
-	//     expression it holds, or that <offset> from the window's middle
-	//     (the window's middle when empty), on that axis (Centered).
-	//     <left>, <right>, <top> and <bottom> are Centered too: that side of
-	//     the object on the window's, an <offset> in from it (Edge).
-	//     centerOnOwnSize makes it an Expression once the object's name is
-	//     final, so nothing evaluates it as it is.
-	// load/expr evaluates it (see load/expr::evaluate), so a new kind of value
-	// tag is one more Kind here, one more case in load/xml's readValue and one
-	// more in load/expr's evaluate.
+	// A text (one number or one name), a <random>, an operation (Formula),
+	// or in a <position> a <centered>, <left>, <right>, <top> or <bottom>
+	// (Centered), which centerOnOwnSize makes a text once the object's name
+	// is final. A new kind is a Kind here, a case in load/xml's readValue
+	// and one in load/expr's evaluate.
 	struct WrittenValue
 	{
 		enum class Kind { Expression, Random, Formula, Centered };
@@ -1472,13 +1445,9 @@ namespace xge
 	// ShapeKind::Unknown is {0,0}.
 	Vector2f measureShapeSize(const Picture& picture);
 
-	// If `expression` is nothing but an "owner.variable" reference (for
-	// example paddle1.score, or playing.room1.tally.kills, whose owner is a
-	// path), returns {owner, variable}, split at the last dot. Returns nullopt
-	// for anything else - a number, a sum, a name with no owner. Used to tell a <number> in a text sprite that should stay live
-	// (bound to that variable) from one that is just worked out once; it is a
-	// plain scan of the text, since once the text is worked out only the
-	// number is left.
+	// A text that is one owner.variable name (paddle1.score, or
+	// playing.room1.tally.kills), split at the last dot; nullopt for
+	// anything else. A <number> in a text that names one stays live.
 	std::optional<std::pair<std::string, std::string>> parseVariableReference(const std::string& expression);
 
 	// Formats a live numeric value for on-screen display: whole numbers print

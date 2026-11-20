@@ -513,16 +513,10 @@ namespace xge
 		// re-fire.
 		void resetObject(Name name);
 
-		// Bare <reset /> in a state's list (an <input>, a <condition>, a
-		// state's <timer>; an object's own bare <reset /> only puts that
-		// object back, see CommandExecutor::run). Objects the game <keeps>
-		// are passed over.
-		// Resets every object back to how the game loaded (position, velocity,
-		// every <variable>), refreshes every bound text display, and collapses
-		// the whole state stack back down to the very first state - the same
-		// state Engine's constructor pushes via setCurrentState(0) - so
-		// title -> playing -> over -> title -> ... doesn't grow the
-		// stack forever.
+		// A bare <reset /> in a state's list: every object but those the game
+		// <keeps> back as it loaded, every text shown again, and the state
+		// stack back to the first state, so going round the states does not
+		// grow it.
 		void resetAll();
 
 		// <become sprite="..." style="..." object="name" />: every object of

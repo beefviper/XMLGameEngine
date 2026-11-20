@@ -24,7 +24,7 @@ namespace xge
 	// another variable, read every frame: object= on the tag names whose, and
 	// without it it is the tested object's own (<above object="gun2"
 	// variable="score" />). <remaining>: if no more than that many of the
-	// matching objects are still in play (visible - die() hides an object),
+	// matching objects are still in play (<die /> takes one out),
 	// the commands fire; remaining 0 is "they are all gone". Leaving both
 	// filters empty matches any object, same as an unfiltered collision rule.
 	//

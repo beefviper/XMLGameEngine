@@ -2073,19 +2073,11 @@ namespace xge
 		// code only ever reads this field.
 		Vector2f size{};
 
-		// How its position is worked out again after the game loads.
-		// <position> may use any object's size by name - name.width and
-		// name.height, including this object's own - e.g. to centre a text:
-		// window.width.center - title.width / 2. A circle's or rectangle's
-		// size follows from its sprite alone, so a position using only those
-		// is exact the moment the game is loaded. A text's size can change as
-		// its words do (a score gaining a digit), so a position that uses one
-		// has a SizeUse part (Parts::sizeUses) listing those texts in
-		// sizesOf, and Game::resolveSizeDependentPositions() works it out
-		// again whenever one of them changes. sizesUsed holds the sizes, in
-		// sizesOf order, it was last worked out from. cellOffset is a cell's
-		// offset from its group's evaluated <position> (see WrittenCell), so that
-		// position can be worked out again later and the offset added back.
+		// A position that reads a text's size (name.width), which changes as
+		// its words do: Game::resolveSizeDependentPositions() works it out
+		// again when one of sizesOf changes. sizesUsed: the sizes it was last
+		// worked out from. cellOffset: a cell's offset from its group's
+		// <position>, added back each time.
 		struct SizeUse
 		{
 			std::vector<Name> sizesOf;
@@ -2174,13 +2166,9 @@ namespace xge
 		};
 		Drawn drawn;
 
-		// A text that shows a variable (e.g. a <text> sprite whose <number>
-		// is paddle1.score): every piece of the text, those that follow a
-		// variable with its owner and name, the rest as they were worked
-		// out, so it can be put together again whenever one of its
-		// variables changes (Game::relabel). A part (Parts::boundTexts,
-		// Game::textPiecesOf): a text with none shows no variable and only
-		// ever changes by an <inc /> naming the text object itself.
+		// A text that shows a variable (a <number> of paddle1.score): its
+		// pieces, so it is put together again when one changes (Game::relabel).
+		// A part (Parts::boundTexts); a text with none shows no variable.
 		struct BoundText
 		{
 			std::vector<TextPiece> pieces;

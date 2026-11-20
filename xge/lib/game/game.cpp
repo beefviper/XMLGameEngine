@@ -1516,12 +1516,9 @@ namespace xge
 			static_cast<Moment&>(object) = startOf(parts, object);
 			object.placed = true;
 
-			// Also drop what its keys drive (moves, thrusts and turns
-			// recorded as held): velocity above is reset to rest, so a stale
-			// held direction (a key never released across this reset)
-			// shouldn't be able to resurrect part of the old velocity the
-			// next time some other direction's key event recomputes it. A
-			// <stop /> that took the acceleration away is given back above.
+			// What its keys drive is dropped too, so a key held across the
+			// reset cannot bring back part of the old velocity. A <stop />
+			// that took the acceleration away is given back above.
 			parts.drives.remove(object.id);
 			if (Object::Swing* swing = parts.swings.find(object.id)) { swing->held = false; swing->done = 0.0f; }
 			if (Object::Picker* picker = parts.pickers.find(object.id))
@@ -2037,11 +2034,7 @@ namespace xge
 	{
 		const int lockstepNum = object.kind->collisionData.lockstep;
 
-		// Every member gets exactly the same treatment. This used to shift the
-		// members stored before the touching one by three steps and the rest
-		// by one (and repeated that on every right-hand bounce), which pushed
-		// the last column of a block further from the others each time.
-		// A stepped one is taken back by its whole last step, so the rest of
+		// Every member gets the same treatment. A stepped one is taken back by its whole last step, so the rest of
 		// the column that met the edge with it are inside again; the others
 		// turn at the moment the edge is met (in the sweep), where they are.
 		for (auto& obj : objects)
