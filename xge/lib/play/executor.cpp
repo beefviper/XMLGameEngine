@@ -114,7 +114,7 @@ namespace xge
 
 		Object& object = game.getObject(trigger->object);
 		doer.self = &object;
-		doer.action = &trigger->action;
+		doer.action = &trigger->action.str();
 		for (const auto& written : object.kind->action[trigger->action])
 		{
 			Command madeNow;

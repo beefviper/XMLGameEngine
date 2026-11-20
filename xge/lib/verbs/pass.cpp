@@ -33,7 +33,7 @@ namespace xge
 	{
 		Game& game = doer.game();
 		Object* const self = doer.self;
-		if (pass.member >= 0) { return game.passPlayersTo(pass.group.empty() && self ? self->groupName.str() : pass.group, pass.member); }
+		if (pass.member >= 0) { return game.passPlayersTo(pass.group.empty() && self ? self->groupName : pass.group, pass.member); }
 		if (!pass.group.empty())
 		{
 			Object* const on = game.onTurn(pass.group);

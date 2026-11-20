@@ -34,7 +34,7 @@ namespace xge
 	{
 		const std::vector<std::string>& players = ownOf<RawAlternate>(raw).players;
 		if (players.empty()) { throw std::runtime_error("<alternate> has no <player>; it needs one for each player"); }
-		return CmdAlternate{ players };
+		return CmdAlternate{ NameStore::program().of(players) };
 	}
 
 	static void checkAlternate(const CmdAlternate& alternate, const Checking& checking)
@@ -47,7 +47,7 @@ namespace xge
 
 	static bool runAlternate(const CmdAlternate& alternate, const Doer& doer)
 	{
-		if (!doer.self) { doer.game().startTurns(alternate.players); }
+		if (!doer.self) { doer.game().startTurns(textsOf(alternate.players)); }
 		return true;
 	}
 

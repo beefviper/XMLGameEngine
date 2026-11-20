@@ -399,8 +399,8 @@ namespace xge
 			if (timer.name.empty()) { continue; }
 			// A named timer's time left (see init): where it starts.
 			const float left = std::ceil(timer.seconds);
-			object.variable[Name::of(timer.name)] = left;
-			startFor(object).variable[Name::of(timer.name)] = left;
+			object.variable[timer.name] = left;
+			startFor(object).variable[timer.name] = left;
 			objectVariables[rawObject.name + "." + timer.name] = left;
 		}
 	}

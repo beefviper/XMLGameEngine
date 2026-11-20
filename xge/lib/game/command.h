@@ -129,10 +129,10 @@ namespace xge
 	// arc, a gun on a rail.
 	struct CmdTrack
 	{
-		std::string path;
+		Name path;
 		// On cells, with <onto class="..."/>s: the cell nearest where it
 		// points that holds a piece of one of those classes.
-		std::vector<std::string> onto;
+		std::vector<Name> onto;
 	};
 
 	// <deflect>45</deflect> - in a collision rule about another object: a
@@ -199,7 +199,7 @@ namespace xge
 		Direction direction{};
 		// class=: every piece of that class on cells, the one nearest that
 		// way first; refused when none moved.
-		std::string objClass{};
+		Name objClass{};
 	};
 
 	// <clear /> - in a cell map's check: the pieces it found are taken out
@@ -262,7 +262,7 @@ namespace xge
 	struct CmdRank
 	{
 		VariableName entry;    // the entry and what orders it
-		std::string table;     // the group
+		Name table;     // the group
 	};
 
 	// <alternate><player state="player1" /><player state="player2" /></alternate> -
@@ -272,7 +272,7 @@ namespace xge
 	// their turn comes up, a screen saying whose it is. See Game::startTurns.
 	struct CmdAlternate
 	{
-		std::vector<std::string> players;
+		std::vector<Name> players;
 	};
 
 	// <demo /> - the game's recorded <demo> plays, the attract mode: a new
@@ -287,7 +287,7 @@ namespace xge
 	// the group named by object= or else the doer's. See Game::passPlayers.
 	struct CmdPass
 	{
-		std::string group;
+		Name group;
 		int member{ -1 };
 	};
 
@@ -328,7 +328,7 @@ namespace xge
 		float arc{};
 		// On cells, with <onto class="..."/>s: to the nearest cell that way
 		// holding a piece of one of those classes (Game::hopOnto).
-		std::vector<std::string> onto;
+		std::vector<Name> onto;
 	};
 
 	// <hunt object="qbert"><hop><x>32</x><y>48</y><seconds>0.3</seconds></hop></hunt>
@@ -341,7 +341,7 @@ namespace xge
 	// Coily. A hop under way, or nothing to hunt, and it stays.
 	struct CmdHuntHop
 	{
-		std::string target;
+		Name target;
 		float across{};
 		float down{};
 		bool diagonal{ false };
@@ -376,7 +376,7 @@ namespace xge
 	{
 		Direction direction{};
 		float step{};
-		std::string ladderClass;
+		Name ladderClass;
 	};
 
 	// <chase object="player">90<near>100</near></chase> - the
@@ -386,7 +386,7 @@ namespace xge
 	// it keeps it on the trail. See CommandExecutor::chase.
 	struct CmdChase
 	{
-		std::string target;
+		Name target;
 		float speed{};
 		float stopWithin{}; // not "near": windows.h defines near (and far) as nothing
 	};
@@ -415,11 +415,11 @@ namespace xge
 	// play/maze.h.
 	struct CmdHunt
 	{
-		std::string target;
+		Name target;
 		float speed{};
 		float ahead{};
-		std::string partner;
-		std::string retreatTo;
+		Name partner;
+		Name retreatTo;
 		float retreatWithin{};
 		// <search />: the first step of the shortest way to the target's tile
 		// (play/maze.h's mazeDistances), not the next tile nearest it.
@@ -443,7 +443,7 @@ namespace xge
 	// what follows it in the timer does not run. See aimAtNearest in verbs/aim.cpp.
 	struct CmdAim
 	{
-		std::string target;
+		Name target;
 		bool lined{ false };
 		float within{};
 	};
@@ -460,10 +460,10 @@ namespace xge
 	// the same pictures in other colors, a palette swap (Object::Looks::palettes).
 	struct CmdBecome
 	{
-		std::string sprite; // empty: the look stays
-		std::string target; // empty: the object running the command
-		std::string from;   // from="normal": only one showing that look; empty: any
-		std::string style;  // empty: the colors stay
+		Name sprite; // empty: the look stays
+		Name target; // empty: the object running the command
+		Name from;   // from="normal": only one showing that look; empty: any
+		Name style;  // empty: the colors stay
 	};
 
 	// <reveal object="igloo">count</reveal> - brings back the first `count`
@@ -474,7 +474,7 @@ namespace xge
 	// they belong: an igloo built a block at a time, a door that appears.
 	struct CmdReveal
 	{
-		std::string target;
+		Name target;
 		int count{ 1 };
 	};
 
@@ -494,7 +494,7 @@ namespace xge
 	{
 		Direction direction{};
 		float amount{};
-		std::string burn;
+		Name burn;
 	};
 
 	// <turn direction="counterclockwise">180</turn> (or clockwise) - only ever in an object's own
@@ -514,7 +514,7 @@ namespace xge
 	struct CmdThrust
 	{
 		float amount{};
-		std::string burn;
+		Name burn;
 	};
 
 	// <swing direction="counterclockwise"><degrees>60</degrees><seconds>0.1</seconds></swing>
@@ -539,7 +539,7 @@ namespace xge
 
 	struct CmdPushState
 	{
-		std::string name;
+		Name name;
 	};
 
 	// <pop /> - back to the state underneath. <pop state="wave2" /> - this
@@ -547,7 +547,7 @@ namespace xge
 	// does not grow the stack the way a <push> would.
 	struct CmdPopState
 	{
-		std::string name;
+		Name name;
 	};
 
 	// <play sound="bounce" /> - starts one of the game's <sounds> (see audio/sound.h
@@ -556,7 +556,7 @@ namespace xge
 	// for it (Game::requestSound); Engine hands it to the Audio backend.
 	struct CmdPlay
 	{
-		std::string sound;
+		Name sound;
 	};
 
 	// <silence sound="thrust" /> - stops one of the game's sounds if it is
@@ -564,13 +564,13 @@ namespace xge
 	// until something silences it. Anywhere <play> can go.
 	struct CmdSilence
 	{
-		std::string sound;
+		Name sound;
 	};
 
 	// <fire object="projectileName" /> - spawn/launch a named projectile object
 	struct CmdFire
 	{
-		std::string projectileName;
+		Name projectileName;
 	};
 
 	// Cells about an object on a map of cells, for a <count> or a
@@ -583,7 +583,7 @@ namespace xge
 		enum class Where { None, Here, Around };
 		Where where{ Where::None };
 		bool straight{ false };
-		std::string alike;
+		Name alike;
 		bool any() const noexcept { return where != Where::None; }
 	};
 
@@ -592,16 +592,16 @@ namespace xge
 	// from="normal": only those of them showing that look run it.
 	struct CmdTriggerAction
 	{
-		std::string object;
-		std::string action;
-		std::string from{};
+		Name object;
+		Name action;
+		Name from{};
 		// In a key's commands: how many after it are its <otherwise>, run
 		// only when its action is refused (Engine::runAsPress).
 		int otherwise{ 0 };
 		// <here /> or <around /> with class=: each piece of that class in
 		// those cells about the object running it, each one once a press
 		// however the actions call one another (Minesweeper's flood).
-		std::string objClass{};
+		Name objClass{};
 		CellPlace place{};
 	};
 
@@ -612,7 +612,7 @@ namespace xge
 	// starting values (see Game::resetObject).
 	struct CmdResetObject
 	{
-		std::string target;
+		Name target;
 	};
 
 	// <follow path="dive" /> - the object sets off along one of the game's
@@ -623,8 +623,8 @@ namespace xge
 	// Game::follow and Game::applyPaths.
 	struct CmdFollow
 	{
-		std::string path;
-		std::string target; // empty: the object running the command
+		Name path;
+		Name target; // empty: the object running the command
 		float stagger{};
 		// With target: only this many of them, the nearest the object
 		// running it that are not on a path already (0: all).
@@ -638,7 +638,7 @@ namespace xge
 	// the place back. See Game::shift.
 	struct CmdShift
 	{
-		std::string target;
+		Name target;
 		Vector2f by;
 	};
 
@@ -650,8 +650,8 @@ namespace xge
 	// scene's way of that name leads, worked out when it runs.
 	struct CmdEnterScene
 	{
-		std::string scene;
-		std::string way;
+		Name scene;
+		Name way;
 	};
 
 	// <reset scene="room1" /> - every object of that scene back as it started
@@ -660,8 +660,8 @@ namespace xge
 	// the scene that way of the current scene leads to.
 	struct CmdResetScene
 	{
-		std::string scene;
-		std::string way;
+		Name scene;
+		Name way;
 	};
 
 	// <set variable="ball.speed">value</set> - puts the value, worked out as
@@ -685,7 +685,7 @@ namespace xge
 	// CommandExecutor::spawn.
 	struct CmdSpawn
 	{
-		std::string target;
+		Name target;
 		// <count>N</count>: how many copies (1 when left out).
 		int count{ 1 };
 		std::optional<float> x;
@@ -705,7 +705,7 @@ namespace xge
 		std::optional<float> column;
 		std::optional<float> row;
 		// into=: the map of cells it goes on, when not its own.
-		std::string into;
+		Name into;
 		// <free />: in a free cell of the map, at random; with <below>N</below>,
 		// one under row N.
 		bool free{ false };
@@ -738,7 +738,7 @@ namespace xge
 	// A piece merged once does not merge again in the same <slide>.
 	struct CmdMerge
 	{
-		std::string variable;
+		Name variable;
 	};
 
 	// <undo />: the pieces on maps of cells, and every object's variables,
@@ -764,7 +764,7 @@ namespace xge
 	// picker is, when only one has (a jump that must be made).
 	struct CmdPick
 	{
-		std::string objClass;
+		Name objClass;
 		bool only{ false };
 	};
 
@@ -776,7 +776,7 @@ namespace xge
 	// or with into= on the first of those holders that accepts it.
 	struct CmdPlace
 	{
-		std::string into;
+		Name into;
 	};
 
 	// <call object="discard" />: a hand names the suit of the card it points
@@ -784,7 +784,7 @@ namespace xge
 	// Refused when the holder is not waiting or no card of its own is pointed at.
 	struct CmdCall
 	{
-		std::string holder;
+		Name holder;
 	};
 
 	// <put class="black" />: a picker puts a new piece of that class (a
@@ -797,14 +797,14 @@ namespace xge
 	// not pass.
 	struct CmdPut
 	{
-		std::string objClass;
+		Name objClass;
 	};
 
 	// <count class="black" into="score.black" />: how many objects of that
 	// class are in play now (pieces put this frame too), into a variable.
 	struct CmdCount
 	{
-		std::string objClass;
+		Name objClass;
 		VariableName target;
 		// <here /> or <around />: only those in those cells about the
 		// object running it.
@@ -819,22 +819,22 @@ namespace xge
 	// (Game::sendHeld).
 	struct CmdSend
 	{
-		std::string target;
-		std::string from;
-		std::string into;
+		Name target;
+		Name from;
+		Name into;
 		std::optional<float> column;
 		std::optional<float> row;
 		bool held{ false };
 		int count{};
 		bool all{ false };
-		std::string sprite;
+		Name sprite;
 	};
 
 	// <order group><random /></order>: what that holder holds, in a random
 	// order (Game::orderHeld).
 	struct CmdOrder
 	{
-		std::string group;
+		Name group;
 	};
 
 	// <despawn /> - the object takes itself out of the game; with object=,
@@ -843,7 +843,7 @@ namespace xge
 	// <fire> to bring back: a despawned object is not there at all.
 	struct CmdDespawn
 	{
-		std::string target;
+		Name target;
 	};
 
 	// <hold button="up" /> - only in a <condition> of a state's <computer>:
@@ -864,8 +864,8 @@ namespace xge
 	// button on each as a player would. See Game::think (game/think.cpp).
 	struct CmdThink
 	{
-		std::string objClass;
-		std::string picker;
+		Name objClass;
+		Name picker;
 		KeyCode button{};
 		int depth{ 4 };
 		std::vector<std::pair<std::string, float>> worths;
@@ -1362,13 +1362,13 @@ namespace xge
 		// starts over whenever a <become> gives it that look (even the look it
 		// shows already), so <after>6</after> is six seconds of being blue.
 		// Empty: it counts whatever the object shows.
-		std::string sprite;
+		Name sprite;
 
 		// name="fuse": on an object, its time left is the object's number of
 		// that name (bomb.fuse), whole seconds rounded up, kept by
 		// Game::updateTimers; `seconds` is what it starts at. In a state or a
 		// scene the name only lets a from= copy replace it.
-		std::string name;
+		Name name;
 		float seconds{};
 
 		// Seconds until it goes off, while `counting`; not counting means not
@@ -1438,7 +1438,7 @@ namespace xge
 	// the way carries it round without changing what is left of the step.
 	struct Path
 	{
-		std::string name;
+		Name name;
 		float speed{};
 		std::optional<Vector2f> start;  // where 0 is; when written
 		std::vector<PathStep> steps;

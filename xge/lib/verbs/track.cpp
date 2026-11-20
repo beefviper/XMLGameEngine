@@ -26,7 +26,7 @@ namespace xge
 
 	static Command makeTrack(const RawCommand& raw, const ValueEvaluator&)
 	{
-		return CmdTrack{ raw.path, ownOf<RawTrack>(raw).onto };
+		return CmdTrack{ raw.path, NameStore::program().of(ownOf<RawTrack>(raw).onto) };
 	}
 
 	static void checkTrack(const CmdTrack& track, const Checking& checking)

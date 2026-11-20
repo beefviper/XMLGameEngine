@@ -1321,7 +1321,7 @@ namespace xge
 	}
 
 	// The cells holding a piece in play of one of these classes.
-	std::vector<std::pair<int, int>> Game::ontoCells(const std::vector<std::string>& onto)
+	std::vector<std::pair<int, int>> Game::ontoCells(const std::vector<Name>& onto)
 	{
 		std::vector<std::pair<int, int>> cells;
 		for (const Object& object : objects)
@@ -1338,7 +1338,7 @@ namespace xge
 	// row ahead that has one, the cell in it nearest the column kept (the
 	// one the first of these hops started from, as a text cursor keeps
 	// its column). Refused when there is none that way.
-	bool Game::hopOnto(Object& mover, Direction direction, const std::vector<std::string>& onto)
+	bool Game::hopOnto(Object& mover, Direction direction, const std::vector<Name>& onto)
 	{
 		const int column = whole(place(mover).column);
 		const int row = whole(place(mover).row);
@@ -1369,7 +1369,7 @@ namespace xge
 		return true;
 	}
 
-	void Game::trackCells(Object& object, bool horizontal, float at, const std::vector<std::string>& onto)
+	void Game::trackCells(Object& object, bool horizontal, float at, const std::vector<Name>& onto)
 	{
 		// <onto>: the cell nearest where it points, of those holding such a
 		// piece, while it points over the map.
@@ -1594,8 +1594,8 @@ namespace xge
 		const auto alike = [&](const Object& other)
 		{
 			if (place.alike.empty()) { return true; }
-			const auto mine = piece.variable.findText(place.alike);
-			const auto theirs = other.variable.findText(place.alike);
+			const auto mine = piece.variable.find(place.alike);
+			const auto theirs = other.variable.find(place.alike);
 			return mine != piece.variable.end() && theirs != other.variable.end() && mine->second == theirs->second;
 		};
 		const int column = whole(this->place(piece).column);

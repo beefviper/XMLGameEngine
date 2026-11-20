@@ -831,7 +831,7 @@ namespace xge
 		for (int side = 0; side < 2; ++side)
 		{
 			if (side == 1 && other.empty()) { break; }
-			for (const Object* each : putTemplates(side == 0 ? think.objClass : other))
+			for (const Object* each : putTemplates(side == 0 ? think.objClass.str() : other))
 			{
 				const PieceKind* kind = board.kindOf(each);
 				board.allKinds[side].push_back(kind);

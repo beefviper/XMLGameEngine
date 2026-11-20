@@ -37,7 +37,7 @@ namespace xge
 
 	static void printEnter(std::ostream& o, const CmdEnterScene& enterScene)
 	{
-		o << "enter(" << (enterScene.way.empty() ? enterScene.scene : "way " + enterScene.way) << ")";
+		o << "enter(" << (enterScene.way.empty() ? enterScene.scene.str() : "way " + enterScene.way) << ")";
 	}
 
 	extern const Verb enterVerb;

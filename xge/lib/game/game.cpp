@@ -1318,7 +1318,7 @@ namespace xge
 	void Game::showTimeLeft(Object& object, const Timer& timer, const Timer::Clock& clock)
 	{
 		const float left = clock.done || !clock.counting ? 0.0f : static_cast<float>(std::ceil(std::max(0.0, clock.secondsLeft - static_cast<double>(kTimeSlack))));
-		const auto found = object.variable.findText(timer.name);
+		const auto found = object.variable.find(timer.name);
 		if (found == object.variable.end() || found->second == left) { return; }
 		found->second = left;
 		refreshBoundTexts(object.name, timer.name, left);
@@ -1970,7 +1970,7 @@ namespace xge
 
 	void Game::enter(const CmdEnterScene& command)
 	{
-		const std::string scene = command.way.empty() ? command.scene : wayLeadsTo(command.way);
+		const std::string scene = command.way.empty() ? command.scene.str() : wayLeadsTo(command.way);
 		if (!scene.empty()) { enterScene(scene); }
 		// A new level: nothing to undo into the last.
 		undoSteps.clear();
@@ -1978,7 +1978,7 @@ namespace xge
 
 	void Game::reset(const CmdResetScene& command)
 	{
-		const std::string scene = command.way.empty() ? command.scene : wayLeadsTo(command.way);
+		const std::string scene = command.way.empty() ? command.scene.str() : wayLeadsTo(command.way);
 		if (!scene.empty()) { resetScene(scene); }
 	}
 

@@ -45,7 +45,7 @@ namespace xge
 			CmdHop hop{ directionFromName(name, raw.verb), valueOr(written.distance, 0.0f, evaluate), {}, hopSeconds(written, evaluate), 0.0f, {} };
 			hop.arc = arcOf(written, "hop", hop.seconds, evaluate);
 			hop.step = stepToward(hop.direction, hop.distance);
-			hop.onto = written.onto;
+			hop.onto = NameStore::program().of(written.onto);
 			return hop;
 		}
 

@@ -682,8 +682,8 @@ namespace xge
 		float countClass(const std::string& objClass);
 		// <track /> by a pointer, for a piece on a map of cells: into the
 		// cell under `at` (a pixel across, or down), when it is on the map.
-		void trackCells(Object& object, bool horizontal, float at, const std::vector<std::string>& onto = {});
-		bool hopOnto(Object& mover, Direction direction, const std::vector<std::string>& onto);
+		void trackCells(Object& object, bool horizontal, float at, const std::vector<Name>& onto = {});
+		bool hopOnto(Object& mover, Direction direction, const std::vector<Name>& onto);
 		// Items (game/holders.cpp): a hand's verbs, each false when refused;
 		// moving it among the holders; the deal at the start of a game.
 		bool takeItems(Object& hand);
@@ -761,7 +761,7 @@ namespace xge
 		// Where each item's object is in `objects`, by its number less one
 		// (looked over again when a copy taken away moved them).
 		std::vector<std::size_t> itemIndex;
-		std::vector<std::pair<int, int>> ontoCells(const std::vector<std::string>& onto);
+		std::vector<std::pair<int, int>> ontoCells(const std::vector<Name>& onto);
 		// <marks>: each picker's marks put in their cells (game/cells.cpp).
 		void showMarks();
 		// <place />: the piece held makes the move that ends in the picker's
