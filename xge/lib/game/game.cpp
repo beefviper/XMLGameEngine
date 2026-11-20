@@ -2570,7 +2570,7 @@ namespace xge
 			{
 				if (matchesClassOrObjectFilter(filterClass, filterObject, objects[i])) { indices.push_back(i); }
 			}
-			found = filtered.emplace(std::make_pair(filterClass, filterObject), std::move(indices)).first;
+			found = filtered.emplace(std::pair<Name, Name>{ filterClass, filterObject }, std::move(indices)).first;
 		}
 		return found->second;
 	}

@@ -1011,7 +1011,14 @@ namespace xge
 
 		// The objects a condition's class and name filter matches (both
 		// fixed while a game runs), by index, kept per filter.
-		std::map<std::pair<std::string, std::string>, std::vector<std::size_t>> filtered;
+		struct ByTwoNames
+		{
+			std::size_t operator()(const std::pair<Name, Name>& names) const noexcept
+			{
+				return std::hash<Name>{}(names.first) * 31u + std::hash<Name>{}(names.second);
+			}
+		};
+		std::unordered_map<std::pair<Name, Name>, std::vector<std::size_t>, ByTwoNames> filtered;
 		const std::vector<std::size_t>& matching(Name filterClass, Name filterObject);
 		unsigned long resets = 0;
 		RawDemo demo;
@@ -1060,13 +1067,13 @@ namespace xge
 		// Every state's <timers> as they are counting (State::timers is how
 		// they start); kept here, by state name, because the state stack
 		// holds copies of states. A reset starts them all over.
-		std::map<Name, std::vector<Timer>> stateTimers;
+		std::unordered_map<Name, std::vector<Timer>> stateTimers;
 
 		// Each state's current scene, by state name, and every scene's
 		// timers as they are counting, by its path. Goes up by one each time
 		// a scene is entered (a timer or condition list stops for the frame).
-		std::map<Name, Name> currentScenes;
-		std::map<Name, std::vector<Timer>> sceneTimers;
+		std::unordered_map<Name, Name> currentScenes;
+		std::unordered_map<Name, std::vector<Timer>> sceneTimers;
 		unsigned long sceneChanges = 0;
 
 		// A <demo /> in a game with no <demo> stops the load.
@@ -1080,9 +1087,9 @@ namespace xge
 		{
 			std::vector<Object> objects;
 			Parts parts;
-			std::map<Name, std::vector<Timer>> stateTimers;
-			std::map<Name, Name> currentScenes;
-			std::map<Name, std::vector<Timer>> sceneTimers;
+			std::unordered_map<Name, std::vector<Timer>> stateTimers;
+			std::unordered_map<Name, Name> currentScenes;
+			std::unordered_map<Name, std::vector<Timer>> sceneTimers;
 			Name state;
 			bool out = false;
 		};
