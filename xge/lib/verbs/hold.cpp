@@ -13,14 +13,14 @@ namespace xge
 {
 	// <hold>: A <computer> holds a key down: run by Game, where its conditions
 	// are tested.
-	static void readHold(const XmlNode& node, const std::string& where, RawCommand& command)
+	static void readHold(const XmlNode& node, const std::string& where, WrittenCommand& command)
 	{
-		command.own.emplace<RawHold>().button = requireAttribute(node, "button", where);
+		command.own.emplace<WrittenHold>().button = requireAttribute(node, "button", where);
 	}
 
-	static Command makeHold(const RawCommand& raw, const ValueEvaluator&)
+	static Command makeHold(const WrittenCommand& raw, const ValueEvaluator&)
 	{
-		const std::string& written = ownOf<RawHold>(raw).button;
+		const std::string& written = ownOf<WrittenHold>(raw).button;
 		const KeyCode button = keyCodeFromString(written);
 		if (button == KeyCode::Unknown)
 		{

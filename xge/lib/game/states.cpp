@@ -26,25 +26,25 @@ namespace xge
 		return false;
 	}
 
-	std::vector<RawCondition> flattened(const std::vector<RawCondition>& conditions)
+	std::vector<WrittenCondition> flattened(const std::vector<WrittenCondition>& conditions)
 	{
-		std::vector<RawCondition> out;
-		for (const RawCondition& condition : conditions)
+		std::vector<WrittenCondition> out;
+		for (const WrittenCondition& condition : conditions)
 		{
 			if (condition.inner.empty())
 			{
 				out.push_back(condition);
 				continue;
 			}
-			RawCondition test = condition;
+			WrittenCondition test = condition;
 			test.inner.clear();
 			test.first.clear();
 			test.commands.clear();
 			test.name.clear();
-			for (RawCondition& each : flattened(condition.inner))
+			for (WrittenCondition& each : flattened(condition.inner))
 			{
-				RawCondition both;
-				both.join = RawCondition::Join::All;
+				WrittenCondition both;
+				both.join = WrittenCondition::Join::All;
 				both.commands = condition.first;
 				both.commands.insert(both.commands.end(), each.commands.begin(), each.commands.end());
 				each.commands.clear();
@@ -54,7 +54,7 @@ namespace xge
 			}
 			if (!condition.first.empty() || !condition.commands.empty())
 			{
-				RawCondition own = condition;
+				WrittenCondition own = condition;
 				own.inner.clear();
 				own.first.clear();
 				own.commands = condition.first;
@@ -68,9 +68,9 @@ namespace xge
 	std::string describe(const Condition& condition)
 	{
 		std::ostringstream text;
-		if (condition.join != RawCondition::Join::None)
+		if (condition.join != WrittenCondition::Join::None)
 		{
-			text << (condition.join == RawCondition::Join::All ? "all of (" : "any of (");
+			text << (condition.join == WrittenCondition::Join::All ? "all of (" : "any of (");
 			for (std::size_t i = 0; i < condition.parts.size(); ++i)
 			{
 				text << (i ? "; " : "") << describe(condition.parts[i]);
@@ -121,7 +121,7 @@ namespace xge
 		return text.str();
 	}
 
-	std::ostream& operator<<(std::ostream& o, const RawState& f)
+	std::ostream& operator<<(std::ostream& o, const WrittenState& f)
 	{
 		o << "state: ";
 		o << "name=" << f.name << ", show=";
@@ -151,11 +151,11 @@ namespace xge
 			o << "       condition: ";
 			static const char* const tests[] = { "atleast", "atmost", "remaining", "above", "below", "equal", "shows", "lowest", "highest", "unequal" };
 			const char* test = tests[static_cast<std::size_t>(condition.test)];
-			if (condition.join != RawCondition::Join::None)
+			if (condition.join != WrittenCondition::Join::None)
 			{
-				o << (condition.join == RawCondition::Join::All ? "all" : "any") << " of " << condition.parts.size() << " checks";
+				o << (condition.join == WrittenCondition::Join::All ? "all" : "any") << " of " << condition.parts.size() << " checks";
 			}
-			else if (condition.test == RawCondition::Test::Remaining)
+			else if (condition.test == WrittenCondition::Test::Remaining)
 			{
 				o << "remaining=" << condition.threshold;
 			}

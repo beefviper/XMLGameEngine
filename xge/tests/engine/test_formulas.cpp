@@ -324,41 +324,41 @@ TEST_CASE("a negative number and a decimal are numbers", "[formulas]")
 // --------------------------------------------------------------- the print
 TEST_CASE("a value prints as infix with its brackets", "[formulas]")
 {
-	const auto operand = [](const std::string& text) { RawOperand o; o.value = RawValue::expression(text); return o; };
+	const auto operand = [](const std::string& text) { WrittenOperand o; o.value = WrittenValue::expression(text); return o; };
 
-	RawOperation divide;
+	WrittenOperation divide;
 	divide.op = "divide";
 	divide.operands = { operand("title.width"), operand("2") };
 
-	RawValue inner;
-	inner.kind = RawValue::Kind::Formula;
-	inner.operations = std::make_shared<std::vector<RawOperation>>(1, divide);
+	WrittenValue inner;
+	inner.kind = WrittenValue::Kind::Formula;
+	inner.operations = std::make_shared<std::vector<WrittenOperation>>(1, divide);
 
-	RawOperation subtract;
+	WrittenOperation subtract;
 	subtract.op = "subtract";
 	subtract.operands = { operand("window.width.center") };
-	RawOperand nested;
+	WrittenOperand nested;
 	nested.value = inner;
 	subtract.operands.push_back(nested);
 
-	RawValue formula;
-	formula.kind = RawValue::Kind::Formula;
-	formula.operations = std::make_shared<std::vector<RawOperation>>(1, subtract);
+	WrittenValue formula;
+	formula.kind = WrittenValue::Kind::Formula;
+	formula.operations = std::make_shared<std::vector<WrittenOperation>>(1, subtract);
 
 	CHECK(valueText(formula) == "(window.width.center - (title.width / 2))");
 
-	RawOperation compare;
+	WrittenOperation compare;
 	compare.op = "compare";
-	RawOperand of = operand("mode.waves");
+	WrittenOperand of = operand("mode.waves");
 	of.role = "value";
-	RawOperand test = operand("4");
+	WrittenOperand test = operand("4");
 	test.role = "atleast";
 	compare.operands = { of, test };
-	RawValue compared;
-	compared.kind = RawValue::Kind::Formula;
-	compared.operations = std::make_shared<std::vector<RawOperation>>(1, compare);
+	WrittenValue compared;
+	compared.kind = WrittenValue::Kind::Formula;
+	compared.operations = std::make_shared<std::vector<WrittenOperation>>(1, compare);
 	CHECK(valueText(compared) == "(mode.waves >= 4)");
-	CHECK(valueText(RawValue::expression("a + b")) == "a + b");
+	CHECK(valueText(WrittenValue::expression("a + b")) == "a + b");
 }
 
 // --------------------------------------------------------------- mistakes

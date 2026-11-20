@@ -31,17 +31,17 @@ namespace xge
 
 	// A <demo> element: its seed, its frames, and each key pressed and let
 	// go with the frame it happened in.
-	RawDemo readDemo(const XmlNode& demo);
+	WrittenDemo readDemo(const XmlNode& demo);
 
 	// The text of a game file with `demo` written into it as its <demo>, in
 	// place of the one it had, or as the last thing in <game>: what
 	// xgecli --record does when it closes.
-	std::string withDemo(const std::string& gameText, const RawDemo& demo);
+	std::string withDemo(const std::string& gameText, const WrittenDemo& demo);
 
 	// The <demo> in that file, read with that XML library: the file's root,
 	// or a child of the root (a game file --record wrote into). What
 	// xgecli --keys replays. Throws when there is none or it is wrong.
-	RawDemo readDemo(const std::string& filename, XmlBackend backend = XmlDocumentFactory::defaultBackend());
+	WrittenDemo readDemo(const std::string& filename, XmlBackend backend = XmlDocumentFactory::defaultBackend());
 
 	// The game in that file, read with that XML library and checked against
 	// the schema it names, else the engine's own (load/file.cpp), as Game is

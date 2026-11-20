@@ -157,10 +157,10 @@ namespace xge
 		// readCommand): the attributes it must have, its content and its
 		// children, into `command`. None: it says nothing more. Stops the
 		// load (fail, load/reading.h) at anything missing or unknown.
-		void (*read)(const XmlNode& node, const std::string& where, RawCommand& command) = nullptr;
+		void (*read)(const XmlNode& node, const std::string& where, WrittenCommand& command) = nullptr;
 		// What was written, its numbers worked out. Throws
 		// std::runtime_error naming what is wrong with it.
-		Command (*make)(const RawCommand& raw, const ValueEvaluator& evaluate) = nullptr;
+		Command (*make)(const WrittenCommand& raw, const ValueEvaluator& evaluate) = nullptr;
 		// The names it uses exist (load/check.h); none: it names nothing.
 		// Throws std::runtime_error saying which does not.
 		void (*check)(const Command& command, const Checking& checking) = nullptr;
@@ -210,9 +210,9 @@ namespace xge
 	// The verb of that tag name; null when there is none.
 	const Verb* findVerb(std::string_view name) noexcept;
 	// What a written command's attributes name (VerbNames), by its verb.
-	VerbNames namesOf(const RawCommand& command) noexcept;
+	VerbNames namesOf(const WrittenCommand& command) noexcept;
 	// Whether a written command is made again each time it runs (Verb::alwaysLive).
-	bool alwaysLive(const RawCommand& command) noexcept;
+	bool alwaysLive(const WrittenCommand& command) noexcept;
 
 	// The verb a command is of, and which of its forms; null for what is not
 	// a verb's (a condition in an action, a command made as it runs: see
@@ -222,7 +222,7 @@ namespace xge
 
 	// A command tag as written, read by its verb; an unknown tag stops the
 	// load.
-	RawCommand readCommand(const XmlNode& node, const std::string& where);
+	WrittenCommand readCommand(const XmlNode& node, const std::string& where);
 
 	// --- What several verbs' read() share (more in load/reading.h).
 
@@ -231,7 +231,7 @@ namespace xge
 	// What a <hop> says besides its direction: one distance as its content,
 	// or an <x> across and a <y> up or down; then how long it takes, its
 	// <seconds>, and how high it goes, its <arc>. True for an <x> and a <y>.
-	bool readHopParts(const XmlNode& node, const std::string& where, RawHop& hop);
+	bool readHopParts(const XmlNode& node, const std::string& where, WrittenHop& hop);
 	// <onto class="hslot" />, one or more and nothing else: the cells a hop
 	// or a track on cells may go to.
 	void readOnto(const XmlNode& node, const std::string& here, std::vector<std::string>& onto);
@@ -241,13 +241,13 @@ namespace xge
 	// Members of a held class, holder to holder: how many, or <all /> where
 	// it `takesAll` (a <send>; a <distribute> gives how many each, into a
 	// holder or a group's own ones).
-	void readSendHeld(const XmlNode& node, const std::string& where, RawCommand& command, bool takesAll);
+	void readSendHeld(const XmlNode& node, const std::string& where, WrittenCommand& command, bool takesAll);
 
 	// --- What several verbs' make() share.
 
 	// A command's own data as its verb reads it; one made with none (by
 	// hand, in a test) has its parts' defaults: each left out.
-	template <typename Own> const Own& ownOf(const RawCommand& command)
+	template <typename Own> const Own& ownOf(const WrittenCommand& command)
 	{
 		static const Own none{};
 		const Own* own = std::get_if<Own>(&command.own);
@@ -255,10 +255,10 @@ namespace xge
 	}
 
 	// Whether anything was written for a value.
-	bool isWritten(const RawValue& value) noexcept;
+	bool isWritten(const WrittenValue& value) noexcept;
 	// The value, or `otherwise` when nothing was written.
-	float valueOr(const RawValue& value, float otherwise, const ValueEvaluator& evaluate);
-	float valueOr(const std::optional<RawValue>& value, float otherwise, const ValueEvaluator& evaluate);
+	float valueOr(const WrittenValue& value, float otherwise, const ValueEvaluator& evaluate);
+	float valueOr(const std::optional<WrittenValue>& value, float otherwise, const ValueEvaluator& evaluate);
 
 	// up, down, left or right; anything else throws, naming the verb.
 	Direction directionFromName(const std::string& name, const std::string& verb);
@@ -266,14 +266,14 @@ namespace xge
 	// Right) or counterclockwise (takes from it, kept as Left).
 	Direction rotationFromName(const std::string& name, const std::string& verb);
 	// How long a <hop> takes: no <seconds>, none at all.
-	float hopSeconds(const RawHop& hop, const ValueEvaluator& evaluate);
+	float hopSeconds(const WrittenHop& hop, const ValueEvaluator& evaluate);
 	// How high a timed <hop> goes: no <arc>, not at all.
-	float arcOf(const RawHop& hop, const char* what, float seconds, const ValueEvaluator& evaluate);
+	float arcOf(const WrittenHop& hop, const char* what, float seconds, const ValueEvaluator& evaluate);
 	// The speed of a <go>, <hunt> or <wander>, which may not be below 0.
-	float speedOf(const RawValue& written, const char* what, const ValueEvaluator& evaluate);
+	float speedOf(const WrittenValue& written, const char* what, const ValueEvaluator& evaluate);
 	// What one holder holds, sent to another: a <distribute>, or a <send>
 	// that names no object.
-	Command makeSendHeld(const RawCommand& raw, const ValueEvaluator& evaluate);
+	Command makeSendHeld(const WrittenCommand& raw, const ValueEvaluator& evaluate);
 
 	// --- What several verbs' run() share.
 
@@ -286,7 +286,7 @@ namespace xge
 
 	// What a <hop> says as printed: its distance or diagonal, its seconds
 	// and arc.
-	void printHopParts(std::ostream& out, const RawHop& hop);
+	void printHopParts(std::ostream& out, const WrittenHop& hop);
 	// A <count>'s or <trigger>'s cells as printed: ", here", ", around
 	// straight alike hue", or nothing for none.
 	std::string cellPlaceText(const CellPlace& place);

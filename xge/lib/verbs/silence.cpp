@@ -11,12 +11,12 @@
 namespace xge
 {
 	// <silence>: Stops a sound that loops.
-	static void readSilence(const XmlNode& node, const std::string& where, RawCommand&)
+	static void readSilence(const XmlNode& node, const std::string& where, WrittenCommand&)
 	{
 		requireAttribute(node, "sound", where);
 	}
 
-	static Command makeSilence(const RawCommand& raw, const ValueEvaluator&)
+	static Command makeSilence(const WrittenCommand& raw, const ValueEvaluator&)
 	{
 		return CmdSilence{ raw.sound };
 	}

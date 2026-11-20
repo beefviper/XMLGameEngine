@@ -9,7 +9,7 @@
 namespace xge
 {
 	// <reverse>: Goes back the way it came.
-	static Command makeReverse(const RawCommand&, const ValueEvaluator&)
+	static Command makeReverse(const WrittenCommand&, const ValueEvaluator&)
 	{
 		return CmdReverse{};
 	}

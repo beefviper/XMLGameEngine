@@ -19,7 +19,7 @@
 namespace xge
 {
 	// <trigger>: Runs an object's action.
-	static void readTrigger(const XmlNode& node, const std::string& where, RawCommand& command)
+	static void readTrigger(const XmlNode& node, const std::string& where, WrittenCommand& command)
 	{
 		requireAttribute(node, "action", where);
 		const std::unique_ptr<XmlNode> child = node.getFirstChild();
@@ -29,16 +29,16 @@ namespace xge
 		}
 		if (child)
 		{
-			command.own.emplace<RawTrigger>().cells = readCellPlace(node, where + " > <trigger>");
+			command.own.emplace<WrittenTrigger>().cells = readCellPlace(node, where + " > <trigger>");
 			requireAttribute(node, "class", where + " > <trigger> with <" + child->getName() + ">");
 			if (!command.object.empty()) { fail(where + " > <trigger>", "with <" + child->getName() + "> runs the action of pieces about the object running it, so it names no object="); }
 		}
 		else if (!command.objClass.empty()) { fail(where + " > <trigger class>", "class= picks the pieces in a <here /> or an <around />; give one, or leave class= out"); }
 	}
 
-	static Command makeTrigger(const RawCommand& raw, const ValueEvaluator&)
+	static Command makeTrigger(const WrittenCommand& raw, const ValueEvaluator&)
 	{
-		const RawTrigger& written = ownOf<RawTrigger>(raw);
+		const WrittenTrigger& written = ownOf<WrittenTrigger>(raw);
 		return CmdTriggerAction{ raw.object, raw.action, raw.from, written.otherwise, raw.objClass, written.cells };
 	}
 

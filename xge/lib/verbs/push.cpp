@@ -13,12 +13,12 @@
 namespace xge
 {
 	// <push>: Goes to another state, on top of this one.
-	static void readPush(const XmlNode& node, const std::string& where, RawCommand&)
+	static void readPush(const XmlNode& node, const std::string& where, WrittenCommand&)
 	{
 		requireAttribute(node, "state", where);
 	}
 
-	static Command makePush(const RawCommand& raw, const ValueEvaluator&)
+	static Command makePush(const WrittenCommand& raw, const ValueEvaluator&)
 	{
 		return CmdPushState{ raw.state };
 	}

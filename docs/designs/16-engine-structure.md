@@ -11,8 +11,8 @@ The language had a pass that asked of every word whether it was needed. The C++ 
 | Thing | Found |
 |---|---|
 | One `Object` | 4,736 bytes, whatever it is. A Pong ball carries a card holder (776 bytes), a hand (192), cell-map state (184) and key-drive state (224) |
-| One object as written (`RawObject`) | 14,600 bytes |
-| One command as written (`RawCommand`) | 3,328 bytes: 61 fields shared by every verb, most of them empty for any one (2,496 after CR7, each verb's own). A `Command` is 184 |
+| One object as written (`WrittenObject`) | 14,600 bytes |
+| One command as written (`WrittenCommand`) | 3,328 bytes: 61 fields shared by every verb, most of them empty for any one (2,496 after CR7, each verb's own). A `Command` is 184 |
 | Pictures | Rows, SVGs and sheet cells are already drawn once per description (`drawOnce`), so Space Invaders' 77 objects hold 16 pictures. Lines and polygons are drawn per object; circles, rectangles and texts are drawn again each time a window asks. Five caches share them: `drawOnce`, the flips, the open sheets, each `Turnable`'s turned pictures and a static map of image files |
 | Textures | Each window keeps a texture per object name and builds it again whenever the object's picture changes: in 600 frames Space Invaders builds 1,109 textures (9 MB of pixels) for its 16 pictures, Pac-Man keeps 777 textures for 35 |
 | `before` | A whole `Moment` (its variables map and three vectors included) copied for every object every frame, read in one place for its position and two flags |
@@ -87,7 +87,7 @@ Proposed, for the author. Each row is one commit, made by tool; the generator's 
 
 | # | Today | Proposed | Why |
 |---|---|---|---|
-| 1 | `Raw...` (69 types: `RawObject`, `RawValue`, `RawCommand`, each verb's `RawBounce`...) | `Written...` | as the file says it, not yet worked out; `RawValue` is read while playing too, and "written" still says what it is |
+| 1 | `Raw...` (69 types: `WrittenObject`, `WrittenValue`, `WrittenCommand`, each verb's `WrittenBounce`...) | `Written...` | as the file says it, not yet worked out; `WrittenValue` is read while playing too, and "written" still says what it is |
 | 2 | `raw`, `rawObject`, `rawState`... (50 names, 486 bare `raw`) | `written`, `writtenObject`... | the same word as its type |
 | 3 | `game_expr` | `Evaluator` | it works written values out, at load and while playing; the one class named in snake case |
 | 4 | `getObject`, `tryGetObject`, `findObject`, `findAnywhere`, `find(ObjectId)` | `object(Name)` (throws), `find(Name)`, `find(ObjectId)`, `findSpawning(Name)` (this frame's spawns too); the uncached search private | five names for one question today |
@@ -121,8 +121,8 @@ Where one mechanic bent shared code for itself, and what each became (the author
 | `game/scenes.cpp` (4), `game/object.cpp` (2) | Renames know which verbs' `variable=`, `into=`, `from=` and `object=` name a variable, an object or an exact object, by listing verbs (inc, dec, copy, rank, set, spawn, send, trigger) | Done: `Verb::names` says what each names (`.into = Naming::Object`); renames ask the verb |
 | `object.cpp` `nameSelfIn` | A `<trigger>` with no object= means self | Done: `Naming::OneObject`, left out the one running it |
 | `load/expr.cpp` | `<set>` and `<spawn>` are always made again as they run | Done: `Verb::alwaysLive` |
-| `load/xml.cpp`, `load/expr.cpp` (3) | A state's `<starts>` (the deal) reads send, distribute and order by hand into its own `RawStart` | Done, smaller than first proposed: a step is read once into its kind (`RawStart::Step`). The deal is worked out at load into the holders, not run, so it does not become commands |
-| `load/expr.cpp` | A `<pick>` of a held class makes its object a hand | Stays: a fact about the object worked out from its actions, now read from `RawPick` |
+| `load/xml.cpp`, `load/expr.cpp` (3) | A state's `<starts>` (the deal) reads send, distribute and order by hand into its own `WrittenStart` | Done, smaller than first proposed: a step is read once into its kind (`WrittenStart::Step`). The deal is worked out at load into the holders, not run, so it does not become commands |
+| `load/expr.cpp` | A `<pick>` of a held class makes its object a hand | Stays: a fact about the object worked out from its actions, now read from `WrittenPick` |
 | `verbs/all.cpp` | A hint for the old `<accelerate>` | Done: removed |
 | `verbs/all.cpp` | The shared send reader asks whether it is a send or a distribute | Done: each passes whether it takes `<all />` |
 | `load/expr.cpp` | `condition` in a list | Stays: the list's own flow, not a verb |

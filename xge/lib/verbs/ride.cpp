@@ -9,7 +9,7 @@
 namespace xge
 {
 	// <ride>: Is carried along by what it stands on.
-	static Command makeRide(const RawCommand&, const ValueEvaluator&)
+	static Command makeRide(const WrittenCommand&, const ValueEvaluator&)
 	{
 		return CmdRide{};
 	}

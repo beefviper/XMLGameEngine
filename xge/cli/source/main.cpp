@@ -196,7 +196,7 @@ int main(int argc, char* argv[])
 				read << in.rdbuf();
 				text = read.str();
 			}
-			const xge::RawDemo demo = engine.recorded();
+			const xge::WrittenDemo demo = engine.recorded();
 			std::ofstream out(filename, std::ios::binary | std::ios::trunc);
 			out << xge::withDemo(text, demo);
 			if (!out)

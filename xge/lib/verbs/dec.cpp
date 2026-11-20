@@ -15,18 +15,18 @@
 namespace xge
 {
 	// <dec>: Takes from a variable.
-	static void readDec(const XmlNode& node, const std::string& where, RawCommand& command)
+	static void readDec(const XmlNode& node, const std::string& where, WrittenCommand& command)
 	{
 		requireAttribute(node, "variable", where);
 		// The amount is optional: a bare <dec variable="..." /> is 1.
-		RawDec& own = command.own.emplace<RawDec>();
+		WrittenDec& own = command.own.emplace<WrittenDec>();
 		if (hasContent(node)) { own.by = readValue(node, where); }
 	}
 
-	static Command makeDec(const RawCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeDec(const WrittenCommand& raw, const ValueEvaluator& evaluate)
 	{
 		// By its amount, or by 1 when it has none.
-		return CmdDecrement{ VariableName::of(raw.variable), valueOr(ownOf<RawDec>(raw).by, 1.0f, evaluate) };
+		return CmdDecrement{ VariableName::of(raw.variable), valueOr(ownOf<WrittenDec>(raw).by, 1.0f, evaluate) };
 	}
 
 	static void checkDec(const CmdDecrement& decrement, const Checking& checking)

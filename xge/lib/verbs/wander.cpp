@@ -12,14 +12,14 @@
 namespace xge
 {
 	// <wander>: Through a maze, any way at each corner.
-	static void readWander(const XmlNode& node, const std::string& where, RawCommand& command)
+	static void readWander(const XmlNode& node, const std::string& where, WrittenCommand& command)
 	{
-		command.own = RawWander{ readValue(node, where) };
+		command.own = WrittenWander{ readValue(node, where) };
 	}
 
-	static Command makeWander(const RawCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeWander(const WrittenCommand& raw, const ValueEvaluator& evaluate)
 	{
-		return CmdWander{ speedOf(ownOf<RawWander>(raw).speed, "wander", evaluate) };
+		return CmdWander{ speedOf(ownOf<WrittenWander>(raw).speed, "wander", evaluate) };
 	}
 
 	static bool runWander(const CmdWander& wander, const Doer& doer)

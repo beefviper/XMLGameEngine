@@ -14,18 +14,18 @@
 namespace xge
 {
 	// <hole>: Cuts a hole in its picture where it was touched.
-	static void readHole(const XmlNode& node, const std::string& where, RawCommand& command)
+	static void readHole(const XmlNode& node, const std::string& where, WrittenCommand& command)
 	{
 		// Its radius as its content, then how rough its edge is.
 		const std::string here = where + " > <hole>";
-		RawHole& hole = command.own.emplace<RawHole>();
+		WrittenHole& hole = command.own.emplace<WrittenHole>();
 		hole.radius = readLeadValue(node, { "rough" }, "its radius, then <rough> if wanted", where);
 		if (auto roughNode = findChild(&node, "rough")) { hole.rough = readValue(*roughNode, here); }
 	}
 
-	static Command makeHole(const RawCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeHole(const WrittenCommand& raw, const ValueEvaluator& evaluate)
 	{
-		const RawHole& written = ownOf<RawHole>(raw);
+		const WrittenHole& written = ownOf<WrittenHole>(raw);
 		const float radius = evaluate(written.radius);
 		const float rough = valueOr(written.rough, 0.0f, evaluate);
 		if (!(radius > 0.0f)) { throw std::runtime_error("<hole> has a radius of " + formatDisplayNumber(radius) + "; expected above 0"); }

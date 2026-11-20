@@ -19,14 +19,14 @@
 namespace xge
 {
 	// <track>: Follows a control that points (a mouse, a stick).
-	static void readTrack(const XmlNode& node, const std::string& where, RawCommand& command)
+	static void readTrack(const XmlNode& node, const std::string& where, WrittenCommand& command)
 	{
-		if (node.getFirstChild()) { readOnto(node, where + " > <track>", command.own.emplace<RawTrack>().onto); }
+		if (node.getFirstChild()) { readOnto(node, where + " > <track>", command.own.emplace<WrittenTrack>().onto); }
 	}
 
-	static Command makeTrack(const RawCommand& raw, const ValueEvaluator&)
+	static Command makeTrack(const WrittenCommand& raw, const ValueEvaluator&)
 	{
-		return CmdTrack{ raw.path, NameStore::program().of(ownOf<RawTrack>(raw).onto) };
+		return CmdTrack{ raw.path, NameStore::program().of(ownOf<WrittenTrack>(raw).onto) };
 	}
 
 	static void checkTrack(const CmdTrack& track, const Checking& checking)

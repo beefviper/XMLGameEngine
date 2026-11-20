@@ -21,7 +21,7 @@ namespace xge
 	// <spawn>: Makes copies of a piece (one, or a <count> of them), put at
 	// the spawner's middle unless a <position> says; refused when no more
 	// of it may exist.
-	static void readSpawn(const XmlNode& node, const std::string& where, RawCommand& command)
+	static void readSpawn(const XmlNode& node, const std::string& where, WrittenCommand& command)
 	{
 		requireAttribute(node, "object", where);
 		const std::string here = where + " > <spawn>";
@@ -33,7 +33,7 @@ namespace xge
 				fail(here, "unknown <" + tag + ">; expected a <count>, <random /> or a <member>, a <position> (or a <column> and a <row>, or <free />), a <velocity> and an <acceleration>, each if wanted");
 			}
 		}
-		RawSpawn& spawn = command.own.emplace<RawSpawn>();
+		WrittenSpawn& spawn = command.own.emplace<WrittenSpawn>();
 		if (auto count = findChild(&node, "count")) { spawn.count = readValue(*count, here + " > <count>"); }
 		spawn.random = findChild(&node, "random") != nullptr;
 		if (auto member = findChild(&node, "member")) { spawn.member = readValue(*member, here + " > <member>"); }
@@ -68,9 +68,9 @@ namespace xge
 		}
 	}
 
-	static Command makeSpawn(const RawCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeSpawn(const WrittenCommand& raw, const ValueEvaluator& evaluate)
 	{
-		const RawSpawn& written = ownOf<RawSpawn>(raw);
+		const WrittenSpawn& written = ownOf<WrittenSpawn>(raw);
 		CmdSpawn spawn;
 		spawn.target = raw.object;
 		if (written.count)
@@ -80,13 +80,13 @@ namespace xge
 		}
 		// A <centered> half holds where the middle goes; left empty, the
 		// middle of the window.
-		const auto half = [&](const std::optional<RawValue>& given, std::optional<float>& into, bool* centered, const char* middle)
+		const auto half = [&](const std::optional<WrittenValue>& given, std::optional<float>& into, bool* centered, const char* middle)
 		{
 			if (!given) { return; }
-			const RawValue& value = *given;
-			if (value.kind == RawValue::Kind::Centered)
+			const WrittenValue& value = *given;
+			if (value.kind == WrittenValue::Kind::Centered)
 			{
-				if (value.edge != RawValue::Edge::Middle) { throw std::runtime_error("<spawn object=\"" + raw.object + "\">: <left>, <right>, <top> and <bottom> are for an object's <position>"); }
+				if (value.edge != WrittenValue::Edge::Middle) { throw std::runtime_error("<spawn object=\"" + raw.object + "\">: <left>, <right>, <top> and <bottom> are for an object's <position>"); }
 				if (!centered)
 				{
 					throw std::runtime_error("<spawn object=\"" + raw.object + "\">: <centered> is for its <position>, not its <velocity> or <acceleration>");

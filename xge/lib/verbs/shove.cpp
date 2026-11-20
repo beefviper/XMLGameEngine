@@ -9,7 +9,7 @@
 namespace xge
 {
 	// <shove>: Pushes the piece in its way one cell on.
-	static Command makeShove(const RawCommand&, const ValueEvaluator&)
+	static Command makeShove(const WrittenCommand&, const ValueEvaluator&)
 	{
 		return CmdShove{};
 	}

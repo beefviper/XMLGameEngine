@@ -10,7 +10,7 @@
 namespace xge
 {
 	// <drop>: Lets go of what it carries, or puts back what it picked.
-	static Command makeDrop(const RawCommand&, const ValueEvaluator&)
+	static Command makeDrop(const WrittenCommand&, const ValueEvaluator&)
 	{
 		return CmdDrop{};
 	}

@@ -20,7 +20,7 @@
 
 namespace xge
 {
-	Object Evaluator::makeObject(RawObject& rawObject, const FirstPass& first, Vector2f cellOffset, int thisLockstep)
+	Object Evaluator::makeObject(WrittenObject& rawObject, const FirstPass& first, Vector2f cellOffset, int thisLockstep)
 	{
 		const std::string where = "object '" + rawObject.name + "'";
 		struct Self
@@ -76,7 +76,7 @@ namespace xge
 
 	// makeObject's looks: each named <sprite> or <animation> made, the first the
 	// very picture it starts with, and where each once look goes when it ends.
-	std::vector<Object::Look> Evaluator::buildLooks(RawObject& rawObject, const FirstPass& first, const HeldPicture& picture, const std::string& where)
+	std::vector<Object::Look> Evaluator::buildLooks(WrittenObject& rawObject, const FirstPass& first, const HeldPicture& picture, const std::string& where)
 	{
 		std::vector<Object::Look> looks;
 		if (first.looks)
@@ -85,7 +85,7 @@ namespace xge
 		}
 		else if (!rawObject.looks.empty())
 		{
-			for (const RawSprite& rawLook : rawObject.looks)
+			for (const WrittenSprite& rawLook : rawObject.looks)
 			{
 				Object::Look look;
 				look.name = rawLook.name;
@@ -142,7 +142,7 @@ namespace xge
 
 	// makeObject's picture: the sprite it starts as, its animation, and a
 	// text's live pieces.
-	void Evaluator::buildSprite(RawObject& rawObject, const FirstPass& first, const HeldPicture& picture, float animationSeconds, Object& object, const std::string& where)
+	void Evaluator::buildSprite(WrittenObject& rawObject, const FirstPass& first, const HeldPicture& picture, float animationSeconds, Object& object, const std::string& where)
 	{
 		object.drawn.picture = picture;
 		object.drawn.bitmap = first.bitmap;
@@ -174,7 +174,7 @@ namespace xge
 
 	// makeObject's names: its group, class and owners, and whether it is
 	// drawn, seen and there.
-	void Evaluator::buildNames(RawObject& rawObject, Object& object)
+	void Evaluator::buildNames(WrittenObject& rawObject, Object& object)
 	{
 		object.groupName = Name::of(rawObject.groupName);
 		object.outerGroups = NameStore::program().listOf(rawObject.outerGroups);
@@ -202,7 +202,7 @@ namespace xge
 
 	// makeObject's numbers: its variables, then where it starts, what it
 	// follows, its velocity, acceleration and heading.
-	void Evaluator::buildNumbers(RawObject& rawObject, Object& object, Vector2f cellOffset, const std::vector<std::string>& positionSizeDependencies, const std::string& where)
+	void Evaluator::buildNumbers(WrittenObject& rawObject, Object& object, Vector2f cellOffset, const std::vector<std::string>& positionSizeDependencies, const std::string& where)
 	{
 		// Its variables first, so its position and velocity can use them
 		// (a serve drawn as an angle: its speed times the cosine of its angle).
@@ -277,7 +277,7 @@ namespace xge
 
 	// makeObject's ways of moving: drag, surface, friction, mass, pulls,
 	// seeking, light and dark, altitude, a tether and which way it faces.
-	void Evaluator::buildMotion(RawObject& rawObject, Object& object, const std::string& where)
+	void Evaluator::buildMotion(WrittenObject& rawObject, Object& object, const std::string& where)
 	{
 		if (rawObject.rawDrag)
 		{
@@ -347,7 +347,7 @@ namespace xge
 		if (rawObject.hasAltitude)
 		{
 			const std::string here = where + " > <altitude>";
-			const auto given = [&](const RawValue& value) { return !(value.kind == RawValue::Kind::Expression && value.text.empty()); };
+			const auto given = [&](const WrittenValue& value) { return !(value.kind == WrittenValue::Kind::Expression && value.text.empty()); };
 			aloft->has = true;
 			object.altitude = given(rawObject.rawAltitude) ? evaluate(rawObject.rawAltitude, here) : 0.0f;
 			object.rise = given(rawObject.rawRise) ? evaluate(rawObject.rawRise, here) : 0.0f;
@@ -370,7 +370,7 @@ namespace xge
 			Object::Tether& tether = parts->tethers.add(object.id, parts->orderOf(object.id), {});
 			tether.from = rawObject.sprite.tetherFrom;
 			tether.to = rawObject.sprite.tetherTo;
-			if (!rawObject.sprite.thickness.text.empty() || rawObject.sprite.thickness.kind != RawValue::Kind::Expression)
+			if (!rawObject.sprite.thickness.text.empty() || rawObject.sprite.thickness.kind != WrittenValue::Kind::Expression)
 			{
 				tether.thickness = static_cast<int>(std::lround(evaluate(rawObject.sprite.thickness, where)));
 				if (tether.thickness < 1) { throw std::runtime_error(where + ": a <tether> has a <thickness> under 1"); }
@@ -390,7 +390,7 @@ namespace xge
 	}
 
 	// makeObject's timers, a named one's time left a number of its own.
-	void Evaluator::buildTimers(RawObject& rawObject, Object& object, const std::string& where)
+	void Evaluator::buildTimers(WrittenObject& rawObject, Object& object, const std::string& where)
 	{
 		object.kind->timers = processTimers(rawObject.timers, where);
 		if (!object.kind->timers.empty()) { parts->clocks.add(object.id, parts->orderOf(object.id), std::vector<Timer::Clock>(object.kind->timers.size())); }
@@ -407,20 +407,20 @@ namespace xge
 
 	// makeObject's looks given it, the first one's animation, the look for
 	// each way it moves (<poses>) and for where what it is joined to lies.
-	void Evaluator::buildLookParts(RawObject& rawObject, Object& object, const std::vector<Object::Look>& looks, const std::string& where)
+	void Evaluator::buildLookParts(WrittenObject& rawObject, Object& object, const std::vector<Object::Look>& looks, const std::string& where)
 	{
 		object.looks.set->all = looks;
 
 		// Animations timed live (<seconds update="live">), followed after the
 		// object's other live numbers: the animation's own seconds, and each
 		// picture's, its own or, with none, the animation's.
-		const auto followSeconds = [&](const RawValue& interval, const std::vector<RawValue>& times, std::size_t look)
+		const auto followSeconds = [&](const WrittenValue& interval, const std::vector<WrittenValue>& times, std::size_t look)
 		{
 			using Follow = Object::Follow;
 			if (interval.live) { parts->give(parts->follows, object.id).each.push_back({ Follow::Part::Seconds, "", interval, look, std::string::npos }); }
 			for (std::size_t i = 0; i < times.size(); ++i)
 			{
-				const RawValue& time = frameTimeGiven(times[i]) ? times[i] : interval;
+				const WrittenValue& time = frameTimeGiven(times[i]) ? times[i] : interval;
 				if (time.live) { parts->give(parts->follows, object.id).each.push_back({ Follow::Part::Seconds, "", time, look, i }); }
 			}
 		};
@@ -487,10 +487,10 @@ namespace xge
 	}
 
 	// makeObject's board-game moves and marks, each set's look found.
-	void Evaluator::buildMoves(RawObject& rawObject, Object& object, const std::vector<Object::Look>& looks, const std::string& where)
+	void Evaluator::buildMoves(WrittenObject& rawObject, Object& object, const std::vector<Object::Look>& looks, const std::string& where)
 	{
 		// A board game piece's moves, each set's look found.
-		for (const RawObject::RawMoveSet& rawSet : rawObject.moveSets)
+		for (const WrittenObject::WrittenMoveSet& rawSet : rawObject.moveSets)
 		{
 			const auto lookNamed = [&](const std::string& name, const std::string& at) -> std::size_t
 			{
@@ -507,17 +507,17 @@ namespace xge
 			Object::MoveSet set;
 			if (!rawSet.sprite.empty()) { set.look = lookNamed(rawSet.sprite, "<moves"); }
 			set.forced = rawSet.forced;
-			for (const RawObject::RawPieceMove& move : rawSet.moves) { set.moves.push_back({ move.jump, move.objClass, move.x, move.y }); }
+			for (const WrittenObject::WrittenPieceMove& move : rawSet.moves) { set.moves.push_back({ move.jump, move.objClass, move.x, move.y }); }
 			if (!rawSet.promote.empty()) { set.promoteLook = lookNamed(rawSet.promote, "<moves> > <promote"); }
 			set.promoteRow = rawSet.promoteRow;
-			for (const RawObject::RawMoveSet::RawFlank& flank : rawSet.flanks) { set.flanks.push_back({ flank.objClass, flank.straight }); }
+			for (const WrittenObject::WrittenMoveSet::WrittenFlank& flank : rawSet.flanks) { set.flanks.push_back({ flank.objClass, flank.straight }); }
 			set.fall = rawSet.fall;
 			set.on = NameStore::program().of(rawSet.on);
 			set.closeClass = rawSet.closeClass;
 			set.closeObject = rawSet.closeObject;
 			parts->give(parts->moves, object.id).sets.push_back(std::move(set));
 		}
-		for (const RawObject::RawMarkSet& rawSet : rawObject.markSets)
+		for (const WrittenObject::WrittenMarkSet& rawSet : rawObject.markSets)
 		{
 			Object::MarkSet set;
 			if (!rawSet.sprite.empty())
@@ -532,7 +532,7 @@ namespace xge
 				}
 				set.look = static_cast<std::size_t>(look - looks.begin());
 			}
-			for (const RawObject::RawMark& raw : rawSet.marks)
+			for (const WrittenObject::WrittenMark& raw : rawSet.marks)
 			{
 				Object::Mark mark;
 				mark.kind = raw.kind == "held" ? Object::Mark::Kind::Held : raw.kind == "moves" ? Object::Mark::Kind::Moves
@@ -547,13 +547,13 @@ namespace xge
 	}
 
 	// makeObject's holder (<holds>), hand, held item and turns.
-	void Evaluator::buildHolder(RawObject& rawObject, Object& object, std::uint64_t order, const std::string& where)
+	void Evaluator::buildHolder(WrittenObject& rawObject, Object& object, std::uint64_t order, const std::string& where)
 	{
 		// Holders: a holder's rules, a hand, a held member.
 		if (rawObject.holder.is)
 		{
-			const RawObject::RawHolder& raw = rawObject.holder;
-			const auto number = [&](const RawValue& value) { return value.kind == RawValue::Kind::Expression && value.text.empty() ? 0.0f : evaluate(value, where); };
+			const WrittenObject::WrittenHolder& raw = rawObject.holder;
+			const auto number = [&](const WrittenValue& value) { return value.kind == WrittenValue::Kind::Expression && value.text.empty() ? 0.0f : evaluate(value, where); };
 			Holder& holder = parts->holders.add(object.id, order, {});
 			holder.holdsClass = raw.holdsClass;
 			holder.holdsSprite = raw.holdsSprite;
@@ -598,7 +598,7 @@ namespace xge
 
 	// makeObject's mirror, grip, timers' looks, its tile on a map, a
 	// maze's walls and its pivot.
-	void Evaluator::buildPlace(RawObject& rawObject, Object& object, const std::vector<Object::Look>& looks, const std::string& where)
+	void Evaluator::buildPlace(WrittenObject& rawObject, Object& object, const std::vector<Object::Look>& looks, const std::string& where)
 	{
 		if (!rawObject.mirror.empty())
 		{
@@ -649,7 +649,7 @@ namespace xge
 			{
 				cell->place.column = cell->start.column = static_cast<float>(rawObject.cell.mapColumn);
 				cell->place.row = cell->start.row = static_cast<float>(rawObject.cell.mapRow);
-				for (const RawCheck& check : rawObject.cell.checks)
+				for (const WrittenCheck& check : rawObject.cell.checks)
 				{
 					cell->checks.push_back({ check.kind, check.objClass, processCommands(check.commands, "map '" + rawObject.cell.map + "' > <checks> > <" + check.kind + ">"), check.count, check.straight, check.alike });
 				}
@@ -726,7 +726,7 @@ namespace xge
 
 	// makeObject's collisions: on or off, the kind, solid pixels, hitboxes
 	// (its own and each frame's), its edge rules and its rules with others.
-	void Evaluator::buildCollisions(RawObject& rawObject, Object& object, const std::vector<Object::Look>& looks, int thisLockstep, const std::string& where)
+	void Evaluator::buildCollisions(WrittenObject& rawObject, Object& object, const std::vector<Object::Look>& looks, int thisLockstep, const std::string& where)
 	{
 		object.collisionsOn = rawObject.rawCollisionData.enabled;
 		startFor(object).isVisible = object.isVisible;
@@ -752,7 +752,7 @@ namespace xge
 			{
 				throw std::runtime_error(where + ": a <solid char> says which pixels touch, so it needs <type>pixel</type>");
 			}
-			const auto rows = [](const RawSprite& sprite) { return sprite.kind == "bitmap"; };
+			const auto rows = [](const WrittenSprite& sprite) { return sprite.kind == "bitmap"; };
 			if (!rows(rawObject.sprite) || !std::all_of(rawObject.looks.begin(), rawObject.looks.end(), rows)
 				|| !std::all_of(rawObject.animation.frames.begin(), rawObject.animation.frames.end(), rows))
 			{
@@ -762,18 +762,18 @@ namespace xge
 
 		// What it touches with, if not its picture.
 		object.kind->collisionData.hitboxes.clear();
-		for (const RawHitbox& raw : rawObject.rawCollisionData.hitboxes)
+		for (const WrittenHitbox& raw : rawObject.rawCollisionData.hitboxes)
 		{
 			object.kind->collisionData.hitboxes.push_back(makeHitbox(raw, object, where + " > <hitbox>"));
 		}
 		// And each animation frame's own.
-		const auto frameHitboxes = [&](const std::vector<std::vector<RawHitbox>>& written, const std::string& here)
+		const auto frameHitboxes = [&](const std::vector<std::vector<WrittenHitbox>>& written, const std::string& here)
 		{
 			std::vector<std::vector<Hitbox>> made;
-			for (const std::vector<RawHitbox>& frame : written)
+			for (const std::vector<WrittenHitbox>& frame : written)
 			{
 				made.emplace_back();
-				for (const RawHitbox& raw : frame) { made.back().push_back(makeHitbox(raw, object, here + " > <frame> > <hitbox>")); }
+				for (const WrittenHitbox& raw : frame) { made.back().push_back(makeHitbox(raw, object, here + " > <frame> > <hitbox>")); }
 			}
 			return made;
 		};
@@ -787,7 +787,7 @@ namespace xge
 
 		for (std::size_t edge = 0; edge < object.kind->collisionData.edges.size(); ++edge)
 		{
-			const EdgeRules<RawCommand>& raw = rawObject.rawCollisionData.edges[edge];
+			const EdgeRules<WrittenCommand>& raw = rawObject.rawCollisionData.edges[edge];
 			object.kind->collisionData.edges[edge] = { processCommands(raw.commands, where), raw.guards };
 			for (const EdgeGuard& edgeGuard : raw.guards)
 			{
@@ -834,7 +834,7 @@ namespace xge
 	}
 
 	// makeObject's actions.
-	void Evaluator::buildActions(RawObject& rawObject, Object& object, const std::string& where)
+	void Evaluator::buildActions(WrittenObject& rawObject, Object& object, const std::string& where)
 	{
 		for (auto& rawAction : rawObject.action)
 		{

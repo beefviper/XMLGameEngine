@@ -10,12 +10,12 @@ namespace xge
 {
 	// <distribute>: What one holder holds, to others. It makes a <send>'s
 	// command, which runs it.
-	static void readDistribute(const XmlNode& node, const std::string& where, RawCommand& command)
+	static void readDistribute(const XmlNode& node, const std::string& where, WrittenCommand& command)
 	{
 		readSendHeld(node, where, command, false);
 	}
 
-	static Command makeDistribute(const RawCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeDistribute(const WrittenCommand& raw, const ValueEvaluator& evaluate)
 	{
 		return makeSendHeld(raw, evaluate);
 	}

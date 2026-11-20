@@ -15,21 +15,21 @@ namespace xge
 {
 	// <swing>: One eased stroke round its pivot while held, and back when let
 	// go.
-	static void readSwing(const XmlNode& node, const std::string& where, RawCommand& command)
+	static void readSwing(const XmlNode& node, const std::string& where, WrittenCommand& command)
 	{
 		requireAttribute(node, "direction", where);
 		std::unique_ptr<XmlNode> degrees = findChild(&node, "degrees");
 		std::unique_ptr<XmlNode> seconds = findChild(&node, "seconds");
 		if (!degrees || !seconds) { fail(where, "<swing> gives how far it turns as <degrees>, and how long the stroke takes as <seconds>"); }
-		RawSwing& swing = command.own.emplace<RawSwing>();
+		WrittenSwing& swing = command.own.emplace<WrittenSwing>();
 		swing.degrees = readValue(*degrees, where + " > <swing> > <degrees>");
 		swing.seconds = readValue(*seconds, where + " > <swing> > <seconds>");
 	}
 
-	static Command makeSwing(const RawCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeSwing(const WrittenCommand& raw, const ValueEvaluator& evaluate)
 	{
 		const Direction direction = rotationFromName(raw.direction, raw.verb);
-		const RawSwing& written = ownOf<RawSwing>(raw);
+		const WrittenSwing& written = ownOf<WrittenSwing>(raw);
 		const float seconds = evaluate(written.seconds);
 		if (!(seconds > 0.0f)) { throw std::runtime_error("<swing> takes <seconds> of " + formatDisplayNumber(seconds) + "; expected more than 0"); }
 		const float degrees = evaluate(written.degrees);

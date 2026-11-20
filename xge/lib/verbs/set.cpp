@@ -18,20 +18,20 @@
 namespace xge
 {
 	// <set>: Gives a variable, or one of an object's own numbers, a value.
-	static void readSet(const XmlNode& node, const std::string& where, RawCommand& command)
+	static void readSet(const XmlNode& node, const std::string& where, WrittenCommand& command)
 	{
 		requireAttribute(node, "variable", where);
-		command.own = RawSet{ readValue(node, where) };
+		command.own = WrittenSet{ readValue(node, where) };
 	}
 
-	static Command makeSet(const RawCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeSet(const WrittenCommand& raw, const ValueEvaluator& evaluate)
 	{
 		// One of the numbers every object has (ship.velocity.x) is split before
 		// its part, not at its last dot.
 		const std::string part = liveNumberPart(raw.variable);
 		VariableName target = part.empty() ? VariableName::of(raw.variable)
 			: VariableName{ raw.variable.substr(0, raw.variable.size() - part.size() - 1), part };
-		return CmdSet{ std::move(target), evaluate(ownOf<RawSet>(raw).value) };
+		return CmdSet{ std::move(target), evaluate(ownOf<WrittenSet>(raw).value) };
 	}
 
 	static void checkSet(const CmdSet& set, const Checking& checking)

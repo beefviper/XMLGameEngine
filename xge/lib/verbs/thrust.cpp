@@ -11,14 +11,14 @@ namespace xge
 {
 	// <thrust>: A push while held, the way it faces, or with direction= one
 	// way across the screen whatever its heading.
-	static void readThrust(const XmlNode& node, const std::string& where, RawCommand& command)
+	static void readThrust(const XmlNode& node, const std::string& where, WrittenCommand& command)
 	{
-		command.own.emplace<RawThrust>().amount = readValue(node, where);
+		command.own.emplace<WrittenThrust>().amount = readValue(node, where);
 	}
 
-	static Command makeThrust(const RawCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeThrust(const WrittenCommand& raw, const ValueEvaluator& evaluate)
 	{
-		const float amount = evaluate(ownOf<RawThrust>(raw).amount);
+		const float amount = evaluate(ownOf<WrittenThrust>(raw).amount);
 		if (!raw.direction.empty()) { return CmdThrustAcross{ directionFromName(raw.direction, raw.verb), amount, raw.burn }; }
 		return CmdThrust{ amount, raw.burn };
 	}

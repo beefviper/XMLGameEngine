@@ -15,7 +15,7 @@
 namespace xge
 {
 	// <become>: Shows another of its looks, or wears another style's colours.
-	static void readBecome(const XmlNode&, const std::string& where, RawCommand& command)
+	static void readBecome(const XmlNode&, const std::string& where, WrittenCommand& command)
 	{
 		if (command.sprite.empty() && command.style.empty())
 		{
@@ -23,7 +23,7 @@ namespace xge
 		}
 	}
 
-	static Command makeBecome(const RawCommand& raw, const ValueEvaluator&)
+	static Command makeBecome(const WrittenCommand& raw, const ValueEvaluator&)
 	{
 		return CmdBecome{ raw.sprite, raw.object, raw.from, raw.style };
 	}

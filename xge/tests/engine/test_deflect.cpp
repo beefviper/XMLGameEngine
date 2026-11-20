@@ -34,16 +34,16 @@ namespace
 		return executor.run(command, Doer::meeting(self, other, touch));
 	}
 
-	float evaluatePlainNumber(const RawValue& value)
+	float evaluatePlainNumber(const WrittenValue& value)
 	{
 		return std::stof(value.text);
 	}
 
-	RawCommand deflectTag(const std::string& angle)
+	WrittenCommand deflectTag(const std::string& angle)
 	{
-		RawCommand command;
+		WrittenCommand command;
 		command.verb = "deflect";
-		command.own.emplace<RawDeflect>().widest = RawValue::expression(angle);
+		command.own.emplace<WrittenDeflect>().widest = WrittenValue::expression(angle);
 		return command;
 	}
 

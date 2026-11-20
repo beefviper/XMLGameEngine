@@ -33,14 +33,14 @@ namespace xge
 	namespace
 	{
 		// Whether a value says self.
-		bool saysSelf(const RawValue& value)
+		bool saysSelf(const WrittenValue& value)
 		{
-			RawValue probe = value;
+			WrittenValue probe = value;
 			return renameInValue(probe, "self", "self_");
 		}
 
 		// Whether a condition's class= and object= pick the object.
-		bool matchesFilter(const RawCondition& rawCondition, const Object& object)
+		bool matchesFilter(const WrittenCondition& rawCondition, const Object& object)
 		{
 			return (rawCondition.filterClass.empty() || rawCondition.filterClass == object.objClass)
 				&& (rawCondition.filterObject.empty() || object.named(rawCondition.filterObject));
@@ -50,7 +50,7 @@ namespace xge
 		// object it names, at the start of the variables and values it names,
 		// and, as a look, its own name (sprite="self": the look named after
 		// it). Whether it named `from` at all.
-		bool renameIn(RawCommand& command, const std::string& from, const std::string& to)
+		bool renameIn(WrittenCommand& command, const std::string& from, const std::string& to)
 		{
 			bool changed = false;
 			if (command.object == from) { command.object = to; changed = true; }
@@ -63,33 +63,33 @@ namespace xge
 			{
 				changed = renameStart(*text, from, to) || changed;
 			}
-			command.forEachValue([&](RawValue& each) { changed = renameInValue(each, from, to) || changed; });
+			command.forEachValue([&](WrittenValue& each) { changed = renameInValue(each, from, to) || changed; });
 			return changed;
 		}
 
 		// A state's condition's commands for the one it matched (self) among
 		// what it looks at: self made that one, and a command naming the
 		// others made once for each of the rest. Whether they name either.
-		bool forMatched(std::vector<RawCommand>& list, const std::string& self, const std::vector<std::string>& others)
+		bool forMatched(std::vector<WrittenCommand>& list, const std::string& self, const std::vector<std::string>& others)
 		{
 			bool named = false;
-			std::vector<RawCommand> out;
-			for (const RawCommand& command : list)
+			std::vector<WrittenCommand> out;
+			for (const WrittenCommand& command : list)
 			{
-				RawCommand probe = command;
+				WrittenCommand probe = command;
 				if (renameIn(probe, "others", "others_"))
 				{
 					named = true;
 					for (const std::string& other : others)
 					{
-						RawCommand each = command;
+						WrittenCommand each = command;
 						renameIn(each, "others", other);
 						renameIn(each, "self", self);
 						out.push_back(std::move(each));
 					}
 					continue;
 				}
-				RawCommand each = command;
+				WrittenCommand each = command;
 				named = renameIn(each, "self", self) || named;
 				out.push_back(std::move(each));
 			}
@@ -100,23 +100,23 @@ namespace xge
 
 	// What a <condition> tests, made ready (with its <all> or
 	// <any>'s checks, each made the same way).
-	Condition Evaluator::makeTest(const RawCondition& rawCondition, const std::string& where, const std::string& owner, const std::vector<Object>& objects)
+	Condition Evaluator::makeTest(const WrittenCondition& rawCondition, const std::string& where, const std::string& owner, const std::vector<Object>& objects)
 	{
 		return onLine(rawCondition.line, [&] { return makeTestHere(rawCondition, where, owner, objects); });
 	}
 
-	Condition Evaluator::makeTestHere(const RawCondition& rawCondition, const std::string& where, const std::string& owner, const std::vector<Object>& objects)
+	Condition Evaluator::makeTestHere(const WrittenCondition& rawCondition, const std::string& where, const std::string& owner, const std::vector<Object>& objects)
 	{
 		Condition condition;
 		condition.line = rawCondition.line;
 		condition.join = rawCondition.join;
 		for (std::size_t i = 0; i < rawCondition.parts.size(); ++i)
 		{
-			const RawCondition& part = rawCondition.parts[i];
-			const char* kind = part.join == RawCondition::Join::All ? "<all>" : part.join == RawCondition::Join::Any ? "<any>" : "<condition>";
+			const WrittenCondition& part = rawCondition.parts[i];
+			const char* kind = part.join == WrittenCondition::Join::All ? "<all>" : part.join == WrittenCondition::Join::Any ? "<any>" : "<condition>";
 			condition.parts.push_back(makeTest(part, where + " > " + kind + " " + std::to_string(i + 1), owner, objects));
 		}
-		if (condition.join != RawCondition::Join::None)
+		if (condition.join != WrittenCondition::Join::None)
 		{
 			return condition;
 		}
@@ -129,7 +129,7 @@ namespace xge
 		const bool theirs = !otherName.empty() && namesOther(rawCondition);
 		if (own || theirs)
 		{
-			RawCondition named = rawCondition;
+			WrittenCondition named = rawCondition;
 			if (own) { nameSelfInTest(named, selfName); }
 			if (theirs) { nameOtherInTest(named, otherName); }
 			Condition made = makeTestHere(named, where, owner, objects);
@@ -148,7 +148,7 @@ namespace xge
 			}
 			if (saysSelf(rawCondition.threshold) || (theirs && namesLive(rawCondition.threshold)))
 			{
-				made.live = std::make_shared<const RawValue>(rawCondition.threshold);
+				made.live = std::make_shared<const WrittenValue>(rawCondition.threshold);
 				made.where = where;
 				// What it reads of itself, by the names its variables have.
 				const auto sameName = [](const std::string& a, const std::string& b)
@@ -213,15 +213,15 @@ namespace xge
 		// A number that names something that changes is worked out again
 		// each time the condition is tested (Game::testCondition); now, it
 		// may read where things are as 0, as a command's values may.
-		const bool shows = rawCondition.test == RawCondition::Test::Shows || rawCondition.test == RawCondition::Test::Lowest || rawCondition.test == RawCondition::Test::Highest
-			|| rawCondition.test == RawCondition::Test::Sees;
+		const bool shows = rawCondition.test == WrittenCondition::Test::Shows || rawCondition.test == WrittenCondition::Test::Lowest || rawCondition.test == WrittenCondition::Test::Highest
+			|| rawCondition.test == WrittenCondition::Test::Sees;
 		const bool live = !shows && namesLive(rawCondition.threshold);
 		commandValues = live;
 		const float threshold = shows ? 0.0f : evaluate(rawCondition.threshold, where);
 		commandValues = false;
 		if (live)
 		{
-			condition.live = std::make_shared<const RawValue>(rawCondition.threshold);
+			condition.live = std::make_shared<const WrittenValue>(rawCondition.threshold);
 			condition.where = where;
 			const auto sameName = [](const std::string& a, const std::string& b)
 			{
@@ -244,19 +244,19 @@ namespace xge
 		}
 		switch (rawCondition.test)
 		{
-		case RawCondition::Test::AtLeast:   condition.compare = Compare::AtLeast; break;
-		case RawCondition::Test::AtMost:    condition.compare = Compare::AtMost; break;
-		case RawCondition::Test::Above:     condition.compare = Compare::Above; break;
-		case RawCondition::Test::Below:     condition.compare = Compare::Below; break;
-		case RawCondition::Test::Equal:     condition.compare = Compare::Equal; break;
-		case RawCondition::Test::Unequal:   condition.compare = Compare::Unequal; break;
-		case RawCondition::Test::Remaining: condition.remaining = threshold; break;
-		case RawCondition::Test::Shows:     condition.compare = Compare::Shows; break;
-		case RawCondition::Test::Lowest:    condition.compare = Compare::Lowest; break;
-		case RawCondition::Test::Highest:   condition.compare = Compare::Highest; break;
-		case RawCondition::Test::Sees:      condition.compare = Compare::Equal; break;
+		case WrittenCondition::Test::AtLeast:   condition.compare = Compare::AtLeast; break;
+		case WrittenCondition::Test::AtMost:    condition.compare = Compare::AtMost; break;
+		case WrittenCondition::Test::Above:     condition.compare = Compare::Above; break;
+		case WrittenCondition::Test::Below:     condition.compare = Compare::Below; break;
+		case WrittenCondition::Test::Equal:     condition.compare = Compare::Equal; break;
+		case WrittenCondition::Test::Unequal:   condition.compare = Compare::Unequal; break;
+		case WrittenCondition::Test::Remaining: condition.remaining = threshold; break;
+		case WrittenCondition::Test::Shows:     condition.compare = Compare::Shows; break;
+		case WrittenCondition::Test::Lowest:    condition.compare = Compare::Lowest; break;
+		case WrittenCondition::Test::Highest:   condition.compare = Compare::Highest; break;
+		case WrittenCondition::Test::Sees:      condition.compare = Compare::Equal; break;
 		}
-		condition.value = rawCondition.test == RawCondition::Test::Sees ? 1.0f : threshold;
+		condition.value = rawCondition.test == WrittenCondition::Test::Sees ? 1.0f : threshold;
 
 		checkTestNames(rawCondition, condition, where, owner, objects);
 		return condition;
@@ -264,7 +264,7 @@ namespace xge
 
 	// makeTestHere's checks: what a test names (what it sees and what is in
 	// the way, a look, a distance, a variable) is something the game has.
-	void Evaluator::checkTestNames(const RawCondition& rawCondition, const Condition& condition, const std::string& where, const std::string& owner, const std::vector<Object>& objects)
+	void Evaluator::checkTestNames(const WrittenCondition& rawCondition, const Condition& condition, const std::string& where, const std::string& owner, const std::vector<Object>& objects)
 	{
 		// <sees>: what is looked for is there, and so is each class in the way.
 		if (!condition.sees.empty() && !findObject(objects, condition.sees))
@@ -339,22 +339,22 @@ namespace xge
 	// self or others, its commands for each object it may match (the
 	// last test of an <all>'s, as a condition in a condition is), and
 	// they run for each one that holds.
-	Condition Evaluator::makeConditionHere(const RawCondition& rawCondition, const std::string& where, const std::string& owner, const std::string& stateName, const std::vector<Object>& objects)
+	Condition Evaluator::makeConditionHere(const WrittenCondition& rawCondition, const std::string& where, const std::string& owner, const std::string& stateName, const std::vector<Object>& objects)
 	{
 		Condition condition = makeTest(rawCondition, where, owner, objects);
-		std::vector<RawCommand> probe = rawCondition.commands;
+		std::vector<WrittenCommand> probe = rawCondition.commands;
 		if (!forMatched(probe, "self_", { "others_" }))
 		{
 			condition.commands = processCommands(rawCondition.commands, where);
 			return condition;
 		}
-		const RawCondition* test = &rawCondition;
-		while (test->join == RawCondition::Join::All && !test->parts.empty()) { test = &test->parts.back(); }
-		if (test->join != RawCondition::Join::None || (test->filterClass.empty() && test->filterObject.empty()))
+		const WrittenCondition* test = &rawCondition;
+		while (test->join == WrittenCondition::Join::All && !test->parts.empty()) { test = &test->parts.back(); }
+		if (test->join != WrittenCondition::Join::None || (test->filterClass.empty() && test->filterObject.empty()))
 		{
 			throw std::runtime_error(where + ": its commands name self or others, so its test (or the last of its <all>) needs class= or object= to say what they are among");
 		}
-		if (test->total != "" || test->test == RawCondition::Test::Remaining)
+		if (test->total != "" || test->test == WrittenCondition::Test::Remaining)
 		{
 			throw std::runtime_error(where + ": its commands name self or others, but its test is a total of everything matched, so no one object holds it");
 		}
@@ -364,25 +364,25 @@ namespace xge
 			if (matchesFilter(*test, object) && (object.ownerState.empty() || object.ownerState == stateName)) { matched.push_back(object.name); }
 		}
 		// What names self or others runs for each one it holds for; the rest once, after.
-		std::vector<RawCommand> eachOne;
-		std::vector<RawCommand> once;
-		for (const RawCommand& command : rawCondition.commands)
+		std::vector<WrittenCommand> eachOne;
+		std::vector<WrittenCommand> once;
+		for (const WrittenCommand& command : rawCondition.commands)
 		{
-			std::vector<RawCommand> one{ command };
+			std::vector<WrittenCommand> one{ command };
 			(forMatched(one, "self_", { "others_" }) ? eachOne : once).push_back(command);
 		}
 		for (const std::string& self : matched)
 		{
 			std::vector<std::string> others;
 			for (const std::string& other : matched) { if (other != self) { others.push_back(other); } }
-			std::vector<RawCommand> commands = eachOne;
+			std::vector<WrittenCommand> commands = eachOne;
 			forMatched(commands, self, others);
 			condition.each.push_back({ self, processCommands(commands, where) });
 		}
 		condition.commands = processCommands(once, where);
 		return condition;
 	}
-	Condition Evaluator::makeCondition(const RawCondition& rawCondition, const std::string& where, const std::string& owner, const std::string& stateName, const std::vector<Object>& objects)
+	Condition Evaluator::makeCondition(const WrittenCondition& rawCondition, const std::string& where, const std::string& owner, const std::string& stateName, const std::vector<Object>& objects)
 	{
 		return onLine(rawCondition.line, [&] { return makeConditionHere(rawCondition, where, owner, stateName, objects); });
 	}

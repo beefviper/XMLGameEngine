@@ -43,5 +43,5 @@ namespace xge
 	// state before it, a change of an object the copy has not got, and a
 	// copy of a state with scenes stop the load (std::runtime_error). Run
 	// before layOutScenes, so the copies are named by their own state.
-	void takeStates(std::vector<RawState>& states);
+	void takeStates(std::vector<WrittenState>& states);
 }

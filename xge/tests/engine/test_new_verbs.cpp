@@ -31,31 +31,31 @@ namespace
 		return executor.run(command, Doer::meeting(self, other, touch));
 	}
 
-	float evaluatePlainNumber(const RawValue& value)
+	float evaluatePlainNumber(const WrittenValue& value)
 	{
 		return std::stof(value.text);
 	}
 
-	RawCommand tag(const std::string& verb)
+	WrittenCommand tag(const std::string& verb)
 	{
-		RawCommand command;
+		WrittenCommand command;
 		command.verb = verb;
 		return command;
 	}
 
-	RawCommand step(const std::string& verb, const std::string& direction, const std::string& amount)
+	WrittenCommand step(const std::string& verb, const std::string& direction, const std::string& amount)
 	{
-		RawCommand command = tag(verb);
+		WrittenCommand command = tag(verb);
 		command.direction = direction;
-		if (verb == "hop") { command.own.emplace<RawHop>().distance = RawValue::expression(amount); }
-		else { command.own.emplace<RawMove>().step = RawValue::expression(amount); }
+		if (verb == "hop") { command.own.emplace<WrittenHop>().distance = WrittenValue::expression(amount); }
+		else { command.own.emplace<WrittenMove>().step = WrittenValue::expression(amount); }
 		return command;
 	}
 }
 
 TEST_CASE("<dec variable=\"owner.variable\" /> makes a CmdDecrement", "[new_verbs][command_parsing]")
 {
-	RawCommand dec = tag("dec");
+	WrittenCommand dec = tag("dec");
 	dec.variable = "frog.lives";
 
 	const auto commands = makeCommands({ dec, tag("reset") }, evaluatePlainNumber);
@@ -196,16 +196,16 @@ TEST_CASE("a hop and a ride are only for the frame they were asked for", "[new_v
 
 TEST_CASE("<inc> and <dec> change by 1 unless they are given an amount", "[new_verbs][command_parsing]")
 {
-	RawCommand bare = tag("inc");
+	WrittenCommand bare = tag("inc");
 	bare.variable = "frog.score";
 
-	RawCommand five = tag("inc");
+	WrittenCommand five = tag("inc");
 	five.variable = "frog.score";
-	five.own = RawInc{ RawValue::expression("5") };
+	five.own = WrittenInc{ WrittenValue::expression("5") };
 
-	RawCommand three = tag("dec");
+	WrittenCommand three = tag("dec");
 	three.variable = "frog.lives";
-	three.own = RawDec{ RawValue::expression("3") };
+	three.own = WrittenDec{ WrittenValue::expression("3") };
 
 	const auto commands = makeCommands({ bare, five, three }, evaluatePlainNumber);
 

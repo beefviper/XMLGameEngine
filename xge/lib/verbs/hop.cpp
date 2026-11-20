@@ -18,10 +18,10 @@
 namespace xge
 {
 	// <hop>: At once, or with <seconds> through the air.
-	static void readHop(const XmlNode& node, const std::string& where, RawCommand& command)
+	static void readHop(const XmlNode& node, const std::string& where, WrittenCommand& command)
 	{
 		requireAttribute(node, "direction", where);
-		RawHop& hop = command.own.emplace<RawHop>();
+		WrittenHop& hop = command.own.emplace<WrittenHop>();
 		if (findChild(&node, "onto"))
 		{
 			readOnto(node, where + " > <hop>", hop.onto);
@@ -33,9 +33,9 @@ namespace xge
 		}
 	}
 
-	static Command makeHop(const RawCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeHop(const WrittenCommand& raw, const ValueEvaluator& evaluate)
 	{
-		const RawHop& written = ownOf<RawHop>(raw);
+		const WrittenHop& written = ownOf<WrittenHop>(raw);
 		// up-left and the rest: one of up/down, then one of left/right.
 		const std::string& name = raw.direction;
 		const auto dash = name.find('-');

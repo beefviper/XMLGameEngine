@@ -13,7 +13,7 @@
 namespace xge
 {
 	// <order>: Puts what a holder holds in order.
-	static void readOrder(const XmlNode& node, const std::string& where, RawCommand& command)
+	static void readOrder(const XmlNode& node, const std::string& where, WrittenCommand& command)
 	{
 		command.object = requireAttribute(node, "group", where);
 		const std::string here = where + " > <order>";
@@ -24,7 +24,7 @@ namespace xge
 		}
 	}
 
-	static Command makeOrder(const RawCommand& raw, const ValueEvaluator&)
+	static Command makeOrder(const WrittenCommand& raw, const ValueEvaluator&)
 	{
 		return CmdOrder{ raw.object };
 	}

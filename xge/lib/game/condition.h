@@ -42,7 +42,7 @@ namespace xge
 	// (<first>) runs as soon as it holds, before them, and its `commands`
 	// (<otherwise>) when none of them does. flattened() turns those into the
 	// plain list the engine checks.
-	struct RawCondition
+	struct WrittenCondition
 	{
 		enum class Test { AtLeast, AtMost, Remaining, Above, Below, Equal, Shows, Lowest, Highest, Unequal, Sees };
 		enum class Join { None, All, Any };
@@ -59,12 +59,12 @@ namespace xge
 		std::string sees;
 		std::vector<std::string> past;
 		Test test{ Test::AtLeast };
-		RawValue threshold;      // the test tag's number
+		WrittenValue threshold;      // the test tag's number
 		Join join{ Join::None };
-		std::vector<RawCondition> parts; // <all> or <any>: its <condition>s, <all>s and <any>s
-		std::vector<RawCondition> inner; // the conditions it holds, checked while it holds
-		std::vector<RawCommand> first;   // <first>: holding conditions, run before they are checked
-		std::vector<RawCommand> commands; // holding conditions: its <otherwise>
+		std::vector<WrittenCondition> parts; // <all> or <any>: its <condition>s, <all>s and <any>s
+		std::vector<WrittenCondition> inner; // the conditions it holds, checked while it holds
+		std::vector<WrittenCommand> first;   // <first>: holding conditions, run before they are checked
+		std::vector<WrittenCommand> commands; // holding conditions: its <otherwise>
 		std::string name; // name="...": a scene from= this one's can put another in its place
 	};
 
@@ -72,7 +72,7 @@ namespace xge
 	// order: each inner one as an <all> of its holder's test and its own,
 	// its holder's <first> before its commands; then the holder alone with
 	// its <first> and its <otherwise>, if it has either.
-	std::vector<RawCondition> flattened(const std::vector<RawCondition>& conditions);
+	std::vector<WrittenCondition> flattened(const std::vector<WrittenCondition>& conditions);
 
 	// How a condition's variable is compared, and whether `variable` passes
 	// against `against` that way.
@@ -86,7 +86,7 @@ namespace xge
 
 	struct Condition
 	{
-		int line{ 0 }; // RawCondition::line
+		int line{ 0 }; // WrittenCondition::line
 		Name filterClass;
 		// "self": the object testing it (a rule's, an action's), as are
 		// distanceTo and sees; `selfReads` are the variables of its own a
@@ -106,14 +106,14 @@ namespace xge
 		// of a class in `past` (measured as 1, or 0 when it crosses).
 		Name sees;
 		std::vector<Name> past;
-		RawCondition::Join join{ RawCondition::Join::None };
+		WrittenCondition::Join join{ WrittenCondition::Join::None };
 		std::vector<Condition> parts;
 		Compare compare{ Compare::AtLeast };
 		float value{};
 		// A number that names something that changes as the game runs (an
 		// object's variable, where it is: ship.next) is worked out again each
 		// time the condition is tested, from this; value is what it was at load.
-		std::shared_ptr<const RawValue> live;
+		std::shared_ptr<const WrittenValue> live;
 		std::string where;
 		// The objects' variables it names, each with where the expressions
 		// read it from: brought up to date from the object before it is
@@ -145,7 +145,7 @@ namespace xge
 	// made (none until every object is known), and its commands.
 	struct WhenBody
 	{
-		std::shared_ptr<const RawCondition> raw;
+		std::shared_ptr<const WrittenCondition> raw;
 		std::optional<Condition> test;
 		std::vector<Command> commands;
 	};

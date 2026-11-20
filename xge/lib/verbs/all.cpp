@@ -66,13 +66,13 @@ namespace xge
 		return nullptr;
 	}
 
-	VerbNames namesOf(const RawCommand& command) noexcept
+	VerbNames namesOf(const WrittenCommand& command) noexcept
 	{
 		const Verb* verb = findVerb(command.verb);
 		return verb ? verb->names : VerbNames{};
 	}
 
-	bool alwaysLive(const RawCommand& command) noexcept
+	bool alwaysLive(const WrittenCommand& command) noexcept
 	{
 		const Verb* verb = findVerb(command.verb);
 		return verb && verb->alwaysLive;
@@ -118,7 +118,7 @@ namespace xge
 		return owner.form;
 	}
 
-	void printHopParts(std::ostream& out, const RawHop& hop)
+	void printHopParts(std::ostream& out, const WrittenHop& hop)
 	{
 		if (hop.diagonal) { out << hop.diagonal->x << " " << hop.diagonal->y; }
 		else if (hop.distance) { out << *hop.distance; }
@@ -137,18 +137,18 @@ namespace xge
 	}
 
 	// The tag read, readCommand without the line.
-	static RawCommand readCommandHere(const XmlNode& node, const std::string& where);
+	static WrittenCommand readCommandHere(const XmlNode& node, const std::string& where);
 
 	Game& Doer::game() const noexcept { return executor->game; }
 
-	RawCommand readCommand(const XmlNode& node, const std::string& where)
+	WrittenCommand readCommand(const XmlNode& node, const std::string& where)
 	{
 		return onLineOf(node, [&] { return readCommandHere(node, where); });
 	}
 
-	static RawCommand readCommandHere(const XmlNode& node, const std::string& where)
+	static WrittenCommand readCommandHere(const XmlNode& node, const std::string& where)
 	{
-		RawCommand command;
+		WrittenCommand command;
 		command.verb = node.getName();
 		command.line = node.line();
 
@@ -181,7 +181,7 @@ namespace xge
 		return node.getFirstChild() || !readText(node).empty();
 	}
 
-	bool readHopParts(const XmlNode& node, const std::string& where, RawHop& hop)
+	bool readHopParts(const XmlNode& node, const std::string& where, WrittenHop& hop)
 	{
 		const std::string here = where + " > <hop>";
 		if (auto seconds = findChild(&node, "seconds")) { hop.seconds = readValue(*seconds, here); }
@@ -205,7 +205,7 @@ namespace xge
 		}
 		const PartialVector2 step = readPartialVector2(node, where);
 		if (!step.x || !step.y || !readText(node).empty()) { fail(where, "<hop> gives one distance, or an <x> across and a <y> up or down, both"); }
-		hop.diagonal = RawVector2{ *step.x, *step.y };
+		hop.diagonal = WrittenVector2{ *step.x, *step.y };
 		return true;
 	}
 
@@ -242,13 +242,13 @@ namespace xge
 	}
 
 
-	void readSendHeld(const XmlNode& node, const std::string& where, RawCommand& command, bool takesAll)
+	void readSendHeld(const XmlNode& node, const std::string& where, WrittenCommand& command, bool takesAll)
 	{
 		const std::string& verb = command.verb;
 		command.from = requireAttribute(node, "from", where);
 		command.into = requireAttribute(node, "into", where);
 		const std::string here = where + " > <" + verb + ">";
-		RawSend& send = command.own.emplace<RawSend>();
+		WrittenSend& send = command.own.emplace<WrittenSend>();
 		for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
 		{
 			if (child->getName() != "all" || !takesAll) { fail(here, "unknown <" + child->getName() + ">; expected how many" + std::string(takesAll ? ", or <all />" : " each")); }
@@ -258,17 +258,17 @@ namespace xge
 		else if (!readText(node).empty()) { fail(here, "has <all /> and a number; give one"); }
 	}
 
-	bool isWritten(const RawValue& value) noexcept
+	bool isWritten(const WrittenValue& value) noexcept
 	{
-		return !(value.kind == RawValue::Kind::Expression && value.text.empty());
+		return !(value.kind == WrittenValue::Kind::Expression && value.text.empty());
 	}
 
-	float valueOr(const RawValue& value, float otherwise, const ValueEvaluator& evaluate)
+	float valueOr(const WrittenValue& value, float otherwise, const ValueEvaluator& evaluate)
 	{
 		return isWritten(value) ? evaluate(value) : otherwise;
 	}
 
-	float valueOr(const std::optional<RawValue>& value, float otherwise, const ValueEvaluator& evaluate)
+	float valueOr(const std::optional<WrittenValue>& value, float otherwise, const ValueEvaluator& evaluate)
 	{
 		return value ? evaluate(*value) : otherwise;
 	}
@@ -291,7 +291,7 @@ namespace xge
 		throw std::runtime_error("<" + verb + "> has direction=\"" + name + "\"; expected clockwise or counterclockwise");
 	}
 
-	float hopSeconds(const RawHop& hop, const ValueEvaluator& evaluate)
+	float hopSeconds(const WrittenHop& hop, const ValueEvaluator& evaluate)
 	{
 		if (!hop.seconds) { return 0.0f; }
 		const float seconds = evaluate(*hop.seconds);
@@ -299,7 +299,7 @@ namespace xge
 		return seconds;
 	}
 
-	float arcOf(const RawHop& hop, const char* what, float seconds, const ValueEvaluator& evaluate)
+	float arcOf(const WrittenHop& hop, const char* what, float seconds, const ValueEvaluator& evaluate)
 	{
 		if (!hop.arc) { return 0.0f; }
 		if (!(seconds > 0.0f)) { throw std::runtime_error(std::string("<") + what + "> has an <arc> but no <seconds>: only a hop that takes time leaves the ground"); }
@@ -308,18 +308,18 @@ namespace xge
 		return arc;
 	}
 
-	float speedOf(const RawValue& written, const char* what, const ValueEvaluator& evaluate)
+	float speedOf(const WrittenValue& written, const char* what, const ValueEvaluator& evaluate)
 	{
 		const float speed = evaluate(written);
 		if (speed < 0.0f) { throw std::runtime_error(std::string("<") + what + ">: the speed is below 0"); }
 		return speed;
 	}
 
-	Command makeSendHeld(const RawCommand& raw, const ValueEvaluator& evaluate)
+	Command makeSendHeld(const WrittenCommand& raw, const ValueEvaluator& evaluate)
 	{
 		CmdSend send{ raw.object, raw.from, raw.into, std::nullopt, std::nullopt, false, 0, false, {} };
 		send.held = true;
-		const RawSend& written = ownOf<RawSend>(raw);
+		const WrittenSend& written = ownOf<WrittenSend>(raw);
 		send.all = written.all;
 		send.sprite = raw.sprite;
 		if (!written.all)

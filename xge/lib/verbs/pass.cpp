@@ -14,15 +14,15 @@
 namespace xge
 {
 	// <pass>: The turn goes to the next player.
-	static void readPass(const XmlNode& node, const std::string&, RawCommand& command)
+	static void readPass(const XmlNode& node, const std::string&, WrittenCommand& command)
 	{
-		RawPass& own = command.own.emplace<RawPass>();
-		if (!node.getAttribute("member").empty()) { own.member = RawValue::expression(node.getAttribute("member")); }
+		WrittenPass& own = command.own.emplace<WrittenPass>();
+		if (!node.getAttribute("member").empty()) { own.member = WrittenValue::expression(node.getAttribute("member")); }
 	}
 
-	static Command makePass(const RawCommand& raw, const ValueEvaluator& evaluate)
+	static Command makePass(const WrittenCommand& raw, const ValueEvaluator& evaluate)
 	{
-		const std::optional<RawValue>& member = ownOf<RawPass>(raw).member;
+		const std::optional<WrittenValue>& member = ownOf<WrittenPass>(raw).member;
 		if (!member) { return CmdPass{ raw.object, -1 }; }
 		const float number = evaluate(*member);
 		if (number < 0.0f || number != std::floor(number)) { throw std::runtime_error("<pass member=\"" + member->text + "\">: is " + formatDisplayNumber(number) + "; expected a member's number from 1, or 0 for nobody's turn"); }

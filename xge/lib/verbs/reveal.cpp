@@ -15,17 +15,17 @@
 namespace xge
 {
 	// <reveal>: Puts some of an object that is out of play back in.
-	static void readReveal(const XmlNode& node, const std::string& where, RawCommand& command)
+	static void readReveal(const XmlNode& node, const std::string& where, WrittenCommand& command)
 	{
 		requireAttribute(node, "object", where);
 		// How many is optional: a bare <reveal object="..." /> is one.
-		RawReveal& own = command.own.emplace<RawReveal>();
+		WrittenReveal& own = command.own.emplace<WrittenReveal>();
 		if (hasContent(node)) { own.count = readValue(node, where); }
 	}
 
-	static Command makeReveal(const RawCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeReveal(const WrittenCommand& raw, const ValueEvaluator& evaluate)
 	{
-		const std::optional<RawValue>& written = ownOf<RawReveal>(raw).count;
+		const std::optional<WrittenValue>& written = ownOf<WrittenReveal>(raw).count;
 		const int count = written ? static_cast<int>(std::lround(evaluate(*written))) : 1;
 		if (count < 1) { throw std::runtime_error("<reveal> of " + raw.object + " has a count under 1"); }
 		return CmdReveal{ raw.object, count };

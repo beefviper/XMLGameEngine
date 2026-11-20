@@ -109,8 +109,8 @@ TEST_CASE("The size of the engine's things", "[long][size]")
 {
 	std::printf("%-12s %8s\n", "type", "bytes");
 	std::printf("%-12s %8zu\n", "Object", sizeof(xge::Object));
-	std::printf("%-12s %8zu\n", "RawObject", sizeof(xge::RawObject));
-	std::printf("%-12s %8zu\n", "RawCommand", sizeof(xge::RawCommand));
+	std::printf("%-12s %8zu\n", "WrittenObject", sizeof(xge::WrittenObject));
+	std::printf("%-12s %8zu\n", "WrittenCommand", sizeof(xge::WrittenCommand));
 	std::printf("%-12s %8zu\n", "Command", sizeof(xge::Command));
 	std::printf("\n");
 

@@ -12,9 +12,9 @@
 namespace xge
 {
 	// <pick>: Takes up the piece, or the items, under it.
-	static void readPick(const XmlNode& node, const std::string& where, RawCommand& command)
+	static void readPick(const XmlNode& node, const std::string& where, WrittenCommand& command)
 	{
-		RawPick& pick = command.own.emplace<RawPick>();
+		WrittenPick& pick = command.own.emplace<WrittenPick>();
 		for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
 		{
 			if (child->getName() == "most") { pick.most = readCount(*child, where + " > <pick> > <most>"); continue; }
@@ -23,9 +23,9 @@ namespace xge
 		}
 	}
 
-	static Command makePick(const RawCommand& raw, const ValueEvaluator&)
+	static Command makePick(const WrittenCommand& raw, const ValueEvaluator&)
 	{
-		return CmdPick{ raw.objClass, ownOf<RawPick>(raw).only };
+		return CmdPick{ raw.objClass, ownOf<WrittenPick>(raw).only };
 	}
 
 	static bool runPick(const CmdPick& pick, const Doer& doer)

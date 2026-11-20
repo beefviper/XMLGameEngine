@@ -26,19 +26,19 @@ namespace xge
 		return { written.substr(0, dot), written.substr(dot + 1) };
 	}
 
-	Command makeCommand(const RawCommand& raw, const ValueEvaluator& evaluate)
+	Command makeCommand(const WrittenCommand& raw, const ValueEvaluator& evaluate)
 	{
 		const Verb* verb = findVerb(raw.verb);
 		if (!verb) { throw std::runtime_error("unknown command <" + raw.verb + ">"); }
 		return verb->make(raw, evaluate);
 	}
 
-	std::vector<Command> makeCommands(const std::vector<RawCommand>& raw, const ValueEvaluator& evaluate)
+	std::vector<Command> makeCommands(const std::vector<WrittenCommand>& raw, const ValueEvaluator& evaluate)
 	{
 		std::vector<Command> commands;
 		commands.reserve(raw.size());
 
-		for (const RawCommand& rawCommand : raw)
+		for (const WrittenCommand& rawCommand : raw)
 		{
 			commands.push_back(makeCommand(rawCommand, evaluate));
 		}
@@ -133,7 +133,7 @@ namespace xge
 			{ "clamp", "value", "atleast", 0, "clamp", 3, 3, "atmost" },
 			// A <value> and a test of it, the same words as a condition's: 1 or 0.
 			{ "compare", "value", "test", 0, "compare", 2, 2, nullptr, true },
-			// A <random> with an end that is an operation (RawValue::operations).
+			// A <random> with an end that is an operation (WrittenValue::operations).
 			{ "random", "min", "max", 0, "random", 2, 2 },
 		};
 	}
@@ -167,7 +167,7 @@ namespace xge
 
 	namespace
 	{
-		std::string operationText(const RawOperation& operation)
+		std::string operationText(const WrittenOperation& operation)
 		{
 			const OperationShape* shape = operationShape(operation.op);
 			if (shape && shape->compares && operation.operands.size() == 2)
@@ -189,30 +189,30 @@ namespace xge
 		}
 	}
 
-	std::string valueText(const RawValue& value)
+	std::string valueText(const WrittenValue& value)
 	{
 		switch (value.kind)
 		{
-		case RawValue::Kind::Random:
+		case WrittenValue::Kind::Random:
 			if (value.operations && !value.operations->empty()) { return operationText(value.operations->front()); }
 			return "random(" + value.min + ", " + value.max + ")";
 
-		case RawValue::Kind::Centered:
-			if (value.edge != RawValue::Edge::Middle) { return std::string(value.edge == RawValue::Edge::Start ? "start" : "end") + "(offset " + (value.offset.empty() ? std::string("0") : value.offset) + ")"; }
+		case WrittenValue::Kind::Centered:
+			if (value.edge != WrittenValue::Edge::Middle) { return std::string(value.edge == WrittenValue::Edge::Start ? "start" : "end") + "(offset " + (value.offset.empty() ? std::string("0") : value.offset) + ")"; }
 			if (value.operations && !value.operations->empty()) { return "centered(" + operationText(value.operations->front()) + ")"; }
 			return value.offset.empty() ? "centered(" + value.text + ")" : "centered(offset " + value.offset + ")";
 
-		case RawValue::Kind::Formula:
+		case WrittenValue::Kind::Formula:
 			return value.operations && !value.operations->empty() ? operationText(value.operations->front()) : "";
 
-		case RawValue::Kind::Expression:
+		case WrittenValue::Kind::Expression:
 			break;
 		}
 
 		return value.text;
 	}
 
-	std::vector<const std::string*> RawValue::expressions() const
+	std::vector<const std::string*> WrittenValue::expressions() const
 	{
 		if (kind == Kind::Random && !operations) { return { &min, &max }; }
 
@@ -221,9 +221,9 @@ namespace xge
 			std::vector<const std::string*> all;
 			if (operations)
 			{
-				for (const RawOperation& operation : *operations)
+				for (const WrittenOperation& operation : *operations)
 				{
-					for (const RawOperand& operand : operation.operands)
+					for (const WrittenOperand& operand : operation.operands)
 					{
 						for (const std::string* expression : operand.value.expressions()) { all.push_back(expression); }
 					}
@@ -236,13 +236,13 @@ namespace xge
 		return { &text };
 	}
 
-	bool RawValue::drawsRandom() const
+	bool WrittenValue::drawsRandom() const
 	{
 		if (kind == Kind::Random) { return true; }
 		if (!operations) { return false; }
-		for (const RawOperation& operation : *operations)
+		for (const WrittenOperation& operation : *operations)
 		{
-			for (const RawOperand& operand : operation.operands)
+			for (const WrittenOperand& operand : operation.operands)
 			{
 				if (operand.value.drawsRandom()) { return true; }
 			}
@@ -250,17 +250,17 @@ namespace xge
 		return false;
 	}
 
-	std::ostream& operator<<(std::ostream& o, const RawValue& value)
+	std::ostream& operator<<(std::ostream& o, const WrittenValue& value)
 	{
 		return o << valueText(value);
 	}
 
-	std::ostream& operator<<(std::ostream& o, const RawCommand& command)
+	std::ostream& operator<<(std::ostream& o, const WrittenCommand& command)
 	{
 		return o << command.verb;
 	}
 
-	std::ostream& operator<<(std::ostream& o, const std::vector<RawCommand>& commands)
+	std::ostream& operator<<(std::ostream& o, const std::vector<WrittenCommand>& commands)
 	{
 		for (std::size_t i = 0; i < commands.size(); ++i)
 		{
@@ -298,7 +298,7 @@ namespace xge
 		}
 	}
 
-	std::ostream& operator<<(std::ostream& o, const RawCollisionData& f)
+	std::ostream& operator<<(std::ostream& o, const WrittenCollisionData& f)
 	{
 		if (f.type == CollisionType::Pixel) { o << ", type=pixel"; }
 		for (const Edge edge : { Edge::Top, Edge::Bottom, Edge::Left, Edge::Right })
@@ -332,7 +332,7 @@ namespace xge
 		return o;
 	}
 
-	std::ostream& operator<<(std::ostream& o, const RawObject& f) {
+	std::ostream& operator<<(std::ostream& o, const WrittenObject& f) {
 		o << "rawObject: " << "name=" << f.name << (f.groupName.empty() ? "" : ", group=" + f.groupName) << ", sprite=" << f.sprite.kind
 			<< (f.cell.column > 0 ? " (cell " + std::to_string(f.cell.column) + "." + std::to_string(f.cell.row) + ")" : "")
 			<< (f.hasAnimation ? " (animated, " + std::to_string(f.animation.frames.size()) + " frames)" : "") << '\n'

@@ -314,11 +314,11 @@ namespace xge
 
 	void wantPalette(const Checking& checking, const Object& object, const std::string& style)
 	{
-		const std::vector<RawStyle>& styles = checking.styles;
-		if (std::none_of(styles.begin(), styles.end(), [&](const RawStyle& each) { return each.name == style; }))
+		const std::vector<WrittenStyle>& styles = checking.styles;
+		if (std::none_of(styles.begin(), styles.end(), [&](const WrittenStyle& each) { return each.name == style; }))
 		{
 			std::vector<std::string> names;
-			for (const RawStyle& each : styles) { names.push_back(each.name); }
+			for (const WrittenStyle& each : styles) { names.push_back(each.name); }
 			throw std::runtime_error(checking.where + ": <become style=\"" + style + "\" /> names no <style> of the game's <styles>" + didYouMean(style, names));
 		}
 		std::vector<std::string>& list = checking.wanted[object.name];
@@ -645,7 +645,7 @@ namespace xge
 			const std::vector<Object>& objects;
 			const std::vector<SoundDesc>& sounds;
 			const std::map<std::string, Path>& paths;
-			const std::vector<RawStyle>& styles;
+			const std::vector<WrittenStyle>& styles;
 			WantedPalettes& wanted;
 			const Parts& parts;
 
@@ -966,7 +966,7 @@ namespace xge
 	}
 
 	WantedPalettes checkReferences(const Parts& parts, const std::vector<State>& states, const std::vector<Object>& objects, const std::vector<SoundDesc>& sounds,
-		const std::map<std::string, Path>& paths, const std::vector<RawStyle>& styles)
+		const std::map<std::string, Path>& paths, const std::vector<WrittenStyle>& styles)
 	{
 		WantedPalettes wanted;
 		checkObjectNames(parts, objects);

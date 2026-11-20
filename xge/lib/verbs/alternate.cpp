@@ -16,12 +16,12 @@ namespace xge
 {
 	// <alternate>: Starts a game the players take in turn, each with a game
 	// of their own (the arcade way: the machine swaps whole games).
-	static void readAlternate(const XmlNode& node, const std::string& where, RawCommand& command)
+	static void readAlternate(const XmlNode& node, const std::string& where, WrittenCommand& command)
 	{
 		// A <player> for each player, each with the state (if any) that says it
 		// is their turn.
 		const std::string here = where + " > <alternate>";
-		std::vector<std::string>& players = command.own.emplace<RawAlternate>().players;
+		std::vector<std::string>& players = command.own.emplace<WrittenAlternate>().players;
 		for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
 		{
 			if (child->getName() != "player") { fail(here, "unknown <" + child->getName() + ">; expected a <player> for each player"); }
@@ -30,9 +30,9 @@ namespace xge
 		if (players.empty()) { fail(here, "has no <player>; it needs one for each player"); }
 	}
 
-	static Command makeAlternate(const RawCommand& raw, const ValueEvaluator&)
+	static Command makeAlternate(const WrittenCommand& raw, const ValueEvaluator&)
 	{
-		const std::vector<std::string>& players = ownOf<RawAlternate>(raw).players;
+		const std::vector<std::string>& players = ownOf<WrittenAlternate>(raw).players;
 		if (players.empty()) { throw std::runtime_error("<alternate> has no <player>; it needs one for each player"); }
 		return CmdAlternate{ NameStore::program().of(players) };
 	}

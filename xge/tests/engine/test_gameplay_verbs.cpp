@@ -988,7 +988,7 @@ TEST_CASE("<alternate> names the players' states, and goes only where a state's 
 
 TEST_CASE("withDemo writes a <demo> in before </game>, in place of the one there, as the file's lines end", "[demo]")
 {
-	RawDemo demo;
+	WrittenDemo demo;
 	demo.recorded = true;
 	demo.seed = 7;
 	demo.frames = 90;
@@ -1019,7 +1019,7 @@ TEST_CASE("withDemo writes a <demo> in before </game>, in place of the one there
 
 TEST_CASE("a <demo> is read by every XML library, and a <demo /> needs one", "[demo]")
 {
-	RawDemo demo;
+	WrittenDemo demo;
 	demo.recorded = true;
 	demo.seed = 12;
 	demo.frames = 60;
@@ -1029,7 +1029,7 @@ TEST_CASE("a <demo> is read by every XML library, and a <demo /> needs one", "[d
 	for (const XmlBackend backend : { XmlBackend::Xerces, XmlBackend::TinyXml2, XmlBackend::PugiXml, XmlBackend::RapidXml })
 	{
 		Loaded loaded(withDemo(game, demo), backend);
-		const RawDemo& read = loaded.game.getDemo();
+		const WrittenDemo& read = loaded.game.getDemo();
 		CHECK(read.recorded);
 		CHECK(read.seed == 12u);
 		CHECK(read.frames == 60u);

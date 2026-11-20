@@ -9,7 +9,7 @@
 namespace xge
 {
 	// <settle>: A falling shape becomes part of its map.
-	static Command makeSettle(const RawCommand&, const ValueEvaluator&)
+	static Command makeSettle(const WrittenCommand&, const ValueEvaluator&)
 	{
 		return CmdSettle{};
 	}

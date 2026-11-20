@@ -102,7 +102,7 @@ namespace xge
 	{
 	}
 
-	RawDemo readDemo(const std::string& filename, XmlBackend backend)
+	WrittenDemo readDemo(const std::string& filename, XmlBackend backend)
 	{
 		std::unique_ptr<XmlDocument> document = XmlDocumentFactory::create(backend);
 		if (!document->load(filename))
@@ -121,7 +121,7 @@ namespace xge
 		throw std::runtime_error(filename + " has no <demo>: a keys file is a <demo> as --record writes one, or a game file holding one");
 	}
 
-	std::string withDemo(const std::string& gameText, const RawDemo& demo)
+	std::string withDemo(const std::string& gameText, const WrittenDemo& demo)
 	{
 		std::ostringstream element;
 		element << "  <demo>\n"

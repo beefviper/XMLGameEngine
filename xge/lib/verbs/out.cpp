@@ -9,7 +9,7 @@
 namespace xge
 {
 	// <out>: The player whose turn it is has finished.
-	static Command makeOut(const RawCommand&, const ValueEvaluator&)
+	static Command makeOut(const WrittenCommand&, const ValueEvaluator&)
 	{
 		return CmdOut{};
 	}

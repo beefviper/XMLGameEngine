@@ -13,18 +13,18 @@
 namespace xge
 {
 	// <move>: A step: held in an action, one step anywhere else.
-	static void readMove(const XmlNode& node, const std::string& where, RawCommand& command)
+	static void readMove(const XmlNode& node, const std::string& where, WrittenCommand& command)
 	{
 		// Its step, then on a cell map how long it waits before it repeats.
 		requireAttribute(node, "direction", where);
-		RawMove& move = command.own.emplace<RawMove>();
+		WrittenMove& move = command.own.emplace<WrittenMove>();
 		move.step = readLeadValue(node, { "wait" }, "its step, then <wait> if wanted", where);
 		if (auto wait = findChild(&node, "wait")) { move.wait = readValue(*wait, where + " > <move>"); }
 	}
 
-	static Command makeMove(const RawCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeMove(const WrittenCommand& raw, const ValueEvaluator& evaluate)
 	{
-		const RawMove& written = ownOf<RawMove>(raw);
+		const WrittenMove& written = ownOf<WrittenMove>(raw);
 		CmdMove move{ directionFromName(raw.direction, raw.verb), evaluate(written.step) };
 		if (written.wait)
 		{

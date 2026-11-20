@@ -11,16 +11,16 @@ namespace xge
 {
 	// <count>: How many of a class there are, or lie about it, into a
 	// variable.
-	static void readCount(const XmlNode& node, const std::string& where, RawCommand& command)
+	static void readCount(const XmlNode& node, const std::string& where, WrittenCommand& command)
 	{
 		requireAttribute(node, "class", where);
 		requireAttribute(node, "into", where);
-		if (node.getFirstChild()) { command.own.emplace<RawCount>().cells = readCellPlace(node, where + " > <count>"); }
+		if (node.getFirstChild()) { command.own.emplace<WrittenCount>().cells = readCellPlace(node, where + " > <count>"); }
 	}
 
-	static Command makeCount(const RawCommand& raw, const ValueEvaluator&)
+	static Command makeCount(const WrittenCommand& raw, const ValueEvaluator&)
 	{
-		return CmdCount{ raw.objClass, VariableName::of(raw.into), ownOf<RawCount>(raw).cells };
+		return CmdCount{ raw.objClass, VariableName::of(raw.into), ownOf<WrittenCount>(raw).cells };
 	}
 
 	static bool runCount(const CmdCount& count, const Doer& doer)

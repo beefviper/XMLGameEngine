@@ -54,7 +54,7 @@ namespace xge
 		const std::vector<Object>& objects;
 		const std::vector<SoundDesc>& sounds;
 		const std::map<std::string, Path>& paths;
-		const std::vector<RawStyle>& styles;
+		const std::vector<WrittenStyle>& styles;
 		WantedPalettes& wanted;
 		const std::string& where;
 		const Parts& parts;
@@ -86,5 +86,5 @@ namespace xge
 	// names it uses and for being in a place where it does something
 	// (the places of its verb, verbs/verb.h); hands back the palettes the <become style>s ask for.
 	WantedPalettes checkReferences(const Parts& parts, const std::vector<State>& states, const std::vector<Object>& objects, const std::vector<SoundDesc>& sounds,
-		const std::map<std::string, Path>& paths, const std::vector<RawStyle>& styles);
+		const std::map<std::string, Path>& paths, const std::vector<WrittenStyle>& styles);
 }

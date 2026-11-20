@@ -9,7 +9,7 @@
 namespace xge
 {
 	// <undo>: Takes back the last move on the cells.
-	static Command makeUndo(const RawCommand&, const ValueEvaluator&)
+	static Command makeUndo(const WrittenCommand&, const ValueEvaluator&)
 	{
 		return CmdUndo{};
 	}

@@ -111,8 +111,8 @@ namespace xge
 
 	// <random><min>..</min><max>..</max></random>: each end an expression
 	// or an operation. With an operation end, the two ends are kept as one
-	// operation "random" (see RawValue::operations).
-	RawValue readRandom(const XmlNode& tag, const std::string& here);
+	// operation "random" (see WrittenValue::operations).
+	WrittenValue readRandom(const XmlNode& tag, const std::string& here);
 
 	// Whether text is a plain number (`2`, `-130`, `0.5`, `1e3`): digits, a
 	// sign, a point and an exponent, nothing else, so that "inf" and "0x10"
@@ -129,38 +129,38 @@ namespace xge
 
 	// An operand of an operation: <value>window.width.center</value>, or an
 	// operation in place of the name, or a <random>.
-	RawValue readFormulaOperand(const XmlNode& node, const std::string& where);
+	WrittenValue readFormulaOperand(const XmlNode& node, const std::string& where);
 
 	// <subtract><value>a</value><value>b</value><value>c</value></subtract>:
 	// the first operand, then the others taken from it one after another.
-	RawOperation readFormulaOperation(const XmlNode& node, const OperationShape& shape, const std::string& where);
+	WrittenOperation readFormulaOperation(const XmlNode& node, const OperationShape& shape, const std::string& where);
 
 	// Whether a tag is an operation (<add>, <clamp>, ...; not <random>).
 	bool isOperation(const std::string& tag);
 
 	// An operation written straight in a value: <x><subtract><value>window.right
 	// </value><value>4</value></subtract></x>, a value of kind Formula.
-	RawValue readOperation(const XmlNode& tag, const std::string& where);
+	WrittenValue readOperation(const XmlNode& tag, const std::string& where);
 
 	// A number, written either as an expression (the text of the element) or
-	// as one value tag inside it - see RawValue - and whether it is
+	// as one value tag inside it - see WrittenValue - and whether it is
 	// update="live".
-	RawValue readValue(const XmlNode& node, const std::string& where);
+	WrittenValue readValue(const XmlNode& node, const std::string& where);
 
-	RawValue readValueOf(const XmlNode& parent, const std::string& name, const std::string& where);
+	WrittenValue readValueOf(const XmlNode& parent, const std::string& name, const std::string& where);
 
 	// The one number a verb holds as its content, as text or a value tag,
 	// beside the named parts it may also have (`parts`, with `expected`
 	// saying them for the message): <chase object="ship">2<near>40</near></chase>.
-	RawValue readLeadValue(const XmlNode& node, std::initializer_list<const char*> parts, const std::string& expected, const std::string& where);
+	WrittenValue readLeadValue(const XmlNode& node, std::initializer_list<const char*> parts, const std::string& expected, const std::string& where);
 
 	// Some of an <x>/<y> pair. A <group> gives what its members share and a
 	// <member> only what differs, so either half may be left out of either;
 	// an object's <velocity> may leave out a half that is 0.
 	struct PartialVector2
 	{
-		std::optional<RawValue> x;
-		std::optional<RawValue> y;
+		std::optional<WrittenValue> x;
+		std::optional<WrittenValue> y;
 	};
 
 	PartialVector2 readPartialVector2(const XmlNode& node, const std::string& where);

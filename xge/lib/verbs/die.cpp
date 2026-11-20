@@ -9,7 +9,7 @@
 namespace xge
 {
 	// <die>: Out of play until something puts it back.
-	static Command makeDie(const RawCommand&, const ValueEvaluator&)
+	static Command makeDie(const WrittenCommand&, const ValueEvaluator&)
 	{
 		return CmdDie{};
 	}

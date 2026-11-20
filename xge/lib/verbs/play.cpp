@@ -11,12 +11,12 @@
 namespace xge
 {
 	// <play>: A sound; one that loops stops when its key is let go.
-	static void readPlay(const XmlNode& node, const std::string& where, RawCommand&)
+	static void readPlay(const XmlNode& node, const std::string& where, WrittenCommand&)
 	{
 		requireAttribute(node, "sound", where);
 	}
 
-	static Command makePlay(const RawCommand& raw, const ValueEvaluator&)
+	static Command makePlay(const WrittenCommand& raw, const ValueEvaluator&)
 	{
 		return CmdPlay{ raw.sound };
 	}

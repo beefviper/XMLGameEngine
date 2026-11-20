@@ -16,15 +16,15 @@ namespace xge
 {
 	// <bounce>: Off what it touched, or off the window's edge, keeping a share
 	// of its speed.
-	static void readBounce(const XmlNode& node, const std::string& where, RawCommand& command)
+	static void readBounce(const XmlNode& node, const std::string& where, WrittenCommand& command)
 	{
-		RawBounce& bounce = command.own.emplace<RawBounce>();
+		WrittenBounce& bounce = command.own.emplace<WrittenBounce>();
 		if (hasContent(node)) { bounce.share = readValue(node, where); }
 	}
 
-	static Command makeBounce(const RawCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeBounce(const WrittenCommand& raw, const ValueEvaluator& evaluate)
 	{
-		const RawBounce& bounce = ownOf<RawBounce>(raw);
+		const WrittenBounce& bounce = ownOf<WrittenBounce>(raw);
 		const float share = valueOr(bounce.share, 1.0f, evaluate);
 		if (!(share >= 0.0f))
 		{

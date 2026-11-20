@@ -294,12 +294,12 @@ namespace xge
 
 		// A value worked out now, from where everything is and how it is
 		// going (see Evaluator::liveNumbers), and every variable as it is.
-		float evaluateNow(const RawValue& value, const std::string& where);
+		float evaluateNow(const WrittenValue& value, const std::string& where);
 		// The same for a value of that object's, saying it is the object's.
-		float evaluateFor(const RawValue& value, const Object& object);
+		float evaluateFor(const WrittenValue& value, const Object& object);
 		// A path step's half that names something that changes, worked out
 		// for the follower as the step sets off (self is the follower).
-		float stepHalf(const RawValue& value, const Object& follower);
+		float stepHalf(const WrittenValue& value, const Object& follower);
 
 		// A command that reads something that changes (CmdLive), made again
 		// from what is so now. A value that cannot be worked out (a division
@@ -307,7 +307,7 @@ namespace xge
 		// was made at load, with one warning.
 		Command makeNow(const CmdLive& live, const Object* self, const Object* other);
 		// What makeNow names self and other in.
-		std::vector<RawCommand> ownCommands;
+		std::vector<WrittenCommand> ownCommands;
 
 		// <set variable="target">: a variable of an object's (owner.name), or
 		// one of the numbers every object has (owner.x, owner.y,
@@ -456,8 +456,8 @@ namespace xge
 		void beginStep(float seconds) noexcept { stepSeconds = seconds; }
 		float stepTime() const noexcept { return stepSeconds; }
 
-		// The game's recorded <demo> (RawDemo::recorded false for none).
-		const RawDemo& getDemo(void) const noexcept { return demo; }
+		// The game's recorded <demo> (WrittenDemo::recorded false for none).
+		const WrittenDemo& getDemo(void) const noexcept { return demo; }
 
 		// <demo />: asks for the demo to play; Engine, which has the keys,
 		// plays it (takeDemoRequest).
@@ -956,15 +956,15 @@ namespace xge
 		// only ever read back by printGame().
 		std::string validation;
 
-		std::vector<std::pair<std::string, RawValue>> rawVariables;
+		std::vector<std::pair<std::string, WrittenValue>> rawVariables;
 		std::map<std::string, float> variables;
-		std::vector<RawState> rawStates;
+		std::vector<WrittenState> rawStates;
 		std::vector<State> states;
-		std::vector<RawObject> rawObjects;
+		std::vector<WrittenObject> rawObjects;
 		std::vector<Object> objects;
-		std::vector<RawSound> rawSounds;
+		std::vector<WrittenSound> rawSounds;
 		std::vector<SoundDesc> sounds;
-		std::vector<RawPath> rawPaths;
+		std::vector<WrittenPath> rawPaths;
 		std::vector<Patterns> patterns;
 		std::map<std::string, Path> paths;
 		std::vector<std::string> soundRequests;
@@ -994,7 +994,7 @@ namespace xge
 		// What the file says of each copy, under the copy's name (what
 		// drawStartAgain draws a <random> from), and, for a group spawned
 		// from, which of its members is next.
-		std::map<std::string, RawObject> copyRaws;
+		std::map<std::string, WrittenObject> copyRaws;
 		std::map<Name, std::size_t> spawnTurns;
 		std::map<std::string, bool> descriptions;
 
@@ -1023,7 +1023,7 @@ namespace xge
 		std::unordered_map<std::pair<Name, Name>, std::vector<std::size_t>, ByTwoNames> filtered;
 		const std::vector<std::size_t>& matching(Name filterClass, Name filterObject);
 		unsigned long resets = 0;
-		RawDemo demo;
+		WrittenDemo demo;
 		bool demoAsked = false;
 		float stepSeconds = kSixtieth;
 

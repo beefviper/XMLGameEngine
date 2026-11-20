@@ -16,17 +16,17 @@ namespace xge
 {
 	// <aim>: Faces another object; with <lined>, refused unless it is lined
 	// up.
-	static void readAim(const XmlNode& node, const std::string& where, RawCommand& command)
+	static void readAim(const XmlNode& node, const std::string& where, WrittenCommand& command)
 	{
 		// Optionally only when lined up, within so many pixels.
 		requireAttribute(node, "object", where);
-		RawAim& aim = command.own.emplace<RawAim>();
+		WrittenAim& aim = command.own.emplace<WrittenAim>();
 		if (auto lined = findChild(&node, "lined")) { aim.lined = readValue(*lined, where + " > <aim>"); }
 	}
 
-	static Command makeAim(const RawCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeAim(const WrittenCommand& raw, const ValueEvaluator& evaluate)
 	{
-		const std::optional<RawValue>& written = ownOf<RawAim>(raw).lined;
+		const std::optional<WrittenValue>& written = ownOf<WrittenAim>(raw).lined;
 		const bool lined = written.has_value();
 		const float within = lined ? evaluate(*written) : 0.0f;
 		if (within < 0.0f) { throw std::runtime_error("<aim object=\"" + raw.object + "\">: the <lined> is below 0"); }

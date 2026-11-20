@@ -90,7 +90,7 @@ namespace xge
 	};
 
 	// --- Command: what a command tag in the XML becomes once it is loaded.
-	// makeCommand() (game/command.cpp) is the one place that turns a RawCommand
+	// makeCommand() (game/command.cpp) is the one place that turns a WrittenCommand
 	// into one of these.
 
 	// <bounce />, <bounce>0.7</bounce>: off what it touched, mirrored about
@@ -882,8 +882,8 @@ namespace xge
 		bool avoid{ false };   // <avoid />: a card player that keeps out of tricks
 	};
 
-	struct RawCommand;
-	struct RawCondition;
+	struct WrittenCommand;
+	struct WrittenCondition;
 	struct LoadedCommand;
 
 	// A command whose numbers name something that changes while the game
@@ -896,7 +896,7 @@ namespace xge
 	// (`namesOther`), for the one it touched.
 	struct CmdLive
 	{
-		std::shared_ptr<const RawCommand> raw;
+		std::shared_ptr<const WrittenCommand> raw;
 		std::shared_ptr<const LoadedCommand> loaded;
 		std::string where;
 		bool namesSelf{ false };
@@ -919,7 +919,7 @@ namespace xge
 
 	// --- What the XML says, before any of it is evaluated.
 
-	struct RawOperation;
+	struct WrittenOperation;
 
 	// A value in the XML: an element's content wherever a number is wanted.
 	// It is one of
@@ -939,7 +939,7 @@ namespace xge
 	// load/expr evaluates it (see load/expr::evaluate), so a new kind of value
 	// tag is one more Kind here, one more case in load/xml's readValue and one
 	// more in load/expr's evaluate.
-	struct RawValue
+	struct WrittenValue
 	{
 		enum class Kind { Expression, Random, Formula, Centered };
 
@@ -969,16 +969,16 @@ namespace xge
 		// is. Random with an end that is an operation: one operation "random"
 		// of two operands, `min` and `max` (each an expression or an operation),
 		// and min and max above left empty.
-		std::shared_ptr<const std::vector<RawOperation>> operations;
+		std::shared_ptr<const std::vector<WrittenOperation>> operations;
 
 		// update="live": worked out again every frame from what it reads, not
 		// once as the game loads. Only an object's <variable>, the halves of
 		// its <position> and its <heading> take it (Object::follows).
 		bool live{ false };
 
-		static RawValue expression(std::string text)
+		static WrittenValue expression(std::string text)
 		{
-			RawValue value;
+			WrittenValue value;
 			value.text = std::move(text);
 			return value;
 		}
@@ -994,19 +994,19 @@ namespace xge
 		bool drawsRandom() const;
 	};
 
-	// An <x>/<y> pair, each still a RawValue.
-	struct RawVector2
+	// An <x>/<y> pair, each still a WrittenValue.
+	struct WrittenVector2
 	{
-		RawValue x;
-		RawValue y;
+		WrittenValue x;
+		WrittenValue y;
 	};
 
 	// One operand of an operation: the number it is, and the role it plays
 	// (`value`, or a test word such as `atleast`; see operationShape).
-	struct RawOperand
+	struct WrittenOperand
 	{
 		std::string role;
-		RawValue value;
+		WrittenValue value;
 	};
 
 	// One arithmetic operation: `op` is the tag (add,
@@ -1014,10 +1014,10 @@ namespace xge
 	// first operand of the four arithmetic ones is combined with each of the
 	// others in turn, left to right, so that `a - b - c` is one subtract with
 	// three values.
-	struct RawOperation
+	struct WrittenOperation
 	{
 		std::string op;
-		std::vector<RawOperand> operands;
+		std::vector<WrittenOperand> operands;
 	};
 
 	// What an arithmetic tag is: its name, the role of its first operand and of
@@ -1060,7 +1060,7 @@ namespace xge
 
 	// A value as one line of text, the way a game is printed: an expression as
 	// written, an operation tree in infix with its brackets.
-	std::string valueText(const RawValue& value);
+	std::string valueText(const WrittenValue& value);
 
 	// A <sound> as written (load/xml.cpp reads it, and load/expr.cpp turns it
 	// into a SoundDesc, audio/sound.h).
@@ -1068,40 +1068,40 @@ namespace xge
 	// One <note> or <rest> as written: <note pitch="C5" to="C6" wave="noise">0.1</note>.
 	// wave, pitch and to are left as the words in the file; length is a value
 	// (an expression or a value tag), in seconds.
-	struct RawNote
+	struct WrittenNote
 	{
 		bool rest{ false };
 		std::string wave;   // "" means the sound's own
 		std::string pitch;
 		std::string to;     // "" means no slide
-		RawValue length;
+		WrittenValue length;
 		unsigned part{ 0 }; // which <part> it is in, from 0 (0 for a sound of one part)
-		RawValue decay;     // its sound's or part's <decay>; empty text for none
+		WrittenValue decay;     // its sound's or part's <decay>; empty text for none
 	};
 
 	// One <sound name="..." wave="square"> as written; volume is empty text
 	// when the sound gives no <volume>.
-	struct RawSound
+	struct WrittenSound
 	{
 		std::string name;
 		std::string wave;   // "" means square
 		bool loop{ false }; // <loop />
-		RawValue volume;
-		std::vector<RawNote> notes;
+		WrittenValue volume;
+		std::vector<WrittenNote> notes;
 		std::string path;   // a recording (<path>), in place of notes
 	};
 
 	// --- A verb's own data as written: what its tag says besides the names
 	// every command may have, each part named for what it is there and a
 	// std::optional when it may be left out. A struct is named for its tag
-	// (RawInc for <inc>). A verb without one yet reads into RawCommand's
+	// (WrittenInc for <inc>). A verb without one yet reads into WrittenCommand's
 	// shared fields (plan CR7). values() lists its numbers, for
-	// RawCommand::forEachValue.
+	// WrittenCommand::forEachValue.
 
 	// <bounce>N</bounce>: the share of its speed it keeps; left out, all.
-	struct RawBounce
+	struct WrittenBounce
 	{
-		std::optional<RawValue> share;
+		std::optional<WrittenValue> share;
 		static auto values(auto& own) { return std::tie(own.share); }
 	};
 
@@ -1110,12 +1110,12 @@ namespace xge
 	// <arc> it is drawn off its way (left out: none). On cells, its <onto
 	// class>es: what it may land on (nothing else written: one cell). A
 	// <hunt>'s <hop> is one too, its direction chosen as it hunts.
-	struct RawHop
+	struct WrittenHop
 	{
-		std::optional<RawValue> distance;
-		std::optional<RawVector2> diagonal;
-		std::optional<RawValue> seconds;
-		std::optional<RawValue> arc;
+		std::optional<WrittenValue> distance;
+		std::optional<WrittenVector2> diagonal;
+		std::optional<WrittenValue> seconds;
+		std::optional<WrittenValue> arc;
 		std::vector<std::string> onto;
 		static auto values(auto& own) { return std::tie(own.distance, own.diagonal, own.seconds, own.arc); }
 	};
@@ -1125,21 +1125,21 @@ namespace xge
 	// <row>, or <free /> with the row it goes <below>), how it is going
 	// (<velocity>, <acceleration>), each half left out when not written; and
 	// of a group, <random /> or the <member> of that number.
-	struct RawSpawn
+	struct WrittenSpawn
 	{
-		std::optional<RawValue> count;
-		std::optional<RawValue> positionX;
-		std::optional<RawValue> positionY;
-		std::optional<RawValue> velocityX;
-		std::optional<RawValue> velocityY;
-		std::optional<RawValue> accelerationX;
-		std::optional<RawValue> accelerationY;
-		std::optional<RawValue> column;
-		std::optional<RawValue> row;
+		std::optional<WrittenValue> count;
+		std::optional<WrittenValue> positionX;
+		std::optional<WrittenValue> positionY;
+		std::optional<WrittenValue> velocityX;
+		std::optional<WrittenValue> velocityY;
+		std::optional<WrittenValue> accelerationX;
+		std::optional<WrittenValue> accelerationY;
+		std::optional<WrittenValue> column;
+		std::optional<WrittenValue> row;
 		bool free{ false };
-		std::optional<RawValue> freeBelow;
+		std::optional<WrittenValue> freeBelow;
 		bool random{ false };
-		std::optional<RawValue> member;
+		std::optional<WrittenValue> member;
 		static auto values(auto& own)
 		{
 			return std::tie(own.count, own.positionX, own.positionY, own.velocityX, own.velocityY, own.accelerationX, own.accelerationY,
@@ -1148,123 +1148,123 @@ namespace xge
 	};
 
 	// <inc variable="...">N</inc> and <dec>: by how much; left out, 1.
-	struct RawInc { std::optional<RawValue> by; static auto values(auto& own) { return std::tie(own.by); } };
-	struct RawDec { std::optional<RawValue> by; static auto values(auto& own) { return std::tie(own.by); } };
+	struct WrittenInc { std::optional<WrittenValue> by; static auto values(auto& own) { return std::tie(own.by); } };
+	struct WrittenDec { std::optional<WrittenValue> by; static auto values(auto& own) { return std::tie(own.by); } };
 
 	// <set variable="...">N</set>: what it is set to.
-	struct RawSet { RawValue value; static auto values(auto& own) { return std::tie(own.value); } };
+	struct WrittenSet { WrittenValue value; static auto values(auto& own) { return std::tie(own.value); } };
 
 	// <jump>N</jump>: how high.
-	struct RawJump { RawValue height; static auto values(auto& own) { return std::tie(own.height); } };
+	struct WrittenJump { WrittenValue height; static auto values(auto& own) { return std::tie(own.height); } };
 
 	// <knock>N</knock>: how much of the knock bounces back, 0 to 1; left out, all.
-	struct RawKnock { std::optional<RawValue> bounce; static auto values(auto& own) { return std::tie(own.bounce); } };
+	struct WrittenKnock { std::optional<WrittenValue> bounce; static auto values(auto& own) { return std::tie(own.bounce); } };
 
 	// <pass member="N" />: whose turn it is next; left out, the next player's.
-	struct RawPass { std::optional<RawValue> member; static auto values(auto& own) { return std::tie(own.member); } };
+	struct WrittenPass { std::optional<WrittenValue> member; static auto values(auto& own) { return std::tie(own.member); } };
 
 	// <reveal object="...">N</reveal>: how many are turned up; left out, one.
-	struct RawReveal { std::optional<RawValue> count; static auto values(auto& own) { return std::tie(own.count); } };
+	struct WrittenReveal { std::optional<WrittenValue> count; static auto values(auto& own) { return std::tie(own.count); } };
 
 	// <go>, <wander> and <climb>: how fast, in pixels a second.
-	struct RawGo { RawValue speed; static auto values(auto& own) { return std::tie(own.speed); } };
-	struct RawWander { RawValue speed; static auto values(auto& own) { return std::tie(own.speed); } };
-	struct RawClimb { RawValue speed; static auto values(auto& own) { return std::tie(own.speed); } };
+	struct WrittenGo { WrittenValue speed; static auto values(auto& own) { return std::tie(own.speed); } };
+	struct WrittenWander { WrittenValue speed; static auto values(auto& own) { return std::tie(own.speed); } };
+	struct WrittenClimb { WrittenValue speed; static auto values(auto& own) { return std::tie(own.speed); } };
 
 	// <follow path="..."><stagger>s</stagger><nearest>N</nearest></follow>:
 	// the seconds between each one setting off, and how many nearest set
 	// off (left out: all).
-	struct RawFollow { std::optional<RawValue> stagger, nearest; static auto values(auto& own) { return std::tie(own.stagger, own.nearest); } };
+	struct WrittenFollow { std::optional<WrittenValue> stagger, nearest; static auto values(auto& own) { return std::tie(own.stagger, own.nearest); } };
 
 	// <move direction="...">step<wait>s</wait></move>.
-	struct RawMove { RawValue step; std::optional<RawValue> wait; static auto values(auto& own) { return std::tie(own.step, own.wait); } };
+	struct WrittenMove { WrittenValue step; std::optional<WrittenValue> wait; static auto values(auto& own) { return std::tie(own.step, own.wait); } };
 
 	// <turn direction="...">degrees a second</turn>; left out on a cell map.
-	struct RawTurn { std::optional<RawValue> rate; static auto values(auto& own) { return std::tie(own.rate); } };
+	struct WrittenTurn { std::optional<WrittenValue> rate; static auto values(auto& own) { return std::tie(own.rate); } };
 
 	// <thrust>N</thrust>: how hard it pushes.
-	struct RawThrust { RawValue amount; static auto values(auto& own) { return std::tie(own.amount); } };
+	struct WrittenThrust { WrittenValue amount; static auto values(auto& own) { return std::tie(own.amount); } };
 
 	// <deflect>degrees</deflect>: the widest angle it goes back off at.
-	struct RawDeflect { RawValue widest; static auto values(auto& own) { return std::tie(own.widest); } };
+	struct WrittenDeflect { WrittenValue widest; static auto values(auto& own) { return std::tie(own.widest); } };
 
 	// <hole>radius<rough>share</rough></hole>.
-	struct RawHole { RawValue radius; std::optional<RawValue> rough; static auto values(auto& own) { return std::tie(own.radius, own.rough); } };
+	struct WrittenHole { WrittenValue radius; std::optional<WrittenValue> rough; static auto values(auto& own) { return std::tie(own.radius, own.rough); } };
 
 	// <swing><degrees>N</degrees><seconds>s</seconds></swing>.
-	struct RawSwing { RawValue degrees, seconds; static auto values(auto& own) { return std::tie(own.degrees, own.seconds); } };
+	struct WrittenSwing { WrittenValue degrees, seconds; static auto values(auto& own) { return std::tie(own.degrees, own.seconds); } };
 
 	// <chase object="...">speed<near>N</near></chase>.
-	struct RawChase { RawValue speed; std::optional<RawValue> near; static auto values(auto& own) { return std::tie(own.speed, own.near); } };
+	struct WrittenChase { WrittenValue speed; std::optional<WrittenValue> near; static auto values(auto& own) { return std::tie(own.speed, own.near); } };
 
 	// <aim object="..."><lined>N</lined></aim>: only when lined up within N.
-	struct RawAim { std::optional<RawValue> lined; static auto values(auto& own) { return std::tie(own.lined); } };
+	struct WrittenAim { std::optional<WrittenValue> lined; static auto values(auto& own) { return std::tie(own.lined); } };
 
 	// <shift object="..."><x>N</x><y>N</y></shift>: by how far.
-	struct RawShift { std::optional<RawValue> x, y; static auto values(auto& own) { return std::tie(own.x, own.y); } };
+	struct WrittenShift { std::optional<WrittenValue> x, y; static auto values(auto& own) { return std::tie(own.x, own.y); } };
 
 	// <hunt object="...">speed<ahead>N</ahead><with object="..." />
 	// <retreat object="...">N</retreat><search /></hunt> in a maze (a hunt
-	// by hops is a RawHop): tiles ahead of the one hunted, a partner, what
+	// by hops is a WrittenHop): tiles ahead of the one hunted, a partner, what
 	// it backs off to within that many tiles, and the shortest way.
-	struct RawHunt
+	struct WrittenHunt
 	{
-		RawValue speed;
-		std::optional<RawValue> ahead;
+		WrittenValue speed;
+		std::optional<WrittenValue> ahead;
 		std::string partner;
 		std::string retreat;
-		RawValue retreatWithin;
+		WrittenValue retreatWithin;
 		bool search{ false };
 		static auto values(auto& own) { return std::tie(own.speed, own.ahead, own.retreatWithin); }
 	};
 
 	// <send>: on a cell map, the cell it goes to; holder to holder (and a
 	// <distribute>), how many, or <all />.
-	struct RawSend
+	struct WrittenSend
 	{
-		std::optional<RawValue> column, row;
-		std::optional<RawValue> count;
+		std::optional<WrittenValue> column, row;
+		std::optional<WrittenValue> count;
 		bool all{ false };
 		static auto values(auto& own) { return std::tie(own.column, own.row, own.count); }
 	};
 
 	// <pick><only /><most>N</most></pick>: pick the only piece that can
 	// move; from how many holders a picker may hold one at once.
-	struct RawPick { bool only{ false }; int most{ 0 }; static auto values(auto&) { return std::tie(); } };
+	struct WrittenPick { bool only{ false }; int most{ 0 }; static auto values(auto&) { return std::tie(); } };
 
 	// <think button="..."><depth>N</depth><avoid /><worth sprite="...">N</worth></think>.
-	struct RawThink
+	struct WrittenThink
 	{
 		std::string button;
-		std::optional<RawValue> depth;
+		std::optional<WrittenValue> depth;
 		bool avoid{ false };
 		std::vector<std::pair<std::string, float>> worths;
 		static auto values(auto& own) { return std::tie(own.depth); }
 	};
 
 	// <hold button="..." />: the key the computer holds down.
-	struct RawHold { std::string button; static auto values(auto&) { return std::tie(); } };
+	struct WrittenHold { std::string button; static auto values(auto&) { return std::tie(); } };
 
 	// <alternate><player state="..." />...</alternate>: each player's state
 	// (empty for none).
-	struct RawAlternate { std::vector<std::string> players; static auto values(auto&) { return std::tie(); } };
+	struct WrittenAlternate { std::vector<std::string> players; static auto values(auto&) { return std::tie(); } };
 
 	// <track><onto class="..." /></track> on cells.
-	struct RawTrack { std::vector<std::string> onto; static auto values(auto&) { return std::tie(); } };
+	struct WrittenTrack { std::vector<std::string> onto; static auto values(auto&) { return std::tie(); } };
 
 	// <trigger>: in a key's input, how many commands after it are its
 	// <otherwise>; with class=, the cells about the one running it.
-	struct RawTrigger { int otherwise{ 0 }; CellPlace cells; static auto values(auto&) { return std::tie(); } };
+	struct WrittenTrigger { int otherwise{ 0 }; CellPlace cells; static auto values(auto&) { return std::tie(); } };
 
 	// <count class="..." into="..."><here /> or <around /></count>.
-	struct RawCount { CellPlace cells; static auto values(auto&) { return std::tie(); } };
+	struct WrittenCount { CellPlace cells; static auto values(auto&) { return std::tie(); } };
 
-	using RawOwn = std::variant<std::monostate, RawBounce, RawHop, RawSpawn,
-		RawInc, RawDec, RawSet, RawJump, RawKnock, RawPass, RawReveal, RawGo, RawWander, RawClimb,
-		RawFollow, RawMove, RawTurn, RawThrust, RawDeflect, RawHole, RawSwing, RawChase, RawAim, RawShift,
-		RawHunt, RawSend, RawPick, RawThink, RawHold, RawAlternate, RawTrack, RawTrigger, RawCount>;
+	using WrittenOwn = std::variant<std::monostate, WrittenBounce, WrittenHop, WrittenSpawn,
+		WrittenInc, WrittenDec, WrittenSet, WrittenJump, WrittenKnock, WrittenPass, WrittenReveal, WrittenGo, WrittenWander, WrittenClimb,
+		WrittenFollow, WrittenMove, WrittenTurn, WrittenThrust, WrittenDeflect, WrittenHole, WrittenSwing, WrittenChase, WrittenAim, WrittenShift,
+		WrittenHunt, WrittenSend, WrittenPick, WrittenThink, WrittenHold, WrittenAlternate, WrittenTrack, WrittenTrigger, WrittenCount>;
 
-	// Each number among a verb's own parts that was written: a RawValue, or
+	// Each number among a verb's own parts that was written: a WrittenValue, or
 	// an optional one, or pair, that holds something.
 	template <typename Visit, typename... Parts> void visitValues(Visit& visit, Parts&... parts)
 	{
@@ -1274,11 +1274,11 @@ namespace xge
 			const auto one = [&](auto& part)
 			{
 				using Part = std::remove_const_t<std::remove_reference_t<decltype(part)>>;
-				if constexpr (std::is_same_v<Part, RawValue>) { visit(part); }
-				else if constexpr (std::is_same_v<Part, std::optional<RawValue>>) { if (part) { visit(*part); } }
+				if constexpr (std::is_same_v<Part, WrittenValue>) { visit(part); }
+				else if constexpr (std::is_same_v<Part, std::optional<WrittenValue>>) { if (part) { visit(*part); } }
 				else
 				{
-					static_assert(std::is_same_v<Part, std::optional<RawVector2>>, "a verb's number is a RawValue, an optional one or an optional pair");
+					static_assert(std::is_same_v<Part, std::optional<WrittenVector2>>, "a verb's number is a WrittenValue, an optional one or an optional pair");
 					if (part) { visit(part->x); visit(part->y); }
 				}
 			};
@@ -1292,7 +1292,7 @@ namespace xge
 	// may have, and its numbers and the rest of what it says are its own
 	// (`own`).
 
-	struct RawCommand
+	struct WrittenCommand
 	{
 		std::string verb;
 		int line{ 0 }; // of its tag in the game file; 0 when not known (a generated program)
@@ -1313,10 +1313,10 @@ namespace xge
 		std::string from;      // become, trigger: only one showing this look
 		// condition (a <condition> in an action): its test, and its commands
 		// as the test's own (shared; copied before it is changed).
-		std::shared_ptr<RawCondition> test;
+		std::shared_ptr<WrittenCondition> test;
 
-		// The verb's own data, as written, for a verb that has any (RawOwn).
-		RawOwn own;
+		// The verb's own data, as written, for a verb that has any (WrittenOwn).
+		WrittenOwn own;
 
 		// Every number it holds, written or not: what self, a copy's name, a
 		// scene's names and live numbers are looked for in. Not its test's.
@@ -1340,11 +1340,11 @@ namespace xge
 	// A <timer> as written: <every> (again and again) or <after> (once), a
 	// number of seconds, then the commands it runs each time it goes off.
 	// See Timer.
-	struct RawTimer
+	struct WrittenTimer
 	{
 		bool repeat{ true };
-		RawValue interval;
-		std::vector<RawCommand> commands;
+		WrittenValue interval;
+		std::vector<WrittenCommand> commands;
 		std::string name; // name="...": a scene from= this one's can put another in its place
 		std::string sprite; // sprite="blue": an object's timer that counts only while it shows that look
 	};
@@ -1365,7 +1365,7 @@ namespace xge
 	struct Timer
 	{
 		bool repeat{ true };
-		RawValue interval;
+		WrittenValue interval;
 		std::vector<Command> commands;
 
 		// sprite="blue": it counts only while its object shows that look, and
@@ -1399,21 +1399,21 @@ namespace xge
 
 	// One leg of a path as written: a step of x and y (and the commands run as
 	// it sets off), or home. See Path.
-	struct RawPathStep
+	struct WrittenPathStep
 	{
 		bool home{ false };
-		RawValue x;
-		RawValue y;
-		std::vector<RawCommand> commands;
+		WrittenValue x;
+		WrittenValue y;
+		std::vector<WrittenCommand> commands;
 	};
 
 	// A <path> as written, in the game's <paths>. See Path.
-	struct RawPath
+	struct WrittenPath
 	{
 		std::string name;
-		RawValue speed;
-		std::optional<RawVector2> start;  // <start>, when written
-		std::vector<RawPathStep> steps;
+		WrittenValue speed;
+		std::optional<WrittenVector2> start;  // <start>, when written
+		std::vector<WrittenPathStep> steps;
 	};
 
 	struct PathStep
@@ -1423,14 +1423,14 @@ namespace xge
 		std::vector<Command> commands;
 		// A half that names something that changes (ship.x - self.x, where
 		// self is the follower) is worked out as the step sets off.
-		std::shared_ptr<const RawValue> liveX;
-		std::shared_ptr<const RawValue> liveY;
+		std::shared_ptr<const WrittenValue> liveX;
+		std::shared_ptr<const WrittenValue> liveY;
 		// Commands that say something of the follower (self.pays, a
 		// <trigger> with no object=) are its own: made for each object that
 		// can fly the path when the game loads (`ownBy`, by its name), and
 		// for a copy made while it runs the first time it flies it, from
 		// `ownRaw` with self made that one's name. `commands` are the rest.
-		std::shared_ptr<const std::vector<RawCommand>> ownRaw;
+		std::shared_ptr<const std::vector<WrittenCommand>> ownRaw;
 		std::map<std::string, std::vector<Command>> ownBy;
 	};
 
@@ -1454,16 +1454,16 @@ namespace xge
 		std::vector<PathStep> steps;
 	};
 
-	// Works out a RawValue to a number; makeCommand is given one so that it can
+	// Works out a WrittenValue to a number; makeCommand is given one so that it can
 	// stay free of the expression library (and be tested without it).
-	using ValueEvaluator = std::function<float(const RawValue&)>;
+	using ValueEvaluator = std::function<float(const WrittenValue&)>;
 
 	// Turns what the XML says into the typed Commands the engine runs. This is
 	// the one place that knows what each command tag means; an unknown tag or
 	// direction throws std::runtime_error naming it, so a typo in a game file
 	// is reported when it loads.
-	Command makeCommand(const RawCommand& raw, const ValueEvaluator& evaluate);
-	std::vector<Command> makeCommands(const std::vector<RawCommand>& raw, const ValueEvaluator& evaluate);
+	Command makeCommand(const WrittenCommand& raw, const ValueEvaluator& evaluate);
+	std::vector<Command> makeCommands(const std::vector<WrittenCommand>& raw, const ValueEvaluator& evaluate);
 
 	// The picture's size, with no window needed: a circle's box and a
 	// rectangle exactly as written (Object::pictureSize rounds them up to
@@ -1490,7 +1490,7 @@ namespace xge
 	std::ostream& operator<<(std::ostream& o, const Picture& picture);
 
 	// How a value and a command tag read in printGame()'s output.
-	std::ostream& operator<<(std::ostream& o, const RawValue& value);
-	std::ostream& operator<<(std::ostream& o, const RawCommand& command);
-	std::ostream& operator<<(std::ostream& o, const std::vector<RawCommand>& commands);
+	std::ostream& operator<<(std::ostream& o, const WrittenValue& value);
+	std::ostream& operator<<(std::ostream& o, const WrittenCommand& command);
+	std::ostream& operator<<(std::ostream& o, const std::vector<WrittenCommand>& commands);
 }

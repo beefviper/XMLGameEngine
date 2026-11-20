@@ -29,10 +29,10 @@
 
 namespace xge
 {
-	bool showsNumbers(const RawSprite& sprite)
+	bool showsNumbers(const WrittenSprite& sprite)
 	{
 		return std::any_of(sprite.text.begin(), sprite.text.end(),
-			[](const RawTextPiece& piece) { return piece.kind != RawTextPiece::Kind::Words; });
+			[](const WrittenTextPiece& piece) { return piece.kind != WrittenTextPiece::Kind::Words; });
 	}
 
 	namespace
@@ -42,21 +42,21 @@ namespace xge
 		// its first look and its second), worth its column unless it says,
 		// and `high` a second worth it may count instead; a picker of one is
 		// a hand.
-		void makeHeld(std::vector<RawObject>& objects)
+		void makeHeld(std::vector<WrittenObject>& objects)
 		{
 			std::vector<std::string> held;
-			for (const RawObject& object : objects)
+			for (const WrittenObject& object : objects)
 			{
 				if (!object.holder.holdsClass.empty() && std::find(held.begin(), held.end(), object.holder.holdsClass) == held.end()) { held.push_back(object.holder.holdsClass); }
 			}
 			if (held.empty()) { return; }
 			const auto isHeld = [&](const std::string& objClass) { return !objClass.empty() && std::find(held.begin(), held.end(), objClass) != held.end(); };
-			const auto number = [](const RawValue& value, const std::string& where, const char* what)
+			const auto number = [](const WrittenValue& value, const std::string& where, const char* what)
 			{
 				try { return std::stof(value.text); }
 				catch (const std::exception&) { throw std::runtime_error(where + ": its " + what + " is \"" + value.text + "\"; expected a number"); }
 			};
-			for (RawObject& object : objects)
+			for (WrittenObject& object : objects)
 			{
 				if (!isHeld(object.objClass)) { continue; }
 				const std::string where = "object '" + object.name + "' (of class " + object.objClass + ", which a <holds> holds)";
@@ -73,18 +73,18 @@ namespace xge
 					if (more != worth) { object.item.worths.push_back(more); }
 					std::sort(object.item.worths.begin(), object.item.worths.end());
 				}
-				object.variable["worth"] = RawValue::expression(formatDisplayNumber(worth));
+				object.variable["worth"] = WrittenValue::expression(formatDisplayNumber(worth));
 				if (!object.looks.empty()) { object.sprite = object.looks.front(); }
 			}
-			for (RawObject& object : objects)
+			for (WrittenObject& object : objects)
 			{
 				for (const auto& [action, commands] : object.action)
 				{
-					for (const RawCommand& command : commands)
+					for (const WrittenCommand& command : commands)
 					{
 						if (command.verb != "pick" || !isHeld(command.objClass)) { continue; }
 						object.hand = true;
-						if (const RawPick* pick = std::get_if<RawPick>(&command.own); pick && pick->most > 0) { object.handHolds = pick->most; }
+						if (const WrittenPick* pick = std::get_if<WrittenPick>(&command.own); pick && pick->most > 0) { object.handHolds = pick->most; }
 					}
 				}
 			}
@@ -93,27 +93,27 @@ namespace xge
 		// Each state's <starts>: every held member of a group sent into one
 		// holder, then from there so many into each holder named (a group's:
 		// each member's own), in random order.
-		void placeStarts(std::vector<RawState>& states, std::vector<RawObject>& objects)
+		void placeStarts(std::vector<WrittenState>& states, std::vector<WrittenObject>& objects)
 		{
 			const auto holdersFor = [&](const std::string& name, const std::string& state)
 			{
-				std::vector<RawObject*> found;
-				for (RawObject& object : objects)
+				std::vector<WrittenObject*> found;
+				for (WrittenObject& object : objects)
 				{
 					if (object.holder.is && object.ownerState == state && (object.named(state + "." + name) || object.named(name))) { found.push_back(&object); }
 				}
 				return found;
 			};
-			for (RawState& state : states)
+			for (WrittenState& state : states)
 			{
 				std::string start;   // the holder every member starts in
-				for (const RawStart& step : state.starts)
+				for (const WrittenStart& step : state.starts)
 				{
 					const std::string where = "state '" + state.name + "' > <starts> > <" + step.tag() + ">";
-					if (step.step == RawStart::Step::Send && step.all)
+					if (step.step == WrittenStart::Step::Send && step.all)
 					{
 						bool any = false;
-						for (RawObject& object : objects)
+						for (WrittenObject& object : objects)
 						{
 							if (object.held && object.ownerState == state.name && (object.named(state.name + "." + step.from) || object.named(step.from))) { object.item.startHolder = step.into; any = true; }
 						}
@@ -126,30 +126,30 @@ namespace xge
 					{
 						throw std::runtime_error(where + ": for now a start sends <all /> of a group into one holder first, then orders and sends from that holder");
 					}
-					if (step.step == RawStart::Step::Order)
+					if (step.step == WrittenStart::Step::Order)
 					{
 						// What starts in it is shuffled; with no <order>, it lies in the pack's order.
-						for (RawObject* each : holdersFor(step.from, state.name)) { each->holder.startShuffled = true; }
+						for (WrittenObject* each : holdersFor(step.from, state.name)) { each->holder.startShuffled = true; }
 						continue;
 					}
-					std::vector<RawObject*> into = holdersFor(step.into, state.name);
+					std::vector<WrittenObject*> into = holdersFor(step.into, state.name);
 					if (into.empty())
 					{
-						for (const RawObject& object : objects)
+						for (const WrittenObject& object : objects)
 						{
 							if (object.ownerState != state.name || object.handHolder.empty() || (object.groupName != step.into && object.groupName != state.name + "." + step.into)) { continue; }
-							for (RawObject* own : holdersFor(object.handHolder, state.name)) { into.push_back(own); }
+							for (WrittenObject* own : holdersFor(object.handHolder, state.name)) { into.push_back(own); }
 						}
 					}
 					if (into.empty()) { throw std::runtime_error(where + ": into=\"" + step.into + "\" names no holder of this state"); }
-					for (RawObject* each : into)
+					for (WrittenObject* each : into)
 					{
-						each->holder.startCount = RawValue::expression(std::to_string(step.count));
-						if (step.more != 0) { each->holder.startMore = RawValue::expression(std::to_string(step.more)); }
+						each->holder.startCount = WrittenValue::expression(std::to_string(step.count));
+						if (step.more != 0) { each->holder.startMore = WrittenValue::expression(std::to_string(step.more)); }
 					}
 				}
 			}
-			for (const RawObject& object : objects)
+			for (const WrittenObject& object : objects)
 			{
 				if (object.held && object.item.startHolder.empty())
 				{
@@ -161,11 +161,11 @@ namespace xge
 	}
 
 	void Evaluator::init(const WindowDesc& windowDesc,
-		const std::vector<std::pair<std::string, RawValue>>& rawVariables, std::map<std::string, float>& variables,
-		std::vector<RawState>& rawStates, std::vector<State>& states,
-		std::vector<RawObject>& rawObjects, std::vector<Object>& objects,
-		const std::vector<RawSound>& rawSounds, std::vector<SoundDesc>& sounds,
-		const std::vector<RawPath>& rawPaths, std::map<std::string, Path>& paths)
+		const std::vector<std::pair<std::string, WrittenValue>>& rawVariables, std::map<std::string, float>& variables,
+		std::vector<WrittenState>& rawStates, std::vector<State>& states,
+		std::vector<WrittenObject>& rawObjects, std::vector<Object>& objects,
+		const std::vector<WrittenSound>& rawSounds, std::vector<SoundDesc>& sounds,
+		const std::vector<WrittenPath>& rawPaths, std::map<std::string, Path>& paths)
 	{
 		seedRandom();
 		makeHeld(rawObjects);
@@ -203,7 +203,7 @@ namespace xge
 
 	// init's names: the window's edges, the game's variables, every object's
 	// variables and timers, and the live numbers, as names a text reads.
-	void Evaluator::nameNumbers(const WindowDesc& windowDesc, const std::vector<std::pair<std::string, RawValue>>& rawVariables, std::map<std::string, float>& variables, std::vector<RawObject>& rawObjects)
+	void Evaluator::nameNumbers(const WindowDesc& windowDesc, const std::vector<std::pair<std::string, WrittenValue>>& rawVariables, std::map<std::string, float>& variables, std::vector<WrittenObject>& rawObjects)
 	{
 		// the window's edges and middles, then the game's variables, as names a text reads
 		calc.constant("window.top", 0);
@@ -229,7 +229,7 @@ namespace xge
 		// does any variable; its value is given when the object is made.
 		for (auto& rawObject : rawObjects)
 		{
-			for (const RawTimer& timer : rawObject.timers)
+			for (const WrittenTimer& timer : rawObject.timers)
 			{
 				if (timer.name.empty()) { continue; }
 				const std::string here = "object '" + rawObject.name + "' > <timer name=\"" + timer.name + "\">";
@@ -242,11 +242,11 @@ namespace xge
 				{
 					throw std::runtime_error(here + ": " + rawObject.name + "." + timer.name + " is already where the object is or how it moves; give the timer another name");
 				}
-				rawObject.variable[timer.name] = RawValue::expression("0");
+				rawObject.variable[timer.name] = WrittenValue::expression("0");
 			}
 			// A holder's <counts variable>: a variable of its own, kept to the total.
 			const std::string& counts = rawObject.holder.counts;
-			if (!counts.empty() && !rawObject.variable.count(counts)) { rawObject.variable[counts] = RawValue::expression("0"); }
+			if (!counts.empty() && !rawObject.variable.count(counts)) { rawObject.variable[counts] = WrittenValue::expression("0"); }
 		}
 		// A holder's top.<variable>: each variable its held class has, the top
 		// one's while the game runs (Game::refreshHolder), so bag.top.shape reads.
@@ -256,7 +256,7 @@ namespace xge
 			for (const auto& member : rawObjects)
 			{
 				if (&member == &holder || member.objClass != holder.holder.holdsClass) { continue; }
-				for (const auto& [name, value] : member.variable) { holder.variable.try_emplace("top." + name, RawValue::expression("0")); }
+				for (const auto& [name, value] : member.variable) { holder.variable.try_emplace("top." + name, WrittenValue::expression("0")); }
 			}
 		}
 
@@ -307,7 +307,7 @@ namespace xge
 		// answering, as names; worked out when they are used (Game::evaluateNow).
 		// An object's own variable of a part's name is read instead.
 		liveNumbers.reserve(rawObjects.size() * livePartNames().size());
-		for (const RawObject& rawObject : rawObjects)
+		for (const WrittenObject& rawObject : rawObjects)
 		{
 			const std::string owner = Calc::nameOf(rawObject.name) + ".";
 			for (const std::string& part : livePartNames())
@@ -319,7 +319,7 @@ namespace xge
 
 	// init's objects: every sprite measured once (its size a name), the
 	// cells of groups laid out, then each object made, groups in lockstep.
-	void Evaluator::makeObjects(std::vector<RawObject>& rawObjects, std::vector<Object>& objects)
+	void Evaluator::makeObjects(std::vector<WrittenObject>& rawObjects, std::vector<Object>& objects)
 	{
 		// Every object's size as name.width / name.height, so an expression can
 		// place an object by its own size (or another's) the same way it reads
@@ -408,11 +408,11 @@ namespace xge
 
 	// init's tests on collision rules, edge guards and actions' conditions,
 	// once every object they can name is made.
-	void Evaluator::makeRuleTests(const std::vector<RawObject>& rawObjects, std::vector<Object>& objects)
+	void Evaluator::makeRuleTests(const std::vector<WrittenObject>& rawObjects, std::vector<Object>& objects)
 	{
 		// The checks of the objects' collision rules, now that every object
 		// they can name is made.
-		for (const RawObject& rawObject : rawObjects)
+		for (const WrittenObject& rawObject : rawObjects)
 		{
 			const auto object = std::find_if(objects.begin(), objects.end(), [&](const Object& each) { return each.name == rawObject.name; });
 			if (object == objects.end()) { continue; }
@@ -426,9 +426,9 @@ namespace xge
 			} self{ selfName, std::exchange(selfName, rawObject.name) };
 			for (std::size_t i = 0; i < rawObject.rawCollisionData.others.size(); ++i)
 			{
-				const RawCollisionRule& rule = rawObject.rawCollisionData.others[i];
-				const RawCondition& check = rule.check;
-				if (check.join == RawCondition::Join::None) { continue; }
+				const WrittenCollisionRule& rule = rawObject.rawCollisionData.others[i];
+				const WrittenCondition& check = rule.check;
+				if (check.join == WrittenCondition::Join::None) { continue; }
 				// One naming other: made, so checked, for each thing it can
 				// touch, and kept as made for the first.
 				for (std::size_t t = rule.touchable.size(); t-- > 1;)
@@ -446,7 +446,7 @@ namespace xge
 				const std::vector<EdgeGuard>& guards = rawObject.rawCollisionData.edges[edge].guards;
 				for (std::size_t g = 0; g < guards.size(); ++g)
 				{
-					if (guards[g].rawCheck.join != RawCondition::Join::None)
+					if (guards[g].rawCheck.join != WrittenCondition::Join::None)
 					{
 						object->kind->collisionData.edges[edge].guards[g].check = makeTest(guards[g].rawCheck, where, where, objects);
 					}
@@ -468,7 +468,7 @@ namespace xge
 	}
 
 	// init's states: each one's inputs, conditions, timers and scenes.
-	void Evaluator::makeStates(std::vector<RawState>& rawStates, std::vector<State>& states, const std::vector<Object>& objects)
+	void Evaluator::makeStates(std::vector<WrittenState>& rawStates, std::vector<State>& states, const std::vector<Object>& objects)
 	{
 		for (auto& rawState : rawStates)
 		{
@@ -517,7 +517,7 @@ namespace xge
 
 			state.timers = processTimers(rawState.timers, where);
 
-			for (const RawScene& rawScene : rawState.scenes)
+			for (const WrittenScene& rawScene : rawState.scenes)
 			{
 				Scene scene;
 				scene.name = rawState.name + "." + rawScene.name;
@@ -525,20 +525,20 @@ namespace xge
 				for (const auto& [way, to] : rawScene.ways)
 				{
 					// A scene of the same state, by its name there or by its path.
-					const auto leads = std::find_if(rawState.scenes.begin(), rawState.scenes.end(), [&](const RawScene& other)
+					const auto leads = std::find_if(rawState.scenes.begin(), rawState.scenes.end(), [&](const WrittenScene& other)
 						{
 							return other.name == to || rawState.name + "." + other.name == to;
 						});
 					if (leads == rawState.scenes.end())
 					{
 						std::vector<std::string> names;
-						for (const RawScene& other : rawState.scenes) { names.push_back(other.name); }
+						for (const WrittenScene& other : rawState.scenes) { names.push_back(other.name); }
 						throw std::runtime_error(sceneWhere + ": <way name=\"" + way + "\" scene=\"" + to + "\" /> names no scene of state '" + rawState.name + "'"
 							+ didYouMean(to, names) + ". Its scenes are: " + listOf(names));
 					}
 					scene.ways[Name(way)] = Name(rawState.name + "." + leads->name);
 				}
-				for (const RawCondition& rawCondition : flattened(rawScene.conditions))
+				for (const WrittenCondition& rawCondition : flattened(rawScene.conditions))
 				{
 					scene.conditions.push_back(makeCondition(rawCondition, sceneWhere, sceneWhere, rawState.name, objects));
 				}
@@ -551,11 +551,11 @@ namespace xge
 	}
 
 	// init's sounds, after everything else so that a length can use any variable.
-	void Evaluator::makeSounds(const std::vector<RawSound>& rawSounds, std::vector<SoundDesc>& sounds)
+	void Evaluator::makeSounds(const std::vector<WrittenSound>& rawSounds, std::vector<SoundDesc>& sounds)
 	{
 		// The sounds, worked out after everything else so that a length can use
 		// any variable.
-		for (const RawSound& rawSound : rawSounds)
+		for (const WrittenSound& rawSound : rawSounds)
 		{
 			const bool taken = std::any_of(sounds.begin(), sounds.end(), [&](const SoundDesc& sound) { return sound.name == rawSound.name; });
 			if (taken)
@@ -568,10 +568,10 @@ namespace xge
 
 	// init's paths, worked out last too, and each step's commands about
 	// its follower made for each object that can fly it.
-	void Evaluator::makePaths(const std::vector<RawPath>& rawPaths, std::map<std::string, Path>& paths, const std::vector<State>& states, const std::vector<Object>& objects)
+	void Evaluator::makePaths(const std::vector<WrittenPath>& rawPaths, std::map<std::string, Path>& paths, const std::vector<State>& states, const std::vector<Object>& objects)
 	{
 		// The paths, worked out last too: a step's numbers can use any variable.
-		for (const RawPath& rawPath : rawPaths)
+		for (const WrittenPath& rawPath : rawPaths)
 		{
 			const std::string where = "path '" + rawPath.name + "'";
 			if (paths.count(rawPath.name))
@@ -590,7 +590,7 @@ namespace xge
 			{
 				path.start = Vector2f{ evaluate(rawPath.start->x, where + " > <start>"), evaluate(rawPath.start->y, where + " > <start>") };
 			}
-			for (const RawPathStep& rawStep : rawPath.steps)
+			for (const WrittenPathStep& rawStep : rawPath.steps)
 			{
 				PathStep step;
 				step.home = rawStep.home;
@@ -598,14 +598,14 @@ namespace xge
 				{
 					// A half that names something that changes, or the
 					// follower (self), is worked out as the step sets off.
-					const auto half = [&](const RawValue& value, float& into, std::shared_ptr<const RawValue>& live)
+					const auto half = [&](const WrittenValue& value, float& into, std::shared_ptr<const WrittenValue>& live)
 					{
 						const std::vector<const std::string*> texts = value.expressions();
 						const bool own = std::any_of(texts.begin(), texts.end(),
 							[](const std::string* text) { return text->find("self.") != std::string::npos; });
 						if (own || namesLive(value))
 						{
-							live = std::make_shared<const RawValue>(value);
+							live = std::make_shared<const WrittenValue>(value);
 							if (own) { return; }
 							commandValues = true;
 							evaluate(value, where + " > <step>");
@@ -619,10 +619,10 @@ namespace xge
 
 					// Commands about the follower are made for each follower
 					// (below); the rest once.
-					std::vector<RawCommand> probe = rawStep.commands;
+					std::vector<WrittenCommand> probe = rawStep.commands;
 					if (nameSelfIn(probe, "follower"))
 					{
-						step.ownRaw = std::make_shared<const std::vector<RawCommand>>(rawStep.commands);
+						step.ownRaw = std::make_shared<const std::vector<WrittenCommand>>(rawStep.commands);
 					}
 					else
 					{
@@ -651,7 +651,7 @@ namespace xge
 		}
 	}
 
-	Object Evaluator::spawnObject(RawObject& raw, const Object& from)
+	Object Evaluator::spawnObject(WrittenObject& raw, const Object& from)
 	{
 		// What its rules and others' read of it, under its own name, as init
 		// makes them known for every object the file has. A name used
@@ -696,7 +696,7 @@ namespace xge
 		return made;
 	}
 
-	SoundDesc Evaluator::processSound(const RawSound& raw)
+	SoundDesc Evaluator::processSound(const WrittenSound& raw)
 	{
 		const std::string where = "sound '" + raw.name + "'";
 
@@ -705,7 +705,7 @@ namespace xge
 		sound.loop = raw.loop;
 		sound.path = raw.path;
 
-		const bool noVolume = raw.volume.kind == RawValue::Kind::Expression && raw.volume.text.empty();
+		const bool noVolume = raw.volume.kind == WrittenValue::Kind::Expression && raw.volume.text.empty();
 		// A recording plays as loud as it was made unless told otherwise.
 		if (!sound.path.empty()) { sound.volume = 1.0f; }
 		if (!noVolume)
@@ -759,7 +759,7 @@ namespace xge
 
 		for (std::size_t i = 0; i < raw.notes.size(); ++i)
 		{
-			const RawNote& rawNote = raw.notes[i];
+			const WrittenNote& rawNote = raw.notes[i];
 			const std::string here = where + " > " + (rawNote.rest ? "<rest>" : "<note>") + " " + std::to_string(i + 1);
 
 			SoundNote note;
@@ -777,7 +777,7 @@ namespace xge
 				note.wave = rawNote.wave.empty() ? soundWave : waveOf(rawNote.wave, here);
 				note.startHz = pitchOf(rawNote.pitch, "pitch", here);
 				note.endHz = rawNote.to.empty() ? note.startHz : pitchOf(rawNote.to, "to", here);
-				if (rawNote.decay.kind != RawValue::Kind::Expression || !rawNote.decay.text.empty())
+				if (rawNote.decay.kind != WrittenValue::Kind::Expression || !rawNote.decay.text.empty())
 				{
 					note.decay = evaluate(rawNote.decay, here + " > <decay>");
 					if (!(note.decay > 0.0f && note.decay <= kMaxNoteSeconds))
@@ -795,13 +795,13 @@ namespace xge
 	}
 
 	// A <hitbox> worked out for `object` (its picture already made).
-	Hitbox Evaluator::makeHitbox(const RawHitbox& raw, const Object& object, const std::string& where)
+	Hitbox Evaluator::makeHitbox(const WrittenHitbox& raw, const Object& object, const std::string& where)
 	{
 		if (object.kind->collisionData.type == CollisionType::Pixel)
 		{
 			throw std::runtime_error(where + ": a <hitbox> is touched as its own shape, not by the pixels of the picture; it cannot go with <type>pixel</type>");
 		}
-		const auto valueOr0 = [&](const RawValue& value) { return value.kind == RawValue::Kind::Expression && value.text.empty() ? 0.0f : evaluate(value, where); };
+		const auto valueOr0 = [&](const WrittenValue& value) { return value.kind == WrittenValue::Kind::Expression && value.text.empty() ? 0.0f : evaluate(value, where); };
 		Hitbox hitbox;
 		hitbox.name = raw.name;
 		if (raw.kind == "inset")
@@ -843,7 +843,7 @@ namespace xge
 		return hitbox;
 	}
 
-	float Evaluator::evaluateStart(const RawValue& value, const std::string& where)
+	float Evaluator::evaluateStart(const WrittenValue& value, const std::string& where)
 	{
 		if (!value.live) { return evaluate(value, where); }
 		// It may read where things are (reading 0 while loading): the game
@@ -863,17 +863,17 @@ namespace xge
 		}
 	}
 
-	float Evaluator::evaluate(const RawValue& value, const std::string& where)
+	float Evaluator::evaluate(const WrittenValue& value, const std::string& where)
 	{
 		switch (value.kind)
 		{
-		case RawValue::Kind::Random:
+		case WrittenValue::Kind::Random:
 		{
 			if (value.operations)
 			{
-				const RawOperation& ends = value.operations->front();
+				const WrittenOperation& ends = value.operations->front();
 				// Where each end is written is made only for a message.
-				const auto end = [&](const RawValue& written, const char* tag)
+				const auto end = [&](const WrittenValue& written, const char* tag)
 				{
 					try { return evaluate(written, std::string{}); }
 					catch (const std::runtime_error& error) { throw std::runtime_error(where + " > <random> > <" + tag + ">" + error.what()); }
@@ -887,7 +887,7 @@ namespace xge
 			return randomBetween(min, max);
 		}
 
-		case RawValue::Kind::Formula:
+		case WrittenValue::Kind::Formula:
 		{
 			const float answer = evaluateOperation(value.operations->front(), where).value;
 			if (loading && !std::isfinite(answer))
@@ -897,10 +897,10 @@ namespace xge
 			return answer;
 		}
 
-		case RawValue::Kind::Centered:
+		case WrittenValue::Kind::Centered:
 			throw std::runtime_error(where + ": <centered> is only for an object's <position>");
 
-		case RawValue::Kind::Expression:
+		case WrittenValue::Kind::Expression:
 			break;
 		}
 
@@ -924,19 +924,19 @@ namespace xge
 		return false;
 	}
 
-	Evaluator::Answer Evaluator::evaluateOperation(const RawOperation& operation, const std::string& where)
+	Evaluator::Answer Evaluator::evaluateOperation(const WrittenOperation& operation, const std::string& where)
 	{
 		const std::string here = where + " > <" + operation.op + ">";
 
-		const auto operandAnswer = [&](const RawOperand& operand)
+		const auto operandAnswer = [&](const WrittenOperand& operand)
 		{
-			if (operand.value.kind == RawValue::Kind::Expression)
+			if (operand.value.kind == WrittenValue::Kind::Expression)
 			{
 				return Answer{ evaluate(operand.value, here), isLate(operand.value.text) };
 			}
 
 			// An operation nested in another is part of the same sum.
-			if (operand.value.kind == RawValue::Kind::Formula) { return evaluateOperation(operand.value.operations->front(), here); }
+			if (operand.value.kind == WrittenValue::Kind::Formula) { return evaluateOperation(operand.value.operations->front(), here); }
 
 			return Answer{ evaluate(operand.value, here), false };
 		};
@@ -1093,7 +1093,7 @@ namespace xge
 		return found->second;
 	}
 
-	bool Evaluator::namesLive(const RawValue& value) const
+	bool Evaluator::namesLive(const WrittenValue& value) const
 	{
 		for (const std::string* text : value.expressions())
 		{
@@ -1107,12 +1107,12 @@ namespace xge
 	}
 
 
-	std::vector<Timer> Evaluator::processTimers(const std::vector<RawTimer>& raw, const std::string& where)
+	std::vector<Timer> Evaluator::processTimers(const std::vector<WrittenTimer>& raw, const std::string& where)
 	{
 		std::vector<Timer> timers;
 		const std::string here = where + " > <timer>";
 
-		for (const RawTimer& rawTimer : raw)
+		for (const WrittenTimer& rawTimer : raw)
 		{
 			Timer timer;
 			timer.repeat = rawTimer.repeat;
@@ -1133,7 +1133,7 @@ namespace xge
 			setRandomState(drawn);
 			char* end = nullptr;
 			const std::string& text = rawTimer.interval.text;
-			const bool plainNumber = rawTimer.interval.kind == RawValue::Kind::Expression && !text.empty()
+			const bool plainNumber = rawTimer.interval.kind == WrittenValue::Kind::Expression && !text.empty()
 				&& (std::strtof(text.c_str(), &end), end == text.c_str() + text.size());
 			// An <after> of 0 goes off on the first frame it counts (a ghost
 			// told what to do the moment it turns blue); an <every> of 0 would
@@ -1156,18 +1156,18 @@ namespace xge
 	std::vector<Command> Evaluator::pathCommandsFor(const PathStep& step, const std::string& follower, const std::string& where)
 	{
 		if (!step.ownRaw) { return {}; }
-		std::vector<RawCommand> own = *step.ownRaw;
+		std::vector<WrittenCommand> own = *step.ownRaw;
 		nameSelfIn(own, follower);
 		return processCommands(own, where);
 	}
 
-	std::vector<Command> Evaluator::processCommands(const std::vector<RawCommand>& raw, const std::string& where)
+	std::vector<Command> Evaluator::processCommands(const std::vector<WrittenCommand>& raw, const std::string& where)
 	{
 		std::vector<Command> commands;
 		commandValues = true;
 		try
 		{
-			for (const RawCommand& each : raw)
+			for (const WrittenCommand& each : raw)
 			{
 				// A condition in an action: its commands now, its test once
 				// every object is made (testActionConditions).
@@ -1185,26 +1185,26 @@ namespace xge
 				// time it runs; at load, for the one being made.
 				const bool own = !selfName.empty() && namesSelf(each);
 				const bool theirs = !otherName.empty() && namesOther(each);
-				std::vector<RawCommand> named;
+				std::vector<WrittenCommand> named;
 				if (own || theirs)
 				{
 					named.push_back(each);
 					if (own) { nameSelfIn(named.front(), selfName); }
 					if (theirs) { renameObjectIn(named, "other", otherName); }
 				}
-				const RawCommand& making = own || theirs ? named.front() : each;
-				Command made = onLine(each.line, [&] { return makeCommand(making, [&](const RawValue& value) { return evaluate(value, where); }); });
+				const WrittenCommand& making = own || theirs ? named.front() : each;
+				Command made = onLine(each.line, [&] { return makeCommand(making, [&](const WrittenValue& value) { return evaluate(value, where); }); });
 
 				// One whose numbers can change is made again each time it runs
 				// (CmdLive), and so is one whose verb says so (Verb::alwaysLive).
 				bool readsLive = false;
-				making.forEachValue([&](const RawValue& value) { readsLive = readsLive || namesLive(value); });
+				making.forEachValue([&](const WrittenValue& value) { readsLive = readsLive || namesLive(value); });
 				const bool live = own || theirs || alwaysLive(each) || readsLive;
 				if (live)
 				{
 					auto loaded = std::make_shared<LoadedCommand>();
 					loaded->command = std::move(made);
-					commands.push_back(CmdLive{ std::make_shared<const RawCommand>(each), std::move(loaded), where, own, theirs });
+					commands.push_back(CmdLive{ std::make_shared<const WrittenCommand>(each), std::move(loaded), where, own, theirs });
 				}
 				else
 				{
@@ -1234,7 +1234,7 @@ namespace xge
 		}
 	}
 
-	std::vector<std::string> Evaluator::sizeDependenciesOf(const RawObject& rawObject) const
+	std::vector<std::string> Evaluator::sizeDependenciesOf(const WrittenObject& rawObject) const
 	{
 		std::vector<std::string> dependencies;
 

@@ -10,7 +10,7 @@
 namespace xge
 {
 	// <wrap>: Out of one edge of the window and in at the other.
-	static Command makeWrap(const RawCommand&, const ValueEvaluator&)
+	static Command makeWrap(const WrittenCommand&, const ValueEvaluator&)
 	{
 		return CmdWrap{};
 	}

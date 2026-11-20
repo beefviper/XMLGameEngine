@@ -12,7 +12,7 @@
 namespace xge
 {
 	// <pop>: Back to the state below, or down to a named one.
-	static Command makePop(const RawCommand& raw, const ValueEvaluator&)
+	static Command makePop(const WrittenCommand& raw, const ValueEvaluator&)
 	{
 		return CmdPopState{ raw.state };
 	}

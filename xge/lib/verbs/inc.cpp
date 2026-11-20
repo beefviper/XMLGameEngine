@@ -15,18 +15,18 @@
 namespace xge
 {
 	// <inc>: Adds to a variable.
-	static void readInc(const XmlNode& node, const std::string& where, RawCommand& command)
+	static void readInc(const XmlNode& node, const std::string& where, WrittenCommand& command)
 	{
 		requireAttribute(node, "variable", where);
 		// The amount is optional: a bare <inc variable="..." /> is 1.
-		RawInc& own = command.own.emplace<RawInc>();
+		WrittenInc& own = command.own.emplace<WrittenInc>();
 		if (hasContent(node)) { own.by = readValue(node, where); }
 	}
 
-	static Command makeInc(const RawCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeInc(const WrittenCommand& raw, const ValueEvaluator& evaluate)
 	{
 		// By its amount, or by 1 when it has none.
-		return CmdIncrement{ VariableName::of(raw.variable), valueOr(ownOf<RawInc>(raw).by, 1.0f, evaluate) };
+		return CmdIncrement{ VariableName::of(raw.variable), valueOr(ownOf<WrittenInc>(raw).by, 1.0f, evaluate) };
 	}
 
 	static void checkInc(const CmdIncrement& increment, const Checking& checking)

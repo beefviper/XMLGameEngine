@@ -10,18 +10,18 @@
 namespace xge
 {
 	// <turn>: Round while held; a quarter turn for a shape of cells.
-	static void readTurn(const XmlNode& node, const std::string& where, RawCommand& command)
+	static void readTurn(const XmlNode& node, const std::string& where, WrittenCommand& command)
 	{
 		// On a cell map a quarter turn, with nothing written.
 		requireAttribute(node, "direction", where);
-		RawTurn& turn = command.own.emplace<RawTurn>();
+		WrittenTurn& turn = command.own.emplace<WrittenTurn>();
 		if (hasContent(node)) { turn.rate = readValue(node, where); }
 	}
 
-	static Command makeTurn(const RawCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeTurn(const WrittenCommand& raw, const ValueEvaluator& evaluate)
 	{
 		// Nothing written: none (a turn on a cell map, a quarter).
-		return CmdTurn{ rotationFromName(raw.direction, raw.verb), valueOr(ownOf<RawTurn>(raw).rate, 0.0f, evaluate) };
+		return CmdTurn{ rotationFromName(raw.direction, raw.verb), valueOr(ownOf<WrittenTurn>(raw).rate, 0.0f, evaluate) };
 	}
 
 	// A turn is now held (rate 0 = just released);

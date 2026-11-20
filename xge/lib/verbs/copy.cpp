@@ -13,13 +13,13 @@
 namespace xge
 {
 	// <copy>: One variable's value into another.
-	static void readCopy(const XmlNode& node, const std::string& where, RawCommand&)
+	static void readCopy(const XmlNode& node, const std::string& where, WrittenCommand&)
 	{
 		requireAttribute(node, "variable", where);
 		requireAttribute(node, "into", where);
 	}
 
-	static Command makeCopy(const RawCommand& raw, const ValueEvaluator&)
+	static Command makeCopy(const WrittenCommand& raw, const ValueEvaluator&)
 	{
 		return CmdCopy{ VariableName::of(raw.variable), VariableName::of(raw.into) };
 	}

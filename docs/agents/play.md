@@ -41,7 +41,7 @@ Tips for changing values, objects, frames, touches, spawning and loading. Back t
 
 ## Spawning
 
-- A verb's own numbers (`RawSpawn`, `RawHop`...) are renamed for `self`, a copy's name and a scene's names only through `forEachValue`: a new number goes in its struct's `eachValue`, and nowhere else.
+- A verb's own numbers (`WrittenSpawn`, `WrittenHop`...) are renamed for `self`, a copy's name and a scene's names only through `forEachValue`: a new number goes in its struct's `eachValue`, and nowhere else.
 - Copies wait in `Game::spawned` and join, and despawned ones go, in `settleSpawns()`, which calls `rosterChanged()` and drops every cache.
 - A spawned piece lands beside its spawner, so copies are named by that list (`playing.wave1.bomb.1`).
 - New state that points into `objects` must be rebuilt in `rosterChanged()`.

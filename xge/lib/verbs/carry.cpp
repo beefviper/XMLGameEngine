@@ -10,7 +10,7 @@
 namespace xge
 {
 	// <carry>: Picks up what it touched.
-	static Command makeCarry(const RawCommand&, const ValueEvaluator&)
+	static Command makeCarry(const WrittenCommand&, const ValueEvaluator&)
 	{
 		return CmdCarry{};
 	}

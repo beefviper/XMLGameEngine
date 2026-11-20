@@ -17,7 +17,7 @@ namespace xge
 {
 	// <reset>: Back to how it started: the object running it, a named one, a
 	// scene, or the whole game.
-	static void readReset(const XmlNode&, const std::string& where, RawCommand& command)
+	static void readReset(const XmlNode&, const std::string& where, WrittenCommand& command)
 	{
 		if ((!command.object.empty()) + (!command.scene.empty()) + (!command.way.empty()) > 1)
 		{
@@ -25,7 +25,7 @@ namespace xge
 		}
 	}
 
-	static Command makeReset(const RawCommand& raw, const ValueEvaluator&)
+	static Command makeReset(const WrittenCommand& raw, const ValueEvaluator&)
 	{
 		// <reset /> puts the object in the rule (or, in a state's input or
 		// condition, the whole game) back; <reset object="name" /> that one object.

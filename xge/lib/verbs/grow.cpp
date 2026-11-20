@@ -9,7 +9,7 @@
 namespace xge
 {
 	// <grow>: A chain gets one link longer.
-	static Command makeGrow(const RawCommand&, const ValueEvaluator&)
+	static Command makeGrow(const WrittenCommand&, const ValueEvaluator&)
 	{
 		return CmdGrow{};
 	}

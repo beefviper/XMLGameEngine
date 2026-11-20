@@ -267,7 +267,7 @@ namespace xge
 
 	void Engine::record(void)
 	{
-		recordedSoFar = RawDemo{};
+		recordedSoFar = WrittenDemo{};
 		recordedSoFar.recorded = true;
 		recordedSoFar.seed = std::random_device{}();
 		setRandomState(std::mt19937{ recordedSoFar.seed });
@@ -275,7 +275,7 @@ namespace xge
 		recording = true;
 	}
 
-	void Engine::replay(const RawDemo& demo)
+	void Engine::replay(const WrittenDemo& demo)
 	{
 		replayed = demo;
 		replaying = true;
@@ -285,7 +285,7 @@ namespace xge
 		game.resetAll();
 	}
 
-	RawDemo Engine::recorded(void) const
+	WrittenDemo Engine::recorded(void) const
 	{
 		return recordedSoFar;
 	}

@@ -23,15 +23,15 @@
 
 namespace xge
 {
-	std::string showPiece(RawTextPiece::Kind kind, float value, const std::vector<std::string>& choices)
+	std::string showPiece(WrittenTextPiece::Kind kind, float value, const std::vector<std::string>& choices)
 	{
-		if (kind == RawTextPiece::Kind::Choice)
+		if (kind == WrittenTextPiece::Kind::Choice)
 		{
 			if (choices.empty()) { return {}; }
 			const long last = static_cast<long>(choices.size()) - 1;
 			return choices[static_cast<std::size_t>(std::clamp(std::lround(std::floor(value)), 0L, last))];
 		}
-		if (kind != RawTextPiece::Kind::Letter)
+		if (kind != WrittenTextPiece::Kind::Letter)
 		{
 			return formatDisplayNumber(value);
 		}
@@ -45,7 +45,7 @@ namespace xge
 		std::string text;
 		for (std::size_t i = 0; i < pieces.size(); ++i)
 		{
-			const bool word = i > 0 && !(pieces[i].kind == RawTextPiece::Kind::Letter && pieces[i - 1].kind == RawTextPiece::Kind::Letter);
+			const bool word = i > 0 && !(pieces[i].kind == WrittenTextPiece::Kind::Letter && pieces[i - 1].kind == WrittenTextPiece::Kind::Letter);
 			if (word) { text += ' '; }
 			text += pieces[i].shown;
 		}
@@ -157,8 +157,8 @@ namespace xge
 		drawn.visualDirty = true;
 	}
 
-	bool addEdgeRule(RawCollisionData& collisions, const std::string& edges, const std::vector<RawCommand>& commands,
-		const std::string& sprite, const std::string& unlessClass, const RawCondition& check)
+	bool addEdgeRule(WrittenCollisionData& collisions, const std::string& edges, const std::vector<WrittenCommand>& commands,
+		const std::string& sprite, const std::string& unlessClass, const WrittenCondition& check)
 	{
 		const bool all = edges == "all";
 		const bool vertical = all || edges == "vertical";
@@ -169,7 +169,7 @@ namespace xge
 		{
 			if (!named) { continue; }
 			any = true;
-			EdgeRules<RawCommand>& rules = collisions.edges[edgeIndex(edge)];
+			EdgeRules<WrittenCommand>& rules = collisions.edges[edgeIndex(edge)];
 			if (!commands.empty())
 			{
 				rules.guards.push_back(EdgeGuard{ rules.commands.size(), commands.size(), sprite, unlessClass, check, std::nullopt });
@@ -179,7 +179,7 @@ namespace xge
 		return any;
 	}
 
-	std::vector<std::pair<std::size_t, std::size_t>> tilesOf(const RawMap& map, char character)
+	std::vector<std::pair<std::size_t, std::size_t>> tilesOf(const WrittenMap& map, char character)
 	{
 		std::vector<std::pair<std::size_t, std::size_t>> tiles;
 		for (std::size_t row = 0; row < map.rows.size(); ++row)
@@ -192,7 +192,7 @@ namespace xge
 		return tiles;
 	}
 
-	void placeOnMap(RawObject& object, const RawMap& map, std::size_t column, std::size_t row, char character)
+	void placeOnMap(WrittenObject& object, const WrittenMap& map, std::size_t column, std::size_t row, char character)
 	{
 		object.cell.character = character;
 		object.rawPosition = map.position;
@@ -211,7 +211,7 @@ namespace xge
 		}
 	}
 
-	bool startOnMap(RawObject& object, const RawMap& map, char character)
+	bool startOnMap(WrittenObject& object, const WrittenMap& map, char character)
 	{
 		const auto tiles = tilesOf(map, character);
 		if (tiles.size() == 1)
@@ -229,41 +229,41 @@ namespace xge
 		return false;
 	}
 
-	void waitOnMap(RawObject& object, const RawMap& map, char character)
+	void waitOnMap(WrittenObject& object, const WrittenMap& map, char character)
 	{
 		placeOnMap(object, map, 0, 0, character);
 		object.exists = false;
 	}
 
-	RawObject mapHolder(const RawMap& map)
+	WrittenObject mapHolder(const WrittenMap& map)
 	{
-		RawObject holder;
+		WrittenObject holder;
 		holder.name = map.name + ".cells";
 		holder.sprite = nothingSprite();
 		holder.isDrawn = false;
-		holder.rawVelocity = { RawValue::expression("0"), RawValue::expression("0") };
+		holder.rawVelocity = { WrittenValue::expression("0"), WrittenValue::expression("0") };
 		waitOnMap(holder, map);
 		return holder;
 	}
 
-	void pickShapePieces(std::vector<RawObject>& objects, std::size_t first)
+	void pickShapePieces(std::vector<WrittenObject>& objects, std::size_t first)
 	{
 		for (std::size_t i = first; i < objects.size(); ++i)
 		{
-			RawObject& shape = objects[i];
+			WrittenObject& shape = objects[i];
 			for (const std::string& row : shape.shapeRows)
 			{
 				for (const char character : row)
 				{
 					if (shape.shapePieces.count(character)) { continue; }
-					std::vector<const RawObject*> found;
+					std::vector<const WrittenObject*> found;
 					for (std::size_t j = first; j < objects.size(); ++j)
 					{
-						const RawObject& piece = objects[j];
+						const WrittenObject& piece = objects[j];
 						if (piece.cell.character == character && piece.cell.map == shape.cell.map) { found.push_back(&piece); }
 					}
 					if (found.empty()) { continue; }
-					const RawObject& piece = *found.front();
+					const WrittenObject& piece = *found.front();
 					if (found.size() == 1 || piece.exists)
 					{
 						shape.shapePieces[character] = !piece.exists || piece.groupName.empty() ? piece.name : piece.groupName;
@@ -273,7 +273,7 @@ namespace xge
 					// jewel): the innermost group around them all, which a
 					// spawn takes one member of at random.
 					std::vector<std::string> shared = piece.outerGroups;
-					for (const RawObject* other : found)
+					for (const WrittenObject* other : found)
 					{
 						std::size_t same = 0;
 						while (same < shared.size() && same < other->outerGroups.size() && shared[same] == other->outerGroups[same]) { ++same; }
@@ -285,16 +285,16 @@ namespace xge
 		}
 	}
 
-	void applyStyles(std::vector<RawObject>& objects, const std::vector<RawStyle>& styles)
+	void applyStyles(std::vector<WrittenObject>& objects, const std::vector<WrittenStyle>& styles)
 	{
-		for (RawObject& object : objects)
+		for (WrittenObject& object : objects)
 		{
-			const auto apply = [&](RawSprite& sprite)
+			const auto apply = [&](WrittenSprite& sprite)
 			{
 				if (sprite.kind == "bitmap")
 				{
 					if (sprite.style.empty()) { return; }
-					const auto style = std::find_if(styles.begin(), styles.end(), [&](const RawStyle& each) { return each.name == sprite.style; });
+					const auto style = std::find_if(styles.begin(), styles.end(), [&](const WrittenStyle& each) { return each.name == sprite.style; });
 					if (style == styles.end())
 					{
 						throw std::runtime_error("object '" + object.name + "': style=\"" + sprite.style + "\" names no <style> of the game's <styles>");
@@ -318,10 +318,10 @@ namespace xge
 					return;
 				}
 				if (sprite.kind != "text") { return; }
-				const bool noSize = sprite.size.kind == RawValue::Kind::Expression && sprite.size.text.empty();
+				const bool noSize = sprite.size.kind == WrittenValue::Kind::Expression && sprite.size.text.empty();
 				if (!sprite.style.empty())
 				{
-					const auto style = std::find_if(styles.begin(), styles.end(), [&](const RawStyle& each) { return each.name == sprite.style; });
+					const auto style = std::find_if(styles.begin(), styles.end(), [&](const WrittenStyle& each) { return each.name == sprite.style; });
 					if (style == styles.end())
 					{
 						throw std::runtime_error("object '" + object.name + "': style=\"" + sprite.style + "\" names no <style> of the game's <styles>");
@@ -330,53 +330,53 @@ namespace xge
 					if (sprite.color.empty()) { sprite.color = style->color; }
 					if (sprite.font.empty()) { sprite.font = style->font; }
 				}
-				if (sprite.size.kind == RawValue::Kind::Expression && sprite.size.text.empty())
+				if (sprite.size.kind == WrittenValue::Kind::Expression && sprite.size.text.empty())
 				{
 					throw std::runtime_error("object '" + object.name + "': a <text> needs a <size>, or a style= whose <style> has one");
 				}
 			};
 			apply(object.sprite);
-			for (RawSprite& look : object.looks)
+			for (WrittenSprite& look : object.looks)
 			{
 				apply(look);
-				for (RawSprite& frame : look.frames) { apply(frame); }
+				for (WrittenSprite& frame : look.frames) { apply(frame); }
 			}
-			for (RawSprite& frame : object.animation.frames) { apply(frame); }
+			for (WrittenSprite& frame : object.animation.frames) { apply(frame); }
 			apply(object.cell.slot);
 		}
 	}
 
-	void markSolid(std::vector<RawObject>& objects)
+	void markSolid(std::vector<WrittenObject>& objects)
 	{
-		for (RawObject& object : objects)
+		for (WrittenObject& object : objects)
 		{
 			const std::string& solid = object.rawCollisionData.solid;
 			if (solid.empty()) { continue; }
 			object.sprite.solid = solid;
-			for (RawSprite& look : object.looks)
+			for (WrittenSprite& look : object.looks)
 			{
 				look.solid = solid;
-				for (RawSprite& frame : look.frames) { frame.solid = solid; }
+				for (WrittenSprite& frame : look.frames) { frame.solid = solid; }
 			}
-			for (RawSprite& frame : object.animation.frames) { frame.solid = solid; }
+			for (WrittenSprite& frame : object.animation.frames) { frame.solid = solid; }
 		}
 	}
 
-	void lookWithAnimations(RawObject& object, const std::vector<RawSprite>& sprites, const std::vector<RawFrames>& animations, const std::string& where)
+	void lookWithAnimations(WrittenObject& object, const std::vector<WrittenSprite>& sprites, const std::vector<WrittenFrames>& animations, const std::string& where)
 	{
 		// The animations that go round first, then the sprites, then those
 		// played once: an object starts as the first, and never as a look
 		// that plays once.
-		std::vector<RawSprite> looks;
-		std::vector<RawSprite> played;
-		for (const RawFrames& animation : animations)
+		std::vector<WrittenSprite> looks;
+		std::vector<WrittenSprite> played;
+		for (const WrittenFrames& animation : animations)
 		{
 			if (animation.frames.size() < (animation.once ? 1u : 2u)) { throw std::runtime_error(where + ": <animation name=\"" + animation.name + "\"> needs at least two <frame>s (one, with <once />)"); }
 
-			RawSprite look;
+			WrittenSprite look;
 			for (const std::string& name : animation.frames)
 			{
-				const auto found = std::find_if(sprites.begin(), sprites.end(), [&](const RawSprite& sprite) { return sprite.name == name; });
+				const auto found = std::find_if(sprites.begin(), sprites.end(), [&](const WrittenSprite& sprite) { return sprite.name == name; });
 				if (found == sprites.end())
 				{
 					throw std::runtime_error(where + ": <animation name=\"" + animation.name + "\"> > <frame sprite=\"" + name + "\">: no <sprite name=\"" + name + "\"> to show");
@@ -384,7 +384,7 @@ namespace xge
 				look.frames.push_back(*found);
 			}
 			// Its first picture, in the look's own name.
-			std::vector<RawSprite> frames = std::move(look.frames);
+			std::vector<WrittenSprite> frames = std::move(look.frames);
 			look = frames.front();
 			look.name = animation.name;
 			look.frames = std::move(frames);
@@ -398,12 +398,12 @@ namespace xge
 			look.thenCommands = animation.thenCommands;
 			(animation.once ? played : looks).push_back(std::move(look));
 		}
-		for (const RawSprite& sprite : sprites)
+		for (const WrittenSprite& sprite : sprites)
 		{
 			if (sprite.name.empty()) { throw std::runtime_error(where + ": has <animation name=\"...\">s, so its sprites are looks too, and every one needs a name"); }
 			looks.push_back(sprite);
 		}
-		for (RawSprite& look : played) { looks.push_back(std::move(look)); }
+		for (WrittenSprite& look : played) { looks.push_back(std::move(look)); }
 		for (std::size_t i = 0; i < looks.size(); ++i)
 		{
 			for (std::size_t j = i + 1; j < looks.size(); ++j)
@@ -574,15 +574,15 @@ namespace xge
 	namespace
 	{
 		// self. at the start of a name in a value, made `name`; whether any was.
-		bool nameSelfInValue(RawValue& each, const std::string& name);
+		bool nameSelfInValue(WrittenValue& each, const std::string& name);
 
 		// A rule's or an action's test: self, as a name or in front of a
 		// variable (self.worth), is the object running it, as it is in its
 		// commands; a test naming nothing is about that object.
-		void nameSelfInCheck(RawCondition& condition, const std::string& name)
+		void nameSelfInCheck(WrittenCondition& condition, const std::string& name)
 		{
-			for (RawCondition& part : condition.parts) { nameSelfInCheck(part, name); }
-			if (condition.join != RawCondition::Join::None) { return; }
+			for (WrittenCondition& part : condition.parts) { nameSelfInCheck(part, name); }
+			if (condition.join != WrittenCondition::Join::None) { return; }
 
 			const std::string own = "self.";
 			for (std::string* each : { &condition.filterObject, &condition.distance, &condition.sees })
@@ -601,13 +601,13 @@ namespace xge
 			}
 		}
 
-		bool nameSelfInValue(RawValue& each, const std::string& name)
+		bool nameSelfInValue(WrittenValue& each, const std::string& name)
 		{
 			return renameInValue(each, "self", name);
 		}
 	}
 
-	bool renameInValue(RawValue& each, const std::string& from, const std::string& to)
+	bool renameInValue(WrittenValue& each, const std::string& from, const std::string& to)
 	{
 		bool changed = false;
 		for (std::string* text : { &each.text, &each.min, &each.max, &each.offset })
@@ -616,30 +616,30 @@ namespace xge
 		}
 		if (each.operations)
 		{
-			auto operations = std::make_shared<std::vector<RawOperation>>(*each.operations);
-			for (RawOperation& operation : *operations)
+			auto operations = std::make_shared<std::vector<WrittenOperation>>(*each.operations);
+			for (WrittenOperation& operation : *operations)
 			{
-				for (RawOperand& operand : operation.operands) { changed = renameInValue(operand.value, from, to) || changed; }
+				for (WrittenOperand& operand : operation.operands) { changed = renameInValue(operand.value, from, to) || changed; }
 			}
 			each.operations = std::move(operations);
 		}
 		return changed;
 	}
 
-	bool nameSelfIn(std::vector<RawCommand>& list, const std::string& name)
+	bool nameSelfIn(std::vector<WrittenCommand>& list, const std::string& name)
 	{
 		bool changed = false;
-		for (RawCommand& command : list) { changed = nameSelfIn(command, name) || changed; }
+		for (WrittenCommand& command : list) { changed = nameSelfIn(command, name) || changed; }
 		return changed;
 	}
 
-	void nameSelfInTests(std::vector<RawCommand>& list)
+	void nameSelfInTests(std::vector<WrittenCommand>& list)
 	{
-		for (RawCommand& command : list)
+		for (WrittenCommand& command : list)
 		{
 			if (command.test)
 			{
-				auto test = std::make_shared<RawCondition>(*command.test);
+				auto test = std::make_shared<WrittenCondition>(*command.test);
 				nameSelfInCheck(*test, "self");
 				nameSelfInTests(test->commands);
 				command.test = std::move(test);
@@ -647,7 +647,7 @@ namespace xge
 		}
 	}
 
-	bool nameSelfIn(RawCommand& command, const std::string& name)
+	bool nameSelfIn(WrittenCommand& command, const std::string& name)
 	{
 		bool changed = false;
 		{
@@ -656,11 +656,11 @@ namespace xge
 			{
 				changed = renameStart(*text, "self", name) || changed;
 			}
-			command.forEachValue([&](RawValue& each) { changed = nameSelfInValue(each, name) || changed; });
+			command.forEachValue([&](WrittenValue& each) { changed = nameSelfInValue(each, name) || changed; });
 			// A condition in an action: its test and its commands.
 			if (command.test)
 			{
-				command.test = std::make_shared<RawCondition>(*command.test);
+				command.test = std::make_shared<WrittenCondition>(*command.test);
 				nameSelfInCheck(*command.test, name);
 				nameSelfIn(command.test->commands, name);
 				changed = true;
@@ -669,21 +669,21 @@ namespace xge
 		return changed;
 	}
 
-	void nameSelfInTest(RawCondition& condition, const std::string& name)
+	void nameSelfInTest(WrittenCondition& condition, const std::string& name)
 	{
 		nameSelfInCheck(condition, name);
 	}
 
-	bool namesSelf(const RawCommand& command)
+	bool namesSelf(const WrittenCommand& command)
 	{
-		RawCommand probe = command;
+		WrittenCommand probe = command;
 		return nameSelfIn(probe, "self_");
 	}
 
 	namespace
 	{
 		// `from.` at the start of a name in a value made `to.`; whether any was.
-		bool renameObjectInValue(RawValue& each, const std::string& from, const std::string& to)
+		bool renameObjectInValue(WrittenValue& each, const std::string& from, const std::string& to)
 		{
 			bool changed = false;
 			for (std::string* text : { &each.text, &each.offset, &each.min, &each.max })
@@ -692,10 +692,10 @@ namespace xge
 			}
 			if (each.operations)
 			{
-				auto operations = std::make_shared<std::vector<RawOperation>>(*each.operations);
-				for (RawOperation& operation : *operations)
+				auto operations = std::make_shared<std::vector<WrittenOperation>>(*each.operations);
+				for (WrittenOperation& operation : *operations)
 				{
-					for (RawOperand& operand : operation.operands) { changed = renameObjectInValue(operand.value, from, to) || changed; }
+					for (WrittenOperand& operand : operation.operands) { changed = renameObjectInValue(operand.value, from, to) || changed; }
 				}
 				each.operations = std::move(operations);
 			}
@@ -704,7 +704,7 @@ namespace xge
 
 		// The same in a test: the object it is about or measures to, its
 		// variable, its number, and what it holds.
-		bool renameObjectInCheck(RawCondition& condition, const std::string& from, const std::string& to)
+		bool renameObjectInCheck(WrittenCondition& condition, const std::string& from, const std::string& to)
 		{
 			bool changed = false;
 			for (std::string* each : { &condition.filterObject, &condition.distance, &condition.sees })
@@ -713,9 +713,9 @@ namespace xge
 			}
 			changed = renameStart(condition.variableName, from, to) || changed;
 			changed = renameObjectInValue(condition.threshold, from, to) || changed;
-			for (std::vector<RawCondition>* list : { &condition.parts, &condition.inner })
+			for (std::vector<WrittenCondition>* list : { &condition.parts, &condition.inner })
 			{
-				for (RawCondition& part : *list) { changed = renameObjectInCheck(part, from, to) || changed; }
+				for (WrittenCondition& part : *list) { changed = renameObjectInCheck(part, from, to) || changed; }
 			}
 			changed = renameObjectIn(condition.first, from, to) || changed;
 			changed = renameObjectIn(condition.commands, from, to) || changed;
@@ -723,12 +723,12 @@ namespace xge
 		}
 	}
 
-	bool renameObjectIn(std::vector<RawCommand>& list, const std::string& from, const std::string& to)
+	bool renameObjectIn(std::vector<WrittenCommand>& list, const std::string& from, const std::string& to)
 	{
 		bool changed = false;
-		for (RawCommand& command : list)
+		for (WrittenCommand& command : list)
 		{
-			RawHunt* hunt = std::get_if<RawHunt>(&command.own);
+			WrittenHunt* hunt = std::get_if<WrittenHunt>(&command.own);
 			for (std::string* each : { &command.object, hunt ? &hunt->partner : nullptr, hunt ? &hunt->retreat : nullptr })
 			{
 				if (each && *each == from) { *each = to; changed = true; }
@@ -737,41 +737,41 @@ namespace xge
 			{
 				changed = renameStart(*text, from, to) || changed;
 			}
-			command.forEachValue([&](RawValue& each) { changed = renameObjectInValue(each, from, to) || changed; });
+			command.forEachValue([&](WrittenValue& each) { changed = renameObjectInValue(each, from, to) || changed; });
 			if (command.test)
 			{
-				auto test = std::make_shared<RawCondition>(*command.test);
+				auto test = std::make_shared<WrittenCondition>(*command.test);
 				if (renameObjectInCheck(*test, from, to)) { command.test = std::move(test); changed = true; }
 			}
 		}
 		return changed;
 	}
 
-	bool namesOther(const RawCommand& command)
+	bool namesOther(const WrittenCommand& command)
 	{
-		std::vector<RawCommand> probe{ command };
+		std::vector<WrittenCommand> probe{ command };
 		return renameObjectIn(probe, "other", "other_");
 	}
 
-	bool namesOther(const RawCondition& condition)
+	bool namesOther(const WrittenCondition& condition)
 	{
-		RawCondition probe = condition;
+		WrittenCondition probe = condition;
 		return renameObjectInCheck(probe, "other", "other_");
 	}
 
-	void nameOtherInTest(RawCondition& condition, const std::string& name)
+	void nameOtherInTest(WrittenCondition& condition, const std::string& name)
 	{
 		renameObjectInCheck(condition, "other", name);
 	}
 
-	void nameOther(std::vector<RawObject>& objects)
+	void nameOther(std::vector<WrittenObject>& objects)
 	{
-		for (RawObject& object : objects)
+		for (WrittenObject& object : objects)
 		{
-			std::vector<RawCollisionRule> rules;
-			for (RawCollisionRule& rule : object.rawCollisionData.others)
+			std::vector<WrittenCollisionRule> rules;
+			for (WrittenCollisionRule& rule : object.rawCollisionData.others)
 			{
-				RawCollisionRule probe = rule;
+				WrittenCollisionRule probe = rule;
 				const bool inCommands = renameObjectIn(probe.commands, "other", "other_");
 				const bool inCheck = renameObjectInCheck(probe.check, "other", "other_");
 				if (!inCommands && !inCheck)
@@ -782,7 +782,7 @@ namespace xge
 
 				// What it can touch: of its class=, named by its object=, in
 				// the same state (or one of them in none).
-				for (const RawObject& touched : objects)
+				for (const WrittenObject& touched : objects)
 				{
 					if (&touched == &object) { continue; }
 					if (!rule.filterClass.empty() && touched.objClass != rule.filterClass) { continue; }
@@ -801,81 +801,81 @@ namespace xge
 		}
 	}
 
-	void nameSelf(std::vector<RawObject>& objects)
+	void nameSelf(std::vector<WrittenObject>& objects)
 	{
-		for (RawObject& object : objects)
+		for (WrittenObject& object : objects)
 		{
-			const std::function<void(RawValue&)> value = [&](RawValue& each) { nameSelfInValue(each, object.name); };
+			const std::function<void(WrittenValue&)> value = [&](WrittenValue& each) { nameSelfInValue(each, object.name); };
 			// The commands of its rules, timers and actions keep self, found
 			// as each runs (Game::makeNow); only their tests are made its name.
-			const auto own = [&](std::vector<RawCommand>& list) { nameSelfInTests(list); };
-			const auto commands = [&](std::vector<RawCommand>& list) { nameSelfIn(list, object.name); };
+			const auto own = [&](std::vector<WrittenCommand>& list) { nameSelfInTests(list); };
+			const auto commands = [&](std::vector<WrittenCommand>& list) { nameSelfIn(list, object.name); };
 			// A rule's test says self too, found as it is tested (Game::holds).
-			const auto check = [&](RawCondition& condition) { nameSelfInCheck(condition, "self"); };
+			const auto check = [&](WrittenCondition& condition) { nameSelfInCheck(condition, "self"); };
 
-			RawCollisionData& collisions = object.rawCollisionData;
+			WrittenCollisionData& collisions = object.rawCollisionData;
 			for (auto& edge : collisions.edges)
 			{
 				own(edge.commands);
-				for (EdgeGuard& guard : edge.guards) { if (guard.rawCheck.join != RawCondition::Join::None) { check(guard.rawCheck); } }
+				for (EdgeGuard& guard : edge.guards) { if (guard.rawCheck.join != WrittenCondition::Join::None) { check(guard.rawCheck); } }
 			}
-			for (RawCollisionRule& rule : collisions.others)
+			for (WrittenCollisionRule& rule : collisions.others)
 			{
 				own(rule.commands);
-				if (rule.check.join != RawCondition::Join::None) { check(rule.check); }
+				if (rule.check.join != WrittenCondition::Join::None) { check(rule.check); }
 			}
-			for (RawTimer& timer : object.timers) { own(timer.commands); }
+			for (WrittenTimer& timer : object.timers) { own(timer.commands); }
 			for (auto& [name, list] : object.action) { own(list); }
 			// Its animations: their live seconds, what a picture does as it
 			// comes up and what an animation that ends does then.
-			const auto animation = [&](RawValue& interval, std::vector<RawValue>& times, std::vector<std::vector<RawCommand>>& frames, std::vector<RawCommand>& then)
+			const auto animation = [&](WrittenValue& interval, std::vector<WrittenValue>& times, std::vector<std::vector<WrittenCommand>>& frames, std::vector<WrittenCommand>& then)
 			{
 				value(interval);
-				for (RawValue& time : times) { value(time); }
-				for (std::vector<RawCommand>& frame : frames) { commands(frame); }
+				for (WrittenValue& time : times) { value(time); }
+				for (std::vector<WrittenCommand>& frame : frames) { commands(frame); }
 				commands(then);
 			};
 			animation(object.animation.interval, object.animation.times, object.animation.frameCommands, object.animation.thenCommands);
-			for (RawSprite& look : object.looks) { animation(look.interval, look.times, look.frameCommands, look.thenCommands); }
+			for (WrittenSprite& look : object.looks) { animation(look.interval, look.times, look.frameCommands, look.thenCommands); }
 
 			// Its own numbers, worked out once or live (update="live"):
 			// self in them is this object too.
 			for (auto& each : object.variable) { value(each.second); }
-			for (RawValue* half : { &object.rawPosition.x, &object.rawPosition.y }) { value(*half); }
+			for (WrittenValue* half : { &object.rawPosition.x, &object.rawPosition.y }) { value(*half); }
 			if (object.rawHeading) { value(*object.rawHeading); }
 			// The numbers its texts show (<number>self.value</number>).
-			for (RawTextPiece& piece : object.sprite.text) { value(piece.value); }
-			for (RawSprite& look : object.looks)
+			for (WrittenTextPiece& piece : object.sprite.text) { value(piece.value); }
+			for (WrittenSprite& look : object.looks)
 			{
-				for (RawTextPiece& piece : look.text) { value(piece.value); }
+				for (WrittenTextPiece& piece : look.text) { value(piece.value); }
 			}
 		}
 	}
 
-	Renamed renameOwn(RawObject& object, const std::string& from, const std::string& to)
+	Renamed renameOwn(WrittenObject& object, const std::string& from, const std::string& to)
 	{
 		bool said = false;
-		const auto value = [&](RawValue& each) { said = renameInValue(each, from, to) || said; };
+		const auto value = [&](WrittenValue& each) { said = renameInValue(each, from, to) || said; };
 		const auto exact = [&](std::string& each) { if (each == from) { each = to; said = true; } };
 		const auto start = [&](std::string& each)
 		{
 			said = renameStart(each, from, to) || said;
 		};
-		const std::function<void(RawCondition&)> check = [&](RawCondition& condition)
+		const std::function<void(WrittenCondition&)> check = [&](WrittenCondition& condition)
 		{
-			for (RawCondition& part : condition.parts) { check(part); }
+			for (WrittenCondition& part : condition.parts) { check(part); }
 			exact(condition.filterObject);
 			exact(condition.distance);
 			exact(condition.sees);
 			value(condition.threshold);
 		};
-		std::function<void(std::vector<RawCommand>&)> commands = [&](std::vector<RawCommand>& list)
+		std::function<void(std::vector<WrittenCommand>&)> commands = [&](std::vector<WrittenCommand>& list)
 		{
-			for (RawCommand& command : list)
+			for (WrittenCommand& command : list)
 			{
 				if (command.test)
 				{
-					command.test = std::make_shared<RawCondition>(*command.test);
+					command.test = std::make_shared<WrittenCondition>(*command.test);
 					check(*command.test);
 					commands(command.test->commands);
 				}
@@ -890,95 +890,95 @@ namespace xge
 		object.forEachValue(value);
 		for (auto& [name, each] : object.rawPulls) { value(each); }
 		for (auto& [name, each] : object.variable) { value(each); }
-		for (RawTextPiece& piece : object.sprite.text) { value(piece.value); }
+		for (WrittenTextPiece& piece : object.sprite.text) { value(piece.value); }
 
 		// Whether what its kind holds (its rules and actions) named it.
 		said = false;
-		RawCollisionData& collisions = object.rawCollisionData;
+		WrittenCollisionData& collisions = object.rawCollisionData;
 		for (auto& edge : collisions.edges)
 		{
 			commands(edge.commands);
-			for (EdgeGuard& guard : edge.guards) { if (guard.rawCheck.join != RawCondition::Join::None) { check(guard.rawCheck); } }
+			for (EdgeGuard& guard : edge.guards) { if (guard.rawCheck.join != WrittenCondition::Join::None) { check(guard.rawCheck); } }
 		}
-		for (RawCollisionRule& rule : collisions.others)
+		for (WrittenCollisionRule& rule : collisions.others)
 		{
 			commands(rule.commands);
-			if (rule.check.join != RawCondition::Join::None) { check(rule.check); }
+			if (rule.check.join != WrittenCondition::Join::None) { check(rule.check); }
 		}
 		for (auto& [actionName, list] : object.action) { commands(list); }
-		for (RawTimer& timer : object.timers)
+		for (WrittenTimer& timer : object.timers)
 		{
 			value(timer.interval);
 			commands(timer.commands);
 		}
 		const bool kindNamedIt = said;
 		said = false;
-		const auto animation = [&](RawValue& interval, std::vector<RawValue>& times, std::vector<std::vector<RawCommand>>& frames, std::vector<RawCommand>& then)
+		const auto animation = [&](WrittenValue& interval, std::vector<WrittenValue>& times, std::vector<std::vector<WrittenCommand>>& frames, std::vector<WrittenCommand>& then)
 		{
 			value(interval);
-			for (RawValue& time : times) { value(time); }
-			for (std::vector<RawCommand>& frame : frames) { commands(frame); }
+			for (WrittenValue& time : times) { value(time); }
+			for (std::vector<WrittenCommand>& frame : frames) { commands(frame); }
 			commands(then);
 		};
 		animation(object.animation.interval, object.animation.times, object.animation.frameCommands, object.animation.thenCommands);
-		for (RawSprite& look : object.looks) { animation(look.interval, look.times, look.frameCommands, look.thenCommands); }
+		for (WrittenSprite& look : object.looks) { animation(look.interval, look.times, look.frameCommands, look.thenCommands); }
 		return { kindNamedIt, said };
 	}
 
 	namespace
 	{
 		// An operation of the values given, in that order.
-		RawValue operationOf(const char* op, std::vector<RawValue> values)
+		WrittenValue operationOf(const char* op, std::vector<WrittenValue> values)
 		{
-			RawOperation operation;
+			WrittenOperation operation;
 			operation.op = op;
-			for (RawValue& value : values) { operation.operands.push_back(RawOperand{ "value", std::move(value) }); }
-			RawValue made;
-			made.kind = RawValue::Kind::Formula;
-			made.operations = std::make_shared<std::vector<RawOperation>>(1, std::move(operation));
+			for (WrittenValue& value : values) { operation.operands.push_back(WrittenOperand{ "value", std::move(value) }); }
+			WrittenValue made;
+			made.kind = WrittenValue::Kind::Formula;
+			made.operations = std::make_shared<std::vector<WrittenOperation>>(1, std::move(operation));
 			return made;
 		}
 	}
 
-	RawValue centeredMiddle(const RawValue& value, const std::string& windowMiddle)
+	WrittenValue centeredMiddle(const WrittenValue& value, const std::string& windowMiddle)
 	{
 		if (value.operations)
 		{
-			RawValue middle;
-			middle.kind = RawValue::Kind::Formula;
+			WrittenValue middle;
+			middle.kind = WrittenValue::Kind::Formula;
 			middle.operations = value.operations;
 			return middle;
 		}
-		if (!value.offset.empty()) { return operationOf("add", { RawValue::expression(windowMiddle), RawValue::expression(value.offset) }); }
-		return RawValue::expression(value.text.empty() ? windowMiddle : value.text);
+		if (!value.offset.empty()) { return operationOf("add", { WrittenValue::expression(windowMiddle), WrittenValue::expression(value.offset) }); }
+		return WrittenValue::expression(value.text.empty() ? windowMiddle : value.text);
 	}
 
-	void centerOnOwnSize(std::vector<RawObject>& objects)
+	void centerOnOwnSize(std::vector<WrittenObject>& objects)
 	{
-		for (RawObject& object : objects)
+		for (WrittenObject& object : objects)
 		{
-			const auto center = [&](RawValue& value, const std::string& window, const char* size)
+			const auto center = [&](WrittenValue& value, const std::string& window, const char* size)
 			{
-				if (value.kind != RawValue::Kind::Centered) { return; }
-				const RawValue own = RawValue::expression(object.name + "." + size);
+				if (value.kind != WrittenValue::Kind::Centered) { return; }
+				const WrittenValue own = WrittenValue::expression(object.name + "." + size);
 				const bool live = value.live;
-				if (value.edge == RawValue::Edge::Start)
+				if (value.edge == WrittenValue::Edge::Start)
 				{
 					// Its left or top on the window's, the offset in from it.
-					value = RawValue::expression(value.offset.empty() ? std::string("0") : value.offset);
+					value = WrittenValue::expression(value.offset.empty() ? std::string("0") : value.offset);
 				}
-				else if (value.edge == RawValue::Edge::End)
+				else if (value.edge == WrittenValue::Edge::End)
 				{
 					// Its right or bottom on the window's: the window's size less
 					// its own, and the offset in from it.
-					std::vector<RawValue> parts{ RawValue::expression(window), own };
-					if (!value.offset.empty()) { parts.push_back(RawValue::expression(value.offset)); }
+					std::vector<WrittenValue> parts{ WrittenValue::expression(window), own };
+					if (!value.offset.empty()) { parts.push_back(WrittenValue::expression(value.offset)); }
 					value = operationOf("subtract", std::move(parts));
 				}
 				else
 				{
 					// Its middle where the middle goes: that less half its size.
-					value = operationOf("subtract", { centeredMiddle(value, window + ".center"), operationOf("divide", { own, RawValue::expression("2") }) });
+					value = operationOf("subtract", { centeredMiddle(value, window + ".center"), operationOf("divide", { own, WrittenValue::expression("2") }) });
 				}
 				value.live = live;
 			};
@@ -987,12 +987,12 @@ namespace xge
 		}
 	}
 
-	RawSprite nothingSprite()
+	WrittenSprite nothingSprite()
 	{
-		RawSprite sprite;
+		WrittenSprite sprite;
 		sprite.kind = "rectangle";
-		sprite.width = RawValue::expression("0");
-		sprite.height = RawValue::expression("0");
+		sprite.width = WrittenValue::expression("0");
+		sprite.height = WrittenValue::expression("0");
 		sprite.color = "color.black";
 		return sprite;
 	}

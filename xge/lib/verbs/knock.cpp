@@ -16,15 +16,15 @@
 namespace xge
 {
 	// <knock>: Two things with a mass trade their speed.
-	static void readKnock(const XmlNode& node, const std::string& where, RawCommand& command)
+	static void readKnock(const XmlNode& node, const std::string& where, WrittenCommand& command)
 	{
-		RawKnock& own = command.own.emplace<RawKnock>();
+		WrittenKnock& own = command.own.emplace<WrittenKnock>();
 		if (hasContent(node)) { own.bounce = readValue(node, where); }
 	}
 
-	static Command makeKnock(const RawCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeKnock(const WrittenCommand& raw, const ValueEvaluator& evaluate)
 	{
-		const std::optional<RawValue>& written = ownOf<RawKnock>(raw).bounce;
+		const std::optional<WrittenValue>& written = ownOf<WrittenKnock>(raw).bounce;
 		const float bounce = valueOr(written, 1.0f, evaluate);
 		if (!(bounce >= 0.0f && bounce <= 1.0f))
 		{

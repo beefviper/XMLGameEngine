@@ -95,18 +95,18 @@ namespace xge
 
 	// <random><min>..</min><max>..</max></random>: each end an expression
 	// or an operation. With an operation end, the two ends are kept as one
-	// operation "random" (see RawValue::operations).
-	RawValue readRandom(const XmlNode& tag, const std::string& here)
+	// operation "random" (see WrittenValue::operations).
+	WrittenValue readRandom(const XmlNode& tag, const std::string& here)
 	{
-		RawValue value;
-		value.kind = RawValue::Kind::Random;
+		WrittenValue value;
+		value.kind = WrittenValue::Kind::Random;
 		const std::string there = here + " > <random>";
 		for (std::unique_ptr<XmlNode> child = tag.getFirstChild(); child; child = child->getNextSibling())
 		{
 			if (child->getName() != "min" && child->getName() != "max") { fail(there, "unknown <" + child->getName() + ">; expected <min> and <max>"); }
 		}
 
-		RawOperation ends;
+		WrittenOperation ends;
 		ends.op = "random";
 		bool worked = false;
 		for (const char* end : { "min", "max" })
@@ -114,7 +114,7 @@ namespace xge
 			const std::unique_ptr<XmlNode> node = requireChild(tag, end, there);
 			const std::string text = readText(*node);
 			const std::unique_ptr<XmlNode> inside = node->getFirstChild();
-			RawOperand operand;
+			WrittenOperand operand;
 			operand.role = end;
 			if (inside)
 			{
@@ -128,14 +128,14 @@ namespace xge
 			else
 			{
 				if (text.empty()) { fail(there, "a <min> or <max> with nothing in it; each is a number, a name or an operation"); }
-				operand.value = RawValue::expression(text);
+				operand.value = WrittenValue::expression(text);
 			}
 			ends.operands.push_back(std::move(operand));
 		}
 
 		if (worked)
 		{
-			value.operations = std::make_shared<std::vector<RawOperation>>(1, std::move(ends));
+			value.operations = std::make_shared<std::vector<WrittenOperation>>(1, std::move(ends));
 		}
 		else
 		{
@@ -183,7 +183,7 @@ namespace xge
 
 	// An operand of an operation: <value>window.width.center</value>, or an
 	// operation in place of the name, or a <random>.
-	RawValue readFormulaOperand(const XmlNode& node, const std::string& where)
+	WrittenValue readFormulaOperand(const XmlNode& node, const std::string& where)
 	{
 		const std::string text = readText(node);
 		const std::string here = where + " > <" + node.getName() + ">";
@@ -192,7 +192,7 @@ namespace xge
 		if (!tag)
 		{
 			if (text.empty()) { fail(here, "has no value"); }
-			return RawValue::expression(requireTerm(text, here));
+			return WrittenValue::expression(requireTerm(text, here));
 		}
 
 		if (!text.empty()) { fail(here, "holds both the text \"" + text + "\" and a <" + tag->getName() + "> tag; use one or the other"); }
@@ -203,20 +203,20 @@ namespace xge
 		const OperationShape* shape = operationShape(tag->getName());
 		if (!shape) { fail(here, "has <" + tag->getName() + ">, which is not an operation; expected a name, a number, <random>, " + operationTags()); }
 
-		RawValue value;
-		value.kind = RawValue::Kind::Formula;
-		value.operations = std::make_shared<std::vector<RawOperation>>(1, readFormulaOperation(*tag, *shape, here));
+		WrittenValue value;
+		value.kind = WrittenValue::Kind::Formula;
+		value.operations = std::make_shared<std::vector<WrittenOperation>>(1, readFormulaOperation(*tag, *shape, here));
 		return value;
 	}
 
 	// <subtract><value>a</value><value>b</value><value>c</value></subtract>:
 	// the first operand, then the others taken from it one after another.
-	RawOperation readFormulaOperation(const XmlNode& node, const OperationShape& shape, const std::string& where)
+	WrittenOperation readFormulaOperation(const XmlNode& node, const OperationShape& shape, const std::string& where)
 	{
 		const std::string here = where + " > <" + shape.tag + ">";
 
 
-		RawOperation operation;
+		WrittenOperation operation;
 		operation.op = shape.tag;
 
 		// What it holds, in words, for a mistake: "two or more <value>", "one
@@ -248,7 +248,7 @@ namespace xge
 				fail(here, "has <" + child->getName() + "> where <" + expected + "> belongs: it holds " + wanted);
 			}
 
-			RawOperand operand;
+			WrittenOperand operand;
 			operand.role = expected;
 			operand.value = readFormulaOperand(*child, here);
 			operation.operands.push_back(std::move(operand));
@@ -264,22 +264,22 @@ namespace xge
 		return tag != "random" && operationShape(tag) != nullptr;
 	}
 
-	RawValue readOperation(const XmlNode& tag, const std::string& where)
+	WrittenValue readOperation(const XmlNode& tag, const std::string& where)
 	{
 		const OperationShape* shape = isOperation(tag.getName()) ? operationShape(tag.getName()) : nullptr;
 		if (!shape) { fail(where, "has <" + tag.getName() + ">, which is not an operation; expected " + operationTags()); }
 
-		RawValue value;
-		value.kind = RawValue::Kind::Formula;
-		value.operations = std::make_shared<std::vector<RawOperation>>(1, readFormulaOperation(tag, *shape, where));
+		WrittenValue value;
+		value.kind = WrittenValue::Kind::Formula;
+		value.operations = std::make_shared<std::vector<WrittenOperation>>(1, readFormulaOperation(tag, *shape, where));
 		return value;
 	}
 
 
 	// A number, written either as an expression (the text of the element) or
-	// as one value tag inside it - see RawValue - and whether it is
+	// as one value tag inside it - see WrittenValue - and whether it is
 	// update="live".
-	static RawValue readValueBody(const XmlNode& node, const std::string& where)
+	static WrittenValue readValueBody(const XmlNode& node, const std::string& where)
 	{
 		const std::string text = readText(node);
 		const std::string here = where + " > <" + node.getName() + ">";
@@ -288,7 +288,7 @@ namespace xge
 		if (!tag)
 		{
 			if (text.empty()) { fail(here, "has no value"); }
-			return RawValue::expression(text);
+			return WrittenValue::expression(text);
 		}
 
 		if (!text.empty()) { fail(here, "holds both the text \"" + text + "\" and a <" + tag->getName() + "> tag; use one or the other"); }
@@ -300,8 +300,8 @@ namespace xge
 		if (isOperation(tagName)) { return readOperation(*tag, here); }
 		if (tagName == "centered")
 		{
-			RawValue value = RawValue::expression(readText(*tag));
-			value.kind = RawValue::Kind::Centered;
+			WrittenValue value = WrittenValue::expression(readText(*tag));
+			value.kind = WrittenValue::Kind::Centered;
 			// <centered><offset>-60</offset></centered>: that far from the window's
 			// middle; <centered><divide>...</divide></centered>: the middle at what
 			// the operation gives (its steps kept in `operations`).
@@ -330,9 +330,9 @@ namespace xge
 			const bool across = tagName == "left" || tagName == "right";
 			if (node.getName() != (across ? "x" : "y")) { fail(edgeHere, std::string("is a side of the window ") + (across ? "across, so it goes in an <x>" : "up and down, so it goes in a <y>")); }
 			if (!readText(*tag).empty()) { fail(edgeHere, "holds only an <offset>, how far in from the window's side the object goes"); }
-			RawValue value;
-			value.kind = RawValue::Kind::Centered;
-			value.edge = (tagName == "left" || tagName == "top") ? RawValue::Edge::Start : RawValue::Edge::End;
+			WrittenValue value;
+			value.kind = WrittenValue::Kind::Centered;
+			value.edge = (tagName == "left" || tagName == "top") ? WrittenValue::Edge::Start : WrittenValue::Edge::End;
 			if (std::unique_ptr<XmlNode> offset = tag->getFirstChild())
 			{
 				if (offset->getName() != "offset" || offset->getNextSibling() || offset->getFirstChild()) { fail(edgeHere, "holds only an <offset>, how far in from the window's side the object goes"); }
@@ -345,17 +345,17 @@ namespace xge
 		fail(here, "unknown value tag <" + tagName + ">; a value is a number, a name, <random>, <centered>, a side (<left>, <right>, <top>, <bottom>) or an operation: " + operationTags());
 	}
 
-	RawValue readValue(const XmlNode& node, const std::string& where)
+	WrittenValue readValue(const XmlNode& node, const std::string& where)
 	{
 		return onLineOf(node, [&]
 		{
-			RawValue value = readValueBody(node, where);
+			WrittenValue value = readValueBody(node, where);
 			value.live = node.getAttribute("update") == "live";
 			return value;
 		});
 	}
 
-	RawValue readValueOf(const XmlNode& parent, const std::string& name, const std::string& where)
+	WrittenValue readValueOf(const XmlNode& parent, const std::string& name, const std::string& where)
 	{
 		return readValue(*requireChild(parent, name, where), where);
 	}
@@ -363,7 +363,7 @@ namespace xge
 	// The one number a verb holds as its content, as text or a value tag,
 	// beside the named parts it may also have (`parts`, with `expected`
 	// saying them for the message): <chase object="ship">2<near>40</near></chase>.
-	RawValue readLeadValue(const XmlNode& node, std::initializer_list<const char*> parts, const std::string& expected, const std::string& where)
+	WrittenValue readLeadValue(const XmlNode& node, std::initializer_list<const char*> parts, const std::string& expected, const std::string& where)
 	{
 		const std::string here = where + " > <" + node.getName() + ">";
 		std::string valueTagName;
@@ -385,7 +385,7 @@ namespace xge
 		const std::string text = readText(node);
 		if (valueTag && !text.empty()) { fail(here, "holds both the text \"" + text + "\" and a <" + valueTag->getName() + "> tag; use one or the other"); }
 		if (!valueTag && text.empty()) { fail(here, "has no value; its number goes between its tags"); }
-		if (!valueTag) { return RawValue::expression(text); }
+		if (!valueTag) { return WrittenValue::expression(text); }
 		if (valueTag->getName() == "random") { return readRandom(*valueTag, here); }
 		return readOperation(*valueTag, here);
 	}

@@ -22,7 +22,7 @@
 namespace xge
 {
 	// <hunt>: After another object through a maze, or towards it hop by hop.
-	static void readHunt(const XmlNode& node, const std::string& where, RawCommand& command)
+	static void readHunt(const XmlNode& node, const std::string& where, WrittenCommand& command)
 	{
 		requireAttribute(node, "object", where);
 		const std::string here = where + " > <hunt>";
@@ -35,13 +35,13 @@ namespace xge
 				fail(here, "a hunt by hops has its <hop> and nothing else (no speed, <ahead>, <with> or <retreat>: those are for a maze)");
 			}
 			if (!hop->getAttribute("direction").empty()) { fail(here + " > <hop>", "has a direction=; the hunt chooses the way"); }
-			readHopParts(*hop, here, command.own.emplace<RawHop>());
+			readHopParts(*hop, here, command.own.emplace<WrittenHop>());
 			return;
 		}
 
 		// What it hunts, how fast, and how its target is found from that: tiles
 		// ahead of it, with a partner, or backing off when near.
-		RawHunt& hunt = command.own.emplace<RawHunt>();
+		WrittenHunt& hunt = command.own.emplace<WrittenHunt>();
 		for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
 		{
 			const std::string tag = child->getName();
@@ -57,9 +57,9 @@ namespace xge
 		if (auto ahead = findChild(&node, "ahead")) { hunt.ahead = readValue(*ahead, here); }
 	}
 
-	static Command makeHunt(const RawCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeHunt(const WrittenCommand& raw, const ValueEvaluator& evaluate)
 	{
-		if (const RawHop* hop = std::get_if<RawHop>(&raw.own))
+		if (const WrittenHop* hop = std::get_if<WrittenHop>(&raw.own))
 		{
 			const bool diagonal = hop->diagonal.has_value();
 			const float distance = diagonal ? 0.0f : evaluate(*hop->distance);
@@ -67,7 +67,7 @@ namespace xge
 			return CmdHuntHop{ raw.object, diagonal ? evaluate(hop->diagonal->x) : distance, diagonal ? evaluate(hop->diagonal->y) : distance, diagonal, seconds, arcOf(*hop, "hop", seconds, evaluate) };
 		}
 
-		const RawHunt& written = ownOf<RawHunt>(raw);
+		const WrittenHunt& written = ownOf<WrittenHunt>(raw);
 		CmdHunt hunt{ raw.object, speedOf(written.speed, "hunt", evaluate), valueOr(written.ahead, 0.0f, evaluate), written.partner, written.retreat, 0.0f, written.search };
 		if (!written.retreat.empty())
 		{

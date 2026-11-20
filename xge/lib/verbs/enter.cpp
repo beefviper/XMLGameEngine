@@ -11,7 +11,7 @@
 namespace xge
 {
 	// <enter>: Goes to another scene of the state.
-	static void readEnter(const XmlNode&, const std::string& where, RawCommand& command)
+	static void readEnter(const XmlNode&, const std::string& where, WrittenCommand& command)
 	{
 		if (command.scene.empty() == command.way.empty())
 		{
@@ -19,7 +19,7 @@ namespace xge
 		}
 	}
 
-	static Command makeEnter(const RawCommand& raw, const ValueEvaluator&)
+	static Command makeEnter(const WrittenCommand& raw, const ValueEvaluator&)
 	{
 		return CmdEnterScene{ raw.scene, raw.way };
 	}

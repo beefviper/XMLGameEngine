@@ -411,7 +411,7 @@ TEST_CASE("keys plays back what record recorded and ends the same", "[cli][frame
 {
 	// Ten seconds of Pong played and recorded, keys pressed between frames
 	// as a window would report them.
-	RawDemo recording;
+	WrittenDemo recording;
 	std::string atEnd;
 	{
 		Game game{ readGame("descriptions/pong.xml", XmlBackend::TinyXml2) };
@@ -449,7 +449,7 @@ TEST_CASE("keys plays back what record recorded and ends the same", "[cli][frame
 	for (const XmlBackend xml : XmlDocumentFactory::availableBackends())
 	{
 		INFO(XmlDocumentFactory::name(xml));
-		const RawDemo read = readDemo(recorded.string(), xml);
+		const WrittenDemo read = readDemo(recorded.string(), xml);
 		CHECK(read.seed == recording.seed);
 		CHECK(read.frames == 600);
 		CHECK(read.keys.size() == 8);
@@ -468,7 +468,7 @@ TEST_CASE("keys plays back what record recorded and ends the same", "[cli][frame
 	{
 		Game game{ readGame("descriptions/pong.xml", XmlBackend::TinyXml2) };
 		Engine engine(game, WindowBackend::None, AudioBackend::None);
-		RawDemo noKeys = recording;
+		WrittenDemo noKeys = recording;
 		noKeys.keys.clear();
 		engine.replay(noKeys);
 		for (int frame = 0; frame < 600; ++frame) { engine.input(); engine.update(xge::kSixtieth); }

@@ -13,21 +13,21 @@
 namespace xge
 {
 	// <climb>: Up or down a ladder while held.
-	static void readClimb(const XmlNode& node, const std::string& where, RawCommand& command)
+	static void readClimb(const XmlNode& node, const std::string& where, WrittenCommand& command)
 	{
 		requireAttribute(node, "direction", where);
 		requireAttribute(node, "class", where);
-		command.own = RawClimb{ readValue(node, where) };
+		command.own = WrittenClimb{ readValue(node, where) };
 	}
 
-	static Command makeClimb(const RawCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeClimb(const WrittenCommand& raw, const ValueEvaluator& evaluate)
 	{
 		const Direction direction = directionFromName(raw.direction, raw.verb);
 		if (direction != Direction::Up && direction != Direction::Down)
 		{
 			throw std::runtime_error("<climb> has direction=\"" + raw.direction + "\"; expected up or down");
 		}
-		return CmdClimb{ direction, evaluate(ownOf<RawClimb>(raw).speed), raw.objClass };
+		return CmdClimb{ direction, evaluate(ownOf<WrittenClimb>(raw).speed), raw.objClass };
 	}
 
 	static bool runClimb(const CmdClimb& climb, const Doer& doer)

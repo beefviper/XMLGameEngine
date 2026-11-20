@@ -16,19 +16,19 @@
 namespace xge
 {
 	// <chase>: Heads straight for another object.
-	static void readChase(const XmlNode& node, const std::string& where, RawCommand& command)
+	static void readChase(const XmlNode& node, const std::string& where, WrittenCommand& command)
 	{
 		// Its speed as its content, then how near is near enough.
 		requireAttribute(node, "object", where);
 		const std::string here = where + " > <chase>";
-		RawChase& chase = command.own.emplace<RawChase>();
+		WrittenChase& chase = command.own.emplace<WrittenChase>();
 		chase.speed = readLeadValue(node, { "near" }, "its speed, then <near> if wanted", where);
 		if (auto nearNode = findChild(&node, "near")) { chase.near = readValue(*nearNode, here); }
 	}
 
-	static Command makeChase(const RawCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeChase(const WrittenCommand& raw, const ValueEvaluator& evaluate)
 	{
-		const RawChase& written = ownOf<RawChase>(raw);
+		const WrittenChase& written = ownOf<WrittenChase>(raw);
 		const float speed = evaluate(written.speed);
 		const float stopWithin = valueOr(written.near, 0.0f, evaluate);
 		if (speed < 0.0f) { throw std::runtime_error("<chase object=\"" + raw.object + "\">: its speed is below 0"); }

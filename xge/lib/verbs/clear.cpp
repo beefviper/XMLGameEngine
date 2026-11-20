@@ -9,7 +9,7 @@
 namespace xge
 {
 	// <clear>: Takes away the cells a check found.
-	static Command makeClear(const RawCommand&, const ValueEvaluator&)
+	static Command makeClear(const WrittenCommand&, const ValueEvaluator&)
 	{
 		return CmdClear{};
 	}

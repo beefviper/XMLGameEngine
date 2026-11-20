@@ -51,11 +51,11 @@ namespace xge
 		rawObjects = std::move(data.objects);
 		rawSounds = std::move(data.sounds);
 		rawPaths = std::move(data.paths);
-		for (const RawPatterns& raw : data.patterns)
+		for (const WrittenPatterns& raw : data.patterns)
 		{
 			Patterns& set = patterns.emplace_back();
 			set.name = Name::of(raw.name);
-			for (const RawPatterns::Pattern& rawPattern : raw.patterns)
+			for (const WrittenPatterns::Pattern& rawPattern : raw.patterns)
 			{
 				set.patterns.push_back({ Name::of(rawPattern.name), rawPattern.parts, NameStore::program().of(rawPattern.by) });
 			}
@@ -140,10 +140,10 @@ namespace xge
 		sendStarts();
 		scoreDueHolders();
 		// The players: the first one's turn; those the computer plays.
-		for (const RawObject& raw : rawObjects)
+		for (const WrittenObject& raw : rawObjects)
 		{
 			if (raw.think.empty()) { continue; }
-			const Command made = makeCommand(raw.think.front(), [&](const RawValue& value) { return expr.evaluate(value, "object '" + raw.name + "' > <think>"); });
+			const Command made = makeCommand(raw.think.front(), [&](const WrittenValue& value) { return expr.evaluate(value, "object '" + raw.name + "' > <think>"); });
 			if (const auto* plays = std::get_if<CmdThink>(&shapeOf(made))) { memberThinks.emplace(Name::of(raw.name), *plays); }
 		}
 		startPlayers();
@@ -195,7 +195,7 @@ namespace xge
 			}
 
 			const auto rawObject = std::find_if(rawObjects.begin(), rawObjects.end(),
-				[&](const RawObject& raw) { return raw.name == object.name; });
+				[&](const WrittenObject& raw) { return raw.name == object.name; });
 			if (rawObject == rawObjects.end())
 			{
 				return;
@@ -289,9 +289,9 @@ namespace xge
 			if (std::none_of(objects.begin(), objects.end(), taken) && std::none_of(spawned.begin(), spawned.end(), taken)) { name = candidate; }
 		}
 
-		const auto raw = std::find_if(rawObjects.begin(), rawObjects.end(), [&](const RawObject& each) { return each.name == original.name; });
+		const auto raw = std::find_if(rawObjects.begin(), rawObjects.end(), [&](const WrittenObject& each) { return each.name == original.name; });
 		if (raw == rawObjects.end()) { return nullptr; }
-		RawObject copy = *raw;
+		WrittenObject copy = *raw;
 		const Renamed renamed = renameOwn(copy, original.name, name);
 		const bool namedIt = renamed.kind;
 		copy.outerGroups = textsOf(original.outerGroups);
@@ -836,12 +836,12 @@ namespace xge
 			return;
 		}
 
-		const RawObject* raw = nullptr;
+		const WrittenObject* raw = nullptr;
 		if (const auto copy = copyRaws.find(object.name); object.isCopy() && copy != copyRaws.end())
 		{
 			raw = &copy->second;
 		}
-		else if (const auto written = std::find_if(rawObjects.begin(), rawObjects.end(), [&](const RawObject& candidate) { return candidate.name == object.name; }); written != rawObjects.end())
+		else if (const auto written = std::find_if(rawObjects.begin(), rawObjects.end(), [&](const WrittenObject& candidate) { return candidate.name == object.name; }); written != rawObjects.end())
 		{
 			raw = &*written;
 		}
@@ -2246,9 +2246,9 @@ namespace xge
 		if (check.sees == from) { check.sees = to; }
 		if (check.live)
 		{
-			RawValue renamed = *check.live;
+			WrittenValue renamed = *check.live;
 			renameInValue(renamed, from, to);
-			check.live = std::make_shared<const RawValue>(std::move(renamed));
+			check.live = std::make_shared<const WrittenValue>(std::move(renamed));
 		}
 		for (Condition::Read& read : check.reads)
 		{
@@ -2396,20 +2396,20 @@ namespace xge
 		}
 	}
 
-	float Game::stepHalf(const RawValue& value, const Object& follower)
+	float Game::stepHalf(const WrittenValue& value, const Object& follower)
 	{
-		RawValue own = value;
+		WrittenValue own = value;
 		renameInValue(own, "self", follower.name);
 		return evaluateNow(own, "object '" + follower.name + "' > <follow> > <step>");
 	}
 
-	float Game::evaluateNow(const RawValue& value, const std::string& where)
+	float Game::evaluateNow(const WrittenValue& value, const std::string& where)
 	{
 		refreshLive();
 		return expr.evaluate(value, where);
 	}
 
-	float Game::evaluateFor(const RawValue& value, const Object& object)
+	float Game::evaluateFor(const WrittenValue& value, const Object& object)
 	{
 		// Where it is written is told only when it fails.
 		try { return evaluateNow(value, std::string{}); }
@@ -2430,9 +2430,9 @@ namespace xge
 				ownCommands.front() = *live.raw;
 				if (live.namesSelf) { nameSelfIn(ownCommands.front(), self->name); }
 				if (live.namesOther) { renameObjectIn(ownCommands, "other", other->name); }
-				return makeCommand(ownCommands.front(), [&](const RawValue& value) { return evaluateNow(value, live.where); });
+				return makeCommand(ownCommands.front(), [&](const WrittenValue& value) { return evaluateNow(value, live.where); });
 			}
-			return makeCommand(*live.raw, [&](const RawValue& value) { return evaluateNow(value, live.where); });
+			return makeCommand(*live.raw, [&](const WrittenValue& value) { return evaluateNow(value, live.where); });
 		}
 		catch (const std::runtime_error& error)
 		{
@@ -2728,7 +2728,7 @@ namespace xge
 
 	bool Game::holds(const Condition& condition, std::vector<const Object*>* who)
 	{
-		if (condition.join == RawCondition::Join::All)
+		if (condition.join == WrittenCondition::Join::All)
 		{
 			for (std::size_t i = 0; i < condition.parts.size(); ++i)
 			{
@@ -2736,7 +2736,7 @@ namespace xge
 			}
 			return true;
 		}
-		if (condition.join == RawCondition::Join::Any)
+		if (condition.join == WrittenCondition::Join::Any)
 		{
 			return std::any_of(condition.parts.begin(), condition.parts.end(), [&](const Condition& part)
 				{

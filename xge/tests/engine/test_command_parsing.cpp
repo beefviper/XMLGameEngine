@@ -5,7 +5,7 @@
 //
 // Catch2 tests for makeCommands()/operator<<(Command) against the actual
 // production game/command.cpp (not a reimplementation) - they don't touch SFML or
-// load/expr, so nothing here needs a real Object/Game. A RawCommand is what
+// load/expr, so nothing here needs a real Object/Game. A WrittenCommand is what
 // load/xml reads a command tag (<bounce />, <inc variable="..." />) into.
 
 #include "game/command.h"
@@ -22,28 +22,28 @@ using namespace xge;
 namespace
 {
 	// Stands in for load/expr: every value in these tests is a plain number.
-	float evaluatePlainNumber(const RawValue& value)
+	float evaluatePlainNumber(const WrittenValue& value)
 	{
 		return std::stof(value.text);
 	}
 
-	RawCommand tag(const std::string& verb)
+	WrittenCommand tag(const std::string& verb)
 	{
-		RawCommand command;
+		WrittenCommand command;
 		command.verb = verb;
 		return command;
 	}
 
-	RawCommand resetOf(const std::string& object)
+	WrittenCommand resetOf(const std::string& object)
 	{
-		RawCommand command = tag("reset");
+		WrittenCommand command = tag("reset");
 		command.object = object;
 		return command;
 	}
 
-	RawCommand pushOf(const std::string& state)
+	WrittenCommand pushOf(const std::string& state)
 	{
-		RawCommand command = tag("push");
+		WrittenCommand command = tag("push");
 		command.state = state;
 		return command;
 	}

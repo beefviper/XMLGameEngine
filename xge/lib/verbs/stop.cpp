@@ -10,7 +10,7 @@
 namespace xge
 {
 	// <stop>: Stands still.
-	static Command makeStop(const RawCommand&, const ValueEvaluator&)
+	static Command makeStop(const WrittenCommand&, const ValueEvaluator&)
 	{
 		return CmdStop{};
 	}

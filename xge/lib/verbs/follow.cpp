@@ -18,7 +18,7 @@
 namespace xge
 {
 	// <follow>: Sets off along a path.
-	static void readFollow(const XmlNode& node, const std::string& where, RawCommand& command)
+	static void readFollow(const XmlNode& node, const std::string& where, WrittenCommand& command)
 	{
 		requireAttribute(node, "path", where);
 		const std::string here = where + " > <follow>";
@@ -26,7 +26,7 @@ namespace xge
 		{
 			if (child->getName() != "stagger" && child->getName() != "nearest") { fail(here, "unknown <" + child->getName() + ">; expected <stagger> and <nearest>"); }
 		}
-		RawFollow& follow = command.own.emplace<RawFollow>();
+		WrittenFollow& follow = command.own.emplace<WrittenFollow>();
 		if (auto stagger = findChild(&node, "stagger")) { follow.stagger = readValue(*stagger, here); }
 		if (auto nearest = findChild(&node, "nearest"))
 		{
@@ -35,9 +35,9 @@ namespace xge
 		}
 	}
 
-	static Command makeFollow(const RawCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeFollow(const WrittenCommand& raw, const ValueEvaluator& evaluate)
 	{
-		const RawFollow& written = ownOf<RawFollow>(raw);
+		const WrittenFollow& written = ownOf<WrittenFollow>(raw);
 		const float stagger = valueOr(written.stagger, 0.0f, evaluate);
 		if (stagger < 0.0f) { throw std::runtime_error("<follow path=\"" + raw.path + "\">: the <stagger> is below 0"); }
 		const bool all = !written.nearest;

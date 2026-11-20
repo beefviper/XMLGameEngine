@@ -17,7 +17,7 @@ namespace xge
 {
 	// <send>: A piece from one map to another, or what one holder holds to
 	// another.
-	static void readSend(const XmlNode& node, const std::string& where, RawCommand& command)
+	static void readSend(const XmlNode& node, const std::string& where, WrittenCommand& command)
 	{
 		// With no object=, members of a held class, holder to holder.
 		if (node.getAttribute("object").empty())
@@ -35,18 +35,18 @@ namespace xge
 		const auto column = findChild(&node, "column");
 		const auto row = findChild(&node, "row");
 		if (!column != !row) { fail(here, "has a <column> or a <row> and not the other; give both, or neither to keep its cell"); }
-		RawSend& send = command.own.emplace<RawSend>();
+		WrittenSend& send = command.own.emplace<WrittenSend>();
 		if (column) { send.column = readValue(*column, here); }
 		if (row) { send.row = readValue(*row, here); }
 	}
 
-	static Command makeSend(const RawCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeSend(const WrittenCommand& raw, const ValueEvaluator& evaluate)
 	{
 		// With no object=, members of a held class go holder to holder, as a
 		// <distribute> sends them.
 		if (raw.object.empty()) { return makeSendHeld(raw, evaluate); }
 		CmdSend send{ raw.object, raw.from, raw.into, std::nullopt, std::nullopt, false, 0, false, {} };
-		const RawSend& written = ownOf<RawSend>(raw);
+		const WrittenSend& written = ownOf<WrittenSend>(raw);
 		if (written.column) { send.column = evaluate(*written.column); }
 		if (written.row) { send.row = evaluate(*written.row); }
 		return send;

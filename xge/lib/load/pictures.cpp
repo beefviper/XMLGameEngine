@@ -36,8 +36,8 @@ namespace xge
 	namespace
 	{
 		// A sprite as it is with another style's colors in place of the
-		// ones it took from its own (see RawSprite::styleChars); its own stay.
-		void restyle(RawSprite& sprite, const RawStyle& style)
+		// ones it took from its own (see WrittenSprite::styleChars); its own stay.
+		void restyle(WrittenSprite& sprite, const WrittenStyle& style)
 		{
 			if (sprite.kind == "bitmap" && !sprite.style.empty())
 			{
@@ -49,7 +49,7 @@ namespace xge
 					if (given != style.bitmapColors.end()) { color = given->second; }
 				}
 			}
-			for (RawSprite& frame : sprite.frames) { restyle(frame, style); }
+			for (WrittenSprite& frame : sprite.frames) { restyle(frame, style); }
 		}
 
 		// A number in a picture's key, exactly: two keys are the same only
@@ -66,19 +66,19 @@ namespace xge
 			return std::to_string(color.r) + "." + std::to_string(color.g) + "." + std::to_string(color.b) + "." + std::to_string(color.a);
 		}
 
-		bool takesStyle(const RawSprite& sprite)
+		bool takesStyle(const WrittenSprite& sprite)
 		{
 			return (sprite.kind == "bitmap" && !sprite.style.empty()) || std::any_of(sprite.frames.begin(), sprite.frames.end(), takesStyle);
 		}
 	}
 
-	void Evaluator::makePalettes(const std::vector<RawObject>& rawObjects, std::vector<Object>& objects, const std::map<std::string, std::vector<std::string>>& wanted)
+	void Evaluator::makePalettes(const std::vector<WrittenObject>& rawObjects, std::vector<Object>& objects, const std::map<std::string, std::vector<std::string>>& wanted)
 	{
 		for (Object& object : objects)
 		{
 			const auto asked = wanted.find(object.name);
 			if (asked == wanted.end()) { continue; }
-			const auto raw = std::find_if(rawObjects.begin(), rawObjects.end(), [&](const RawObject& each) { return each.name == object.name; });
+			const auto raw = std::find_if(rawObjects.begin(), rawObjects.end(), [&](const WrittenObject& each) { return each.name == object.name; });
 			if (raw == rawObjects.end()) { continue; }
 
 			const std::string where = "object '" + object.name + "'";
@@ -102,8 +102,8 @@ namespace xge
 
 			for (const std::string& name : asked->second)
 			{
-				const RawStyle& style = *std::find_if(styles.begin(), styles.end(), [&](const RawStyle& each) { return each.name == name; });
-				const auto restyled = [&](RawSprite sprite) { restyle(sprite, style); return sprite; };
+				const WrittenStyle& style = *std::find_if(styles.begin(), styles.end(), [&](const WrittenStyle& each) { return each.name == name; });
+				const auto restyled = [&](WrittenSprite sprite) { restyle(sprite, style); return sprite; };
 				const std::string here = where + " in style '" + name + "'";
 
 				Object::Palette palette;
@@ -113,7 +113,7 @@ namespace xge
 					palette.looks = object.looks.all();
 					for (std::size_t i = 0; i < palette.looks.size(); ++i)
 					{
-						const RawSprite look = restyled(raw->looks[i]);
+						const WrittenSprite look = restyled(raw->looks[i]);
 						buildPicture(look, here, &palette.looks[i].bitmap);
 						if (!look.frames.empty()) { palette.looks[i].frames.edit().bitmaps = buildAnimationBitmaps(look.frames, here); }
 					}
@@ -124,8 +124,8 @@ namespace xge
 					buildPicture(restyled(raw->sprite), here, &palette.bitmap);
 					if (!object.animation.frames.shows().bitmaps.empty())
 					{
-						std::vector<RawSprite> frames;
-						for (const RawSprite& frame : raw->animation.frames) { frames.push_back(restyled(frame)); }
+						std::vector<WrittenSprite> frames;
+						for (const WrittenSprite& frame : raw->animation.frames) { frames.push_back(restyled(frame)); }
 						palette.animation = buildAnimationBitmaps(frames, here);
 					}
 				}
@@ -135,21 +135,21 @@ namespace xge
 		}
 	}
 
-	std::vector<TextPiece> Evaluator::textPieces(const RawSprite& sprite, const std::string& where, const RawObject* self)
+	std::vector<TextPiece> Evaluator::textPieces(const WrittenSprite& sprite, const std::string& where, const WrittenObject* self)
 	{
 		std::vector<TextPiece> pieces;
-		for (const RawTextPiece& raw : sprite.text)
+		for (const WrittenTextPiece& raw : sprite.text)
 		{
 			TextPiece piece;
 			piece.kind = raw.kind;
-			if (raw.kind == RawTextPiece::Kind::Words)
+			if (raw.kind == WrittenTextPiece::Kind::Words)
 			{
 				piece.shown = raw.words;
 				pieces.push_back(std::move(piece));
 				continue;
 			}
 
-			if (raw.value.kind == RawValue::Kind::Expression)
+			if (raw.value.kind == WrittenValue::Kind::Expression)
 			{
 				if (const auto reference = parseVariableReference(raw.value.text))
 				{
@@ -199,8 +199,8 @@ namespace xge
 		}
 	}
 
-	Picture Evaluator::buildPicture(const RawSprite& sprite, const std::string& where,
-		PictureId* bitmap, std::shared_ptr<const Turnable>* turnable, const RawObject* self)
+	Picture Evaluator::buildPicture(const WrittenSprite& sprite, const std::string& where,
+		PictureId* bitmap, std::shared_ptr<const Turnable>* turnable, const WrittenObject* self)
 	{
 		const std::string color = sprite.color.empty() ? "color.white" : sprite.color;
 		checkColor(color, where);
@@ -326,7 +326,7 @@ namespace xge
 
 	// buildPicture's steps 1 to 3 for a line, polygon, cell, svg or bitmap:
 	// read, drawn into a Bitmap and flipped; a line's segments kept to turn.
-	PictureId Evaluator::drawPicture(const RawSprite& sprite, const std::string& where, const std::string& color, const std::shared_ptr<Turnable>& kept)
+	PictureId Evaluator::drawPicture(const WrittenSprite& sprite, const std::string& where, const std::string& color, const std::shared_ptr<Turnable>& kept)
 	{
 		PictureId drawn;
 		// 3. Flipped.
@@ -337,7 +337,7 @@ namespace xge
 		if (sprite.kind == "line")
 		{
 			// 1. The line ends, colours and thicknesses.
-			for (const RawLine& rawLine : sprite.lines)
+			for (const WrittenLine& rawLine : sprite.lines)
 			{
 				LineSegment segment;
 				segment.x1 = evaluate(rawLine.from.x, where);
@@ -367,10 +367,10 @@ namespace xge
 			// 1. The corners and colours; 2. drawn, filled. Turned as a
 			// finished picture, pixel by pixel, and holed as one.
 			std::vector<FilledPolygon> polygons;
-			for (const RawPolygon& rawPolygon : sprite.polygons)
+			for (const WrittenPolygon& rawPolygon : sprite.polygons)
 			{
 				FilledPolygon polygon;
-				for (const RawVector2& point : rawPolygon.points)
+				for (const WrittenVector2& point : rawPolygon.points)
 				{
 					polygon.points.emplace_back(evaluate(point.x, where), evaluate(point.y, where));
 				}
@@ -392,7 +392,7 @@ namespace xge
 			// 1. Which sheet, which cell or part of it, at what size.
 			const auto sheet = std::find_if(sheets.begin(), sheets.end(), [&](const Sheet& each) { return each.name == sprite.sheet; });
 			if (sheet == sheets.end()) { throw std::invalid_argument("<cell sheet=\"" + sprite.sheet + "\">: the game has no <sheet name=\"" + sprite.sheet + "\">"); }
-			const auto given = [](const RawValue& value) { return !(value.kind == RawValue::Kind::Expression && value.text.empty()); };
+			const auto given = [](const WrittenValue& value) { return !(value.kind == WrittenValue::Kind::Expression && value.text.empty()); };
 			SheetCell cell;
 			std::string key = "cell|" + sheet->name + "|";
 			if (sprite.svgRegion)
@@ -471,14 +471,14 @@ namespace xge
 		}
 		return drawn;
 	}
-	std::vector<PictureId> Evaluator::buildAnimationBitmaps(const std::vector<RawSprite>& frames, const std::string& where,
+	std::vector<PictureId> Evaluator::buildAnimationBitmaps(const std::vector<WrittenSprite>& frames, const std::string& where,
 		std::vector<std::shared_ptr<const Turnable>>* turnables)
 	{
 		std::vector<PictureId> pictures;
 
 		for (std::size_t i = 0; i < frames.size(); ++i)
 		{
-			const RawSprite& frame = frames[i];
+			const WrittenSprite& frame = frames[i];
 			const std::string here = where + " > frame " + std::to_string(i + 1)
 				+ (frame.name.empty() ? std::string{} : " (\"" + frame.name + "\")");
 
@@ -538,7 +538,7 @@ namespace xge
 		return flips;
 	}
 
-	float Evaluator::animationSecondsOf(const RawValue& interval, const std::string& where)
+	float Evaluator::animationSecondsOf(const WrittenValue& interval, const std::string& where)
 	{
 		// A live one may read its own object's numbers, not made yet: it is
 		// timed as the game starts, before anything is drawn (Game::follow).
@@ -552,7 +552,7 @@ namespace xge
 		return seconds;
 	}
 
-	std::vector<float> Evaluator::animationTimesOf(const std::vector<RawValue>& times, float fallback, const std::string& where)
+	std::vector<float> Evaluator::animationTimesOf(const std::vector<WrittenValue>& times, float fallback, const std::string& where)
 	{
 		std::vector<float> frames;
 		for (std::size_t i = 0; i < times.size(); ++i)
@@ -564,7 +564,7 @@ namespace xge
 		return frames;
 	}
 
-	std::vector<std::vector<Command>> Evaluator::frameCommandsOf(const std::vector<std::vector<RawCommand>>& frames, const std::string& where)
+	std::vector<std::vector<Command>> Evaluator::frameCommandsOf(const std::vector<std::vector<WrittenCommand>>& frames, const std::string& where)
 	{
 		std::vector<std::vector<Command>> made;
 		for (std::size_t i = 0; i < frames.size(); ++i)
@@ -586,13 +586,13 @@ namespace xge
 		}
 	}
 
-	std::map<std::string, Vector2f> Evaluator::layOutCells(const std::vector<RawObject>& rawObjects,
+	std::map<std::string, Vector2f> Evaluator::layOutCells(const std::vector<WrittenObject>& rawObjects,
 		const std::map<std::string, Picture>& pictures)
 	{
 		// Each group's cells by row, in the order they were read: a row's
 		// columns left to right.
-		std::map<std::string, std::map<int, std::vector<const RawObject*>>> groups;
-		for (const RawObject& rawObject : rawObjects)
+		std::map<std::string, std::map<int, std::vector<const WrittenObject*>>> groups;
+		for (const WrittenObject& rawObject : rawObjects)
 		{
 			if (rawObject.cell.column > 0) { groups[rawObject.groupName][rawObject.cell.row].push_back(&rawObject); }
 		}
@@ -601,7 +601,7 @@ namespace xge
 
 		// What a <map> placed: in the middle of its tile, counted from the
 		// map's top left, which is the object's own <position>.
-		for (const RawObject& rawObject : rawObjects)
+		for (const WrittenObject& rawObject : rawObjects)
 		{
 			if (rawObject.cell.mapColumn == 0) { continue; }
 			const std::string where = "object '" + rawObject.name + "' (on map '" + rawObject.cell.map + "')";
@@ -619,7 +619,7 @@ namespace xge
 			float above = 0.0f; // the height of the row above
 			for (const auto& [row, cells] : rows)
 			{
-				const RawObject& first = *cells.front();
+				const WrittenObject& first = *cells.front();
 				const std::string where = "object '" + first.name + "'";
 
 				// The slot is the row's sprite, so a cell with a sprite of its
@@ -632,14 +632,14 @@ namespace xge
 				above = slot.y;
 
 				float left = 0.0f;
-				for (const RawObject* cell : cells)
+				for (const WrittenObject* cell : cells)
 				{
 					const std::string here = "object '" + cell->name + "'";
 					if (cell->cell.column > 1) { left += slot.x + evaluate(cell->cell.gapBefore, here); }
 
 					const Vector2f own = layoutSize(pictures.at(cell->name));
 					// A <slope>: each column that much lower than the one before.
-					const float drop = cell->cell.drop.text.empty() && cell->cell.drop.kind == RawValue::Kind::Expression ? 0.0f
+					const float drop = cell->cell.drop.text.empty() && cell->cell.drop.kind == WrittenValue::Kind::Expression ? 0.0f
 						: evaluate(cell->cell.drop, here + " > <slope>") * static_cast<float>(cell->cell.column - 1);
 					offsets[cell->name] = { left + (slot.x - own.x) / 2.0f, top + drop + (slot.y - own.y) / 2.0f };
 				}

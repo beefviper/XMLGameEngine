@@ -13,7 +13,7 @@ namespace xge
 {
 	// <put>: A new piece on the cell it is over: of class=, or with none,
 	// of the pieces the player on its turn owns (Game::turnClass).
-	static void readPut(const XmlNode& node, const std::string& where, RawCommand&)
+	static void readPut(const XmlNode& node, const std::string& where, WrittenCommand&)
 	{
 		if (const std::unique_ptr<XmlNode> child = node.getFirstChild())
 		{
@@ -21,7 +21,7 @@ namespace xge
 		}
 	}
 
-	static Command makePut(const RawCommand& raw, const ValueEvaluator&)
+	static Command makePut(const WrittenCommand& raw, const ValueEvaluator&)
 	{
 		return CmdPut{ raw.objClass };
 	}

@@ -13,7 +13,7 @@
 namespace xge
 {
 	// <land>: Comes to rest on what it fell onto.
-	static Command makeLand(const RawCommand&, const ValueEvaluator&)
+	static Command makeLand(const WrittenCommand&, const ValueEvaluator&)
 	{
 		return CmdLand{};
 	}

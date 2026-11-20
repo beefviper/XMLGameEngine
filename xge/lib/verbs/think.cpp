@@ -17,10 +17,10 @@ namespace xge
 {
 	// <think>: A <computer> looks ahead for its best move: run by Game
 	// (game/think.cpp).
-	static void readThink(const XmlNode& node, const std::string& where, RawCommand& command)
+	static void readThink(const XmlNode& node, const std::string& where, WrittenCommand& command)
 	{
 		const std::string here = where + " > <think>";
-		RawThink& think = command.own.emplace<RawThink>();
+		WrittenThink& think = command.own.emplace<WrittenThink>();
 		think.button = requireAttribute(node, "button", here);
 		for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
 		{
@@ -37,10 +37,10 @@ namespace xge
 		}
 	}
 
-	static Command makeThink(const RawCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeThink(const WrittenCommand& raw, const ValueEvaluator& evaluate)
 	{
 		if (raw.object.empty()) { throw std::runtime_error("<think>: names the object it plays with object= (a <think> on a member of a group that takes <turns> plays that member)"); }
-		const RawThink& written = ownOf<RawThink>(raw);
+		const WrittenThink& written = ownOf<WrittenThink>(raw);
 		const KeyCode button = keyCodeFromString(written.button);
 		if (button == KeyCode::Unknown)
 		{

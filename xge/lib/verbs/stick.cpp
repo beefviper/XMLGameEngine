@@ -10,7 +10,7 @@
 namespace xge
 {
 	// <stick>: Stops at the window's edge, or against what it touched.
-	static Command makeStick(const RawCommand&, const ValueEvaluator&)
+	static Command makeStick(const WrittenCommand&, const ValueEvaluator&)
 	{
 		return CmdStick{};
 	}

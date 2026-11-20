@@ -9,7 +9,7 @@
 namespace xge
 {
 	// <place>: Sets down what it picked, where it is.
-	static Command makePlace(const RawCommand& raw, const ValueEvaluator&)
+	static Command makePlace(const WrittenCommand& raw, const ValueEvaluator&)
 	{
 		return CmdPlace{ raw.into };
 	}

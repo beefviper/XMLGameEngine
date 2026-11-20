@@ -9,7 +9,7 @@
 namespace xge
 {
 	// <split>: Cuts a chain where it was touched.
-	static Command makeSplit(const RawCommand&, const ValueEvaluator&)
+	static Command makeSplit(const WrittenCommand&, const ValueEvaluator&)
 	{
 		return CmdSplit{};
 	}

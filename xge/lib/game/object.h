@@ -48,7 +48,7 @@ namespace xge
 	// other object in the pair; empty means "matches anything". Only meaningful
 	// for object-object collisions - a screen-edge collision (<collision
 	// edge="...">) has no "other object" to filter against.
-	struct RawCollisionRule
+	struct WrittenCollisionRule
 	{
 		int line{ 0 }; // of its <collision> tag in the game file; 0 when not known (a generated program)
 		std::string filterClass;
@@ -84,9 +84,9 @@ namespace xge
 		// runs while every one holds. Gathered as an <all> (join All); join
 		// None means there are none. A <condition> with no class= or object= is
 		// about the object running the rule (see nameSelf).
-		RawCondition check;
+		WrittenCondition check;
 
-		std::vector<RawCommand> commands;
+		std::vector<WrittenCommand> commands;
 
 		// For a rule that names `other` (the object it touched): every
 		// object of the file it can touch, in full (see nameOther). Its
@@ -114,12 +114,12 @@ namespace xge
 		Name unlessClass;
 		// Its <condition>s and <any>s, gathered as an <all> (join None when
 		// it has none), and what they are made into: it runs only while it holds.
-		RawCondition rawCheck;
+		WrittenCondition rawCheck;
 		std::optional<Condition> check;
 	};
 
 	// One screen edge's rules: their commands in file order, and where each
-	// rule is among them (guards). `Command` is a RawCommand as written, or
+	// rule is among them (guards). `Command` is a WrittenCommand as written, or
 	// the Command it is made into.
 	template <typename CommandType>
 	struct EdgeRules
@@ -139,19 +139,19 @@ namespace xge
 	// left out: 0); or "inset", the picture's box pulled in from each side
 	// by top, ...: each the most particular of the side's words given
 	// (<top>, then <vertical>, then <all>), empty text when none (0).
-	struct RawHitbox
+	struct WrittenHitbox
 	{
 		std::string name;           // name=: what rules pick it by (empty: none)
 		std::string kind;
-		RawValue width;
-		RawValue height;
-		RawValue radius;
-		RawValue x;
-		RawValue y;
-		RawValue top;
-		RawValue bottom;
-		RawValue left;
-		RawValue right;
+		WrittenValue width;
+		WrittenValue height;
+		WrittenValue radius;
+		WrittenValue x;
+		WrittenValue y;
+		WrittenValue top;
+		WrittenValue bottom;
+		WrittenValue left;
+		WrittenValue right;
 	};
 
 	// One, worked out: an inset one, or a box (round: a circle filling it)
@@ -169,7 +169,7 @@ namespace xge
 		bool round{ false };
 	};
 
-	struct RawCollisionData
+	struct WrittenCollisionData
 	{
 		bool enabled{ false };
 		bool lockstep{ false };
@@ -181,35 +181,35 @@ namespace xge
 
 		// Its <hitbox>es: what it touches other objects with instead of its
 		// picture, any of them a touch. None: the picture.
-		std::vector<RawHitbox> hitboxes;
+		std::vector<WrittenHitbox> hitboxes;
 
 		// Each screen edge's <collision edge="..."> rules (addEdgeRule).
-		EdgesRules<RawCommand> edges;
+		EdgesRules<WrittenCommand> edges;
 		// Rules about another object: a <collision> with a class= and/or
 		// object= selector, or with no selector at all (matches anything), as
 		// against the window's edges above.
-		std::vector<RawCollisionRule> others;
+		std::vector<WrittenCollisionRule> others;
 
-		friend std::ostream& operator<<(std::ostream& o, RawCollisionData const& f);
+		friend std::ostream& operator<<(std::ostream& o, WrittenCollisionData const& f);
 	};
 
-	// A parsed, ready-to-run version of RawCollisionRule.
+	// A parsed, ready-to-run version of WrittenCollisionRule.
 	struct CollisionRule
 	{
-		int line{ 0 }; // RawCollisionRule::line
+		int line{ 0 }; // WrittenCollisionRule::line
 		Name filterClass;
 		Name filterObject;
 		Name unlessClass;
-		Name throughClass;          // see RawCollisionRule
+		Name throughClass;          // see WrittenCollisionRule
 
 		Name whileSprite;
 		std::vector<Edge> sides;           // empty: any side
-		Name hitbox;                // see RawCollisionRule
+		Name hitbox;                // see WrittenCollisionRule
 		Name by;
-		std::optional<Condition> check;    // see RawCollisionRule::check
+		std::optional<Condition> check;    // see WrittenCollisionRule::check
 		std::vector<Command> commands;
 		// For one naming other: its commands as made for each other thing
-		// it can touch (RawCollisionRule::touchable), only until the load's
+		// it can touch (WrittenCollisionRule::touchable), only until the load's
 		// checks have seen them.
 		std::vector<std::vector<Command>> loadChecks;
 	};
@@ -220,9 +220,9 @@ namespace xge
 		int lockstep{ 0 };
 		CollisionType type{ CollisionType::Box };
 
-		// Each screen edge's rules (see RawCollisionData::edges).
+		// Each screen edge's rules (see WrittenCollisionData::edges).
 		EdgesRules<Command> edges;
-		// Rules about another object (see RawCollisionData::others).
+		// Rules about another object (see WrittenCollisionData::others).
 		std::vector<CollisionRule> others;
 		// Its <hitbox>es (Object::hitboxes), an inset one placed on whatever
 		// picture shows.
@@ -233,19 +233,19 @@ namespace xge
 
 	// One <line> of a sprite drawn from lines: two points, measured in pixels
 	// from the sprite's top left, and how it looks.
-	struct RawLine
+	struct WrittenLine
 	{
-		RawVector2 from;
-		RawVector2 to;
+		WrittenVector2 from;
+		WrittenVector2 to;
 		std::string color;           // "" means color.white
-		std::optional<RawValue> thickness;  // when written; otherwise 1
+		std::optional<WrittenValue> thickness;  // when written; otherwise 1
 	};
 
 	// One <polygon> of a sprite of filled shapes: its corners in order, in
 	// pixels from the sprite's top left, and its colour.
-	struct RawPolygon
+	struct WrittenPolygon
 	{
-		std::vector<RawVector2> points;
+		std::vector<WrittenVector2> points;
 		std::string color;           // "" means color.white
 	};
 
@@ -256,16 +256,16 @@ namespace xge
 	// One piece of a <text>, in the order written: a fixed label
 	// (<content>), a number (<number>) or a number shown as a letter
 	// (<letter>, 0 is A, 25 is Z, and round again).
-	struct RawTextPiece
+	struct WrittenTextPiece
 	{
 		enum class Kind { Words, Number, Letter, Choice };
 		Kind kind{ Kind::Words };
 		std::string words;           // Words
-		RawValue value;              // Number, Letter, Choice (which, from 0)
+		WrittenValue value;              // Number, Letter, Choice (which, from 0)
 		std::vector<std::string> choices; // Choice: its <word>s
 	};
 
-	struct RawSprite
+	struct WrittenSprite
 	{
 		std::string kind;
 
@@ -273,8 +273,8 @@ namespace xge
 		// when an object has more than one sprite.
 		std::string name;
 
-		std::vector<RawLine> lines;  // line: one or more
-		std::vector<RawPolygon> polygons; // polygon: one or more
+		std::vector<WrittenLine> lines;  // line: one or more
+		std::vector<WrittenPolygon> polygons; // polygon: one or more
 
 		std::vector<std::string> bitmapRows; // bitmap: the <row>s, top to bottom
 		// bitmap: each <color char="w">: the character and the name of its
@@ -282,30 +282,30 @@ namespace xge
 		std::vector<std::pair<char, std::string>> bitmapColors;
 		// bitmap: real pixels to a character; svg: real pixels to a unit of
 		// the drawing; when written.
-		std::optional<RawValue> scale;
+		std::optional<WrittenValue> scale;
 
 		// svg: the file is `path` (as for an image). The part of the drawing to
 		// take, in the drawing's units, is x, y, width and height, all four
 		// given or none (then all of it). hide names elements to leave out.
 		struct Region
 		{
-			RawValue x;
-			RawValue y;
-			RawValue width;
-			RawValue height;
+			WrittenValue x;
+			WrittenValue y;
+			WrittenValue width;
+			WrittenValue height;
 		};
 		std::optional<Region> svgRegion;
 		std::vector<std::string> svgHide;
 
-		RawValue radius;             // circle
-		RawValue width;              // rectangle; cell: the size it is made (an item)
-		RawValue height;             // rectangle; cell
-		RawValue size;               // text
+		WrittenValue radius;             // circle
+		WrittenValue width;              // rectangle; cell: the size it is made (an item)
+		WrittenValue height;             // rectangle; cell
+		WrittenValue size;               // text
 
-		// A text: its pieces, in order (see RawTextPiece); a <number> or a
+		// A text: its pieces, in order (see WrittenTextPiece); a <number> or a
 		// <letter> that is just an owner.variable stays live (see
 		// Object::BoundText).
-		std::vector<RawTextPiece> text;
+		std::vector<WrittenTextPiece> text;
 
 		std::string path;            // image, svg
 
@@ -314,15 +314,15 @@ namespace xge
 		// it says; drawn `scale` pixels to the
 		// sheet's, or (a pack's faces) made `width` by `height` when given.
 		std::string sheet;
-		RawValue column;
-		RawValue row;
+		WrittenValue column;
+		WrittenValue row;
 
 		// tether: the two objects whose middles
 		// the line joins, drawn again every frame, and how thick it is
 		// (empty text: 1).
 		std::string tetherFrom;
 		std::string tetherTo;
-		RawValue thickness;
+		WrittenValue thickness;
 
 		std::string flip;            // image: "", "horizontal" or "vertical"
 		std::string color;           // "" means color.white (or the style's)
@@ -344,39 +344,39 @@ namespace xge
 		// pick, in order, each shown `interval` seconds (or its own, in
 		// `times`), round and round, or through one time (`once`). The fields
 		// above are its first frame's. Empty for a still look.
-		std::vector<RawSprite> frames;
-		RawValue interval;
-		std::vector<RawValue> times;
+		std::vector<WrittenSprite> frames;
+		WrittenValue interval;
+		std::vector<WrittenValue> times;
 		// Each frame's own <hitbox>es, one list a frame, or none at all when
 		// no frame has any: touched with too while that frame shows.
-		std::vector<std::vector<RawHitbox>> frameHitboxes;
-		std::vector<std::vector<RawCommand>> frameCommands;   // as RawFrames::frameCommands
+		std::vector<std::vector<WrittenHitbox>> frameHitboxes;
+		std::vector<std::vector<WrittenCommand>> frameCommands;   // as WrittenFrames::frameCommands
 		bool once{ false };
-		bool stepped{ false };   // as RawFrames::stepped
+		bool stepped{ false };   // as WrittenFrames::stepped
 		// <then>: the look a once look goes to when it ends (empty, the look
 		// before it), and the commands it runs then.
 		std::string thenSprite;
-		std::vector<RawCommand> thenCommands;
+		std::vector<WrittenCommand> thenCommands;
 	};
 
 	// An <animation> as written: its name (empty for an object's one
 	// animation, a look's name for a look that moves), how long each picture
 	// is shown, and the names of the sprites it shows, in order.
-	struct RawFrames
+	struct WrittenFrames
 	{
 		std::string name;
-		RawValue interval;
+		WrittenValue interval;
 		std::vector<std::string> frames;
 		// Each frame's own <seconds>, one a frame, or none at all when no
 		// frame has its own; an empty value is the animation's (see
 		// frameTimeGiven).
-		std::vector<RawValue> times;
+		std::vector<WrittenValue> times;
 		// Each frame's own <hitbox>es, one list a frame, or none at all when
 		// no frame has any: touched with too while that frame shows.
-		std::vector<std::vector<RawHitbox>> frameHitboxes;
+		std::vector<std::vector<WrittenHitbox>> frameHitboxes;
 		// Each frame's own commands, one list a frame, or none at all when no
 		// frame has any: run as the animation moves on to that picture.
-		std::vector<std::vector<RawCommand>> frameCommands;
+		std::vector<std::vector<WrittenCommand>> frameCommands;
 		// <once />: plays through one time, not round and round.
 		bool once{ false };
 		// <stepped />: the object moves only as the picture changes.
@@ -384,59 +384,59 @@ namespace xge
 		// <then sprite="...">: the look it goes to when it ends, and the
 		// commands it runs then. Only with once.
 		std::string thenSprite;
-		std::vector<RawCommand> thenCommands;
+		std::vector<WrittenCommand> thenCommands;
 		// Frames cut from a sheet (<cell>s and runs of <cells>), named for
 		// the animation and numbered ("walk.1", "frame.1" for an unnamed
 		// one), each also among `frames`: sprites the object gains.
-		std::vector<RawSprite> cells;
+		std::vector<WrittenSprite> cells;
 	};
 
 	// A game's <style name="...">: what a <text> (a size and a color) or a
 	// <bitmap> (a scale and colors) can take by style="..." instead of saying
 	// them. Any may be left out.
-	struct RawStyle
+	struct WrittenStyle
 	{
 		std::string name;
-		RawValue size;               // empty: the style gives no size
+		WrittenValue size;               // empty: the style gives no size
 		std::string color;           // empty: the style gives no color
 		std::string font;            // a text's font file; empty: the style gives none
 		// A bitmap's: its <scale> (when written), and its other colors, a
 		// character each.
-		std::optional<RawValue> scale;
+		std::optional<WrittenValue> scale;
 		std::vector<std::pair<char, std::string>> bitmapColors;
 	};
 
 	// An object's <animation>: the sprites it shows one after the other, each
 	// for `interval` seconds, round and round. The frames are the object's own
 	// <sprite>s picked out by name, in the order the <frame>s are written.
-	struct RawAnimation
+	struct WrittenAnimation
 	{
-		RawValue interval;
-		std::vector<RawSprite> frames;
-		std::vector<RawValue> times;   // as RawFrames::times
-		std::vector<std::vector<RawHitbox>> frameHitboxes;   // as RawFrames::frameHitboxes
-		std::vector<std::vector<RawCommand>> frameCommands;   // as RawFrames::frameCommands
-		bool once{ false };            // as RawFrames::once
-		bool stepped{ false };         // as RawFrames::stepped
-		std::vector<RawCommand> thenCommands;   // as RawFrames::thenCommands
+		WrittenValue interval;
+		std::vector<WrittenSprite> frames;
+		std::vector<WrittenValue> times;   // as WrittenFrames::times
+		std::vector<std::vector<WrittenHitbox>> frameHitboxes;   // as WrittenFrames::frameHitboxes
+		std::vector<std::vector<WrittenCommand>> frameCommands;   // as WrittenFrames::frameCommands
+		bool once{ false };            // as WrittenFrames::once
+		bool stepped{ false };         // as WrittenFrames::stepped
+		std::vector<WrittenCommand> thenCommands;   // as WrittenFrames::thenCommands
 	};
 
 	// Whether a frame's entry in `times` holds a time of its own, rather
 	// than standing for the animation's.
-	inline bool frameTimeGiven(const RawValue& time)
+	inline bool frameTimeGiven(const WrittenValue& time)
 	{
-		return time.kind != RawValue::Kind::Expression || !time.text.empty() || time.operations;
+		return time.kind != WrittenValue::Kind::Expression || !time.text.empty() || time.operations;
 	}
 
-	// One of a cell map's <checks> (see RawCell::cells): what it asks of the
+	// One of a cell map's <checks> (see WrittenCell::cells): what it asks of the
 	// map after something settles, and what it does for each answer. "full"
 	// is a row every cell of which holds a loose piece (of the class, when
 	// it names one).
-	struct RawCheck
+	struct WrittenCheck
 	{
 		std::string kind;
 		std::string objClass;
-		std::vector<RawCommand> commands;
+		std::vector<WrittenCommand> commands;
 		// A <line>'s <atleast>: how many alike in a row.
 		int count{ 0 };
 		// <straight />: across and down only, no slants.
@@ -450,16 +450,16 @@ namespace xge
 	// left to right with a gap before each, and the rows follow one another
 	// down the same way (see load/expr::layOutCells). A cell whose own sprite
 	// is another size sits in the middle of its slot.
-	struct RawCell
+	struct WrittenCell
 	{
 		int column{ 0 };             // from 1; 0 for anything that is not a cell
 		int row{ 0 };                // from 1
 		std::string columnName;      // <columns name=>: what its column is also called (an item's rank)
 		std::string rowName;         // <rows name=>: what its row is also called (an item's suit)
-		RawSprite slot;              // its row's sprite, as the row first shows it
-		RawValue gapBefore;          // the gap before its column, in its row (0 in column 1)
-		RawValue gapAbove;           // the gap above its row (0 in row 1)
-		RawValue drop;               // how much lower each column is than the one before it (<slope>; empty: 0)
+		WrittenSprite slot;              // its row's sprite, as the row first shows it
+		WrittenValue gapBefore;          // the gap before its column, in its row (0 in column 1)
+		WrittenValue gapAbove;           // the gap above its row (0 in row 1)
+		WrittenValue drop;               // how much lower each column is than the one before it (<slope>; empty: 0)
 
 		// A place on a <map> (load/xml's readMap), when mapColumn is above 0:
 		// the map's name, the tile's column and row counting from 1, how many
@@ -474,14 +474,14 @@ namespace xge
 		bool between{ false };
 		int mapColumns{ 0 };
 		int mapRows{ 0 };
-		RawValue tileWidth;
-		RawValue tileHeight;
+		WrittenValue tileWidth;
+		WrittenValue tileHeight;
 
 		// On a map with <cells />: its pieces move a cell at a time, a move
 		// that is refused is a touch, and what the map asks after something
 		// settles on it (its <checks>). Every piece of the map carries them.
 		bool cells{ false };
-		std::vector<RawCheck> checks;
+		std::vector<WrittenCheck> checks;
 
 		// The character of the map's rows that picked it ('\0' for none).
 		char character{};
@@ -507,7 +507,7 @@ namespace xge
 	// An object's <maze map="maze">: the <map> whose tiles it walks ("" for
 	// an object that walks none), what is a wall to it, and where it goes
 	// slower. See play/maze.h.
-	struct RawMaze
+	struct WrittenMaze
 	{
 		std::string map;
 		std::vector<MazeWall> walls;
@@ -573,7 +573,7 @@ namespace xge
 	// scored: <alike variable>N (N items with one value of the variable;
 	// two <alike>s of one variable, two values) and <run variable>N (N
 	// values in a row; by worth, an item counting any of its worths).
-	struct RawPatterns
+	struct WrittenPatterns
 	{
 		enum class Part { Alike, Run };
 		struct Pattern
@@ -589,7 +589,7 @@ namespace xge
 	// A <patterns> set as played, its names held as Names.
 	struct Patterns
 	{
-		using Part = RawPatterns::Part;
+		using Part = WrittenPatterns::Part;
 		struct Pattern
 		{
 			Name name;
@@ -600,7 +600,7 @@ namespace xge
 		std::vector<Pattern> patterns;
 	};
 
-	struct RawObject
+	struct WrittenObject
 	{
 		std::string name;
 		int line{ 0 }; // of its tag (a member: its group's) in the game file; 0 when not known (a generated program)
@@ -608,13 +608,13 @@ namespace xge
 
 		// What the object looks like: its only <sprite>, or, when it has an
 		// <animation>, the first frame (the one it starts on).
-		RawSprite sprite;
+		WrittenSprite sprite;
 		bool hasAnimation{ false };
-		RawAnimation animation;
+		WrittenAnimation animation;
 
 		// An object's looks: its <sprite>s, each named, when it has more than
 		// one and no animation (sprite is the first). Empty otherwise.
-		std::vector<RawSprite> looks;
+		std::vector<WrittenSprite> looks;
 		bool isVisible{ true };
 
 		// <hidden />: in play, moving and colliding, but never drawn
@@ -630,27 +630,27 @@ namespace xge
 
 		// <most>: how many spawned of it can exist at once (0: no limit).
 		int most{ 0 };
-		RawVector2 rawPosition;
-		RawVector2 rawVelocity;
+		WrittenVector2 rawPosition;
+		WrittenVector2 rawVelocity;
 		// Each of these only when written.
-		std::optional<RawVector2> rawAcceleration;
-		std::optional<RawValue> rawHeading;
-		std::optional<RawVector2> rawPivot;  // the point of the picture its heading turns about
-		std::optional<RawValue> rawDrag;
-		std::optional<RawValue> rawFriction;
-		std::optional<RawValue> rawMass;
+		std::optional<WrittenVector2> rawAcceleration;
+		std::optional<WrittenValue> rawHeading;
+		std::optional<WrittenVector2> rawPivot;  // the point of the picture its heading turns about
+		std::optional<WrittenValue> rawDrag;
+		std::optional<WrittenValue> rawFriction;
+		std::optional<WrittenValue> rawMass;
 		// <surface>: the drag and grip it gives as ground (hasSurface,
 		// above), each if written.
-		std::optional<RawValue> rawSurfaceDrag;
-		std::optional<RawValue> rawSurfaceGrip;
+		std::optional<WrittenValue> rawSurfaceDrag;
+		std::optional<WrittenValue> rawSurfaceGrip;
 		// <pull object="sun">strength</pull>s: what pulls it, and how hard.
-		std::vector<std::pair<std::string, RawValue>> rawPulls;
+		std::vector<std::pair<std::string, WrittenValue>> rawPulls;
 		// <seek object="ship">degrees</seek>: what it turns toward, and how
 		// fast; seekTarget empty for none.
 		std::string seekTarget;
-		RawValue rawSeek;
+		WrittenValue rawSeek;
 		// <light>radius</light>, only when written.
-		std::optional<RawValue> rawLight;
+		std::optional<WrittenValue> rawLight;
 		// <light>'s <past class>es: what its light does not shine through.
 		std::vector<std::string> lightPast;
 		// <dark>unlit</dark> or <dark>unseen</dark>; "" for neither.
@@ -658,10 +658,10 @@ namespace xge
 		// <altitude> with its <start>, <rise>, <fall> and <bounce>, each
 		// optional; only when hasAltitude.
 		bool hasAltitude{ false };
-		RawValue rawAltitude;
-		RawValue rawRise;
-		RawValue rawFall;
-		RawValue rawAltitudeBounce;
+		WrittenValue rawAltitude;
+		WrittenValue rawRise;
+		WrittenValue rawFall;
+		WrittenValue rawAltitudeBounce;
 		// <shadow object="ball" />: what it is the shadow of; "" for nothing.
 		std::string shadowOf;
 		std::string facing;          // "" when the object has no <facing>
@@ -676,7 +676,7 @@ namespace xge
 		std::string mirror;
 		// <grip>: how much of the way to what its moves ask for its velocity
 		// goes each frame, only when written; otherwise 1, all of it.
-		std::optional<RawValue> rawGrip;
+		std::optional<WrittenValue> rawGrip;
 
 		// Every number of its motion, light and altitude that was written
 		// (not its pulls' or its variables', which go with a name, nor its
@@ -684,15 +684,15 @@ namespace xge
 		// are looked for in.
 		template <typename Visit> void forEachValue(Visit&& visit)
 		{
-			for (RawValue* each : { &rawPosition.x, &rawPosition.y, &rawVelocity.x, &rawVelocity.y, &rawSeek, &rawAltitude, &rawRise, &rawFall, &rawAltitudeBounce })
+			for (WrittenValue* each : { &rawPosition.x, &rawPosition.y, &rawVelocity.x, &rawVelocity.y, &rawSeek, &rawAltitude, &rawRise, &rawFall, &rawAltitudeBounce })
 			{
 				visit(*each);
 			}
-			for (std::optional<RawVector2>* each : { &rawAcceleration, &rawPivot })
+			for (std::optional<WrittenVector2>* each : { &rawAcceleration, &rawPivot })
 			{
 				if (*each) { visit((*each)->x); visit((*each)->y); }
 			}
-			for (std::optional<RawValue>* each : { &rawHeading, &rawDrag, &rawFriction, &rawMass, &rawSurfaceDrag, &rawSurfaceGrip, &rawLight, &rawGrip })
+			for (std::optional<WrittenValue>* each : { &rawHeading, &rawDrag, &rawFriction, &rawMass, &rawSurfaceDrag, &rawSurfaceGrip, &rawLight, &rawGrip })
 			{
 				if (*each) { visit(**each); }
 			}
@@ -700,69 +700,69 @@ namespace xge
 		// <moves>: on a map with <cells />, the moves a piece of a board
 		// game may make when <place>d (see Object::MoveSet); a set with a
 		// sprite= is the one for that look, the one without for the others.
-		struct RawPieceMove
+		struct WrittenPieceMove
 		{
 			bool jump{ false };
 			std::string objClass;   // a jump's: what it may go over
 			int x{};
 			int y{};
 		};
-		struct RawMoveSet
+		struct WrittenMoveSet
 		{
 			std::string sprite;
 			bool forced{ false };
-			std::vector<RawPieceMove> moves;
+			std::vector<WrittenPieceMove> moves;
 			std::string promote;    // <promote sprite=>: the look it takes...
 			int promoteRow{};       // ...on reaching this row
-			struct RawFlank
+			struct WrittenFlank
 			{
 				std::string objClass;   // what it traps in a line
 				bool straight{ false }; // across and down only
 			};
-			std::vector<RawFlank> flanks;   // <flank>: a new piece is <put> where it traps
+			std::vector<WrittenFlank> flanks;   // <flank>: a new piece is <put> where it traps
 			bool fall{ false };             // <fall />: a piece put drops down its column
 			std::vector<std::string> on;    // <on class>: a piece put goes only on one of these, in its place
 			std::string closeClass;          // <close class object>: a put walling in a piece of closeClass...
 			std::string closeObject;         // ...puts a copy of closeObject in its cell
 		};
-		std::vector<RawMoveSet> moveSets;
+		std::vector<WrittenMoveSet> moveSets;
 		// <marks>: on a picker, the pieces it shows on a map of cells for
 		// what it holds and can do (see Object::MarkSet); a set with a
 		// sprite= while it shows that look, the one without always.
-		struct RawMark
+		struct WrittenMark
 		{
 			std::string kind;       // held, moves, movable, put, last
 			std::string object;     // what is put in each cell marked
 			std::string objClass;   // movable, put: whose pieces
 			std::string variable;   // only while this is not 0 ("" always)
 		};
-		struct RawMarkSet
+		struct WrittenMarkSet
 		{
 			std::string sprite;
-			std::vector<RawMark> marks;
+			std::vector<WrittenMark> marks;
 		};
-		std::vector<RawMarkSet> markSets;
+		std::vector<WrittenMarkSet> markSets;
 		// <holds>: a place that holds members of a class (Object::Holder), as written.
-		struct RawHolder
+		struct WrittenHolder
 		{
 			bool is{ false };
-			RawValue spreadX;           // <spread>: each item on from the one below (empty text: 0)
-			RawValue spreadY;
-			RawValue lookSpreadX;       // <spread sprite>: each item showing that look instead
-			RawValue lookSpreadY;
-			RawValue startCount;        // <starts>: what it is sent at the start (empty text: none)
-			RawValue startMore;         // a group's: each holder after the first, this many more
+			WrittenValue spreadX;           // <spread>: each item on from the one below (empty text: 0)
+			WrittenValue spreadY;
+			WrittenValue lookSpreadX;       // <spread sprite>: each item showing that look instead
+			WrittenValue lookSpreadY;
+			WrittenValue startCount;        // <starts>: what it is sent at the start (empty text: none)
+			WrittenValue startMore;         // a group's: each holder after the first, this many more
 			bool startShuffled{ false }; // <starts> > <order group><random />: what starts in it is shuffled
 			std::string pickedInto;     // <picked><send into>N: picking from it sends that many there (none: into the hand's own holder)
-			std::optional<RawValue> pickedSends;
+			std::optional<WrittenValue> pickedSends;
 			std::string emptyFrom;      // <picked><empty><send from>: picking from it empty brings that holder's back
 			bool emptyRandom{ false };  // <empty><order><random /></order>: put back in random order, not turned over
-			RawValue emptyLeave;        // <empty><send><leave>: that many of the top items stay (empty text: none)
-			RawValue spreadWidth;       // <spread><width>: the spread is never wider (empty text: no limit)
+			WrittenValue emptyLeave;        // <empty><send><leave>: that many of the top items stay (empty text: none)
+			WrittenValue spreadWidth;       // <spread><width>: the spread is never wider (empty text: no limit)
 			bool carry{ false };        // <carry />: a face-up item can be taken with all above it
-			RawValue lift;              // <lift>: the item a hand points at, lifted out of the fan by that much (empty text: none)
+			WrittenValue lift;              // <lift>: the item a hand points at, lifted out of the fan by that much (empty text: none)
 			bool hasPoints{ false };    // <counts>: what its face-up items add up to
-			RawValue pointsMost;        // <counts><atmost>: highs only while the total stays at most this (empty text: no limit)
+			WrittenValue pointsMost;        // <counts><atmost>: highs only while the total stays at most this (empty text: no limit)
 			std::string score;          // <score patterns=>: scored by those patterns (empty: not scored)
 			std::string scoreWith;      // <score><with object=>: with that holder's items too
 			int scoreFull{};            // <with><full>: that holder holds this many when all are dealt (0: as it is)
@@ -782,7 +782,7 @@ namespace xge
 			std::vector<std::string> orderBy; // <order><by variable>s: kept in order by these, the first first
 			std::string counts;         // <counts variable>: the holder's own variable of that name, its face-up members' added
 		};
-		RawHolder holder;
+		WrittenHolder holder;
 		// <owns object=>: the holder of its own (a player's items), as
 		// written.
 		// <turns sprite=> on a group: its members take turns, in order,
@@ -790,7 +790,7 @@ namespace xge
 		// is). <think> on a member: the computer plays it.
 		bool takesTurns{ false };
 		std::string turnsSprite;
-		std::vector<RawCommand> think;
+		std::vector<WrittenCommand> think;
 		bool hand{ false };             // a picker of a held class: points at holders and carries what it picks (Object::Hand)
 		std::string handHolder;         // <owns object=>: its own holder (items held by a player)
 		std::string ownsClass;          // <owns class=>: the pieces a player of a board game moves
@@ -799,7 +799,7 @@ namespace xge
 		int handHolds{ 1 };             // <pick><most>: from how many holders it may hold one at once
 		ItemOf item;                    // a held member's worths and start (empty for anything else)
 		bool held{ false };
-		RawMaze maze;                // <maze>: the map it walks, if any
+		WrittenMaze maze;                // <maze>: the map it walks, if any
 		// <shape>: on a cell map, the cells it fills, a <row> of characters
 		// each, top to bottom; and the object of the map each character
 		// picks, by its name. A character nothing picks is an empty cell.
@@ -809,14 +809,14 @@ namespace xge
 		// <chain object="body" />: on a map with <cells />, the pieces of
 		// that name or group behind it follow its trail (empty for none).
 		std::string chain;
-		std::vector<RawTimer> timers;
-		RawCollisionData rawCollisionData;
-		std::map<std::string, std::vector<RawCommand>> action;
-		std::map<std::string, RawValue> variable;
+		std::vector<WrittenTimer> timers;
+		WrittenCollisionData rawCollisionData;
+		std::map<std::string, std::vector<WrittenCommand>> action;
+		std::map<std::string, WrittenValue> variable;
 
 		// The <group> this object is a member of, or empty for a plain
 		// <object>. A group is written once in the file and read as one
-		// RawObject per member (see load/xml.cpp), so from here on a member
+		// WrittenObject per member (see load/xml.cpp), so from here on a member
 		// is an ordinary object that also remembers which group it came from.
 		std::string groupName;
 		// Its group's number, the same for all its members (see Kind); 0
@@ -836,23 +836,23 @@ namespace xge
 		bool named(const std::string& wanted) const { return name == wanted || inGroup(wanted); }
 
 		// Where it goes in its group's <columns> and <rows>, when it is a cell.
-		RawCell cell;
+		WrittenCell cell;
 
 		// A cell's sheet <cell>s that leave out a column or a row take the
 		// cell's own (a pack's faces are a sheet's grid): its sprite, looks
 		// and animation frames. Made once the cell knows its place.
 		void takeOwnCell()
 		{
-			const auto own = [&](RawSprite& each)
+			const auto own = [&](WrittenSprite& each)
 			{
 				if (each.kind != "cell" || each.svgRegion) { return; }
-				const auto unset = [](const RawValue& value) { return value.kind == RawValue::Kind::Expression && value.text.empty(); };
-				if (unset(each.column)) { each.column = RawValue::expression(std::to_string(cell.column)); }
-				if (unset(each.row)) { each.row = RawValue::expression(std::to_string(cell.row)); }
+				const auto unset = [](const WrittenValue& value) { return value.kind == WrittenValue::Kind::Expression && value.text.empty(); };
+				if (unset(each.column)) { each.column = WrittenValue::expression(std::to_string(cell.column)); }
+				if (unset(each.row)) { each.row = WrittenValue::expression(std::to_string(cell.row)); }
 			};
 			own(sprite);
-			for (RawSprite& look : looks) { own(look); }
-			for (RawSprite& frame : animation.frames) { own(frame); }
+			for (WrittenSprite& look : looks) { own(look); }
+			for (WrittenSprite& frame : animation.frames) { own(frame); }
 		}
 
 		// A cell's row and column are variables of its own, `row` and
@@ -866,7 +866,7 @@ namespace xge
 				std::pair{ cell.rowName, cell.row }, std::pair{ cell.columnName, cell.column } })
 			{
 				if (called.empty() || variable.count(called)) { if (!called.empty() && called != "row" && called != "column" && clash.empty()) { clash = called; } continue; }
-				variable[called] = RawValue::expression(std::to_string(number));
+				variable[called] = WrittenValue::expression(std::to_string(number));
 			}
 			return clash;
 		}
@@ -878,7 +878,7 @@ namespace xge
 		std::string ownerState;
 		std::string ownerScene;
 
-		friend std::ostream& operator<<(std::ostream& o, RawObject const& f);
+		friend std::ostream& operator<<(std::ostream& o, WrittenObject const& f);
 	};
 
 	// Where a maze walker is headed (see play/maze.h): what its last <go>, <hunt>
@@ -924,12 +924,12 @@ namespace xge
 		Walk walk;
 	};
 
-	// A piece of a text as an object shows it (see RawTextPiece): what it
+	// A piece of a text as an object shows it (see WrittenTextPiece): what it
 	// shows now, and, for a number or a letter that follows a variable, its
 	// owner and name.
 	struct TextPiece
 	{
-		RawTextPiece::Kind kind{ RawTextPiece::Kind::Words };
+		WrittenTextPiece::Kind kind{ WrittenTextPiece::Kind::Words };
 		std::string shown;
 		Name owner;
 		Name variable;
@@ -940,7 +940,7 @@ namespace xge
 	// letter (0 is A, 25 is Z, and round again: 26 is A, -1 is Z), or the
 	// word of `choices` it picks (0 the first; below 0 the first, past the
 	// end the last).
-	std::string showPiece(RawTextPiece::Kind kind, float value, const std::vector<std::string>& choices = {});
+	std::string showPiece(WrittenTextPiece::Kind kind, float value, const std::vector<std::string>& choices = {});
 
 	// What a text of these pieces reads: each piece a word, one space
 	// between, except that letters side by side make one word (initials).
@@ -1086,10 +1086,10 @@ namespace xge
 	// light and height, whether it is in play, touches things and exists,
 	// the scene it is in, and its variables. An object is one (its current
 	// values, with no prefix: object.position), and holds two more: `start`,
-	// how it started (worked out from its RawObject, and drawn again when a
+	// how it started (worked out from its WrittenObject, and drawn again when a
 	// <random> start is), and `before`, how it was when the last frame
 	// ended (only what the next frame reads of it, see Object::Before). The
-	// RawObject itself, the file's text, is the fourth.
+	// WrittenObject itself, the file's text, is the fourth.
 	struct Moment
 	{
 		Vector2f position;
@@ -1134,7 +1134,7 @@ namespace xge
 		// frame ends, one the file wrote stays, not existing, until a reset.
 		bool exists{ true };
 
-		// The scene it is in (see RawObject::ownerState): an object carried
+		// The scene it is in (see WrittenObject::ownerState): an object carried
 		// into another scene (<enter>) belongs to that one from then on.
 		Name ownerScene;
 
@@ -1148,14 +1148,14 @@ namespace xge
 
 	// What the objects of one kind have alike and never change while they
 	// play (their rules, actions and timers): the members of a <group>, or
-	// a piece and the copies spawned of it (RawObject::kind). Made for each object as it loads, checked
+	// a piece and the copies spawned of it (WrittenObject::kind). Made for each object as it loads, checked
 	// for each, then shared by the kind (Evaluator::shareKinds).
 	struct Kind
 	{
 		CollisionData collisionData;
 		std::map<Name, std::vector<Command>> action;
 		std::vector<Timer> timers;   // their clocks are each object's (Parts::clocks)
-		int written{ 0 };   // RawObject::kind
+		int written{ 0 };   // WrittenObject::kind
 	};
 
 	struct Object : Moment
@@ -1163,7 +1163,7 @@ namespace xge
 		// Its handle (Game::find); given when it joins the game.
 		ObjectId id;
 
-		// RawObject::line, for the messages of the checks made once all is loaded.
+		// WrittenObject::line, for the messages of the checks made once all is loaded.
 		int line{ 0 };
 
 
@@ -1221,7 +1221,7 @@ namespace xge
 		// object (a state's <show>, object= in a rule or
 		// condition, <reset object="..." />) to mean every member at once.
 		Name groupName;
-		// The groups around that one, outermost first (see RawObject).
+		// The groups around that one, outermost first (see WrittenObject).
 		NameList outerGroups;
 
 		// Whether `group` is this object's group or one around it.
@@ -1247,7 +1247,7 @@ namespace xge
 		// keeps what it holds (a best score) from one game to the next.
 		bool kept{ false };
 
-		// Whether it is drawn while in play (see RawObject::isDrawn).
+		// Whether it is drawn while in play (see WrittenObject::isDrawn).
 		bool isDrawn{ true };
 
 		// Loaded or reset since the last frame ended: where it is when the
@@ -1260,7 +1260,7 @@ namespace xge
 		// <random>: a reset then draws it again (Game::drawStartAgain).
 		bool startDrawsRandom{ false };
 
-		// The state it belongs to (see RawObject::ownerState); its scene is
+		// The state it belongs to (see WrittenObject::ownerState); its scene is
 		// the Moment's ownerScene.
 		Name ownerState;
 
@@ -1442,7 +1442,7 @@ namespace xge
 		// fireProjectile in verbs/fire.cpp.
 		bool hasFacing{ false };
 
-		// Its place on a <map> (see RawCell): the map's name ("" for an object
+		// Its place on a <map> (see WrittenCell): the map's name ("" for an object
 		// no map placed), its tile counting from 0, and the map's top left,
 		// the size of a tile and how many tiles across and down it is. The
 		// maps a walker finds its way on are made from these (buildMazes).
@@ -1461,7 +1461,7 @@ namespace xge
 			// not run until it is back (Game::awayFromHome).
 			Name home;
 		};
-		// On a map with <cells /> (see RawCell::cells): it moves a cell at a
+		// On a map with <cells /> (see WrittenCell::cells): it moves a cell at a
 		// time, and a move that is refused touches what refused it (see
 		// game/cells.cpp). Its cell part's place is the cell it is in. Kept
 		// in the object, not its map place: every frame asks it of each.
@@ -1671,7 +1671,7 @@ namespace xge
 			Place place;
 			Place start;
 
-			// <chain object>: what its links are (see RawObject::chain).
+			// <chain object>: what its links are (see WrittenObject::chain).
 			Name chain;
 			// The map's <checks>, made ready (each piece of the map has them).
 			std::vector<CellCheck> checks;
@@ -2084,7 +2084,7 @@ namespace xge
 		// sizesOf, and Game::resolveSizeDependentPositions() works it out
 		// again whenever one of them changes. sizesUsed holds the sizes, in
 		// sizesOf order, it was last worked out from. cellOffset is a cell's
-		// offset from its group's evaluated <position> (see RawCell), so that
+		// offset from its group's evaluated <position> (see WrittenCell), so that
 		// position can be worked out again later and the offset added back.
 		struct SizeUse
 		{
@@ -2109,7 +2109,7 @@ namespace xge
 			enum class Part { X, Y, Heading, Variable, Seconds };
 			Part part{ Part::Variable };
 			Name variable;
-			RawValue value;
+			WrittenValue value;
 			// Seconds: whose they are, the look (index into looks.all()) or the
 			// object's one animation (npos), and which picture's (index into
 			// its times) or every picture's that has none of its own (npos).
@@ -2200,7 +2200,7 @@ namespace xge
 			PictureId drawn;
 		};
 
-		// Its <hitbox>es (see RawCollisionData), any of them a touch; none,
+		// Its <hitbox>es (see WrittenCollisionData), any of them a touch; none,
 		// its picture's box. Its kind's: they are written with its rules.
 		const std::vector<Hitbox>& hitboxes() const noexcept { return kind->collisionData.hitboxes; }
 
@@ -2213,22 +2213,22 @@ namespace xge
 	// A <map> (load/xml's readMap; a generated game's map function): its
 	// name, its rows of characters, a character a tile, where its top left
 	// is, and the size of a tile.
-	struct RawMap
+	struct WrittenMap
 	{
 		std::string name;
 		std::vector<std::string> rows;
-		RawVector2 position;
-		RawValue tileWidth;
-		RawValue tileHeight;
+		WrittenVector2 position;
+		WrittenValue tileWidth;
+		WrittenValue tileHeight;
 
 		// <columns> and <rows>: how many tiles across and down, for a map
 		// written without <row>s (0 for one with them, whose rows say).
 		int columns{ 0 };
 		int rowCount{ 0 };
 
-		// <cells /> and the <checks> (see RawCell::cells).
+		// <cells /> and the <checks> (see WrittenCell::cells).
 		bool cells{ false };
-		std::vector<RawCheck> checks;
+		std::vector<WrittenCheck> checks;
 
 		int across() const noexcept { return rows.empty() ? columns : static_cast<int>(rows.front().size()); }
 		int down() const noexcept { return rows.empty() ? rowCount : static_cast<int>(rows.size()); }
@@ -2239,79 +2239,79 @@ namespace xge
 	// and right, all every one), noting where the rule is among them: it may
 	// hold only to a look (sprite=) and be passed over while touching a class
 	// (unless=). False for an edge= that names none of those.
-	bool addEdgeRule(RawCollisionData& collisions, const std::string& edges, const std::vector<RawCommand>& commands,
-		const std::string& sprite = {}, const std::string& unlessClass = {}, const RawCondition& check = {});
+	bool addEdgeRule(WrittenCollisionData& collisions, const std::string& edges, const std::vector<WrittenCommand>& commands,
+		const std::string& sprite = {}, const std::string& unlessClass = {}, const WrittenCondition& check = {});
 
 	// The tiles of a map that show this character, row by row and each row
 	// left to right: column, then row, counting from 0.
-	std::vector<std::pair<std::size_t, std::size_t>> tilesOf(const RawMap& map, char character);
+	std::vector<std::pair<std::size_t, std::size_t>> tilesOf(const WrittenMap& map, char character);
 
 	// Puts an object on a tile of the map (column and row from 0): at the
 	// map's <position>, which load/expr's layOutCells moves it on from to
 	// the middle of the tile. The map's name means it too, outermost of
 	// its names.
-	void placeOnMap(RawObject& object, const RawMap& map, std::size_t column, std::size_t row, char character = '\0');
+	void placeOnMap(WrittenObject& object, const WrittenMap& map, std::size_t column, std::size_t row, char character = '\0');
 
 	// Puts an object where its character starts it on the map: its one tile,
 	// or between two side by side on a map that is not a cell map. False
 	// when the character is on no tile or on other tiles than those.
-	bool startOnMap(RawObject& object, const RawMap& map, char character);
+	bool startOnMap(WrittenObject& object, const WrittenMap& map, char character);
 
 	// A piece of a cell map on none of its tiles: put on the map, not in
 	// the game, waiting to be spawned, as a piece does.
-	void waitOnMap(RawObject& object, const RawMap& map, char character = '\0');
+	void waitOnMap(WrittenObject& object, const WrittenMap& map, char character = '\0');
 
 	// What a cell map with nothing on it (a next-piece box) is in the game:
 	// one undrawn piece, never in play, named map.cells, that holds where
 	// the map is so that pieces can be spawned or sent onto it.
-	RawObject mapHolder(const RawMap& map);
+	WrittenObject mapHolder(const WrittenMap& map);
 
 	// Each <shape> among objects[first] on gets the objects its characters
 	// pick: of the same map, the one waiting piece or plain object picked
 	// by that character, or the group whose members are on its tiles.
-	void pickShapePieces(std::vector<RawObject>& objects, std::size_t first);
+	void pickShapePieces(std::vector<WrittenObject>& objects, std::size_t first);
 
 	// Gives every text and bitmap with a style= what it leaves out of that
 	// style: a text's size and color, a bitmap's scale and colors (each char=
 	// it does not give). A style no <style> has, or a text left with no
 	// size, stops the load.
-	void applyStyles(std::vector<RawObject>& objects, const std::vector<RawStyle>& styles);
+	void applyStyles(std::vector<WrittenObject>& objects, const std::vector<WrittenStyle>& styles);
 
 	// The looks of an object with named <animation>s, from its `sprites`
 	// (each named) and `animations` (each named): first each animation, a
-	// look that moves (RawSprite::frames), then each sprite; it starts as
+	// look that moves (WrittenSprite::frames), then each sprite; it starts as
 	// the first. A frame naming no sprite, or a look named twice, throws,
 	// saying `where`.
-	void lookWithAnimations(RawObject& object, const std::vector<RawSprite>& sprites, const std::vector<RawFrames>& animations, const std::string& where);
+	void lookWithAnimations(WrittenObject& object, const std::vector<WrittenSprite>& sprites, const std::vector<WrittenFrames>& animations, const std::string& where);
 
 	// Gives every sprite of an object (its looks and animation frames too)
-	// the characters its <collisions> say are solid (RawSprite::solid).
-	void markSolid(std::vector<RawObject>& objects);
+	// the characters its <collisions> say are solid (WrittenSprite::solid).
+	void markSolid(std::vector<WrittenObject>& objects);
 
 	// What an object's own rules, timers and actions leave to mean itself,
 	// made its name (final, so after layOutScenes): a <trigger> with no
 	// object=, a collision rule's <condition> with no class= or object=, and
 	// self. at the start of a name in a command's value or variable=
 	// (self.x, self.score).
-	void nameSelf(std::vector<RawObject>& objects);
+	void nameSelf(std::vector<WrittenObject>& objects);
 
 	// The same for one list of commands, run by the object `name` (a path's
 	// step, run by whichever object flies it). The answer is whether the
 	// list said anything of itself, so changed.
-	bool nameSelfIn(std::vector<RawCommand>& list, const std::string& name);
-	bool nameSelfIn(RawCommand& command, const std::string& name);
+	bool nameSelfIn(std::vector<WrittenCommand>& list, const std::string& name);
+	bool nameSelfIn(WrittenCommand& command, const std::string& name);
 
 	// The tests in a list (a <condition>'s) made to say self of the object
 	// testing them; the commands keep self (see nameSelf), a <trigger> with
 	// no object= among them.
-	void nameSelfInTests(std::vector<RawCommand>& list);
+	void nameSelfInTests(std::vector<WrittenCommand>& list);
 
 	// Whether a command says anything of self.
-	bool namesSelf(const RawCommand& command);
+	bool namesSelf(const WrittenCommand& command);
 
 	// A test's self made `name`, and a test that names nothing made about
 	// `name` (with "self", one about the object testing it).
-	void nameSelfInTest(RawCondition& condition, const std::string& name);
+	void nameSelfInTest(WrittenCondition& condition, const std::string& name);
 
 	// A copy of an object, named `to` where it was `from`: what its own
 	// rules, timers, actions and values said of `from` by name they now say
@@ -2324,26 +2324,26 @@ namespace xge
 		bool kind{ false };
 		bool looks{ false };
 	};
-	Renamed renameOwn(RawObject& object, const std::string& from, const std::string& to);
+	Renamed renameOwn(WrittenObject& object, const std::string& from, const std::string& to);
 
 	// What a rule about another object leaves to mean the object it touched:
 	// other, as the object a command names (object="other") or at the start
 	// of a name (other.score), in its commands and its tests. It stays other,
 	// found as the rule runs; nameOther lists what each such rule can touch
 	// (not the object itself; one of its own state, or of none:
-	// RawCollisionRule::touchable), and refuses one that can touch nothing.
-	void nameOther(std::vector<RawObject>& objects);
+	// WrittenCollisionRule::touchable), and refuses one that can touch nothing.
+	void nameOther(std::vector<WrittenObject>& objects);
 
 	// Whether a command, or a test, says anything of other.
-	bool namesOther(const RawCommand& command);
-	bool namesOther(const RawCondition& condition);
+	bool namesOther(const WrittenCommand& command);
+	bool namesOther(const WrittenCondition& condition);
 
 	// other made `name` in a test.
-	void nameOtherInTest(RawCondition& condition, const std::string& name);
+	void nameOtherInTest(WrittenCondition& condition, const std::string& name);
 
 	// The object `from` made `to` in a list of commands: as the object one
 	// names, and at the start of a variable or a value. Whether any was.
-	bool renameObjectIn(std::vector<RawCommand>& list, const std::string& from, const std::string& to);
+	bool renameObjectIn(std::vector<WrittenCommand>& list, const std::string& from, const std::string& to);
 
 	// One of the numbers every object has while the game runs, read and set
 	// as owner.part (ball.x, ship.velocity.y): its top left, its velocity,
@@ -2384,21 +2384,21 @@ namespace xge
 
 	// renameStart on every text in a value, its operations' operands too;
 	// whether any changed.
-	bool renameInValue(RawValue& value, const std::string& from, const std::string& to);
+	bool renameInValue(WrittenValue& value, const std::string& from, const std::string& to);
 
 	// Makes each <centered> and side (<left>, <right>, <top>, <bottom>) of an
 	// object's <position> the operation it means: where its middle goes,
 	// less half its own width (or height), or its side on the window's,
 	// named by the object's final name (so after layOutScenes).
-	void centerOnOwnSize(std::vector<RawObject>& objects);
+	void centerOnOwnSize(std::vector<WrittenObject>& objects);
 
 	// Where a <centered> puts the middle: the name, number or operation it
 	// holds, its <offset> from `windowMiddle`, or `windowMiddle` itself.
-	RawValue centeredMiddle(const RawValue& value, const std::string& windowMiddle);
+	WrittenValue centeredMiddle(const WrittenValue& value, const std::string& windowMiddle);
 
 	// What an object with no <sprite> is drawn as, which is never: an empty
-	// rectangle (it only holds numbers; see RawObject::isDrawn).
-	RawSprite nothingSprite();
+	// rectangle (it only holds numbers; see WrittenObject::isDrawn).
+	WrittenSprite nothingSprite();
 
 	// Puts on the object's palette of that name (Object::Looks::palettes); false
 	// (and nothing changes) if it has none of that name.

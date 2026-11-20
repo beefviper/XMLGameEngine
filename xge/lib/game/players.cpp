@@ -23,7 +23,7 @@ namespace xge
 	void settlePlayers(GameData& data)
 	{
 		std::map<std::string, int> count;
-		for (RawObject& object : data.objects)
+		for (WrittenObject& object : data.objects)
 		{
 			if (!object.takesTurns)
 			{
@@ -34,12 +34,12 @@ namespace xge
 			const bool first = number == 1;
 			// Its seat at a trick is its number.
 			if (object.handSeat == 0) { object.handSeat = number; }
-			object.variable["turn"] = RawValue::expression(first ? "1" : "0");
-			if (!object.turnsSprite.empty() && std::none_of(object.looks.begin(), object.looks.end(), [&](const RawSprite& look) { return look.name == object.turnsSprite; }))
+			object.variable["turn"] = WrittenValue::expression(first ? "1" : "0");
+			if (!object.turnsSprite.empty() && std::none_of(object.looks.begin(), object.looks.end(), [&](const WrittenSprite& look) { return look.name == object.turnsSprite; }))
 			{
 				throw std::runtime_error("object '" + object.name + "': its group's <turns sprite=\"" + object.turnsSprite + "\">, a look it has not");
 			}
-			for (RawCommand& think : object.think) { think.object = object.name; }
+			for (WrittenCommand& think : object.think) { think.object = object.name; }
 		}
 	}
 

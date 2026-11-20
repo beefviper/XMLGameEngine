@@ -19,12 +19,12 @@ namespace xge
 {
 	// <fire>: Sends a copy of a piece from where it is; refused when its
 	// <most> are in flight.
-	static void readFire(const XmlNode& node, const std::string& where, RawCommand&)
+	static void readFire(const XmlNode& node, const std::string& where, WrittenCommand&)
 	{
 		requireAttribute(node, "object", where);
 	}
 
-	static Command makeFire(const RawCommand& raw, const ValueEvaluator&)
+	static Command makeFire(const WrittenCommand& raw, const ValueEvaluator&)
 	{
 		return CmdFire{ raw.object };
 	}

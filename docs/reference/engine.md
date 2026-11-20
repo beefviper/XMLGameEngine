@@ -116,7 +116,7 @@ Design: [build-and-layout](../designs/51-build-and-layout.md).
 | | `load/reading.cpp` | what every reader shares: a child, an attribute, a value, `fail` |
 | | `load/merge.cpp` | pieces and `from=` on the XML (`layOut`, `addWaiting`) |
 | | `load/expr.cpp` | values, operations, building `Object`s and `State`s; the loading stages in order (`Evaluator::init`) |
-| | `load/build.cpp` | one `Object` from its `RawObject` (`makeObject`), a step per part: looks, numbers, motion, timers, rules, actions, holder, moves |
+| | `load/build.cpp` | one `Object` from its `WrittenObject` (`makeObject`), a step per part: looks, numbers, motion, timers, rules, actions, holder, moves |
 | | `load/conditions.cpp` | conditions and their tests, as states, rules and holders use them |
 | | `load/pictures.cpp` | pictures (`buildPicture`, `drawPicture`), animations, styles and palettes, cell layout |
 | | `load/calc.cpp` | a value's text: one number or one name, bound once |

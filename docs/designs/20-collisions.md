@@ -54,7 +54,7 @@ A screen grid was rejected: it needs a cell size per game, and what is left afte
   - No `<otherwise>`: every matching rule runs, so "none ran" would need the engine to track the rules of one touch.
 - **`other`, the object touched**: a rule about another object names it `other` (`other.score`, `object="other"`), so a two-player game's rules about either player are written once.
   - One rule, with `other` found as it runs: a command saying it is made for the object touched (`CmdLive::namesOther`), and a test saying it is about that one (`Game::holdsFor`). The rules of a group's members stay alike, so they can be shared (CR3 step 5a), and a spawned copy needs nothing made for it.
-  - The load checks still see plain rules: `nameOther` (`game/object.cpp`) lists what each such rule can touch (`RawCollisionRule::touchable`), and its commands and test are made and checked for every one of them, then dropped but for the first.
+  - The load checks still see plain rules: `nameOther` (`game/object.cpp`) lists what each such rule can touch (`WrittenCollisionRule::touchable`), and its commands and test are made and checked for every one of them, then dropped but for the first.
   - Was: one rule made at load for each object it could touch, and again for each spawned copy the first time it was touched. It multiplied the rules by the objects (and the stored rules with them), which is what sharing the kind could not live with.
   - Open: a rule about its own kind (a copy touching a copy of the same piece) has no `other` of the file to be made for, and Pong's edge rules ("left edge: paddle2 scores") are no touch between objects, so they stay.
 

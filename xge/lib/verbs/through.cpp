@@ -10,7 +10,7 @@
 namespace xge
 {
 	// <through>: Makes the refused cell step anyway: the two share the cell.
-	static Command makeThrough(const RawCommand&, const ValueEvaluator&)
+	static Command makeThrough(const WrittenCommand&, const ValueEvaluator&)
 	{
 		return CmdThrough{};
 	}

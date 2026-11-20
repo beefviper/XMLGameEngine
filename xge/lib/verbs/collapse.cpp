@@ -9,7 +9,7 @@
 namespace xge
 {
 	// <collapse>: The rows above what a check found come down.
-	static Command makeCollapse(const RawCommand&, const ValueEvaluator&)
+	static Command makeCollapse(const WrittenCommand&, const ValueEvaluator&)
 	{
 		return CmdCollapse{};
 	}

@@ -12,15 +12,15 @@
 namespace xge
 {
 	// <go>: Sets off along a maze's corridors, or cell by cell.
-	static void readGo(const XmlNode& node, const std::string& where, RawCommand& command)
+	static void readGo(const XmlNode& node, const std::string& where, WrittenCommand& command)
 	{
 		requireAttribute(node, "direction", where);
-		command.own = RawGo{ readValue(node, where) };
+		command.own = WrittenGo{ readValue(node, where) };
 	}
 
-	static Command makeGo(const RawCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeGo(const WrittenCommand& raw, const ValueEvaluator& evaluate)
 	{
-		return CmdGo{ directionFromName(raw.direction, raw.verb), speedOf(ownOf<RawGo>(raw).speed, "go", evaluate) };
+		return CmdGo{ directionFromName(raw.direction, raw.verb), speedOf(ownOf<WrittenGo>(raw).speed, "go", evaluate) };
 	}
 
 	static bool runGo(const CmdGo& go, const Doer& doer)

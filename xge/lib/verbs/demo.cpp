@@ -9,7 +9,7 @@
 namespace xge
 {
 	// <demo>: Plays the recorded game.
-	static Command makeDemo(const RawCommand&, const ValueEvaluator&)
+	static Command makeDemo(const WrittenCommand&, const ValueEvaluator&)
 	{
 		return CmdDemo{};
 	}

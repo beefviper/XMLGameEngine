@@ -10,12 +10,12 @@
 namespace xge
 {
 	// <slide>: As far as it can go one way over the cells.
-	static void readSlide(const XmlNode& node, const std::string& where, RawCommand&)
+	static void readSlide(const XmlNode& node, const std::string& where, WrittenCommand&)
 	{
 		requireAttribute(node, "direction", where);
 	}
 
-	static Command makeSlide(const RawCommand& raw, const ValueEvaluator&)
+	static Command makeSlide(const WrittenCommand& raw, const ValueEvaluator&)
 	{
 		return CmdSlide{ directionFromName(raw.direction, raw.verb), raw.objClass };
 	}

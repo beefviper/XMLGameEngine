@@ -15,13 +15,13 @@
 namespace xge
 {
 	// <rank>: Enters a score in a table that lasts.
-	static void readRank(const XmlNode& node, const std::string& where, RawCommand&)
+	static void readRank(const XmlNode& node, const std::string& where, WrittenCommand&)
 	{
 		requireAttribute(node, "variable", where);
 		requireAttribute(node, "into", where);
 	}
 
-	static Command makeRank(const RawCommand& raw, const ValueEvaluator&)
+	static Command makeRank(const WrittenCommand& raw, const ValueEvaluator&)
 	{
 		return CmdRank{ VariableName::of(raw.variable), raw.into };
 	}

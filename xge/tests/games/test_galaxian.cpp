@@ -856,7 +856,7 @@ TEST_CASE("a demo given to Galaxian plays to its end, or until a key is pressed,
 {
 	// The game ships with none (the author: new ones are recorded later);
 	// one given to it, Space then Left held.
-	RawDemo demo;
+	WrittenDemo demo;
 	demo.recorded = true;
 	demo.seed = 20261016;
 	demo.frames = 300;
@@ -937,7 +937,7 @@ TEST_CASE("a game recorded plays back the same as it was played", "[galaxian][de
 	const float score = played.object("ship").variable.at("score");
 	played.frames(1);
 
-	const RawDemo demo = played.engine.recorded();
+	const WrittenDemo demo = played.engine.recorded();
 	CHECK(demo.recorded);
 	CHECK(demo.frames == 469u);
 	REQUIRE(demo.keys.size() == 17);

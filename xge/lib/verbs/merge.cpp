@@ -10,12 +10,12 @@
 namespace xge
 {
 	// <merge>: Two alike pieces become one.
-	static void readMerge(const XmlNode& node, const std::string& where, RawCommand&)
+	static void readMerge(const XmlNode& node, const std::string& where, WrittenCommand&)
 	{
 		requireAttribute(node, "variable", where);
 	}
 
-	static Command makeMerge(const RawCommand& raw, const ValueEvaluator&)
+	static Command makeMerge(const WrittenCommand& raw, const ValueEvaluator&)
 	{
 		return CmdMerge{ raw.variable };
 	}
