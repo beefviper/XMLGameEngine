@@ -81,6 +81,22 @@ There are four, and the names should say which:
 
 The rename is the author's to approve as a table before anything is touched.
 
+## Names (plan CR9)
+
+Proposed, for the author. Each row is one commit, made by tool; the generator's files and the docs go with it.
+
+| # | Today | Proposed | Why |
+|---|---|---|---|
+| 1 | `Raw...` (69 types: `RawObject`, `RawValue`, `RawCommand`, each verb's `RawBounce`...) | `Written...` | as the file says it, not yet worked out; `RawValue` is read while playing too, and "written" still says what it is |
+| 2 | `raw`, `rawObject`, `rawState`... (50 names, 486 bare `raw`) | `written`, `writtenObject`... | the same word as its type |
+| 3 | `game_expr` | `Evaluator` | it works written values out, at load and while playing; the one class named in snake case |
+| 4 | `getObject`, `tryGetObject`, `findObject`, `findAnywhere`, `find(ObjectId)` | `object(Name)` (throws), `find(Name)`, `find(ObjectId)`, `findSpawning(Name)` (this frame's spawns too); the uncached search private | five names for one question today |
+| 5 | `holdVariablesForExpressions`, `heldFor`, `refreshBoundTexts` | `shareVariables`, `expressionSlot`, `variableChanged` | what each does, not how |
+| 6 | `liveNumberParts` | `livePartNames` | it gives the parts' names; `liveParts` gives how each is read |
+| 7 | `Game::nameOf` | gone: `Name::of` | a wrapper left from the per-game table |
+
+Kept, as they say what they are: `start`, `before`, `Moment`, `Kind`, `Doer`, `Compared`, `CommandExecutor`, and the `xxxOf` (reads a part) and `xxxFor` (gives one) pairs, which step 4 writes down as a rule.
+
 ## What we looked at
 
 - **A full ECS with systems free to run in any order,** as large engines have: built for tens of thousands of alike things. Taken and not taken as [above](#how-a-step-runs-over-them).
