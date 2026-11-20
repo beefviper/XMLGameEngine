@@ -33,6 +33,18 @@ namespace xge
 			return drive ? *drive : still;
 		}
 
+		// Each object of `objects` that has a part in `store`, with it, in
+		// object order: a pass over the few that have it, not over all.
+		template <typename Part, typename Work>
+		void eachWithPart(std::vector<Object>& objects, FrameRules& rules, Store<Part>& store, Work&& work)
+		{
+			store.each([&](ObjectId id, Part& part)
+			{
+				const std::size_t at = rules.parts().at(id);
+				if (at < objects.size() && objects[at].id == id) { work(objects[at], part); }
+			});
+		}
+
 		// What a rate of loss (a <drag>, a <grip>) leaves of a speed over a
 		// step: e to the -rate t (infinite: nothing). Worked out once for
 		// each rate a step, not for each object.
@@ -118,12 +130,9 @@ namespace xge
 		// Pieces stacked one on another, as wide and lined up, are one ladder.
 		void applyClimbing(std::vector<Object>& objects, FrameRules& rules, float t)
 		{
-			if (rules.parts().climbs.size() == 0) { return; }
-			for (auto& object : objects)
+			eachWithPart(objects, rules, rules.parts().climbs, [&](Object& object, Object::Climb& climb)
 			{
-				Object::Climb* const asked = rules.parts().climbs.find(object.id);
-				if (!asked || asked->climbClass.empty() || !rules.inPlay(object)) { continue; }
-				Object::Climb& climb = *asked;
+				if (climb.climbClass.empty() || !rules.inPlay(object)) { return; }
 
 				const auto isLadder = [&](const Object& other)
 					{
@@ -138,7 +147,7 @@ namespace xge
 				if (ladder == objects.end())
 				{
 					object.footing.climbing = false;
-					continue;
+					return;
 				}
 
 				Box whole{ ladder->position, ladder->size };
@@ -173,7 +182,7 @@ namespace xge
 				const bool wasClimbing = object.footing.climbing;
 				if (!climbLadder(object.position, object.velocity, object.size, step, t, object.footing.climbing, object.footing.grounded, whole, holdTop, holdBottom))
 				{
-					continue;
+					return;
 				}
 
 				if (!wasClimbing) { object.footing.jumping = false; }
@@ -189,7 +198,7 @@ namespace xge
 					object.velocity.x = drive.moveStep[static_cast<std::size_t>(Direction::Right)]
 						- drive.moveStep[static_cast<std::size_t>(Direction::Left)];
 				}
-			}
+			});
 		}
 
 		// The ground: a thing with a <grip> whose middle is over a <surface>
@@ -603,12 +612,11 @@ namespace xge
 		// target, and its heading with it.
 		void pullAndSeek(std::vector<Object>& objects, FrameRules& rules, float t)
 		{
-			if (rules.parts().pulls.size() == 0) { return; }
 			const auto inPlay = [&](const Object& other) { return rules.inPlay(other); };
-			for (auto& object : objects)
+			eachWithPart(objects, rules, rules.parts().pulls, [&](Object& object, const Object::Pull& part)
 			{
-				const Object::Pull* pull = rules.parts().pulls.find(object.id);
-				if (!pull || !rules.inPlay(object)) { continue; }
+				const Object::Pull* pull = &part;
+				if (!rules.inPlay(object)) { return; }
 
 				const Vector2f middle = middleOf(object);
 				for (const auto& [name, strength] : pull->toward)
@@ -622,9 +630,9 @@ namespace xge
 					}
 				}
 
-				if (pull->seek.empty()) { continue; }
+				if (pull->seek.empty()) { return; }
 				const Object* target = nearestInPlay(objects, object, pull->seek, inPlay);
-				if (!target) { continue; }
+				if (!target) { return; }
 				const Vector2f before = object.velocity;
 				object.velocity = turnedToward(object.velocity, middleOf(*target) - middle, pull->seekRate * t);
 				if (object.turning.hasHeading && (object.velocity.x != before.x || object.velocity.y != before.y))
@@ -632,7 +640,7 @@ namespace xge
 					object.heading = headingOf(object.velocity);
 					object.showHeading();
 				}
-			}
+			});
 		}
 
 		// <altitude>: what is in the air rises by its rise, which falls by its
@@ -641,25 +649,24 @@ namespace xge
 		// less than a frame's fall, so it comes to rest).
 		void riseAndFall(std::vector<Object>& objects, FrameRules& rules, float seconds)
 		{
-			if (rules.parts().alofts.size() == 0) { return; }
 			const float t = seconds;
-			for (auto& object : objects)
+			eachWithPart(objects, rules, rules.parts().alofts, [&](Object& object, const Object::Aloft& part)
 			{
-				const Object::Aloft* aloft = rules.parts().alofts.find(object.id);
-				if (!aloft || !aloft->has || !rules.inPlay(object)) { continue; }
+				const Object::Aloft* aloft = &part;
+				if (!aloft->has || !rules.inPlay(object)) { return; }
 				// A constant fall: the altitude goes by the mean of the rise
 				// before and after.
 				const float fall = aloft->fall * t;
 				object.altitude += (object.rise - fall * 0.5f) * t;
 				object.rise -= fall;
-				if (object.altitude > 0.0f) { continue; }
+				if (object.altitude > 0.0f) { return; }
 				object.altitude = 0.0f;
 				if (object.rise < 0.0f)
 				{
 					const float up = -object.rise * aloft->bounce;
 					object.rise = up > aloft->fall * kSixtieth ? up : 0.0f;
 				}
-			}
+			});
 		}
 
 		// A <shadow> is kept under what casts it, on the ground, and shown
