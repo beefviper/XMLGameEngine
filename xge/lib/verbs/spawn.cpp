@@ -135,7 +135,7 @@ namespace xge
 			// Onto another map: its first cell unless told; on its own, its own.
 			const bool elsewhere = !spawn.into.empty() && spawn.into != game.mapOf(*made).name;
 			// Left out: the spawner's own cell, when it is on that map.
-			const bool besideSelf = self && self->onCells && game.mapOf(*self).name == (spawn.into.empty() ? game.mapOf(*made).name : spawn.into);
+			const bool besideSelf = self && self->onCells && game.mapOf(*self).name == (spawn.into.empty() ? game.mapOf(*made).name.str() : spawn.into);
 			const auto cell = [&](const std::optional<float>& given, int own, float selfCell)
 			{
 				if (given) { return static_cast<int>(std::lround(*given)); }

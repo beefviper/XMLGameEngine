@@ -10,6 +10,7 @@
 #include <deque>
 #include <functional>
 #include <map>
+#include <mutex>
 #include <ostream>
 #include <string>
 #include <string_view>
@@ -18,15 +19,21 @@
 
 namespace xge
 {
-	// A name the game file gives (an object's, its group's, its class's, a
-	// state's), held once in the game's NameStore and handed round as this:
-	// one pointer, read back as text where it is shown. The empty name
-	// holds nothing. Two names of one game are the same name when they
-	// point at the same text.
+	// A name a game file gives (an object's, its group's, its class's, a
+	// variable's, a state's), held once in the program's NameStore and
+	// handed round as this: one pointer, compared as an id, read back as
+	// text where it is shown. Made from text once, where it is read; the
+	// empty name holds nothing.
 	class Name
 	{
 	public:
 		Name() = default;
+		// The program's name for that text (Name::of).
+		Name(const std::string& written);
+		Name(const char* written);
+
+		// The program's name for that text, held from now on.
+		static Name of(std::string_view text);
 
 		const std::string& str() const noexcept { return text ? *text : none(); }
 		operator const std::string&() const noexcept { return str(); }
@@ -92,8 +99,6 @@ namespace xge
 		NameStore() = default;
 		NameStore(const NameStore&) = delete;
 		NameStore& operator=(const NameStore&) = delete;
-		NameStore(NameStore&&) noexcept = default;
-		NameStore& operator=(NameStore&&) noexcept = default;
 
 		// The name of that text, held from now on ("" is the empty name).
 		Name of(std::string_view text)
@@ -120,6 +125,7 @@ namespace xge
 		{
 			if (texts.empty()) { return {}; }
 			std::vector<Name> names = of(texts);
+			const std::lock_guard<std::mutex> lock(guard);
 			if (const auto found = lists.find(names); found != lists.end()) { return NameList(found->second); }
 			const std::vector<Name>& kept = heldLists.emplace_back(std::move(names));
 			lists.emplace(kept, &kept);
@@ -129,13 +135,23 @@ namespace xge
 		// The name of that text if it is held, else the empty name.
 		Name find(std::string_view text) const
 		{
+			const std::lock_guard<std::mutex> lock(guard);
 			const auto found = index.find(text);
 			return found == index.end() ? Name{} : Name(found->second);
 		}
 
 		std::size_t size() const noexcept { return held.size(); }
 
+		// The program's: every game's names, each held once (a game
+		// file's names are few, and two games share theirs).
+		static NameStore& program()
+		{
+			static NameStore names;
+			return names;
+		}
+
 	private:
+		mutable std::mutex guard;
 		std::deque<std::string> held;
 		std::unordered_map<std::string_view, const std::string*> index;
 		// Lists, told apart by which names they hold (each held once, so
@@ -164,6 +180,10 @@ namespace xge
 		return texts;
 	}
 	inline std::vector<std::string> textsOf(const NameList& names) { return textsOf(names.all()); }
+
+	inline Name Name::of(std::string_view text) { return NameStore::program().of(text); }
+	inline Name::Name(const std::string& written) : Name(of(written)) {}
+	inline Name::Name(const char* written) : Name(of(written ? std::string_view(written) : std::string_view())) {}
 }
 
 template <>

@@ -170,6 +170,6 @@ namespace xge
 	{
 		if (!takesTurns(owner)) { return owner; }
 		const Object* on = onTurn(owner);
-		return on ? on->name : owner;
+		return on ? on->name.str() : owner;
 	}
 }

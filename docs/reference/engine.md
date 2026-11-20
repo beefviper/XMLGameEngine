@@ -127,7 +127,7 @@ Design: [build-and-layout](../designs/51-build-and-layout.md).
 | | `game/command.cpp` | raw command tags into typed `Command`s (`makeCommand`, by the verb), printing them and objects; `operationShape` |
 | | `verbs/` | a file per verb: its name, the places it may go, `read`, `make`, `check`, `run`, `hold` and `print`, and the work it does; `verb.h` says what a verb is, `all.cpp` lists them |
 | | `game/object.*`, `game/states.*`, `game/data.h`, `game/random.cpp` | the data model; the one random source |
-| | `game/name.h`, `game/variables.h` | `Name`, a name from the game file held once in the game's `NameStore` (`Game::nameOf`); `Variables`, an object's variables as one short list |
+| | `game/name.h`, `game/variables.h` | `Name`, a name from a game file held once in the program's `NameStore` (`Name::of`, or a `std::string` made a `Name`) and compared as an id; `Variables`, an object's variables as one short list under `Name`s |
 | | `game/parts.*`, `game/store.h` | every object's handle (`ObjectId`) and the parts it has, a `Store` per kind (`Game::parts()`) |
 | | `game/cells.cpp`, `game/holders.cpp`, `game/think.cpp` | maps of cells and board games; cards; the board-game search |
 | the frame | `play/frame.cpp` | `playOneFrame`: the order of a frame and the moving |

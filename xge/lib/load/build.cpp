@@ -176,14 +176,14 @@ namespace xge
 	// drawn, seen and there.
 	void game_expr::buildNames(RawObject& rawObject, Object& object)
 	{
-		object.groupName = nameStore.of(rawObject.groupName);
-		object.outerGroups = nameStore.listOf(rawObject.outerGroups);
-		object.name = nameStore.of(rawObject.name);
+		object.groupName = Name::of(rawObject.groupName);
+		object.outerGroups = NameStore::program().listOf(rawObject.outerGroups);
+		object.name = Name::of(rawObject.name);
 		object.line = rawObject.line;
-		object.objClass = nameStore.of(rawObject.objClass);
+		object.objClass = Name::of(rawObject.objClass);
 		object.isDrawn = rawObject.isDrawn;
-		object.ownerState = nameStore.of(rawObject.ownerState);
-		object.ownerScene = nameStore.of(rawObject.ownerScene);
+		object.ownerState = Name::of(rawObject.ownerState);
+		object.ownerScene = Name::of(rawObject.ownerScene);
 		startFor(object).ownerScene = object.ownerScene;
 
 		if (rawObject.objClass == "projectile")
@@ -209,8 +209,8 @@ namespace xge
 		for (auto& rawVariable : rawObject.variable)
 		{
 			const float value = evaluateStart(rawVariable.second, where);
-			object.variable[nameStore.of(rawVariable.first)] = value;
-			startFor(object).variable[nameStore.of(rawVariable.first)] = value;
+			object.variable[Name::of(rawVariable.first)] = value;
+			startFor(object).variable[Name::of(rawVariable.first)] = value;
 
 			// Keep the cross-object symbol table entry (registered above,
 			// before any expression compiled) up to date with the real
@@ -399,8 +399,8 @@ namespace xge
 			if (timer.name.empty()) { continue; }
 			// A named timer's time left (see init): where it starts.
 			const float left = std::ceil(timer.seconds);
-			object.variable[nameStore.of(timer.name)] = left;
-			startFor(object).variable[nameStore.of(timer.name)] = left;
+			object.variable[Name::of(timer.name)] = left;
+			startFor(object).variable[Name::of(timer.name)] = left;
 			objectVariables[rawObject.name + "." + timer.name] = left;
 		}
 	}
@@ -632,7 +632,7 @@ namespace xge
 			Object::Cells* cell = rawObject.cell.cells || !rawObject.chain.empty() || !rawObject.shapeRows.empty()
 				? &parts->cells.add(object.id, parts->orderOf(object.id), {}) : nullptr;
 			Object::MapPlace& mapPlace = parts->mapPlaces.add(object.id, parts->orderOf(object.id), {});
-			mapPlace.name = nameStore.of(rawObject.cell.map);
+			mapPlace.name = Name::of(rawObject.cell.map);
 			mapPlace.home = mapPlace.name;
 			if (cell) { cell->chain = rawObject.chain; }
 			mapPlace.column = rawObject.cell.mapColumn - 1;

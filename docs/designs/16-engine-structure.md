@@ -141,6 +141,8 @@ The author: a name is looked up once, when it is read or when its object comes i
 
 `self`, `other` and a spawned copy's name are only known while playing: each gets its id once, when it is known.
 
+The names are the program's, not each game's (the author chose it on a card): one table, each text once, so that a reader, a command made with no game at hand, or a test can make a name. Making a name takes the table's lock, which the computer's thread needs; reading and comparing take none, and nothing makes a name per frame.
+
 Not a name, but found on the way: the card search (`meldDeadwood`, gin rummy's think) is 40% of all play, and builds a `std::vector<float>` for each meld it tries (10%).
 
 ## Open

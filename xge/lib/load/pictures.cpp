@@ -205,7 +205,7 @@ namespace xge
 		const std::string color = sprite.color.empty() ? "color.white" : sprite.color;
 		checkColor(color, where);
 		Picture picture;
-		picture.color = nameStore.of(color);
+		picture.color = Name::of(color);
 
 		// Lines, rows of text and SVG drawings are all pictures the engine draws
 		// itself, and all go the same way, here, once, when the game loads:
@@ -279,12 +279,12 @@ namespace xge
 			const float size = evaluate(sprite.size, where);
 			if (!(size > 0.0f)) { throw std::runtime_error(where + " > <text> > <size> is " + formatDisplayNumber(size) + "; expected a number of pixels above 0"); }
 			picture.textSize = static_cast<int>(size);
-			picture.font = nameStore.of(sprite.font);
+			picture.font = Name::of(sprite.font);
 		}
 		else if (sprite.kind == "image")
 		{
 			picture.kind = ShapeKind::Image;
-			picture.file = nameStore.of(sprite.path);
+			picture.file = Name::of(sprite.path);
 			picture.flipHorizontal = sprite.flip == "horizontal";
 			picture.flipVertical = sprite.flip == "vertical";
 			try

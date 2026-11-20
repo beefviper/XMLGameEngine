@@ -57,7 +57,7 @@ namespace xge
 			set.name = nameOf(raw.name);
 			for (const RawPatterns::Pattern& rawPattern : raw.patterns)
 			{
-				set.patterns.push_back({ nameOf(rawPattern.name), rawPattern.parts, expr.nameStore.of(rawPattern.by) });
+				set.patterns.push_back({ nameOf(rawPattern.name), rawPattern.parts, NameStore::program().of(rawPattern.by) });
 			}
 		}
 		const std::vector<std::string> keeps = std::move(data.keeps);
@@ -349,7 +349,7 @@ namespace xge
 
 		made.copyOf = original.name;
 		made.groupName = nameOf(copy.groupName);
-		made.outerGroups = expr.nameStore.listOf(copy.outerGroups);
+		made.outerGroups = NameStore::program().listOf(copy.outerGroups);
 		made.ownerState = original.ownerState;
 		made.ownerScene = original.ownerScene;
 		startFor(made).ownerScene = original.ownerScene;
@@ -2666,8 +2666,8 @@ namespace xge
 	const std::string& Game::selfIn(const Condition& condition, const std::string& name) const noexcept
 	{
 		if (!condition.saysSelf) { return name; }
-		if (name == "self") { return testing ? testing->name : condition.madeFor; }
-		if (name == "other") { return testingOther ? testingOther->name : condition.madeAgainst; }
+		if (name == "self") { return testing ? testing->name.str() : condition.madeFor; }
+		if (name == "other") { return testingOther ? testingOther->name.str() : condition.madeAgainst; }
 		return name;
 	}
 
