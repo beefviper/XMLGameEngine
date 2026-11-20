@@ -9,7 +9,7 @@ What is next, and nothing else. The ordered tasks come first, each written to be
 
 ## Order of work
 
-**[The C++ review](#the-c-review) comes first,** in its own section and order. After them, one task at a time, top to bottom. A task's steps are done in their own order, and the tests are green after every step. Where a line says "steps 1 to 4", the rest of that task comes back further down.
+One task at a time, top to bottom. A task's steps are done in their own order, and the tests are green after every step. Where a line says "steps 1 to 4", the rest of that task comes back further down.
 
 | # | Task | Why here |
 |---|---|---|
@@ -38,73 +38,6 @@ The rules for any change are in [AGENTS.md](../AGENTS.md), and what a language c
 - Each step leaves the tests green. If a step cannot, it is too big: split it, and write the smaller steps into this file first.
 - One game is moved first as the proof, then the rest in groups of about ten, running that group's tests after each.
 - When a word is removed, the reader must refuse it with a message that names the new form, and a test must hold that message.
-
-## The C++ review
-
-Its own block of work, done before the tasks below: it touches every field of an object. **Design, measurements and reasons:** [engine-structure](designs/16-engine-structure.md). Read it first.
-
-- **The aim.** The engine does the same things with less: a resource is held once, an object carries only the parts it uses, a tag is written in few places, and the code reads from its names.
-- **What it must not do** is change what any game does. Every step here leaves every game playing exactly as before.
-
-### Rules for this block
-
-- **No game changes.** `xgetest`, `xgetest-generated` and `xgetest-long` pass unchanged after every step. A test is edited only where it names a C++ type or field that moved.
-- **Measure.** `xgetest-long "[speed]"` and `"[size]"` before and after each task, back to back on one machine. Load time, frame time and bytes do not rise; where a task says they fall, the numbers go in the commit message.
-- **One move a commit.** A part, a resource kind or a verb's data moves in its own commit, so a break is found by `git bisect`.
-- **Names over comments,** in every line this block writes or moves: a comment that says what a good name would say is replaced by the name. One-line comments stay as landmarks over a section or a function, and wherever the code cannot say why.
-- **How a step is checked.** Build as [AGENTS.md](../AGENTS.md#build-and-test) says, then `cd build && ctest -j4`, `xgetest-generated`, and `xgetest-long` (random keys, damaged files, `[speed]`, `[size]`). A step is done when its **Check** and all of these pass with zero warnings, and its box is ticked in the same commit.
-- A step marked "the author" stops for the author.
-
-CR1, CR2 and CR4 to CR9 are done; what each did is in [engine-structure](designs/16-engine-structure.md). CR3 is what is left.
-
-### CR3. Parts as components
-
-- **Why.** An `Object` is 4,752 bytes whatever it is. Its parts (A4) become components: each kind in its own collection, held only by the objects that use it. The author: an object needs only its name; everything else, its place and picture included, is a part it has or has not.
-- **The shape.**
-
-  ```cpp
-  struct ObjectId { std::uint32_t index{}; std::uint32_t generation{}; };
-
-  template <typename Part> class Store      // xge/lib/game/store.h
-  {
-  public:
-      bool has(ObjectId id) const;
-      Part& get(ObjectId id);               // throws for one that has none
-      Part* find(ObjectId id);              // nullptr for one that has none
-      Part& add(ObjectId id, Part part);
-      void remove(ObjectId id);
-      template <typename Work> void each(Work&& work);   // in object order: work(ObjectId, Part&)
-  };
-  ```
-
-  - Parts are packed in one vector, kept in object order, with an index per object slot (none: no part). `Game` holds one `Store` per kind of part.
-  - A slot freed by a despawn is used again with its generation raised by one, so an `ObjectId` kept from before no longer matches and `Game::find(ObjectId)` answers nullptr.
-  - A part that a reset returns to its start keeps its start value in the same store (`Store::start(id)`); which parts do is in step 1's table.
-  - A `Game` is not copied (its loaded expressions point at its stores); a player's game put away while another plays (`Turn`) keeps a copy of the stores.
-- **Steps.**
-  - [x] **1. The author: the table of parts.** In [object-parts](designs/17-object-parts.md). The author chose a store per part; the per-part proposals are applied as each part moves in step 4.
-  - [x] **2. A handle with a generation (M).** `ObjectId` (`game/object.h`), `Game::find(ObjectId)`, each object's `id`, slots freed when a copy leaves and used again a generation on (`test_store.cpp`). The `Object*` kept in `game.h` and `play/frame.h` all live within one step or are cleared when the roster changes, and what is kept from frame to frame is kept by name, which never changes (a copy's number is never reused), so none needed moving. Names become ids only where a store needs one (step 4) or speed gains (CR8 step 4).
-  - [x] **3. The store (S).** `Store<Part>` (`game/store.h`): `has`, `find`, `get`, `add(id, order, part)`, `remove`, `each` in object order, `keepStart` and `restart`. `order` is where the object stands among the game's objects: objects join in order and keep it, so a number given as each joins is enough. A despawn must `remove` from every store (step 4).
-  - [x] **4. Parts move out, one a commit, largest first (L in all).** Done at 536 bytes (the author): `mirror`, `turning` and `dark` stay in the object, read on nearly every draw and touch for a few bytes each. `Holder`, `Drive`, `Hand`, `Cells`, `Animation`, `MapPlace`, then the rest of step 1's table. For each part:
-    1. it leaves `Object` and gets its store in `Game`;
-    2. `load/build.cpp` adds it only for an object whose file has its tag, or that has a command of its verb family;
-    3. a verb that can give it to an object while playing adds it on first use;
-    4. every reader of `object.<part>` asks the store, with `find` where the object may have none;
-    5. spawn copies it, despawn removes it, reset restores it.
-    Moved so far: `Holder` (`Game::parts().holders`, `isHolder`, `holderOf`; handles live in `game/parts.h` with the stores); `Drive` (`Game::driveFor` gives it on the first key that drives, `<stop />` and a reset take it away, the frame reads it); `Hand` (`isHand`, `handOf`, for an object whose action picks up held items); `Maze` (`Game::mazeOf`; `<go>`, `<hunt>` and `<wander>` start a walk on the part); `Object::Cells` (`Game::cellPart` reads, an empty part for one with none; `cellPartFor` gives one to a piece sent into a cell map; `isShape` moves to the game); `Tether`, `Pull` and `Aloft`, rare enough to go in one commit; `Rest` (for an object with `<friction>`; `knock` and `bounce` take the game's parts); `Carry` (given by the first `<carry />`, `Game::carrying` reads what is carried); `Picker` with `Marks` folded into it (`Game::pickerOf` reads, `pickerFor` gives). Then `Turns` (`Game::turnsOf`), `Item` (`itemOf` reads, `itemFor` writes) `SizeUse`, what a size-dependent position uses (`usesSize`), and `Climb`, what a `<climb>` asked (the footing keeps only grounded, jumping, climbing): 2,000 to 1,736 bytes. Then a board piece's `Moves` (`Game::pieceMoves`; live `moves` linked only for a piece with them), a flipper's `Swing` (given by the first `<swing>`) and a light's `LightPast`: 1,168 to 1,096 bytes. A map piece's `MapPlace` (`Game::mapOf`, `mapFor`; whether it is on a map of cells stays in the object as `onCells`, which every frame asks): 1,096 to 1,032 bytes. A text's pieces that show variables, `BoundText` (`Game::textPiecesOf`, `showsVariable`): 1,032 to 1,008 bytes. What an object follows (`Follows`, update="live") and the picture a hole was first cut in (`Unholed`, given by `cutHole`, taken by a reset): 872 to 824 bytes. A `<surface>`'s drag and grip (`Surface`; the object keeps only `ground`, what it has under it this frame): 824 to 808 bytes. A `<mirror>`'s flipped pictures are its looks' (`LookSet::flips`), shared with its copies: 808 to 784 bytes. Each object's start `Moment`, read only by a reset, a spawn and a few verbs (`Parts::starts`; `Game::startOf` reads, `startFor` writes as it loads): 784 to 696 bytes. An object's own `<hitbox>`es go with its kind's rules (`CollisionData::hitboxes`, read by `Object::hitboxes()`), as they are written with them: 696 to 672 bytes. Its yes/no fields packed side by side, and a flight's numbers by size: 672 to 640 bytes. Timer clocks, for an object with `<timers>` (`Parts::clocks`, `Game::clocksOf`; a look change goes through `Game::showLook`, which starts the timers that follow it over): 640 to 616 bytes. An animation's numbers by size: 616 to 608 bytes. An object's outer groups are one `NameList` (`game/name.h`), a list held once in the `NameStore` and shared by a group's members: 608 to 592 bytes, under the 600 aimed at. A `<follow>` under way (`OnPath`, `Parts::onPaths`, `Game::isFollowing`; given by `follow`, taken by the path's end, a reset, `<die />` and `<stop />`): 592 to 552 bytes. A timed hop's `Flight` (`Parts::flights`, while the object's `airborne` flag is on; given by the hop, taken as it lands or by a reset): 552 to 536 bytes. The frame reads every store through `FrameRules::parts()`.
-    **Check after each commit:** all tests and `xgetest-generated`; a case in `test_store.cpp` that Pong's ball has no such part (for a part Pong does not use); `[size]` and `[speed]` numbers in the commit, neither worse.
-  - [ ] **5. What every drawn thing has (the author: it stays).** `Moment` (place, speed and the rest) and the picture, its `animation` with it (the author), stay in the object: nearly every object has them (the picture 5,722 of 5,926) and most verbs touch them. The picture becomes a `PictureId` (CR2 step 4) and `drawn` keeps only what a text needs besides. `before` shrinks to what is read of it (position, `collisionsOn`, `isVisible`): done, 2,624 to 2,416 bytes. The cell place (column, row, a `<go>`, a chain's links, what a piece is joined with) left the `Moment` for the cell part (`Object::Cells::Place`, `Game::place` reads, `placeFor` gives; a reset puts back its `start`): 2,160 to 2,000 bytes. Live `column` and `row` are linked only for an object with a cell part (`LivePart::has`), which also made the frame cheaper.
-  - [x] **5a. The kind, shared (L, a part a commit).** What is the same for every object made from one piece (collision rules and hitboxes, animation frames, looks, moves, layout, and the rest that no verb changes while playing) moves into one `Kind` record per piece, held by the game; an object points at its kind. Something a verb does change while playing stays in the object, or is copied out of the kind on the first change. **Check:** all tests; Space Invaders' 55 invaders hold one set of collision rules between them.
-    Done so far: rules, timers and actions keep `self` and `other`, found as they run (`CmdLive::namesSelf`/`namesOther`, `Game::holdsFor`), and a rule naming other is one rule; `Kind` (`game/object.h`) holds the collision rules, actions and timers (each object keeps only its timers' `clocks`), made and checked for each object, then shared by a group's members (`WrittenObject::kind`, `Evaluator::shareKinds`) and by a copy whose rules do not name its piece (`renameOwn`). Hitboxes stay the object's (they can be about its picture). Its looks, palettes, poses and joins are one `LookSet` behind `Object::looks.set`, shared by a copy whose animations do not name its piece (`Renamed::looks`); a look's seconds changed while playing give the object its own set (`Looks::change`): 1,736 to 1,592 bytes. An animation's frames (pictures, times, hitboxes, commands) are one `Frames` held by pointer (`HeldFrames`, `edit` copies a shared one first), shown by pointing at a look's: 1,592 to 1,480 bytes. Objects whose looks came out the same share one set (`Evaluator::shareLooks`, at the end of loading): Q*bert's 33 sets to 6, Checkers' 28 to 6; a look that moves is shared only when its frames are the same frames, so Mario Bros.' walkers each keep theirs.
-  - [x] **5b. Names as ids (L).** An object's name, group, class, copy and owner state are small ids into one table of names the game holds, read back as text only for the screen, the debug print and errors. **Check:** all tests; `[speed]` not worse.
-    Done so far: `Name` (`game/name.h`) is one pointer into the program's `NameStore` (`Name::of`; the author chose one table for the program over one per game, so that any code can make a name), each text held once; an object's name, class, group, outer groups, copy, owner state and owner scene are names, and so are the map a piece is on, its home map and the path it follows: 1,480 to 1,240 bytes. A picture's colour, font and file are names too: 1,240 to 1,168 bytes. The picture itself is held by pointer (`HeldPicture`, in `game/command.h`), one between an object and its looks, copied only when something changes it (a text's words, a tether's line): 1,008 to 920 bytes. An object's variables are one short list in name order (`Variables`, `game/variables.h`) in place of a `std::map`, in its `Moment` and its `start`: 920 to 872 bytes.
-  - [x] **6. Passes over a store (M, one pass a commit).** Where a frame pass asks every object "do you have this" (animations, object timers, paths, flights, pulls, altitude), it walks that part's store with `each`. The order of passes in `playOneFrame` and `Game::updateObjects` does not change. **Check:** all tests; `[speed]` frame time for all games summed is lower than before the task; `xgetest-long` random keys.
-    Done so far: climbing, pulls and altitudes walk their store (`eachWithPart` in `play/frame.cpp`, by each part's place in the game's list): frame 10,874 to 10,774 and 10,966 to 10,719 us in two runs back to back. Paths and object timers keep walking the objects: their commands can give a part to an object later in the list (a `<follow>`, a look that starts timers), which must still count this frame, so a walk over the store as it was would change play.
-  - [ ] **7. Features leave `Game` (L, a feature a commit).** With holders, cells, marks and the search holding their own parts, the functions in `game/holders.cpp`, `cells.cpp` and `think.cpp` become functions that take the game, as verbs are, and leave the class. **Check:** all tests; `wc -l xge/lib/game/game.h` under 500.
-    Done so far: the search is a `Thinker` (`game/think.h`) the game holds, asking it only through the game's public functions (`fullName`, `putInCell`, `spawning` made public for it): 1,172 to 1,157 lines. Maps of cells and their board games are a `CellMaps` (`game/cells.h`, `Game::cellMaps()`), 45 functions with the state only they use (the cells held still, a refused step's cells, what merged); undo, `kindOf` and `findSpawning` stay the game's, which several features use: 1,157 to 985 lines. Cards are a `Holders` (`game/holders.h`, `Game::holders()`), 44 functions with the state only they use (the scores due, where each item is), the hand verbs and the deal public, the rest its own: 985 to 924 lines. Players as a group are a `Players` (`game/players.h`, `Game::players()`): 924 to 896 lines. The sounds asked for, silenced and looping are a `Sounds` (`game/sounds.*`, `Game::sounds()`, `request`, `silence`, `playing`): 896 to 865 lines. Undo, which only ever puts back pieces on cells, went into `CellMaps`: 865 to 845 lines. The hot-seat `<turns>` stay the game's: a turn puts away and takes up the whole game (its objects, parts, timers and scenes).
-  - [x] **8. The written side.** Dropped (the author): `WrittenObject` (14,600 bytes) is mostly the file's text, read at load and on a spawn, never every frame, so its size is a fair trade for not reading the file again.
-- **Files.** `xge/lib/game/store.h` (new), `game/object.h`, `game/game.*`, `game/*.cpp`, `play/*`, `verbs/*`, `load/build.cpp`; `xge/tests/engine/test_store.cpp` (new); `docs/reference/engine.md`, `docs/agents/play.md`.
-- **Done when** what is the same for every object of a kind is held once (step 5a), an object holds only what changes for it while playing, and no object holds a part its file never asked for; `sizeof(Object)` is then under 600 bytes (held by a `static_assert` in the `[size]` test). The author (after seeing where 2.5 KB went: three copies of the `Moment`, about fifteen empty strings, and per-kind data copied into every object) agreed this goal in place of the first one, under 1,200.
 
 ## Tasks
 
@@ -183,7 +116,7 @@ Ordered by how many existing games gain. Each ends with the docs, a game or two 
 
 ## Long term
 
-Goals the author has set, beyond the tasks above. None is scheduled; [the C++ review](#the-c-review) is being done first and has its own section.
+Goals the author has set, beyond the tasks above. None is scheduled.
 
 ### A camera and scrolling
 

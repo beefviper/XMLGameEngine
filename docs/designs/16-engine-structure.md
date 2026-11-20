@@ -1,6 +1,6 @@
 # The engine's structure
 
-**Status:** Built, except the later steps of components (CR3), which are the [C++ review](../plan.md#the-c-review) section of the plan.
+**Status:** Built.
 
 ## What we want
 
@@ -38,6 +38,7 @@ A4 put an object's fields into parts by feature, which made it readable. It did 
 | Task | Result |
 |---|---|
 | CR1 | sizes on record (`xgetest-long "[size]"`); one walk over a command's values (`forEachValue`) in place of six hand lists, five of which missed `<arc>` and `<below>` |
+| CR3 | parts in a store each (`Store`, `Parts`), a handle with a generation (`ObjectId`); what a piece shares in one `Kind` and `LookSet`; names as ids; an object 4,752 to 536 bytes; features in their own classes (`CellMaps`, `Holders`, `Players`, `Sounds`, `Thinker`), `game.h` 1,172 to 845 lines |
 | CR2 | `Resources` (`engine/resources.h`): each picture and sound held once, named by an id; windows keep a texture a picture |
 | CR4 | `Engine::run` is `input()`, `update(seconds)`, `render()`; `Game::updateObjects` and `playOneFrame` are named stages only |
 | CR5 | every game checked by a schema; the reader trusts it (`fail(` 251 to 156) and walks each element once (`Children`); Pac-Man's `--check` 3.69G to 2.07G instructions |
@@ -49,6 +50,7 @@ A4 put an object's fields into parts by feature, which made it readable. It did 
 ## Decided by the author
 
 - **One owner of resources.** Everything loaded or made (pictures, turned and flipped and recoloured pictures, sheets, fonts, sounds, schemas, a window's textures) is held once by a resource manager and named by a small id. A hundred objects with one picture share it. A picture's id is one pointer to where the manager keeps it (as a `Name` is into the names), so it reads like the picture wherever an object is at hand, with no manager passed in; the author asked for ids, and this one is also the picture. Two things outlive a game and stay the program's, each read once: a parsed schema (a game is read before any `Engine` exists to hold one) and a font file (texts are measured where no game is at hand, on the computer's thread too, so its lock stays).
+- **A class per self-contained feature.** A feature with state of its own (cells, cards, players, sounds, the search) is a class the game holds, reading the game through its public functions. What reworks the game's whole object list (hot-seat turns, spawning) and the interpreter's core (states, scenes, conditions, part lookups) stays in `Game`: splitting those would open up nearly all of it.
 - **Components.** A part an object does not use is not in it. Parts live in a collection each, an object keeps an index into the ones it has, and an object's own handle carries a generation so a stale one is caught.
 - **The engine's run reads as it is:** input, update, render, spelled out, so another stage can go between.
 - **Names over comments.** A good name replaces a comment; one-line comments stay as landmarks over sections and functions.
