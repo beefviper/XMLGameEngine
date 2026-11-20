@@ -145,7 +145,7 @@ namespace xge
 	// made (none until every object is known), and its commands.
 	struct WhenBody
 	{
-		std::shared_ptr<const WrittenCondition> raw;
+		std::shared_ptr<const WrittenCondition> written;
 		std::optional<Condition> test;
 		std::vector<Command> commands;
 	};

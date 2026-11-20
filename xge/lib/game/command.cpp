@@ -26,21 +26,21 @@ namespace xge
 		return { written.substr(0, dot), written.substr(dot + 1) };
 	}
 
-	Command makeCommand(const WrittenCommand& raw, const ValueEvaluator& evaluate)
+	Command makeCommand(const WrittenCommand& written, const ValueEvaluator& evaluate)
 	{
-		const Verb* verb = findVerb(raw.verb);
-		if (!verb) { throw std::runtime_error("unknown command <" + raw.verb + ">"); }
-		return verb->make(raw, evaluate);
+		const Verb* verb = findVerb(written.verb);
+		if (!verb) { throw std::runtime_error("unknown command <" + written.verb + ">"); }
+		return verb->make(written, evaluate);
 	}
 
-	std::vector<Command> makeCommands(const std::vector<WrittenCommand>& raw, const ValueEvaluator& evaluate)
+	std::vector<Command> makeCommands(const std::vector<WrittenCommand>& written, const ValueEvaluator& evaluate)
 	{
 		std::vector<Command> commands;
-		commands.reserve(raw.size());
+		commands.reserve(written.size());
 
-		for (const WrittenCommand& rawCommand : raw)
+		for (const WrittenCommand& writtenCommand : written)
 		{
-			commands.push_back(makeCommand(rawCommand, evaluate));
+			commands.push_back(makeCommand(writtenCommand, evaluate));
 		}
 
 		return commands;
@@ -333,12 +333,12 @@ namespace xge
 	}
 
 	std::ostream& operator<<(std::ostream& o, const WrittenObject& f) {
-		o << "rawObject: " << "name=" << f.name << (f.groupName.empty() ? "" : ", group=" + f.groupName) << ", sprite=" << f.sprite.kind
+		o << "writtenObject: " << "name=" << f.name << (f.groupName.empty() ? "" : ", group=" + f.groupName) << ", sprite=" << f.sprite.kind
 			<< (f.cell.column > 0 ? " (cell " + std::to_string(f.cell.column) + "." + std::to_string(f.cell.row) + ")" : "")
 			<< (f.hasAnimation ? " (animated, " + std::to_string(f.animation.frames.size()) + " frames)" : "") << '\n'
-			<< "\tpos.x=" << f.rawPosition.x << ", pos.y=" << f.rawPosition.y << '\n'
-			<< "\tvel.x=" << f.rawVelocity.x << ", vel.y=" << f.rawVelocity.y << '\n'
-			<< "\tcollision=" << (f.rawCollisionData.enabled ? "true" : "false") << f.rawCollisionData;
+			<< "\tpos.x=" << f.writtenPosition.x << ", pos.y=" << f.writtenPosition.y << '\n'
+			<< "\tvel.x=" << f.writtenVelocity.x << ", vel.y=" << f.writtenVelocity.y << '\n'
+			<< "\tcollision=" << (f.writtenCollisionData.enabled ? "true" : "false") << f.writtenCollisionData;
 		o << '\n';
 
 		for (auto& action : f.action)

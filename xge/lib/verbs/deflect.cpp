@@ -17,9 +17,9 @@ namespace xge
 		command.own.emplace<WrittenDeflect>().widest = readValue(node, where);
 	}
 
-	static Command makeDeflect(const WrittenCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeDeflect(const WrittenCommand& written, const ValueEvaluator& evaluate)
 	{
-		const float maxAngle = evaluate(ownOf<WrittenDeflect>(raw).widest);
+		const float maxAngle = evaluate(ownOf<WrittenDeflect>(written).widest);
 		if (!(maxAngle >= 0.0f && maxAngle < 90.0f))
 		{
 			throw std::runtime_error("<deflect> has an angle of " + formatDisplayNumber(maxAngle) + "; expected 0 up to (not including) 90 degrees");

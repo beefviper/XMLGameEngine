@@ -956,15 +956,15 @@ namespace xge
 		// only ever read back by printGame().
 		std::string validation;
 
-		std::vector<std::pair<std::string, WrittenValue>> rawVariables;
+		std::vector<std::pair<std::string, WrittenValue>> writtenVariables;
 		std::map<std::string, float> variables;
-		std::vector<WrittenState> rawStates;
+		std::vector<WrittenState> writtenStates;
 		std::vector<State> states;
-		std::vector<WrittenObject> rawObjects;
+		std::vector<WrittenObject> writtenObjects;
 		std::vector<Object> objects;
-		std::vector<WrittenSound> rawSounds;
+		std::vector<WrittenSound> writtenSounds;
 		std::vector<SoundDesc> sounds;
-		std::vector<WrittenPath> rawPaths;
+		std::vector<WrittenPath> writtenPaths;
 		std::vector<Patterns> patterns;
 		std::map<std::string, Path> paths;
 		std::vector<std::string> soundRequests;
@@ -994,7 +994,7 @@ namespace xge
 		// What the file says of each copy, under the copy's name (what
 		// drawStartAgain draws a <random> from), and, for a group spawned
 		// from, which of its members is next.
-		std::map<std::string, WrittenObject> copyRaws;
+		std::map<std::string, WrittenObject> writtenCopies;
 		std::map<Name, std::size_t> spawnTurns;
 		std::map<std::string, bool> descriptions;
 

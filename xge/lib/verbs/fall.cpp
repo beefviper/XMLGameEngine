@@ -9,9 +9,9 @@
 namespace xge
 {
 	// <fall>: Every piece with nothing under it comes down.
-	static Command makeFall(const WrittenCommand& raw, const ValueEvaluator&)
+	static Command makeFall(const WrittenCommand& written, const ValueEvaluator&)
 	{
-		return CmdFall{ raw.objClass };
+		return CmdFall{ written.objClass };
 	}
 
 	static bool runFall(const CmdFall& fall, const Doer& doer)

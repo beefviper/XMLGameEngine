@@ -18,9 +18,9 @@ namespace xge
 		if (node.getFirstChild()) { command.own.emplace<WrittenCount>().cells = readCellPlace(node, where + " > <count>"); }
 	}
 
-	static Command makeCount(const WrittenCommand& raw, const ValueEvaluator&)
+	static Command makeCount(const WrittenCommand& written, const ValueEvaluator&)
 	{
-		return CmdCount{ raw.objClass, VariableName::of(raw.into), ownOf<WrittenCount>(raw).cells };
+		return CmdCount{ written.objClass, VariableName::of(written.into), ownOf<WrittenCount>(written).cells };
 	}
 
 	static bool runCount(const CmdCount& count, const Doer& doer)

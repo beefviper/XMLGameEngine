@@ -57,22 +57,22 @@ namespace xge
 		if (auto ahead = findChild(&node, "ahead")) { hunt.ahead = readValue(*ahead, here); }
 	}
 
-	static Command makeHunt(const WrittenCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeHunt(const WrittenCommand& written, const ValueEvaluator& evaluate)
 	{
-		if (const WrittenHop* hop = std::get_if<WrittenHop>(&raw.own))
+		if (const WrittenHop* hop = std::get_if<WrittenHop>(&written.own))
 		{
 			const bool diagonal = hop->diagonal.has_value();
 			const float distance = diagonal ? 0.0f : evaluate(*hop->distance);
 			const float seconds = hopSeconds(*hop, evaluate);
-			return CmdHuntHop{ raw.object, diagonal ? evaluate(hop->diagonal->x) : distance, diagonal ? evaluate(hop->diagonal->y) : distance, diagonal, seconds, arcOf(*hop, "hop", seconds, evaluate) };
+			return CmdHuntHop{ written.object, diagonal ? evaluate(hop->diagonal->x) : distance, diagonal ? evaluate(hop->diagonal->y) : distance, diagonal, seconds, arcOf(*hop, "hop", seconds, evaluate) };
 		}
 
-		const WrittenHunt& written = ownOf<WrittenHunt>(raw);
-		CmdHunt hunt{ raw.object, speedOf(written.speed, "hunt", evaluate), valueOr(written.ahead, 0.0f, evaluate), written.partner, written.retreat, 0.0f, written.search };
-		if (!written.retreat.empty())
+		const WrittenHunt& own = ownOf<WrittenHunt>(written);
+		CmdHunt hunt{ written.object, speedOf(own.speed, "hunt", evaluate), valueOr(own.ahead, 0.0f, evaluate), own.partner, own.retreat, 0.0f, own.search };
+		if (!own.retreat.empty())
 		{
-			hunt.retreatWithin = evaluate(written.retreatWithin);
-			if (hunt.retreatWithin < 0.0f) { throw std::runtime_error("<hunt object=\"" + raw.object + "\">: the <retreat> is below 0 tiles"); }
+			hunt.retreatWithin = evaluate(own.retreatWithin);
+			if (hunt.retreatWithin < 0.0f) { throw std::runtime_error("<hunt object=\"" + written.object + "\">: the <retreat> is below 0 tiles"); }
 		}
 		return hunt;
 	}

@@ -18,9 +18,9 @@ namespace xge
 		requireAttribute(node, "state", where);
 	}
 
-	static Command makePush(const WrittenCommand& raw, const ValueEvaluator&)
+	static Command makePush(const WrittenCommand& written, const ValueEvaluator&)
 	{
-		return CmdPushState{ raw.state };
+		return CmdPushState{ written.state };
 	}
 
 	static void checkPush(const CmdPushState& pushState, const Checking& checking)

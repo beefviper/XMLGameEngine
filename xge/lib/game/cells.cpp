@@ -207,7 +207,7 @@ namespace xge
 
 		const auto takeBack = [&]()
 		{
-			copyRaws.erase(made.name);
+			writtenCopies.erase(made.name);
 			spawned.pop_back();
 			return false;
 		};
@@ -518,7 +518,7 @@ namespace xge
 	{
 		if (!map.empty() && !moveToMap(made, map))
 		{
-			copyRaws.erase(made.name);
+			writtenCopies.erase(made.name);
 			spawned.pop_back();
 			return false;
 		}
@@ -535,7 +535,7 @@ namespace xge
 		}
 		if (free.empty())
 		{
-			copyRaws.erase(made.name);
+			writtenCopies.erase(made.name);
 			spawned.pop_back();
 			return false;
 		}

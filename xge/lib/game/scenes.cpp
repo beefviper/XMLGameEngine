@@ -433,11 +433,11 @@ namespace xge
 				object.forEachValue([&](WrittenValue& each) { value(each, context); });
 				timers(object.timers, context);
 
-				WrittenCollisionData& collisions = object.rawCollisionData;
+				WrittenCollisionData& collisions = object.writtenCollisionData;
 				for (auto& edge : collisions.edges)
 				{
 					commands(edge.commands, context);
-					for (EdgeGuard& guard : edge.guards) { conditions(guard.rawCheck.parts, context); }
+					for (EdgeGuard& guard : edge.guards) { conditions(guard.writtenCheck.parts, context); }
 				}
 				for (WrittenCollisionRule& rule : collisions.others)
 				{
@@ -459,7 +459,7 @@ namespace xge
 				for (auto& [character, piece] : object.shapePieces) { piece = names_.object(piece, context); }
 				object.chain = names_.object(object.chain, context);
 				for (WrittenCheck& check : object.cell.checks) { commands(check.commands, context); }
-				for (auto& [name, strength] : object.rawPulls)
+				for (auto& [name, strength] : object.writtenPulls)
 				{
 					name = names_.object(name, context);
 					value(strength, context);

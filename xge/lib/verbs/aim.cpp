@@ -24,13 +24,13 @@ namespace xge
 		if (auto lined = findChild(&node, "lined")) { aim.lined = readValue(*lined, where + " > <aim>"); }
 	}
 
-	static Command makeAim(const WrittenCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeAim(const WrittenCommand& written, const ValueEvaluator& evaluate)
 	{
-		const std::optional<WrittenValue>& written = ownOf<WrittenAim>(raw).lined;
-		const bool lined = written.has_value();
-		const float within = lined ? evaluate(*written) : 0.0f;
-		if (within < 0.0f) { throw std::runtime_error("<aim object=\"" + raw.object + "\">: the <lined> is below 0"); }
-		return CmdAim{ raw.object, lined, within };
+		const std::optional<WrittenValue>& own = ownOf<WrittenAim>(written).lined;
+		const bool lined = own.has_value();
+		const float within = lined ? evaluate(*own) : 0.0f;
+		if (within < 0.0f) { throw std::runtime_error("<aim object=\"" + written.object + "\">: the <lined> is below 0"); }
+		return CmdAim{ written.object, lined, within };
 	}
 
 	static void checkAim(const CmdAim& aim, const Checking& checking)

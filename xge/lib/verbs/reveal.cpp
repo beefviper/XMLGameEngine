@@ -23,12 +23,12 @@ namespace xge
 		if (hasContent(node)) { own.count = readValue(node, where); }
 	}
 
-	static Command makeReveal(const WrittenCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeReveal(const WrittenCommand& written, const ValueEvaluator& evaluate)
 	{
-		const std::optional<WrittenValue>& written = ownOf<WrittenReveal>(raw).count;
-		const int count = written ? static_cast<int>(std::lround(evaluate(*written))) : 1;
-		if (count < 1) { throw std::runtime_error("<reveal> of " + raw.object + " has a count under 1"); }
-		return CmdReveal{ raw.object, count };
+		const std::optional<WrittenValue>& own = ownOf<WrittenReveal>(written).count;
+		const int count = own ? static_cast<int>(std::lround(evaluate(*own))) : 1;
+		if (count < 1) { throw std::runtime_error("<reveal> of " + written.object + " has a count under 1"); }
+		return CmdReveal{ written.object, count };
 	}
 
 	static void checkReveal(const CmdReveal& reveal, const Checking& checking)

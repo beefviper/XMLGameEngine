@@ -70,32 +70,30 @@ The reason is that here the order of a step is part of what a game means: timers
 
 ## Versions of one value
 
-There are four, and the names should say which:
+There are four, and the names say which:
 
-| Today | What it is | Proposed |
-|---|---|---|
-| `Raw...`, `raw...` | as written in the file: text, not yet worked out | `Written...` |
-| `start` | worked out when the game loaded; what a reset returns to | `start` |
-| (no prefix) | now | (none) |
-| `before` | at the end of the last step | `before` |
-
-The rename is the author's to approve as a table before anything is touched.
+| Name | What it is |
+|---|---|
+| `Written...`, `written...` | as the file writes it: text, not yet worked out |
+| `start` | worked out when the game loaded; what a reset returns to |
+| (no prefix) | now |
+| `before` | at the end of the last step |
 
 ## Names (plan CR9)
 
-Proposed, for the author. Each row is one commit, made by tool; the generator's files and the docs go with it.
+The author approved these as a table, and each was made by tool, one commit a row, with the generator's files and the docs.
 
-| # | Today | Proposed | Why |
-|---|---|---|---|
-| 1 | `Raw...` (69 types: `WrittenObject`, `WrittenValue`, `WrittenCommand`, each verb's `WrittenBounce`...) | `Written...` | as the file says it, not yet worked out; `WrittenValue` is read while playing too, and "written" still says what it is |
-| 2 | `raw`, `rawObject`, `rawState`... (50 names, 486 bare `raw`) | `written`, `writtenObject`... | the same word as its type |
-| 3 | `game_expr` | `Evaluator` | it works written values out, at load and while playing; the one class named in snake case |
-| 4 | `getObject`, `tryGetObject`, `findObject`, `findAnywhere`, `find(ObjectId)` | `object(Name)` (throws), `find(Name)`, `find(ObjectId)`, `findSpawning(Name)` (this frame's spawns too); the uncached search private | five names for one question today |
-| 5 | `holdVariablesForExpressions`, `heldFor`, `refreshBoundTexts` | `shareVariables`, `expressionSlot`, `variableChanged` | what each does, not how |
-| 6 | `liveNumberParts` | `livePartNames` | it gives the parts' names; `liveParts` gives how each is read |
-| 7 | `Game::nameOf` | gone: `Name::of` | a wrapper left from the per-game table |
+| Was | Is | Why |
+|---|---|---|
+| `Raw...` (69 types) | `Written...` | as the file says it; `WrittenValue` is read while playing too, and "written" still says what it is |
+| `raw`, `rawObject`... | `written`, `writtenObject`...; a verb's own part, once `written`, is `own` | the same word as its type |
+| `game_expr` | `Evaluator` | it works written values out, at load and while playing |
+| `getObject`, `tryGetObject`, `findObject`, `findAnywhere` | `object(Name)` (throws), `find(Name)` (null), beside `find(ObjectId)`; `findSpawning(Name)`; private `search` | five names for one question |
+| `holdVariablesForExpressions`, `heldFor`, `refreshBoundTexts`, `refreshAllBoundTexts` | `shareVariables`, `expressionSlot`, `variableChanged`, `relabelAll` | what each does, not how |
+| `liveNumberParts` | `livePartNames` | the parts' names; `liveParts` says how each is read |
+| `Game::nameOf` | `Name::of` | a wrapper left from the per-game table |
 
-Kept, as they say what they are: `start`, `before`, `Moment`, `Kind`, `Doer`, `Compared`, `CommandExecutor`, and the `xxxOf` (reads a part) and `xxxFor` (gives one) pairs, which step 4 writes down as a rule.
+Kept, as they say what they are: `start`, `before`, `Moment`, `Kind`, `Doer`, `Compared`, `CommandExecutor`, and the `xxxOf` (reads a part) and `xxxFor` (gives one) pairs.
 
 ## What we looked at
 

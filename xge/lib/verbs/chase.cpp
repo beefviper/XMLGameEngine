@@ -26,14 +26,14 @@ namespace xge
 		if (auto nearNode = findChild(&node, "near")) { chase.near = readValue(*nearNode, here); }
 	}
 
-	static Command makeChase(const WrittenCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeChase(const WrittenCommand& written, const ValueEvaluator& evaluate)
 	{
-		const WrittenChase& written = ownOf<WrittenChase>(raw);
-		const float speed = evaluate(written.speed);
-		const float stopWithin = valueOr(written.near, 0.0f, evaluate);
-		if (speed < 0.0f) { throw std::runtime_error("<chase object=\"" + raw.object + "\">: its speed is below 0"); }
-		if (stopWithin < 0.0f) { throw std::runtime_error("<chase object=\"" + raw.object + "\">: the <near> is below 0"); }
-		return CmdChase{ raw.object, speed, stopWithin };
+		const WrittenChase& own = ownOf<WrittenChase>(written);
+		const float speed = evaluate(own.speed);
+		const float stopWithin = valueOr(own.near, 0.0f, evaluate);
+		if (speed < 0.0f) { throw std::runtime_error("<chase object=\"" + written.object + "\">: its speed is below 0"); }
+		if (stopWithin < 0.0f) { throw std::runtime_error("<chase object=\"" + written.object + "\">: the <near> is below 0"); }
+		return CmdChase{ written.object, speed, stopWithin };
 	}
 
 	static void checkChase(const CmdChase& chase, const Checking& checking)

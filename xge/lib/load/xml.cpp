@@ -330,29 +330,29 @@ namespace xge
 		WrittenLine readLine(const XmlNode& line, const std::string& where)
 		{
 			const std::string here = where + " > <line>";
-			WrittenLine rawLine;
+			WrittenLine writtenLine;
 
-			rawLine.from = readVector2(*requireChild(line, "from", here), here);
-			rawLine.to = readVector2(*requireChild(line, "to", here), here);
+			writtenLine.from = readVector2(*requireChild(line, "from", here), here);
+			writtenLine.to = readVector2(*requireChild(line, "to", here), here);
 
-			if (auto color = findChild(&line, "color")) { rawLine.color = readText(*color); }
+			if (auto color = findChild(&line, "color")) { writtenLine.color = readText(*color); }
 			if (auto thickness = findChild(&line, "thickness"))
 			{
-				rawLine.thickness = readValue(*thickness, here);
+				writtenLine.thickness = readValue(*thickness, here);
 			}
 
-			return rawLine;
+			return writtenLine;
 		}
 
 		// A <surface>: its <drag> and <grip>, each if given.
-		void readSurface(const XmlNode& surface, WrittenObject& rawObject, const std::string& where)
+		void readSurface(const XmlNode& surface, WrittenObject& writtenObject, const std::string& where)
 		{
 			const std::string here = where + " > <surface>";
-			rawObject.hasSurface = true;
+			writtenObject.hasSurface = true;
 			for (std::unique_ptr<XmlNode> child = surface.getFirstChild(); child != nullptr; child = child->getNextSibling())
 			{
-				if (child->getName() == "drag") { rawObject.rawSurfaceDrag = readValue(*child, here); }
-				else { rawObject.rawSurfaceGrip = readValue(*child, here); }
+				if (child->getName() == "drag") { writtenObject.writtenSurfaceDrag = readValue(*child, here); }
+				else { writtenObject.writtenSurfaceGrip = readValue(*child, here); }
 			}
 		}
 
@@ -360,15 +360,15 @@ namespace xge
 		WrittenPolygon readPolygon(const XmlNode& polygon, const std::string& where)
 		{
 			const std::string here = where + " > <polygon>";
-			WrittenPolygon rawPolygon;
+			WrittenPolygon writtenPolygon;
 
 			for (std::unique_ptr<XmlNode> node = polygon.getFirstChild(); node != nullptr; node = node->getNextSibling())
 			{
-				if (node->getName() == "point") { rawPolygon.points.push_back(readVector2(*node, here + " > <point>")); }
-				else { rawPolygon.color = readText(*node); }
+				if (node->getName() == "point") { writtenPolygon.points.push_back(readVector2(*node, here + " > <point>")); }
+				else { writtenPolygon.color = readText(*node); }
 			}
 
-			return rawPolygon;
+			return writtenPolygon;
 		}
 
 		// The tag read; readSprite without the line.
@@ -793,30 +793,30 @@ namespace xge
 		// An object's <pull>s and its <seek>, each naming what with object=.
 		// A <light>: how far it reaches, then a <past class> for each class
 		// it does not shine through.
-		void readLight(const XmlNode& light, WrittenObject& rawObject, const std::string& where)
+		void readLight(const XmlNode& light, WrittenObject& writtenObject, const std::string& where)
 		{
 			const std::string here = where + " > <light>";
-			rawObject.lightPast.clear();
+			writtenObject.lightPast.clear();
 			for (std::unique_ptr<XmlNode> past = light.getFirstChild(); past != nullptr; past = past->getNextSibling())
 			{
-				if (past->getName() == "past") { rawObject.lightPast.push_back(past->getAttribute("class")); }
+				if (past->getName() == "past") { writtenObject.lightPast.push_back(past->getAttribute("class")); }
 			}
-			rawObject.rawLight = rawObject.lightPast.empty() ? readValue(light, here)
+			writtenObject.writtenLight = writtenObject.lightPast.empty() ? readValue(light, here)
 				: readLeadValue(light, { "past" }, "how far it reaches, then a <past class=\"...\" /> for each class it does not shine through", here);
 		}
 
 		// An <altitude>: its <start>, <rise>, <fall> and <bounce>, each if given.
-		void readAltitude(const XmlNode& altitude, WrittenObject& rawObject, const std::string& where)
+		void readAltitude(const XmlNode& altitude, WrittenObject& writtenObject, const std::string& where)
 		{
 			const std::string here = where + " > <altitude>";
-			rawObject.hasAltitude = true;
+			writtenObject.hasAltitude = true;
 			for (std::unique_ptr<XmlNode> child = altitude.getFirstChild(); child != nullptr; child = child->getNextSibling())
 			{
 				const std::string tag = child->getName();
-				if (tag == "start") { rawObject.rawAltitude = readValue(*child, here); }
-				else if (tag == "rise") { rawObject.rawRise = readValue(*child, here); }
-				else if (tag == "fall") { rawObject.rawFall = readValue(*child, here); }
-				else { rawObject.rawAltitudeBounce = readValue(*child, here); }
+				if (tag == "start") { writtenObject.writtenAltitude = readValue(*child, here); }
+				else if (tag == "rise") { writtenObject.writtenRise = readValue(*child, here); }
+				else if (tag == "fall") { writtenObject.writtenFall = readValue(*child, here); }
+				else { writtenObject.writtenAltitudeBounce = readValue(*child, here); }
 			}
 		}
 
@@ -1108,21 +1108,21 @@ namespace xge
 				const std::string here = where + " > <timer>";
 				std::unique_ptr<XmlNode> when = timer->getFirstChild();
 
-				WrittenTimer raw;
-				raw.name = timer->getAttribute("name");
-				if (!raw.name.empty() && std::any_of(timers.begin(), timers.end(), [&](const WrittenTimer& other) { return other.name == raw.name; }))
+				WrittenTimer written;
+				written.name = timer->getAttribute("name");
+				if (!written.name.empty() && std::any_of(timers.begin(), timers.end(), [&](const WrittenTimer& other) { return other.name == written.name; }))
 				{
-					fail(here, "has two timers called '" + raw.name + "'");
+					fail(here, "has two timers called '" + written.name + "'");
 				}
-				raw.sprite = timer->getAttribute("sprite");
-				if (!raw.sprite.empty() && !ofObject)
+				written.sprite = timer->getAttribute("sprite");
+				if (!written.sprite.empty() && !ofObject)
 				{
-					fail(here, "sprite=\"" + raw.sprite + "\": only an object's timer follows a look; a state or a scene has none");
+					fail(here, "sprite=\"" + written.sprite + "\": only an object's timer follows a look; a state or a scene has none");
 				}
-				raw.repeat = when->getName() == "every";
-				raw.interval = readValue(*when, here);
-				raw.commands = readCommands(when->getNextSibling(), here);
-				timers.push_back(std::move(raw));
+				written.repeat = when->getName() == "every";
+				written.interval = readValue(*when, here);
+				written.commands = readCommands(when->getNextSibling(), here);
+				timers.push_back(std::move(written));
 			}
 
 			return timers;
@@ -1342,8 +1342,8 @@ namespace xge
 		}
 
 		// What a <condition>, an <all> or an <any> tests (below, with <condition>s).
-		std::unique_ptr<XmlNode> readCheck(const XmlNode& node, const std::string& here, WrittenCondition& raw);
-		void readJoin(const XmlNode& join, const std::string& here, WrittenCondition& raw);
+		std::unique_ptr<XmlNode> readCheck(const XmlNode& node, const std::string& here, WrittenCondition& written);
+		void readJoin(const XmlNode& join, const std::string& here, WrittenCondition& written);
 
 		// <collisions>: whether they are on, whether the objects move in lockstep
 		// with the others of their group, then the rules.
@@ -1806,12 +1806,12 @@ namespace xge
 
 		constexpr SimplePart simpleParts[]
 		{
-			{ "acceleration", [](const XmlNode& node, WrittenObject& into, const std::string& where) { into.rawAcceleration = readVector2(node, where); } },
-			{ "heading", [](const XmlNode& node, WrittenObject& into, const std::string& where) { into.rawHeading = readValue(node, where); } },
-			{ "pivot", [](const XmlNode& node, WrittenObject& into, const std::string& where) { into.rawPivot = readVector2(node, where); } },
-			{ "drag", [](const XmlNode& node, WrittenObject& into, const std::string& where) { into.rawDrag = readValue(node, where); } },
-			{ "friction", [](const XmlNode& node, WrittenObject& into, const std::string& where) { into.rawFriction = readValue(node, where); } },
-			{ "mass", [](const XmlNode& node, WrittenObject& into, const std::string& where) { into.rawMass = readValue(node, where); } },
+			{ "acceleration", [](const XmlNode& node, WrittenObject& into, const std::string& where) { into.writtenAcceleration = readVector2(node, where); } },
+			{ "heading", [](const XmlNode& node, WrittenObject& into, const std::string& where) { into.writtenHeading = readValue(node, where); } },
+			{ "pivot", [](const XmlNode& node, WrittenObject& into, const std::string& where) { into.writtenPivot = readVector2(node, where); } },
+			{ "drag", [](const XmlNode& node, WrittenObject& into, const std::string& where) { into.writtenDrag = readValue(node, where); } },
+			{ "friction", [](const XmlNode& node, WrittenObject& into, const std::string& where) { into.writtenFriction = readValue(node, where); } },
+			{ "mass", [](const XmlNode& node, WrittenObject& into, const std::string& where) { into.writtenMass = readValue(node, where); } },
 			{ "surface", [](const XmlNode& node, WrittenObject& into, const std::string& where) { readSurface(node, into, where); } },
 			{ "facing", [](const XmlNode& node, WrittenObject& into, const std::string&) { into.facing = readText(node); } },
 			{ "maze", [](const XmlNode& node, WrittenObject& into, const std::string& where) { into.maze = readMaze(node, where); } },
@@ -1821,8 +1821,8 @@ namespace xge
 			{ "waiting", [](const XmlNode&, WrittenObject& into, const std::string&) { into.isVisible = false; } },
 			{ "ready", [](const XmlNode&, WrittenObject& into, const std::string&) { into.isVisible = true; } },
 			{ "hidden", [](const XmlNode&, WrittenObject& into, const std::string&) { into.isDrawn = false; } },
-			{ "pull", [](const XmlNode& node, WrittenObject& into, const std::string& where) { into.rawPulls.emplace_back(node.getAttribute("object"), readValue(node, where + " > <pull>")); } },
-			{ "seek", [](const XmlNode& node, WrittenObject& into, const std::string& where) { into.seekTarget = node.getAttribute("object"); into.rawSeek = readValue(node, where + " > <seek>"); } },
+			{ "pull", [](const XmlNode& node, WrittenObject& into, const std::string& where) { into.writtenPulls.emplace_back(node.getAttribute("object"), readValue(node, where + " > <pull>")); } },
+			{ "seek", [](const XmlNode& node, WrittenObject& into, const std::string& where) { into.seekTarget = node.getAttribute("object"); into.writtenSeek = readValue(node, where + " > <seek>"); } },
 			{ "light", readLight },
 			{ "dark", [](const XmlNode& node, WrittenObject& into, const std::string&) { into.dark = readText(node); } },
 			{ "altitude", readAltitude },
@@ -1832,9 +1832,9 @@ namespace xge
 			{ "poses", readPoses },
 			{ "joins", readJoins },
 			{ "mirror", [](const XmlNode& node, WrittenObject& into, const std::string&) { into.mirror = readText(node); } },
-			{ "grip", [](const XmlNode& node, WrittenObject& into, const std::string& where) { into.rawGrip = readValue(node, where + " > <grip>"); } },
+			{ "grip", [](const XmlNode& node, WrittenObject& into, const std::string& where) { into.writtenGrip = readValue(node, where + " > <grip>"); } },
 			// An inner group's touches add to and change its outer group's.
-			{ "collisions", [](const XmlNode& node, WrittenObject& into, const std::string& where) { into.rawCollisionData = readCollisions(node, where, into.rawCollisionData); } },
+			{ "collisions", [](const XmlNode& node, WrittenObject& into, const std::string& where) { into.writtenCollisionData = readCollisions(node, where, into.writtenCollisionData); } },
 			// An inner group's timers come after its outer group's.
 			{ "timers", [](const XmlNode& node, WrittenObject& into, const std::string& where) { for (WrittenTimer& timer : readTimers(&node, where)) { into.timers.push_back(std::move(timer)); } } },
 		};
@@ -1860,13 +1860,13 @@ namespace xge
 
 		WrittenObject readObjectHere(const XmlNode& object, const MapLayout* map)
 		{
-			WrittenObject rawObject;
-			rawObject.line = object.line();
-			rawObject.name = object.getAttribute("name");
-			refuseReserved(rawObject.name, "an object", "<object name=\"" + rawObject.name + "\">");
-			rawObject.objClass = object.getAttribute("class");
+			WrittenObject writtenObject;
+			writtenObject.line = object.line();
+			writtenObject.name = object.getAttribute("name");
+			refuseReserved(writtenObject.name, "an object", "<object name=\"" + writtenObject.name + "\">");
+			writtenObject.objClass = object.getAttribute("class");
 
-			const std::string where = "object '" + rawObject.name + "'";
+			const std::string where = "object '" + writtenObject.name + "'";
 			const Children children(object);
 
 			std::vector<AnimationSpec> animations = readAnimations(object, where);
@@ -1887,33 +1887,33 @@ namespace xge
 			{
 				if (!map || !map->cells) { fail(where, "has a <shape>, which is for an object on a map with <cells />"); }
 				if (!sprites.empty() || !animations.empty()) { fail(where, "has a <shape>, which is drawn by its cells, so it has no <sprite> or <animation>"); }
-				rawObject.shapeRows = readShapeRows(*children.find("shape"), where);
-				rawObject.sprite = nothingSprite();
-				rawObject.isDrawn = false;
+				writtenObject.shapeRows = readShapeRows(*children.find("shape"), where);
+				writtenObject.sprite = nothingSprite();
+				writtenObject.isDrawn = false;
 			}
 			else if (holder)
 			{
-				rawObject.sprite = nothingSprite();
-				rawObject.isDrawn = false;
+				writtenObject.sprite = nothingSprite();
+				writtenObject.isDrawn = false;
 				if (children.find("hidden")) { fail(where, "has no <sprite>, so it is never drawn; <hidden /> is for something with a picture"); }
 				if (!children.find("variables") && !children.find("timers") && !children.find("holds")) { fail(where, "has no <sprite> and no <variables>, <timers> or <holds>, so it is nothing"); }
 			}
 			else
 			{
-				chooseSprite(std::move(sprites), animations, where, rawObject);
+				chooseSprite(std::move(sprites), animations, where, writtenObject);
 				if (blank && children.find("hidden")) { fail(where, "draws nothing in any of its looks; <hidden /> is for something with a picture"); }
 			}
 
 			if (map)
 			{
 				if (children.find("position")) { fail(where, "is on a <map>, where the tile of its char= is where it starts, so it has no <position>"); }
-				placeObjectOnMap(object, *map, rawObject, where);
+				placeObjectOnMap(object, *map, writtenObject, where);
 			}
 			else
 			{
 				if (!object.getAttribute("char").empty()) { fail(where, "char=\"" + object.getAttribute("char") + "\" picks a character of a <map>'s rows; this object is on no <map>"); }
-				if (auto position = children.find("position")) { rawObject.rawPosition = readVector2(*position, where); }
-				else if (holder || blank || !readExists(object, where)) { rawObject.rawPosition = { zeroValue(), zeroValue() }; }
+				if (auto position = children.find("position")) { writtenObject.writtenPosition = readVector2(*position, where); }
+				else if (holder || blank || !readExists(object, where)) { writtenObject.writtenPosition = { zeroValue(), zeroValue() }; }
 				else { fail(where, "missing <position>"); }
 			}
 			// What a game leaves out is nothing: no <velocity> (or no half of
@@ -1921,28 +1921,28 @@ namespace xge
 			if (auto velocity = children.find("velocity"))
 			{
 				const PartialVector2 given = readPartialVector2(*velocity, where);
-				rawObject.rawVelocity.x = given.x.value_or(zeroValue());
-				rawObject.rawVelocity.y = given.y.value_or(zeroValue());
+				writtenObject.writtenVelocity.x = given.x.value_or(zeroValue());
+				writtenObject.writtenVelocity.y = given.y.value_or(zeroValue());
 			}
 			else
 			{
-				rawObject.rawVelocity = { zeroValue(), zeroValue() };
+				writtenObject.writtenVelocity = { zeroValue(), zeroValue() };
 			}
 			for (const Children::Child& child : children)
 			{
-				if (const SimplePart* part = simplePart(child.name)) { part->read(*child.node, rawObject, where); }
+				if (const SimplePart* part = simplePart(child.name)) { part->read(*child.node, writtenObject, where); }
 			}
-			readPieceMoves(object, rawObject, where);
+			readPieceMoves(object, writtenObject, where);
 			if (auto chain = children.find("chain"))
 			{
 				if (!map || !map->cells) { fail(where, "has a <chain>, which is for an object on a map with <cells />"); }
-				rawObject.chain = chain->getAttribute("object");
+				writtenObject.chain = chain->getAttribute("object");
 			}
-			rawObject.exists = rawObject.exists && readExists(object, where);
-			readActions(object, where, rawObject.action);
-			readObjectVariables(object, where, rawObject.variable);
+			writtenObject.exists = writtenObject.exists && readExists(object, where);
+			readActions(object, where, writtenObject.action);
+			readObjectVariables(object, where, writtenObject.variable);
 
-			return rawObject;
+			return writtenObject;
 		}
 
 		// What a member says for one thing, else what its group says, else an error.
@@ -2224,9 +2224,9 @@ namespace xge
 			const std::vector<AnimationSpec>& animations = own.animations;
 			const PartialVector2& position = own.position;
 			const PartialVector2& velocity = own.velocity;
-			WrittenObject rawObject = own.object;
-			rawObject.name = memberName;
-			rawObject.line = group.line();
+			WrittenObject writtenObject = own.object;
+			writtenObject.name = memberName;
+			writtenObject.line = group.line();
 
 			std::vector<WrittenSprite> used = sprites;
 			std::vector<AnimationSpec> usedAnimations = animations;
@@ -2242,38 +2242,38 @@ namespace xge
 				if (part->position.y) { positionY = part->position.y; }
 				if (part->velocity.x) { velocityX = part->velocity.x; }
 				if (part->velocity.y) { velocityY = part->velocity.y; }
-				for (const auto& [variable, value] : part->variables) { rawObject.variable[variable] = value; }
-				if (!part->owns.empty()) { rawObject.handHolder = part->owns; }
-				if (!part->ownsClass.empty()) { rawObject.ownsClass = part->ownsClass; }
-				if (!part->think.empty()) { rawObject.think = part->think; }
-				if (part->team != 0) { rawObject.handTeam = part->team; }
+				for (const auto& [variable, value] : part->variables) { writtenObject.variable[variable] = value; }
+				if (!part->owns.empty()) { writtenObject.handHolder = part->owns; }
+				if (!part->ownsClass.empty()) { writtenObject.ownsClass = part->ownsClass; }
+				if (!part->think.empty()) { writtenObject.think = part->think; }
+				if (part->team != 0) { writtenObject.handTeam = part->team; }
 			}
 
-			if (!rawObject.shapeRows.empty())
+			if (!writtenObject.shapeRows.empty())
 			{
 				if (!used.empty() || !usedAnimations.empty()) { fail(here, "has a <shape>, which is drawn by its cells, so it and its group have no <sprite> or <animation>"); }
-				rawObject.sprite = nothingSprite();
-				rawObject.isDrawn = false;
+				writtenObject.sprite = nothingSprite();
+				writtenObject.isDrawn = false;
 			}
 			else
 			{
 				const bool cut = std::any_of(usedAnimations.begin(), usedAnimations.end(), [](const AnimationSpec& each) { return !each.cells.empty(); });
 				if (used.empty() && !cut) { fail(here, "has no <sprite>, and neither does its group"); }
-				chooseSprite(used, usedAnimations, here, rawObject);
+				chooseSprite(used, usedAnimations, here, writtenObject);
 			}
 
 			// One that does not exist at the start is placed by the <spawn>
 			// that makes it, so its <position> may be left out (0, 0).
-			if (!rawObject.exists)
+			if (!writtenObject.exists)
 			{
 				if (!positionX) { positionX = zeroValue(); }
 				if (!positionY) { positionY = zeroValue(); }
 			}
-			rawObject.rawPosition.x = pickValue(positionX, std::nullopt, here, "<position><x>");
-			rawObject.rawPosition.y = pickValue(positionY, std::nullopt, here, "<position><y>");
-			rawObject.rawVelocity.x = velocityX.value_or(zeroValue());
-			rawObject.rawVelocity.y = velocityY.value_or(zeroValue());
-			return rawObject;
+			writtenObject.writtenPosition.x = pickValue(positionX, std::nullopt, here, "<position><x>");
+			writtenObject.writtenPosition.y = pickValue(positionY, std::nullopt, here, "<position><y>");
+			writtenObject.writtenVelocity.x = velocityX.value_or(zeroValue());
+			writtenObject.writtenVelocity.y = velocityY.value_or(zeroValue());
+			return writtenObject;
 		}
 
 		// On a map: a member for each tile of its character, named under
@@ -2451,23 +2451,23 @@ namespace xge
 					}
 					if (cell) { parts.push_back(cell); }
 
-					WrittenObject rawObject = makeMember(group, own, cellName, here, parts);
+					WrittenObject writtenObject = makeMember(group, own, cellName, here, parts);
 
-					rawObject.cell.slot = makeMember(group, own, cellName, here, rowParts).sprite;
-					rawObject.cell.column = column;
-					rawObject.cell.row = row;
-					rawObject.takeOwnCell();
-					if (const std::string clash = rawObject.numberCell(); !clash.empty())
+					writtenObject.cell.slot = makeMember(group, own, cellName, here, rowParts).sprite;
+					writtenObject.cell.column = column;
+					writtenObject.cell.row = row;
+					writtenObject.takeOwnCell();
+					if (const std::string clash = writtenObject.numberCell(); !clash.empty())
 					{
 						fail(here, "its group names its rows or columns '" + clash + "', and it has a variable of that name already");
 					}
-					rawObject.cell.gapBefore = column == 1 ? WrittenValue::expression("0")
+					writtenObject.cell.gapBefore = column == 1 ? WrittenValue::expression("0")
 						: gapBefore ? *gapBefore->padding.x : padding.x ? *padding.x : WrittenValue::expression("0");
-					rawObject.cell.gapAbove = row == 1 ? WrittenValue::expression("0")
+					writtenObject.cell.gapAbove = row == 1 ? WrittenValue::expression("0")
 						: gapAbove ? *gapAbove->padding.y : padding.y ? *padding.y : WrittenValue::expression("0");
-					if (own.slope) { rawObject.cell.drop = *own.slope; }
+					if (own.slope) { writtenObject.cell.drop = *own.slope; }
 
-					out.push_back(std::move(rawObject));
+					out.push_back(std::move(writtenObject));
 				}
 			}
 		}
@@ -2648,12 +2648,12 @@ namespace xge
 
 		WrittenSound readSoundHere(const XmlNode& sound)
 		{
-			WrittenSound raw;
-			raw.name = sound.getAttribute("name");
-			refuseReserved(raw.name, "a sound", "<sound name=\"" + raw.name + "\">", false);
-			raw.wave = sound.getAttribute("wave");
+			WrittenSound written;
+			written.name = sound.getAttribute("name");
+			refuseReserved(written.name, "a sound", "<sound name=\"" + written.name + "\">", false);
+			written.wave = sound.getAttribute("wave");
 
-			const std::string where = "sound '" + raw.name + "'";
+			const std::string where = "sound '" + written.name + "'";
 
 			// The schema holds the order (<loop />, <volume>, <decay>) and that
 			// a sound is <note>s and <rest>s, <part>s or one <path>, never two
@@ -2665,8 +2665,8 @@ namespace xge
 			{
 				const std::string tag = child->getName();
 
-				if (tag == "loop") { raw.loop = true; }
-				else if (tag == "volume") { raw.volume = readValue(*child, where); }
+				if (tag == "loop") { written.loop = true; }
+				else if (tag == "volume") { written.volume = readValue(*child, where); }
 				else if (tag == "decay")
 				{
 					decay = readValue(*child, where);
@@ -2675,13 +2675,13 @@ namespace xge
 				else if (tag == "path")
 				{
 					if (decayed) { fail(where, "plays a recording (<path>), so it has no <decay>"); }
-					if (!raw.wave.empty()) { fail(where, "plays a recording (<path>), so it has no wave="); }
-					raw.path = readText(*child);
-					if (raw.path.empty()) { fail(where, "has an empty <path>"); }
+					if (!written.wave.empty()) { fail(where, "plays a recording (<path>), so it has no wave="); }
+					written.path = readText(*child);
+					if (written.path.empty()) { fail(where, "has an empty <path>"); }
 				}
 				else if (tag == "note" || tag == "rest")
 				{
-					raw.notes.push_back(readNote(*child, where, 0, "", decay));
+					written.notes.push_back(readNote(*child, where, 0, "", decay));
 				}
 				else if (tag == "part")
 				{
@@ -2691,12 +2691,12 @@ namespace xge
 					for (std::unique_ptr<XmlNode> step = child->getFirstChild(); step != nullptr; step = step->getNextSibling())
 					{
 						if (step->getName() == "decay") { partDecay = readValue(*step, partWhere); }
-						else { raw.notes.push_back(readNote(*step, partWhere, parts, wave, partDecay)); }
+						else { written.notes.push_back(readNote(*step, partWhere, parts, wave, partDecay)); }
 					}
 					++parts;
 				}
 			}
-			return raw;
+			return written;
 		}
 
 		// A state's <inputs> or a <keys> set: what each key runs at each of
@@ -2788,12 +2788,12 @@ namespace xge
 			}
 		}
 
-		// An <any>, into `raw`: its <condition>s and <any>s in order, one or
+		// An <any>, into `written`: its <condition>s and <any>s in order, one or
 		// more (the schema).
-		void readJoin(const XmlNode& join, const std::string& here, WrittenCondition& raw)
+		void readJoin(const XmlNode& join, const std::string& here, WrittenCondition& written)
 		{
-			raw.line = join.line();
-			raw.join = WrittenCondition::Join::Any;
+			written.line = join.line();
+			written.join = WrittenCondition::Join::Any;
 			for (std::unique_ptr<XmlNode> part = join.getFirstChild(); part != nullptr; part = part->getNextSibling())
 			{
 				const std::string partName = part->getName();
@@ -2807,22 +2807,22 @@ namespace xge
 				{
 					readJoin(*part, here + " > <" + partName + ">", check);
 				}
-				raw.parts.push_back(std::move(check));
+				written.parts.push_back(std::move(check));
 			}
 		}
 
-		// What a <condition> tests, into `raw`: its filters and
+		// What a <condition> tests, into `written`: its filters and
 		// what it measures (attributes), then its test tag, or an <all> or
 		// <any> of <condition>s. Gives back what follows (a condition's commands).
-		std::unique_ptr<XmlNode> readCheck(const XmlNode& node, const std::string& here, WrittenCondition& raw)
+		std::unique_ptr<XmlNode> readCheck(const XmlNode& node, const std::string& here, WrittenCondition& written)
 		{
-			raw.line = node.line();
-			raw.filterClass = node.getAttribute("class");
-			raw.filterObject = node.getAttribute("object");
-			raw.variableName = node.getAttribute("variable");
-			raw.total = node.getAttribute("total");
-			raw.distance = node.getAttribute("distance");
-			raw.sprite = node.getAttribute("sprite");
+			written.line = node.line();
+			written.filterClass = node.getAttribute("class");
+			written.filterObject = node.getAttribute("object");
+			written.variableName = node.getAttribute("variable");
+			written.total = node.getAttribute("total");
+			written.distance = node.getAttribute("distance");
+			written.sprite = node.getAttribute("sprite");
 
 			std::unique_ptr<XmlNode> test = node.getFirstChild();
 
@@ -2831,16 +2831,16 @@ namespace xge
 			if (test && test->getName() == "sees")
 			{
 				const std::string seesHere = here + " > <sees>";
-				if (!raw.variableName.empty() || !raw.total.empty() || !raw.distance.empty())
+				if (!written.variableName.empty() || !written.total.empty() || !written.distance.empty())
 				{
 					fail(here, "<sees> looks along a line, so the condition has no variable=, total= or distance=");
 				}
-				raw.test = WrittenCondition::Test::Sees;
+				written.test = WrittenCondition::Test::Sees;
 				// One or more <past class>es (the schema).
-				raw.sees = test->getAttribute("object");
+				written.sees = test->getAttribute("object");
 				for (std::unique_ptr<XmlNode> past = test->getFirstChild(); past != nullptr; past = past->getNextSibling())
 				{
-					raw.past.push_back(past->getAttribute("class"));
+					written.past.push_back(past->getAttribute("class"));
 				}
 				return test->getNextSibling();
 			}
@@ -2849,15 +2849,15 @@ namespace xge
 			// class= or object= alone, being there is (each of them, for
 			// commands that name self).
 			static const std::set<std::string> tests{ "atleast", "atmost", "above", "below", "equal", "unequal", "remaining", "lowest", "highest", "all", "any" };
-			const bool named = !raw.filterClass.empty() || !raw.filterObject.empty();
+			const bool named = !written.filterClass.empty() || !written.filterObject.empty();
 			if (named && (!test || !tests.contains(test->getName()))
-				&& (!raw.sprite.empty() || (raw.variableName.empty() && raw.total.empty() && raw.distance.empty())))
+				&& (!written.sprite.empty() || (written.variableName.empty() && written.total.empty() && written.distance.empty())))
 			{
-				if (!raw.variableName.empty() || !raw.total.empty() || !raw.distance.empty())
+				if (!written.variableName.empty() || !written.total.empty() || !written.distance.empty())
 				{
 					fail(here, "has variable=, total= or distance= but no test of them; add an <atleast>, <atmost>, <above>, <below> or <equal>");
 				}
-				raw.test = WrittenCondition::Test::Shows;
+				written.test = WrittenCondition::Test::Shows;
 				return test;
 			}
 			if (!test) { fail(here, "needs an <atleast>, <atmost>, <above>, <below>, <equal>, <unequal> or <remaining>, or an <any>"); }
@@ -2867,46 +2867,46 @@ namespace xge
 			// <any>: several checks, each a test of its own.
 			if (testName == "any")
 			{
-				if (!raw.filterClass.empty() || !raw.filterObject.empty() || !raw.variableName.empty() || !raw.total.empty() || !raw.distance.empty() || !raw.sprite.empty())
+				if (!written.filterClass.empty() || !written.filterObject.empty() || !written.variableName.empty() || !written.total.empty() || !written.distance.empty() || !written.sprite.empty())
 				{
 					fail(here, "<" + testName + "> says what is tested in each of its <condition>s, so the condition has no class=, object=, variable=, total=, distance= or sprite=");
 				}
-				readJoin(*test, here + " > <" + testName + ">", raw);
+				readJoin(*test, here + " > <" + testName + ">", written);
 				return test->getNextSibling();
 			}
 
-			if (testName == "atleast") { raw.test = WrittenCondition::Test::AtLeast; }
-			else if (testName == "atmost") { raw.test = WrittenCondition::Test::AtMost; }
-			else if (testName == "above") { raw.test = WrittenCondition::Test::Above; }
-			else if (testName == "below") { raw.test = WrittenCondition::Test::Below; }
-			else if (testName == "equal") { raw.test = WrittenCondition::Test::Equal; }
-			else if (testName == "unequal") { raw.test = WrittenCondition::Test::Unequal; }
-			else if (testName == "remaining") { raw.test = WrittenCondition::Test::Remaining; }
-			else if (testName == "lowest") { raw.test = WrittenCondition::Test::Lowest; }
-			else if (testName == "highest") { raw.test = WrittenCondition::Test::Highest; }
+			if (testName == "atleast") { written.test = WrittenCondition::Test::AtLeast; }
+			else if (testName == "atmost") { written.test = WrittenCondition::Test::AtMost; }
+			else if (testName == "above") { written.test = WrittenCondition::Test::Above; }
+			else if (testName == "below") { written.test = WrittenCondition::Test::Below; }
+			else if (testName == "equal") { written.test = WrittenCondition::Test::Equal; }
+			else if (testName == "unequal") { written.test = WrittenCondition::Test::Unequal; }
+			else if (testName == "remaining") { written.test = WrittenCondition::Test::Remaining; }
+			else if (testName == "lowest") { written.test = WrittenCondition::Test::Lowest; }
+			else if (testName == "highest") { written.test = WrittenCondition::Test::Highest; }
 			else { fail(here, "starts with <" + testName + ">; expected <atleast>, <atmost>, <above>, <below>, <equal>, <unequal>, <remaining>, <lowest /> or <highest />, or an <any>"); }
 
 			// <lowest /> and <highest />: the one whose variable is lowest (or highest) of all those matched.
-			if (raw.test == WrittenCondition::Test::Lowest || raw.test == WrittenCondition::Test::Highest)
+			if (written.test == WrittenCondition::Test::Lowest || written.test == WrittenCondition::Test::Highest)
 			{
-				if (!raw.total.empty()) { fail(here, "<" + testName + " /> holds for one of those matched, so it takes no total= (total=\"" + testName + "\" is the number itself)"); }
-				if (raw.variableName.empty() && raw.distance.empty()) { fail(here, "<" + testName + " /> compares a variable, so it needs variable=\"...\""); }
+				if (!written.total.empty()) { fail(here, "<" + testName + " /> holds for one of those matched, so it takes no total= (total=\"" + testName + "\" is the number itself)"); }
+				if (written.variableName.empty() && written.distance.empty()) { fail(here, "<" + testName + " /> compares a variable, so it needs variable=\"...\""); }
 				return test->getNextSibling();
 			}
 
-			const bool remaining = raw.test == WrittenCondition::Test::Remaining;
-			if (raw.total == "count" && !raw.distance.empty()) { fail(here, "total=\"count\" counts the objects in play, so it measures no distance="); }
-			if (remaining && (!raw.total.empty() || !raw.distance.empty())) { fail(here, "<remaining> counts what is in play, so it takes no total= or distance="); }
-			if (!raw.distance.empty() && !raw.variableName.empty()) { fail(here, "distance=\"" + raw.distance + "\" measures how far, so it reads no variable="); }
-			if (raw.total == "count" && !raw.variableName.empty()) { fail(here, "total=\"count\" counts the objects in play, so it reads no variable="); }
-			if (!remaining && raw.variableName.empty() && raw.total != "count" && raw.distance.empty())
+			const bool remaining = written.test == WrittenCondition::Test::Remaining;
+			if (written.total == "count" && !written.distance.empty()) { fail(here, "total=\"count\" counts the objects in play, so it measures no distance="); }
+			if (remaining && (!written.total.empty() || !written.distance.empty())) { fail(here, "<remaining> counts what is in play, so it takes no total= or distance="); }
+			if (!written.distance.empty() && !written.variableName.empty()) { fail(here, "distance=\"" + written.distance + "\" measures how far, so it reads no variable="); }
+			if (written.total == "count" && !written.variableName.empty()) { fail(here, "total=\"count\" counts the objects in play, so it reads no variable="); }
+			if (!remaining && written.variableName.empty() && written.total != "count" && written.distance.empty())
 			{
 				fail(here, "<" + testName + "> reads a variable, so it needs variable=\"...\"");
 			}
 
 			// The number compared with, which may name another variable
 			// (<above>gun2.score</above>), read as the game runs.
-			raw.threshold = readValue(*test, here);
+			written.threshold = readValue(*test, here);
 			return test->getNextSibling();
 		}
 
@@ -2924,13 +2924,13 @@ namespace xge
 		void readConditionHere(const XmlNode& condition, const std::string& where, std::vector<WrittenCondition>& out)
 		{
 			const std::string conditionHere = where + " > <condition>";
-			WrittenCondition raw;
-			raw.name = condition.getAttribute("name");
-			if (!raw.name.empty() && std::any_of(out.begin(), out.end(), [&](const WrittenCondition& other) { return other.name == raw.name; }))
+			WrittenCondition written;
+			written.name = condition.getAttribute("name");
+			if (!written.name.empty() && std::any_of(out.begin(), out.end(), [&](const WrittenCondition& other) { return other.name == written.name; }))
 			{
-				fail(conditionHere, "has two conditions called '" + raw.name + "'");
+				fail(conditionHere, "has two conditions called '" + written.name + "'");
 			}
-			std::unique_ptr<XmlNode> after = readCheck(condition, conditionHere, raw);
+			std::unique_ptr<XmlNode> after = readCheck(condition, conditionHere, written);
 
 			// Holding conditions: <first>, the conditions, <otherwise>, and no
 			// commands loose beside them, so which run when is written.
@@ -2948,30 +2948,30 @@ namespace xge
 						fail(conditionHere, "has a <" + each->getName() + "> but holds no conditions; its commands go in it directly");
 					}
 				}
-				raw.commands = readCommands(std::move(after), conditionHere);
-				out.push_back(std::move(raw));
+				written.commands = readCommands(std::move(after), conditionHere);
+				out.push_back(std::move(written));
 				return;
 			}
 			std::unique_ptr<XmlNode> part = std::move(after);
 			if (part && part->getName() == "first")
 			{
-				raw.first = readCommands(part->getFirstChild(), conditionHere + " > <first>");
+				written.first = readCommands(part->getFirstChild(), conditionHere + " > <first>");
 				part = part->getNextSibling();
 			}
 			for (; part && part->getName() == "condition"; part = part->getNextSibling())
 			{
-				readCondition(*part, conditionHere, raw.inner);
+				readCondition(*part, conditionHere, written.inner);
 			}
 			if (part && part->getName() == "otherwise")
 			{
-				raw.commands = readCommands(part->getFirstChild(), conditionHere + " > <otherwise>");
+				written.commands = readCommands(part->getFirstChild(), conditionHere + " > <otherwise>");
 				part = part->getNextSibling();
 			}
 			if (part)
 			{
 				fail(conditionHere, "holds conditions, so <" + part->getName() + "> is out of place; a condition holding conditions has a <first> before them, run as soon as it holds, and an <otherwise> after, run when none of them does");
 			}
-			out.push_back(std::move(raw));
+			out.push_back(std::move(written));
 		}
 
 		// The <condition>s under a node (a state's <conditions>, or a
@@ -3089,15 +3089,15 @@ namespace xge
 		// What comes after a state's <inputs>: its <conditions> (optional - the
 		// schema allows a state with none) and its <timers> (optional: counted
 		// while this is the current state).
-		WrittenState finishState(const Children& children, const std::string& where, WrittenState rawState)
+		WrittenState finishState(const Children& children, const std::string& where, WrittenState writtenState)
 		{
 			if (const XmlNode* conditions = children.find("conditions"))
 			{
-				readConditions(*conditions, where, rawState.conditions);
+				readConditions(*conditions, where, writtenState.conditions);
 			}
 			if (const XmlNode* computer = children.find("computer"))
 			{
-				readConditions(*computer, where + " > <computer>", rawState.computer);
+				readConditions(*computer, where + " > <computer>", writtenState.computer);
 				// Every one that holds holds its buttons, so one holding conditions has no "otherwise".
 				const std::function<void(const std::vector<WrittenCondition>&)> plain = [&](const std::vector<WrittenCondition>& list)
 				{
@@ -3110,10 +3110,10 @@ namespace xge
 						plain(each.inner);
 					}
 				};
-				plain(rawState.computer);
+				plain(writtenState.computer);
 			}
-			rawState.timers = readTimers(children.find("timers"), where, false);
-			return rawState;
+			writtenState.timers = readTimers(children.find("timers"), where, false);
+			return writtenState;
 		}
 
 		// A <state>. Its objects are laid out by load/merge: those of the state
@@ -3129,20 +3129,20 @@ namespace xge
 
 		WrittenState readStateHere(const XmlNode& state, std::map<std::string, std::vector<ElementPtr>>& lists, const Kit& kit, const std::set<std::string>& gameNames)
 		{
-			WrittenState rawState{};
-			rawState.line = state.line();
-			rawState.name = state.getAttribute("name");
-			refuseReserved(rawState.name, "a state", "<state name=\"" + rawState.name + "\">");
-			rawState.from = state.getAttribute("from");
+			WrittenState writtenState{};
+			writtenState.line = state.line();
+			writtenState.name = state.getAttribute("name");
+			refuseReserved(writtenState.name, "a state", "<state name=\"" + writtenState.name + "\">");
+			writtenState.from = state.getAttribute("from");
 
-			const std::string where = "state '" + rawState.name + "'";
+			const std::string where = "state '" + writtenState.name + "'";
 			const Children children(state);
 
 			std::vector<ElementPtr> list;
-			if (!rawState.from.empty())
+			if (!writtenState.from.empty())
 			{
-				const auto from = lists.find(rawState.from);
-				if (from == lists.end()) { fail(where, "from=\"" + rawState.from + "\" names no state before it"); }
+				const auto from = lists.find(writtenState.from);
+				if (from == lists.end()) { fail(where, "from=\"" + writtenState.from + "\" names no state before it"); }
 				list = from->second;
 			}
 
@@ -3178,7 +3178,7 @@ namespace xge
 						}
 					}
 					else { start.from = step->getAttribute("group"); }
-					rawState.starts.push_back(std::move(start));
+					writtenState.starts.push_back(std::move(start));
 				}
 			}
 
@@ -3186,29 +3186,29 @@ namespace xge
 			// taken whole, and states drawn still underneath
 			if (const XmlNode* shows = children.find("shows"))
 			{
-				readShows(*shows, where + " > <shows>", rawState.show, rawState.showStates);
+				readShows(*shows, where + " > <shows>", writtenState.show, writtenState.showStates);
 			}
 
 			// <music sound="..." /> (optional)
 			if (const XmlNode* music = children.find("music"))
 			{
-				rawState.music = music->getAttribute("sound");
+				writtenState.music = music->getAttribute("sound");
 			}
 
 			// <inputs>: its own <input>s, over those of the state it is from=.
 			const XmlNode* inputs = children.find("inputs");
-			if (!inputs && rawState.from.empty()) { fail(where, "missing <inputs>"); }
+			if (!inputs && writtenState.from.empty()) { fail(where, "missing <inputs>"); }
 			if (inputs)
 			{
 				KeyBindings own;
 				readInputs(*inputs, where + " > <inputs>", own);
 				for (std::size_t moment = 0; moment < keyMoments.size(); ++moment)
 				{
-					for (auto& [button, commands] : own.buttons[moment]) { (*rawState.keyMaps()[moment])[button] = std::move(commands); }
+					for (auto& [button, commands] : own.buttons[moment]) { (*writtenState.keyMaps()[moment])[button] = std::move(commands); }
 				}
-				for (auto& [axis, commands] : own.axes) { rawState.axes[axis] = std::move(commands); }
+				for (auto& [axis, commands] : own.axes) { writtenState.axes[axis] = std::move(commands); }
 			}
-			rawState = finishState(children, where, std::move(rawState));
+			writtenState = finishState(children, where, std::move(writtenState));
 
 			// What its own inputs, conditions and timers spawn (a piece of the top-level <objects>
 			// comes into its objects), then its scenes, then its objects read.
@@ -3216,12 +3216,12 @@ namespace xge
 
 			if (const XmlNode* scenes = children.find("scenes"))
 			{
-				readScenes(*scenes, where, kit, namesOf(list, gameNames), rawState);
+				readScenes(*scenes, where, kit, namesOf(list, gameNames), writtenState);
 			}
 
-			readAll(list, rawState.objects);
-			lists[rawState.name] = std::move(list);
-			return rawState;
+			readAll(list, writtenState.objects);
+			lists[writtenState.name] = std::move(list);
+			return writtenState;
 		}
 	}
 
@@ -3287,35 +3287,35 @@ namespace xge
 		}
 
 		// <styles> (optional): what a <text> or a <bitmap> can take by style="...".
-		void readStyles(const Children& top, std::vector<WrittenStyle>& rawStyles)
+		void readStyles(const Children& top, std::vector<WrittenStyle>& writtenStyles)
 		{
 			if (const XmlNode* stylesNode = top.find("styles"))
 			{
 				for (std::unique_ptr<XmlNode> style = stylesNode->getFirstChild(); style != nullptr; style = style->getNextSibling())
 				{
-					WrittenStyle raw;
-					raw.name = style->getAttribute("name");
-					const std::string here = "<styles> > <style name=\"" + raw.name + "\">";
-					if (std::any_of(rawStyles.begin(), rawStyles.end(), [&](const WrittenStyle& each) { return each.name == raw.name; }))
+					WrittenStyle written;
+					written.name = style->getAttribute("name");
+					const std::string here = "<styles> > <style name=\"" + written.name + "\">";
+					if (std::any_of(writtenStyles.begin(), writtenStyles.end(), [&](const WrittenStyle& each) { return each.name == written.name; }))
 					{
-						fail("<styles>", "two <style>s are called '" + raw.name + "'");
+						fail("<styles>", "two <style>s are called '" + written.name + "'");
 					}
-					if (auto size = findChild(style.get(), "size")) { raw.size = readValue(*size, here); }
+					if (auto size = findChild(style.get(), "size")) { written.size = readValue(*size, here); }
 					if (auto scale = findChild(style.get(), "scale"))
 					{
-						raw.scale = readValue(*scale, here);
+						written.scale = readValue(*scale, here);
 					}
-					if (auto color = findPlainColor(*style)) { raw.color = readText(*color); }
-					readBitmapColors(*style, here, raw.bitmapColors);
-					if (auto font = findChild(style.get(), "font")) { raw.font = readText(*font); }
-					rawStyles.push_back(std::move(raw));
+					if (auto color = findPlainColor(*style)) { written.color = readText(*color); }
+					readBitmapColors(*style, here, written.bitmapColors);
+					if (auto font = findChild(style.get(), "font")) { written.font = readText(*font); }
+					writtenStyles.push_back(std::move(written));
 				}
 			}
 		}
 
 		// The <sheet>s among the <pictures> (optional): the pictures sprites,
 		// animations and packs cut theirs from.
-		void readSheets(const Children& top, std::vector<Sheet>& rawSheets)
+		void readSheets(const Children& top, std::vector<Sheet>& writtenSheets)
 		{
 			if (const XmlNode* picturesNode = top.find("pictures"))
 			{
@@ -3325,7 +3325,7 @@ namespace xge
 					Sheet sheet;
 					sheet.name = node->getAttribute("name");
 					const std::string here = "<pictures> > <sheet name=\"" + sheet.name + "\">";
-					if (std::any_of(rawSheets.begin(), rawSheets.end(), [&](const Sheet& each) { return each.name == sheet.name; }))
+					if (std::any_of(writtenSheets.begin(), writtenSheets.end(), [&](const Sheet& each) { return each.name == sheet.name; }))
 					{
 						fail("<pictures>", "two <sheet>s are called '" + sheet.name + "'");
 					}
@@ -3354,23 +3354,23 @@ namespace xge
 					{
 						if (hide->getName() == "hide") { sheet.hide.push_back(readText(*hide)); }
 					}
-					rawSheets.push_back(std::move(sheet));
+					writtenSheets.push_back(std::move(sheet));
 				}
 			}
 		}
 
 		// <patterns> (optional): what a holder's <score patterns="..."> is scored by.
-		void readPatterns(const Children& top, std::vector<WrittenPatterns>& rawPatterns)
+		void readPatterns(const Children& top, std::vector<WrittenPatterns>& writtenPatterns)
 		{
 			for (const auto& [name, node] : top)
 			{
 				if (name != "patterns") { continue; }
-				WrittenPatterns raw;
-				raw.name = node->getAttribute("name");
-				const std::string here = "<patterns name=\"" + raw.name + "\">";
-				if (std::any_of(rawPatterns.begin(), rawPatterns.end(), [&](const WrittenPatterns& each) { return each.name == raw.name; }))
+				WrittenPatterns written;
+				written.name = node->getAttribute("name");
+				const std::string here = "<patterns name=\"" + written.name + "\">";
+				if (std::any_of(writtenPatterns.begin(), writtenPatterns.end(), [&](const WrittenPatterns& each) { return each.name == written.name; }))
 				{
-					fail("<patterns>", "two <patterns> are called '" + raw.name + "'");
+					fail("<patterns>", "two <patterns> are called '" + written.name + "'");
 				}
 				for (std::unique_ptr<XmlNode> pattern = node->getFirstChild(); pattern != nullptr; pattern = pattern->getNextSibling())
 				{
@@ -3386,25 +3386,25 @@ namespace xge
 						one.by.push_back(part->getAttribute("variable"));
 						one.parts.emplace_back(kind, readCount(*part, at + " > <" + tag + ">"));
 					}
-					raw.patterns.push_back(std::move(one));
+					written.patterns.push_back(std::move(one));
 				}
-				rawPatterns.push_back(std::move(raw));
+				writtenPatterns.push_back(std::move(written));
 			}
 		}
 
 		// The states, each read with what it takes from the pieces.
-		void readStates(const XmlNode& states, std::vector<WrittenState>& rawStates, Kit& kit, const std::set<std::string>& gameNames)
+		void readStates(const XmlNode& states, std::vector<WrittenState>& writtenStates, Kit& kit, const std::set<std::string>& gameNames)
 		{
 			std::map<std::string, std::vector<ElementPtr>> stateLists;
 			for (std::unique_ptr<XmlNode> state = states.getFirstChild(); state != nullptr; state = state->getNextSibling())
 			{
 				if (state->getName() != "state") { continue; }
 				const std::string name = state->getAttribute("name");
-				if (std::any_of(rawStates.begin(), rawStates.end(), [&](const WrittenState& each) { return each.name == name; }))
+				if (std::any_of(writtenStates.begin(), writtenStates.end(), [&](const WrittenState& each) { return each.name == name; }))
 				{
 					fail("<states>", "has two states called '" + name + "'");
 				}
-				rawStates.push_back(readState(*state, stateLists, kit, gameNames));
+				writtenStates.push_back(readState(*state, stateLists, kit, gameNames));
 			}
 		}
 	}
@@ -3413,16 +3413,16 @@ namespace xge
 	{
 		GameData data;
 		WindowDesc& windowDesc = data.window;
-		std::vector<std::pair<std::string, WrittenValue>>& rawVariables = data.variables;
-		std::vector<WrittenState>& rawStates = data.states;
-		std::vector<WrittenObject>& rawObjects = data.objects;
-		std::vector<WrittenSound>& rawSounds = data.sounds;
-		std::vector<WrittenPath>& rawPaths = data.paths;
-		std::vector<WrittenStyle>& rawStyles = data.styles;
-		std::vector<Sheet>& rawSheets = data.sheets;
-		std::vector<WrittenPatterns>& rawPatterns = data.patterns;
-		std::vector<std::string>& rawKeeps = data.keeps;
-		WrittenDemo& rawDemo = data.demo;
+		std::vector<std::pair<std::string, WrittenValue>>& writtenVariables = data.variables;
+		std::vector<WrittenState>& writtenStates = data.states;
+		std::vector<WrittenObject>& writtenObjects = data.objects;
+		std::vector<WrittenSound>& writtenSounds = data.sounds;
+		std::vector<WrittenPath>& writtenPaths = data.paths;
+		std::vector<WrittenStyle>& writtenStyles = data.styles;
+		std::vector<Sheet>& writtenSheets = data.sheets;
+		std::vector<WrittenPatterns>& writtenPatterns = data.patterns;
+		std::vector<std::string>& writtenKeeps = data.keeps;
+		WrittenDemo& writtenDemo = data.demo;
 
 		// The pictures put in where sprites take them (<bitmap from>), so the
 		// rest reads each as if written out there.
@@ -3439,14 +3439,14 @@ namespace xge
 		readWindow(*window, windowDesc);
 
 		// load variables
-		readVariables(variablesNode, "<variables>", rawVariables);
+		readVariables(variablesNode, "<variables>", writtenVariables);
 
 		// load sounds (optional: a game can be silent)
 		if (const XmlNode* soundsNode = top.find("sounds"))
 		{
 			for (std::unique_ptr<XmlNode> sound = soundsNode->getFirstChild(); sound != nullptr; sound = sound->getNextSibling())
 			{
-				rawSounds.push_back(readSound(*sound));
+				writtenSounds.push_back(readSound(*sound));
 			}
 		}
 
@@ -3455,13 +3455,13 @@ namespace xge
 		{
 			for (std::unique_ptr<XmlNode> path = pathsNode->getFirstChild(); path != nullptr; path = path->getNextSibling())
 			{
-				rawPaths.push_back(readPath(*path));
+				writtenPaths.push_back(readPath(*path));
 			}
 		}
 
-		readStyles(top, rawStyles);
-		readSheets(top, rawSheets);
-		readPatterns(top, rawPatterns);
+		readStyles(top, writtenStyles);
+		readSheets(top, writtenSheets);
+		readPatterns(top, writtenPatterns);
 
 		// load the pieces, the top-level <objects>: written once, in play
 		// only where something takes them (load/merge)
@@ -3486,7 +3486,7 @@ namespace xge
 		std::vector<ElementPtr> gameList;
 		if (objectsNode) { gameList = layOut(*objectsNode, {}, kit, "<states> > <objects>"); }
 		addWaiting(gameList, {}, {}, kit, "<states> > <objects>");
-		readAll(gameList, rawObjects);
+		readAll(gameList, writtenObjects);
 		const std::set<std::string> gameNames = namesOf(gameList, {});
 
 		// load keeps (optional: what a full reset passes over)
@@ -3494,17 +3494,17 @@ namespace xge
 		{
 			for (std::unique_ptr<XmlNode> keep = keepsNode->getFirstChild(); keep != nullptr; keep = keep->getNextSibling())
 			{
-				rawKeeps.push_back(keep->getAttribute("object"));
+				writtenKeeps.push_back(keep->getAttribute("object"));
 			}
 		}
 
 		// load the demo (optional: a recorded game for the attract mode)
 		if (const XmlNode* demoNode = top.find("demo"))
 		{
-			rawDemo = readDemoElement(*demoNode);
+			writtenDemo = readDemoElement(*demoNode);
 		}
 
-		readStates(*states, rawStates, kit, gameNames);
+		readStates(*states, writtenStates, kit, gameNames);
 		return data;
 	}
 

@@ -13,9 +13,9 @@ namespace xge
 {
 	// <despawn>: Takes a copy away for good: the one running it, or those
 	// named.
-	static Command makeDespawn(const WrittenCommand& raw, const ValueEvaluator&)
+	static Command makeDespawn(const WrittenCommand& written, const ValueEvaluator&)
 	{
-		return CmdDespawn{ raw.object };
+		return CmdDespawn{ written.object };
 	}
 
 	static void checkDespawn(const CmdDespawn& despawn, const Checking& checking)

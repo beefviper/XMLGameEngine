@@ -20,13 +20,13 @@ namespace xge
 		if (!node.getAttribute("member").empty()) { own.member = WrittenValue::expression(node.getAttribute("member")); }
 	}
 
-	static Command makePass(const WrittenCommand& raw, const ValueEvaluator& evaluate)
+	static Command makePass(const WrittenCommand& written, const ValueEvaluator& evaluate)
 	{
-		const std::optional<WrittenValue>& member = ownOf<WrittenPass>(raw).member;
-		if (!member) { return CmdPass{ raw.object, -1 }; }
+		const std::optional<WrittenValue>& member = ownOf<WrittenPass>(written).member;
+		if (!member) { return CmdPass{ written.object, -1 }; }
 		const float number = evaluate(*member);
 		if (number < 0.0f || number != std::floor(number)) { throw std::runtime_error("<pass member=\"" + member->text + "\">: is " + formatDisplayNumber(number) + "; expected a member's number from 1, or 0 for nobody's turn"); }
-		return CmdPass{ raw.object, static_cast<int>(number) };
+		return CmdPass{ written.object, static_cast<int>(number) };
 	}
 
 	static bool runPass(const CmdPass& pass, const Doer& doer)

@@ -46,18 +46,18 @@ namespace xge
 		centerOnOwnSize(data.objects);
 		windowDesc = std::move(data.window);
 		validation = std::move(data.validation);
-		rawVariables = std::move(data.variables);
-		rawStates = std::move(data.states);
-		rawObjects = std::move(data.objects);
-		rawSounds = std::move(data.sounds);
-		rawPaths = std::move(data.paths);
-		for (const WrittenPatterns& raw : data.patterns)
+		writtenVariables = std::move(data.variables);
+		writtenStates = std::move(data.states);
+		writtenObjects = std::move(data.objects);
+		writtenSounds = std::move(data.sounds);
+		writtenPaths = std::move(data.paths);
+		for (const WrittenPatterns& written : data.patterns)
 		{
 			Patterns& set = patterns.emplace_back();
-			set.name = Name::of(raw.name);
-			for (const WrittenPatterns::Pattern& rawPattern : raw.patterns)
+			set.name = Name::of(written.name);
+			for (const WrittenPatterns::Pattern& writtenPattern : written.patterns)
 			{
-				set.patterns.push_back({ Name::of(rawPattern.name), rawPattern.parts, NameStore::program().of(rawPattern.by) });
+				set.patterns.push_back({ Name::of(writtenPattern.name), writtenPattern.parts, NameStore::program().of(writtenPattern.by) });
 			}
 		}
 		const std::vector<Name> keeps = NameStore::program().of(data.keeps);
@@ -65,11 +65,11 @@ namespace xge
 
 		// Room for what is spawned, so that the file's objects stay where
 		// they are (and a reference to one good) as copies join.
-		objects.reserve(rawObjects.size() * 2 + 256);
+		objects.reserve(writtenObjects.size() * 2 + 256);
 		expr.parts = &objectParts;
 		expr.styles = data.styles;
 		expr.sheets = data.sheets;
-		expr.init(windowDesc, rawVariables, variables, rawStates, states, rawObjects, objects, rawSounds, sounds, rawPaths, paths);
+		expr.init(windowDesc, writtenVariables, variables, writtenStates, states, writtenObjects, objects, writtenSounds, sounds, writtenPaths, paths);
 		expr.finishLoading();
 		for (std::size_t i = 0; i < objects.size(); ++i) { objectParts.placeAt(objects[i].id, i); }
 		expr.whenLiveRead = [this] { refreshLive(); };
@@ -140,11 +140,11 @@ namespace xge
 		sendStarts();
 		scoreDueHolders();
 		// The players: the first one's turn; those the computer plays.
-		for (const WrittenObject& raw : rawObjects)
+		for (const WrittenObject& written : writtenObjects)
 		{
-			if (raw.think.empty()) { continue; }
-			const Command made = makeCommand(raw.think.front(), [&](const WrittenValue& value) { return expr.evaluate(value, "object '" + raw.name + "' > <think>"); });
-			if (const auto* plays = std::get_if<CmdThink>(&shapeOf(made))) { memberThinks.emplace(Name::of(raw.name), *plays); }
+			if (written.think.empty()) { continue; }
+			const Command made = makeCommand(written.think.front(), [&](const WrittenValue& value) { return expr.evaluate(value, "object '" + written.name + "' > <think>"); });
+			if (const auto* plays = std::get_if<CmdThink>(&shapeOf(made))) { memberThinks.emplace(Name::of(written.name), *plays); }
 		}
 		startPlayers();
 		loadedCount = objects.size();
@@ -194,16 +194,16 @@ namespace xge
 				return;
 			}
 
-			const auto rawObject = std::find_if(rawObjects.begin(), rawObjects.end(),
-				[&](const WrittenObject& raw) { return raw.name == object.name; });
-			if (rawObject == rawObjects.end())
+			const auto writtenObject = std::find_if(writtenObjects.begin(), writtenObjects.end(),
+				[&](const WrittenObject& written) { return written.name == object.name; });
+			if (writtenObject == writtenObjects.end())
 			{
 				return;
 			}
 
-			const std::string where = "object '" + rawObject->name + "'";
-			startFor(object).position.x = expr.evaluate(rawObject->rawPosition.x, where);
-			startFor(object).position.y = expr.evaluate(rawObject->rawPosition.y, where);
+			const std::string where = "object '" + writtenObject->name + "'";
+			startFor(object).position.x = expr.evaluate(writtenObject->writtenPosition.x, where);
+			startFor(object).position.y = expr.evaluate(writtenObject->writtenPosition.y, where);
 			startFor(object).position = startOf(object).position + object.layout.cellOffset;
 			object.position = startOf(object).position;
 			use.sizesUsed = sizes;
@@ -289,9 +289,9 @@ namespace xge
 			if (std::none_of(objects.begin(), objects.end(), taken) && std::none_of(spawned.begin(), spawned.end(), taken)) { name = candidate; }
 		}
 
-		const auto raw = std::find_if(rawObjects.begin(), rawObjects.end(), [&](const WrittenObject& each) { return each.name == original.name; });
-		if (raw == rawObjects.end()) { return nullptr; }
-		WrittenObject copy = *raw;
+		const auto written = std::find_if(writtenObjects.begin(), writtenObjects.end(), [&](const WrittenObject& each) { return each.name == original.name; });
+		if (written == writtenObjects.end()) { return nullptr; }
+		WrittenObject copy = *written;
 		const Renamed renamed = renameOwn(copy, original.name, name);
 		const bool namedIt = renamed.kind;
 		copy.outerGroups = textsOf(original.outerGroups);
@@ -328,11 +328,11 @@ namespace xge
 			}
 		}
 		// Its actions' conditions, the same way.
-		const std::function<void(const std::vector<Command>&, std::vector<Command>&)> whens = [&](const std::vector<Command>& written, std::vector<Command>& copied)
+		const std::function<void(const std::vector<Command>&, std::vector<Command>&)> whens = [&](const std::vector<Command>& theirs, std::vector<Command>& copied)
 		{
-			for (std::size_t i = 0; i < written.size() && i < copied.size(); ++i)
+			for (std::size_t i = 0; i < theirs.size() && i < copied.size(); ++i)
 			{
-				const auto* was = std::get_if<CmdWhen>(&written[i]);
+				const auto* was = std::get_if<CmdWhen>(&theirs[i]);
 				auto* now = std::get_if<CmdWhen>(&copied[i]);
 				if (!was || !now || !was->body || !now->body || !was->body->test) { continue; }
 				Condition check = *was->body->test;
@@ -359,7 +359,7 @@ namespace xge
 		startFor(made).isVisible = true;
 		// Its picture is the one it is copied from, and so its size.
 		made.size = original.size;
-		copyRaws[name] = std::move(copy);
+		writtenCopies[name] = std::move(copy);
 		spawned.push_back(std::move(made));
 		if (objectParts.boundTexts.has(spawned.back().id)) { relabel(spawned.back()); }
 		return &spawned.back();
@@ -471,9 +471,9 @@ namespace xge
 		}
 		std::cout << '\n';
 
-		for (auto& rawObject : rawObjects)
+		for (auto& writtenObject : writtenObjects)
 		{
-			std::cout << rawObject << '\n';
+			std::cout << writtenObject << '\n';
 		}
 
 		for (auto& object : objects)
@@ -836,22 +836,22 @@ namespace xge
 			return;
 		}
 
-		const WrittenObject* raw = nullptr;
-		if (const auto copy = copyRaws.find(object.name); object.isCopy() && copy != copyRaws.end())
+		const WrittenObject* written = nullptr;
+		if (const auto copy = writtenCopies.find(object.name); object.isCopy() && copy != writtenCopies.end())
 		{
-			raw = &copy->second;
+			written = &copy->second;
 		}
-		else if (const auto written = std::find_if(rawObjects.begin(), rawObjects.end(), [&](const WrittenObject& candidate) { return candidate.name == object.name; }); written != rawObjects.end())
+		else if (const auto found = std::find_if(writtenObjects.begin(), writtenObjects.end(), [&](const WrittenObject& candidate) { return candidate.name == object.name; }); found != writtenObjects.end())
 		{
-			raw = &*written;
+			written = &*found;
 		}
-		if (!raw)
+		if (!written)
 		{
 			return;
 		}
 
-		const std::string where = "object '" + raw->name + "'";
-		for (const auto& [name, value] : raw->variable)
+		const std::string where = "object '" + written->name + "'";
+		for (const auto& [name, value] : written->variable)
 		{
 			if (!value.drawsRandom()) { continue; }
 			const float drawn = expr.evaluate(value, where);
@@ -864,9 +864,9 @@ namespace xge
 		// game loads (load/expr::init), so a start drawn again takes the same
 		// numbers as the first did, and a generated program, which draws them
 		// in that order, draws the same ones.
-		startFor(object).position = Vector2f{ expr.evaluate(raw->rawPosition.x, where), expr.evaluate(raw->rawPosition.y, where) } + object.layout.cellOffset;
+		startFor(object).position = Vector2f{ expr.evaluate(written->writtenPosition.x, where), expr.evaluate(written->writtenPosition.y, where) } + object.layout.cellOffset;
 
-		startFor(object).velocity = { expr.evaluate(raw->rawVelocity.x, where), expr.evaluate(raw->rawVelocity.y, where) };
+		startFor(object).velocity = { expr.evaluate(written->writtenVelocity.x, where), expr.evaluate(written->writtenVelocity.y, where) };
 	}
 
 	void Game::popState(Name name)
@@ -1793,7 +1793,7 @@ namespace xge
 					// path. Its own commands too, made for it when the game
 					// loaded, or, a copy made since, now, once.
 					std::vector<Command> commands = leg.commands;
-					if (leg.ownRaw)
+					if (leg.ownWritten)
 					{
 						auto own = leg.ownBy.find(object.name);
 						if (own == leg.ownBy.end())
@@ -2427,12 +2427,12 @@ namespace xge
 				if ((live.namesSelf && !self) || (live.namesOther && !other)) { return live.loaded->command; }
 				// Into one kept for it, so its texts' room is used again.
 				ownCommands.resize(1);
-				ownCommands.front() = *live.raw;
+				ownCommands.front() = *live.written;
 				if (live.namesSelf) { nameSelfIn(ownCommands.front(), self->name); }
 				if (live.namesOther) { renameObjectIn(ownCommands, "other", other->name); }
 				return makeCommand(ownCommands.front(), [&](const WrittenValue& value) { return evaluateNow(value, live.where); });
 			}
-			return makeCommand(*live.raw, [&](const WrittenValue& value) { return evaluateNow(value, live.where); });
+			return makeCommand(*live.written, [&](const WrittenValue& value) { return evaluateNow(value, live.where); });
 		}
 		catch (const std::runtime_error& error)
 		{

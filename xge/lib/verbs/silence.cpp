@@ -16,9 +16,9 @@ namespace xge
 		requireAttribute(node, "sound", where);
 	}
 
-	static Command makeSilence(const WrittenCommand& raw, const ValueEvaluator&)
+	static Command makeSilence(const WrittenCommand& written, const ValueEvaluator&)
 	{
-		return CmdSilence{ raw.sound };
+		return CmdSilence{ written.sound };
 	}
 
 	static void checkSilence(const CmdSilence& silence, const Checking& checking)

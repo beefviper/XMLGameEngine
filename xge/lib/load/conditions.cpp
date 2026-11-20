@@ -40,10 +40,10 @@ namespace xge
 		}
 
 		// Whether a condition's class= and object= pick the object.
-		bool matchesFilter(const WrittenCondition& rawCondition, const Object& object)
+		bool matchesFilter(const WrittenCondition& writtenCondition, const Object& object)
 		{
-			return (rawCondition.filterClass.empty() || rawCondition.filterClass == object.objClass)
-				&& (rawCondition.filterObject.empty() || object.named(rawCondition.filterObject));
+			return (writtenCondition.filterClass.empty() || writtenCondition.filterClass == object.objClass)
+				&& (writtenCondition.filterObject.empty() || object.named(writtenCondition.filterObject));
 		}
 
 		// A command's `from` (self, others) made the object `to`: as the
@@ -100,19 +100,19 @@ namespace xge
 
 	// What a <condition> tests, made ready (with its <all> or
 	// <any>'s checks, each made the same way).
-	Condition Evaluator::makeTest(const WrittenCondition& rawCondition, const std::string& where, const std::string& owner, const std::vector<Object>& objects)
+	Condition Evaluator::makeTest(const WrittenCondition& writtenCondition, const std::string& where, const std::string& owner, const std::vector<Object>& objects)
 	{
-		return onLine(rawCondition.line, [&] { return makeTestHere(rawCondition, where, owner, objects); });
+		return onLine(writtenCondition.line, [&] { return makeTestHere(writtenCondition, where, owner, objects); });
 	}
 
-	Condition Evaluator::makeTestHere(const WrittenCondition& rawCondition, const std::string& where, const std::string& owner, const std::vector<Object>& objects)
+	Condition Evaluator::makeTestHere(const WrittenCondition& writtenCondition, const std::string& where, const std::string& owner, const std::vector<Object>& objects)
 	{
 		Condition condition;
-		condition.line = rawCondition.line;
-		condition.join = rawCondition.join;
-		for (std::size_t i = 0; i < rawCondition.parts.size(); ++i)
+		condition.line = writtenCondition.line;
+		condition.join = writtenCondition.join;
+		for (std::size_t i = 0; i < writtenCondition.parts.size(); ++i)
 		{
-			const WrittenCondition& part = rawCondition.parts[i];
+			const WrittenCondition& part = writtenCondition.parts[i];
 			const char* kind = part.join == WrittenCondition::Join::All ? "<all>" : part.join == WrittenCondition::Join::Any ? "<any>" : "<condition>";
 			condition.parts.push_back(makeTest(part, where + " > " + kind + " " + std::to_string(i + 1), owner, objects));
 		}
@@ -124,12 +124,12 @@ namespace xge
 		// One about self is made, and checked, for the object being made;
 		// as it is tested, it is about the object testing it.
 		// The same for other, in a rule about touching: the one touched.
-		const bool own = !selfName.empty() && (rawCondition.filterObject == "self" || rawCondition.distance == "self" || rawCondition.sees == "self"
-			|| saysSelf(rawCondition.threshold));
-		const bool theirs = !otherName.empty() && namesOther(rawCondition);
+		const bool own = !selfName.empty() && (writtenCondition.filterObject == "self" || writtenCondition.distance == "self" || writtenCondition.sees == "self"
+			|| saysSelf(writtenCondition.threshold));
+		const bool theirs = !otherName.empty() && namesOther(writtenCondition);
 		if (own || theirs)
 		{
-			WrittenCondition named = rawCondition;
+			WrittenCondition named = writtenCondition;
 			if (own) { nameSelfInTest(named, selfName); }
 			if (theirs) { nameOtherInTest(named, otherName); }
 			Condition made = makeTestHere(named, where, owner, objects);
@@ -138,17 +138,17 @@ namespace xge
 			if (theirs) { made.madeAgainst = otherName; }
 			for (const char* name : { "self", "other" })
 			{
-				if (rawCondition.filterObject == name) { made.filterObject = name; }
-				if (rawCondition.distance == name) { made.distanceTo = name; }
-				if (rawCondition.sees == name) { made.sees = name; }
+				if (writtenCondition.filterObject == name) { made.filterObject = name; }
+				if (writtenCondition.distance == name) { made.distanceTo = name; }
+				if (writtenCondition.sees == name) { made.sees = name; }
 			}
-			if (theirs && rawCondition.variableName.compare(0, 6, "other.") == 0)
+			if (theirs && writtenCondition.variableName.compare(0, 6, "other.") == 0)
 			{
-				throw std::runtime_error(where + ": variable=\"" + rawCondition.variableName + "\": say whose with object=\"other\" and variable=\"" + rawCondition.variableName.substr(6) + "\"");
+				throw std::runtime_error(where + ": variable=\"" + writtenCondition.variableName + "\": say whose with object=\"other\" and variable=\"" + writtenCondition.variableName.substr(6) + "\"");
 			}
-			if (saysSelf(rawCondition.threshold) || (theirs && namesLive(rawCondition.threshold)))
+			if (saysSelf(writtenCondition.threshold) || (theirs && namesLive(writtenCondition.threshold)))
 			{
-				made.live = std::make_shared<const WrittenValue>(rawCondition.threshold);
+				made.live = std::make_shared<const WrittenValue>(writtenCondition.threshold);
 				made.where = where;
 				// What it reads of itself, by the names its variables have.
 				const auto sameName = [](const std::string& a, const std::string& b)
@@ -163,7 +163,7 @@ namespace xge
 				const auto reads = [&](const std::string& prefix, const std::string& whose, std::vector<Name>& into)
 				{
 					if (whose.empty()) { return; }
-					for (const std::string* text : rawCondition.threshold.expressions())
+					for (const std::string* text : writtenCondition.threshold.expressions())
 					{
 						for (const std::string& name : namesIn(*text))
 						{
@@ -182,8 +182,8 @@ namespace xge
 			return made;
 		}
 
-		condition.filterClass = rawCondition.filterClass;
-		condition.filterObject = rawCondition.filterObject;
+		condition.filterClass = writtenCondition.filterClass;
+		condition.filterObject = writtenCondition.filterObject;
 
 		// What it looks at is something the game has: a misspelt class or
 		// object would match nothing, and the condition would quietly
@@ -200,35 +200,35 @@ namespace xge
 		{
 			throw std::runtime_error(where + ": object=\"" + condition.filterObject + "\" names no object or group" + didYouMean(condition.filterObject, objectNames(objects)));
 		}
-		condition.variableName = rawCondition.variableName;
-		condition.distanceTo = rawCondition.distance;
-		condition.sprite = rawCondition.sprite;
-		condition.sees = rawCondition.sees;
-		condition.past = NameStore::program().of(rawCondition.past);
-		if (rawCondition.total == "count") { condition.total = Total::Count; }
-		else if (rawCondition.total == "sum") { condition.total = Total::Sum; }
-		else if (rawCondition.total == "highest") { condition.total = Total::Highest; }
-		else if (rawCondition.total == "lowest") { condition.total = Total::Lowest; }
+		condition.variableName = writtenCondition.variableName;
+		condition.distanceTo = writtenCondition.distance;
+		condition.sprite = writtenCondition.sprite;
+		condition.sees = writtenCondition.sees;
+		condition.past = NameStore::program().of(writtenCondition.past);
+		if (writtenCondition.total == "count") { condition.total = Total::Count; }
+		else if (writtenCondition.total == "sum") { condition.total = Total::Sum; }
+		else if (writtenCondition.total == "highest") { condition.total = Total::Highest; }
+		else if (writtenCondition.total == "lowest") { condition.total = Total::Lowest; }
 
 		// A number that names something that changes is worked out again
 		// each time the condition is tested (Game::testCondition); now, it
 		// may read where things are as 0, as a command's values may.
-		const bool shows = rawCondition.test == WrittenCondition::Test::Shows || rawCondition.test == WrittenCondition::Test::Lowest || rawCondition.test == WrittenCondition::Test::Highest
-			|| rawCondition.test == WrittenCondition::Test::Sees;
-		const bool live = !shows && namesLive(rawCondition.threshold);
+		const bool shows = writtenCondition.test == WrittenCondition::Test::Shows || writtenCondition.test == WrittenCondition::Test::Lowest || writtenCondition.test == WrittenCondition::Test::Highest
+			|| writtenCondition.test == WrittenCondition::Test::Sees;
+		const bool live = !shows && namesLive(writtenCondition.threshold);
 		commandValues = live;
-		const float threshold = shows ? 0.0f : evaluate(rawCondition.threshold, where);
+		const float threshold = shows ? 0.0f : evaluate(writtenCondition.threshold, where);
 		commandValues = false;
 		if (live)
 		{
-			condition.live = std::make_shared<const WrittenValue>(rawCondition.threshold);
+			condition.live = std::make_shared<const WrittenValue>(writtenCondition.threshold);
 			condition.where = where;
 			const auto sameName = [](const std::string& a, const std::string& b)
 			{
 				return a.size() == b.size() && std::equal(a.begin(), a.end(), b.begin(),
 					[](char x, char y) { return std::tolower(static_cast<unsigned char>(x)) == std::tolower(static_cast<unsigned char>(y)); });
 			};
-			for (const std::string* text : rawCondition.threshold.expressions())
+			for (const std::string* text : writtenCondition.threshold.expressions())
 			{
 				for (const std::string& name : namesIn(*text))
 				{
@@ -242,7 +242,7 @@ namespace xge
 				}
 			}
 		}
-		switch (rawCondition.test)
+		switch (writtenCondition.test)
 		{
 		case WrittenCondition::Test::AtLeast:   condition.compare = Compare::AtLeast; break;
 		case WrittenCondition::Test::AtMost:    condition.compare = Compare::AtMost; break;
@@ -256,15 +256,15 @@ namespace xge
 		case WrittenCondition::Test::Highest:   condition.compare = Compare::Highest; break;
 		case WrittenCondition::Test::Sees:      condition.compare = Compare::Equal; break;
 		}
-		condition.value = rawCondition.test == WrittenCondition::Test::Sees ? 1.0f : threshold;
+		condition.value = writtenCondition.test == WrittenCondition::Test::Sees ? 1.0f : threshold;
 
-		checkTestNames(rawCondition, condition, where, owner, objects);
+		checkTestNames(writtenCondition, condition, where, owner, objects);
 		return condition;
 	}
 
 	// makeTestHere's checks: what a test names (what it sees and what is in
 	// the way, a look, a distance, a variable) is something the game has.
-	void Evaluator::checkTestNames(const WrittenCondition& rawCondition, const Condition& condition, const std::string& where, const std::string& owner, const std::vector<Object>& objects)
+	void Evaluator::checkTestNames(const WrittenCondition& writtenCondition, const Condition& condition, const std::string& where, const std::string& owner, const std::vector<Object>& objects)
 	{
 		// <sees>: what is looked for is there, and so is each class in the way.
 		if (!condition.sees.empty() && !findObject(objects, condition.sees))
@@ -287,7 +287,7 @@ namespace xge
 			std::vector<std::string> looks;
 			for (const Object& object : objects)
 			{
-				if (!matchesFilter(rawCondition, object)) { continue; }
+				if (!matchesFilter(writtenCondition, object)) { continue; }
 				for (const auto& look : object.looks.all()) { looks.push_back(look.name); }
 			}
 			if (std::find(looks.begin(), looks.end(), condition.sprite) == looks.end())
@@ -304,21 +304,21 @@ namespace xge
 		// A total of a variable: some object it can count has it.
 		if ((condition.total == Total::Sum || condition.total == Total::Highest || condition.total == Total::Lowest)
 			&& condition.distanceTo.empty()
-			&& std::none_of(objects.begin(), objects.end(), [&](const Object& object) { return matchesFilter(rawCondition, object) && numberOf(*parts, object, condition.variableName); }))
+			&& std::none_of(objects.begin(), objects.end(), [&](const Object& object) { return matchesFilter(writtenCondition, object) && numberOf(*parts, object, condition.variableName); }))
 		{
-			throw std::runtime_error(where + ": total=\"" + rawCondition.total + "\" of variable=\"" + condition.variableName + "\", and no object it looks at has a variable of that name");
+			throw std::runtime_error(where + ": total=\"" + writtenCondition.total + "\" of variable=\"" + condition.variableName + "\", and no object it looks at has a variable of that name");
 		}
 
 		// One object's variable: something it looks at has it, as a
 		// variable of its own or as a number the engine keeps (x,
 		// moves, ...). A misspelt one was never there to compare.
 		if (condition.total == Total::None && !condition.remaining && condition.distanceTo.empty() && !condition.variableName.empty()
-			&& std::none_of(objects.begin(), objects.end(), [&](const Object& object) { return matchesFilter(rawCondition, object) && numberOf(*parts, object, condition.variableName); }))
+			&& std::none_of(objects.begin(), objects.end(), [&](const Object& object) { return matchesFilter(writtenCondition, object) && numberOf(*parts, object, condition.variableName); }))
 		{
 			std::set<std::string> own;
 			for (const Object& object : objects)
 			{
-				if (!matchesFilter(rawCondition, object)) { continue; }
+				if (!matchesFilter(writtenCondition, object)) { continue; }
 				for (const auto& [name, value] : object.variable) { own.insert(name); }
 			}
 			std::vector<std::string> names(own.begin(), own.end());
@@ -328,7 +328,7 @@ namespace xge
 				+ didYouMean(condition.variableName, all) + (names.empty() ? std::string("; it has no <variables>") : "; its variables are: " + listOf(names)));
 		}
 
-		if ((condition.remaining || condition.total == Total::Count) && std::none_of(objects.begin(), objects.end(), [&](const Object& object) { return matchesFilter(rawCondition, object); }))
+		if ((condition.remaining || condition.total == Total::Count) && std::none_of(objects.begin(), objects.end(), [&](const Object& object) { return matchesFilter(writtenCondition, object); }))
 		{
 			std::cout << "warning: " << owner << (condition.remaining ? ": a condition with remaining= matches no object at all, so it would fire at once\n"
 				: ": a condition with total=\"count\" matches no object at all, so it counts 0\n");
@@ -339,16 +339,16 @@ namespace xge
 	// self or others, its commands for each object it may match (the
 	// last test of an <all>'s, as a condition in a condition is), and
 	// they run for each one that holds.
-	Condition Evaluator::makeConditionHere(const WrittenCondition& rawCondition, const std::string& where, const std::string& owner, const std::string& stateName, const std::vector<Object>& objects)
+	Condition Evaluator::makeConditionHere(const WrittenCondition& writtenCondition, const std::string& where, const std::string& owner, const std::string& stateName, const std::vector<Object>& objects)
 	{
-		Condition condition = makeTest(rawCondition, where, owner, objects);
-		std::vector<WrittenCommand> probe = rawCondition.commands;
+		Condition condition = makeTest(writtenCondition, where, owner, objects);
+		std::vector<WrittenCommand> probe = writtenCondition.commands;
 		if (!forMatched(probe, "self_", { "others_" }))
 		{
-			condition.commands = processCommands(rawCondition.commands, where);
+			condition.commands = processCommands(writtenCondition.commands, where);
 			return condition;
 		}
-		const WrittenCondition* test = &rawCondition;
+		const WrittenCondition* test = &writtenCondition;
 		while (test->join == WrittenCondition::Join::All && !test->parts.empty()) { test = &test->parts.back(); }
 		if (test->join != WrittenCondition::Join::None || (test->filterClass.empty() && test->filterObject.empty()))
 		{
@@ -366,7 +366,7 @@ namespace xge
 		// What names self or others runs for each one it holds for; the rest once, after.
 		std::vector<WrittenCommand> eachOne;
 		std::vector<WrittenCommand> once;
-		for (const WrittenCommand& command : rawCondition.commands)
+		for (const WrittenCommand& command : writtenCondition.commands)
 		{
 			std::vector<WrittenCommand> one{ command };
 			(forMatched(one, "self_", { "others_" }) ? eachOne : once).push_back(command);
@@ -382,8 +382,8 @@ namespace xge
 		condition.commands = processCommands(once, where);
 		return condition;
 	}
-	Condition Evaluator::makeCondition(const WrittenCondition& rawCondition, const std::string& where, const std::string& owner, const std::string& stateName, const std::vector<Object>& objects)
+	Condition Evaluator::makeCondition(const WrittenCondition& writtenCondition, const std::string& where, const std::string& owner, const std::string& stateName, const std::vector<Object>& objects)
 	{
-		return onLine(rawCondition.line, [&] { return makeConditionHere(rawCondition, where, owner, stateName, objects); });
+		return onLine(writtenCondition.line, [&] { return makeConditionHere(writtenCondition, where, owner, stateName, objects); });
 	}
 }

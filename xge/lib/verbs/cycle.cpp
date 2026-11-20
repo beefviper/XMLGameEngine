@@ -14,11 +14,11 @@ namespace xge
 {
 	// <cycle>: The cells of a shape change places in turn, each to the next
 	// place, or with direction="backward" each to the one before.
-	static Command makeCycle(const WrittenCommand& raw, const ValueEvaluator&)
+	static Command makeCycle(const WrittenCommand& written, const ValueEvaluator&)
 	{
-		if (raw.direction.empty() || raw.direction == "forward") { return CmdCycle{}; }
-		if (raw.direction == "backward") { return CmdCycle{ true }; }
-		throw std::runtime_error("<cycle> has direction=\"" + raw.direction + "\"; expected forward or backward");
+		if (written.direction.empty() || written.direction == "forward") { return CmdCycle{}; }
+		if (written.direction == "backward") { return CmdCycle{ true }; }
+		throw std::runtime_error("<cycle> has direction=\"" + written.direction + "\"; expected forward or backward");
 	}
 
 	static bool runCycle(const CmdCycle& cycle, const Doer& doer)

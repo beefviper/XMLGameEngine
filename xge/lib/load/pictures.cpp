@@ -72,26 +72,26 @@ namespace xge
 		}
 	}
 
-	void Evaluator::makePalettes(const std::vector<WrittenObject>& rawObjects, std::vector<Object>& objects, const std::map<std::string, std::vector<std::string>>& wanted)
+	void Evaluator::makePalettes(const std::vector<WrittenObject>& writtenObjects, std::vector<Object>& objects, const std::map<std::string, std::vector<std::string>>& wanted)
 	{
 		for (Object& object : objects)
 		{
 			const auto asked = wanted.find(object.name);
 			if (asked == wanted.end()) { continue; }
-			const auto raw = std::find_if(rawObjects.begin(), rawObjects.end(), [&](const WrittenObject& each) { return each.name == object.name; });
-			if (raw == rawObjects.end()) { continue; }
+			const auto written = std::find_if(writtenObjects.begin(), writtenObjects.end(), [&](const WrittenObject& each) { return each.name == object.name; });
+			if (written == writtenObjects.end()) { continue; }
 
 			const std::string where = "object '" + object.name + "'";
 			if (!object.drawn.turnables.empty())
 			{
 				throw std::runtime_error(where + ": <become style=\"" + asked->second.front() + "\" />: a palette is for a picture that does not turn; it has a <heading>");
 			}
-			if (!takesStyle(raw->sprite) && std::none_of(raw->looks.begin(), raw->looks.end(), takesStyle)
-				&& std::none_of(raw->animation.frames.begin(), raw->animation.frames.end(), takesStyle))
+			if (!takesStyle(written->sprite) && std::none_of(written->looks.begin(), written->looks.end(), takesStyle)
+				&& std::none_of(written->animation.frames.begin(), written->animation.frames.end(), takesStyle))
 			{
 				throw std::runtime_error(where + ": <become style=\"" + asked->second.front() + "\" />: it has no <bitmap style=\"...\"> whose colors another style could change");
 			}
-			if (object.looks.all().size() != raw->looks.size()) { continue; }
+			if (object.looks.all().size() != written->looks.size()) { continue; }
 
 			// As loaded: the colors it starts in, and a reset puts back.
 			Object::Palette loaded;
@@ -113,7 +113,7 @@ namespace xge
 					palette.looks = object.looks.all();
 					for (std::size_t i = 0; i < palette.looks.size(); ++i)
 					{
-						const WrittenSprite look = restyled(raw->looks[i]);
+						const WrittenSprite look = restyled(written->looks[i]);
 						buildPicture(look, here, &palette.looks[i].bitmap);
 						if (!look.frames.empty()) { palette.looks[i].frames.edit().bitmaps = buildAnimationBitmaps(look.frames, here); }
 					}
@@ -121,11 +121,11 @@ namespace xge
 				}
 				else
 				{
-					buildPicture(restyled(raw->sprite), here, &palette.bitmap);
+					buildPicture(restyled(written->sprite), here, &palette.bitmap);
 					if (!object.animation.frames.shows().bitmaps.empty())
 					{
 						std::vector<WrittenSprite> frames;
-						for (const WrittenSprite& frame : raw->animation.frames) { frames.push_back(restyled(frame)); }
+						for (const WrittenSprite& frame : written->animation.frames) { frames.push_back(restyled(frame)); }
 						palette.animation = buildAnimationBitmaps(frames, here);
 					}
 				}
@@ -138,20 +138,20 @@ namespace xge
 	std::vector<TextPiece> Evaluator::textPieces(const WrittenSprite& sprite, const std::string& where, const WrittenObject* self)
 	{
 		std::vector<TextPiece> pieces;
-		for (const WrittenTextPiece& raw : sprite.text)
+		for (const WrittenTextPiece& written : sprite.text)
 		{
 			TextPiece piece;
-			piece.kind = raw.kind;
-			if (raw.kind == WrittenTextPiece::Kind::Words)
+			piece.kind = written.kind;
+			if (written.kind == WrittenTextPiece::Kind::Words)
 			{
-				piece.shown = raw.words;
+				piece.shown = written.words;
 				pieces.push_back(std::move(piece));
 				continue;
 			}
 
-			if (raw.value.kind == WrittenValue::Kind::Expression)
+			if (written.value.kind == WrittenValue::Kind::Expression)
 			{
-				if (const auto reference = parseVariableReference(raw.value.text))
+				if (const auto reference = parseVariableReference(written.value.text))
 				{
 					std::string owner = reference->first;
 					if (self && self->inGroup(owner) && objectVariables.count(self->name + "." + reference->second))
@@ -162,8 +162,8 @@ namespace xge
 					{
 						piece.owner = owner;
 						piece.variable = reference->second;
-						piece.choices = raw.choices;
-						piece.shown = showPiece(raw.kind, found->second, piece.choices);
+						piece.choices = written.choices;
+						piece.shown = showPiece(written.kind, found->second, piece.choices);
 						pieces.push_back(std::move(piece));
 						continue;
 					}
@@ -174,16 +174,16 @@ namespace xge
 					{
 						piece.owner = owner;
 						piece.variable = reference->second;
-						piece.choices = raw.choices;
-						piece.shown = showPiece(raw.kind, 0.0f, piece.choices);
+						piece.choices = written.choices;
+						piece.shown = showPiece(written.kind, 0.0f, piece.choices);
 						pieces.push_back(std::move(piece));
 						continue;
 					}
 				}
 			}
 
-			piece.choices = raw.choices;
-			piece.shown = showPiece(raw.kind, evaluate(raw.value, where), piece.choices);
+			piece.choices = written.choices;
+			piece.shown = showPiece(written.kind, evaluate(written.value, where), piece.choices);
 			pieces.push_back(std::move(piece));
 		}
 		return pieces;
@@ -337,16 +337,16 @@ namespace xge
 		if (sprite.kind == "line")
 		{
 			// 1. The line ends, colours and thicknesses.
-			for (const WrittenLine& rawLine : sprite.lines)
+			for (const WrittenLine& writtenLine : sprite.lines)
 			{
 				LineSegment segment;
-				segment.x1 = evaluate(rawLine.from.x, where);
-				segment.y1 = evaluate(rawLine.from.y, where);
-				segment.x2 = evaluate(rawLine.to.x, where);
-				segment.y2 = evaluate(rawLine.to.y, where);
-				checkColor(rawLine.color.empty() ? "color.white" : rawLine.color, where + " > <line>");
-				segment.color = colorFromName(rawLine.color.empty() ? "color.white" : rawLine.color);
-				if (rawLine.thickness) { segment.thickness = static_cast<int>(std::lround(evaluate(*rawLine.thickness, where))); }
+				segment.x1 = evaluate(writtenLine.from.x, where);
+				segment.y1 = evaluate(writtenLine.from.y, where);
+				segment.x2 = evaluate(writtenLine.to.x, where);
+				segment.y2 = evaluate(writtenLine.to.y, where);
+				checkColor(writtenLine.color.empty() ? "color.white" : writtenLine.color, where + " > <line>");
+				segment.color = colorFromName(writtenLine.color.empty() ? "color.white" : writtenLine.color);
+				if (writtenLine.thickness) { segment.thickness = static_cast<int>(std::lround(evaluate(*writtenLine.thickness, where))); }
 				if (segment.thickness < 1) { throw std::invalid_argument("a <line> has a <thickness> under 1"); }
 				kept->lines.push_back(segment);
 			}
@@ -367,15 +367,15 @@ namespace xge
 			// 1. The corners and colours; 2. drawn, filled. Turned as a
 			// finished picture, pixel by pixel, and holed as one.
 			std::vector<FilledPolygon> polygons;
-			for (const WrittenPolygon& rawPolygon : sprite.polygons)
+			for (const WrittenPolygon& writtenPolygon : sprite.polygons)
 			{
 				FilledPolygon polygon;
-				for (const WrittenVector2& point : rawPolygon.points)
+				for (const WrittenVector2& point : writtenPolygon.points)
 				{
 					polygon.points.emplace_back(evaluate(point.x, where), evaluate(point.y, where));
 				}
-				checkColor(rawPolygon.color.empty() ? "color.white" : rawPolygon.color, where + " > <polygon>");
-				polygon.color = colorFromName(rawPolygon.color.empty() ? "color.white" : rawPolygon.color);
+				checkColor(writtenPolygon.color.empty() ? "color.white" : writtenPolygon.color, where + " > <polygon>");
+				polygon.color = colorFromName(writtenPolygon.color.empty() ? "color.white" : writtenPolygon.color);
 				polygons.push_back(std::move(polygon));
 			}
 			std::string key = "polygons";
@@ -586,31 +586,31 @@ namespace xge
 		}
 	}
 
-	std::map<std::string, Vector2f> Evaluator::layOutCells(const std::vector<WrittenObject>& rawObjects,
+	std::map<std::string, Vector2f> Evaluator::layOutCells(const std::vector<WrittenObject>& writtenObjects,
 		const std::map<std::string, Picture>& pictures)
 	{
 		// Each group's cells by row, in the order they were read: a row's
 		// columns left to right.
 		std::map<std::string, std::map<int, std::vector<const WrittenObject*>>> groups;
-		for (const WrittenObject& rawObject : rawObjects)
+		for (const WrittenObject& writtenObject : writtenObjects)
 		{
-			if (rawObject.cell.column > 0) { groups[rawObject.groupName][rawObject.cell.row].push_back(&rawObject); }
+			if (writtenObject.cell.column > 0) { groups[writtenObject.groupName][writtenObject.cell.row].push_back(&writtenObject); }
 		}
 
 		std::map<std::string, Vector2f> offsets;
 
 		// What a <map> placed: in the middle of its tile, counted from the
 		// map's top left, which is the object's own <position>.
-		for (const WrittenObject& rawObject : rawObjects)
+		for (const WrittenObject& writtenObject : writtenObjects)
 		{
-			if (rawObject.cell.mapColumn == 0) { continue; }
-			const std::string where = "object '" + rawObject.name + "' (on map '" + rawObject.cell.map + "')";
-			const Vector2f tile{ evaluate(rawObject.cell.tileWidth, where + " > <tile> > <width>"), evaluate(rawObject.cell.tileHeight, where + " > <tile> > <height>") };
+			if (writtenObject.cell.mapColumn == 0) { continue; }
+			const std::string where = "object '" + writtenObject.name + "' (on map '" + writtenObject.cell.map + "')";
+			const Vector2f tile{ evaluate(writtenObject.cell.tileWidth, where + " > <tile> > <width>"), evaluate(writtenObject.cell.tileHeight, where + " > <tile> > <height>") };
 			if (!(tile.x > 0.0f) || !(tile.y > 0.0f)) { throw std::runtime_error(where + ": a <tile> is " + formatDisplayNumber(tile.x) + " by " + formatDisplayNumber(tile.y) + "; both have to be above 0"); }
-			const Vector2f own = layoutSize(pictures.at(rawObject.name));
-			const float across = static_cast<float>(rawObject.cell.mapColumn - 1) + (rawObject.cell.between ? 0.5f : 0.0f);
-			offsets[rawObject.name] = { across * tile.x + (tile.x - own.x) / 2.0f,
-				static_cast<float>(rawObject.cell.mapRow - 1) * tile.y + (tile.y - own.y) / 2.0f };
+			const Vector2f own = layoutSize(pictures.at(writtenObject.name));
+			const float across = static_cast<float>(writtenObject.cell.mapColumn - 1) + (writtenObject.cell.between ? 0.5f : 0.0f);
+			offsets[writtenObject.name] = { across * tile.x + (tile.x - own.x) / 2.0f,
+				static_cast<float>(writtenObject.cell.mapRow - 1) * tile.y + (tile.y - own.y) / 2.0f };
 		}
 
 		for (const auto& [group, rows] : groups)

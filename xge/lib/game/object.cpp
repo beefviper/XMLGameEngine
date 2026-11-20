@@ -195,7 +195,7 @@ namespace xge
 	void placeOnMap(WrittenObject& object, const WrittenMap& map, std::size_t column, std::size_t row, char character)
 	{
 		object.cell.character = character;
-		object.rawPosition = map.position;
+		object.writtenPosition = map.position;
 		object.cell.map = map.name;
 		object.cell.mapColumn = static_cast<int>(column) + 1;
 		object.cell.mapRow = static_cast<int>(row) + 1;
@@ -241,7 +241,7 @@ namespace xge
 		holder.name = map.name + ".cells";
 		holder.sprite = nothingSprite();
 		holder.isDrawn = false;
-		holder.rawVelocity = { WrittenValue::expression("0"), WrittenValue::expression("0") };
+		holder.writtenVelocity = { WrittenValue::expression("0"), WrittenValue::expression("0") };
 		waitOnMap(holder, map);
 		return holder;
 	}
@@ -350,7 +350,7 @@ namespace xge
 	{
 		for (WrittenObject& object : objects)
 		{
-			const std::string& solid = object.rawCollisionData.solid;
+			const std::string& solid = object.writtenCollisionData.solid;
 			if (solid.empty()) { continue; }
 			object.sprite.solid = solid;
 			for (WrittenSprite& look : object.looks)
@@ -769,7 +769,7 @@ namespace xge
 		for (WrittenObject& object : objects)
 		{
 			std::vector<WrittenCollisionRule> rules;
-			for (WrittenCollisionRule& rule : object.rawCollisionData.others)
+			for (WrittenCollisionRule& rule : object.writtenCollisionData.others)
 			{
 				WrittenCollisionRule probe = rule;
 				const bool inCommands = renameObjectIn(probe.commands, "other", "other_");
@@ -797,7 +797,7 @@ namespace xge
 				}
 				rules.push_back(std::move(rule));
 			}
-			object.rawCollisionData.others = std::move(rules);
+			object.writtenCollisionData.others = std::move(rules);
 		}
 	}
 
@@ -813,11 +813,11 @@ namespace xge
 			// A rule's test says self too, found as it is tested (Game::holds).
 			const auto check = [&](WrittenCondition& condition) { nameSelfInCheck(condition, "self"); };
 
-			WrittenCollisionData& collisions = object.rawCollisionData;
+			WrittenCollisionData& collisions = object.writtenCollisionData;
 			for (auto& edge : collisions.edges)
 			{
 				own(edge.commands);
-				for (EdgeGuard& guard : edge.guards) { if (guard.rawCheck.join != WrittenCondition::Join::None) { check(guard.rawCheck); } }
+				for (EdgeGuard& guard : edge.guards) { if (guard.writtenCheck.join != WrittenCondition::Join::None) { check(guard.writtenCheck); } }
 			}
 			for (WrittenCollisionRule& rule : collisions.others)
 			{
@@ -841,8 +841,8 @@ namespace xge
 			// Its own numbers, worked out once or live (update="live"):
 			// self in them is this object too.
 			for (auto& each : object.variable) { value(each.second); }
-			for (WrittenValue* half : { &object.rawPosition.x, &object.rawPosition.y }) { value(*half); }
-			if (object.rawHeading) { value(*object.rawHeading); }
+			for (WrittenValue* half : { &object.writtenPosition.x, &object.writtenPosition.y }) { value(*half); }
+			if (object.writtenHeading) { value(*object.writtenHeading); }
 			// The numbers its texts show (<number>self.value</number>).
 			for (WrittenTextPiece& piece : object.sprite.text) { value(piece.value); }
 			for (WrittenSprite& look : object.looks)
@@ -888,17 +888,17 @@ namespace xge
 
 		object.name = to;
 		object.forEachValue(value);
-		for (auto& [name, each] : object.rawPulls) { value(each); }
+		for (auto& [name, each] : object.writtenPulls) { value(each); }
 		for (auto& [name, each] : object.variable) { value(each); }
 		for (WrittenTextPiece& piece : object.sprite.text) { value(piece.value); }
 
 		// Whether what its kind holds (its rules and actions) named it.
 		said = false;
-		WrittenCollisionData& collisions = object.rawCollisionData;
+		WrittenCollisionData& collisions = object.writtenCollisionData;
 		for (auto& edge : collisions.edges)
 		{
 			commands(edge.commands);
-			for (EdgeGuard& guard : edge.guards) { if (guard.rawCheck.join != WrittenCondition::Join::None) { check(guard.rawCheck); } }
+			for (EdgeGuard& guard : edge.guards) { if (guard.writtenCheck.join != WrittenCondition::Join::None) { check(guard.writtenCheck); } }
 		}
 		for (WrittenCollisionRule& rule : collisions.others)
 		{
@@ -982,8 +982,8 @@ namespace xge
 				}
 				value.live = live;
 			};
-			center(object.rawPosition.x, "window.width", "width");
-			center(object.rawPosition.y, "window.height", "height");
+			center(object.writtenPosition.x, "window.width", "width");
+			center(object.writtenPosition.y, "window.height", "height");
 		}
 	}
 

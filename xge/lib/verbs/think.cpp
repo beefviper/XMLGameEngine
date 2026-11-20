@@ -37,21 +37,21 @@ namespace xge
 		}
 	}
 
-	static Command makeThink(const WrittenCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeThink(const WrittenCommand& written, const ValueEvaluator& evaluate)
 	{
-		if (raw.object.empty()) { throw std::runtime_error("<think>: names the object it plays with object= (a <think> on a member of a group that takes <turns> plays that member)"); }
-		const WrittenThink& written = ownOf<WrittenThink>(raw);
-		const KeyCode button = keyCodeFromString(written.button);
+		if (written.object.empty()) { throw std::runtime_error("<think>: names the object it plays with object= (a <think> on a member of a group that takes <turns> plays that member)"); }
+		const WrittenThink& own = ownOf<WrittenThink>(written);
+		const KeyCode button = keyCodeFromString(own.button);
 		if (button == KeyCode::Unknown)
 		{
-			throw std::runtime_error("<think button=\"" + written.button + "\">: there is no key named '" + written.button + "'");
+			throw std::runtime_error("<think button=\"" + own.button + "\">: there is no key named '" + own.button + "'");
 		}
-		const float depth = valueOr(written.depth, 4.0f, evaluate);
+		const float depth = valueOr(own.depth, 4.0f, evaluate);
 		if (!(depth >= 1.0f && depth <= 9.0f) || depth != std::floor(depth))
 		{
 			throw std::runtime_error("<think> looks " + formatDisplayNumber(depth) + " moves ahead; expected a whole number from 1 to 9");
 		}
-		return CmdThink{ raw.objClass, raw.object, button, static_cast<int>(depth), written.worths, written.avoid };
+		return CmdThink{ written.objClass, written.object, button, static_cast<int>(depth), own.worths, own.avoid };
 	}
 
 	static void printThink(std::ostream& o, const CmdThink& think)

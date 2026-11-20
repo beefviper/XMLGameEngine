@@ -9,9 +9,9 @@
 namespace xge
 {
 	// <place>: Sets down what it picked, where it is.
-	static Command makePlace(const WrittenCommand& raw, const ValueEvaluator&)
+	static Command makePlace(const WrittenCommand& written, const ValueEvaluator&)
 	{
-		return CmdPlace{ raw.into };
+		return CmdPlace{ written.into };
 	}
 
 	static bool runPlace(const CmdPlace& place, const Doer& doer)

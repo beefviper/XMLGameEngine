@@ -19,9 +19,9 @@ namespace xge
 		}
 	}
 
-	static Command makeEnter(const WrittenCommand& raw, const ValueEvaluator&)
+	static Command makeEnter(const WrittenCommand& written, const ValueEvaluator&)
 	{
-		return CmdEnterScene{ raw.scene, raw.way };
+		return CmdEnterScene{ written.scene, written.way };
 	}
 
 	static void checkEnter(const CmdEnterScene& enter, const Checking& checking)

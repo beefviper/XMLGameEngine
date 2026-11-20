@@ -33,33 +33,33 @@ namespace xge
 		}
 	}
 
-	static Command makeHop(const WrittenCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeHop(const WrittenCommand& written, const ValueEvaluator& evaluate)
 	{
-		const WrittenHop& written = ownOf<WrittenHop>(raw);
+		const WrittenHop& own = ownOf<WrittenHop>(written);
 		// up-left and the rest: one of up/down, then one of left/right.
-		const std::string& name = raw.direction;
+		const std::string& name = written.direction;
 		const auto dash = name.find('-');
 		if (dash == std::string::npos)
 		{
 			// Nothing written: none (a hop on a cell map, one cell).
-			CmdHop hop{ directionFromName(name, raw.verb), valueOr(written.distance, 0.0f, evaluate), {}, hopSeconds(written, evaluate), 0.0f, {} };
-			hop.arc = arcOf(written, "hop", hop.seconds, evaluate);
+			CmdHop hop{ directionFromName(name, written.verb), valueOr(own.distance, 0.0f, evaluate), {}, hopSeconds(own, evaluate), 0.0f, {} };
+			hop.arc = arcOf(own, "hop", hop.seconds, evaluate);
 			hop.step = stepToward(hop.direction, hop.distance);
-			hop.onto = NameStore::program().of(written.onto);
+			hop.onto = NameStore::program().of(own.onto);
 			return hop;
 		}
 
-		const Direction upDown = directionFromName(name.substr(0, dash), raw.verb);
-		const Direction leftRight = directionFromName(name.substr(dash + 1), raw.verb);
+		const Direction upDown = directionFromName(name.substr(0, dash), written.verb);
+		const Direction leftRight = directionFromName(name.substr(dash + 1), written.verb);
 		if ((upDown != Direction::Up && upDown != Direction::Down) || (leftRight != Direction::Left && leftRight != Direction::Right))
 		{
 			throw std::runtime_error("<hop> has direction=\"" + name + "\"; a diagonal is up-left, up-right, down-left or down-right");
 		}
-		const float distance = written.diagonal ? 0.0f : evaluate(*written.distance);
-		const float across = written.diagonal ? evaluate(written.diagonal->x) : distance;
-		const float down = written.diagonal ? evaluate(written.diagonal->y) : distance;
-		CmdHop hop{ upDown, distance, {}, hopSeconds(written, evaluate), 0.0f, {} };
-		hop.arc = arcOf(written, "hop", hop.seconds, evaluate);
+		const float distance = own.diagonal ? 0.0f : evaluate(*own.distance);
+		const float across = own.diagonal ? evaluate(own.diagonal->x) : distance;
+		const float down = own.diagonal ? evaluate(own.diagonal->y) : distance;
+		CmdHop hop{ upDown, distance, {}, hopSeconds(own, evaluate), 0.0f, {} };
+		hop.arc = arcOf(own, "hop", hop.seconds, evaluate);
 		hop.step = { leftRight == Direction::Left ? -across : across, upDown == Direction::Up ? -down : down };
 		return hop;
 	}

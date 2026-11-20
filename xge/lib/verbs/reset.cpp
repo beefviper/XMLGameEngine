@@ -25,13 +25,13 @@ namespace xge
 		}
 	}
 
-	static Command makeReset(const WrittenCommand& raw, const ValueEvaluator&)
+	static Command makeReset(const WrittenCommand& written, const ValueEvaluator&)
 	{
 		// <reset /> puts the object in the rule (or, in a state's input or
 		// condition, the whole game) back; <reset object="name" /> that one object.
-		if (!raw.scene.empty() || !raw.way.empty()) { return CmdResetScene{ raw.scene, raw.way }; }
-		if (raw.object.empty()) { return CmdReset{}; }
-		return CmdResetObject{ raw.object };
+		if (!written.scene.empty() || !written.way.empty()) { return CmdResetScene{ written.scene, written.way }; }
+		if (written.object.empty()) { return CmdReset{}; }
+		return CmdResetObject{ written.object };
 	}
 
 	static void checkReset(const Command& command, const Checking& checking)

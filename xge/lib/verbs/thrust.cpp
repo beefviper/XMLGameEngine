@@ -16,11 +16,11 @@ namespace xge
 		command.own.emplace<WrittenThrust>().amount = readValue(node, where);
 	}
 
-	static Command makeThrust(const WrittenCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeThrust(const WrittenCommand& written, const ValueEvaluator& evaluate)
 	{
-		const float amount = evaluate(ownOf<WrittenThrust>(raw).amount);
-		if (!raw.direction.empty()) { return CmdThrustAcross{ directionFromName(raw.direction, raw.verb), amount, raw.burn }; }
-		return CmdThrust{ amount, raw.burn };
+		const float amount = evaluate(ownOf<WrittenThrust>(written).amount);
+		if (!written.direction.empty()) { return CmdThrustAcross{ directionFromName(written.direction, written.verb), amount, written.burn }; }
+		return CmdThrust{ amount, written.burn };
 	}
 
 	// `direction` is now being pushed by `amount` (0 =

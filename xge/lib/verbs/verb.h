@@ -160,7 +160,7 @@ namespace xge
 		void (*read)(const XmlNode& node, const std::string& where, WrittenCommand& command) = nullptr;
 		// What was written, its numbers worked out. Throws
 		// std::runtime_error naming what is wrong with it.
-		Command (*make)(const WrittenCommand& raw, const ValueEvaluator& evaluate) = nullptr;
+		Command (*make)(const WrittenCommand& written, const ValueEvaluator& evaluate) = nullptr;
 		// The names it uses exist (load/check.h); none: it names nothing.
 		// Throws std::runtime_error saying which does not.
 		void (*check)(const Command& command, const Checking& checking) = nullptr;
@@ -273,7 +273,7 @@ namespace xge
 	float speedOf(const WrittenValue& written, const char* what, const ValueEvaluator& evaluate);
 	// What one holder holds, sent to another: a <distribute>, or a <send>
 	// that names no object.
-	Command makeSendHeld(const WrittenCommand& raw, const ValueEvaluator& evaluate);
+	Command makeSendHeld(const WrittenCommand& written, const ValueEvaluator& evaluate);
 
 	// --- What several verbs' run() share.
 

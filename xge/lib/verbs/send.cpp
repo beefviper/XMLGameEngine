@@ -40,15 +40,15 @@ namespace xge
 		if (row) { send.row = readValue(*row, here); }
 	}
 
-	static Command makeSend(const WrittenCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeSend(const WrittenCommand& written, const ValueEvaluator& evaluate)
 	{
 		// With no object=, members of a held class go holder to holder, as a
 		// <distribute> sends them.
-		if (raw.object.empty()) { return makeSendHeld(raw, evaluate); }
-		CmdSend send{ raw.object, raw.from, raw.into, std::nullopt, std::nullopt, false, 0, false, {} };
-		const WrittenSend& written = ownOf<WrittenSend>(raw);
-		if (written.column) { send.column = evaluate(*written.column); }
-		if (written.row) { send.row = evaluate(*written.row); }
+		if (written.object.empty()) { return makeSendHeld(written, evaluate); }
+		CmdSend send{ written.object, written.from, written.into, std::nullopt, std::nullopt, false, 0, false, {} };
+		const WrittenSend& own = ownOf<WrittenSend>(written);
+		if (own.column) { send.column = evaluate(*own.column); }
+		if (own.row) { send.row = evaluate(*own.row); }
 		return send;
 	}
 

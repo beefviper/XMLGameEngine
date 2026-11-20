@@ -180,9 +180,9 @@ namespace xge
 		// Split into lines of characters, one entry per character; a
 		// multi-byte UTF-8 character is one entry, drawn as '?'.
 		std::vector<std::vector<unsigned char>> lines(1);
-		for (const char raw : text)
+		for (const char written : text)
 		{
-			const auto character = static_cast<unsigned char>(raw);
+			const auto character = static_cast<unsigned char>(written);
 
 			if (character == '\n') { lines.emplace_back(); continue; }
 			if (character == '\r') { continue; }

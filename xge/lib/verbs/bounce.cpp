@@ -22,9 +22,9 @@ namespace xge
 		if (hasContent(node)) { bounce.share = readValue(node, where); }
 	}
 
-	static Command makeBounce(const WrittenCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeBounce(const WrittenCommand& written, const ValueEvaluator& evaluate)
 	{
-		const WrittenBounce& bounce = ownOf<WrittenBounce>(raw);
+		const WrittenBounce& bounce = ownOf<WrittenBounce>(written);
 		const float share = valueOr(bounce.share, 1.0f, evaluate);
 		if (!(share >= 0.0f))
 		{

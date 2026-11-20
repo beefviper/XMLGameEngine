@@ -20,49 +20,49 @@
 
 namespace xge
 {
-	Object Evaluator::makeObject(WrittenObject& rawObject, const FirstPass& first, Vector2f cellOffset, int thisLockstep)
+	Object Evaluator::makeObject(WrittenObject& writtenObject, const FirstPass& first, Vector2f cellOffset, int thisLockstep)
 	{
-		const std::string where = "object '" + rawObject.name + "'";
+		const std::string where = "object '" + writtenObject.name + "'";
 		struct Self
 		{
 			std::string& name;
 			std::string was;
 			~Self() { name = std::move(was); }
-		} self{ selfName, std::exchange(selfName, rawObject.name) };
+		} self{ selfName, std::exchange(selfName, writtenObject.name) };
 
 		// Only a text showing a number needs working out again here, for the
 		// value it has by now (see above). The object and its first look
 		// hold this one picture.
-		const HeldPicture picture = (rawObject.sprite.kind == "text" && showsNumbers(rawObject.sprite))
-			? buildPicture(rawObject.sprite, where, nullptr, nullptr, &rawObject)
+		const HeldPicture picture = (writtenObject.sprite.kind == "text" && showsNumbers(writtenObject.sprite))
+			? buildPicture(writtenObject.sprite, where, nullptr, nullptr, &writtenObject)
 			: first.picture;
 
 		// A position that uses the size of a text (its own, or another
 		// object's) is worked out again when that text's words change - see
 		// Object::Layout.
-		const std::vector<std::string> positionSizeDependencies = sizeDependenciesOf(rawObject);
+		const std::vector<std::string> positionSizeDependencies = sizeDependenciesOf(writtenObject);
 
 		// How long each picture of an animation lasts.
-		const float animationSeconds = rawObject.hasAnimation ? animationSecondsOf(rawObject.animation.interval, where + " > <animation>") : 0.0f;
+		const float animationSeconds = writtenObject.hasAnimation ? animationSecondsOf(writtenObject.animation.interval, where + " > <animation>") : 0.0f;
 
 		// The object's looks, if it has several sprites and no animation.
-		const std::vector<Object::Look> looks = buildLooks(rawObject, first, picture, where);
+		const std::vector<Object::Look> looks = buildLooks(writtenObject, first, picture, where);
 
 		Object object{};
-		object.kind->written = rawObject.kind;
+		object.kind->written = writtenObject.kind;
 		object.id = parts->newId();
 		const std::uint64_t order = parts->orderOf(object.id);
-		buildSprite(rawObject, first, picture, animationSeconds, object, where);
-		buildNames(rawObject, object);
-		buildNumbers(rawObject, object, cellOffset, positionSizeDependencies, where);
-		buildMotion(rawObject, object, where);
-		buildTimers(rawObject, object, where);
-		buildLookParts(rawObject, object, looks, where);
-		buildMoves(rawObject, object, looks, where);
-		buildHolder(rawObject, object, order, where);
-		buildPlace(rawObject, object, looks, where);
-		buildCollisions(rawObject, object, looks, thisLockstep, where);
-		buildActions(rawObject, object, where);
+		buildSprite(writtenObject, first, picture, animationSeconds, object, where);
+		buildNames(writtenObject, object);
+		buildNumbers(writtenObject, object, cellOffset, positionSizeDependencies, where);
+		buildMotion(writtenObject, object, where);
+		buildTimers(writtenObject, object, where);
+		buildLookParts(writtenObject, object, looks, where);
+		buildMoves(writtenObject, object, looks, where);
+		buildHolder(writtenObject, object, order, where);
+		buildPlace(writtenObject, object, looks, where);
+		buildCollisions(writtenObject, object, looks, thisLockstep, where);
+		buildActions(writtenObject, object, where);
 
 		// How it started is how it was before its first frame.
 		object.before = startFor(object);
@@ -76,38 +76,38 @@ namespace xge
 
 	// makeObject's looks: each named <sprite> or <animation> made, the first the
 	// very picture it starts with, and where each once look goes when it ends.
-	std::vector<Object::Look> Evaluator::buildLooks(WrittenObject& rawObject, const FirstPass& first, const HeldPicture& picture, const std::string& where)
+	std::vector<Object::Look> Evaluator::buildLooks(WrittenObject& writtenObject, const FirstPass& first, const HeldPicture& picture, const std::string& where)
 	{
 		std::vector<Object::Look> looks;
 		if (first.looks)
 		{
 			looks = *first.looks;
 		}
-		else if (!rawObject.looks.empty())
+		else if (!writtenObject.looks.empty())
 		{
-			for (const WrittenSprite& rawLook : rawObject.looks)
+			for (const WrittenSprite& writtenLook : writtenObject.looks)
 			{
 				Object::Look look;
-				look.name = rawLook.name;
+				look.name = writtenLook.name;
 				std::shared_ptr<const Turnable> turned;
-				look.picture = buildPicture(rawLook, where + " > <sprite name=\"" + rawLook.name + "\">", &look.bitmap,
-					rawObject.rawHeading ? &turned : nullptr);
+				look.picture = buildPicture(writtenLook, where + " > <sprite name=\"" + writtenLook.name + "\">", &look.bitmap,
+					writtenObject.writtenHeading ? &turned : nullptr);
 				if (turned) { look.turnables = { turned }; }
-				if (!rawLook.frames.empty())
+				if (!writtenLook.frames.empty())
 				{
 					// A look that moves: its pictures, all one size, and how long each shows.
-					const std::string here = where + " > <animation name=\"" + rawLook.name + "\">";
+					const std::string here = where + " > <animation name=\"" + writtenLook.name + "\">";
 					look.turnables.clear();
 					Object::Frames& moving = look.frames.edit();
-					moving.bitmaps = buildAnimationBitmaps(rawLook.frames, here, rawObject.rawHeading ? &look.turnables : nullptr);
-					moving.seconds = animationSecondsOf(rawLook.interval, here);
-					moving.times = animationTimesOf(rawLook.times, moving.seconds, here);
-					moving.once = rawLook.once;
-					moving.stepped = rawLook.stepped;
-					moving.then = processCommands(rawLook.thenCommands, here + " > <then>");
-					moving.commands = frameCommandsOf(rawLook.frameCommands, here);
+					moving.bitmaps = buildAnimationBitmaps(writtenLook.frames, here, writtenObject.writtenHeading ? &look.turnables : nullptr);
+					moving.seconds = animationSecondsOf(writtenLook.interval, here);
+					moving.times = animationTimesOf(writtenLook.times, moving.seconds, here);
+					moving.once = writtenLook.once;
+					moving.stepped = writtenLook.stepped;
+					moving.then = processCommands(writtenLook.thenCommands, here + " > <then>");
+					moving.commands = frameCommandsOf(writtenLook.frameCommands, here);
 				}
-				if (look.picture->kind == ShapeKind::Text && showsNumbers(rawLook))
+				if (look.picture->kind == ShapeKind::Text && showsNumbers(writtenLook))
 				{
 					throw std::runtime_error(where + ": a look cannot be a text showing a <number> or a <letter>");
 				}
@@ -122,16 +122,16 @@ namespace xge
 			if (first.turned && looks.front().frames.shows().bitmaps.empty()) { looks.front().turnables = { first.turned }; }
 
 			// The look each once look goes to when it ends, by its name.
-			for (std::size_t i = 0; i < rawObject.looks.size(); ++i)
+			for (std::size_t i = 0; i < writtenObject.looks.size(); ++i)
 			{
-				const std::string& then = rawObject.looks[i].thenSprite;
+				const std::string& then = writtenObject.looks[i].thenSprite;
 				if (then.empty()) { continue; }
 				const auto found = std::find_if(looks.begin(), looks.end(), [&](const Object::Look& each) { return each.name == then; });
 				if (found == looks.end())
 				{
 					std::vector<std::string> names;
 					for (const Object::Look& each : looks) { names.push_back(each.name); }
-					throw std::runtime_error(where + " > <animation name=\"" + rawObject.looks[i].name + "\"> > <then sprite=\"" + then + "\">: the object has no look of that name"
+					throw std::runtime_error(where + " > <animation name=\"" + writtenObject.looks[i].name + "\"> > <then sprite=\"" + then + "\">: the object has no look of that name"
 						+ didYouMean(then, names) + ". Its looks are: " + listOf(names));
 				}
 				looks[i].thenLook = static_cast<std::size_t>(found - looks.begin());
@@ -142,29 +142,29 @@ namespace xge
 
 	// makeObject's picture: the sprite it starts as, its animation, and a
 	// text's live pieces.
-	void Evaluator::buildSprite(WrittenObject& rawObject, const FirstPass& first, const HeldPicture& picture, float animationSeconds, Object& object, const std::string& where)
+	void Evaluator::buildSprite(WrittenObject& writtenObject, const FirstPass& first, const HeldPicture& picture, float animationSeconds, Object& object, const std::string& where)
 	{
 		object.drawn.picture = picture;
 		object.drawn.bitmap = first.bitmap;
 		if (first.turned) { object.drawn.turnables = { first.turned }; }
 
-		if (rawObject.hasAnimation)
+		if (writtenObject.hasAnimation)
 		{
 			Object::Frames& own = object.animation.frames.edit();
 			own.bitmaps = first.animation;
 			if (!first.animationTurned.empty()) { object.drawn.turnables = first.animationTurned; }
 			own.seconds = animationSeconds;
-			own.times = animationTimesOf(rawObject.animation.times, animationSeconds, where + " > <animation>");
-			own.once = rawObject.animation.once;
-			own.stepped = rawObject.animation.stepped;
-			own.then = processCommands(rawObject.animation.thenCommands, where + " > <animation> > <then>");
-			own.commands = frameCommandsOf(rawObject.animation.frameCommands, where + " > <animation>");
+			own.times = animationTimesOf(writtenObject.animation.times, animationSeconds, where + " > <animation>");
+			own.once = writtenObject.animation.once;
+			own.stepped = writtenObject.animation.stepped;
+			own.then = processCommands(writtenObject.animation.thenCommands, where + " > <animation> > <then>");
+			own.commands = frameCommandsOf(writtenObject.animation.frameCommands, where + " > <animation>");
 			object.drawn.bitmap = own.bitmaps.front();
 		}
 
-		if (object.drawn.picture->kind == ShapeKind::Text && showsNumbers(rawObject.sprite))
+		if (object.drawn.picture->kind == ShapeKind::Text && showsNumbers(writtenObject.sprite))
 		{
-			std::vector<TextPiece> pieces = textPieces(rawObject.sprite, where, &rawObject);
+			std::vector<TextPiece> pieces = textPieces(writtenObject.sprite, where, &writtenObject);
 			if (std::any_of(pieces.begin(), pieces.end(), [](const TextPiece& piece) { return !piece.owner.empty(); }))
 			{
 				parts->boundTexts.add(object.id, parts->orderOf(object.id), { std::move(pieces) });
@@ -174,56 +174,56 @@ namespace xge
 
 	// makeObject's names: its group, class and owners, and whether it is
 	// drawn, seen and there.
-	void Evaluator::buildNames(WrittenObject& rawObject, Object& object)
+	void Evaluator::buildNames(WrittenObject& writtenObject, Object& object)
 	{
-		object.groupName = Name::of(rawObject.groupName);
-		object.outerGroups = NameStore::program().listOf(rawObject.outerGroups);
-		object.name = Name::of(rawObject.name);
-		object.line = rawObject.line;
-		object.objClass = Name::of(rawObject.objClass);
-		object.isDrawn = rawObject.isDrawn;
-		object.ownerState = Name::of(rawObject.ownerState);
-		object.ownerScene = Name::of(rawObject.ownerScene);
+		object.groupName = Name::of(writtenObject.groupName);
+		object.outerGroups = NameStore::program().listOf(writtenObject.outerGroups);
+		object.name = Name::of(writtenObject.name);
+		object.line = writtenObject.line;
+		object.objClass = Name::of(writtenObject.objClass);
+		object.isDrawn = writtenObject.isDrawn;
+		object.ownerState = Name::of(writtenObject.ownerState);
+		object.ownerScene = Name::of(writtenObject.ownerScene);
 		startFor(object).ownerScene = object.ownerScene;
 
-		if (rawObject.objClass == "projectile")
+		if (writtenObject.objClass == "projectile")
 		{
-			rawObject.isVisible = false;
+			writtenObject.isVisible = false;
 		}
 
-		object.isVisible = rawObject.isVisible;
-		object.exists = rawObject.exists;
-		startFor(object).exists = rawObject.exists;
+		object.isVisible = writtenObject.isVisible;
+		object.exists = writtenObject.exists;
+		startFor(object).exists = writtenObject.exists;
 		// One that does not exist is in nothing that looks for what is out
 		// there, as one taken out of play is not.
 		if (!object.exists) { object.isVisible = false; }
-		object.most = rawObject.most;
+		object.most = writtenObject.most;
 	}
 
 	// makeObject's numbers: its variables, then where it starts, what it
 	// follows, its velocity, acceleration and heading.
-	void Evaluator::buildNumbers(WrittenObject& rawObject, Object& object, Vector2f cellOffset, const std::vector<std::string>& positionSizeDependencies, const std::string& where)
+	void Evaluator::buildNumbers(WrittenObject& writtenObject, Object& object, Vector2f cellOffset, const std::vector<std::string>& positionSizeDependencies, const std::string& where)
 	{
 		// Its variables first, so its position and velocity can use them
 		// (a serve drawn as an angle: its speed times the cosine of its angle).
-		for (auto& rawVariable : rawObject.variable)
+		for (auto& writtenVariable : writtenObject.variable)
 		{
-			const float value = evaluateStart(rawVariable.second, where);
-			object.variable[Name::of(rawVariable.first)] = value;
-			startFor(object).variable[Name::of(rawVariable.first)] = value;
+			const float value = evaluateStart(writtenVariable.second, where);
+			object.variable[Name::of(writtenVariable.first)] = value;
+			startFor(object).variable[Name::of(writtenVariable.first)] = value;
 
 			// Keep the cross-object symbol table entry (registered above,
 			// before any expression compiled) up to date with the real
 			// value now that it's known.
-			objectVariables[rawObject.name + "." + rawVariable.first] = value;
+			objectVariables[writtenObject.name + "." + writtenVariable.first] = value;
 		}
 
-		object.startDrawsRandom = rawObject.rawPosition.x.drawsRandom() || rawObject.rawPosition.y.drawsRandom()
-			|| rawObject.rawVelocity.x.drawsRandom() || rawObject.rawVelocity.y.drawsRandom()
-			|| std::any_of(rawObject.variable.begin(), rawObject.variable.end(), [](const auto& variable) { return variable.second.drawsRandom(); });
+		object.startDrawsRandom = writtenObject.writtenPosition.x.drawsRandom() || writtenObject.writtenPosition.y.drawsRandom()
+			|| writtenObject.writtenVelocity.x.drawsRandom() || writtenObject.writtenVelocity.y.drawsRandom()
+			|| std::any_of(writtenObject.variable.begin(), writtenObject.variable.end(), [](const auto& variable) { return variable.second.drawsRandom(); });
 
-		startFor(object).position.x = evaluateStart(rawObject.rawPosition.x, where);
-		startFor(object).position.y = evaluateStart(rawObject.rawPosition.y, where);
+		startFor(object).position.x = evaluateStart(writtenObject.writtenPosition.x, where);
+		startFor(object).position.y = evaluateStart(writtenObject.writtenPosition.y, where);
 
 		// A cell is its group's position and its place in the
 		// group; start.position keeps both, so a reset puts each
@@ -236,30 +236,30 @@ namespace xge
 
 		// What it follows, worked out again every frame (Game::follow).
 		using Follow = Object::Follow;
-		if (rawObject.rawPosition.x.live) { parts->give(parts->follows, object.id).each.push_back({ Follow::Part::X, "", rawObject.rawPosition.x }); }
-		if (rawObject.rawPosition.y.live) { parts->give(parts->follows, object.id).each.push_back({ Follow::Part::Y, "", rawObject.rawPosition.y }); }
-		if (rawObject.rawHeading && rawObject.rawHeading->live) { parts->give(parts->follows, object.id).each.push_back({ Follow::Part::Heading, "", *rawObject.rawHeading }); }
-		for (const auto& [name, value] : rawObject.variable)
+		if (writtenObject.writtenPosition.x.live) { parts->give(parts->follows, object.id).each.push_back({ Follow::Part::X, "", writtenObject.writtenPosition.x }); }
+		if (writtenObject.writtenPosition.y.live) { parts->give(parts->follows, object.id).each.push_back({ Follow::Part::Y, "", writtenObject.writtenPosition.y }); }
+		if (writtenObject.writtenHeading && writtenObject.writtenHeading->live) { parts->give(parts->follows, object.id).each.push_back({ Follow::Part::Heading, "", *writtenObject.writtenHeading }); }
+		for (const auto& [name, value] : writtenObject.variable)
 		{
 			if (value.live) { parts->give(parts->follows, object.id).each.push_back({ Follow::Part::Variable, name, value }); }
 		}
 
-		object.velocity.x = evaluate(rawObject.rawVelocity.x, where);
-		object.velocity.y = evaluate(rawObject.rawVelocity.y, where);
+		object.velocity.x = evaluate(writtenObject.writtenVelocity.x, where);
+		object.velocity.y = evaluate(writtenObject.writtenVelocity.y, where);
 
 		startFor(object).velocity = object.velocity;
 
-		if (rawObject.rawAcceleration)
+		if (writtenObject.writtenAcceleration)
 		{
-			object.acceleration.x = evaluate(rawObject.rawAcceleration->x, where);
-			object.acceleration.y = evaluate(rawObject.rawAcceleration->y, where);
+			object.acceleration.x = evaluate(writtenObject.writtenAcceleration->x, where);
+			object.acceleration.y = evaluate(writtenObject.writtenAcceleration->y, where);
 		}
 		startFor(object).acceleration = object.acceleration;
 
-		if (rawObject.rawHeading)
+		if (writtenObject.writtenHeading)
 		{
 			object.turning.hasHeading = true;
-			float degrees = std::fmod(evaluateStart(*rawObject.rawHeading, where), 360.0f);
+			float degrees = std::fmod(evaluateStart(*writtenObject.writtenHeading, where), 360.0f);
 			if (degrees < 0.0f) { degrees += 360.0f; }
 			object.heading = degrees;
 		}
@@ -277,122 +277,122 @@ namespace xge
 
 	// makeObject's ways of moving: drag, surface, friction, mass, pulls,
 	// seeking, light and dark, altitude, a tether and which way it faces.
-	void Evaluator::buildMotion(WrittenObject& rawObject, Object& object, const std::string& where)
+	void Evaluator::buildMotion(WrittenObject& writtenObject, Object& object, const std::string& where)
 	{
-		if (rawObject.rawDrag)
+		if (writtenObject.writtenDrag)
 		{
-			object.motion.drag = lossRate(evaluate(*rawObject.rawDrag, where), where + " > <drag>");
+			object.motion.drag = lossRate(evaluate(*writtenObject.writtenDrag, where), where + " > <drag>");
 		}
 
-		if (rawObject.hasSurface)
+		if (writtenObject.hasSurface)
 		{
 			Object::Surface surface;
-			if (rawObject.rawSurfaceDrag)
+			if (writtenObject.writtenSurfaceDrag)
 			{
-				surface.drag = lossRate(evaluate(*rawObject.rawSurfaceDrag, where + " > <surface> > <drag>"), where + " > <surface> > <drag>");
+				surface.drag = lossRate(evaluate(*writtenObject.writtenSurfaceDrag, where + " > <surface> > <drag>"), where + " > <surface> > <drag>");
 			}
-			if (rawObject.rawSurfaceGrip)
+			if (writtenObject.writtenSurfaceGrip)
 			{
-				surface.grip = lossRate(evaluate(*rawObject.rawSurfaceGrip, where + " > <surface> > <grip>"), where + " > <surface> > <grip>");
+				surface.grip = lossRate(evaluate(*writtenObject.writtenSurfaceGrip, where + " > <surface> > <grip>"), where + " > <surface> > <grip>");
 			}
 			parts->surfaces.add(object.id, parts->orderOf(object.id), surface);
 		}
 
-		if (rawObject.rawFriction)
+		if (writtenObject.writtenFriction)
 		{
 			parts->rests.add(object.id, parts->orderOf(object.id), {});
-			object.motion.friction = evaluate(*rawObject.rawFriction, where);
+			object.motion.friction = evaluate(*writtenObject.writtenFriction, where);
 			if (object.motion.friction < 0.0f)
 			{
 				throw std::runtime_error(where + ": <friction> is " + std::to_string(object.motion.friction) + "; expected 0 or more");
 			}
 		}
 
-		if (rawObject.rawMass)
+		if (writtenObject.writtenMass)
 		{
-			object.motion.mass = evaluate(*rawObject.rawMass, where);
+			object.motion.mass = evaluate(*writtenObject.writtenMass, where);
 			if (!(object.motion.mass > 0.0f))
 			{
 				throw std::runtime_error(where + ": <mass> is " + formatDisplayNumber(object.motion.mass) + "; expected more than 0");
 			}
 		}
 
-		if (!rawObject.rawPulls.empty() || !rawObject.seekTarget.empty())
+		if (!writtenObject.writtenPulls.empty() || !writtenObject.seekTarget.empty())
 		{
 			Object::Pull& pull = parts->pulls.add(object.id, parts->orderOf(object.id), {});
-			for (const auto& [name, strength] : rawObject.rawPulls)
+			for (const auto& [name, strength] : writtenObject.writtenPulls)
 			{
 				pull.toward.emplace_back(name, evaluate(strength, where + " > <pull object=\"" + name + "\">"));
 			}
-			if (!rawObject.seekTarget.empty())
+			if (!writtenObject.seekTarget.empty())
 			{
-				pull.seek = rawObject.seekTarget;
-				pull.seekRate = evaluate(rawObject.rawSeek, where + " > <seek>");
+				pull.seek = writtenObject.seekTarget;
+				pull.seekRate = evaluate(writtenObject.writtenSeek, where + " > <seek>");
 				if (pull.seekRate < 0.0f) { throw std::runtime_error(where + ": <seek> turns " + formatDisplayNumber(pull.seekRate) + " degrees a second; expected 0 or more"); }
 			}
 		}
 
-		if (rawObject.rawLight)
+		if (writtenObject.writtenLight)
 		{
-			object.light = evaluate(*rawObject.rawLight, where + " > <light>");
+			object.light = evaluate(*writtenObject.writtenLight, where + " > <light>");
 			if (object.light < 0.0f) { throw std::runtime_error(where + ": <light> reaches " + formatDisplayNumber(object.light) + " pixels; expected 0 or more"); }
 			startFor(object).light = object.light;
-			if (!rawObject.lightPast.empty()) { parts->lightPasts.add(object.id, parts->orderOf(object.id), { NameStore::program().of(rawObject.lightPast) }); }
+			if (!writtenObject.lightPast.empty()) { parts->lightPasts.add(object.id, parts->orderOf(object.id), { NameStore::program().of(writtenObject.lightPast) }); }
 		}
-		if (rawObject.dark == "unlit") { object.dark.kind = Object::Darkness::Unlit; }
-		else if (rawObject.dark == "unseen") { object.dark.kind = Object::Darkness::Unseen; }
+		if (writtenObject.dark == "unlit") { object.dark.kind = Object::Darkness::Unlit; }
+		else if (writtenObject.dark == "unseen") { object.dark.kind = Object::Darkness::Unseen; }
 		object.dark.hidden = object.dark.kind != Object::Darkness::None;
 
-		Object::Aloft* aloft = rawObject.hasAltitude || !rawObject.shadowOf.empty() ? &parts->alofts.add(object.id, parts->orderOf(object.id), {}) : nullptr;
-		if (rawObject.hasAltitude)
+		Object::Aloft* aloft = writtenObject.hasAltitude || !writtenObject.shadowOf.empty() ? &parts->alofts.add(object.id, parts->orderOf(object.id), {}) : nullptr;
+		if (writtenObject.hasAltitude)
 		{
 			const std::string here = where + " > <altitude>";
 			const auto given = [&](const WrittenValue& value) { return !(value.kind == WrittenValue::Kind::Expression && value.text.empty()); };
 			aloft->has = true;
-			object.altitude = given(rawObject.rawAltitude) ? evaluate(rawObject.rawAltitude, here) : 0.0f;
-			object.rise = given(rawObject.rawRise) ? evaluate(rawObject.rawRise, here) : 0.0f;
-			aloft->fall = given(rawObject.rawFall) ? evaluate(rawObject.rawFall, here) : 0.0f;
-			aloft->bounce = given(rawObject.rawAltitudeBounce) ? evaluate(rawObject.rawAltitudeBounce, here) : 0.0f;
+			object.altitude = given(writtenObject.writtenAltitude) ? evaluate(writtenObject.writtenAltitude, here) : 0.0f;
+			object.rise = given(writtenObject.writtenRise) ? evaluate(writtenObject.writtenRise, here) : 0.0f;
+			aloft->fall = given(writtenObject.writtenFall) ? evaluate(writtenObject.writtenFall, here) : 0.0f;
+			aloft->bounce = given(writtenObject.writtenAltitudeBounce) ? evaluate(writtenObject.writtenAltitudeBounce, here) : 0.0f;
 			if (object.altitude < 0.0f) { throw std::runtime_error(here + ": <start> is " + formatDisplayNumber(object.altitude) + "; it cannot start below the ground"); }
 			if (aloft->fall < 0.0f) { throw std::runtime_error(here + ": <fall> is " + formatDisplayNumber(aloft->fall) + "; expected 0 or more"); }
 			if (!(aloft->bounce >= 0.0f && aloft->bounce <= 1.0f)) { throw std::runtime_error(here + ": <bounce> is " + formatDisplayNumber(aloft->bounce) + "; expected 0 up to 1"); }
 			startFor(object).altitude = object.altitude;
 			startFor(object).rise = object.rise;
 		}
-		if (aloft) { aloft->shadowOf = rawObject.shadowOf; }
+		if (aloft) { aloft->shadowOf = writtenObject.shadowOf; }
 
-		if (rawObject.sprite.kind == "tether")
+		if (writtenObject.sprite.kind == "tether")
 		{
-			if (rawObject.rawHeading || !rawObject.looks.empty() || rawObject.hasAnimation)
+			if (writtenObject.writtenHeading || !writtenObject.looks.empty() || writtenObject.hasAnimation)
 			{
 				throw std::runtime_error(where + ": a <tether> is drawn where its ends are; it has no <heading>, other looks or <animation>");
 			}
 			Object::Tether& tether = parts->tethers.add(object.id, parts->orderOf(object.id), {});
-			tether.from = rawObject.sprite.tetherFrom;
-			tether.to = rawObject.sprite.tetherTo;
-			if (!rawObject.sprite.thickness.text.empty() || rawObject.sprite.thickness.kind != WrittenValue::Kind::Expression)
+			tether.from = writtenObject.sprite.tetherFrom;
+			tether.to = writtenObject.sprite.tetherTo;
+			if (!writtenObject.sprite.thickness.text.empty() || writtenObject.sprite.thickness.kind != WrittenValue::Kind::Expression)
 			{
-				tether.thickness = static_cast<int>(std::lround(evaluate(rawObject.sprite.thickness, where)));
+				tether.thickness = static_cast<int>(std::lround(evaluate(writtenObject.sprite.thickness, where)));
 				if (tether.thickness < 1) { throw std::runtime_error(where + ": a <tether> has a <thickness> under 1"); }
 			}
-			tether.color = colorFromName(rawObject.sprite.color.empty() ? "color.white" : rawObject.sprite.color);
+			tether.color = colorFromName(writtenObject.sprite.color.empty() ? "color.white" : writtenObject.sprite.color);
 		}
 
-		if (!rawObject.facing.empty())
+		if (!writtenObject.facing.empty())
 		{
 			object.hasFacing = true;
-			object.facing = rawObject.facing == "down" ? Direction::Down
-				: rawObject.facing == "left" ? Direction::Left
-				: rawObject.facing == "right" ? Direction::Right
+			object.facing = writtenObject.facing == "down" ? Direction::Down
+				: writtenObject.facing == "left" ? Direction::Left
+				: writtenObject.facing == "right" ? Direction::Right
 				: Direction::Up;
 		}
 		startFor(object).facing = object.facing;
 	}
 
 	// makeObject's timers, a named one's time left a number of its own.
-	void Evaluator::buildTimers(WrittenObject& rawObject, Object& object, const std::string& where)
+	void Evaluator::buildTimers(WrittenObject& writtenObject, Object& object, const std::string& where)
 	{
-		object.kind->timers = processTimers(rawObject.timers, where);
+		object.kind->timers = processTimers(writtenObject.timers, where);
 		if (!object.kind->timers.empty()) { parts->clocks.add(object.id, parts->orderOf(object.id), std::vector<Timer::Clock>(object.kind->timers.size())); }
 		for (const Timer& timer : object.kind->timers)
 		{
@@ -401,13 +401,13 @@ namespace xge
 			const float left = std::ceil(timer.seconds);
 			object.variable[timer.name] = left;
 			startFor(object).variable[timer.name] = left;
-			objectVariables[rawObject.name + "." + timer.name] = left;
+			objectVariables[writtenObject.name + "." + timer.name] = left;
 		}
 	}
 
 	// makeObject's looks given it, the first one's animation, the look for
 	// each way it moves (<poses>) and for where what it is joined to lies.
-	void Evaluator::buildLookParts(WrittenObject& rawObject, Object& object, const std::vector<Object::Look>& looks, const std::string& where)
+	void Evaluator::buildLookParts(WrittenObject& writtenObject, Object& object, const std::vector<Object::Look>& looks, const std::string& where)
 	{
 		object.looks.set->all = looks;
 
@@ -424,10 +424,10 @@ namespace xge
 				if (time.live) { parts->give(parts->follows, object.id).each.push_back({ Follow::Part::Seconds, "", time, look, i }); }
 			}
 		};
-		if (rawObject.hasAnimation) { followSeconds(rawObject.animation.interval, rawObject.animation.times, std::string::npos); }
-		for (std::size_t i = 0; i < rawObject.looks.size() && i < looks.size(); ++i)
+		if (writtenObject.hasAnimation) { followSeconds(writtenObject.animation.interval, writtenObject.animation.times, std::string::npos); }
+		for (std::size_t i = 0; i < writtenObject.looks.size() && i < looks.size(); ++i)
 		{
-			if (!rawObject.looks[i].frames.empty()) { followSeconds(rawObject.looks[i].interval, rawObject.looks[i].times, i); }
+			if (!writtenObject.looks[i].frames.empty()) { followSeconds(writtenObject.looks[i].interval, writtenObject.looks[i].times, i); }
 		}
 		if (!looks.empty() && !looks.front().frames.shows().bitmaps.empty())
 		{
@@ -436,12 +436,12 @@ namespace xge
 		}
 
 		// The look for each way it moves; one left out is another's.
-		if (!rawObject.poses.empty())
+		if (!writtenObject.poses.empty())
 		{
 			const auto lookOf = [&](const std::string& pose) -> std::optional<std::size_t>
 			{
-				const auto named = rawObject.poses.find(pose);
-				if (named == rawObject.poses.end()) { return std::nullopt; }
+				const auto named = writtenObject.poses.find(pose);
+				if (named == writtenObject.poses.end()) { return std::nullopt; }
 				for (std::size_t i = 0; i < looks.size(); ++i)
 				{
 					if (looks[i].name == named->second) { return i; }
@@ -466,12 +466,12 @@ namespace xge
 		}
 
 		// The look for where the piece it is joined to lies.
-		if (!rawObject.joins.empty())
+		if (!writtenObject.joins.empty())
 		{
 			std::size_t at = 0;
 			for (const char* join : { "alone", "left", "right", "up", "down" })
 			{
-				const std::string& name = rawObject.joins.at(join);
+				const std::string& name = writtenObject.joins.at(join);
 				const auto look = std::find_if(looks.begin(), looks.end(), [&](const Object::Look& each) { return each.name == name; });
 				if (look == looks.end())
 				{
@@ -487,10 +487,10 @@ namespace xge
 	}
 
 	// makeObject's board-game moves and marks, each set's look found.
-	void Evaluator::buildMoves(WrittenObject& rawObject, Object& object, const std::vector<Object::Look>& looks, const std::string& where)
+	void Evaluator::buildMoves(WrittenObject& writtenObject, Object& object, const std::vector<Object::Look>& looks, const std::string& where)
 	{
 		// A board game piece's moves, each set's look found.
-		for (const WrittenObject::WrittenMoveSet& rawSet : rawObject.moveSets)
+		for (const WrittenObject::WrittenMoveSet& writtenSet : writtenObject.moveSets)
 		{
 			const auto lookNamed = [&](const std::string& name, const std::string& at) -> std::size_t
 			{
@@ -505,41 +505,41 @@ namespace xge
 				return static_cast<std::size_t>(look - looks.begin());
 			};
 			Object::MoveSet set;
-			if (!rawSet.sprite.empty()) { set.look = lookNamed(rawSet.sprite, "<moves"); }
-			set.forced = rawSet.forced;
-			for (const WrittenObject::WrittenPieceMove& move : rawSet.moves) { set.moves.push_back({ move.jump, move.objClass, move.x, move.y }); }
-			if (!rawSet.promote.empty()) { set.promoteLook = lookNamed(rawSet.promote, "<moves> > <promote"); }
-			set.promoteRow = rawSet.promoteRow;
-			for (const WrittenObject::WrittenMoveSet::WrittenFlank& flank : rawSet.flanks) { set.flanks.push_back({ flank.objClass, flank.straight }); }
-			set.fall = rawSet.fall;
-			set.on = NameStore::program().of(rawSet.on);
-			set.closeClass = rawSet.closeClass;
-			set.closeObject = rawSet.closeObject;
+			if (!writtenSet.sprite.empty()) { set.look = lookNamed(writtenSet.sprite, "<moves"); }
+			set.forced = writtenSet.forced;
+			for (const WrittenObject::WrittenPieceMove& move : writtenSet.moves) { set.moves.push_back({ move.jump, move.objClass, move.x, move.y }); }
+			if (!writtenSet.promote.empty()) { set.promoteLook = lookNamed(writtenSet.promote, "<moves> > <promote"); }
+			set.promoteRow = writtenSet.promoteRow;
+			for (const WrittenObject::WrittenMoveSet::WrittenFlank& flank : writtenSet.flanks) { set.flanks.push_back({ flank.objClass, flank.straight }); }
+			set.fall = writtenSet.fall;
+			set.on = NameStore::program().of(writtenSet.on);
+			set.closeClass = writtenSet.closeClass;
+			set.closeObject = writtenSet.closeObject;
 			parts->give(parts->moves, object.id).sets.push_back(std::move(set));
 		}
-		for (const WrittenObject::WrittenMarkSet& rawSet : rawObject.markSets)
+		for (const WrittenObject::WrittenMarkSet& writtenSet : writtenObject.markSets)
 		{
 			Object::MarkSet set;
-			if (!rawSet.sprite.empty())
+			if (!writtenSet.sprite.empty())
 			{
-				const auto look = std::find_if(looks.begin(), looks.end(), [&](const Object::Look& each) { return each.name == rawSet.sprite; });
+				const auto look = std::find_if(looks.begin(), looks.end(), [&](const Object::Look& each) { return each.name == writtenSet.sprite; });
 				if (look == looks.end())
 				{
 					std::vector<std::string> names;
 					for (const Object::Look& each : looks) { names.push_back(each.name); }
-					throw std::runtime_error(where + " > <marks sprite=\"" + rawSet.sprite + "\">: the object has no look of that name"
-						+ (names.empty() ? std::string(" (it has no looks)") : didYouMean(rawSet.sprite, names) + ". Its looks are: " + listOf(names)));
+					throw std::runtime_error(where + " > <marks sprite=\"" + writtenSet.sprite + "\">: the object has no look of that name"
+						+ (names.empty() ? std::string(" (it has no looks)") : didYouMean(writtenSet.sprite, names) + ". Its looks are: " + listOf(names)));
 				}
 				set.look = static_cast<std::size_t>(look - looks.begin());
 			}
-			for (const WrittenObject::WrittenMark& raw : rawSet.marks)
+			for (const WrittenObject::WrittenMark& written : writtenSet.marks)
 			{
 				Object::Mark mark;
-				mark.kind = raw.kind == "held" ? Object::Mark::Kind::Held : raw.kind == "moves" ? Object::Mark::Kind::Moves
-					: raw.kind == "movable" ? Object::Mark::Kind::Movable : raw.kind == "put" ? Object::Mark::Kind::Put : Object::Mark::Kind::Last;
-				mark.object = raw.object;
-				mark.objClass = raw.objClass;
-				mark.variable = raw.variable;
+				mark.kind = written.kind == "held" ? Object::Mark::Kind::Held : written.kind == "moves" ? Object::Mark::Kind::Moves
+					: written.kind == "movable" ? Object::Mark::Kind::Movable : written.kind == "put" ? Object::Mark::Kind::Put : Object::Mark::Kind::Last;
+				mark.object = written.object;
+				mark.objClass = written.objClass;
+				mark.variable = written.variable;
 				set.marks.push_back(std::move(mark));
 			}
 			parts->give(parts->pickers, object.id).marks.sets.push_back(std::move(set));
@@ -547,72 +547,72 @@ namespace xge
 	}
 
 	// makeObject's holder (<holds>), hand, held item and turns.
-	void Evaluator::buildHolder(WrittenObject& rawObject, Object& object, std::uint64_t order, const std::string& where)
+	void Evaluator::buildHolder(WrittenObject& writtenObject, Object& object, std::uint64_t order, const std::string& where)
 	{
 		// Holders: a holder's rules, a hand, a held member.
-		if (rawObject.holder.is)
+		if (writtenObject.holder.is)
 		{
-			const WrittenObject::WrittenHolder& raw = rawObject.holder;
+			const WrittenObject::WrittenHolder& written = writtenObject.holder;
 			const auto number = [&](const WrittenValue& value) { return value.kind == WrittenValue::Kind::Expression && value.text.empty() ? 0.0f : evaluate(value, where); };
 			Holder& holder = parts->holders.add(object.id, order, {});
-			holder.holdsClass = raw.holdsClass;
-			holder.holdsSprite = raw.holdsSprite;
-			holder.topSprite = raw.topSprite;
-			holder.spread = { number(raw.spreadX), number(raw.spreadY) };
-			holder.lookSpread = { number(raw.lookSpreadX), number(raw.lookSpreadY) };
-			holder.spreadSprite = raw.spreadSprite;
-			holder.startCount = static_cast<int>(std::lround(number(raw.startCount)));
-			holder.startMore = static_cast<int>(std::lround(number(raw.startMore)));
-			holder.startShuffled = raw.startShuffled;
-			holder.pickedInto = raw.pickedInto;
-			holder.pickedSends = !raw.pickedSends ? 0 : std::max(1, static_cast<int>(std::lround(number(*raw.pickedSends))));
-			holder.emptyFrom = raw.emptyFrom;
-			holder.emptyRandom = raw.emptyRandom;
-			holder.pickedSound = raw.pickedSound;
-			holder.emptyLeave = std::max(0, static_cast<int>(std::lround(number(raw.emptyLeave))));
-			holder.spreadWidth = number(raw.spreadWidth);
-			holder.carry = raw.carry;
-			holder.orderBy = NameStore::program().of(raw.orderBy);
-			holder.counts = raw.counts;
-			holder.lift = number(raw.lift);
-			holder.pointsMost = raw.hasPoints ? number(raw.pointsMost) : 0.0f;
-			holder.score = raw.score;
-			holder.scoreWith = raw.scoreWith;
-			holder.scoreFull = raw.scoreFull;
-			holder.scoreBest = raw.scoreBest;
-			holder.melds = raw.melds;
-			holder.meldsBest = raw.meldsBest;
-			holder.takes = raw.takes;
+			holder.holdsClass = written.holdsClass;
+			holder.holdsSprite = written.holdsSprite;
+			holder.topSprite = written.topSprite;
+			holder.spread = { number(written.spreadX), number(written.spreadY) };
+			holder.lookSpread = { number(written.lookSpreadX), number(written.lookSpreadY) };
+			holder.spreadSprite = written.spreadSprite;
+			holder.startCount = static_cast<int>(std::lround(number(written.startCount)));
+			holder.startMore = static_cast<int>(std::lround(number(written.startMore)));
+			holder.startShuffled = written.startShuffled;
+			holder.pickedInto = written.pickedInto;
+			holder.pickedSends = !written.pickedSends ? 0 : std::max(1, static_cast<int>(std::lround(number(*written.pickedSends))));
+			holder.emptyFrom = written.emptyFrom;
+			holder.emptyRandom = written.emptyRandom;
+			holder.pickedSound = written.pickedSound;
+			holder.emptyLeave = std::max(0, static_cast<int>(std::lround(number(written.emptyLeave))));
+			holder.spreadWidth = number(written.spreadWidth);
+			holder.carry = written.carry;
+			holder.orderBy = NameStore::program().of(written.orderBy);
+			holder.counts = written.counts;
+			holder.lift = number(written.lift);
+			holder.pointsMost = written.hasPoints ? number(written.pointsMost) : 0.0f;
+			holder.score = written.score;
+			holder.scoreWith = written.scoreWith;
+			holder.scoreFull = written.scoreFull;
+			holder.scoreBest = written.scoreBest;
+			holder.melds = written.melds;
+			holder.meldsBest = written.meldsBest;
+			holder.takes = written.takes;
 		}
-		if (rawObject.hand)
+		if (writtenObject.hand)
 		{
 			Hand& hand = parts->hands.add(object.id, order, {});
-			hand.own = rawObject.handHolder;
-			hand.seat = rawObject.handSeat;
-			hand.team = rawObject.handTeam;
-			hand.holds = rawObject.handHolds;
+			hand.own = writtenObject.handHolder;
+			hand.seat = writtenObject.handSeat;
+			hand.team = writtenObject.handTeam;
+			hand.holds = writtenObject.handHolds;
 		}
-		if (rawObject.held) { parts->items.add(object.id, order, { true, rawObject.item.startHolder, rawObject.item.worths, 0, 0, false }); }
-		if (rawObject.takesTurns) { parts->turns.add(object.id, order, { true, rawObject.turnsSprite, rawObject.ownsClass }); }
+		if (writtenObject.held) { parts->items.add(object.id, order, { true, writtenObject.item.startHolder, writtenObject.item.worths, 0, 0, false }); }
+		if (writtenObject.takesTurns) { parts->turns.add(object.id, order, { true, writtenObject.turnsSprite, writtenObject.ownsClass }); }
 	}
 
 	// makeObject's mirror, grip, timers' looks, its tile on a map, a
 	// maze's walls and its pivot.
-	void Evaluator::buildPlace(WrittenObject& rawObject, Object& object, const std::vector<Object::Look>& looks, const std::string& where)
+	void Evaluator::buildPlace(WrittenObject& writtenObject, Object& object, const std::vector<Object::Look>& looks, const std::string& where)
 	{
-		if (!rawObject.mirror.empty())
+		if (!writtenObject.mirror.empty())
 		{
-			if (rawObject.rawHeading) { throw std::runtime_error(where + ": <mirror> flips a picture that does not turn; it has a <heading>"); }
+			if (writtenObject.writtenHeading) { throw std::runtime_error(where + ": <mirror> flips a picture that does not turn; it has a <heading>"); }
 			object.mirror.on = true;
-			object.mirror.way = rawObject.mirror == "right" ? Direction::Right : Direction::Left;
+			object.mirror.way = writtenObject.mirror == "right" ? Direction::Right : Direction::Left;
 			object.mirror.goingLeft = object.facing == Direction::Left;
 			object.looks.set->flips = flipsOf(object);
 			object.faceMirror();
 		}
 
-		if (rawObject.rawGrip)
+		if (writtenObject.writtenGrip)
 		{
-			object.motion.grip = lossRate(evaluate(*rawObject.rawGrip, where + " > <grip>"), where + " > <grip>");
+			object.motion.grip = lossRate(evaluate(*writtenObject.writtenGrip, where + " > <grip>"), where + " > <grip>");
 		}
 		for (const Timer& timer : object.kind->timers)
 		{
@@ -626,59 +626,59 @@ namespace xge
 		}
 
 		// On a map: which tile, and the map itself, for what walks it.
-		if (rawObject.cell.mapColumn > 0)
+		if (writtenObject.cell.mapColumn > 0)
 		{
 			// A piece of a cell map, a chain or a shape has a cell part.
-			Object::Cells* cell = rawObject.cell.cells || !rawObject.chain.empty() || !rawObject.shapeRows.empty()
+			Object::Cells* cell = writtenObject.cell.cells || !writtenObject.chain.empty() || !writtenObject.shapeRows.empty()
 				? &parts->cells.add(object.id, parts->orderOf(object.id), {}) : nullptr;
 			Object::MapPlace& mapPlace = parts->mapPlaces.add(object.id, parts->orderOf(object.id), {});
-			mapPlace.name = Name::of(rawObject.cell.map);
+			mapPlace.name = Name::of(writtenObject.cell.map);
 			mapPlace.home = mapPlace.name;
-			if (cell) { cell->chain = rawObject.chain; }
-			mapPlace.column = rawObject.cell.mapColumn - 1;
-			mapPlace.row = rawObject.cell.mapRow - 1;
-			mapPlace.columns = rawObject.cell.mapColumns;
-			mapPlace.rows = rawObject.cell.mapRows;
-			mapPlace.tile = { evaluate(rawObject.cell.tileWidth, where), evaluate(rawObject.cell.tileHeight, where) };
+			if (cell) { cell->chain = writtenObject.chain; }
+			mapPlace.column = writtenObject.cell.mapColumn - 1;
+			mapPlace.row = writtenObject.cell.mapRow - 1;
+			mapPlace.columns = writtenObject.cell.mapColumns;
+			mapPlace.rows = writtenObject.cell.mapRows;
+			mapPlace.tile = { evaluate(writtenObject.cell.tileWidth, where), evaluate(writtenObject.cell.tileHeight, where) };
 			mapPlace.origin = startFor(object).position - object.layout.cellOffset;
 
 			// On a cell map: the cell it is in, its map's checks, and a
 			// shape's cells, each the object its character picks.
-			object.onCells = rawObject.cell.cells;
+			object.onCells = writtenObject.cell.cells;
 			if (object.onCells)
 			{
-				cell->place.column = cell->start.column = static_cast<float>(rawObject.cell.mapColumn);
-				cell->place.row = cell->start.row = static_cast<float>(rawObject.cell.mapRow);
-				for (const WrittenCheck& check : rawObject.cell.checks)
+				cell->place.column = cell->start.column = static_cast<float>(writtenObject.cell.mapColumn);
+				cell->place.row = cell->start.row = static_cast<float>(writtenObject.cell.mapRow);
+				for (const WrittenCheck& check : writtenObject.cell.checks)
 				{
-					cell->checks.push_back({ check.kind, check.objClass, processCommands(check.commands, "map '" + rawObject.cell.map + "' > <checks> > <" + check.kind + ">"), check.count, check.straight, check.alike });
+					cell->checks.push_back({ check.kind, check.objClass, processCommands(check.commands, "map '" + writtenObject.cell.map + "' > <checks> > <" + check.kind + ">"), check.count, check.straight, check.alike });
 				}
 			}
-			for (std::size_t row = 0; row < rawObject.shapeRows.size(); ++row)
+			for (std::size_t row = 0; row < writtenObject.shapeRows.size(); ++row)
 			{
-				const std::string& cells = rawObject.shapeRows[row];
-				cell->shapeSize = std::max({ cell->shapeSize, static_cast<int>(cells.size()), static_cast<int>(rawObject.shapeRows.size()) });
+				const std::string& cells = writtenObject.shapeRows[row];
+				cell->shapeSize = std::max({ cell->shapeSize, static_cast<int>(cells.size()), static_cast<int>(writtenObject.shapeRows.size()) });
 				for (std::size_t column = 0; column < cells.size(); ++column)
 				{
-					const auto piece = rawObject.shapePieces.find(cells[column]);
-					if (piece == rawObject.shapePieces.end()) { continue; }
+					const auto piece = writtenObject.shapePieces.find(cells[column]);
+					if (piece == writtenObject.shapePieces.end()) { continue; }
 					cell->shape.push_back({ static_cast<int>(column), static_cast<int>(row), piece->second });
 				}
 			}
 			if (cell && cell->shapeSize > 0 && cell->shape.empty())
 			{
-				throw std::runtime_error(where + " > <shape>: none of its characters picks an object of map '" + rawObject.cell.map + "'");
+				throw std::runtime_error(where + " > <shape>: none of its characters picks an object of map '" + writtenObject.cell.map + "'");
 			}
 			if (cell) { cell->shapeStart = cell->shape; }
 		}
-		if (!rawObject.maze.map.empty())
+		if (!writtenObject.maze.map.empty())
 		{
 			Maze& maze = parts->mazes.add(object.id, parts->orderOf(object.id), {});
-			maze.map = rawObject.maze.map;
-			maze.walls = rawObject.maze.walls;
-			maze.slows = rawObject.maze.slows;
+			maze.map = writtenObject.maze.map;
+			maze.walls = writtenObject.maze.walls;
+			maze.slows = writtenObject.maze.slows;
 		}
-		for (const MazeWall& wall : rawObject.maze.walls)
+		for (const MazeWall& wall : writtenObject.maze.walls)
 		{
 			if (!wall.sprite.empty() && std::none_of(looks.begin(), looks.end(), [&](const Object::Look& look) { return look.name == wall.sprite; }))
 			{
@@ -691,7 +691,7 @@ namespace xge
 		// <pivot>: the point it turns about, from the middle of the picture as
 		// drawn; its <position> is where that point is on the screen, so the
 		// square of the turned picture goes where puts it there.
-		if (rawObject.rawPivot)
+		if (writtenObject.writtenPivot)
 		{
 			if (object.drawn.turnables.empty() || !object.drawn.bitmap)
 			{
@@ -713,7 +713,7 @@ namespace xge
 			{
 				middle = { static_cast<float>(drawn.picture->width) / 2.0f, static_cast<float>(drawn.picture->height) / 2.0f };
 			}
-			const Vector2f pivot{ evaluate(rawObject.rawPivot->x, where + " > <pivot>"), evaluate(rawObject.rawPivot->y, where + " > <pivot>") };
+			const Vector2f pivot{ evaluate(writtenObject.writtenPivot->x, where + " > <pivot>"), evaluate(writtenObject.writtenPivot->y, where + " > <pivot>") };
 			object.turning.hasPivot = true;
 			object.turning.pivotFromMiddle = pivot - middle;
 			object.pivotDegrees = wholeDegrees(object.heading);
@@ -726,13 +726,13 @@ namespace xge
 
 	// makeObject's collisions: on or off, the kind, solid pixels, hitboxes
 	// (its own and each frame's), its edge rules and its rules with others.
-	void Evaluator::buildCollisions(WrittenObject& rawObject, Object& object, const std::vector<Object::Look>& looks, int thisLockstep, const std::string& where)
+	void Evaluator::buildCollisions(WrittenObject& writtenObject, Object& object, const std::vector<Object::Look>& looks, int thisLockstep, const std::string& where)
 	{
-		object.collisionsOn = rawObject.rawCollisionData.enabled;
+		object.collisionsOn = writtenObject.writtenCollisionData.enabled;
 		startFor(object).isVisible = object.isVisible;
 		startFor(object).collisionsOn = object.collisionsOn;
 		object.kind->collisionData.lockstep = thisLockstep;
-		object.kind->collisionData.type = rawObject.rawCollisionData.type;
+		object.kind->collisionData.type = writtenObject.writtenCollisionData.type;
 
 		// A pixel collision tests the pixels that are drawn; a line
 		// drawing has them from the start, and a circle or rectangle
@@ -746,15 +746,15 @@ namespace xge
 
 		// Which of its pixels touch: only for a picture of rows, tested
 		// pixel by pixel.
-		if (!rawObject.rawCollisionData.solid.empty())
+		if (!writtenObject.writtenCollisionData.solid.empty())
 		{
 			if (object.kind->collisionData.type != CollisionType::Pixel)
 			{
 				throw std::runtime_error(where + ": a <solid char> says which pixels touch, so it needs <type>pixel</type>");
 			}
 			const auto rows = [](const WrittenSprite& sprite) { return sprite.kind == "bitmap"; };
-			if (!rows(rawObject.sprite) || !std::all_of(rawObject.looks.begin(), rawObject.looks.end(), rows)
-				|| !std::all_of(rawObject.animation.frames.begin(), rawObject.animation.frames.end(), rows))
+			if (!rows(writtenObject.sprite) || !std::all_of(writtenObject.looks.begin(), writtenObject.looks.end(), rows)
+				|| !std::all_of(writtenObject.animation.frames.begin(), writtenObject.animation.frames.end(), rows))
 			{
 				throw std::runtime_error(where + ": a <solid char> names characters of a <bitmap>, and every sprite of the object must be one");
 			}
@@ -762,9 +762,9 @@ namespace xge
 
 		// What it touches with, if not its picture.
 		object.kind->collisionData.hitboxes.clear();
-		for (const WrittenHitbox& raw : rawObject.rawCollisionData.hitboxes)
+		for (const WrittenHitbox& written : writtenObject.writtenCollisionData.hitboxes)
 		{
-			object.kind->collisionData.hitboxes.push_back(makeHitbox(raw, object, where + " > <hitbox>"));
+			object.kind->collisionData.hitboxes.push_back(makeHitbox(written, object, where + " > <hitbox>"));
 		}
 		// And each animation frame's own.
 		const auto frameHitboxes = [&](const std::vector<std::vector<WrittenHitbox>>& written, const std::string& here)
@@ -773,23 +773,23 @@ namespace xge
 			for (const std::vector<WrittenHitbox>& frame : written)
 			{
 				made.emplace_back();
-				for (const WrittenHitbox& raw : frame) { made.back().push_back(makeHitbox(raw, object, here + " > <frame> > <hitbox>")); }
+				for (const WrittenHitbox& hitbox : frame) { made.back().push_back(makeHitbox(hitbox, object, here + " > <frame> > <hitbox>")); }
 			}
 			return made;
 		};
-		if (auto own = frameHitboxes(rawObject.animation.frameHitboxes, where + " > <animation>"); !own.empty()) { object.animation.frames.edit().hitboxes = std::move(own); }
-		for (std::size_t i = 0; i < object.looks.all().size() && i < rawObject.looks.size(); ++i)
+		if (auto own = frameHitboxes(writtenObject.animation.frameHitboxes, where + " > <animation>"); !own.empty()) { object.animation.frames.edit().hitboxes = std::move(own); }
+		for (std::size_t i = 0; i < object.looks.all().size() && i < writtenObject.looks.size(); ++i)
 		{
-			auto made = frameHitboxes(rawObject.looks[i].frameHitboxes, where + " > <animation name=\"" + rawObject.looks[i].name + "\">");
+			auto made = frameHitboxes(writtenObject.looks[i].frameHitboxes, where + " > <animation name=\"" + writtenObject.looks[i].name + "\">");
 			if (!made.empty()) { object.looks.set->all[i].frames.edit().hitboxes = std::move(made); }
 		}
 		if (object.looks.shown < object.looks.all().size() && !object.looks.all()[object.looks.shown].frames.shows().bitmaps.empty()) { object.animation.frames = object.looks.all()[object.looks.shown].frames; }
 
 		for (std::size_t edge = 0; edge < object.kind->collisionData.edges.size(); ++edge)
 		{
-			const EdgeRules<WrittenCommand>& raw = rawObject.rawCollisionData.edges[edge];
-			object.kind->collisionData.edges[edge] = { processCommands(raw.commands, where), raw.guards };
-			for (const EdgeGuard& edgeGuard : raw.guards)
+			const EdgeRules<WrittenCommand>& written = writtenObject.writtenCollisionData.edges[edge];
+			object.kind->collisionData.edges[edge] = { processCommands(written.commands, where), written.guards };
+			for (const EdgeGuard& edgeGuard : written.guards)
 			{
 				if (!edgeGuard.sprite.empty() && std::none_of(looks.begin(), looks.end(), [&](const Object::Look& look) { return look.name == edgeGuard.sprite; }))
 				{
@@ -798,47 +798,47 @@ namespace xge
 			}
 		}
 
-		for (auto& rawRule : rawObject.rawCollisionData.others)
+		for (auto& writtenRule : writtenObject.writtenCollisionData.others)
 		{
 			CollisionRule rule;
-			rule.line = rawRule.line;
-			rule.filterClass = rawRule.filterClass;
-			rule.filterObject = rawRule.filterObject;
-			rule.unlessClass = rawRule.unlessClass;
-			rule.throughClass = rawRule.throughClass;
-			rule.whileSprite = rawRule.whileSprite;
-			rule.hitbox = rawRule.hitbox;
-			rule.by = rawRule.by;
+			rule.line = writtenRule.line;
+			rule.filterClass = writtenRule.filterClass;
+			rule.filterObject = writtenRule.filterObject;
+			rule.unlessClass = writtenRule.unlessClass;
+			rule.throughClass = writtenRule.throughClass;
+			rule.whileSprite = writtenRule.whileSprite;
+			rule.hitbox = writtenRule.hitbox;
+			rule.by = writtenRule.by;
 			if (!rule.whileSprite.empty() && std::none_of(looks.begin(), looks.end(), [&](const Object::Look& look) { return look.name == rule.whileSprite; }))
 			{
 				throw std::runtime_error(where + ": a <collision sprite=\"" + rule.whileSprite + "\"> names no look of the object (a look is one of several named <sprite>s)");
 			}
-			const std::string& side = rawRule.side;
+			const std::string& side = writtenRule.side;
 			if (side == "top" || side == "vertical") { rule.sides.push_back(Edge::Top); }
 			if (side == "bottom" || side == "vertical") { rule.sides.push_back(Edge::Bottom); }
 			if (side == "left" || side == "horizontal") { rule.sides.push_back(Edge::Left); }
 			if (side == "right" || side == "horizontal") { rule.sides.push_back(Edge::Right); }
 			// One naming other is made, so checked, for each thing it can
 			// touch, and kept as made for the first (other is found as it runs).
-			for (std::size_t i = 1; loading && i < rawRule.touchable.size(); ++i)
+			for (std::size_t i = 1; loading && i < writtenRule.touchable.size(); ++i)
 			{
-				const std::string was = std::exchange(otherName, rawRule.touchable[i]);
-				rule.loadChecks.push_back(processCommands(rawRule.commands, where + ", touching '" + otherName + "'"));
+				const std::string was = std::exchange(otherName, writtenRule.touchable[i]);
+				rule.loadChecks.push_back(processCommands(writtenRule.commands, where + ", touching '" + otherName + "'"));
 				otherName = was;
 			}
-			const std::string was = std::exchange(otherName, rawRule.touchable.empty() ? std::string() : rawRule.touchable.front());
-			rule.commands = processCommands(rawRule.commands, where);
+			const std::string was = std::exchange(otherName, writtenRule.touchable.empty() ? std::string() : writtenRule.touchable.front());
+			rule.commands = processCommands(writtenRule.commands, where);
 			otherName = was;
 			object.kind->collisionData.others.push_back(std::move(rule));
 		}
 	}
 
 	// makeObject's actions.
-	void Evaluator::buildActions(WrittenObject& rawObject, Object& object, const std::string& where)
+	void Evaluator::buildActions(WrittenObject& writtenObject, Object& object, const std::string& where)
 	{
-		for (auto& rawAction : rawObject.action)
+		for (auto& writtenAction : writtenObject.action)
 		{
-			object.kind->action[rawAction.first] = processCommands(rawAction.second, where);
+			object.kind->action[writtenAction.first] = processCommands(writtenAction.second, where);
 		}
 	}
 }

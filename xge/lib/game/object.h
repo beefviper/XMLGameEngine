@@ -114,7 +114,7 @@ namespace xge
 		Name unlessClass;
 		// Its <condition>s and <any>s, gathered as an <all> (join None when
 		// it has none), and what they are made into: it runs only while it holds.
-		WrittenCondition rawCheck;
+		WrittenCondition writtenCheck;
 		std::optional<Condition> check;
 	};
 
@@ -630,27 +630,27 @@ namespace xge
 
 		// <most>: how many spawned of it can exist at once (0: no limit).
 		int most{ 0 };
-		WrittenVector2 rawPosition;
-		WrittenVector2 rawVelocity;
+		WrittenVector2 writtenPosition;
+		WrittenVector2 writtenVelocity;
 		// Each of these only when written.
-		std::optional<WrittenVector2> rawAcceleration;
-		std::optional<WrittenValue> rawHeading;
-		std::optional<WrittenVector2> rawPivot;  // the point of the picture its heading turns about
-		std::optional<WrittenValue> rawDrag;
-		std::optional<WrittenValue> rawFriction;
-		std::optional<WrittenValue> rawMass;
+		std::optional<WrittenVector2> writtenAcceleration;
+		std::optional<WrittenValue> writtenHeading;
+		std::optional<WrittenVector2> writtenPivot;  // the point of the picture its heading turns about
+		std::optional<WrittenValue> writtenDrag;
+		std::optional<WrittenValue> writtenFriction;
+		std::optional<WrittenValue> writtenMass;
 		// <surface>: the drag and grip it gives as ground (hasSurface,
 		// above), each if written.
-		std::optional<WrittenValue> rawSurfaceDrag;
-		std::optional<WrittenValue> rawSurfaceGrip;
+		std::optional<WrittenValue> writtenSurfaceDrag;
+		std::optional<WrittenValue> writtenSurfaceGrip;
 		// <pull object="sun">strength</pull>s: what pulls it, and how hard.
-		std::vector<std::pair<std::string, WrittenValue>> rawPulls;
+		std::vector<std::pair<std::string, WrittenValue>> writtenPulls;
 		// <seek object="ship">degrees</seek>: what it turns toward, and how
 		// fast; seekTarget empty for none.
 		std::string seekTarget;
-		WrittenValue rawSeek;
+		WrittenValue writtenSeek;
 		// <light>radius</light>, only when written.
-		std::optional<WrittenValue> rawLight;
+		std::optional<WrittenValue> writtenLight;
 		// <light>'s <past class>es: what its light does not shine through.
 		std::vector<std::string> lightPast;
 		// <dark>unlit</dark> or <dark>unseen</dark>; "" for neither.
@@ -658,10 +658,10 @@ namespace xge
 		// <altitude> with its <start>, <rise>, <fall> and <bounce>, each
 		// optional; only when hasAltitude.
 		bool hasAltitude{ false };
-		WrittenValue rawAltitude;
-		WrittenValue rawRise;
-		WrittenValue rawFall;
-		WrittenValue rawAltitudeBounce;
+		WrittenValue writtenAltitude;
+		WrittenValue writtenRise;
+		WrittenValue writtenFall;
+		WrittenValue writtenAltitudeBounce;
 		// <shadow object="ball" />: what it is the shadow of; "" for nothing.
 		std::string shadowOf;
 		std::string facing;          // "" when the object has no <facing>
@@ -676,7 +676,7 @@ namespace xge
 		std::string mirror;
 		// <grip>: how much of the way to what its moves ask for its velocity
 		// goes each frame, only when written; otherwise 1, all of it.
-		std::optional<WrittenValue> rawGrip;
+		std::optional<WrittenValue> writtenGrip;
 
 		// Every number of its motion, light and altitude that was written
 		// (not its pulls' or its variables', which go with a name, nor its
@@ -684,15 +684,15 @@ namespace xge
 		// are looked for in.
 		template <typename Visit> void forEachValue(Visit&& visit)
 		{
-			for (WrittenValue* each : { &rawPosition.x, &rawPosition.y, &rawVelocity.x, &rawVelocity.y, &rawSeek, &rawAltitude, &rawRise, &rawFall, &rawAltitudeBounce })
+			for (WrittenValue* each : { &writtenPosition.x, &writtenPosition.y, &writtenVelocity.x, &writtenVelocity.y, &writtenSeek, &writtenAltitude, &writtenRise, &writtenFall, &writtenAltitudeBounce })
 			{
 				visit(*each);
 			}
-			for (std::optional<WrittenVector2>* each : { &rawAcceleration, &rawPivot })
+			for (std::optional<WrittenVector2>* each : { &writtenAcceleration, &writtenPivot })
 			{
 				if (*each) { visit((*each)->x); visit((*each)->y); }
 			}
-			for (std::optional<WrittenValue>* each : { &rawHeading, &rawDrag, &rawFriction, &rawMass, &rawSurfaceDrag, &rawSurfaceGrip, &rawLight, &rawGrip })
+			for (std::optional<WrittenValue>* each : { &writtenHeading, &writtenDrag, &writtenFriction, &writtenMass, &writtenSurfaceDrag, &writtenSurfaceGrip, &writtenLight, &writtenGrip })
 			{
 				if (*each) { visit(**each); }
 			}
@@ -810,7 +810,7 @@ namespace xge
 		// that name or group behind it follow its trail (empty for none).
 		std::string chain;
 		std::vector<WrittenTimer> timers;
-		WrittenCollisionData rawCollisionData;
+		WrittenCollisionData writtenCollisionData;
 		std::map<std::string, std::vector<WrittenCommand>> action;
 		std::map<std::string, WrittenValue> variable;
 

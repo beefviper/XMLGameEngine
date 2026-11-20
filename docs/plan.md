@@ -45,7 +45,7 @@ Its own block of work, done before the tasks below: it touches every field of an
 
 - **The aim.** The engine does the same things with less: a resource is held once, an object carries only the parts it uses, a tag is written in few places, and the code reads from its names.
 - **What it must not do** is change what any game does. Every step here leaves every game playing exactly as before.
-- **One tag, twelve homes.** `<drag>` today is in the schema, the object reader, the group reader, `rawDrag` in `WrittenObject`, `load/build.cpp`, `Object::Motion`, the frame and the printer. CR5 and CR7 take homes away; CR1 took two hand-kept lists of an object's numbers, CR6 `data.xsl`'s two and the describer's.
+- **One tag, twelve homes.** `<drag>` today is in the schema, the object reader, the group reader, `writtenDrag` in `WrittenObject`, `load/build.cpp`, `Object::Motion`, the frame and the printer. CR5 and CR7 take homes away; CR1 took two hand-kept lists of an object's numbers, CR6 `data.xsl`'s two and the describer's.
 
 ### Rules for this block
 
@@ -209,8 +209,8 @@ The author's order: the resource manager and the components first, since the res
 ### CR9. Names and comments
 
 - **Steps.**
-  - [ ] **1. The author: the names table.** Propose the renames in one table in [engine-structure](designs/16-engine-structure.md#versions-of-one-value): `Raw...`/`raw...` (37 types, 32 fields) to `Written...`, and any type, part or function whose name no longer says what it is after CR2 to CR8. Stop for the author.
-  - [ ] **2. The renames, a family a commit (M).** By tool, not by hand; the generator's files and the docs with them. **Check:** all tests; `xgetest-generated`.
+  - [x] **1. The author: the names table.** Propose the renames in one table in [engine-structure](designs/16-engine-structure.md#names-plan-cr9): `Raw...`/`raw...` to `Written...`, and any type, part or function whose name no longer says what it is after CR2 to CR8. Stop for the author.
+  - [x] **2. The renames, a family a commit (M).** By tool, not by hand; the generator's files and the docs with them. **Check:** all tests; `xgetest-generated`.
   - [ ] **3. Comments, a folder a commit (M).** In `xge/lib`: a comment that repeats the code or stands in for a name goes, the name is fixed instead; one-line landmarks over sections and functions stay; a "why" that the code cannot say stays, short. Comments in `game/` are 19% of its lines today. **Check:** the share per folder before and after in the commit.
   - [ ] **4. The rule is written down (S).** [AGENTS.md](../AGENTS.md) "Rules" gains the names-over-comments line, and [engine](reference/engine.md) describes the engine as it now is: resources, components, input, update, render. This section is deleted from the plan.
 

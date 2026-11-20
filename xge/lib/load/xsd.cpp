@@ -1121,8 +1121,8 @@ namespace xge
 
 		if (declaration.anyType) { return true; }
 
-		const std::string rawText = actual.getText();
-		const std::string text = trim(rawText);
+		const std::string writtenText = actual.getText();
+		const std::string text = trim(writtenText);
 
 		// Text only, of a simple type: of a simple element, or one of a
 		// complex type with simple content (and attributes).
@@ -1134,7 +1134,7 @@ namespace xge
 				return false;
 			}
 
-			if (!typeMatches(simpleType, rawText))
+			if (!typeMatches(simpleType, writtenText))
 			{
 				error = path + ": \"" + text + "\" is not a valid " + (isBuiltin(simpleType) ? "xs:" : "") + simpleType + lineNote(actual.line());
 				return false;

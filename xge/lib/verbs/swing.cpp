@@ -26,13 +26,13 @@ namespace xge
 		swing.seconds = readValue(*seconds, where + " > <swing> > <seconds>");
 	}
 
-	static Command makeSwing(const WrittenCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeSwing(const WrittenCommand& written, const ValueEvaluator& evaluate)
 	{
-		const Direction direction = rotationFromName(raw.direction, raw.verb);
-		const WrittenSwing& written = ownOf<WrittenSwing>(raw);
-		const float seconds = evaluate(written.seconds);
+		const Direction direction = rotationFromName(written.direction, written.verb);
+		const WrittenSwing& own = ownOf<WrittenSwing>(written);
+		const float seconds = evaluate(own.seconds);
 		if (!(seconds > 0.0f)) { throw std::runtime_error("<swing> takes <seconds> of " + formatDisplayNumber(seconds) + "; expected more than 0"); }
-		const float degrees = evaluate(written.degrees);
+		const float degrees = evaluate(own.degrees);
 		if (!(degrees > 0.0f)) { throw std::runtime_error("<swing> takes <degrees> of " + formatDisplayNumber(degrees) + "; expected more than 0"); }
 		return CmdSwing{ direction == Direction::Left ? -degrees : degrees, seconds };
 	}

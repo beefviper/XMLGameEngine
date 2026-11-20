@@ -30,9 +30,9 @@ namespace xge
 		if (players.empty()) { fail(here, "has no <player>; it needs one for each player"); }
 	}
 
-	static Command makeAlternate(const WrittenCommand& raw, const ValueEvaluator&)
+	static Command makeAlternate(const WrittenCommand& written, const ValueEvaluator&)
 	{
-		const std::vector<std::string>& players = ownOf<WrittenAlternate>(raw).players;
+		const std::vector<std::string>& players = ownOf<WrittenAlternate>(written).players;
 		if (players.empty()) { throw std::runtime_error("<alternate> has no <player>; it needs one for each player"); }
 		return CmdAlternate{ NameStore::program().of(players) };
 	}

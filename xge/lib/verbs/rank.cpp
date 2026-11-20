@@ -21,9 +21,9 @@ namespace xge
 		requireAttribute(node, "into", where);
 	}
 
-	static Command makeRank(const WrittenCommand& raw, const ValueEvaluator&)
+	static Command makeRank(const WrittenCommand& written, const ValueEvaluator&)
 	{
-		return CmdRank{ VariableName::of(raw.variable), raw.into };
+		return CmdRank{ VariableName::of(written.variable), written.into };
 	}
 
 	static void checkRank(const CmdRank& rank, const Checking& checking)

@@ -22,10 +22,10 @@ namespace xge
 		if (hasContent(node)) { own.bounce = readValue(node, where); }
 	}
 
-	static Command makeKnock(const WrittenCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeKnock(const WrittenCommand& written, const ValueEvaluator& evaluate)
 	{
-		const std::optional<WrittenValue>& written = ownOf<WrittenKnock>(raw).bounce;
-		const float bounce = valueOr(written, 1.0f, evaluate);
+		const std::optional<WrittenValue>& own = ownOf<WrittenKnock>(written).bounce;
+		const float bounce = valueOr(own, 1.0f, evaluate);
 		if (!(bounce >= 0.0f && bounce <= 1.0f))
 		{
 			throw std::runtime_error("<knock> has a bounce of " + formatDisplayNumber(bounce) + "; expected 0 up to 1");

@@ -35,15 +35,15 @@ namespace xge
 		}
 	}
 
-	static Command makeFollow(const WrittenCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeFollow(const WrittenCommand& written, const ValueEvaluator& evaluate)
 	{
-		const WrittenFollow& written = ownOf<WrittenFollow>(raw);
-		const float stagger = valueOr(written.stagger, 0.0f, evaluate);
-		if (stagger < 0.0f) { throw std::runtime_error("<follow path=\"" + raw.path + "\">: the <stagger> is below 0"); }
-		const bool all = !written.nearest;
-		const int nearest = all ? 0 : static_cast<int>(std::lround(evaluate(*written.nearest)));
-		if (!all && nearest < 1) { throw std::runtime_error("<follow path=\"" + raw.path + "\">: <nearest> is under 1"); }
-		return CmdFollow{ raw.path, raw.object, stagger, nearest };
+		const WrittenFollow& own = ownOf<WrittenFollow>(written);
+		const float stagger = valueOr(own.stagger, 0.0f, evaluate);
+		if (stagger < 0.0f) { throw std::runtime_error("<follow path=\"" + written.path + "\">: the <stagger> is below 0"); }
+		const bool all = !own.nearest;
+		const int nearest = all ? 0 : static_cast<int>(std::lround(evaluate(*own.nearest)));
+		if (!all && nearest < 1) { throw std::runtime_error("<follow path=\"" + written.path + "\">: <nearest> is under 1"); }
+		return CmdFollow{ written.path, written.object, stagger, nearest };
 	}
 
 	static void checkFollow(const CmdFollow& follow, const Checking& checking)

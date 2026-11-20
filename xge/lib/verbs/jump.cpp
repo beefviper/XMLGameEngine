@@ -21,9 +21,9 @@ namespace xge
 		command.own = WrittenJump{ readValue(node, where) };
 	}
 
-	static Command makeJump(const WrittenCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeJump(const WrittenCommand& written, const ValueEvaluator& evaluate)
 	{
-		const float height = evaluate(ownOf<WrittenJump>(raw).height);
+		const float height = evaluate(ownOf<WrittenJump>(written).height);
 		if (!(height > 0.0f)) { throw std::runtime_error("<jump> has a height of " + formatDisplayNumber(height) + "; expected more than 0"); }
 		return CmdJump{ height };
 	}

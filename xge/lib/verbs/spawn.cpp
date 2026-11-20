@@ -68,15 +68,15 @@ namespace xge
 		}
 	}
 
-	static Command makeSpawn(const WrittenCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeSpawn(const WrittenCommand& written, const ValueEvaluator& evaluate)
 	{
-		const WrittenSpawn& written = ownOf<WrittenSpawn>(raw);
+		const WrittenSpawn& own = ownOf<WrittenSpawn>(written);
 		CmdSpawn spawn;
-		spawn.target = raw.object;
-		if (written.count)
+		spawn.target = written.object;
+		if (own.count)
 		{
-			spawn.count = static_cast<int>(std::lround(evaluate(*written.count)));
-			if (spawn.count < 1) { throw std::runtime_error("<spawn object=\"" + raw.object + "\">: a <count> under 1"); }
+			spawn.count = static_cast<int>(std::lround(evaluate(*own.count)));
+			if (spawn.count < 1) { throw std::runtime_error("<spawn object=\"" + written.object + "\">: a <count> under 1"); }
 		}
 		// A <centered> half holds where the middle goes; left empty, the
 		// middle of the window.
@@ -86,10 +86,10 @@ namespace xge
 			const WrittenValue& value = *given;
 			if (value.kind == WrittenValue::Kind::Centered)
 			{
-				if (value.edge != WrittenValue::Edge::Middle) { throw std::runtime_error("<spawn object=\"" + raw.object + "\">: <left>, <right>, <top> and <bottom> are for an object's <position>"); }
+				if (value.edge != WrittenValue::Edge::Middle) { throw std::runtime_error("<spawn object=\"" + written.object + "\">: <left>, <right>, <top> and <bottom> are for an object's <position>"); }
 				if (!centered)
 				{
-					throw std::runtime_error("<spawn object=\"" + raw.object + "\">: <centered> is for its <position>, not its <velocity> or <acceleration>");
+					throw std::runtime_error("<spawn object=\"" + written.object + "\">: <centered> is for its <position>, not its <velocity> or <acceleration>");
 				}
 				*centered = true;
 				into = evaluate(centeredMiddle(value, middle));
@@ -97,20 +97,20 @@ namespace xge
 			}
 			into = evaluate(value);
 		};
-		half(written.positionX, spawn.x, &spawn.centerX, "window.width.center");
-		half(written.positionY, spawn.y, &spawn.centerY, "window.height.center");
-		half(written.velocityX, spawn.velocityX, nullptr, "");
-		half(written.velocityY, spawn.velocityY, nullptr, "");
-		half(written.accelerationX, spawn.accelerationX, nullptr, "");
-		half(written.accelerationY, spawn.accelerationY, nullptr, "");
-		half(written.column, spawn.column, nullptr, "");
-		half(written.row, spawn.row, nullptr, "");
-		half(written.member, spawn.member, nullptr, "");
-		spawn.random = written.random;
-		spawn.into = raw.into;
-		spawn.free = written.free;
+		half(own.positionX, spawn.x, &spawn.centerX, "window.width.center");
+		half(own.positionY, spawn.y, &spawn.centerY, "window.height.center");
+		half(own.velocityX, spawn.velocityX, nullptr, "");
+		half(own.velocityY, spawn.velocityY, nullptr, "");
+		half(own.accelerationX, spawn.accelerationX, nullptr, "");
+		half(own.accelerationY, spawn.accelerationY, nullptr, "");
+		half(own.column, spawn.column, nullptr, "");
+		half(own.row, spawn.row, nullptr, "");
+		half(own.member, spawn.member, nullptr, "");
+		spawn.random = own.random;
+		spawn.into = written.into;
+		spawn.free = own.free;
 		std::optional<float> below;
-		half(written.freeBelow, below, nullptr, "");
+		half(own.freeBelow, below, nullptr, "");
 		spawn.freeBelow = below ? static_cast<int>(std::lround(*below)) : 0;
 		return spawn;
 	}

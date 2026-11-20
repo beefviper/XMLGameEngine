@@ -896,7 +896,7 @@ namespace xge
 	// (`namesOther`), for the one it touched.
 	struct CmdLive
 	{
-		std::shared_ptr<const WrittenCommand> raw;
+		std::shared_ptr<const WrittenCommand> written;
 		std::shared_ptr<const LoadedCommand> loaded;
 		std::string where;
 		bool namesSelf{ false };
@@ -1429,8 +1429,8 @@ namespace xge
 		// <trigger> with no object=) are its own: made for each object that
 		// can fly the path when the game loads (`ownBy`, by its name), and
 		// for a copy made while it runs the first time it flies it, from
-		// `ownRaw` with self made that one's name. `commands` are the rest.
-		std::shared_ptr<const std::vector<WrittenCommand>> ownRaw;
+		// `ownWritten` with self made that one's name. `commands` are the rest.
+		std::shared_ptr<const std::vector<WrittenCommand>> ownWritten;
 		std::map<std::string, std::vector<Command>> ownBy;
 	};
 
@@ -1462,8 +1462,8 @@ namespace xge
 	// the one place that knows what each command tag means; an unknown tag or
 	// direction throws std::runtime_error naming it, so a typo in a game file
 	// is reported when it loads.
-	Command makeCommand(const WrittenCommand& raw, const ValueEvaluator& evaluate);
-	std::vector<Command> makeCommands(const std::vector<WrittenCommand>& raw, const ValueEvaluator& evaluate);
+	Command makeCommand(const WrittenCommand& written, const ValueEvaluator& evaluate);
+	std::vector<Command> makeCommands(const std::vector<WrittenCommand>& written, const ValueEvaluator& evaluate);
 
 	// The picture's size, with no window needed: a circle's box and a
 	// rectangle exactly as written (Object::pictureSize rounds them up to

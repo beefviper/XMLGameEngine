@@ -343,7 +343,7 @@ TEST_CASE("asteroids.xml loads under every XML backend, checked against the sche
 			{
 				for (const Command& command : rule.commands)
 				{
-					if (const auto* live = std::get_if<CmdLive>(&command); live && live->raw->verb == "spawn") { ++breaks; }
+					if (const auto* live = std::get_if<CmdLive>(&command); live && live->written->verb == "spawn") { ++breaks; }
 				}
 			}
 		}

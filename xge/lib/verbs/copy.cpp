@@ -19,9 +19,9 @@ namespace xge
 		requireAttribute(node, "into", where);
 	}
 
-	static Command makeCopy(const WrittenCommand& raw, const ValueEvaluator&)
+	static Command makeCopy(const WrittenCommand& written, const ValueEvaluator&)
 	{
-		return CmdCopy{ VariableName::of(raw.variable), VariableName::of(raw.into) };
+		return CmdCopy{ VariableName::of(written.variable), VariableName::of(written.into) };
 	}
 
 	static void checkCopy(const CmdCopy& copy, const Checking& checking)

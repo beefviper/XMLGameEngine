@@ -15,9 +15,9 @@ namespace xge
 		requireAttribute(node, "direction", where);
 	}
 
-	static Command makeSlide(const WrittenCommand& raw, const ValueEvaluator&)
+	static Command makeSlide(const WrittenCommand& written, const ValueEvaluator&)
 	{
-		return CmdSlide{ directionFromName(raw.direction, raw.verb), raw.objClass };
+		return CmdSlide{ directionFromName(written.direction, written.verb), written.objClass };
 	}
 
 	static bool runSlide(const CmdSlide& slide, const Doer& doer)

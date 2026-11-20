@@ -18,10 +18,10 @@ namespace xge
 		if (hasContent(node)) { turn.rate = readValue(node, where); }
 	}
 
-	static Command makeTurn(const WrittenCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeTurn(const WrittenCommand& written, const ValueEvaluator& evaluate)
 	{
 		// Nothing written: none (a turn on a cell map, a quarter).
-		return CmdTurn{ rotationFromName(raw.direction, raw.verb), valueOr(ownOf<WrittenTurn>(raw).rate, 0.0f, evaluate) };
+		return CmdTurn{ rotationFromName(written.direction, written.verb), valueOr(ownOf<WrittenTurn>(written).rate, 0.0f, evaluate) };
 	}
 
 	// A turn is now held (rate 0 = just released);

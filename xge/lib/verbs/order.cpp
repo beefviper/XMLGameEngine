@@ -24,9 +24,9 @@ namespace xge
 		}
 	}
 
-	static Command makeOrder(const WrittenCommand& raw, const ValueEvaluator&)
+	static Command makeOrder(const WrittenCommand& written, const ValueEvaluator&)
 	{
-		return CmdOrder{ raw.object };
+		return CmdOrder{ written.object };
 	}
 
 	static bool runOrder(const CmdOrder& order, const Doer& doer)

@@ -20,14 +20,14 @@ namespace xge
 		command.own = WrittenClimb{ readValue(node, where) };
 	}
 
-	static Command makeClimb(const WrittenCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeClimb(const WrittenCommand& written, const ValueEvaluator& evaluate)
 	{
-		const Direction direction = directionFromName(raw.direction, raw.verb);
+		const Direction direction = directionFromName(written.direction, written.verb);
 		if (direction != Direction::Up && direction != Direction::Down)
 		{
-			throw std::runtime_error("<climb> has direction=\"" + raw.direction + "\"; expected up or down");
+			throw std::runtime_error("<climb> has direction=\"" + written.direction + "\"; expected up or down");
 		}
-		return CmdClimb{ direction, evaluate(ownOf<WrittenClimb>(raw).speed), raw.objClass };
+		return CmdClimb{ direction, evaluate(ownOf<WrittenClimb>(written).speed), written.objClass };
 	}
 
 	static bool runClimb(const CmdClimb& climb, const Doer& doer)

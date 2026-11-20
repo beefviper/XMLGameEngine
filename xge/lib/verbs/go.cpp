@@ -18,9 +18,9 @@ namespace xge
 		command.own = WrittenGo{ readValue(node, where) };
 	}
 
-	static Command makeGo(const WrittenCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeGo(const WrittenCommand& written, const ValueEvaluator& evaluate)
 	{
-		return CmdGo{ directionFromName(raw.direction, raw.verb), speedOf(ownOf<WrittenGo>(raw).speed, "go", evaluate) };
+		return CmdGo{ directionFromName(written.direction, written.verb), speedOf(ownOf<WrittenGo>(written).speed, "go", evaluate) };
 	}
 
 	static bool runGo(const CmdGo& go, const Doer& doer)

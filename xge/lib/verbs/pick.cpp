@@ -23,9 +23,9 @@ namespace xge
 		}
 	}
 
-	static Command makePick(const WrittenCommand& raw, const ValueEvaluator&)
+	static Command makePick(const WrittenCommand& written, const ValueEvaluator&)
 	{
-		return CmdPick{ raw.objClass, ownOf<WrittenPick>(raw).only };
+		return CmdPick{ written.objClass, ownOf<WrittenPick>(written).only };
 	}
 
 	static bool runPick(const CmdPick& pick, const Doer& doer)

@@ -15,9 +15,9 @@ namespace xge
 		readSendHeld(node, where, command, false);
 	}
 
-	static Command makeDistribute(const WrittenCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeDistribute(const WrittenCommand& written, const ValueEvaluator& evaluate)
 	{
-		return makeSendHeld(raw, evaluate);
+		return makeSendHeld(written, evaluate);
 	}
 
 	extern const Verb distributeVerb;

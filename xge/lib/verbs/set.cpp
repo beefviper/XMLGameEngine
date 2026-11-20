@@ -24,14 +24,14 @@ namespace xge
 		command.own = WrittenSet{ readValue(node, where) };
 	}
 
-	static Command makeSet(const WrittenCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeSet(const WrittenCommand& written, const ValueEvaluator& evaluate)
 	{
 		// One of the numbers every object has (ship.velocity.x) is split before
 		// its part, not at its last dot.
-		const std::string part = liveNumberPart(raw.variable);
-		VariableName target = part.empty() ? VariableName::of(raw.variable)
-			: VariableName{ raw.variable.substr(0, raw.variable.size() - part.size() - 1), part };
-		return CmdSet{ std::move(target), evaluate(ownOf<WrittenSet>(raw).value) };
+		const std::string part = liveNumberPart(written.variable);
+		VariableName target = part.empty() ? VariableName::of(written.variable)
+			: VariableName{ written.variable.substr(0, written.variable.size() - part.size() - 1), part };
+		return CmdSet{ std::move(target), evaluate(ownOf<WrittenSet>(written).value) };
 	}
 
 	static void checkSet(const CmdSet& set, const Checking& checking)

@@ -22,13 +22,13 @@ namespace xge
 		if (auto wait = findChild(&node, "wait")) { move.wait = readValue(*wait, where + " > <move>"); }
 	}
 
-	static Command makeMove(const WrittenCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeMove(const WrittenCommand& written, const ValueEvaluator& evaluate)
 	{
-		const WrittenMove& written = ownOf<WrittenMove>(raw);
-		CmdMove move{ directionFromName(raw.direction, raw.verb), evaluate(written.step) };
-		if (written.wait)
+		const WrittenMove& own = ownOf<WrittenMove>(written);
+		CmdMove move{ directionFromName(written.direction, written.verb), evaluate(own.step) };
+		if (own.wait)
 		{
-			move.wait = evaluate(*written.wait);
+			move.wait = evaluate(*own.wait);
 			if (move.wait < 0.0f) { throw std::runtime_error("<move> has a <wait> of " + formatDisplayNumber(move.wait) + "; expected 0 or more"); }
 		}
 		return move;

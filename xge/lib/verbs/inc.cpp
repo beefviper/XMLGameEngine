@@ -23,10 +23,10 @@ namespace xge
 		if (hasContent(node)) { own.by = readValue(node, where); }
 	}
 
-	static Command makeInc(const WrittenCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeInc(const WrittenCommand& written, const ValueEvaluator& evaluate)
 	{
 		// By its amount, or by 1 when it has none.
-		return CmdIncrement{ VariableName::of(raw.variable), valueOr(ownOf<WrittenInc>(raw).by, 1.0f, evaluate) };
+		return CmdIncrement{ VariableName::of(written.variable), valueOr(ownOf<WrittenInc>(written).by, 1.0f, evaluate) };
 	}
 
 	static void checkInc(const CmdIncrement& increment, const Checking& checking)

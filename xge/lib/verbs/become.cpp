@@ -23,9 +23,9 @@ namespace xge
 		}
 	}
 
-	static Command makeBecome(const WrittenCommand& raw, const ValueEvaluator&)
+	static Command makeBecome(const WrittenCommand& written, const ValueEvaluator&)
 	{
-		return CmdBecome{ raw.sprite, raw.object, raw.from, raw.style };
+		return CmdBecome{ written.sprite, written.object, written.from, written.style };
 	}
 
 	static void checkBecome(const CmdBecome& become, const Checking& checking)

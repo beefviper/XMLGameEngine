@@ -161,25 +161,25 @@ namespace xge
 	}
 
 	void Evaluator::init(const WindowDesc& windowDesc,
-		const std::vector<std::pair<std::string, WrittenValue>>& rawVariables, std::map<std::string, float>& variables,
-		std::vector<WrittenState>& rawStates, std::vector<State>& states,
-		std::vector<WrittenObject>& rawObjects, std::vector<Object>& objects,
-		const std::vector<WrittenSound>& rawSounds, std::vector<SoundDesc>& sounds,
-		const std::vector<WrittenPath>& rawPaths, std::map<std::string, Path>& paths)
+		const std::vector<std::pair<std::string, WrittenValue>>& writtenVariables, std::map<std::string, float>& variables,
+		std::vector<WrittenState>& writtenStates, std::vector<State>& states,
+		std::vector<WrittenObject>& writtenObjects, std::vector<Object>& objects,
+		const std::vector<WrittenSound>& writtenSounds, std::vector<SoundDesc>& sounds,
+		const std::vector<WrittenPath>& writtenPaths, std::map<std::string, Path>& paths)
 	{
 		seedRandom();
-		makeHeld(rawObjects);
-		placeStarts(rawStates, rawObjects);
+		makeHeld(writtenObjects);
+		placeStarts(writtenStates, writtenObjects);
 
 		checkColor(windowDesc.background, "<window> > <background>");
 
-		nameNumbers(windowDesc, rawVariables, variables, rawObjects);
-		makeObjects(rawObjects, objects);
-		makeRuleTests(rawObjects, objects);
-		makeStates(rawStates, states, objects);
-		makeSounds(rawSounds, sounds);
-		makePaths(rawPaths, paths, states, objects);
-		makePalettes(rawObjects, objects, checkReferences(*parts, states, objects, sounds, paths, styles));
+		nameNumbers(windowDesc, writtenVariables, variables, writtenObjects);
+		makeObjects(writtenObjects, objects);
+		makeRuleTests(writtenObjects, objects);
+		makeStates(writtenStates, states, objects);
+		makeSounds(writtenSounds, sounds);
+		makePaths(writtenPaths, paths, states, objects);
+		makePalettes(writtenObjects, objects, checkReferences(*parts, states, objects, sounds, paths, styles));
 		for (Object& object : objects)
 		{
 			for (CollisionRule& rule : object.kind->collisionData.others) { std::vector<std::vector<Command>>().swap(rule.loadChecks); }
@@ -203,7 +203,7 @@ namespace xge
 
 	// init's names: the window's edges, the game's variables, every object's
 	// variables and timers, and the live numbers, as names a text reads.
-	void Evaluator::nameNumbers(const WindowDesc& windowDesc, const std::vector<std::pair<std::string, WrittenValue>>& rawVariables, std::map<std::string, float>& variables, std::vector<WrittenObject>& rawObjects)
+	void Evaluator::nameNumbers(const WindowDesc& windowDesc, const std::vector<std::pair<std::string, WrittenValue>>& writtenVariables, std::map<std::string, float>& variables, std::vector<WrittenObject>& writtenObjects)
 	{
 		// the window's edges and middles, then the game's variables, as names a text reads
 		calc.constant("window.top", 0);
@@ -217,9 +217,9 @@ namespace xge
 
 		// add variables from XML file to symbol table, in the order the file
 		// declares them so that one can use the ones before it
-		for (const auto& [name, rawValue] : rawVariables)
+		for (const auto& [name, writtenValue] : writtenVariables)
 		{
-			const float value = evaluate(rawValue, "variable '" + name + "'");
+			const float value = evaluate(writtenValue, "variable '" + name + "'");
 			variables[name] = value;
 			calc.constant(name, value);
 		}
@@ -227,33 +227,33 @@ namespace xge
 		// An object's named timer is a number of the object's (bomb.fuse), its
 		// time left, so a text shows it and a rule or a value reads it as it
 		// does any variable; its value is given when the object is made.
-		for (auto& rawObject : rawObjects)
+		for (auto& writtenObject : writtenObjects)
 		{
-			for (const WrittenTimer& timer : rawObject.timers)
+			for (const WrittenTimer& timer : writtenObject.timers)
 			{
 				if (timer.name.empty()) { continue; }
-				const std::string here = "object '" + rawObject.name + "' > <timer name=\"" + timer.name + "\">";
-				if (rawObject.variable.count(timer.name))
+				const std::string here = "object '" + writtenObject.name + "' > <timer name=\"" + timer.name + "\">";
+				if (writtenObject.variable.count(timer.name))
 				{
-					throw std::runtime_error(here + ": the object has a <variable> of that name too, and " + rawObject.name + "." + timer.name + " is the timer's time left");
+					throw std::runtime_error(here + ": the object has a <variable> of that name too, and " + writtenObject.name + "." + timer.name + " is the timer's time left");
 				}
 				const auto& liveNames = livePartNames();
 				if (std::find(liveNames.begin(), liveNames.end(), timer.name) != liveNames.end())
 				{
-					throw std::runtime_error(here + ": " + rawObject.name + "." + timer.name + " is already where the object is or how it moves; give the timer another name");
+					throw std::runtime_error(here + ": " + writtenObject.name + "." + timer.name + " is already where the object is or how it moves; give the timer another name");
 				}
-				rawObject.variable[timer.name] = WrittenValue::expression("0");
+				writtenObject.variable[timer.name] = WrittenValue::expression("0");
 			}
 			// A holder's <counts variable>: a variable of its own, kept to the total.
-			const std::string& counts = rawObject.holder.counts;
-			if (!counts.empty() && !rawObject.variable.count(counts)) { rawObject.variable[counts] = WrittenValue::expression("0"); }
+			const std::string& counts = writtenObject.holder.counts;
+			if (!counts.empty() && !writtenObject.variable.count(counts)) { writtenObject.variable[counts] = WrittenValue::expression("0"); }
 		}
 		// A holder's top.<variable>: each variable its held class has, the top
 		// one's while the game runs (Game::refreshHolder), so bag.top.shape reads.
-		for (auto& holder : rawObjects)
+		for (auto& holder : writtenObjects)
 		{
 			if (!holder.holder.is || holder.holder.holdsClass.empty()) { continue; }
-			for (const auto& member : rawObjects)
+			for (const auto& member : writtenObjects)
 			{
 				if (&member == &holder || member.objClass != holder.holder.holdsClass) { continue; }
 				for (const auto& [name, value] : member.variable) { holder.variable.try_emplace("top." + name, WrittenValue::expression("0")); }
@@ -267,11 +267,11 @@ namespace xge
 		// paddle1 is declared after score1). Values start at 0 here; the object
 		// loop further down fills in the real evaluated value once it reaches
 		// that object - see the objectVariables[...] assignment there.
-		for (auto& rawObject : rawObjects)
+		for (auto& writtenObject : writtenObjects)
 		{
-			for (auto& rawVariable : rawObject.variable)
+			for (auto& writtenVariable : writtenObject.variable)
 			{
-				objectVariables[rawObject.name + "." + rawVariable.first] = 0.0f;
+				objectVariables[writtenObject.name + "." + writtenVariable.first] = 0.0f;
 			}
 		}
 		for (auto& objectVariable : objectVariables)
@@ -284,17 +284,17 @@ namespace xge
 		// a <circle> of radius ball.radius, its own variable); without this it
 		// read 0 and was drawn as nothing. One that reads what is not known
 		// yet (a size) keeps 0 here and gets its value in the object loop.
-		for (auto& rawObject : rawObjects)
+		for (auto& writtenObject : writtenObjects)
 		{
-			for (auto& rawVariable : rawObject.variable)
+			for (auto& writtenVariable : writtenObject.variable)
 			{
-				if (rawVariable.second.drawsRandom())
+				if (writtenVariable.second.drawsRandom())
 				{
 					continue;
 				}
 				try
 				{
-					objectVariables[rawObject.name + "." + rawVariable.first] = evaluate(rawVariable.second, "object '" + rawObject.name + "'");
+					objectVariables[writtenObject.name + "." + writtenVariable.first] = evaluate(writtenVariable.second, "object '" + writtenObject.name + "'");
 				}
 				catch (const std::runtime_error&)
 				{
@@ -306,20 +306,20 @@ namespace xge
 		// Where each object is and how it is going, and the touch a rule is
 		// answering, as names; worked out when they are used (Game::evaluateNow).
 		// An object's own variable of a part's name is read instead.
-		liveNumbers.reserve(rawObjects.size() * livePartNames().size());
-		for (const WrittenObject& rawObject : rawObjects)
+		liveNumbers.reserve(writtenObjects.size() * livePartNames().size());
+		for (const WrittenObject& writtenObject : writtenObjects)
 		{
-			const std::string owner = Calc::nameOf(rawObject.name) + ".";
+			const std::string owner = Calc::nameOf(writtenObject.name) + ".";
 			for (const std::string& part : livePartNames())
 			{
-				if (!rawObject.variable.count(part)) { liveNumbers.try_emplace(owner + part, 0.0f); }
+				if (!writtenObject.variable.count(part)) { liveNumbers.try_emplace(owner + part, 0.0f); }
 			}
 		}
 	}
 
 	// init's objects: every sprite measured once (its size a name), the
 	// cells of groups laid out, then each object made, groups in lockstep.
-	void Evaluator::makeObjects(std::vector<WrittenObject>& rawObjects, std::vector<Object>& objects)
+	void Evaluator::makeObjects(std::vector<WrittenObject>& writtenObjects, std::vector<Object>& objects)
 	{
 		// Every object's size as name.width / name.height, so an expression can
 		// place an object by its own size (or another's) the same way it reads
@@ -337,23 +337,23 @@ namespace xge
 		std::map<std::string, std::shared_ptr<const Turnable>> firstPassTurned;
 		std::map<std::string, std::vector<PictureId>> firstPassAnimation;
 		std::map<std::string, std::vector<std::shared_ptr<const Turnable>>> firstPassAnimationTurned;
-		for (auto& rawObject : rawObjects)
+		for (auto& writtenObject : writtenObjects)
 		{
-			if (objectSizes.count(rawObject.name))
+			if (objectSizes.count(writtenObject.name))
 			{
 				continue; // measured already
 			}
 
-			const Picture picture = buildPicture(rawObject.sprite, "object '" + rawObject.name + "'", &firstPassBitmaps[rawObject.name],
-				rawObject.rawHeading ? &firstPassTurned[rawObject.name] : nullptr, &rawObject);
-			objectShapeKinds[rawObject.name] = picture.kind;
-			objectSizes[rawObject.name] = measureShapeSize(picture);
-			firstPassPictures[rawObject.name] = picture;
+			const Picture picture = buildPicture(writtenObject.sprite, "object '" + writtenObject.name + "'", &firstPassBitmaps[writtenObject.name],
+				writtenObject.writtenHeading ? &firstPassTurned[writtenObject.name] : nullptr, &writtenObject);
+			objectShapeKinds[writtenObject.name] = picture.kind;
+			objectSizes[writtenObject.name] = measureShapeSize(picture);
+			firstPassPictures[writtenObject.name] = picture;
 
-			if (rawObject.hasAnimation)
+			if (writtenObject.hasAnimation)
 			{
-				firstPassAnimation[rawObject.name] = buildAnimationBitmaps(rawObject.animation.frames, "object '" + rawObject.name + "' > <animation>",
-					rawObject.rawHeading ? &firstPassAnimationTurned[rawObject.name] : nullptr);
+				firstPassAnimation[writtenObject.name] = buildAnimationBitmaps(writtenObject.animation.frames, "object '" + writtenObject.name + "' > <animation>",
+					writtenObject.writtenHeading ? &firstPassAnimationTurned[writtenObject.name] : nullptr);
 			}
 		}
 		for (auto& [name, size] : objectSizes)
@@ -364,7 +364,7 @@ namespace xge
 
 
 		// Where each cell of a group laid out in <columns> and <rows> goes.
-		const std::map<std::string, Vector2f> cellOffsets = layOutCells(rawObjects, firstPassPictures);
+		const std::map<std::string, Vector2f> cellOffsets = layOutCells(writtenObjects, firstPassPictures);
 
 		// Objects in lockstep share a number: every member of a <group> moves
 		// as one block with the others of its group. A plain object that asks
@@ -373,34 +373,34 @@ namespace xge
 		std::map<std::string, int> groupLockstep;
 
 		// evaluate strings in objects
-		for (auto& rawObject : rawObjects)
+		for (auto& writtenObject : writtenObjects)
 		{
 			int thisLockstep = 0;
-			if (rawObject.rawCollisionData.lockstep)
+			if (writtenObject.writtenCollisionData.lockstep)
 			{
-				if (rawObject.groupName.empty())
+				if (writtenObject.groupName.empty())
 				{
 					thisLockstep = lockstepNum;
 				}
 				else
 				{
-					const auto [entry, isFirstMember] = groupLockstep.try_emplace(rawObject.groupName, lockstepNum);
+					const auto [entry, isFirstMember] = groupLockstep.try_emplace(writtenObject.groupName, lockstepNum);
 					if (isFirstMember) { lockstepNum++; }
 					thisLockstep = entry->second;
 				}
 			}
 
 			FirstPass first;
-			first.picture = firstPassPictures.at(rawObject.name);
-			first.bitmap = firstPassBitmaps[rawObject.name];
-			first.turned = firstPassTurned[rawObject.name];
-			first.animation = firstPassAnimation[rawObject.name];
-			first.animationTurned = firstPassAnimationTurned[rawObject.name];
-			const auto offset = cellOffsets.find(rawObject.name);
-			objects.push_back(onLine(rawObject.line, [&] { return makeObject(rawObject, first, offset == cellOffsets.end() ? Vector2f{} : offset->second, thisLockstep); }));
+			first.picture = firstPassPictures.at(writtenObject.name);
+			first.bitmap = firstPassBitmaps[writtenObject.name];
+			first.turned = firstPassTurned[writtenObject.name];
+			first.animation = firstPassAnimation[writtenObject.name];
+			first.animationTurned = firstPassAnimationTurned[writtenObject.name];
+			const auto offset = cellOffsets.find(writtenObject.name);
+			objects.push_back(onLine(writtenObject.line, [&] { return makeObject(writtenObject, first, offset == cellOffsets.end() ? Vector2f{} : offset->second, thisLockstep); }));
 
 
-			if (rawObject.rawCollisionData.lockstep && rawObject.groupName.empty()) {
+			if (writtenObject.writtenCollisionData.lockstep && writtenObject.groupName.empty()) {
 				lockstepNum++;
 			}
 		}
@@ -408,25 +408,25 @@ namespace xge
 
 	// init's tests on collision rules, edge guards and actions' conditions,
 	// once every object they can name is made.
-	void Evaluator::makeRuleTests(const std::vector<WrittenObject>& rawObjects, std::vector<Object>& objects)
+	void Evaluator::makeRuleTests(const std::vector<WrittenObject>& writtenObjects, std::vector<Object>& objects)
 	{
 		// The checks of the objects' collision rules, now that every object
 		// they can name is made.
-		for (const WrittenObject& rawObject : rawObjects)
+		for (const WrittenObject& writtenObject : writtenObjects)
 		{
-			const auto object = std::find_if(objects.begin(), objects.end(), [&](const Object& each) { return each.name == rawObject.name; });
+			const auto object = std::find_if(objects.begin(), objects.end(), [&](const Object& each) { return each.name == writtenObject.name; });
 			if (object == objects.end()) { continue; }
-			const std::string where = "object '" + rawObject.name + "' > <collision>";
+			const std::string where = "object '" + writtenObject.name + "' > <collision>";
 			// Their tests say self of this one (makeTestHere).
 			struct Self
 			{
 				std::string& name;
 				std::string was;
 				~Self() { name = std::move(was); }
-			} self{ selfName, std::exchange(selfName, rawObject.name) };
-			for (std::size_t i = 0; i < rawObject.rawCollisionData.others.size(); ++i)
+			} self{ selfName, std::exchange(selfName, writtenObject.name) };
+			for (std::size_t i = 0; i < writtenObject.writtenCollisionData.others.size(); ++i)
 			{
-				const WrittenCollisionRule& rule = rawObject.rawCollisionData.others[i];
+				const WrittenCollisionRule& rule = writtenObject.writtenCollisionData.others[i];
 				const WrittenCondition& check = rule.check;
 				if (check.join == WrittenCondition::Join::None) { continue; }
 				// One naming other: made, so checked, for each thing it can
@@ -441,14 +441,14 @@ namespace xge
 				object->kind->collisionData.others[i].check = makeTest(check, where, where, objects);
 				otherName = was;
 			}
-			for (std::size_t edge = 0; edge < rawObject.rawCollisionData.edges.size(); ++edge)
+			for (std::size_t edge = 0; edge < writtenObject.writtenCollisionData.edges.size(); ++edge)
 			{
-				const std::vector<EdgeGuard>& guards = rawObject.rawCollisionData.edges[edge].guards;
+				const std::vector<EdgeGuard>& guards = writtenObject.writtenCollisionData.edges[edge].guards;
 				for (std::size_t g = 0; g < guards.size(); ++g)
 				{
-					if (guards[g].rawCheck.join != WrittenCondition::Join::None)
+					if (guards[g].writtenCheck.join != WrittenCondition::Join::None)
 					{
-						object->kind->collisionData.edges[edge].guards[g].check = makeTest(guards[g].rawCheck, where, where, objects);
+						object->kind->collisionData.edges[edge].guards[g].check = makeTest(guards[g].writtenCheck, where, where, objects);
 					}
 				}
 			}
@@ -459,43 +459,43 @@ namespace xge
 				{
 					auto* when = std::get_if<CmdWhen>(&command);
 					if (!when || !when->body) { continue; }
-					when->body->test = makeTest(*when->body->raw, here + " > <condition>", here, objects);
+					when->body->test = makeTest(*when->body->written, here + " > <condition>", here, objects);
 					tests(when->body->commands, here + " > <condition>");
 				}
 			};
-			for (auto& [name, list] : object->kind->action) { tests(list, "object '" + rawObject.name + "' > <action name=\"" + name + "\">"); }
+			for (auto& [name, list] : object->kind->action) { tests(list, "object '" + writtenObject.name + "' > <action name=\"" + name + "\">"); }
 		}
 	}
 
 	// init's states: each one's inputs, conditions, timers and scenes.
-	void Evaluator::makeStates(std::vector<WrittenState>& rawStates, std::vector<State>& states, const std::vector<Object>& objects)
+	void Evaluator::makeStates(std::vector<WrittenState>& writtenStates, std::vector<State>& states, const std::vector<Object>& objects)
 	{
-		for (auto& rawState : rawStates)
+		for (auto& writtenState : writtenStates)
 		{
 			State state{};
-			const std::string where = "state '" + rawState.name + "'";
+			const std::string where = "state '" + writtenState.name + "'";
 
-			state.name = rawState.name;
-			state.line = rawState.line;
-			state.show = NameStore::program().of(rawState.show);
-			state.showStates = NameStore::program().of(rawState.showStates);
-			state.music = rawState.music;
+			state.name = writtenState.name;
+			state.line = writtenState.line;
+			state.show = NameStore::program().of(writtenState.show);
+			state.showStates = NameStore::program().of(writtenState.showStates);
+			state.music = writtenState.music;
 
 			for (std::size_t moment = 0; moment < keyMoments.size(); ++moment)
 			{
-				for (auto& rawAction : *rawState.keyMaps()[moment])
+				for (auto& writtenAction : *writtenState.keyMaps()[moment])
 				{
-					const KeyCode key = keyCodeFromString(rawAction.first);
+					const KeyCode key = keyCodeFromString(writtenAction.first);
 					if (key == KeyCode::Unknown)
 					{
-						throw std::runtime_error(where + " > <input button=\"" + rawAction.first + "\">: there is no key named '" + rawAction.first + "'"
-							+ didYouMean(rawAction.first, keyNames()) + ". The keys are: " + listOf(keyNames()));
+						throw std::runtime_error(where + " > <input button=\"" + writtenAction.first + "\">: there is no key named '" + writtenAction.first + "'"
+							+ didYouMean(writtenAction.first, keyNames()) + ". The keys are: " + listOf(keyNames()));
 					}
-					(*state.keyMaps()[moment])[key] = processCommands(rawAction.second, where);
+					(*state.keyMaps()[moment])[key] = processCommands(writtenAction.second, where);
 				}
 			}
 
-			for (auto& [name, commands] : rawState.axes)
+			for (auto& [name, commands] : writtenState.axes)
 			{
 				const Axis axis = axisFromString(name);
 				if (axis == Axis::Count)
@@ -506,43 +506,43 @@ namespace xge
 				state.axes[axis] = processCommands(commands, where);
 			}
 
-			for (auto& rawCondition : flattened(rawState.conditions))
+			for (auto& writtenCondition : flattened(writtenState.conditions))
 			{
-				state.conditions.push_back(makeCondition(rawCondition, where, where, rawState.name, objects));
+				state.conditions.push_back(makeCondition(writtenCondition, where, where, writtenState.name, objects));
 			}
-			for (auto& rawCondition : flattened(rawState.computer))
+			for (auto& writtenCondition : flattened(writtenState.computer))
 			{
-				state.computer.push_back(makeCondition(rawCondition, where + " > <computer>", where, rawState.name, objects));
+				state.computer.push_back(makeCondition(writtenCondition, where + " > <computer>", where, writtenState.name, objects));
 			}
 
-			state.timers = processTimers(rawState.timers, where);
+			state.timers = processTimers(writtenState.timers, where);
 
-			for (const WrittenScene& rawScene : rawState.scenes)
+			for (const WrittenScene& writtenScene : writtenState.scenes)
 			{
 				Scene scene;
-				scene.name = rawState.name + "." + rawScene.name;
+				scene.name = writtenState.name + "." + writtenScene.name;
 				const std::string sceneWhere = "scene '" + scene.name + "'";
-				for (const auto& [way, to] : rawScene.ways)
+				for (const auto& [way, to] : writtenScene.ways)
 				{
 					// A scene of the same state, by its name there or by its path.
-					const auto leads = std::find_if(rawState.scenes.begin(), rawState.scenes.end(), [&](const WrittenScene& other)
+					const auto leads = std::find_if(writtenState.scenes.begin(), writtenState.scenes.end(), [&](const WrittenScene& other)
 						{
-							return other.name == to || rawState.name + "." + other.name == to;
+							return other.name == to || writtenState.name + "." + other.name == to;
 						});
-					if (leads == rawState.scenes.end())
+					if (leads == writtenState.scenes.end())
 					{
 						std::vector<std::string> names;
-						for (const WrittenScene& other : rawState.scenes) { names.push_back(other.name); }
-						throw std::runtime_error(sceneWhere + ": <way name=\"" + way + "\" scene=\"" + to + "\" /> names no scene of state '" + rawState.name + "'"
+						for (const WrittenScene& other : writtenState.scenes) { names.push_back(other.name); }
+						throw std::runtime_error(sceneWhere + ": <way name=\"" + way + "\" scene=\"" + to + "\" /> names no scene of state '" + writtenState.name + "'"
 							+ didYouMean(to, names) + ". Its scenes are: " + listOf(names));
 					}
-					scene.ways[Name(way)] = Name(rawState.name + "." + leads->name);
+					scene.ways[Name(way)] = Name(writtenState.name + "." + leads->name);
 				}
-				for (const WrittenCondition& rawCondition : flattened(rawScene.conditions))
+				for (const WrittenCondition& writtenCondition : flattened(writtenScene.conditions))
 				{
-					scene.conditions.push_back(makeCondition(rawCondition, sceneWhere, sceneWhere, rawState.name, objects));
+					scene.conditions.push_back(makeCondition(writtenCondition, sceneWhere, sceneWhere, writtenState.name, objects));
 				}
-				scene.timers = processTimers(rawScene.timers, sceneWhere);
+				scene.timers = processTimers(writtenScene.timers, sceneWhere);
 				state.scenes.push_back(std::move(scene));
 			}
 
@@ -551,50 +551,50 @@ namespace xge
 	}
 
 	// init's sounds, after everything else so that a length can use any variable.
-	void Evaluator::makeSounds(const std::vector<WrittenSound>& rawSounds, std::vector<SoundDesc>& sounds)
+	void Evaluator::makeSounds(const std::vector<WrittenSound>& writtenSounds, std::vector<SoundDesc>& sounds)
 	{
 		// The sounds, worked out after everything else so that a length can use
 		// any variable.
-		for (const WrittenSound& rawSound : rawSounds)
+		for (const WrittenSound& writtenSound : writtenSounds)
 		{
-			const bool taken = std::any_of(sounds.begin(), sounds.end(), [&](const SoundDesc& sound) { return sound.name == rawSound.name; });
+			const bool taken = std::any_of(sounds.begin(), sounds.end(), [&](const SoundDesc& sound) { return sound.name == writtenSound.name; });
 			if (taken)
 			{
-				throw std::runtime_error("sound '" + rawSound.name + "': there is already a sound of that name");
+				throw std::runtime_error("sound '" + writtenSound.name + "': there is already a sound of that name");
 			}
-			sounds.push_back(processSound(rawSound));
+			sounds.push_back(processSound(writtenSound));
 		}
 	}
 
 	// init's paths, worked out last too, and each step's commands about
 	// its follower made for each object that can fly it.
-	void Evaluator::makePaths(const std::vector<WrittenPath>& rawPaths, std::map<std::string, Path>& paths, const std::vector<State>& states, const std::vector<Object>& objects)
+	void Evaluator::makePaths(const std::vector<WrittenPath>& writtenPaths, std::map<std::string, Path>& paths, const std::vector<State>& states, const std::vector<Object>& objects)
 	{
 		// The paths, worked out last too: a step's numbers can use any variable.
-		for (const WrittenPath& rawPath : rawPaths)
+		for (const WrittenPath& writtenPath : writtenPaths)
 		{
-			const std::string where = "path '" + rawPath.name + "'";
-			if (paths.count(rawPath.name))
+			const std::string where = "path '" + writtenPath.name + "'";
+			if (paths.count(writtenPath.name))
 			{
 				throw std::runtime_error(where + ": there is already a path of that name");
 			}
 
 			Path path;
-			path.name = rawPath.name;
-			path.speed = evaluate(rawPath.speed, where + " > <speed>");
+			path.name = writtenPath.name;
+			path.speed = evaluate(writtenPath.speed, where + " > <speed>");
 			if (!(path.speed > 0.0f))
 			{
 				throw std::runtime_error(where + ": the <speed> is not above 0, so it would never get anywhere");
 			}
-			if (rawPath.start)
+			if (writtenPath.start)
 			{
-				path.start = Vector2f{ evaluate(rawPath.start->x, where + " > <start>"), evaluate(rawPath.start->y, where + " > <start>") };
+				path.start = Vector2f{ evaluate(writtenPath.start->x, where + " > <start>"), evaluate(writtenPath.start->y, where + " > <start>") };
 			}
-			for (const WrittenPathStep& rawStep : rawPath.steps)
+			for (const WrittenPathStep& writtenStep : writtenPath.steps)
 			{
 				PathStep step;
-				step.home = rawStep.home;
-				if (!rawStep.home)
+				step.home = writtenStep.home;
+				if (!writtenStep.home)
 				{
 					// A half that names something that changes, or the
 					// follower (self), is worked out as the step sets off.
@@ -614,19 +614,19 @@ namespace xge
 						}
 						into = evaluate(value, where + " > <step>");
 					};
-					half(rawStep.x, step.by.x, step.liveX);
-					half(rawStep.y, step.by.y, step.liveY);
+					half(writtenStep.x, step.by.x, step.liveX);
+					half(writtenStep.y, step.by.y, step.liveY);
 
 					// Commands about the follower are made for each follower
 					// (below); the rest once.
-					std::vector<WrittenCommand> probe = rawStep.commands;
+					std::vector<WrittenCommand> probe = writtenStep.commands;
 					if (nameSelfIn(probe, "follower"))
 					{
-						step.ownRaw = std::make_shared<const std::vector<WrittenCommand>>(rawStep.commands);
+						step.ownWritten = std::make_shared<const std::vector<WrittenCommand>>(writtenStep.commands);
 					}
 					else
 					{
-						step.commands = processCommands(rawStep.commands, where + " > <step>");
+						step.commands = processCommands(writtenStep.commands, where + " > <step>");
 					}
 				}
 				path.steps.push_back(std::move(step));
@@ -642,7 +642,7 @@ namespace xge
 			Path& path = paths.at(name);
 			for (PathStep& step : path.steps)
 			{
-				if (!step.ownRaw) { continue; }
+				if (!step.ownWritten) { continue; }
 				for (const std::string& follower : followers)
 				{
 					step.ownBy[follower] = pathCommandsFor(step, follower, "path '" + name + "' > <step>, flown by '" + follower + "'");
@@ -651,26 +651,26 @@ namespace xge
 		}
 	}
 
-	Object Evaluator::spawnObject(WrittenObject& raw, const Object& from)
+	Object Evaluator::spawnObject(WrittenObject& written, const Object& from)
 	{
 		// What its rules and others' read of it, under its own name, as init
 		// makes them known for every object the file has. A name used
 		// before (a copy despawned, its name taken again) keeps its place.
-		for (const auto& [variable, value] : raw.variable)
+		for (const auto& [variable, value] : written.variable)
 		{
-			const std::string name = raw.name + "." + variable;
+			const std::string name = written.name + "." + variable;
 			if (objectVariables.emplace(name, 0.0f).second) { bind(name, objectVariables[name]); }
 		}
 		for (const std::string& part : livePartNames())
 		{
-			if (!raw.variable.count(part)) { liveNumbers.try_emplace(Calc::nameOf(raw.name) + "." + part, 0.0f); }
+			if (!written.variable.count(part)) { liveNumbers.try_emplace(Calc::nameOf(written.name) + "." + part, 0.0f); }
 		}
-		if (const auto size = objectSizes.find(from.name); size != objectSizes.end() && !objectSizes.count(raw.name))
+		if (const auto size = objectSizes.find(from.name); size != objectSizes.end() && !objectSizes.count(written.name))
 		{
-			Vector2f& own = objectSizes[raw.name] = size->second;
-			objectShapeKinds[raw.name] = objectShapeKinds[from.name];
-			if (!objectVariables.count(raw.name + ".width")) { bind(raw.name + ".width", own.x); }
-			if (!objectVariables.count(raw.name + ".height")) { bind(raw.name + ".height", own.y); }
+			Vector2f& own = objectSizes[written.name] = size->second;
+			objectShapeKinds[written.name] = objectShapeKinds[from.name];
+			if (!objectVariables.count(written.name + ".width")) { bind(written.name + ".width", own.x); }
+			if (!objectVariables.count(written.name + ".height")) { bind(written.name + ".height", own.y); }
 		}
 
 		// Its pictures are the ones `from` was made with, not drawn again.
@@ -689,28 +689,28 @@ namespace xge
 		if (!from.looks.all().empty()) { first.looks = &from.looks.all(); }
 
 		// Its palettes too, wearing the one `from` is (its looks are those).
-		Object made = makeObject(raw, first, from.layout.cellOffset, from.kind->collisionData.lockstep);
+		Object made = makeObject(written, first, from.layout.cellOffset, from.kind->collisionData.lockstep);
 		made.looks.set->palettes = from.looks.set->palettes;
 		made.looks.worn = from.looks.worn;
 		if (made.mirror.on) { made.looks.set->flips = from.looks.set->flips; }
 		return made;
 	}
 
-	SoundDesc Evaluator::processSound(const WrittenSound& raw)
+	SoundDesc Evaluator::processSound(const WrittenSound& written)
 	{
-		const std::string where = "sound '" + raw.name + "'";
+		const std::string where = "sound '" + written.name + "'";
 
 		SoundDesc sound;
-		sound.name = raw.name;
-		sound.loop = raw.loop;
-		sound.path = raw.path;
+		sound.name = written.name;
+		sound.loop = written.loop;
+		sound.path = written.path;
 
-		const bool noVolume = raw.volume.kind == WrittenValue::Kind::Expression && raw.volume.text.empty();
+		const bool noVolume = written.volume.kind == WrittenValue::Kind::Expression && written.volume.text.empty();
 		// A recording plays as loud as it was made unless told otherwise.
 		if (!sound.path.empty()) { sound.volume = 1.0f; }
 		if (!noVolume)
 		{
-			sound.volume = evaluate(raw.volume, where + " > <volume>");
+			sound.volume = evaluate(written.volume, where + " > <volume>");
 			if (!(sound.volume >= 0.0f && sound.volume <= 1.0f))
 			{
 				throw std::runtime_error(where + ": <volume> is " + std::to_string(sound.volume) + "; expected 0 (silent) to 1 (loudest)");
@@ -755,31 +755,31 @@ namespace xge
 			return sound;
 		}
 
-		const Waveform soundWave = waveOf(raw.wave, where);
+		const Waveform soundWave = waveOf(written.wave, where);
 
-		for (std::size_t i = 0; i < raw.notes.size(); ++i)
+		for (std::size_t i = 0; i < written.notes.size(); ++i)
 		{
-			const WrittenNote& rawNote = raw.notes[i];
-			const std::string here = where + " > " + (rawNote.rest ? "<rest>" : "<note>") + " " + std::to_string(i + 1);
+			const WrittenNote& writtenNote = written.notes[i];
+			const std::string here = where + " > " + (writtenNote.rest ? "<rest>" : "<note>") + " " + std::to_string(i + 1);
 
 			SoundNote note;
-			note.rest = rawNote.rest;
-			note.part = rawNote.part;
-			note.seconds = evaluate(rawNote.length, here);
+			note.rest = writtenNote.rest;
+			note.part = writtenNote.part;
+			note.seconds = evaluate(writtenNote.length, here);
 			if (!(note.seconds > 0.0f && note.seconds <= kMaxNoteSeconds))
 			{
 				throw std::runtime_error(here + ": lasts " + std::to_string(note.seconds) + " seconds; expected more than 0 and at most "
 					+ std::to_string(static_cast<int>(kMaxNoteSeconds)));
 			}
 
-			if (!rawNote.rest)
+			if (!writtenNote.rest)
 			{
-				note.wave = rawNote.wave.empty() ? soundWave : waveOf(rawNote.wave, here);
-				note.startHz = pitchOf(rawNote.pitch, "pitch", here);
-				note.endHz = rawNote.to.empty() ? note.startHz : pitchOf(rawNote.to, "to", here);
-				if (rawNote.decay.kind != WrittenValue::Kind::Expression || !rawNote.decay.text.empty())
+				note.wave = writtenNote.wave.empty() ? soundWave : waveOf(writtenNote.wave, here);
+				note.startHz = pitchOf(writtenNote.pitch, "pitch", here);
+				note.endHz = writtenNote.to.empty() ? note.startHz : pitchOf(writtenNote.to, "to", here);
+				if (writtenNote.decay.kind != WrittenValue::Kind::Expression || !writtenNote.decay.text.empty())
 				{
-					note.decay = evaluate(rawNote.decay, here + " > <decay>");
+					note.decay = evaluate(writtenNote.decay, here + " > <decay>");
 					if (!(note.decay > 0.0f && note.decay <= kMaxNoteSeconds))
 					{
 						throw std::runtime_error(here + ": <decay> is " + formatDisplayNumber(note.decay) + " seconds; expected more than 0 and at most "
@@ -795,7 +795,7 @@ namespace xge
 	}
 
 	// A <hitbox> worked out for `object` (its picture already made).
-	Hitbox Evaluator::makeHitbox(const WrittenHitbox& raw, const Object& object, const std::string& where)
+	Hitbox Evaluator::makeHitbox(const WrittenHitbox& written, const Object& object, const std::string& where)
 	{
 		if (object.kind->collisionData.type == CollisionType::Pixel)
 		{
@@ -803,14 +803,14 @@ namespace xge
 		}
 		const auto valueOr0 = [&](const WrittenValue& value) { return value.kind == WrittenValue::Kind::Expression && value.text.empty() ? 0.0f : evaluate(value, where); };
 		Hitbox hitbox;
-		hitbox.name = raw.name;
-		if (raw.kind == "inset")
+		hitbox.name = written.name;
+		if (written.kind == "inset")
 		{
 			hitbox.inset = true;
-			hitbox.top = valueOr0(raw.top);
-			hitbox.bottom = valueOr0(raw.bottom);
-			hitbox.left = valueOr0(raw.left);
-			hitbox.right = valueOr0(raw.right);
+			hitbox.top = valueOr0(written.top);
+			hitbox.bottom = valueOr0(written.bottom);
+			hitbox.left = valueOr0(written.left);
+			hitbox.right = valueOr0(written.right);
 			// Out from the picture, never; and something must be left.
 			if (std::min({ hitbox.top, hitbox.bottom, hitbox.left, hitbox.right }) < 0.0f)
 			{
@@ -824,22 +824,22 @@ namespace xge
 			return hitbox;
 		}
 
-		hitbox.round = raw.kind == "circle";
+		hitbox.round = written.kind == "circle";
 		if (hitbox.round)
 		{
-			const float radius = evaluate(raw.radius, where);
+			const float radius = evaluate(written.radius, where);
 			hitbox.size = { radius * 2.0f, radius * 2.0f };
 		}
 		else
 		{
-			hitbox.size = { evaluate(raw.width, where), evaluate(raw.height, where) };
+			hitbox.size = { evaluate(written.width, where), evaluate(written.height, where) };
 		}
 		if (!(hitbox.size.x > 0.0f) || !(hitbox.size.y > 0.0f))
 		{
 			throw std::runtime_error(where + ": a <hitbox> must be bigger than nothing; its size is " + formatDisplayNumber(hitbox.size.x)
 				+ " by " + formatDisplayNumber(hitbox.size.y));
 		}
-		hitbox.offset = { valueOr0(raw.x), valueOr0(raw.y) };
+		hitbox.offset = { valueOr0(written.x), valueOr0(written.y) };
 		return hitbox;
 	}
 
@@ -1107,17 +1107,17 @@ namespace xge
 	}
 
 
-	std::vector<Timer> Evaluator::processTimers(const std::vector<WrittenTimer>& raw, const std::string& where)
+	std::vector<Timer> Evaluator::processTimers(const std::vector<WrittenTimer>& written, const std::string& where)
 	{
 		std::vector<Timer> timers;
 		const std::string here = where + " > <timer>";
 
-		for (const WrittenTimer& rawTimer : raw)
+		for (const WrittenTimer& writtenTimer : written)
 		{
 			Timer timer;
-			timer.repeat = rawTimer.repeat;
-			timer.interval = rawTimer.interval;
-			timer.commands = processCommands(rawTimer.commands, here);
+			timer.repeat = writtenTimer.repeat;
+			timer.interval = writtenTimer.interval;
+			timer.commands = processCommands(writtenTimer.commands, here);
 
 			// Worked out once now so that a mistake in it is a load error; it
 			// is worked out again every time the timer starts over. Only a plain
@@ -1128,23 +1128,23 @@ namespace xge
 			// checking does not use up the numbers the game will draw.)
 			const std::mt19937 drawn = randomState();
 			commandValues = true;
-			const float seconds = evaluate(rawTimer.interval, here);
+			const float seconds = evaluate(writtenTimer.interval, here);
 			commandValues = false;
 			setRandomState(drawn);
 			char* end = nullptr;
-			const std::string& text = rawTimer.interval.text;
-			const bool plainNumber = rawTimer.interval.kind == WrittenValue::Kind::Expression && !text.empty()
+			const std::string& text = writtenTimer.interval.text;
+			const bool plainNumber = writtenTimer.interval.kind == WrittenValue::Kind::Expression && !text.empty()
 				&& (std::strtof(text.c_str(), &end), end == text.c_str() + text.size());
 			// An <after> of 0 goes off on the first frame it counts (a ghost
 			// told what to do the moment it turns blue); an <every> of 0 would
 			// be every frame, which a frame-counting timer cannot say.
-			if (plainNumber && (rawTimer.repeat ? !(seconds > 0.0f) : seconds < 0.0f))
+			if (plainNumber && (writtenTimer.repeat ? !(seconds > 0.0f) : seconds < 0.0f))
 			{
-				throw std::runtime_error(here + ": " + (rawTimer.repeat ? "<every> is " + std::to_string(seconds) + "; expected a number of seconds above 0"
+				throw std::runtime_error(here + ": " + (writtenTimer.repeat ? "<every> is " + std::to_string(seconds) + "; expected a number of seconds above 0"
 					: "<after> is " + std::to_string(seconds) + "; expected a number of seconds, 0 or more"));
 			}
-			timer.sprite = rawTimer.sprite;
-			timer.name = rawTimer.name;
+			timer.sprite = writtenTimer.sprite;
+			timer.name = writtenTimer.name;
 			timer.seconds = seconds;
 
 			timers.push_back(std::move(timer));
@@ -1155,26 +1155,26 @@ namespace xge
 
 	std::vector<Command> Evaluator::pathCommandsFor(const PathStep& step, const std::string& follower, const std::string& where)
 	{
-		if (!step.ownRaw) { return {}; }
-		std::vector<WrittenCommand> own = *step.ownRaw;
+		if (!step.ownWritten) { return {}; }
+		std::vector<WrittenCommand> own = *step.ownWritten;
 		nameSelfIn(own, follower);
 		return processCommands(own, where);
 	}
 
-	std::vector<Command> Evaluator::processCommands(const std::vector<WrittenCommand>& raw, const std::string& where)
+	std::vector<Command> Evaluator::processCommands(const std::vector<WrittenCommand>& written, const std::string& where)
 	{
 		std::vector<Command> commands;
 		commandValues = true;
 		try
 		{
-			for (const WrittenCommand& each : raw)
+			for (const WrittenCommand& each : written)
 			{
 				// A condition in an action: its commands now, its test once
 				// every object is made (testActionConditions).
 				if (each.verb == "condition" && each.test)
 				{
 					auto body = std::make_shared<WhenBody>();
-					body->raw = each.test;
+					body->written = each.test;
 					commandValues = false;
 					body->commands = processCommands(each.test->commands, where + " > <condition>");
 					commandValues = true;
@@ -1234,15 +1234,15 @@ namespace xge
 		}
 	}
 
-	std::vector<std::string> Evaluator::sizeDependenciesOf(const WrittenObject& rawObject) const
+	std::vector<std::string> Evaluator::sizeDependenciesOf(const WrittenObject& writtenObject) const
 	{
 		std::vector<std::string> dependencies;
 
 		// Every identifier in the position expressions, e.g. "title.width" or
 		// "window.width.center"; the ones that end in .width / .height and name
 		// an object whose size needs a backend are what this is looking for.
-		std::vector<const std::string*> positionExpressions = rawObject.rawPosition.x.expressions();
-		for (const std::string* yExpression : rawObject.rawPosition.y.expressions())
+		std::vector<const std::string*> positionExpressions = writtenObject.writtenPosition.x.expressions();
+		for (const std::string* yExpression : writtenObject.writtenPosition.y.expressions())
 		{
 			positionExpressions.push_back(yExpression);
 		}

@@ -21,9 +21,9 @@ namespace xge
 		}
 	}
 
-	static Command makePut(const WrittenCommand& raw, const ValueEvaluator&)
+	static Command makePut(const WrittenCommand& written, const ValueEvaluator&)
 	{
-		return CmdPut{ raw.objClass };
+		return CmdPut{ written.objClass };
 	}
 
 	static bool runPut(const CmdPut& putCommand, const Doer& doer)

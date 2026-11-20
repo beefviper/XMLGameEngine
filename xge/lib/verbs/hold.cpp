@@ -18,13 +18,13 @@ namespace xge
 		command.own.emplace<WrittenHold>().button = requireAttribute(node, "button", where);
 	}
 
-	static Command makeHold(const WrittenCommand& raw, const ValueEvaluator&)
+	static Command makeHold(const WrittenCommand& written, const ValueEvaluator&)
 	{
-		const std::string& written = ownOf<WrittenHold>(raw).button;
-		const KeyCode button = keyCodeFromString(written);
+		const std::string& own = ownOf<WrittenHold>(written).button;
+		const KeyCode button = keyCodeFromString(own);
 		if (button == KeyCode::Unknown)
 		{
-			throw std::runtime_error("<hold button=\"" + written + "\">: there is no key named '" + written + "'");
+			throw std::runtime_error("<hold button=\"" + own + "\">: there is no key named '" + own + "'");
 		}
 		return CmdHold{ button };
 	}

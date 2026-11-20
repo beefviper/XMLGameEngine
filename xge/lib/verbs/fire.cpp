@@ -24,9 +24,9 @@ namespace xge
 		requireAttribute(node, "object", where);
 	}
 
-	static Command makeFire(const WrittenCommand& raw, const ValueEvaluator&)
+	static Command makeFire(const WrittenCommand& written, const ValueEvaluator&)
 	{
-		return CmdFire{ raw.object };
+		return CmdFire{ written.object };
 	}
 
 	static void checkFire(const CmdFire& fire, const Checking& checking)

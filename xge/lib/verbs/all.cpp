@@ -308,24 +308,24 @@ namespace xge
 		return arc;
 	}
 
-	float speedOf(const WrittenValue& written, const char* what, const ValueEvaluator& evaluate)
+	float speedOf(const WrittenValue& own, const char* what, const ValueEvaluator& evaluate)
 	{
-		const float speed = evaluate(written);
+		const float speed = evaluate(own);
 		if (speed < 0.0f) { throw std::runtime_error(std::string("<") + what + ">: the speed is below 0"); }
 		return speed;
 	}
 
-	Command makeSendHeld(const WrittenCommand& raw, const ValueEvaluator& evaluate)
+	Command makeSendHeld(const WrittenCommand& written, const ValueEvaluator& evaluate)
 	{
-		CmdSend send{ raw.object, raw.from, raw.into, std::nullopt, std::nullopt, false, 0, false, {} };
+		CmdSend send{ written.object, written.from, written.into, std::nullopt, std::nullopt, false, 0, false, {} };
 		send.held = true;
-		const WrittenSend& written = ownOf<WrittenSend>(raw);
-		send.all = written.all;
-		send.sprite = raw.sprite;
-		if (!written.all)
+		const WrittenSend& own = ownOf<WrittenSend>(written);
+		send.all = own.all;
+		send.sprite = written.sprite;
+		if (!own.all)
 		{
-			const float count = written.count ? evaluate(*written.count) : 0.0f;
-			if (count < 1.0f || count != std::floor(count)) { throw std::runtime_error("<" + raw.verb + " from=\"" + raw.from + "\" into=\"" + raw.into + "\">: sends " + formatDisplayNumber(count) + "; expected a whole number from 1, or <all />"); }
+			const float count = own.count ? evaluate(*own.count) : 0.0f;
+			if (count < 1.0f || count != std::floor(count)) { throw std::runtime_error("<" + written.verb + " from=\"" + written.from + "\" into=\"" + written.into + "\">: sends " + formatDisplayNumber(count) + "; expected a whole number from 1, or <all />"); }
 			send.count = static_cast<int>(count);
 		}
 		return send;

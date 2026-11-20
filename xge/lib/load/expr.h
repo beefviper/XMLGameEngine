@@ -46,7 +46,7 @@ namespace xge
 		Evaluator(const Evaluator&) = delete;
 		Evaluator& operator=(const Evaluator&) = delete;
 
-		// Fills `variables` from rawVariables (in order, so a variable's value
+		// Fills `variables` from writtenVariables (in order, so a variable's value
 		// can use the ones declared before it), then builds every object, state
 		// and sound. A wave, pitch or length a sound cannot use, and a <play>
 		// naming no sound, throw std::runtime_error saying where.
@@ -78,86 +78,86 @@ namespace xge
 
 		// One object, made from what the file says of it (after init's
 		// first pass, or for a copy spawned while the game runs).
-		Object makeObject(WrittenObject& rawObject, const FirstPass& first, Vector2f cellOffset, int lockstep);
+		Object makeObject(WrittenObject& writtenObject, const FirstPass& first, Vector2f cellOffset, int lockstep);
 
 		// A written <drag> or <grip> as the rate it loses speed at (load/build.cpp).
 		float lossRate(float written, const std::string& what) const;
 
 		// makeObject's looks: each named <sprite> or <animation> made, the first the
 		// very picture it starts with, and where each once look goes when it ends.
-		std::vector<Object::Look> buildLooks(WrittenObject& rawObject, const FirstPass& first, const HeldPicture& picture, const std::string& where);
+		std::vector<Object::Look> buildLooks(WrittenObject& writtenObject, const FirstPass& first, const HeldPicture& picture, const std::string& where);
 		// makeObject's picture: the sprite it starts as, its animation, and a
 		// text's live pieces.
-		void buildSprite(WrittenObject& rawObject, const FirstPass& first, const HeldPicture& picture, float animationSeconds, Object& object, const std::string& where);
+		void buildSprite(WrittenObject& writtenObject, const FirstPass& first, const HeldPicture& picture, float animationSeconds, Object& object, const std::string& where);
 		// makeObject's names: its group, class and owners, and whether it is
 		// drawn, seen and there.
-		void buildNames(WrittenObject& rawObject, Object& object);
+		void buildNames(WrittenObject& writtenObject, Object& object);
 		// makeObject's numbers: its variables, then where it starts, what it
 		// follows, its velocity, acceleration and heading.
-		void buildNumbers(WrittenObject& rawObject, Object& object, Vector2f cellOffset, const std::vector<std::string>& positionSizeDependencies, const std::string& where);
+		void buildNumbers(WrittenObject& writtenObject, Object& object, Vector2f cellOffset, const std::vector<std::string>& positionSizeDependencies, const std::string& where);
 		// makeObject's ways of moving: drag, surface, friction, mass, pulls,
 		// seeking, light and dark, altitude, a tether and which way it faces.
-		void buildMotion(WrittenObject& rawObject, Object& object, const std::string& where);
+		void buildMotion(WrittenObject& writtenObject, Object& object, const std::string& where);
 		// makeObject's timers, a named one's time left a number of its own.
-		void buildTimers(WrittenObject& rawObject, Object& object, const std::string& where);
+		void buildTimers(WrittenObject& writtenObject, Object& object, const std::string& where);
 		// makeObject's looks given it, the first one's animation, the look for
 		// each way it moves (<poses>) and for where what it is joined to lies.
-		void buildLookParts(WrittenObject& rawObject, Object& object, const std::vector<Object::Look>& looks, const std::string& where);
+		void buildLookParts(WrittenObject& writtenObject, Object& object, const std::vector<Object::Look>& looks, const std::string& where);
 		// makeObject's board-game moves and marks, each set's look found.
-		void buildMoves(WrittenObject& rawObject, Object& object, const std::vector<Object::Look>& looks, const std::string& where);
+		void buildMoves(WrittenObject& writtenObject, Object& object, const std::vector<Object::Look>& looks, const std::string& where);
 		// makeObject's holder (<holds>), hand, held item and turns.
-		void buildHolder(WrittenObject& rawObject, Object& object, std::uint64_t order, const std::string& where);
+		void buildHolder(WrittenObject& writtenObject, Object& object, std::uint64_t order, const std::string& where);
 		// makeObject's mirror, grip, timers' looks, its tile on a map, a
 		// maze's walls and its pivot.
-		void buildPlace(WrittenObject& rawObject, Object& object, const std::vector<Object::Look>& looks, const std::string& where);
+		void buildPlace(WrittenObject& writtenObject, Object& object, const std::vector<Object::Look>& looks, const std::string& where);
 		// makeObject's collisions: on or off, the kind, solid pixels, hitboxes
 		// (its own and each frame's), its edge rules and its rules with others.
-		void buildCollisions(WrittenObject& rawObject, Object& object, const std::vector<Object::Look>& looks, int thisLockstep, const std::string& where);
+		void buildCollisions(WrittenObject& writtenObject, Object& object, const std::vector<Object::Look>& looks, int thisLockstep, const std::string& where);
 		// makeObject's actions.
-		void buildActions(WrittenObject& rawObject, Object& object, const std::string& where);
+		void buildActions(WrittenObject& writtenObject, Object& object, const std::string& where);
 		// init's names: the window's edges, the game's variables, every object's
 		// variables and timers, and the live numbers, as names a text reads.
-		void nameNumbers(const WindowDesc& windowDesc, const std::vector<std::pair<std::string, WrittenValue>>& rawVariables, std::map<std::string, float>& variables, std::vector<WrittenObject>& rawObjects);
+		void nameNumbers(const WindowDesc& windowDesc, const std::vector<std::pair<std::string, WrittenValue>>& writtenVariables, std::map<std::string, float>& variables, std::vector<WrittenObject>& writtenObjects);
 		// init's objects: every sprite measured once (its size a name), the
 		// cells of groups laid out, then each object made, groups in lockstep.
-		void makeObjects(std::vector<WrittenObject>& rawObjects, std::vector<Object>& objects);
+		void makeObjects(std::vector<WrittenObject>& writtenObjects, std::vector<Object>& objects);
 		// init's tests on collision rules, edge guards and actions' conditions,
 		// once every object they can name is made.
-		void makeRuleTests(const std::vector<WrittenObject>& rawObjects, std::vector<Object>& objects);
+		void makeRuleTests(const std::vector<WrittenObject>& writtenObjects, std::vector<Object>& objects);
 		// init's states: each one's inputs, conditions, timers and scenes.
-		void makeStates(std::vector<WrittenState>& rawStates, std::vector<State>& states, const std::vector<Object>& objects);
+		void makeStates(std::vector<WrittenState>& writtenStates, std::vector<State>& states, const std::vector<Object>& objects);
 		// init's sounds, after everything else so that a length can use any variable.
-		void makeSounds(const std::vector<WrittenSound>& rawSounds, std::vector<SoundDesc>& sounds);
+		void makeSounds(const std::vector<WrittenSound>& writtenSounds, std::vector<SoundDesc>& sounds);
 		// init's paths, worked out last too, and each step's commands about
 		// its follower made for each object that can fly it.
-		void makePaths(const std::vector<WrittenPath>& rawPaths, std::map<std::string, Path>& paths, const std::vector<State>& states, const std::vector<Object>& objects);
+		void makePaths(const std::vector<WrittenPath>& writtenPaths, std::map<std::string, Path>& paths, const std::vector<State>& states, const std::vector<Object>& objects);
 		// What a <condition> tests, made ready (with its <all> or <any>'s
 		// checks, each made the same way), checked against the objects.
-		Condition makeTest(const WrittenCondition& rawCondition, const std::string& where, const std::string& owner, const std::vector<Object>& objects);
-		Condition makeTestHere(const WrittenCondition& rawCondition, const std::string& where, const std::string& owner, const std::vector<Object>& objects);
+		Condition makeTest(const WrittenCondition& writtenCondition, const std::string& where, const std::string& owner, const std::vector<Object>& objects);
+		Condition makeTestHere(const WrittenCondition& writtenCondition, const std::string& where, const std::string& owner, const std::vector<Object>& objects);
 		// makeTestHere's checks: what a test names (what it sees and what is in
 		// the way, a look, a distance, a variable) is something the game has.
-		void checkTestNames(const WrittenCondition& rawCondition, const Condition& condition, const std::string& where, const std::string& owner, const std::vector<Object>& objects);
+		void checkTestNames(const WrittenCondition& writtenCondition, const Condition& condition, const std::string& where, const std::string& owner, const std::vector<Object>& objects);
 		// A state's condition: its test, and its commands; or, when they name
 		// self or others, its commands for each object it may match.
-		Condition makeCondition(const WrittenCondition& rawCondition, const std::string& where, const std::string& owner, const std::string& stateName, const std::vector<Object>& objects);
-		Condition makeConditionHere(const WrittenCondition& rawCondition, const std::string& where, const std::string& owner, const std::string& stateName, const std::vector<Object>& objects);
+		Condition makeCondition(const WrittenCondition& writtenCondition, const std::string& where, const std::string& owner, const std::string& stateName, const std::vector<Object>& objects);
+		Condition makeConditionHere(const WrittenCondition& writtenCondition, const std::string& where, const std::string& owner, const std::string& stateName, const std::vector<Object>& objects);
 
 		// buildPicture's steps 1 to 3 for a line, polygon, cell, svg or bitmap:
 		// read, drawn into a Bitmap and flipped; a line's segments kept to turn.
 		PictureId drawPicture(const WrittenSprite& sprite, const std::string& where, const std::string& color, const std::shared_ptr<Turnable>& kept);
-		// A copy of `from` spawned while the game runs, from `raw` (what
+		// A copy of `from` spawned while the game runs, from `written` (what
 		// the file says of `from`, under the copy's name): its names
 		// made known to the expressions (its variables, where it is, its
 		// size) and the object made, its pictures shared with `from`'s.
-		Object spawnObject(WrittenObject& raw, const Object& from);
+		Object spawnObject(WrittenObject& written, const Object& from);
 
 		void init(const WindowDesc& windowDesc,
-			const std::vector<std::pair<std::string, WrittenValue>>& rawVariables, std::map<std::string, float>& variables,
-			std::vector<WrittenState>& rawStates, std::vector<State>& states,
-			std::vector<WrittenObject>& rawObjects, std::vector<Object>& objects,
-			const std::vector<WrittenSound>& rawSounds, std::vector<SoundDesc>& sounds,
-			const std::vector<WrittenPath>& rawPaths, std::map<std::string, Path>& paths);
+			const std::vector<std::pair<std::string, WrittenValue>>& writtenVariables, std::map<std::string, float>& variables,
+			std::vector<WrittenState>& writtenStates, std::vector<State>& states,
+			std::vector<WrittenObject>& writtenObjects, std::vector<Object>& objects,
+			const std::vector<WrittenSound>& writtenSounds, std::vector<SoundDesc>& sounds,
+			const std::vector<WrittenPath>& writtenPaths, std::map<std::string, Path>& paths);
 
 		// Every object's size, keyed by object name and bound into symbolTable as
 		// "name.width" / "name.height" (unless the object declares a <variable>
@@ -170,9 +170,9 @@ namespace xge
 		std::map<std::string, ShapeKind> objectShapeKinds;
 		void setObjectSize(const std::string& name, const Vector2f& size);
 
-		// The objects, other than shapes, whose size rawObject's <position> uses
+		// The objects, other than shapes, whose size writtenObject's <position> uses
 		// (by "name.width" / "name.height"): the ones only a backend can measure.
-		std::vector<std::string> sizeDependenciesOf(const WrittenObject& rawObject) const;
+		std::vector<std::string> sizeDependenciesOf(const WrittenObject& writtenObject) const;
 
 		bool loading{ true };
 
@@ -224,7 +224,7 @@ namespace xge
 		// what is only known while the game runs (Object::follows).
 		float evaluateStart(const WrittenValue& value, const std::string& where);
 
-		// A path step's commands about its flier (PathStep::ownRaw), made for
+		// A path step's commands about its flier (PathStep::ownWritten), made for
 		// the object `follower`: self is its name.
 		std::vector<Command> pathCommandsFor(const PathStep& step, const std::string& follower, const std::string& where);
 
@@ -283,7 +283,7 @@ namespace xge
 		// from the group's position, by its name (see WrittenCell). `pictures`
 		// is every object's sprite as it is drawn, for the size of a cell whose
 		// sprite is not its row's.
-		std::map<std::string, Vector2f> layOutCells(const std::vector<WrittenObject>& rawObjects,
+		std::map<std::string, Vector2f> layOutCells(const std::vector<WrittenObject>& writtenObjects,
 			const std::map<std::string, Picture>& pictures);
 
 		// The picture `key` names (everything it is drawn from), drawn by
@@ -316,7 +316,7 @@ namespace xge
 		// names for it by its name, drawn from what the file says of it.
 		// Throws std::runtime_error for one with a <heading>, or with no
 		// bitmap that takes a style.
-		void makePalettes(const std::vector<WrittenObject>& rawObjects, std::vector<Object>& objects, const std::map<std::string, std::vector<std::string>>& wanted);
+		void makePalettes(const std::vector<WrittenObject>& writtenObjects, std::vector<Object>& objects, const std::map<std::string, std::vector<std::string>>& wanted);
 
 		// The flips (Object::Mirror::flips) of every picture `object` can show.
 		std::shared_ptr<const std::map<PictureId, PictureId>> flipsOf(const Object& object);
@@ -342,17 +342,17 @@ namespace xge
 		// Each frame's own commands, made (empty when no frame has any).
 		std::vector<std::vector<Command>> frameCommandsOf(const std::vector<std::vector<WrittenCommand>>& frames, const std::string& where);
 
-		std::vector<Command> processCommands(const std::vector<WrittenCommand>& raw, const std::string& where);
+		std::vector<Command> processCommands(const std::vector<WrittenCommand>& written, const std::string& where);
 
 		// An object's or a state's <timers>: the commands made, the interval
 		// checked and kept as written (see Timer).
-		std::vector<Timer> processTimers(const std::vector<WrittenTimer>& raw, const std::string& where);
+		std::vector<Timer> processTimers(const std::vector<WrittenTimer>& written, const std::string& where);
 
 		// A <hitbox> worked out for an object whose picture is made.
-		Hitbox makeHitbox(const WrittenHitbox& raw, const Object& object, const std::string& where);
+		Hitbox makeHitbox(const WrittenHitbox& written, const Object& object, const std::string& where);
 
 		// A <sound> worked out: its words checked and its lengths evaluated.
-		SoundDesc processSound(const WrittenSound& raw);
+		SoundDesc processSound(const WrittenSound& written);
 
 		// Every object-declared <variable>, keyed "ownerName.variableName", bound
 		// by reference into symbolTable (see init()) so any expression - not just

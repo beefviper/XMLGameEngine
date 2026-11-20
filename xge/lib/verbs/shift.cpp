@@ -21,9 +21,9 @@ namespace xge
 		shift.y = by.y;
 	}
 
-	static Command makeShift(const WrittenCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeShift(const WrittenCommand& written, const ValueEvaluator& evaluate)
 	{
-		return CmdShift{ raw.object, { valueOr(ownOf<WrittenShift>(raw).x, 0.0f, evaluate), valueOr(ownOf<WrittenShift>(raw).y, 0.0f, evaluate) } };
+		return CmdShift{ written.object, { valueOr(ownOf<WrittenShift>(written).x, 0.0f, evaluate), valueOr(ownOf<WrittenShift>(written).y, 0.0f, evaluate) } };
 	}
 
 	static void checkShift(const CmdShift& shift, const Checking& checking)

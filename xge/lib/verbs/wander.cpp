@@ -17,9 +17,9 @@ namespace xge
 		command.own = WrittenWander{ readValue(node, where) };
 	}
 
-	static Command makeWander(const WrittenCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeWander(const WrittenCommand& written, const ValueEvaluator& evaluate)
 	{
-		return CmdWander{ speedOf(ownOf<WrittenWander>(raw).speed, "wander", evaluate) };
+		return CmdWander{ speedOf(ownOf<WrittenWander>(written).speed, "wander", evaluate) };
 	}
 
 	static bool runWander(const CmdWander& wander, const Doer& doer)

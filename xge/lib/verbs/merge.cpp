@@ -15,9 +15,9 @@ namespace xge
 		requireAttribute(node, "variable", where);
 	}
 
-	static Command makeMerge(const WrittenCommand& raw, const ValueEvaluator&)
+	static Command makeMerge(const WrittenCommand& written, const ValueEvaluator&)
 	{
-		return CmdMerge{ raw.variable };
+		return CmdMerge{ written.variable };
 	}
 
 	static bool runMerge(const CmdMerge& merge, const Doer& doer)

@@ -23,11 +23,11 @@ namespace xge
 		if (auto roughNode = findChild(&node, "rough")) { hole.rough = readValue(*roughNode, here); }
 	}
 
-	static Command makeHole(const WrittenCommand& raw, const ValueEvaluator& evaluate)
+	static Command makeHole(const WrittenCommand& written, const ValueEvaluator& evaluate)
 	{
-		const WrittenHole& written = ownOf<WrittenHole>(raw);
-		const float radius = evaluate(written.radius);
-		const float rough = valueOr(written.rough, 0.0f, evaluate);
+		const WrittenHole& own = ownOf<WrittenHole>(written);
+		const float radius = evaluate(own.radius);
+		const float rough = valueOr(own.rough, 0.0f, evaluate);
 		if (!(radius > 0.0f)) { throw std::runtime_error("<hole> has a radius of " + formatDisplayNumber(radius) + "; expected above 0"); }
 		if (!(rough >= 0.0f && rough <= 1.0f)) { throw std::runtime_error("<hole> has a <rough> of " + formatDisplayNumber(rough) + "; expected 0 up to 1"); }
 		return CmdHole{ radius, rough };

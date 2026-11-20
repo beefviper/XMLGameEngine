@@ -36,10 +36,10 @@ namespace xge
 		else if (!command.objClass.empty()) { fail(where + " > <trigger class>", "class= picks the pieces in a <here /> or an <around />; give one, or leave class= out"); }
 	}
 
-	static Command makeTrigger(const WrittenCommand& raw, const ValueEvaluator&)
+	static Command makeTrigger(const WrittenCommand& written, const ValueEvaluator&)
 	{
-		const WrittenTrigger& written = ownOf<WrittenTrigger>(raw);
-		return CmdTriggerAction{ raw.object, raw.action, raw.from, written.otherwise, raw.objClass, written.cells };
+		const WrittenTrigger& own = ownOf<WrittenTrigger>(written);
+		return CmdTriggerAction{ written.object, written.action, written.from, own.otherwise, written.objClass, own.cells };
 	}
 
 	static void checkTrigger(const CmdTriggerAction& trigger, const Checking& checking)

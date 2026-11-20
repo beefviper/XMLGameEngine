@@ -16,9 +16,9 @@ namespace xge
 		requireAttribute(node, "sound", where);
 	}
 
-	static Command makePlay(const WrittenCommand& raw, const ValueEvaluator&)
+	static Command makePlay(const WrittenCommand& written, const ValueEvaluator&)
 	{
-		return CmdPlay{ raw.sound };
+		return CmdPlay{ written.sound };
 	}
 
 	static void checkPlay(const CmdPlay& play, const Checking& checking)

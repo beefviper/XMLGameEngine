@@ -24,9 +24,9 @@ namespace xge
 		if (node.getFirstChild()) { readOnto(node, where + " > <track>", command.own.emplace<WrittenTrack>().onto); }
 	}
 
-	static Command makeTrack(const WrittenCommand& raw, const ValueEvaluator&)
+	static Command makeTrack(const WrittenCommand& written, const ValueEvaluator&)
 	{
-		return CmdTrack{ raw.path, NameStore::program().of(ownOf<WrittenTrack>(raw).onto) };
+		return CmdTrack{ written.path, NameStore::program().of(ownOf<WrittenTrack>(written).onto) };
 	}
 
 	static void checkTrack(const CmdTrack& track, const Checking& checking)
