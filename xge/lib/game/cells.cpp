@@ -1441,7 +1441,7 @@ namespace xge
 					{
 						if (!on(mark.variable)) { continue; }
 						// No class=: the pieces of the player on its turn.
-						const Name markClass = mark.objClass.empty() ? game.turnClass() : mark.objClass;
+						const Name markClass = mark.objClass.empty() ? game.players().turnClass() : mark.objClass;
 						switch (mark.kind)
 						{
 						case Object::Mark::Kind::Held:

@@ -144,9 +144,9 @@ namespace xge
 		{
 			if (written.think.empty()) { continue; }
 			const Command made = makeCommand(written.think.front(), [&](const WrittenValue& value) { return expr.evaluate(value, "object '" + written.name + "' > <think>"); });
-			if (const auto* plays = std::get_if<CmdThink>(&shapeOf(made))) { memberThinks.emplace(Name::of(written.name), *plays); }
+			if (const auto* plays = std::get_if<CmdThink>(&shapeOf(made))) { playerGroups.memberThinks.emplace(Name::of(written.name), *plays); }
 		}
-		startPlayers();
+		playerGroups.startPlayers();
 		loadedCount = objects.size();
 		runsInTop.assign(objects.size(), 0);
 		runsInTopStage.assign(objects.size(), 0);
@@ -930,7 +930,7 @@ namespace xge
 
 	float* Game::variableOf(const VariableName& name) noexcept
 	{
-		Object* owner = anyTurns ? find(turnOwner(name.owner)) : find(name.owner);
+		Object* owner = find(playerGroups.turnOwner(name.owner));
 		if (!owner) { return nullptr; }
 		const auto found = owner->variable.find(name.variable);
 		return found == owner->variable.end() ? nullptr : &found->second;
@@ -1487,7 +1487,7 @@ namespace xge
 
 	bool Game::setVariable(Name objectName, Name variableName, float value)
 	{
-		Object* owner = find(anyTurns ? turnOwner(objectName) : objectName);
+		Object* owner = find(playerGroups.turnOwner(objectName));
 		if (!owner)
 		{
 			return false;
@@ -1909,7 +1909,7 @@ namespace xge
 
 		// A new game: the cards shuffled and dealt again, the first player's turn.
 		itemHolders.sendStarts();
-		startPlayers();
+		playerGroups.startPlayers();
 	}
 
 	void Game::relabelAll(void)
@@ -2499,7 +2499,7 @@ namespace xge
 		{
 			thought = true;
 			CmdThink each = written;
-			if (each.objClass.empty()) { each.objClass = turnClass(); }
+			if (each.objClass.empty()) { each.objClass = playerGroups.turnClass(); }
 			if (const auto key = thinker.think(*this, each, seconds)) { taps.insert(*key); }
 		};
 		for (const Condition& condition : currentState.top().computer)
@@ -2512,7 +2512,7 @@ namespace xge
 			}
 		}
 		// A player the computer plays, on its turn.
-		for (const auto& [name, plays] : memberThinks)
+		for (const auto& [name, plays] : playerGroups.memberThinks)
 		{
 			const Object* member = find(name);
 			if (!member || !member->exists || !isShown(*member) || member->variable.find(words::turn)->second == 0.0f) { continue; }

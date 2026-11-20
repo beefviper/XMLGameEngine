@@ -43,40 +43,40 @@ namespace xge
 		}
 	}
 
-	void Game::startPlayers()
+	void Players::startPlayers()
 	{
 		std::set<std::string> started;
-		for (Object& object : objects)
+		for (Object& object : game.getCurrentObjects())
 		{
-			if (!turnsOf(object).takes) { continue; }
+			if (!game.turnsOf(object).takes) { continue; }
 			anyTurns = true;
 			const bool first = started.insert(object.groupName).second;
 			object.variable[words::turn] = first ? 1.0f : 0.0f;
-			variableChanged(object.name, words::turn, object.variable[words::turn]);
+			game.variableChanged(object.name, words::turn, object.variable[words::turn]);
 			if (first) { object.showLook(0); }
-			else if (!turnsOf(object).sprite.empty()) { showLook(object, turnsOf(object).sprite); }
+			else if (!game.turnsOf(object).sprite.empty()) { game.showLook(object, game.turnsOf(object).sprite); }
 		}
 	}
 
-	Object* Game::onTurn(Name name)
+	Object* Players::onTurn(Name name)
 	{
-		const Name full = fullName(name);
-		for (Object& object : objects)
+		const Name full = game.fullName(name);
+		for (Object& object : game.getCurrentObjects())
 		{
-			if (turnsOf(object).takes && (object.inGroup(name) || object.inGroup(full)) && object.variable[words::turn] != 0.0f) { return &object; }
+			if (game.turnsOf(object).takes && (object.inGroup(name) || object.inGroup(full)) && object.variable[words::turn] != 0.0f) { return &object; }
 		}
 		return nullptr;
 	}
 
-	bool Game::takesTurns(Name name) const
+	bool Players::takesTurns(Name name) const
 	{
-		const Name full = fullName(name);
-		return std::any_of(objects.begin(), objects.end(), [&](const Object& object) { return turnsOf(object).takes && (object.inGroup(name) || object.inGroup(full)); });
+		const Name full = game.fullName(name);
+		return std::any_of(game.getCurrentObjects().begin(), game.getCurrentObjects().end(), [&](const Object& object) { return game.turnsOf(object).takes && (object.inGroup(name) || object.inGroup(full)); });
 	}
 
-	bool Game::answers(const Object& member) const
+	bool Players::answers(const Object& member) const
 	{
-		if (!turnsOf(member).takes) { return true; }
+		if (!game.turnsOf(member).takes) { return true; }
 		const auto onIt = member.variable.find(words::turn);
 		if (onIt == member.variable.end() || onIt->second == 0.0f) { return false; }
 		// A member the computer thinks for answers only its presses; any other
@@ -84,37 +84,37 @@ namespace xge
 		return memberThinks.count(member.name) == 0 || computerPresses;
 	}
 
-	bool Game::passPlayers(Object& member)
+	bool Players::passPlayers(Object& member)
 	{
-		if (!turnsOf(member).takes || member.variable[words::turn] == 0.0f) { return false; }
+		if (!game.turnsOf(member).takes || member.variable[words::turn] == 0.0f) { return false; }
 		// Not while a holder waits for the call its wild card asks of the
 		// one who laid it.
-		for (Object* holder : itemHolders.shownHolders())
+		for (Object* holder : game.holders().shownHolders())
 		{
-			if (holderOf(*holder).calling > 0.0f) { return false; }
+			if (game.holderOf(*holder).calling > 0.0f) { return false; }
 		}
 		// The next member of the group, round to the first.
 		std::vector<Object*> members;
-		for (Object& object : objects)
+		for (Object& object : game.getCurrentObjects())
 		{
-			if (turnsOf(object).takes && object.groupName == member.groupName && object.exists) { members.push_back(&object); }
+			if (game.turnsOf(object).takes && object.groupName == member.groupName && object.exists) { members.push_back(&object); }
 		}
 		const auto at = std::find(members.begin(), members.end(), &member);
 		Object* next = members[static_cast<std::size_t>(at - members.begin() + 1) % members.size()];
 		if (next == &member) { return true; }
 		handTurn(members, next);
 		// What else the press would do is not the next one's.
-		turnHandedOver = true;
+		game.stopCommands();
 		return true;
 	}
 
-	bool Game::passPlayersTo(Name group, int number)
+	bool Players::passPlayersTo(Name group, int number)
 	{
-		const Name full = fullName(group);
+		const Name full = game.fullName(group);
 		std::vector<Object*> members;
-		for (Object& object : objects)
+		for (Object& object : game.getCurrentObjects())
 		{
-			if (turnsOf(object).takes && (object.inGroup(group) || object.inGroup(full)) && object.exists) { members.push_back(&object); }
+			if (game.turnsOf(object).takes && (object.inGroup(group) || object.inGroup(full)) && object.exists) { members.push_back(&object); }
 		}
 		if (members.empty() || number > static_cast<int>(members.size())) { return false; }
 		handTurn(members, number == 0 ? nullptr : members[static_cast<std::size_t>(number - 1)]);
@@ -122,54 +122,54 @@ namespace xge
 	}
 
 	// The turn to `next` (none: nobody's), the others off it.
-	void Game::handTurn(const std::vector<Object*>& members, Object* next)
+	void Players::handTurn(const std::vector<Object*>& members, Object* next)
 	{
 		for (Object* each : members)
 		{
 			const bool on = each == next;
 			if (on == (each->variable[words::turn] != 0.0f)) { continue; }
-			setVariable(each->name, words::turn, on ? 1.0f : 0.0f);
+			game.setVariable(each->name, words::turn, on ? 1.0f : 0.0f);
 			// Onto its turn it leaves its off-turn look, for its first; a look
 			// given it while it waited (a pass's "again") stays.
-			if (on && (turnsOf(*each).sprite.empty() || each->lookName() == turnsOf(*each).sprite)) { each->showLook(0); }
-			else if (!on && !turnsOf(*each).sprite.empty()) { showLook(*each, turnsOf(*each).sprite); }
+			if (on && (game.turnsOf(*each).sprite.empty() || each->lookName() == game.turnsOf(*each).sprite)) { each->showLook(0); }
+			else if (!on && !game.turnsOf(*each).sprite.empty()) { game.showLook(*each, game.turnsOf(*each).sprite); }
 		}
 		// A moment before the computer plays the one whose turn came, and the
 		// game's conditions see the turn change first.
-		itemHolders.itemWait = Holders::kItemPace;
-		itemHolders.layOutItems();
+		game.holders().itemWait = Holders::kItemPace;
+		game.holders().layOutItems();
 	}
 
-	Name Game::turnClass()
+	Name Players::turnClass()
 	{
-		for (const Object& object : objects)
+		for (const Object& object : game.getCurrentObjects())
 		{
-			if (!turnsOf(object).takes || turnsOf(object).ownsClass.empty() || !object.exists || !isShown(object)) { continue; }
+			if (!game.turnsOf(object).takes || game.turnsOf(object).ownsClass.empty() || !object.exists || !game.isShown(object)) { continue; }
 			const auto onIt = object.variable.find(words::turn);
-			if (onIt != object.variable.end() && onIt->second != 0.0f) { return turnsOf(object).ownsClass; }
+			if (onIt != object.variable.end() && onIt->second != 0.0f) { return game.turnsOf(object).ownsClass; }
 		}
 		return {};
 	}
 
-	bool Game::answersPicker(const Object& picker)
+	bool Players::answersPicker(const Object& picker)
 	{
-		if (computerPresses || currentState.empty()) { return true; }
-		const auto picks = [&](const CmdThink& think) { return fullName(think.picker) == picker.name; };
-		for (const Condition& condition : currentState.top().computer)
+		if (computerPresses || !game.hasState()) { return true; }
+		const auto picks = [&](const CmdThink& think) { return game.fullName(think.picker) == picker.name; };
+		for (const Condition& condition : game.getCurrentState().computer)
 		{
 			const bool thinks = std::any_of(condition.commands.begin(), condition.commands.end(), [&](const Command& command)
 				{
 					const auto* think = std::get_if<CmdThink>(&shapeOf(command));
 					return think && picks(*think);
 				});
-			if (thinks && holds(condition)) { return false; }
+			if (thinks && game.holds(condition)) { return false; }
 		}
 		return true;
 	}
 
-	Name Game::turnOwner(Name owner)
+	Name Players::turnOwner(Name owner)
 	{
-		if (!takesTurns(owner)) { return owner; }
+		if (!anyTurns || !takesTurns(owner)) { return owner; }
 		const Object* on = onTurn(owner);
 		return on ? on->name : owner;
 	}

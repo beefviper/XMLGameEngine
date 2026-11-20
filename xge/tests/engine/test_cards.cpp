@@ -1358,7 +1358,7 @@ namespace
 			set("table", "first", static_cast<float>(leader == 1 ? 4 : leader - 1));
 			// As a hand ends: the table done, nobody's turn.
 			game.showLook(get("table"), "done");
-			game.passPlayersTo("players", 0);
+			game.players().passPlayersTo("players", 0);
 			frames(2);
 			// Dealt a card a round to the players in turn: you, west, north and east.
 			game.holders().stackedStart = roundRobin(*this, hands);

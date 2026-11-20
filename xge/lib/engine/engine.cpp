@@ -408,7 +408,7 @@ namespace xge
 		std::set<KeyCode> taps;
 		const std::set<KeyCode> wanted = game.computerButtons(taps, seconds);
 		computerPressing = true;
-		game.pressingForComputer(true);
+		game.players().pressingForComputer(true);
 		for (const KeyCode key : computerHeld)
 		{
 			if (!wanted.count(key)) { handleKeyReleased(key); }
@@ -424,7 +424,7 @@ namespace xge
 			handleKeyReleased(key);
 		}
 		computerPressing = false;
-		game.pressingForComputer(false);
+		game.players().pressingForComputer(false);
 		computerHeld = wanted;
 	}
 

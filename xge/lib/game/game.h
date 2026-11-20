@@ -17,6 +17,7 @@
 #include "game/think.h"
 #include "game/cells.h"
 #include "game/holders.h"
+#include "game/players.h"
 
 #include <functional>
 #include <iostream>
@@ -73,6 +74,7 @@ namespace xge
 		// Maps with <cells /> and the board games on them.
 		CellMaps& cellMaps() noexcept { return cellMapping; }
 		Holders& holders() noexcept { return itemHolders; }
+		Players& players() noexcept { return playerGroups; }
 
 		// The full name a name means: itself, when it names an object or a
 		// group, or else the one path that ends with it (robots for
@@ -311,11 +313,13 @@ namespace xge
 		// The state on top of the stack. Only good until the stack changes: a
 		// caller that runs commands (which may push or pop) copies what it needs.
 		const State& getCurrentState(void) const;
+		bool hasState() const noexcept { return !currentState.empty(); }
 
 		// Every state the game file defines, in file order (the current one is
 		// a copy of one of these, pushed on the state stack).
 		const std::vector<State>& getStates(void) const noexcept;
 		std::vector<Object>& getCurrentObjects(void) noexcept { return objects; }
+		const std::vector<Object>& getCurrentObjects(void) const noexcept { return objects; }
 
 		// `self`'s collision rules about `other`, which it has touched as
 		// `touch` says (its own edge, and the rest): the ones that hold run.
@@ -358,33 +362,6 @@ namespace xge
 		// press of the same key straight after is never taken for it held).
 		// `seconds` is the step's, which the computer's pace counts.
 		std::set<KeyCode> computerButtons(std::set<KeyCode>& taps, float seconds);
-
-		// Players as a group (game/players.cpp). The member of the group
-		// `name` on its turn (none: the group takes no turns); whether a
-		// name is such a group; whether a key reaches `member` now (always,
-		// unless it takes turns: then only on its turn, and only the computer's
-		// presses for a member it thinks for; the rest, played by people or
-		// by <computer> conditions, answer any press).
-		// <pass /> in a member's action: the next member's turn (false:
-		// not its turn, or a holder waits for a wild card's call).
-		Object* onTurn(Name name);
-		bool takesTurns(Name name) const;
-		bool answers(const Object& member) const;
-		bool passPlayers(Object& member);
-		// <pass member=>: the turn of the group's member of that number
-		// (from 1; 0: nobody's turn). And the owner a verb's variable names:
-		// a group that takes turns means the member on its turn.
-		bool passPlayersTo(Name group, int number);
-		Name turnOwner(Name owner);
-		// The pieces (<owns class=>) of the player on its turn, in a board
-		// game played by a group that takes turns; empty when there is none.
-		Name turnClass();
-		// Whether a press reaches `picker` now: while the computer thinks for
-		// it (a <think object=> whose condition holds now), only the
-		// computer's presses do.
-		bool answersPicker(const Object& picker);
-		// The engine says while it presses the computer's keys.
-		void pressingForComputer(bool pressing) noexcept { computerPresses = pressing; }
 
 		void setCurrentState(const int& index);
 		void setCurrentState(Name name);
@@ -525,6 +502,15 @@ namespace xge
 		// list of commands it was in stops there. Read and cleared by
 		// whatever runs a list of commands in a state.
 		bool takeTurnStop(void) noexcept;
+		// The list of commands running now stops after this one (a <pass />
+		// handed the turn to the next member of a group).
+		void stopCommands() noexcept { turnHandedOver = true; }
+
+		// Whether a condition's test holds now: its <all> or <any> of
+		// checks, a total over what it matches, or any one object it
+		// matches passing it; with `who`, every object its test holds for
+		// (the last test of an <all>'s), for commands that name self.
+		bool holds(const Condition& condition, std::vector<const Object*>* who = nullptr);
 
 		// Called just before a player's game is put away, so whatever the
 		// keys held are doing to it (a ship moving) stops there and does not
@@ -604,15 +590,6 @@ namespace xge
 		void pressBegins();
 		void pressEnds();
 
-		// Players as a group: back to the first member's turn, the rest
-		// showing their <turns sprite=>; each member the computer plays,
-		// with its <think>; whether the computer is pressing now.
-		void startPlayers();
-		void handTurn(const std::vector<Object*>& members, Object* next);
-		std::map<Name, CmdThink> memberThinks;
-		bool anyTurns{ false };
-		bool computerPresses{ false };
-
 		// Joins the objects spawned to the game's, and takes out the copies
 		// despawned: what updateObjects does before and after a frame. A
 		// caller that spawns or despawns between frames and wants it seen at
@@ -664,6 +641,7 @@ namespace xge
 		Thinker thinker;
 		CellMaps cellMapping{ *this };
 		Holders itemHolders{ *this };
+		Players playerGroups{ *this };
 
 
 		// Marks the objects (and every member of the groups) of these names
@@ -885,12 +863,6 @@ namespace xge
 		// fired (and the frame's checking is over).
 		bool checkConditionList(const std::vector<Condition>& conditions);
 
-		// Whether a condition's test holds now: its <all> or <any> of
-		// checks, a total over what it matches, or any one object it
-		// matches passing it.
-		// Whether it holds; with `who`, every object its test holds for
-		// (the last test of an <all>'s), for commands that name self.
-		bool holds(const Condition& condition, std::vector<const Object*>* who = nullptr);
 		// Whether it holds, tested by `self` (a rule's, an action's object):
 		// what says self in it is that one.
 		bool holdsFor(const Condition& condition, const Object* self, const Object* other = nullptr);

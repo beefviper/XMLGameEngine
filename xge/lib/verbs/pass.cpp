@@ -33,14 +33,14 @@ namespace xge
 	{
 		Game& game = doer.game();
 		Object* const self = doer.self;
-		if (pass.member >= 0) { return game.passPlayersTo(pass.group.empty() && self ? self->groupName : pass.group, pass.member); }
+		if (pass.member >= 0) { return game.players().passPlayersTo(pass.group.empty() && self ? self->groupName : pass.group, pass.member); }
 		if (!pass.group.empty())
 		{
-			Object* const on = game.onTurn(pass.group);
-			return !on || game.passPlayers(*on);
+			Object* const on = game.players().onTurn(pass.group);
+			return !on || game.players().passPlayers(*on);
 		}
 		if (!self) { game.passTurn(false); }
-		else if (game.turnsOf(*self).takes) { return game.passPlayers(*self); }
+		else if (game.turnsOf(*self).takes) { return game.players().passPlayers(*self); }
 		return true;
 	}
 

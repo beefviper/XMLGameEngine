@@ -17,7 +17,7 @@ namespace turns
 {
 	inline float number(xge::Game& game, const std::string& group = "players")
 	{
-		const xge::Object* on = game.onTurn(group);
+		const xge::Object* on = game.players().onTurn(group);
 		float counted = 0.0f;
 		for (const xge::Object& each : game.getCurrentObjects())
 		{

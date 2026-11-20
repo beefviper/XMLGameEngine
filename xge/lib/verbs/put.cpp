@@ -30,7 +30,7 @@ namespace xge
 	{
 		Game& game = doer.game();
 		CmdPut put = putCommand;
-		if (put.objClass.empty()) { put.objClass = game.turnClass(); }
+		if (put.objClass.empty()) { put.objClass = game.players().turnClass(); }
 		return doer.self && !put.objClass.empty() && game.cellMaps().putPiece(*doer.self, put);
 	}
 

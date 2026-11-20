@@ -101,6 +101,7 @@ set(ENGINE_HEADERS
 	"xge/lib/game/think.h"
 	"xge/lib/game/cells.h"
 	"xge/lib/game/holders.h"
+	"xge/lib/game/players.h"
 	"xge/lib/game/variables.h"
 	"xge/lib/game/store.h"
 	"xge/lib/game/parts.h"
