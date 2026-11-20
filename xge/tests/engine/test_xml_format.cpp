@@ -142,7 +142,7 @@ TEST_CASE("a value is an operation of operations, numbers and names", "[xml_form
 	o.velocityX = "<negate><value><add><value>1</value><value>1</value></add></value></negate>";
 	Loaded loaded(gameXml("<variable name=\"step\">2</variable>", objectXml(o)));
 
-	const Object& object = loaded.game.getObject("o");
+	const Object& object = loaded.game.object("o");
 	CHECK(loaded.game.startOf(object).position.x == 406.0f); // 800 wide window
 	CHECK(loaded.game.startOf(object).velocity.x == -2.0f);
 }
@@ -164,7 +164,7 @@ TEST_CASE("<random> gives a number between its two ends, and a different one eac
 	std::set<float> seen;
 	for (int i = 0; i < 40; ++i)
 	{
-		const Object& object = loaded.game.getObject("r" + std::to_string(i));
+		const Object& object = loaded.game.object("r" + std::to_string(i));
 		CHECK(loaded.game.startOf(object).velocity.x >= -7.0f);
 		CHECK(loaded.game.startOf(object).velocity.x <= 7.0f);
 		CHECK(loaded.game.startOf(object).velocity.y >= 390.0f);
@@ -181,8 +181,8 @@ TEST_CASE("a value tag works anywhere a value does", "[xml_format][random]")
 	o.extra = "<variables><variable name=\"score\"><random><min>4</min><max>4</max></random></variable></variables>";
 	Loaded loaded(gameXml("<variable name=\"g\"><random><min>9</min><max>9</max></random></variable>", objectXml(o)));
 
-	CHECK(loaded.game.getObject("o").drawn.picture->size.x == 30.0f);
-	CHECK(loaded.game.getObject("o").variable.at("score") == 4.0f);
+	CHECK(loaded.game.object("o").drawn.picture->size.x == 30.0f);
+	CHECK(loaded.game.object("o").variable.at("score") == 4.0f);
 	CHECK(loaded.game.getVariable("g") == 9.0f);
 }
 
@@ -225,9 +225,9 @@ TEST_CASE("a window's background, fullscreen and framerate, and a <collisions>' 
 	CHECK(window.fullscreen == "false");
 	CHECK(window.framerate == 60);
 
-	CHECK(loaded.game.getObject("on").collisionsOn);
-	CHECK_FALSE(loaded.game.getObject("none").collisionsOn);
-	CHECK_FALSE(loaded.game.getObject("plain").collisionsOn);
+	CHECK(loaded.game.object("on").collisionsOn);
+	CHECK_FALSE(loaded.game.object("none").collisionsOn);
+	CHECK_FALSE(loaded.game.object("plain").collisionsOn);
 }
 
 TEST_CASE("a variable can use the ones declared before it", "[xml_format]")
@@ -279,7 +279,7 @@ TEST_CASE("commands run in the order they are written", "[xml_format][commands]"
 	o.extra = "<variables><variable name=\"score\">0</variable></variables>";
 	Loaded loaded(gameXml("", objectXml(o)));
 
-	const auto& left = loaded.game.getObject("o").kind->collisionData.edges[edgeIndex(Edge::Left)].commands;
+	const auto& left = loaded.game.object("o").kind->collisionData.edges[edgeIndex(Edge::Left)].commands;
 	REQUIRE(left.size() == 3);
 	CHECK(as<CmdIncrement>(left[0]).target.written() == "o.score");
 	as<CmdReset>(left[1]);
@@ -295,7 +295,7 @@ TEST_CASE("an edge rule reaches the edges it names, and several rules on one edg
 		"<collision edge=\"vertical\"><stick /></collision>";
 	Loaded loaded(gameXml("", objectXml(o)));
 
-	const auto& data = loaded.game.getObject("o").kind->collisionData;
+	const auto& data = loaded.game.object("o").kind->collisionData;
 	CHECK(data.edges[edgeIndex(Edge::Top)].commands.size() == 2);    // all, vertical
 	CHECK(data.edges[edgeIndex(Edge::Bottom)].commands.size() == 2); // all, vertical
 	CHECK(data.edges[edgeIndex(Edge::Left)].commands.size() == 2);   // all, left
@@ -321,7 +321,7 @@ TEST_CASE("a collision without an edge is about another object; naming nothing m
 	log.attributes = "class=\"logs\"";
 	Loaded loaded(gameXml("", objectXml(o) + objectXml(wall) + objectXml(brick) + objectXml(log)));
 
-	const auto& others = loaded.game.getObject("o").kind->collisionData.others;
+	const auto& others = loaded.game.object("o").kind->collisionData.others;
 	REQUIRE(others.size() == 3);
 
 	CHECK(others[0].filterClass.empty());
@@ -335,7 +335,7 @@ TEST_CASE("a collision without an edge is about another object; naming nothing m
 	CHECK(others[2].unlessClass == "logs");
 	as<CmdReverse>(others[2].commands.at(0));
 
-	const auto& data = loaded.game.getObject("o").kind->collisionData;
+	const auto& data = loaded.game.object("o").kind->collisionData;
 	CHECK(data.edges[edgeIndex(Edge::Top)].commands.empty());
 	CHECK(data.edges[edgeIndex(Edge::Left)].commands.empty());
 }
@@ -348,7 +348,7 @@ TEST_CASE("move and hop take a direction and a value", "[xml_format][commands]")
 		"</actions>";
 	Loaded loaded(gameXml("<variable name=\"step\">3</variable>", objectXml(o)));
 
-	const auto& go = loaded.game.getObject("o").kind->action.at("go");
+	const auto& go = loaded.game.object("o").kind->action.at("go");
 	REQUIRE(go.size() == 2);
 	CHECK(as<CmdMove>(go[0]).direction == Direction::Left);
 	CHECK(as<CmdMove>(go[0]).step == 6.0f);
@@ -564,18 +564,18 @@ TEST_CASE("sprites: each shape's parts", "[xml_format][sprite]")
 	Loaded loaded(gameXml("", objects));
 	Game& game = loaded.game;
 
-	CHECK(game.getObject("circle").drawn.picture->kind == ShapeKind::Circle);
-	CHECK(game.getObject("circle").drawn.picture->radius == 4.0f);
-	CHECK(game.getObject("circle").drawn.picture->color == "color.red");
-	CHECK(game.getObject("rectangle").drawn.picture->size == Vector2f{ 30.0f, 6.0f });
-	CHECK(game.getObject("rectangle").drawn.picture->color == "color.white"); // no <color>: white
-	CHECK(game.getObject("label").drawn.picture->text == "HELLO");
-	CHECK(game.getObject("label").drawn.picture->textSize == 32);
-	CHECK(game.getObject("label").drawn.picture->color == "color.blue");
-	CHECK(game.getObject("image").drawn.picture->file == "assets/paddle.jpg");
-	CHECK(game.getObject("image").drawn.picture->flipHorizontal);
-	CHECK(game.getObject("circle").drawn.picture->kind == ShapeKind::Circle);
-	CHECK(game.getObject("image").drawn.picture->kind == ShapeKind::Image);
+	CHECK(game.object("circle").drawn.picture->kind == ShapeKind::Circle);
+	CHECK(game.object("circle").drawn.picture->radius == 4.0f);
+	CHECK(game.object("circle").drawn.picture->color == "color.red");
+	CHECK(game.object("rectangle").drawn.picture->size == Vector2f{ 30.0f, 6.0f });
+	CHECK(game.object("rectangle").drawn.picture->color == "color.white"); // no <color>: white
+	CHECK(game.object("label").drawn.picture->text == "HELLO");
+	CHECK(game.object("label").drawn.picture->textSize == 32);
+	CHECK(game.object("label").drawn.picture->color == "color.blue");
+	CHECK(game.object("image").drawn.picture->file == "assets/paddle.jpg");
+	CHECK(game.object("image").drawn.picture->flipHorizontal);
+	CHECK(game.object("circle").drawn.picture->kind == ShapeKind::Circle);
+	CHECK(game.object("image").drawn.picture->kind == ShapeKind::Image);
 }
 
 TEST_CASE("a text's <number> stays live only when it is a lone owner.variable", "[xml_format][sprite]")
@@ -595,14 +595,14 @@ TEST_CASE("a text's <number> stays live only when it is a lone owner.variable", 
 	Loaded loaded(gameXml("", objectXml({}) + objectXml(owner) + objectXml(bound) + objectXml(sum) + objectXml(label)));
 	Game& game = loaded.game;
 
-	CHECK(game.showsVariable(game.getObject("bound"), "paddle", "score"));
-	CHECK(game.getObject("bound").drawn.picture->text == "3");
+	CHECK(game.showsVariable(game.object("bound"), "paddle", "score"));
+	CHECK(game.object("bound").drawn.picture->text == "3");
 
-	CHECK(game.textPiecesOf(game.getObject("sum")).empty());
-	CHECK(game.getObject("sum").drawn.picture->text == "4");
+	CHECK(game.textPiecesOf(game.object("sum")).empty());
+	CHECK(game.object("sum").drawn.picture->text == "4");
 
-	CHECK(game.textPiecesOf(game.getObject("label")).empty());
-	CHECK(game.getObject("label").drawn.picture->text == "paddle.score"); // a label is text, not a lookup
+	CHECK(game.textPiecesOf(game.object("label")).empty());
+	CHECK(game.object("label").drawn.picture->text == "paddle.score"); // a label is text, not a lookup
 }
 
 TEST_CASE("a shape with a part missing says which", "[xml_format][errors]")

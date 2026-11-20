@@ -60,8 +60,8 @@ namespace
 
 		std::string state() { return game.getCurrentState().name; }
 		std::string wave() { return game.currentScene("playing"); }
-		float score() { return game.getObject("status").variable.at("score"); }
-		float downed() { return game.getObject("tally").variable.at("downed"); }
+		float score() { return game.object("status").variable.at("score"); }
+		float downed() { return game.object("tally").variable.at("downed"); }
 
 		void frames(int count)
 		{
@@ -106,9 +106,9 @@ TEST_CASE("atlantis.xml loads a city of six, three posts at their angles, and fo
 	CHECK(city.wave() == "playing.wave1");
 	CHECK(city.buildings() == 6);
 
-	CHECK(city.game.getObject("leftpost").heading == Approx(45));
-	CHECK(city.game.getObject("middlepost").heading == Approx(0));
-	CHECK(city.game.getObject("rightpost").heading == Approx(315));
+	CHECK(city.game.object("leftpost").heading == Approx(45));
+	CHECK(city.game.object("middlepost").heading == Approx(0));
+	CHECK(city.game.object("rightpost").heading == Approx(315));
 
 	for (const char* wave : { "wave1", "wave2", "wave3" })
 	{
@@ -121,9 +121,9 @@ TEST_CASE("atlantis.xml loads a city of six, three posts at their angles, and fo
 		}
 		CHECK(ships == 12);
 	}
-	CHECK(city.game.getObject(of("wave1", "lane1.1")).velocity.x == Approx(120));
-	CHECK(city.game.getObject(of("wave2", "lane1.1")).velocity.x == Approx(168));
-	CHECK(city.game.getObject(of("wave3", "lane1.1")).velocity.x == Approx(210));
+	CHECK(city.game.object(of("wave1", "lane1.1")).velocity.x == Approx(120));
+	CHECK(city.game.object(of("wave2", "lane1.1")).velocity.x == Approx(168));
+	CHECK(city.game.object(of("wave3", "lane1.1")).velocity.x == Approx(210));
 }
 
 TEST_CASE("the second wave copies the first's named launch and quota; the third puts its own in their places", "[atlantis][scenes]")
@@ -205,16 +205,16 @@ TEST_CASE("the lowest lane goes round and round and fires death rays that take t
 	CHECK(rays[0]->position.y >= ship.position.y + ship.size.y - 1.0f);
 
 	// One over a dome takes it.
-	Object& dome = city.game.getObject("playing.domes.1");
+	Object& dome = city.game.object("playing.domes.1");
 	rays[0]->position = { dome.position.x + 10.0f, dome.position.y - rays[0]->size.y - 2.0f };
 	city.frames(2);
 	CHECK_FALSE(dome.isVisible);
 	CHECK(city.buildings() == 5);
 
 	// It leaves a burst, gone once its frames are played.
-	CHECK(city.game.tryGetObject("ruin.1"));
+	CHECK(city.game.find("ruin.1"));
 	city.frames(kFramerate);
-	CHECK_FALSE(city.game.tryGetObject("ruin.1"));
+	CHECK_FALSE(city.game.find("ruin.1"));
 }
 
 TEST_CASE("each post fires along its own heading, and a hit ship scores and counts", "[atlantis]")
@@ -243,36 +243,36 @@ TEST_CASE("each post fires along its own heading, and a hit ship scores and coun
 	const std::string shell = middle[0]->name;
 	city.frames(2);
 	CHECK_FALSE(ship.isVisible);
-	CHECK(city.game.tryGetObject(shell) == nullptr); // despawned
+	CHECK(city.game.find(shell) == nullptr); // despawned
 	CHECK(city.score() == 100);
 	CHECK(city.downed() == 1);
 
 	// It leaves a burst, gone once its frames are played.
-	CHECK(city.game.tryGetObject("boom.1"));
+	CHECK(city.game.find("boom.1"));
 	city.frames(kFramerate / 2);
-	CHECK_FALSE(city.game.tryGetObject("boom.1"));
+	CHECK_FALSE(city.game.find("boom.1"));
 }
 
 TEST_CASE("the quota moves the game on from wave to wave, with the tally and the rays put back, and the third quota wins", "[atlantis][scenes]")
 {
 	City city;
-	city.game.getObject("tally").variable.at("downed") = 12;
+	city.game.object("tally").variable.at("downed") = 12;
 	city.frames(1);
 	CHECK(city.wave() == "playing.wave2");
 	CHECK(city.downed() == 0);
 
-	city.game.getObject("tally").variable.at("downed") = 15;
+	city.game.object("tally").variable.at("downed") = 15;
 	city.frames(1);
 	CHECK(city.wave() == "playing.wave2");
-	city.game.getObject("tally").variable.at("downed") = 16;
+	city.game.object("tally").variable.at("downed") = 16;
 	city.frames(1);
 	CHECK(city.wave() == "playing.wave3");
 	CHECK(city.state() == "playing");
 
-	city.game.getObject("tally").variable.at("downed") = 20;
+	city.game.object("tally").variable.at("downed") = 20;
 	city.frames(1);
 	CHECK(city.state() == "over");
-	CHECK(city.game.getObject("over.message").lookName() == "won");
+	CHECK(city.game.object("over.message").lookName() == "won");
 }
 
 TEST_CASE("the city gone is game over, and space plays again with everything back", "[atlantis]")
@@ -291,8 +291,8 @@ TEST_CASE("the city gone is game over, and space plays again with everything bac
 	}
 	engine.input(); engine.update(xge::kSixtieth);
 	REQUIRE(game.getCurrentState().name == "over");
-	CHECK(game.getObject("over.message").lookName() == "lost");
-	CHECK(game.isStill(game.getObject("leftpost")));
+	CHECK(game.object("over.message").lookName() == "lost");
+	CHECK(game.isStill(game.object("leftpost")));
 
 	engine.handleKeyPressed(KeyCode::Space);
 	engine.handleKeyReleased(KeyCode::Space);
@@ -331,6 +331,6 @@ TEST_CASE("the keys fire the posts, and Pause pauses over the city drawn still",
 	engine.handleKeyPressed(KeyCode::Pause);
 	engine.handleKeyReleased(KeyCode::Pause);
 	REQUIRE(game.getCurrentState().name == "paused");
-	CHECK(game.isStill(game.getObject("middlepost")));
-	CHECK(game.isStill(game.getObject("playing.domes.1")));
+	CHECK(game.isStill(game.object("middlepost")));
+	CHECK(game.isStill(game.object("playing.domes.1")));
 }

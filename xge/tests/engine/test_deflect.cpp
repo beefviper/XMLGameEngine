@@ -69,7 +69,7 @@ namespace
 		Object& paddle1;
 		Object& paddle2;
 
-		Pong() : ball(game.getObject("ball")), paddle1(game.getObject("paddle1")), paddle2(game.getObject("paddle2"))
+		Pong() : ball(game.object("ball")), paddle1(game.object("paddle1")), paddle2(game.object("paddle2"))
 		{
 			game.setCurrentState("playing");
 			ball.size = { 20.0f, 20.0f };

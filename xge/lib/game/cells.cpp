@@ -83,7 +83,7 @@ namespace xge
 		}
 	}
 
-	Object* Game::findAnywhere(Name name) noexcept
+	Object* Game::findSpawning(Name name) noexcept
 	{
 		for (Object& object : objects)
 		{
@@ -149,7 +149,7 @@ namespace xge
 		std::vector<Object*> cells;
 		for (const Name part : cellPart(mover).shapeParts)
 		{
-			if (Object* cell = findAnywhere(part)) { cells.push_back(cell); }
+			if (Object* cell = findSpawning(part)) { cells.push_back(cell); }
 		}
 		return cells;
 	}
@@ -362,7 +362,7 @@ namespace xge
 	{
 		if (piece.named(chain)) { return true; }
 		if (!piece.isCopy()) { return false; }
-		const Object* of = findAnywhere(piece.copyOf);
+		const Object* of = findSpawning(piece.copyOf);
 		return piece.copyOf == chain || (of && of != &piece && of->named(chain));
 	}
 
@@ -377,7 +377,7 @@ namespace xge
 			std::vector<Name> kept;
 			for (const Name name : place(head).chainLinks)
 			{
-				Object* link = findAnywhere(name);
+				Object* link = findSpawning(name);
 				if (!link || !link->exists) { continue; }
 				links.push_back(link);
 				kept.push_back(name);
@@ -471,7 +471,7 @@ namespace xge
 		placeFor(*head).chainLinks.resize(at == 0 ? 0 : at - 1);
 		placeFor(*head).chainKnown = true;
 
-		Object* next = behind.empty() ? nullptr : findAnywhere(behind.front());
+		Object* next = behind.empty() ? nullptr : findSpawning(behind.front());
 		if (next)
 		{
 			placeFor(*next).chainLinks.assign(behind.begin() + 1, behind.end());
@@ -662,7 +662,7 @@ namespace xge
 				// Still full (nothing cleared it): on up.
 				const bool stillFull = std::all_of(match.pieces.begin(), match.pieces.end(), [&](const Name name)
 					{
-						const Object* piece = findAnywhere(name);
+						const Object* piece = findSpawning(name);
 						return piece && piece->exists && whole(place(*piece).row) == row;
 					});
 				if (stillFull) { --row; }
@@ -746,7 +746,7 @@ namespace xge
 			}
 			const bool taken = std::any_of(match.pieces.begin(), match.pieces.end(), [&](const Name name)
 				{
-					const Object* piece = findAnywhere(name);
+					const Object* piece = findSpawning(name);
 					return !piece || !piece->exists;
 				});
 			if (!taken) { return; }
@@ -781,7 +781,7 @@ namespace xge
 					std::vector<Object*> together{ holder };
 					for (const Name name : place(*holder).joinedWith)
 					{
-						Object* other = findAnywhere(name);
+						Object* other = findSpawning(name);
 						if (other && other->exists && other->onCells && mapOf(*other).name == map && cellPart(*other).shapeOwner.empty() && (objClass.empty() || other->objClass == objClass)
 							&& std::find(together.begin(), together.end(), other) == together.end())
 						{
@@ -821,13 +821,13 @@ namespace xge
 			std::vector<Name> partners = place(piece).joinedWith;
 			if (!cellPart(piece).shapeOwner.empty())
 			{
-				const Object* shape = findAnywhere(cellPart(piece).shapeOwner);
+				const Object* shape = findSpawning(cellPart(piece).shapeOwner);
 				partners = shape ? cellPart(*shape).shapeParts : std::vector<Name>{};
 			}
 			Object::Join way = Object::Join::Alone;
 			for (const Name name : partners)
 			{
-				const Object* other = findAnywhere(name);
+				const Object* other = findSpawning(name);
 				if (!other || other == &piece || !other->exists || mapOf(*other).name != mapOf(piece).name) { continue; }
 				const int across = whole(place(*other).column) - whole(place(piece).column);
 				const int down = whole(place(*other).row) - whole(place(piece).row);
@@ -863,7 +863,7 @@ namespace xge
 		{
 			cellPartFor(shape).shapeParts[i] = parts[i];
 			cellPartFor(shape).shape[i].piece = pieces[i];
-			if (Object* cell = findAnywhere(parts[i])) { putInCell(*cell, column + cellPart(shape).shape[i].column, row + cellPart(shape).shape[i].row); }
+			if (Object* cell = findSpawning(parts[i])) { putInCell(*cell, column + cellPart(shape).shape[i].column, row + cellPart(shape).shape[i].row); }
 		}
 	}
 
@@ -871,7 +871,7 @@ namespace xge
 	{
 		for (const Name name : match.pieces)
 		{
-			if (Object* piece = findAnywhere(name)) { despawn(*piece); }
+			if (Object* piece = findSpawning(name)) { despawn(*piece); }
 		}
 	}
 
@@ -1267,7 +1267,7 @@ namespace xge
 	bool Game::placePiece(Object& picker)
 	{
 		if (pickerOf(picker).picked.empty() || !picker.onCells) { return false; }
-		Object* piece = findAnywhere(pickerOf(picker).picked);
+		Object* piece = findSpawning(pickerOf(picker).picked);
 		if (!piece || !piece->exists || !isShown(*piece))
 		{
 			pickerFor(picker).picked.clear();
@@ -1432,7 +1432,7 @@ namespace xge
 					const float* value = variableOf(name);
 					return value && *value != 0.0f;
 				};
-				Object* held = pickerOf(picker).picked.empty() ? nullptr : findAnywhere(pickerOf(picker).picked);
+				Object* held = pickerOf(picker).picked.empty() ? nullptr : findSpawning(pickerOf(picker).picked);
 				for (const Object::MarkSet& set : pickerOf(picker).marks.sets)
 				{
 					if (set.look && *set.look != picker.looks.shown) { continue; }
@@ -1507,7 +1507,7 @@ namespace xge
 		Object* shoved = &piece;
 		if (!cellPart(piece).shapeOwner.empty())
 		{
-			if (Object* owner = tryGetObject(cellPart(piece).shapeOwner)) { shoved = owner; }
+			if (Object* owner = find(cellPart(piece).shapeOwner)) { shoved = owner; }
 		}
 		const int across = way == Edge::Left ? -1 : way == Edge::Right ? 1 : 0;
 		const int down = way == Edge::Top ? -1 : way == Edge::Bottom ? 1 : 0;

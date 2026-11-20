@@ -21,7 +21,7 @@ namespace xge
 {
 	// The object a command names: its exact name (aliens.3.2), the name
 	// from the file (aliens), or the name of its <group> - the same lookup
-	// Game::tryGetObject does while the game runs.
+	// Game::find does while the game runs.
 	const Object* findObject(const std::vector<Object>& objects, const std::string& name)
 	{
 		const auto exact = std::find_if(objects.begin(), objects.end(), [&](const Object& object) { return object.name == name; });

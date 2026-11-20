@@ -156,24 +156,24 @@ TEST_CASE("what a game leaves out is nothing: still, and touching nothing", "[gr
 
 	for (const char* name : { "lane.1", "still" })
 	{
-		const Object& object = loaded.game.getObject(name);
+		const Object& object = loaded.game.object(name);
 		CHECK(object.velocity.x == 0.0f);
 		CHECK(object.velocity.y == 0.0f);
 		CHECK_FALSE(object.collisionsOn);
 	}
-	CHECK(loaded.game.getObject("lane.2").velocity.x == 120.0f);
-	CHECK(loaded.game.getObject("lane.2").velocity.y == 0.0f);
-	CHECK(loaded.game.getObject("falling").velocity.x == 0.0f);
-	CHECK(loaded.game.getObject("falling").velocity.y == 180.0f);
-	CHECK_FALSE(loaded.game.getObject("falling").collisionsOn);
+	CHECK(loaded.game.object("lane.2").velocity.x == 120.0f);
+	CHECK(loaded.game.object("lane.2").velocity.y == 0.0f);
+	CHECK(loaded.game.object("falling").velocity.x == 0.0f);
+	CHECK(loaded.game.object("falling").velocity.y == 180.0f);
+	CHECK_FALSE(loaded.game.object("falling").collisionsOn);
 }
 
 TEST_CASE("a member takes what it leaves out from its group", "[group]")
 {
 	Loaded loaded{ gameXml(kLane) };
-	const Object& first = loaded.game.getObject("lane.1");
-	const Object& second = loaded.game.getObject("lane.2");
-	const Object& odd = loaded.game.getObject("odd");
+	const Object& first = loaded.game.object("lane.1");
+	const Object& second = loaded.game.object("lane.2");
+	const Object& odd = loaded.game.object("odd");
 
 	// The group gives the row and the speed, the member its x.
 	CHECK(first.position.x == 10.0f);
@@ -204,28 +204,28 @@ TEST_CASE("the group's name means every member", "[group]")
 	game.setCurrentState("playing");
 
 	// A state that shows the group shows all three, and not the object beside it.
-	for (const char* name : { "lane.1", "lane.2", "odd" }) { CHECK(game.isShown(game.getObject(name))); }
-	CHECK_FALSE(game.isShown(game.getObject("another")));
+	for (const char* name : { "lane.1", "lane.2", "odd" }) { CHECK(game.isShown(game.object(name))); }
+	CHECK_FALSE(game.isShown(game.object("another")));
 
 	// The name alone finds the first member.
-	CHECK(&game.getObject("lane") == &game.getObject("lane.1"));
+	CHECK(&game.object("lane") == &game.object("lane.1"));
 
 	// <reset object="lane" /> puts every member back where it began.
 	for (const char* name : { "lane.1", "lane.2", "odd" })
 	{
-		game.getObject(name).position.x += 55.0f;
-		game.getObject(name).velocity.x = 9.0f;
+		game.object(name).position.x += 55.0f;
+		game.object(name).velocity.x = 9.0f;
 	}
 	game.resetObject("lane");
-	CHECK(game.getObject("lane.1").position.x == 10.0f);
-	CHECK(game.getObject("lane.2").position.x == 200.0f);
-	CHECK(game.getObject("odd").position.x == 300.0f);
-	CHECK(game.getObject("odd").velocity.x == 60.0f);
+	CHECK(game.object("lane.1").position.x == 10.0f);
+	CHECK(game.object("lane.2").position.x == 200.0f);
+	CHECK(game.object("odd").position.x == 300.0f);
+	CHECK(game.object("odd").velocity.x == 60.0f);
 
 	// One member can be reset, or shown, by its own name.
-	game.getObject("lane.2").position.x = 1.0f;
+	game.object("lane.2").position.x = 1.0f;
 	game.resetObject("lane.2");
-	CHECK(game.getObject("lane.2").position.x == 200.0f);
+	CHECK(game.object("lane.2").position.x == 200.0f);
 }
 
 TEST_CASE("a state can show one member of a group", "[group]")
@@ -234,9 +234,9 @@ TEST_CASE("a state can show one member of a group", "[group]")
 	Game& game = loaded.game;
 	game.setCurrentState("playing");
 
-	CHECK(game.isShown(game.getObject("odd")));
-	CHECK_FALSE(game.isShown(game.getObject("lane.1")));
-	CHECK_FALSE(game.isShown(game.getObject("lane.2")));
+	CHECK(game.isShown(game.object("odd")));
+	CHECK_FALSE(game.isShown(game.object("lane.1")));
+	CHECK_FALSE(game.isShown(game.object("lane.2")));
 }
 
 TEST_CASE("groups and plain objects keep the order they are written in", "[group]")
@@ -260,8 +260,8 @@ TEST_CASE("a group can share actions with every member", "[group]")
 		"<member name=\"a\" /><member name=\"b\" />");
 	Loaded loaded{ gameXml(lane) };
 
-	CHECK(loaded.game.getObject("a").kind->action.count("up") == 1);
-	CHECK(loaded.game.getObject("b").kind->action.count("up") == 1);
+	CHECK(loaded.game.object("a").kind->action.count("up") == 1);
+	CHECK(loaded.game.object("b").kind->action.count("up") == 1);
 }
 
 TEST_CASE("members of a group with lockstep move as one block", "[group][lockstep]")
@@ -278,11 +278,11 @@ TEST_CASE("members of a group with lockstep move as one block", "[group][lockste
 	Loaded loaded{ gameXml(lane("a", "<lockstep />") + lane("b", "<lockstep />")
 		+ lane("c", "") + plainLockstep, "<show object=\"a\" />") };
 
-	const int a1 = loaded.game.getObject("a.1").kind->collisionData.lockstep;
-	const int a2 = loaded.game.getObject("a.2").kind->collisionData.lockstep;
-	const int b1 = loaded.game.getObject("b.1").kind->collisionData.lockstep;
-	const int b2 = loaded.game.getObject("b.2").kind->collisionData.lockstep;
-	const int alone = loaded.game.getObject("alone").kind->collisionData.lockstep;
+	const int a1 = loaded.game.object("a.1").kind->collisionData.lockstep;
+	const int a2 = loaded.game.object("a.2").kind->collisionData.lockstep;
+	const int b1 = loaded.game.object("b.1").kind->collisionData.lockstep;
+	const int b2 = loaded.game.object("b.2").kind->collisionData.lockstep;
+	const int alone = loaded.game.object("alone").kind->collisionData.lockstep;
 
 	// One number for each block, nothing shared between blocks, none for a
 	// group that did not ask.
@@ -294,8 +294,8 @@ TEST_CASE("members of a group with lockstep move as one block", "[group][lockste
 	CHECK(alone > 0);
 	CHECK(alone != a1);
 	CHECK(alone != b1);
-	CHECK(loaded.game.getObject("c.1").kind->collisionData.lockstep == 0);
-	CHECK(loaded.game.getObject("c.2").kind->collisionData.lockstep == 0);
+	CHECK(loaded.game.object("c.1").kind->collisionData.lockstep == 0);
+	CHECK(loaded.game.object("c.2").kind->collisionData.lockstep == 0);
 }
 
 TEST_CASE("a group or member that is incomplete says where", "[group][errors]")
@@ -383,12 +383,12 @@ TEST_CASE("a group in columns and rows is a cell for each place, named for its c
 	}
 
 	// A cell's size apart, plus the padding.
-	CHECK(game.getObject("wall.1.1").position.x == 100.0f);
-	CHECK(game.getObject("wall.1.1").position.y == 50.0f);
-	CHECK(game.getObject("wall.3.2").position.x == 100.0f + 2 * (20.0f + 5.0f));
-	CHECK(game.getObject("wall.3.2").position.y == 50.0f + 10.0f + 7.0f);
-	CHECK(game.tryGetObject("wall.4.1") == nullptr);
-	CHECK(game.getObject("wall").name == "wall.1.1");
+	CHECK(game.object("wall.1.1").position.x == 100.0f);
+	CHECK(game.object("wall.1.1").position.y == 50.0f);
+	CHECK(game.object("wall.3.2").position.x == 100.0f + 2 * (20.0f + 5.0f));
+	CHECK(game.object("wall.3.2").position.y == 50.0f + 10.0f + 7.0f);
+	CHECK(game.find("wall.4.1") == nullptr);
+	CHECK(game.object("wall").name == "wall.1.1");
 }
 
 TEST_CASE("a row, a column or a cell changes only what it gives", "[group][cells]")
@@ -402,27 +402,27 @@ TEST_CASE("a row, a column or a cell changes only what it gives", "[group][cells
 	Game& game = loaded.game;
 
 	// The row: green, worth more, the size of the group's bricks.
-	CHECK(colorOf(game.getObject("wall.1.2")) == "color.green");
-	CHECK(game.getObject("wall.1.2").drawn.picture->size.x == 20.0f);
-	CHECK(game.getObject("wall.1.2").variable.at("points") == 5.0f);
-	CHECK(colorOf(game.getObject("wall.1.1")) == "color.red");
-	CHECK(game.getObject("wall.1.1").variable.at("points") == 1.0f);
+	CHECK(colorOf(game.object("wall.1.2")) == "color.green");
+	CHECK(game.object("wall.1.2").drawn.picture->size.x == 20.0f);
+	CHECK(game.object("wall.1.2").variable.at("points") == 5.0f);
+	CHECK(colorOf(game.object("wall.1.1")) == "color.red");
+	CHECK(game.object("wall.1.1").variable.at("points") == 1.0f);
 
 	// The column moves; the rest do not.
-	CHECK(game.getObject("wall.3.1").velocity.x == 120.0f);
-	CHECK(game.getObject("wall.3.2").velocity.x == 120.0f);
-	CHECK(game.getObject("wall.1.1").velocity.x == 0.0f);
+	CHECK(game.object("wall.3.1").velocity.x == 120.0f);
+	CHECK(game.object("wall.3.2").velocity.x == 120.0f);
+	CHECK(game.object("wall.1.1").velocity.x == 0.0f);
 
 	// The cell has a name of its own, and is bigger, in the middle of its place.
-	CHECK(game.tryGetObject("wall.2.1") == nullptr);
-	const Object& boss = game.getObject("boss");
+	CHECK(game.find("wall.2.1") == nullptr);
+	const Object& boss = game.object("boss");
 	CHECK(boss.groupName == "wall");
 	CHECK(colorOf(boss) == "color.blue");
 	CHECK(boss.position.x == 100.0f + 25.0f - 5.0f);
 	CHECK(boss.position.y == 50.0f - 3.0f);
 
 	// Its neighbours are where they would be without it.
-	CHECK(game.getObject("wall.3.1").position.x == 100.0f + 50.0f);
+	CHECK(game.object("wall.3.1").position.x == 100.0f + 50.0f);
 }
 
 TEST_CASE("the padding of a row or column is the gap before it", "[group][cells]")
@@ -433,10 +433,10 @@ TEST_CASE("the padding of a row or column is the gap before it", "[group][cells]
 		kShowWall) };
 	Game& game = loaded.game;
 
-	CHECK(game.getObject("wall.1.2").position.y == 50.0f + 10.0f + 20.0f);
-	CHECK(game.getObject("wall.1.3").position.y == 50.0f + 10.0f + 20.0f + 10.0f + 7.0f); // the group's gap again
-	CHECK(game.getObject("wall.2.1").position.x == 100.0f + 25.0f);
-	CHECK(game.getObject("wall.3.1").position.x == 100.0f + 25.0f + 20.0f + 15.0f);
+	CHECK(game.object("wall.1.2").position.y == 50.0f + 10.0f + 20.0f);
+	CHECK(game.object("wall.1.3").position.y == 50.0f + 10.0f + 20.0f + 10.0f + 7.0f); // the group's gap again
+	CHECK(game.object("wall.2.1").position.x == 100.0f + 25.0f);
+	CHECK(game.object("wall.3.1").position.x == 100.0f + 25.0f + 20.0f + 15.0f);
 }
 
 TEST_CASE("lines of text are a group in <rows> alone: one style, each line named by its row, the padding apart", "[group][cells][text]")
@@ -457,17 +457,17 @@ TEST_CASE("lines of text are a group in <rows> alone: one style, each line named
 	Game& game = loaded.game;
 
 	REQUIRE(game.getCurrentObjects().size() == 3);
-	CHECK(game.getObject("help.1").drawn.picture->text == "first line");
-	CHECK(game.getObject("help.2").drawn.picture->text == "second");
-	CHECK(game.getObject("help.3").drawn.picture->text == "third");
-	CHECK(game.getObject("help.1").drawn.picture->textSize == 20);
-	CHECK(colorOf(game.getObject("help.1")) == "color.white");
-	CHECK(colorOf(game.getObject("help.2")) == "color.red");
+	CHECK(game.object("help.1").drawn.picture->text == "first line");
+	CHECK(game.object("help.2").drawn.picture->text == "second");
+	CHECK(game.object("help.3").drawn.picture->text == "third");
+	CHECK(game.object("help.1").drawn.picture->textSize == 20);
+	CHECK(colorOf(game.object("help.1")) == "color.white");
+	CHECK(colorOf(game.object("help.2")) == "color.red");
 
 	// Text is measured only by a window, so lines are their padding apart, top to top.
-	CHECK(game.getObject("help.1").position.y == 100.0f);
-	CHECK(game.getObject("help.2").position.y == 130.0f);
-	CHECK(game.getObject("help.3").position.y == 180.0f);
+	CHECK(game.object("help.1").position.y == 100.0f);
+	CHECK(game.object("help.2").position.y == 130.0f);
+	CHECK(game.object("help.3").position.y == 180.0f);
 
 	// A line that gives no words, where its group gives none, says so.
 	std::string empty = xml;
@@ -483,11 +483,11 @@ TEST_CASE("a row or column picks by number, several numbers, odd or even", "[gro
 		kShowWall) };
 	Game& game = loaded.game;
 
-	CHECK(colorOf(game.getObject("wall.1.1")) == "color.blue");
-	CHECK(colorOf(game.getObject("wall.2.2")) == "color.green");
-	CHECK(colorOf(game.getObject("wall.3.3")) == "color.blue");
-	CHECK(colorOf(game.getObject("wall.1.4")) == "color.green");
-	CHECK(colorOf(game.getObject("wall.1.5")) == "color.blue");
+	CHECK(colorOf(game.object("wall.1.1")) == "color.blue");
+	CHECK(colorOf(game.object("wall.2.2")) == "color.green");
+	CHECK(colorOf(game.object("wall.3.3")) == "color.blue");
+	CHECK(colorOf(game.object("wall.1.4")) == "color.green");
+	CHECK(colorOf(game.object("wall.1.5")) == "color.blue");
 }
 
 TEST_CASE("a member's sprite of the same shape as its group's gives only what changes", "[group]")
@@ -498,13 +498,13 @@ TEST_CASE("a member's sprite of the same shape as its group's gives only what ch
 		"<member name=\"round\"><sprite><circle><radius>4</radius></circle></sprite></member>"), "<show object=\"lane\" />") };
 	Game& game = loaded.game;
 
-	CHECK(game.getObject("short").drawn.picture->kind == ShapeKind::Rectangle);
-	CHECK(game.getObject("short").drawn.picture->size.x == 10.0f);
-	CHECK(game.getObject("short").drawn.picture->size.y == 20.0f);
-	CHECK(game.getObject("short").drawn.picture->color == "color.brown");
-	CHECK(game.getObject("round").drawn.picture->kind == ShapeKind::Circle);
-	CHECK(game.getObject("round").drawn.picture->radius == 4.0f);
-	CHECK(game.getObject("round").drawn.picture->color == "color.white");
+	CHECK(game.object("short").drawn.picture->kind == ShapeKind::Rectangle);
+	CHECK(game.object("short").drawn.picture->size.x == 10.0f);
+	CHECK(game.object("short").drawn.picture->size.y == 20.0f);
+	CHECK(game.object("short").drawn.picture->color == "color.brown");
+	CHECK(game.object("round").drawn.picture->kind == ShapeKind::Circle);
+	CHECK(game.object("round").drawn.picture->radius == 4.0f);
+	CHECK(game.object("round").drawn.picture->color == "color.white");
 }
 
 TEST_CASE("a member's tether names its two ends again and keeps the rest; a member's text can choose", "[group]")
@@ -518,17 +518,17 @@ TEST_CASE("a member's tether names its two ends again and keeps the rest; a memb
 		"<show object=\"lines\" /><show object=\"signs\" /><show object=\"a\" /><show object=\"b\" />") };
 	Game& game = loaded.game;
 
-	const Object& two = game.getObject("two");
+	const Object& two = game.object("two");
 	const Object::Tether& tether = game.parts().tethers.get(two.id);
 	CHECK(tether.from == "b");
 	CHECK(tether.to == "a");
 	CHECK(tether.thickness == 3);
 	CHECK(tether.color.r == 255);
 	CHECK(tether.color.g == 0);
-	CHECK(game.getObject("sign").drawn.picture->kind == ShapeKind::Text);
-	CHECK(game.getObject("sign").drawn.picture->text == "right");
-	CHECK(game.getObject("sign").drawn.picture->textSize == 10);
-	CHECK(game.getObject("sign").drawn.picture->color == "color.white");
+	CHECK(game.object("sign").drawn.picture->kind == ShapeKind::Text);
+	CHECK(game.object("sign").drawn.picture->text == "right");
+	CHECK(game.object("sign").drawn.picture->textSize == 10);
+	CHECK(game.object("sign").drawn.picture->color == "color.white");
 }
 
 TEST_CASE("cells that cannot be laid out, or changed two ways at once, say where", "[group][cells][errors]")
@@ -627,7 +627,7 @@ TEST_CASE("a group inside a group takes what it leaves out from the one around i
 	CHECK(objects[1].name == "slow.2");
 	CHECK(objects[2].name == "fast.1");
 
-	const Object& slow = game.getObject("slow.2");
+	const Object& slow = game.object("slow.2");
 	CHECK(slow.groupName == "slow");
 	CHECK(textsOf(slow.outerGroups) == std::vector<std::string>{ "lanes" });
 	CHECK(slow.objClass == "logs");
@@ -642,7 +642,7 @@ TEST_CASE("a group inside a group takes what it leaves out from the one around i
 	CHECK(slow.variable.at("weight") == 3.0f);
 
 	// The inner group's rules and variables add to the outer's, its class replaces it.
-	const Object& fast = game.getObject("fast.1");
+	const Object& fast = game.object("fast.1");
 	CHECK(fast.objClass == "hazard");
 	CHECK(fast.kind->collisionData.edges[edgeIndex(Edge::Left)].commands.size() == 1);
 	CHECK(fast.kind->collisionData.others.size() == 1);
@@ -651,13 +651,13 @@ TEST_CASE("a group inside a group takes what it leaves out from the one around i
 
 	// The outer name means every member of every group inside it; each inner name, its own.
 	for (const Object& object : objects) { CHECK(game.isShown(object)); }
-	CHECK(&game.getObject("lanes") == &game.getObject("slow.1"));
-	CHECK(&game.getObject("fast") == &game.getObject("fast.1"));
-	game.getObject("slow.1").position.x = 99.0f;
-	game.getObject("fast.1").position.x = 99.0f;
+	CHECK(&game.object("lanes") == &game.object("slow.1"));
+	CHECK(&game.object("fast") == &game.object("fast.1"));
+	game.object("slow.1").position.x = 99.0f;
+	game.object("fast.1").position.x = 99.0f;
 	game.resetObject("lanes");
-	CHECK(game.getObject("slow.1").position.x == 10.0f);
-	CHECK(game.getObject("fast.1").position.x == 50.0f);
+	CHECK(game.object("slow.1").position.x == 10.0f);
+	CHECK(game.object("fast.1").position.x == 50.0f);
 }
 
 TEST_CASE("a group's <heading> is where its members face, and a group inside it can give its own", "[group][nested][heading]")
@@ -674,13 +674,13 @@ TEST_CASE("a group's <heading> is where its members face, and a group inside it 
 	Game& game = loaded.game;
 	game.setCurrentState("playing");
 
-	CHECK(game.getObject("left.1").heading == 45.0f);
-	CHECK(game.getObject("right.1").heading == 270.0f);
+	CHECK(game.object("left.1").heading == 45.0f);
+	CHECK(game.object("right.1").heading == 270.0f);
 
 	// A reset turns it back to the group's heading.
-	game.getObject("right.1").heading = 90.0f;
+	game.object("right.1").heading = 90.0f;
 	game.resetObject("tanks");
-	CHECK(game.getObject("right.1").heading == 270.0f);
+	CHECK(game.object("right.1").heading == 270.0f);
 }
 
 TEST_CASE("groups inside a group can each be laid out in cells from the outer's columns", "[group][nested][cells]")
@@ -703,18 +703,18 @@ TEST_CASE("groups inside a group can each be laid out in cells from the outer's 
 	Game& game = loaded.game;
 
 	REQUIRE(game.getCurrentObjects().size() == 3 + 6);
-	CHECK(game.getObject("top.3.1").position.x == 100.0f + 2 * (20.0f + 5.0f));
-	CHECK(game.getObject("top.3.1").position.y == 10.0f);
-	CHECK(game.getObject("block.2.2").position.x == 100.0f + 20.0f + 5.0f);
-	CHECK(game.getObject("block.2.2").position.y == 50.0f + 10.0f + 7.0f);
-	CHECK(game.getObject("top.1.1").objClass == "bricks");
-	CHECK_FALSE(game.getObject("top.1.1").collisionsOn);
-	CHECK(game.getObject("block.1.1").collisionsOn);
+	CHECK(game.object("top.3.1").position.x == 100.0f + 2 * (20.0f + 5.0f));
+	CHECK(game.object("top.3.1").position.y == 10.0f);
+	CHECK(game.object("block.2.2").position.x == 100.0f + 20.0f + 5.0f);
+	CHECK(game.object("block.2.2").position.y == 50.0f + 10.0f + 7.0f);
+	CHECK(game.object("top.1.1").objClass == "bricks");
+	CHECK_FALSE(game.object("top.1.1").collisionsOn);
+	CHECK(game.object("block.1.1").collisionsOn);
 
 	// Only the inner group with lockstep moves as one block.
-	CHECK(game.getObject("block.1.1").kind->collisionData.lockstep != 0);
-	CHECK(game.getObject("block.1.1").kind->collisionData.lockstep == game.getObject("block.3.2").kind->collisionData.lockstep);
-	CHECK(game.getObject("top.1.1").kind->collisionData.lockstep == 0);
+	CHECK(game.object("block.1.1").kind->collisionData.lockstep != 0);
+	CHECK(game.object("block.1.1").kind->collisionData.lockstep == game.object("block.3.2").kind->collisionData.lockstep);
+	CHECK(game.object("top.1.1").kind->collisionData.lockstep == 0);
 }
 
 TEST_CASE("a group with groups inside it has no members of its own", "[group][nested][errors]")

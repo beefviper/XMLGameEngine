@@ -93,7 +93,7 @@ namespace
 		// A robot of a room, by its number in the room: y1, r1, c1 or g1 for
 		// the first of rooms one to four.
 		static std::string robot(int n, int member) { return inRoom(n, std::string(1, "yrcg"[n - 1]) + std::to_string(member)); }
-		Object& object(const std::string& name) { return game.getObject(name); }
+		Object& object(const std::string& name) { return game.object(name); }
 		Object& man() { return object("player"); }
 		// His shot, a copy of the bullet piece, while one is out.
 		Object& bullet() { return object("bullet.1"); }
@@ -530,7 +530,7 @@ TEST_CASE("the first room's robots never fire; the next room's fire at the man, 
 	CHECK(play.state() == "zapped");
 	play.frames(90); // zapped first, the room standing still
 	CHECK(play.lives() < 3.0f);
-	CHECK_FALSE(play.game.tryGetObject(shotName));
+	CHECK_FALSE(play.game.find(shotName));
 }
 
 TEST_CASE("robots fire more often, and Otto comes sooner, the deeper the man has gone", "[berserk]")

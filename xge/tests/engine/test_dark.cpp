@@ -75,16 +75,16 @@ TEST_CASE("what is <dark> is drawn only while a <light> reaches some part of it,
 	// A light put out lights nothing; a reset forgets what was seen.
 	engine.handleKeyPressed(KeyCode::Space);
 	engine.handleKeyReleased(KeyCode::Space);
-	game.getObject("lamp").position.x = 125;
-	game.getObject("lamp").velocity.x = 0;
+	game.object("lamp").position.x = 125;
+	game.object("lamp").velocity.x = 0;
 	names = frame();
 	CHECK_FALSE(wasDrawn(names, "near"));
 	game.resetObject("map");
 	names = frame();
 	CHECK_FALSE(wasDrawn(names, "map"));
-	CHECK(game.getObject("lamp").light == Approx(0));
+	CHECK(game.object("lamp").light == Approx(0));
 	game.resetObject("lamp");
-	CHECK(game.getObject("lamp").light == Approx(30));
+	CHECK(game.object("lamp").light == Approx(30));
 }
 
 TEST_CASE("a <dark> object still moves and touches while it is not drawn", "[dark]")
@@ -306,7 +306,7 @@ TEST_CASE("hauntedhouse.xml: the whole urn brought back to the door wins, and no
 	play.place(1, 11);
 	play.frames(2);
 	CHECK(play.state() == "over");
-	CHECK(play.game.getObject("over.message").lookName() == "won");
+	CHECK(play.game.object("over.message").lookName() == "won");
 	play.tap(KeyCode::Space);
 	CHECK(play.state() == "title");
 
@@ -314,7 +314,7 @@ TEST_CASE("hauntedhouse.xml: the whole urn brought back to the door wins, and no
 	again.game.addTo({ "player", "lives" }, -9.0f);
 	again.frames(2);
 	CHECK(again.state() == "over");
-	CHECK(again.game.getObject("over.message").lookName() == "lost");
+	CHECK(again.game.object("over.message").lookName() == "lost");
 }
 
 TEST_CASE("a <light> with a <past class> does not shine through that class: a wall leaves the far side dark", "[dark]")

@@ -279,7 +279,7 @@ TEST_CASE("Minefield: ten mines are laid, and an opened square counts the mines 
 	{
 		CHECK(middle.lookName() == "boom");
 		CHECK(play.state() == "over");
-		CHECK(play.game.getObject("over.message").lookName() == "lost");
+		CHECK(play.game.object("over.message").lookName() == "lost");
 		return;
 	}
 	CHECK(middle.variable.at("near") == static_cast<float>(after.around({ 5, 5 })));

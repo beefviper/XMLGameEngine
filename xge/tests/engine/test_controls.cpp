@@ -126,7 +126,7 @@ TEST_CASE("a pad's start button starts Kaboom and its d-pad moves the bucket", "
 {
 	Game game{ "descriptions/kaboom.xml" };
 	Engine engine(game, std::make_unique<NullWindow>());
-	Object& bucket = game.getObject("bucket");
+	Object& bucket = game.object("bucket");
 
 	engine.handleControls(Controls{});  // the first look only notes where things are
 	engine.handleControls(padWith(PadButton::Start));
@@ -143,7 +143,7 @@ TEST_CASE("a pad's stick pushed past halfway is its direction", "[controls]")
 {
 	Game game{ "descriptions/kaboom.xml" };
 	Engine engine(game, std::make_unique<NullWindow>());
-	Object& bucket = game.getObject("bucket");
+	Object& bucket = game.object("bucket");
 	engine.handleControls(Controls{});
 	engine.handleKeyPressed(KeyCode::Space);
 	engine.handleKeyReleased(KeyCode::Space);
@@ -165,7 +165,7 @@ TEST_CASE("the mouse moves Kaboom's bucket across the window as the paddle did",
 {
 	Game game{ "descriptions/kaboom.xml" };
 	Engine engine(game, std::make_unique<NullWindow>());
-	Object& bucket = game.getObject("bucket");
+	Object& bucket = game.object("bucket");
 	const float width = game.getWindowDesc().width;
 	const float start = bucket.position.x;
 
@@ -199,7 +199,7 @@ TEST_CASE("a mouse button is a key", "[controls]")
 	ScratchGame file(gameWith(R"(<input button="mouse.left"><trigger object="paddle" action="right" /></input>)"));
 	Game game(file.path.string());
 	Engine engine(game, std::make_unique<NullWindow>());
-	Object& paddle = game.getObject("paddle");
+	Object& paddle = game.object("paddle");
 
 	engine.handleControls(Controls{});
 	Controls down;
@@ -233,7 +233,7 @@ TEST_CASE("a vertical control tracks up and down", "[controls]")
 	ScratchGame file(gameWith(R"(<input axis="mouse.y"><trigger object="paddle" action="steer" /></input>)"));
 	Game game(file.path.string());
 	Engine engine(game, std::make_unique<NullWindow>());
-	Object& paddle = game.getObject("paddle");
+	Object& paddle = game.object("paddle");
 
 	engine.handleControls(mouseAt(10.0f, 10.0f));
 	engine.handleControls(mouseAt(10.0f, 50.0f));

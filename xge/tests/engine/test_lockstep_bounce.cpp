@@ -68,12 +68,12 @@ TEST_CASE("the invader block keeps its column spacing through every bounce", "[l
 
 	// Right edge, left edge, right edge again.
 	int bounces = 0;
-	float direction = game.getObject("aliens").velocity.x;
+	float direction = game.object("aliens").velocity.x;
 	for (int frame = 0; frame < 3000 && bounces < 3; ++frame)
 	{
 		game.updateObjects(xge::kSixtieth);
 
-		const float now = game.getObject("aliens").velocity.x;
+		const float now = game.object("aliens").velocity.x;
 		if (now != direction)
 		{
 			direction = now;

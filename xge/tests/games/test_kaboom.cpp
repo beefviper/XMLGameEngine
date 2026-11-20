@@ -63,7 +63,7 @@ namespace
 			if (wave != "wave1") { game.enterScene("playing." + wave); }
 		}
 
-		Object& bucket() { return game.getObject("bucket"); }
+		Object& bucket() { return game.object("bucket"); }
 		float score() { return bucket().variable.at("score"); }
 		float buckets() { return bucket().variable.at("buckets"); }
 		std::string state() { return game.getCurrentState().name; }
@@ -126,13 +126,13 @@ TEST_CASE("kaboom.xml loads a stack of buckets, and a bomber and a bomb that doe
 
 	for (const char* wave : { "wave1", "wave2", "wave3", "wave4", "wave5", "wave6", "wave7", "wave8" })
 	{
-		const Object& object = table.game.getObject(of(wave, "bomber"));
+		const Object& object = table.game.object(of(wave, "bomber"));
 		CHECK(object.hasFacing);
 		CHECK(object.facing == Direction::Down);
 		CHECK(object.kind->timers.size() == 2);
 		CHECK(object.position.y + object.size.y <= 104.0f + 1.0f);
 
-		const Object& bomb = table.game.getObject(of(wave, "bomb"));
+		const Object& bomb = table.game.object(of(wave, "bomb"));
 		CHECK_FALSE(bomb.exists);
 		CHECK(bomb.most == 10);
 		CHECK(table.falling(wave).empty());
@@ -146,7 +146,7 @@ TEST_CASE("kaboom.xml loads a stack of buckets, and a bomber and a bomb that doe
 TEST_CASE("the bomber drops a bomb from under himself every so often, and it falls straight down", "[kaboom]")
 {
 	Table table;
-	const Object& bomber = table.game.getObject(of("wave1", "bomber"));
+	const Object& bomber = table.game.object(of("wave1", "bomber"));
 
 	table.frames(static_cast<int>(0.7f * kFramerate) - 1);
 	CHECK(table.falling().empty());
@@ -173,7 +173,7 @@ TEST_CASE("the bomber stays on the roof, turns at the sides, and changes his min
 {
 	Table table;
 	table.keepPlaying();
-	Object& bomber = table.game.getObject(of("wave1", "bomber"));
+	Object& bomber = table.game.object(of("wave1", "bomber"));
 
 	int turnsAwayFromTheSides = 0;
 	float lastDirection = bomber.velocity.x;
@@ -270,7 +270,7 @@ TEST_CASE("the third bucket lost ends the game", "[kaboom]")
 	CHECK(table.bucket().lookName() == "one");
 	table.frames(1);
 	CHECK(table.state() == "over");
-	CHECK(table.game.getObject("over.message").lookName() == "lost");
+	CHECK(table.game.object("over.message").lookName() == "lost");
 }
 
 TEST_CASE("the score moves the game on from wave to wave and to a win", "[kaboom]")
@@ -289,7 +289,7 @@ TEST_CASE("the score moves the game on from wave to wave and to a win", "[kaboom
 	table.bucket().variable.at("score") = 2900;
 	table.frames(1);
 	CHECK(table.state() == "over");
-	CHECK(table.game.getObject("over.message").lookName() == "won");
+	CHECK(table.game.object("over.message").lookName() == "won");
 }
 
 TEST_CASE("a wave left is away: its bomber stops where he was and drops nothing more", "[kaboom][scenes]")
@@ -303,7 +303,7 @@ TEST_CASE("a wave left is away: its bomber stops where he was and drops nothing 
 	table.frames(1);
 	REQUIRE(table.wave() == "playing.wave2");
 
-	Object& oldBomber = table.game.getObject(of("wave1", "bomber"));
+	Object& oldBomber = table.game.object(of("wave1", "bomber"));
 	const float x = oldBomber.position.x;
 	table.frames(3 * kFramerate);
 
@@ -317,17 +317,17 @@ TEST_CASE("a wave left is away: its bomber stops where he was and drops nothing 
 TEST_CASE("each wave's bomber is quicker and drops faster bombs more often", "[kaboom]")
 {
 	Table table;
-	const float pace1 = std::abs(table.game.getObject(of("wave1", "bomber")).velocity.x);
-	const float pace2 = std::abs(table.game.getObject(of("wave2", "bomber")).velocity.x);
-	const float pace3 = std::abs(table.game.getObject(of("wave3", "bomber")).velocity.x);
+	const float pace1 = std::abs(table.game.object(of("wave1", "bomber")).velocity.x);
+	const float pace2 = std::abs(table.game.object(of("wave2", "bomber")).velocity.x);
+	const float pace3 = std::abs(table.game.object(of("wave3", "bomber")).velocity.x);
 	CHECK(pace1 == Approx(150));
 	CHECK(pace2 == Approx(180));
 	CHECK(pace3 == Approx(210));
-	CHECK(std::abs(table.game.getObject(of("wave8", "bomber")).velocity.x) == Approx(360));
+	CHECK(std::abs(table.game.object(of("wave8", "bomber")).velocity.x) == Approx(360));
 
-	const float fall1 = table.game.getObject(of("wave1", "bomb")).velocity.y;
-	const float fall2 = table.game.getObject(of("wave2", "bomb")).velocity.y;
-	const float fall3 = table.game.getObject(of("wave3", "bomb")).velocity.y;
+	const float fall1 = table.game.object(of("wave1", "bomb")).velocity.y;
+	const float fall2 = table.game.object(of("wave2", "bomb")).velocity.y;
+	const float fall3 = table.game.object(of("wave3", "bomb")).velocity.y;
 	CHECK(fall1 == Approx(150));
 	CHECK(fall2 == Approx(180));
 	CHECK(fall3 == Approx(210));
@@ -351,20 +351,20 @@ TEST_CASE("space starts a new game from the end screen with everything back", "[
 	engine.handleKeyReleased(KeyCode::Space);
 	REQUIRE(game.getCurrentState().name == "playing");
 
-	game.getObject("bucket").variable.at("score") = 10;
+	game.object("bucket").variable.at("score") = 10;
 	for (int i = 0; i < 90; ++i) { engine.input(); engine.update(xge::kSixtieth); }
 	REQUIRE(game.currentScene("playing") == "playing.wave2");
-	game.getObject("bucket").variable.at("buckets") = 0;
+	game.object("bucket").variable.at("buckets") = 0;
 	engine.input(); engine.update(xge::kSixtieth);
 	REQUIRE(game.getCurrentState().name == "over");
-	CHECK(game.getObject("over.message").lookName() == "lost");
+	CHECK(game.object("over.message").lookName() == "lost");
 
 	engine.handleKeyPressed(KeyCode::Space);
 	engine.handleKeyReleased(KeyCode::Space);
 	CHECK(game.getCurrentState().name == "title");
 	CHECK(game.currentScene("playing") == "playing.wave1");
-	CHECK(game.getObject("bucket").variable.at("buckets") == 3);
-	CHECK(game.getObject("bucket").variable.at("score") == 0);
+	CHECK(game.object("bucket").variable.at("buckets") == 3);
+	CHECK(game.object("bucket").variable.at("score") == 0);
 	for (const auto& object : game.getCurrentObjects())
 	{
 		if (object.objClass == "bomb") { CHECK_FALSE(object.isVisible); }
@@ -376,7 +376,7 @@ TEST_CASE("the keys carry on from wave to wave, and Pause pauses over the game d
 	Game game{ "descriptions/kaboom.xml" };
 	measure(game);
 	Engine engine(game, std::make_unique<NullWindow>());
-	Object& bucket = game.getObject("bucket");
+	Object& bucket = game.object("bucket");
 
 	engine.handleKeyPressed(KeyCode::Space);
 	engine.handleKeyReleased(KeyCode::Space);
@@ -404,11 +404,11 @@ TEST_CASE("the keys carry on from wave to wave, and Pause pauses over the game d
 	CHECK(game.getCurrentState().name == "paused");
 
 	// The wave being played is drawn still underneath; the one left is not.
-	Object& bomber = game.getObject(of("wave2", "bomber"));
+	Object& bomber = game.object(of("wave2", "bomber"));
 	CHECK(game.isStill(bucket));
 	CHECK(game.isStill(bomber));
-	CHECK(game.isStill(game.getObject("score")));
-	CHECK_FALSE(game.isStill(game.getObject(of("wave1", "bomber"))));
+	CHECK(game.isStill(game.object("score")));
+	CHECK_FALSE(game.isStill(game.object(of("wave1", "bomber"))));
 	const float x = bomber.position.x;
 	for (int i = 0; i < 30; ++i) { engine.input(); engine.update(xge::kSixtieth); }
 	CHECK(bomber.position.x == Approx(x));

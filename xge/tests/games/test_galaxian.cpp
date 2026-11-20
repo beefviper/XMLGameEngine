@@ -87,7 +87,7 @@ namespace
 		}
 
 		std::string state() { return game.getCurrentState().name; }
-		Object& object(const char* name) { return game.getObject(name); }
+		Object& object(const char* name) { return game.object(name); }
 
 		template <class Test> int count(Test test)
 		{
@@ -167,7 +167,7 @@ namespace
 TEST_CASE("a path is flown a step at a time at its speed, and home takes the object back to its place", "[paths]")
 {
 	Loaded loaded(kSquare, box("a", 50, 50) + box("b", 0, 0));
-	Object& a = loaded.game.getObject("a");
+	Object& a = loaded.game.object("a");
 	loaded.game.follow(a, "square");
 	CHECK(a.isFollowing());
 
@@ -200,9 +200,9 @@ TEST_CASE("a path with a start puts the object there first, and a stagger sends 
 
 	// Half a second apart is 5 frames of a tenth of a second.
 	loaded.game.follow("b", "in", 0.5f);
-	Object& first = loaded.game.getObject("b.1");
-	Object& second = loaded.game.getObject("b.2");
-	Object& third = loaded.game.getObject("b.3");
+	Object& first = loaded.game.object("b.1");
+	Object& second = loaded.game.object("b.2");
+	Object& third = loaded.game.object("b.3");
 	CHECK(first.position.x == Approx(-20.0f));
 	CHECK(third.position.x == Approx(-20.0f));
 	CHECK(second.path.wait == 0.5f);
@@ -224,7 +224,7 @@ TEST_CASE("a step runs its commands as it sets off, and an object on a path fini
 	const std::string paths = "<paths><path name=\"count\"><speed>10</speed>"
 		"<step><x>3</x><y>0</y><inc variable=\"a.n\" /></step><step><x>-3</x><y>0</y><inc variable=\"a.n\">10</inc></step></path></paths>";
 	Loaded loaded(paths, box("a", 50, 50, "<variables><variable name=\"n\">0</variable></variables>") + box("b", 0, 0));
-	Object& a = loaded.game.getObject("a");
+	Object& a = loaded.game.object("a");
 
 	loaded.game.follow(a, "count");
 	loaded.frames(1);
@@ -243,7 +243,7 @@ TEST_CASE("a step runs its commands as it sets off, and an object on a path fini
 TEST_CASE("a reset ends a path, and an object out of play is not moved along it", "[paths]")
 {
 	Loaded loaded(kSquare, box("a", 50, 50) + box("b", 0, 0));
-	Object& a = loaded.game.getObject("a");
+	Object& a = loaded.game.object("a");
 
 	loaded.game.follow(a, "square");
 	loaded.frames(3);
@@ -263,14 +263,14 @@ TEST_CASE("a <follow> in a timer sends its own object, and in a state needs obje
 {
 	Loaded loaded(kSquare, box("a", 50, 50, "<timers><timer><after>0.1</after><follow path=\"square\" /></timer></timers>") + box("b", 0, 0));
 	loaded.frames(1);
-	CHECK(loaded.game.getObject("a").isFollowing());
-	CHECK_FALSE(loaded.game.getObject("b").isFollowing());
+	CHECK(loaded.game.object("a").isFollowing());
+	CHECK_FALSE(loaded.game.object("b").isFollowing());
 
 	Loaded fromState(kSquare, box("a", 50, 50) + box("b", 0, 0),
 		"<timers><timer><after>0.1</after><follow path=\"square\" object=\"b\" /></timer></timers>");
 	fromState.frames(1);
-	CHECK(fromState.game.getObject("b").isFollowing());
-	CHECK_FALSE(fromState.game.getObject("a").isFollowing());
+	CHECK(fromState.game.object("b").isFollowing());
+	CHECK_FALSE(fromState.game.object("a").isFollowing());
 }
 
 TEST_CASE("<nearest> in a <follow> sends only that many, the nearest to the one doing it", "[paths]")
@@ -281,17 +281,17 @@ TEST_CASE("<nearest> in a <follow> sends only that many, the nearest to the one 
 	Loaded loaded(kSquare, box("a", 135, 0,
 		"<timers><timer><after>0.1</after><follow path=\"square\" object=\"b\"><nearest>2</nearest></follow></timer></timers>") + group);
 	loaded.frames(1);
-	CHECK_FALSE(loaded.game.getObject("b.1").isFollowing());
-	CHECK(loaded.game.getObject("b.2").isFollowing());
-	CHECK(loaded.game.getObject("b.3").isFollowing());
-	CHECK_FALSE(loaded.game.getObject("a").isFollowing());
+	CHECK_FALSE(loaded.game.object("b.1").isFollowing());
+	CHECK(loaded.game.object("b.2").isFollowing());
+	CHECK(loaded.game.object("b.3").isFollowing());
+	CHECK_FALSE(loaded.game.object("a").isFollowing());
 }
 
 TEST_CASE("<shift> moves objects and the places they go home to; one on a path only has its place moved", "[paths]")
 {
 	Loaded loaded(kSquare, box("a", 50, 50) + box("b", 0, 0,
 		"<timers><timer><every>0.1</every><shift object=\"a\"><x>1</x></shift></timer></timers>"));
-	Object& a = loaded.game.getObject("a");
+	Object& a = loaded.game.object("a");
 	loaded.frames(3);
 	CHECK(a.position.x == Approx(53.0f));
 	CHECK(isHome(loaded.game, a));
@@ -317,8 +317,8 @@ TEST_CASE("a path step that names something live is worked out as it starts, wit
 	const std::string paths = "<paths><path name=\"aim\"><speed>20</speed>"
 		"<step><x><subtract><value>b.x</value><value>self.x</value></subtract></x><y>0</y></step><home /></path></paths>";
 	Loaded loaded(paths, box("a", 50, 50) + box("b", 10, 0));
-	Object& a = loaded.game.getObject("a");
-	Object& b = loaded.game.getObject("b");
+	Object& a = loaded.game.object("a");
+	Object& b = loaded.game.object("b");
 	b.position.x = 30.0f;
 	loaded.game.follow(a, "aim");
 	loaded.frames(1);
@@ -341,8 +341,8 @@ TEST_CASE("a step's commands can name the one flying it as self, whoever sent it
 		"<member><position><x>100</x></position></member><member><position><x>120</x></position></member></group>";
 	Loaded loaded(paths, box("a", 0, 0, "<timers><timer><after>0.1</after><follow path=\"count\" object=\"b\" /></timer></timers>") + group);
 	loaded.frames(2);
-	CHECK(loaded.game.getObject("b.1").variable.at("n") == 100.0f);
-	CHECK(loaded.game.getObject("b.2").variable.at("n") == 120.0f);
+	CHECK(loaded.game.object("b.1").variable.at("n") == 100.0f);
+	CHECK(loaded.game.object("b.2").variable.at("n") == 120.0f);
 
 	// One that cannot be sent along it says nothing of it; one that can and
 	// has no such variable stops the load, naming it.

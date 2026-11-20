@@ -85,12 +85,12 @@ TEST_CASE("it is drawn raised by its altitude, and its <shadow> lies under it on
 	CHECK(seen.drawn[0].second.y == Approx(201));
 	CHECK(seen.drawn[1].first == "playing.ball");
 	CHECK(seen.drawn[1].second.y == Approx(200 - 49.5));
-	CHECK(game.getObject("ball").position.y == Approx(200));
+	CHECK(game.object("ball").position.y == Approx(200));
 
 	// Out of play, and so is its shadow.
-	game.getObject("ball").isVisible = false;
+	game.object("ball").isVisible = false;
 	engine.input(); engine.update(xge::kSixtieth);
-	CHECK_FALSE(game.getObject("shade").isVisible);
+	CHECK_FALSE(game.object("shade").isVisible);
 }
 
 TEST_CASE("a rule can check how high it is: what flies over goes past", "[altitude]")

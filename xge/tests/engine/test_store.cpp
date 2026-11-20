@@ -59,10 +59,10 @@ TEST_CASE("an object's handle finds it until it is despawned, and a slot used ag
 	REQUIRE(play.game.justSpawned().size() == 1);
 	const std::string again = play.game.justSpawned().front().name;
 	play.frames(1);
-	const ObjectId second = play.game.getObject(again).id;
+	const ObjectId second = play.game.object(again).id;
 	CHECK(second.index == first.index);
 	CHECK(second.generation == first.generation + 1);
-	CHECK(play.game.find(second) == &play.game.getObject(again));
+	CHECK(play.game.find(second) == &play.game.object(again));
 	CHECK(play.game.find(first) == nullptr);
 	CHECK(play.game.find(ship.id) == &play.get("ship"));
 }

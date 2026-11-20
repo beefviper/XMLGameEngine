@@ -75,12 +75,12 @@ TEST_CASE("a text takes the size and color it leaves out from its style", "[text
 		"<object name=\"note\"><sprite><text style=\"plain\"><content>hi</content></text></sprite><position><x>0</x><y>0</y></position></object>",
 		kStyles, backend);
 
-	const Picture& heading = game.getObject("heading").drawn.picture;
+	const Picture& heading = game.object("heading").drawn.picture;
 	CHECK(heading.textSize == 90);   // the style's size, a game variable
 	CHECK(heading.color == "color.red");
-	CHECK(game.getObject("smaller").drawn.picture->textSize == 30); // its own size wins
-	CHECK(game.getObject("smaller").drawn.picture->color == "color.red");
-	CHECK(game.getObject("note").drawn.picture->color == "color.white");           // a style with no color: white
+	CHECK(game.object("smaller").drawn.picture->textSize == 30); // its own size wins
+	CHECK(game.object("smaller").drawn.picture->color == "color.red");
+	CHECK(game.object("note").drawn.picture->color == "color.white");           // a style with no color: white
 }
 
 TEST_CASE("a style that is not there, or a text with no size at all, stops the load", "[text]")
@@ -117,17 +117,17 @@ TEST_CASE("a bitmap takes the scale and colors it leaves out from its style", "[
 	// The pixel at (x, 0) of an object's picture: red, green, blue.
 	const auto rgb = [&](const std::string& name, int x)
 	{
-		const auto& rgba = game.getObject(name).drawn.bitmap->rgba;
+		const auto& rgba = game.object(name).drawn.bitmap->rgba;
 		const std::size_t at = static_cast<std::size_t>(x) * 4;
 		return std::vector<int>{ rgba[at], rgba[at + 1], rgba[at + 2] };
 	};
 
-	CHECK(game.getObject("plain").drawn.bitmap->width == 6);   // the style's scale
+	CHECK(game.object("plain").drawn.bitmap->width == 6);   // the style's scale
 	CHECK(rgb("plain", 0) == std::vector<int>{ 255, 0, 0 });
 	CHECK(rgb("plain", 2) == std::vector<int>{ 0, 0, 255 });
 	CHECK(rgb("plain", 4) == std::vector<int>{ 0, 255, 0 });
 
-	CHECK(game.getObject("own").drawn.bitmap->width == 3);     // its own scale wins
+	CHECK(game.object("own").drawn.bitmap->width == 3);     // its own scale wins
 	CHECK(rgb("own", 0) == std::vector<int>{ 255, 255, 255 });
 	CHECK(rgb("own", 1) == std::vector<int>{ 0, 0, 0 }); // its own b
 	CHECK(rgb("own", 2) == std::vector<int>{ 0, 255, 0 }); // the style's g
@@ -150,10 +150,10 @@ TEST_CASE("a text's font file is its own <font>, its style's, or the standard on
 		"<object name=\"standard\"><sprite><text style=\"plain\"><content>HI</content></text></sprite><position><x>0</x><y>0</y></position></object>",
 		styles, backend);
 
-	CHECK(textFontFile(game.getObject("styled").drawn.picture->font) == "assets/pressstart2p.ttf");
-	CHECK(textFontFile(game.getObject("own").drawn.picture->font) == "assets/other.ttf");
-	CHECK(game.getObject("standard").drawn.picture->font.empty());
-	CHECK(textFontFile(game.getObject("standard").drawn.picture->font) == "assets/tuffy.ttf");
+	CHECK(textFontFile(game.object("styled").drawn.picture->font) == "assets/pressstart2p.ttf");
+	CHECK(textFontFile(game.object("own").drawn.picture->font) == "assets/other.ttf");
+	CHECK(game.object("standard").drawn.picture->font.empty());
+	CHECK(textFontFile(game.object("standard").drawn.picture->font) == "assets/tuffy.ttf");
 }
 
 TEST_CASE("<become style> puts another style's colors on an object's bitmaps, and a reset the first", "[text]")
@@ -228,13 +228,13 @@ TEST_CASE("<centered> puts an object's middle at the window's middle, or at the 
 		"<member><sprite><rectangle><height>30</height></rectangle></sprite><position><x>50</x></position></member></group>",
 		"", backend);
 
-	CHECK(game.getObject("box").position.x == Approx(350));
-	CHECK(game.getObject("box").position.y == Approx(280));
-	CHECK(game.getObject("left").position.x == Approx(190));
-	CHECK(game.getObject("left").position.y == Approx(10));
+	CHECK(game.object("box").position.x == Approx(350));
+	CHECK(game.object("box").position.y == Approx(280));
+	CHECK(game.object("left").position.x == Approx(190));
+	CHECK(game.object("left").position.y == Approx(10));
 	// Each member is centered on its own height.
-	CHECK(game.getObject("row.1").position.y == Approx(300 - 5));
-	CHECK(game.getObject("row.2").position.y == Approx(300 - 15));
+	CHECK(game.object("row.1").position.y == Approx(300 - 5));
+	CHECK(game.object("row.2").position.y == Approx(300 - 15));
 }
 
 TEST_CASE("<centered><offset> puts an object's middle that far from the window's middle", "[text]")
@@ -247,11 +247,11 @@ TEST_CASE("<centered><offset> puts an object's middle that far from the window's
 		"<position><x><subtract><value>window.width</value><value>20</value></subtract></x><y><subtract><value>window.height</value><value>10</value></subtract></y></position></object>",
 		"", backend);
 
-	CHECK(game.getObject("up").position.x == Approx(400 + 50 - 50));
-	CHECK(game.getObject("up").position.y == Approx(300 - 60 - 20));
+	CHECK(game.object("up").position.x == Approx(400 + 50 - 50));
+	CHECK(game.object("up").position.y == Approx(300 - 60 - 20));
 	// window.width and window.height are names, the same as window.right and window.bottom.
-	CHECK(game.getObject("edge").position.x == Approx(780));
-	CHECK(game.getObject("edge").position.y == Approx(590));
+	CHECK(game.object("edge").position.x == Approx(780));
+	CHECK(game.object("edge").position.y == Approx(590));
 
 	SECTION("an offset beside a place, or another tag, stops the load")
 	{

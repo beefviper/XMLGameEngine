@@ -51,7 +51,7 @@ namespace played
 		}
 
 		std::string state() { return game.getCurrentState().name; }
-		xge::Object& get(const std::string& name) { return game.getObject(name); }
+		xge::Object& get(const std::string& name) { return game.object(name); }
 
 		// The holder part of the object of that name, or of that object.
 		xge::Holder& holderOf(const std::string& name) { return game.holderOf(get(name)); }

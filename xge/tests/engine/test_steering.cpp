@@ -62,7 +62,7 @@ namespace
 		}
 
 		std::string state() { return game.getCurrentState().name; }
-		Object& get(const std::string& name) { return game.getObject(name); }
+		Object& get(const std::string& name) { return game.object(name); }
 		// How many copies of a piece are in the game.
 		int count(const std::string& piece)
 		{
@@ -530,11 +530,11 @@ TEST_CASE("a <hunt> with <search /> takes the shortest way to a target behind a 
 		const Scratch file(map + search + "</hunt></action></actions></object></map>", "<trigger object=\"hunter\" action=\"go\" />");
 		Played play(file.path);
 		play.tap(KeyCode::Space);
-		const Object& prey = play.game.getObject("playing.prey");
+		const Object& prey = play.game.object("playing.prey");
 		for (int frame = 0; frame < 600; ++frame)
 		{
 			play.frames(1);
-			const Object& hunter = play.game.getObject("playing.hunter");
+			const Object& hunter = play.game.object("playing.hunter");
 			const Vector2f apart = (hunter.position + hunter.size * 0.5f) - (prey.position + prey.size * 0.5f);
 			if (length(apart) < 10.0f) { return true; }
 		}

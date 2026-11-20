@@ -64,9 +64,9 @@ namespace
 
 		std::string state() { return game.getCurrentState().name; }
 		std::string wave() { return game.currentScene("playing"); }
-		Object& enemy(const std::string& scene, int member) { return game.getObject("playing." + scene + ".enemies." + std::to_string(member)); }
-		Object& player() { return game.getObject("player"); }
-		float energy() { return game.getObject("energy").variable.at("level"); }
+		Object& enemy(const std::string& scene, int member) { return game.object("playing." + scene + ".enemies." + std::to_string(member)); }
+		Object& player() { return game.object("player"); }
+		float energy() { return game.object("energy").variable.at("level"); }
 
 		// Stops a wave (a scene: wave1, wave2, wave3) dropping bombs, for the
 		// tests that are not about them.
@@ -159,10 +159,10 @@ TEST_CASE("a shot brings one down, one shot at a time", "[megamania]")
 	play.player().position.x = burger.position.x + burger.size.x / 2 - play.player().size.x / 2;
 	play.tap(KeyCode::Space);
 	play.frames(1);
-	const Vector2f shot = play.game.getObject("laser.1").position;
+	const Vector2f shot = play.game.object("laser.1").position;
 	play.tap(KeyCode::Space);
 	play.frames(1);
-	CHECK(play.game.getObject("laser.1").position.y < shot.y);
+	CHECK(play.game.object("laser.1").position.y < shot.y);
 	play.frames(60);
 	CHECK_FALSE(burger.isVisible);
 	CHECK(play.player().variable.at("score") == 20);
@@ -179,7 +179,7 @@ TEST_CASE("the energy runs down a second at a time, and running out costs a ship
 	CHECK(play.energy() == Approx(full - 2.0f));
 
 	// Nearly out: the energy's timer a second from going off.
-	play.game.clocksOf(play.game.getObject("energy"))->at(0).counting = true; play.game.clocksOf(play.game.getObject("energy"))->at(0).secondsLeft = 1.0;
+	play.game.clocksOf(play.game.object("energy"))->at(0).counting = true; play.game.clocksOf(play.game.object("energy"))->at(0).secondsLeft = 1.0;
 	play.frames(1);
 	CHECK(play.energy() == Approx(1));
 	play.frames(130);
@@ -231,7 +231,7 @@ TEST_CASE("each wave cleared is the next with the energy full, and the eighth wi
 	play.clear("wave8");
 	play.frames(2);
 	CHECK(play.state() == "over");
-	CHECK(play.game.getObject("over.message").lookName() == "won");
+	CHECK(play.game.object("over.message").lookName() == "won");
 	CHECK(play.game.isStill(play.player()));
 
 	play.tap(KeyCode::Space);
@@ -301,7 +301,7 @@ TEST_CASE("the energy left is a bonus, and its bar is covered as it runs down", 
 	play.start();
 	play.noBombs("wave1");
 
-	Object& cover = play.game.getObject("cover");
+	Object& cover = play.game.object("cover");
 	const float full = cover.position.x;
 	play.frames(600);
 	CHECK(cover.position.x < full);
@@ -321,7 +321,7 @@ TEST_CASE("the shot is steered with the blaster", "[megamania]")
 
 	play.tap(KeyCode::Space);
 	play.frames(2);
-	Object& laser = play.game.getObject("laser.1");
+	Object& laser = play.game.object("laser.1");
 	REQUIRE(laser.isVisible);
 	play.engine.handleKeyPressed(KeyCode::A);
 	play.frames(10);

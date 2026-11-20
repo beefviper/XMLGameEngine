@@ -58,7 +58,7 @@ namespace xge
 		const bool across = axis == Axis::MouseX || axis == Axis::Pad1X || axis == Axis::Pad2X;
 		Object* turn = game.takesTurns(trigger->object) ? game.onTurn(trigger->object) : nullptr;
 		if (game.takesTurns(trigger->object) && (!turn || !game.answers(*turn))) { return; }
-		Object& object = turn ? *turn : game.getObject(trigger->object);
+		Object& object = turn ? *turn : game.object(trigger->object);
 		if (!game.answersPicker(object)) { return; }
 		// from=: only while it shows that look.
 		if (!trigger->from.empty() && object.lookName() != trigger->from) { return; }
@@ -123,7 +123,7 @@ namespace xge
 			return verb && verb->hold && verb->hold(command, doer);
 		}
 
-		Object& object = game.getObject(trigger->object);
+		Object& object = game.object(trigger->object);
 		doer.self = &object;
 		doer.action = &trigger->action;
 		for (const auto& written : actionOf(object, trigger->action))
@@ -139,7 +139,7 @@ namespace xge
 	{
 		const auto showing = [&](const Object& object) { return from.empty() || object.lookName() == from; };
 		lastTriggerRefused = false;
-		Object& first = game.getObject(objectName);
+		Object& first = game.object(objectName);
 		if (first.name == objectName || !first.inGroup(objectName))
 		{
 			if (showing(first) && (byRule || game.answersPicker(first))) { lastTriggerRefused = runAction(first, actionName, keyPressed, byRule); }

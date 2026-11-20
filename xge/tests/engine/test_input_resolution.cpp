@@ -34,7 +34,7 @@ TEST_CASE("holding one direction and tapping the opposite cancels, then resumes 
 {
 	Game game{ "descriptions/tennis.xml" };
 	CommandExecutor executor(game);
-	Object& player = game.getObject("player");
+	Object& player = game.object("player");
 
 	// Press and hold Down.
 	executor.executeInput(Command{ CmdTriggerAction{ "player", "down" } }, true);
@@ -62,7 +62,7 @@ TEST_CASE("two independent axes combine into a diagonal", "[input_resolution]")
 	// each axis resolved independently of the other.
 	Game game{ "descriptions/tennis.xml" };
 	CommandExecutor executor(game);
-	Object& player = game.getObject("player");
+	Object& player = game.object("player");
 
 	executor.executeInput(Command{ CmdTriggerAction{ "player", "left" } }, true);
 	executor.executeInput(Command{ CmdTriggerAction{ "player", "up" } }, true);
@@ -84,7 +84,7 @@ TEST_CASE("a full-game reset clears any direction still recorded as held", "[inp
 	// the old held direction from stale state.
 	Game game{ "descriptions/tennis.xml" };
 	CommandExecutor executor(game);
-	Object& player = game.getObject("player");
+	Object& player = game.object("player");
 
 	executor.executeInput(Command{ CmdTriggerAction{ "player", "down" } }, true);
 	CHECK(player.velocity.y == kStep);

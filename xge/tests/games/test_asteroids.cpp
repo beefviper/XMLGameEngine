@@ -65,8 +65,8 @@ namespace
 			game.setCurrentState("playing");
 		}
 
-		Object& ship() { return game.getObject("ship"); }
-		Object& named(const std::string& name) { return game.getObject(name); }
+		Object& ship() { return game.object("ship"); }
+		Object& named(const std::string& name) { return game.object(name); }
 		float score() { return ship().variable.at("score"); }
 		float lives() { return ship().variable.at("lives"); }
 		std::string state() { return game.getCurrentState().name; }
@@ -89,7 +89,7 @@ namespace
 		{
 			const std::string made = game.spawn(name)->name;
 			game.settleSpawns();
-			return game.getObject(made);
+			return game.object(made);
 		}
 
 		bool has(const std::string& name)
@@ -319,7 +319,7 @@ TEST_CASE("asteroids.xml loads under every XML backend, checked against the sche
 	{
 		Game game{ readGame("descriptions/asteroids.xml", backend) };
 
-		const Object& ship = game.getObject("ship");
+		const Object& ship = game.object("ship");
 		CHECK(ship.turning.hasHeading);
 		CHECK_THAT(ship.motion.drag, WithinAbs((std::log(2.0f) / 0.57f), 1e-5f));
 		CHECK(ship.drawn.turnables.size() == 1);
@@ -1306,7 +1306,7 @@ TEST_CASE("a heading, a drag and an active are read from the file", "[asteroids]
 {
 	Game game{ "descriptions/asteroids.xml" };
 
-	const Object& ship = game.getObject("ship");
+	const Object& ship = game.object("ship");
 	CHECK(ship.turning.hasHeading);
 	CHECK(game.startOf(ship).heading == 0.0f);
 	CHECK_THAT(ship.motion.drag, WithinAbs((std::log(2.0f) / 0.57f), 1e-5f));

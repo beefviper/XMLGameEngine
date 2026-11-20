@@ -59,7 +59,7 @@ namespace
 			game.setCurrentState("playing");
 		}
 
-		Object& frog() { return game.getObject("frog"); }
+		Object& frog() { return game.object("frog"); }
 		float lives() { return frog().variable.at("lives"); }
 		float score() { return frog().variable.at("score"); }
 		float homes() { return frog().variable.at("homes"); }
@@ -119,7 +119,7 @@ TEST_CASE("frogger.xml loads under every XML backend, checked against the schema
 	for (const XmlBackend backend : { XmlBackend::Xerces, XmlBackend::TinyXml2, XmlBackend::PugiXml, XmlBackend::RapidXml })
 	{
 		Game game{ readGame("descriptions/frogger.xml", backend) };
-		const Object& frog = game.getObject("frog");
+		const Object& frog = game.object("frog");
 		CHECK(game.startOf(frog).variable.at("lives") == 3.0f);
 
 		// One rule with unless, and the condition with atmost, came through.
@@ -186,7 +186,7 @@ TEST_CASE("a held hop key hops once, and a state change never repeats it", "[fro
 	Game game{ "descriptions/frogger.xml" };
 	measure(game);
 	Engine engine(game, std::make_unique<NullWindow>());
-	Object& frog = game.getObject("frog");
+	Object& frog = game.object("frog");
 	const float startY = frog.position.y;
 
 	engine.handleKeyPressed(KeyCode::Space); // title -> playing
@@ -221,7 +221,7 @@ TEST_CASE("a held hop key hops once, and a state change never repeats it", "[fro
 TEST_CASE("a car takes a life and sends the frog back to the start", "[frogger][collision]")
 {
 	Table table;
-	Object& car = table.game.getObject("carrow12.1.1");
+	Object& car = table.game.object("carrow12.1.1");
 
 	// The frog is put in the car's lane, right where the car is.
 	table.frog().position = { car.position.x, car.position.y };
@@ -236,7 +236,7 @@ TEST_CASE("a car takes a life and sends the frog back to the start", "[frogger][
 TEST_CASE("a car that only grazes the tips of the frog's legs misses it", "[frogger][collision][hitbox]")
 {
 	Table table;
-	Object& car = table.game.getObject("carrow12.1.1");
+	Object& car = table.game.object("carrow12.1.1");
 
 	// Just over the car's lane, its legs 3 pixels into it: the car goes by underneath.
 	table.frog().position = { car.position.x, car.position.y - table.frog().size.y + 3.0f };
@@ -275,7 +275,7 @@ TEST_CASE("hopping into the river with no log there costs a life", "[frogger][ri
 TEST_CASE("hopping onto a log is safe, and the frog rides it", "[frogger][river][ride]")
 {
 	Table table;
-	const Object& log = table.game.getObject("logrow5.1.1"); // 132 long, +1 a frame
+	const Object& log = table.game.object("logrow5.1.1"); // 132 long, +1 a frame
 
 	table.frog().position = { log.position.x + 40.0f, cellPosition(0, 6).y };
 	table.hop("up");
@@ -293,7 +293,7 @@ TEST_CASE("hopping onto a log is safe, and the frog rides it", "[frogger][river]
 TEST_CASE("riding a log off the side of the screen costs a life", "[frogger][river][ride]")
 {
 	Table table;
-	Object& log = table.game.getObject("logrow5.3.1"); // heading right
+	Object& log = table.game.object("logrow5.3.1"); // heading right
 	log.position.x = 480.0f;
 
 	// Hop up onto its first cells, as far right as a hop can go.
@@ -327,7 +327,7 @@ TEST_CASE("a hedge costs a life", "[frogger][collision]")
 TEST_CASE("reaching a bay scores, fills it and sends the frog back; a filled bay is a loss", "[frogger][pads]")
 {
 	Table table;
-	Object& pad = table.game.getObject("pads.1.1");
+	Object& pad = table.game.object("pads.1.1");
 	REQUIRE(pad.lookName() == "empty");
 
 	table.place(2, 2);
@@ -352,7 +352,7 @@ TEST_CASE("reaching a bay scores, fills it and sends the frog back; a filled bay
 TEST_CASE("a turtle that has dived drowns the frog on it", "[frogger][river]")
 {
 	Table table;
-	Object& turtle = table.game.getObject("turtlerow3.1.1");
+	Object& turtle = table.game.object("turtlerow3.1.1");
 	turtle.velocity = { 0.0f, 0.0f };
 	turtle.position.x = 200.0f;
 
@@ -380,7 +380,7 @@ TEST_CASE("the time runs out a frog", "[frogger][timers]")
 	Table table;
 	table.frames(60 * 40 + 2 + 100);
 	CHECK(table.lives() == 2.0f);
-	CHECK(table.game.getObject("clock").variable.at("time") >= 39.0f);
+	CHECK(table.game.object("clock").variable.at("time") >= 39.0f);
 }
 
 TEST_CASE("all five pads is a win", "[frogger][pads]")
@@ -397,7 +397,7 @@ TEST_CASE("all five pads is a win", "[frogger][pads]")
 
 	CHECK(table.homes() == 5.0f);
 	CHECK(table.game.getCurrentState().name == "over");
-	CHECK(table.game.getObject("over.message").lookName() == "won");
+	CHECK(table.game.object("over.message").lookName() == "won");
 }
 
 TEST_CASE("running out of lives is game over, and space starts again", "[frogger][conditions]")
@@ -414,7 +414,7 @@ TEST_CASE("running out of lives is game over, and space starts again", "[frogger
 
 	CHECK(table.lives() == 0.0f);
 	CHECK(table.game.getCurrentState().name == "over");
-	CHECK(table.game.getObject("over.message").lookName() == "lost");
+	CHECK(table.game.object("over.message").lookName() == "lost");
 
 	table.executor.executeInput(Command{ CmdReset{} }, true);
 	CHECK(table.game.getCurrentState().name == "title");
@@ -430,11 +430,11 @@ TEST_CASE("dec takes a life off the bound text as well as the variable", "[frogg
 	// <dec variable="frog.lives" /> in the game is loaded as.
 	table.game.addTo({ "playing.frog", "lives" }, -1.0f);
 	CHECK(table.lives() == 2.0f);
-	CHECK(table.game.getObject("lives").drawn.picture->text == "LIVES 2");
+	CHECK(table.game.object("lives").drawn.picture->text == "LIVES 2");
 
 	table.game.addTo({ "playing.frog", "lives" });
 	CHECK(table.lives() == 3.0f);
-	CHECK(table.game.getObject("lives").drawn.picture->text == "LIVES 3");
+	CHECK(table.game.object("lives").drawn.picture->text == "LIVES 3");
 }
 
 TEST_CASE("cars, trucks and logs loop round the screen without losing their spacing", "[frogger][wrap]")
@@ -452,7 +452,7 @@ TEST_CASE("cars, trucks and logs loop round the screen without losing their spac
 		std::vector<Object*> members;
 		for (int i = 0; i < l.count; ++i)
 		{
-			members.push_back(&table.game.getObject(std::string(l.prefix) + "." + std::to_string(i + 1) + ".1"));
+			members.push_back(&table.game.object(std::string(l.prefix) + "." + std::to_string(i + 1) + ".1"));
 		}
 		return members;
 	};
@@ -504,7 +504,7 @@ TEST_CASE("cars, trucks and logs loop round the screen without losing their spac
 TEST_CASE("an object only wraps once it has gone right off the screen", "[frogger][wrap]")
 {
 	Table table;
-	Object& car = table.game.getObject("carrow9.1.1"); // 40 wide, +3.2 a frame
+	Object& car = table.game.object("carrow9.1.1"); // 40 wide, +3.2 a frame
 
 	car.position.x = kWindowWidth - 20.0f; // still partly in view
 	table.frames(1);
@@ -514,7 +514,7 @@ TEST_CASE("an object only wraps once it has gone right off the screen", "[frogge
 	table.frames(1);
 	CHECK(car.position.x == kWindowWidth + 1.0f - (kWindowWidth + 40.0f) + 3.2f);
 
-	Object& other = table.game.getObject("carrow10.1.1"); // heading left, -1.6
+	Object& other = table.game.object("carrow10.1.1"); // heading left, -1.6
 	other.position.x = -40.0f - 2.0f; // gone off the left
 	table.frames(1);
 	CHECK(other.position.x == -42.0f + (kWindowWidth + 40.0f) - 1.6f);
@@ -524,24 +524,24 @@ TEST_CASE("each state has its own objects: the title, the board, the signs", "[f
 {
 	Game game{ "descriptions/frogger.xml" };
 	game.setCurrentState("title");
-	CHECK(game.isShown(game.getObject("title")));
-	CHECK_FALSE(game.isShown(game.getObject("frog")));
-	CHECK_FALSE(game.isStill(game.getObject("frog")));
+	CHECK(game.isShown(game.object("title")));
+	CHECK_FALSE(game.isShown(game.object("frog")));
+	CHECK_FALSE(game.isStill(game.object("frog")));
 
 	game.pushState("playing");
-	CHECK(game.getObject("frog").name == "playing.frog");
-	CHECK(game.getObject("carrow9.1.1").name == "playing.carrow9.1.1");
-	CHECK(game.isShown(game.getObject("frog")));
-	CHECK(game.isShown(game.getObject("carrow9.1.1")));
-	CHECK(game.isShown(game.getObject("lives")));
-	CHECK_FALSE(game.isShown(game.getObject("title")));
-	CHECK_FALSE(game.isShown(game.getObject("paused.paused")));
+	CHECK(game.object("frog").name == "playing.frog");
+	CHECK(game.object("carrow9.1.1").name == "playing.carrow9.1.1");
+	CHECK(game.isShown(game.object("frog")));
+	CHECK(game.isShown(game.object("carrow9.1.1")));
+	CHECK(game.isShown(game.object("lives")));
+	CHECK_FALSE(game.isShown(game.object("title")));
+	CHECK_FALSE(game.isShown(game.object("paused.paused")));
 }
 
 TEST_CASE("paused, the board is drawn still underneath and nothing on it moves", "[frogger][states]")
 {
 	Table table;
-	Object& car = table.game.getObject("carrow9.1.1"); // +3.2 a frame
+	Object& car = table.game.object("carrow9.1.1"); // +3.2 a frame
 	const float x = car.position.x;
 
 	table.game.pushState("paused");
@@ -549,7 +549,7 @@ TEST_CASE("paused, the board is drawn still underneath and nothing on it moves",
 	CHECK(car.position.x == x);
 	CHECK(table.game.isStill(car));
 	CHECK(table.game.isStill(table.frog()));
-	CHECK(table.game.isShown(table.game.getObject("paused.paused")));
+	CHECK(table.game.isShown(table.game.object("paused.paused")));
 
 	table.game.popState();
 	table.frames(1);
@@ -567,11 +567,11 @@ TEST_CASE("game over and the win draw the board still, with their own words over
 		table.frames(100);
 	}
 	REQUIRE(table.game.getCurrentState().name == "over");
-	CHECK(table.game.getObject("over.message").lookName() == "lost");
+	CHECK(table.game.object("over.message").lookName() == "lost");
 	CHECK(table.game.isStill(table.frog()));
-	CHECK(table.game.isStill(table.game.getObject("pads.1.1")));
-	CHECK(table.game.isShown(table.game.getObject("over.message")));
-	CHECK(table.game.isShown(table.game.getObject("over.continue")));
+	CHECK(table.game.isStill(table.game.object("pads.1.1")));
+	CHECK(table.game.isShown(table.game.object("over.message")));
+	CHECK(table.game.isShown(table.game.object("over.continue")));
 
 	Table won;
 	for (int i = 0; i < 5; ++i)
@@ -581,9 +581,9 @@ TEST_CASE("game over and the win draw the board still, with their own words over
 		won.frames(1);
 	}
 	REQUIRE(won.game.getCurrentState().name == "over");
-	CHECK(won.game.getObject("over.message").lookName() == "won");
+	CHECK(won.game.object("over.message").lookName() == "won");
 	CHECK(won.game.isStill(won.frog()));
-	CHECK(won.game.isStill(won.game.getObject("pads.5.1")));
-	CHECK(won.game.isShown(won.game.getObject("over.message")));
-	CHECK(won.game.isShown(won.game.getObject("over.continue")));
+	CHECK(won.game.isStill(won.game.object("pads.5.1")));
+	CHECK(won.game.isShown(won.game.object("over.message")));
+	CHECK(won.game.isShown(won.game.object("over.continue")));
 }

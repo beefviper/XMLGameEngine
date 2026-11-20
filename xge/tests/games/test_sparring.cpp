@@ -30,7 +30,7 @@ namespace
 			frames(2);
 		}
 
-		Object& boxer(int player) { return game.getObject("boxer" + std::to_string(player)); }
+		Object& boxer(int player) { return game.object("boxer" + std::to_string(player)); }
 		float points(int player) { return boxer(player).variable.at("points"); }
 
 		// The two boxers `gap` apart, the first at 200.
@@ -134,5 +134,5 @@ TEST_CASE("sparring.xml: the tenth point wins", "[sparring]")
 	ring.frames(10);
 	CHECK(ring.points(2) == 10.0f);
 	CHECK(ring.game.getCurrentState().name == "over");
-	CHECK(ring.game.getObject("over.winner").lookName() == "player2");
+	CHECK(ring.game.object("over.winner").lookName() == "player2");
 }

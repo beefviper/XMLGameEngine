@@ -51,9 +51,9 @@ namespace
 			game.setCurrentState("playing");
 		}
 
-		Object& ship() { return game.getObject("ship"); }
+		Object& ship() { return game.object("ship"); }
 		// The shot in flight, a copy of the shot piece.
-		Object& shot() { return game.getObject("shot.1"); }
+		Object& shot() { return game.object("shot.1"); }
 		float score() { return ship().variable.at("score"); }
 		float lives() { return ship().variable.at("lives"); }
 		bool inFlight() { return copies::count(game, "shot") == 1; }
@@ -106,7 +106,7 @@ namespace
 		// A rock back at the start of its fall, give or take a frame of falling.
 		bool atStart(const std::string& name)
 		{
-			const Object& rock = game.getObject(name);
+			const Object& rock = game.object(name);
 			return std::abs(rock.position.x - game.startOf(rock).position.x) <= std::abs(rock.velocity.x) / 60.0f
 				&& rock.position.y >= game.startOf(rock).position.y
 				&& rock.position.y <= game.startOf(rock).position.y + rock.velocity.y / 60.0f;
@@ -117,7 +117,7 @@ namespace
 		void fireAt(const std::string& name)
 		{
 			press("gun");
-			Object& rock = game.getObject(name);
+			Object& rock = game.object(name);
 			rock.position.y = 200.0f;
 			shot().position = { rock.position.x + rock.size.x / 2.0f, rock.position.y + rock.size.y + 4.0f };
 		}
@@ -143,7 +143,7 @@ TEST_CASE("astrosmash.xml loads a base, four big rocks, four small, two spinners
 	CHECK(boulders == 4);
 	CHECK(pebbles == 4);
 	CHECK(chips == 1); // only the one written; chips are made as rocks break
-	CHECK(table.game.getObject("spinners.2.1").objClass == "spinner");
+	CHECK(table.game.object("spinners.2.1").objClass == "spinner");
 	CHECK(table.score() == 0.0f);
 	CHECK(table.lives() == 4.0f);
 	CHECK(!table.inFlight());
@@ -163,7 +163,7 @@ TEST_CASE("every rock starts above the screen and falls at a slant drawn from it
 			for (const std::string group : { "boulders", "pebbles" })
 			{
 				const bool boulder = group == "boulders";
-				const Object& rock = table.game.getObject(group + "." + std::to_string(i) + ".1");
+				const Object& rock = table.game.object(group + "." + std::to_string(i) + ".1");
 				INFO(group << "." << i);
 				CHECK(rock.position.y + rock.size.y <= 0.0f);
 				CHECK(rock.position.y >= (boulder ? -600.0f : -800.0f));
@@ -181,10 +181,10 @@ TEST_CASE("the rocks do not all draw the same fall", "[astrosmash][random]")
 
 	bool speedsDiffer = false;
 	bool heightsDiffer = false;
-	const Object& first = table.game.getObject("boulders.1.1");
+	const Object& first = table.game.object("boulders.1.1");
 	for (int i = 2; i <= 4; ++i)
 	{
-		const Object& other = table.game.getObject("boulders." + std::to_string(i) + ".1");
+		const Object& other = table.game.object("boulders." + std::to_string(i) + ".1");
 		speedsDiffer = speedsDiffer || other.velocity.y != first.velocity.y;
 		heightsDiffer = heightsDiffer || other.position.y != first.position.y;
 	}
@@ -261,22 +261,22 @@ TEST_CASE("a big rock shot scores 10, starts over and breaks into two chips", "[
 	table.frames(1);
 
 	CHECK(table.score() == 10.0f);
-	CHECK(table.game.getObject("peak").drawn.picture->text.find("10") != std::string::npos);
+	CHECK(table.game.object("peak").drawn.picture->text.find("10") != std::string::npos);
 	CHECK(!table.inFlight());
 	CHECK(table.atStart("boulders.2.1"));
-	CHECK(table.game.getObject("chip.1").isVisible);
-	CHECK(table.game.getObject("chip.2").isVisible);
-	CHECK(table.game.tryGetObject("chip.3") == nullptr);
-	CHECK(table.game.getObject("chip.1").velocity.y > 0.0f);
+	CHECK(table.game.object("chip.1").isVisible);
+	CHECK(table.game.object("chip.2").isVisible);
+	CHECK(table.game.find("chip.3") == nullptr);
+	CHECK(table.game.object("chip.1").velocity.y > 0.0f);
 
 	// A chip shot scores 20 and is gone (the other one out of the way).
-	table.game.getObject("chip.2").velocity = { 0.0f, 0.0f };
-	table.game.getObject("chip.2").position = { 20.0f, 20.0f };
+	table.game.object("chip.2").velocity = { 0.0f, 0.0f };
+	table.game.object("chip.2").position = { 20.0f, 20.0f };
 	table.fireAt("chip.1");
-	table.game.getObject("chip.1").velocity = { 0.0f, 0.0f };
+	table.game.object("chip.1").velocity = { 0.0f, 0.0f };
 	table.frames(1);
 	CHECK(table.score() == 30.0f);
-	CHECK(table.game.tryGetObject("chip.1") == nullptr);
+	CHECK(table.game.find("chip.1") == nullptr);
 }
 
 TEST_CASE("a small rock shot scores 20 and breaks into nothing", "[astrosmash]")
@@ -287,7 +287,7 @@ TEST_CASE("a small rock shot scores 20 and breaks into nothing", "[astrosmash]")
 	table.frames(1);
 	CHECK(table.score() == 20.0f);
 	CHECK(table.atStart("pebbles.3.1"));
-	CHECK(table.game.tryGetObject("chip.1") == nullptr);
+	CHECK(table.game.find("chip.1") == nullptr);
 }
 
 TEST_CASE("a rock that lands takes half its worth off the score and starts over", "[astrosmash]")
@@ -297,7 +297,7 @@ TEST_CASE("a rock that lands takes half its worth off the score and starts over"
 	table.ship().position.x = 700.0f; // well away from the rock below
 	table.game.setVariable("ship", "score", 100.0f);
 
-	Object& rock = table.game.getObject("pebbles.1.1");
+	Object& rock = table.game.object("pebbles.1.1");
 	rock.velocity = { 0.0f, 120.0f };
 	rock.position.y = kWindowHeight - 40.0f - rock.size.y - 1.0f;
 	table.frames(3);
@@ -320,10 +320,10 @@ TEST_CASE("a rock on the base costs it, and the sky clears", "[astrosmash]")
 	Table table;
 	table.parkRocks();
 
-	Object& rock = table.game.getObject("pebbles.1.1");
+	Object& rock = table.game.object("pebbles.1.1");
 	rock.velocity = { 0.0f, 180.0f };
 	rock.position = { table.ship().position.x + 10.0f, table.ship().position.y - rock.size.y + 6.0f }; // into its body, under the pulled-in top
-	Object& other = table.game.getObject("boulders.2.1");
+	Object& other = table.game.object("boulders.2.1");
 	other.position.y = 300.0f;
 	table.frames(1);
 	// The base bursts, out of play, and only then is it lost.
@@ -344,7 +344,7 @@ TEST_CASE("a spinner that lands blows up the base, and one shot scores 40", "[as
 	table.parkRocks();
 	table.ship().position.x = 0.0f;
 
-	Object& spinner = table.game.getObject("spinners.2.1");
+	Object& spinner = table.game.object("spinners.2.1");
 	spinner.velocity = { 0.0f, 120.0f };
 	spinner.position.y = kWindowHeight - 40.0f - spinner.size.y - 1.0f;
 	table.frames(73);
@@ -370,7 +370,7 @@ TEST_CASE("every 1,000 points is a spare base, and the peak stays when the score
 	CHECK(table.ship().variable.at("peak") == 1005.0f);
 
 	table.ship().position.x = 700.0f;
-	Object& rock = table.game.getObject("boulders.1.1");
+	Object& rock = table.game.object("boulders.1.1");
 	rock.velocity = { 0.0f, 120.0f };
 	rock.position.y = kWindowHeight - 40.0f - rock.size.y - 1.0f;
 	table.frames(3);
@@ -385,7 +385,7 @@ TEST_CASE("the last base ends the game", "[astrosmash]")
 	table.parkRocks();
 	table.ship().variable.at("lives") = 1.0f;
 
-	Object& rock = table.game.getObject("pebbles.1.1");
+	Object& rock = table.game.object("pebbles.1.1");
 	rock.velocity = { 0.0f, 180.0f };
 	rock.position = { table.ship().position.x + 10.0f, table.ship().position.y - rock.size.y + 1.0f };
 	table.frames(72);
@@ -409,11 +409,11 @@ TEST_CASE("space starts a new game from game over with everything back", "[astro
 	CHECK(table.game.getCurrentState().name == "title");
 	CHECK(table.score() == 0.0f);
 	CHECK(table.lives() == 4.0f);
-	CHECK(table.game.getObject("score").drawn.picture->text == "0");
-	CHECK(table.game.getObject("lives").drawn.picture->text == "4");
+	CHECK(table.game.object("score").drawn.picture->text == "0");
+	CHECK(table.game.object("lives").drawn.picture->text == "4");
 	CHECK(!table.inFlight());
-	CHECK(table.game.tryGetObject("chip.1") == nullptr);
-	CHECK(table.game.getObject("boulders.1.1").position.y < 0.0f);
+	CHECK(table.game.find("chip.1") == nullptr);
+	CHECK(table.game.object("boulders.1.1").position.y < 0.0f);
 }
 
 TEST_CASE("the keys play the game through the engine", "[astrosmash][engine_input]")
@@ -421,7 +421,7 @@ TEST_CASE("the keys play the game through the engine", "[astrosmash][engine_inpu
 	Game game{ "descriptions/astrosmash.xml" };
 	measure(game);
 	Engine engine(game, std::make_unique<NullWindow>());
-	Object& ship = game.getObject("ship");
+	Object& ship = game.object("ship");
 
 	CHECK(game.getCurrentState().name == "title");
 	engine.handleKeyPressed(KeyCode::Space); // space starts the game
@@ -489,21 +489,21 @@ TEST_CASE("each state has its own objects: the title, the sky, the signs", "[ast
 {
 	Game game{ "descriptions/astrosmash.xml" };
 	game.setCurrentState("title");
-	CHECK(game.isShown(game.getObject("help")));
-	CHECK_FALSE(game.isShown(game.getObject("ship")));
+	CHECK(game.isShown(game.object("help")));
+	CHECK_FALSE(game.isShown(game.object("ship")));
 
 	game.pushState("playing");
-	CHECK(game.getObject("ship").name == "playing.ship");
-	CHECK(game.getObject("pebbles.3.1").name == "playing.pebbles.3.1");
-	CHECK(game.isShown(game.getObject("pebbles.3.1")));
-	CHECK(game.isShown(game.getObject("playing.lives")));
-	CHECK_FALSE(game.isShown(game.getObject("help")));
+	CHECK(game.object("ship").name == "playing.ship");
+	CHECK(game.object("pebbles.3.1").name == "playing.pebbles.3.1");
+	CHECK(game.isShown(game.object("pebbles.3.1")));
+	CHECK(game.isShown(game.object("playing.lives")));
+	CHECK_FALSE(game.isShown(game.object("help")));
 }
 
 TEST_CASE("paused and the endings draw the sky still underneath, with the score", "[astrosmash][states]")
 {
 	Table table;
-	Object& rock = table.game.getObject("boulders.1.1");
+	Object& rock = table.game.object("boulders.1.1");
 	const float y = rock.position.y;
 
 	table.game.pushState("paused");
@@ -511,7 +511,7 @@ TEST_CASE("paused and the endings draw the sky still underneath, with the score"
 	CHECK(rock.position.y == y);
 	CHECK(table.game.isStill(rock));
 	CHECK(table.game.isStill(table.ship()));
-	CHECK(table.game.isShown(table.game.getObject("paused.paused")));
+	CHECK(table.game.isShown(table.game.object("paused.paused")));
 	table.game.popState();
 	CHECK(table.game.isShown(rock));
 
@@ -519,7 +519,7 @@ TEST_CASE("paused and the endings draw the sky still underneath, with the score"
 	table.frames(1);
 	REQUIRE(table.game.getCurrentState().name == "over");
 	CHECK(table.game.isStill(table.ship()));
-	CHECK(table.game.isStill(table.game.getObject("playing.score")));
-	CHECK(table.game.isShown(table.game.getObject("over.message")));
-	CHECK(table.game.isShown(table.game.getObject("over.again")));
+	CHECK(table.game.isStill(table.game.object("playing.score")));
+	CHECK(table.game.isShown(table.game.object("over.message")));
+	CHECK(table.game.isShown(table.game.object("over.again")));
 }

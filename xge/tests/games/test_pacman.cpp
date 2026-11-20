@@ -72,9 +72,9 @@ namespace
 			game.pushState("playing");
 		}
 
-		Object& pacman() { return game.getObject("playing.pacman"); }
-		float status(const char* variable) { return game.getObject("playing.status").variable.at(variable); }
-		Object& ghost(const std::string& name) { return game.getObject("playing.maze." + name + ".1"); }
+		Object& pacman() { return game.object("playing.pacman"); }
+		float status(const char* variable) { return game.object("playing.status").variable.at(variable); }
+		Object& ghost(const std::string& name) { return game.object("playing.maze." + name + ".1"); }
 		std::string state() { return game.getCurrentState().name; }
 
 		void frames(int count)
@@ -192,11 +192,11 @@ TEST_CASE("pacman: the map puts every piece on its tile", "[pacman][map]")
 	CHECK(maze.count("playing.pellets") == 4);
 	CHECK(maze.count("playing.food") == 244);
 	CHECK(maze.count("playing.walls") == 480);
-	CHECK(middleOf(maze.game.getObject("playing.maze.pellets.1")).x == Approx(tile(1, 3).x));
-	CHECK(middleOf(maze.game.getObject("playing.maze.pellets.1")).y == Approx(tile(1, 3).y));
-	CHECK(middleOf(maze.game.getObject("playing.maze.door.1")).x == Approx(tile(13, 12).x));
-	CHECK(maze.game.getObject("playing.maze.door.1").inGroup("playing.walls"));
-	CHECK(maze.game.getObject("playing.maze.door.1").objClass == "door");
+	CHECK(middleOf(maze.game.object("playing.maze.pellets.1")).x == Approx(tile(1, 3).x));
+	CHECK(middleOf(maze.game.object("playing.maze.pellets.1")).y == Approx(tile(1, 3).y));
+	CHECK(middleOf(maze.game.object("playing.maze.door.1")).x == Approx(tile(13, 12).x));
+	CHECK(maze.game.object("playing.maze.door.1").inGroup("playing.walls"));
+	CHECK(maze.game.object("playing.maze.door.1").objClass == "door");
 
 	// The ghosts: Blinky above the door, the others in the house.
 	CHECK(middleOf(maze.ghost("blinky")).x == Approx(tile(14, 11).x));
@@ -206,7 +206,7 @@ TEST_CASE("pacman: the map puts every piece on its tile", "[pacman][map]")
 	CHECK(maze.ghost("blinky").lookName() == "normal");
 
 	// A wall piece gives only its rows: its scale and colour are the walls'.
-	const Object& corner = maze.game.getObject("playing.maze.topleft.1");
+	const Object& corner = maze.game.object("playing.maze.topleft.1");
 	CHECK(corner.size.x == Approx(kTile));
 	CHECK(corner.size.y == Approx(kTile));
 }
@@ -325,7 +325,7 @@ TEST_CASE("pacman: Blinky scatters to his corner, then hunts Pac-Man through the
 	// everyone back where they started.
 	CHECK(chased);
 	CHECK(maze.state() == "dying");
-	CHECK_FALSE(maze.game.getObject("pacman").isVisible);
+	CHECK_FALSE(maze.game.object("pacman").isVisible);
 	maze.frames(110);
 	CHECK(maze.status("lives") == 2.0f);
 	CHECK(maze.state() == "caught");
@@ -357,7 +357,7 @@ TEST_CASE("pacman: the ghosts scatter and chase in waves, turning round at each 
 	PacmanPlay maze;
 	maze.onlyGhost("blinky");
 	Object& blinky = maze.ghost("blinky");
-	Object& mode = maze.game.getObject("playing.mode");
+	Object& mode = maze.game.object("playing.mode");
 	maze.pacman().position = { 2000.0f, 2000.0f };
 	maze.frames(2);
 	REQUIRE(mode.lookName() == "scatter");
@@ -396,7 +396,7 @@ TEST_CASE("pacman: a blue ghost keeps wandering through a change of mode, and ta
 	maze.frames(2);
 	maze.game.become(blinky.name, "blue");
 	maze.frames(7 * 60);
-	CHECK(maze.game.getObject("playing.mode").lookName() == "chase");
+	CHECK(maze.game.object("playing.mode").lookName() == "chase");
 	CHECK(blinky.lookName() == "blue");
 	CHECK(walkOf(maze, blinky).mode == Walk::Mode::Wander);
 	maze.game.become(blinky.name, "normal");
@@ -471,7 +471,7 @@ TEST_CASE("pacman: a pellet turns the ghosts blue, and a blue ghost is eaten", "
 
 	maze.frames(10);
 	CHECK(walkOf(maze, blinky).mode == Walk::Mode::Hunt);
-	Object& pellet = maze.game.getObject("playing.maze.pellets.3");
+	Object& pellet = maze.game.object("playing.maze.pellets.3");
 	maze.touch(pellet);
 	CHECK_FALSE(pellet.isVisible);
 	CHECK(blinky.lookName() == "blue");
@@ -486,7 +486,7 @@ TEST_CASE("pacman: a pellet turns the ghosts blue, and a blue ghost is eaten", "
 	maze.frames(300);
 	CHECK(blinky.lookName() == "blue");
 	maze.game.showLook(clyde, "eyes");
-	maze.touch(maze.game.getObject("playing.maze.pellets.4"));
+	maze.touch(maze.game.object("playing.maze.pellets.4"));
 	CHECK(clyde.lookName() == "eyes");
 	maze.frames(200);
 	CHECK(blinky.lookName() == "blue");
@@ -527,7 +527,7 @@ TEST_CASE("pacman: a pellet turns the ghosts blue, and a blue ghost is eaten", "
 TEST_CASE("pacman: each ghost eaten on one pellet is worth twice the one before", "[pacman][looks]")
 {
 	PacmanPlay maze;
-	maze.touch(maze.game.getObject("playing.maze.pellets.1"));
+	maze.touch(maze.game.object("playing.maze.pellets.1"));
 	maze.frames(1);
 	const float before = maze.status("score");
 	maze.touch(maze.ghost("pinky"));
@@ -537,7 +537,7 @@ TEST_CASE("pacman: each ghost eaten on one pellet is worth twice the one before"
 	CHECK(maze.status("worth") == 1600.0f);
 
 	// The next pellet starts again at 200.
-	maze.touch(maze.game.getObject("playing.maze.pellets.2"));
+	maze.touch(maze.game.object("playing.maze.pellets.2"));
 	CHECK(maze.status("worth") == 200.0f);
 }
 
@@ -545,7 +545,7 @@ TEST_CASE("pacman: the cherry shows after 70 dots, for a while, and scores 100",
 {
 	PacmanPlay maze;
 	maze.onlyGhost("");
-	Object& fruit = maze.game.getObject("playing.fruit");
+	Object& fruit = maze.game.object("playing.fruit");
 	CHECK(fruit.lookName() == "none");
 
 	int eaten = 0;
@@ -621,14 +621,14 @@ TEST_CASE("pacman: a life is won at 10,000 points, once, and the best score is k
 {
 	PacmanPlay maze;
 	maze.onlyGhost("");
-	maze.game.getObject("playing.status").variable.at("score") = 10000.0f;
+	maze.game.object("playing.status").variable.at("score") = 10000.0f;
 	maze.frames(1);
 	CHECK(maze.status("lives") == 4.0f);
 	maze.frames(5);
 	CHECK(maze.status("lives") == 4.0f);
-	CHECK(maze.game.getObject("best").variable.at("score") == 10000.0f);
+	CHECK(maze.game.object("best").variable.at("score") == 10000.0f);
 	maze.game.resetAll();
-	CHECK(maze.game.getObject("best").variable.at("score") == 10000.0f);
+	CHECK(maze.game.object("best").variable.at("score") == 10000.0f);
 }
 
 TEST_CASE("map: what a <map> turns away", "[map]")
@@ -686,7 +686,7 @@ TEST_CASE("map: a group on a map has every part an object has, heading to seek",
 	Game game(path.string());
 	for (const char* name : { "mines.1", "mines.2" })
 	{
-		const Object& mine = game.getObject(name);
+		const Object& mine = game.object(name);
 		CHECK(mine.heading == Approx(90));
 		// a half-life of a second, kept as a loss rate: ln 2 / 1
 		CHECK(mine.motion.drag == Approx(std::log(2.0)));

@@ -61,7 +61,7 @@ namespace
 		}
 
 		std::string state() { return game.getCurrentState().name; }
-		Object& get(const std::string& name) { return game.getObject(name); }
+		Object& get(const std::string& name) { return game.object(name); }
 	};
 
 	// A game of one state, "playing", with these objects and these

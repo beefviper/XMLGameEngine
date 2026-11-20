@@ -159,7 +159,7 @@ TEST_CASE("a live number in a hop's arc is read as the hop is made", "[values]")
 	engine.handleKeyPressed(KeyCode::Space);
 	engine.input();
 	engine.update(kSixtieth);
-	const Object& frog = game.getObject("frog");
+	const Object& frog = game.object("frog");
 	REQUIRE(frog.isAirborne());
 	CHECK(frog.flight.arc == 50.0f);
 }

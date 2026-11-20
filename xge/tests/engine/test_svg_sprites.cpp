@@ -341,7 +341,7 @@ TEST_CASE("an svg sprite is drawn when the game loads and has the size of its pi
 	Loaded loaded{ gameXml(objectWith(
 		"<sprite>" + svgTag(drawing, "<x>4</x><y>0</y><width>4</width><height>4</height><scale>pixel</scale><hide>backdrop</hide>") + "</sprite>"),
 		"<show object=\"thing\" />") };
-	const Object& thing = loaded.game.getObject("thing");
+	const Object& thing = loaded.game.object("thing");
 
 	REQUIRE(thing.drawn.picture->kind == ShapeKind::Line);
 	REQUIRE(thing.drawn.bitmap);
@@ -363,7 +363,7 @@ TEST_CASE("an svg sprite with no part and no scale is the whole drawing at its o
 {
 	const ScratchFile drawing = writeScratch("xge_test_game_whole.svg", kDrawing);
 	Loaded loaded{ gameXml(objectWith("<sprite>" + svgTag(drawing, "") + "</sprite>"), "<show object=\"thing\" />") };
-	const Object& thing = loaded.game.getObject("thing");
+	const Object& thing = loaded.game.object("thing");
 
 	REQUIRE(thing.drawn.bitmap);
 	CHECK(thing.drawn.bitmap->width == 8);
@@ -377,7 +377,7 @@ TEST_CASE("an svg object's picture has solid pixels only where something was dra
 	Loaded loaded{ gameXml(objectWith(
 		"<sprite>" + svgTag(drawing, "<hide>backdrop</hide>") + "</sprite>"),
 		"<show object=\"thing\" />") };
-	const Object& thing = loaded.game.getObject("thing");
+	const Object& thing = loaded.game.object("thing");
 
 	REQUIRE(thing.drawn.bitmap);
 	CHECK(thing.drawn.bitmap->solidAt(1, 1));
@@ -396,19 +396,19 @@ TEST_CASE("the cells of a group of an svg are one object each, all sharing one p
 	Game& game = loaded.game;
 	measure(game);
 
-	const Object* first = game.tryGetObject("thing.1.1");
-	const Object* last = game.tryGetObject("thing.3.2");
+	const Object* first = game.find("thing.1.1");
+	const Object* last = game.find("thing.3.2");
 	REQUIRE(first != nullptr);
 	REQUIRE(last != nullptr);
-	CHECK(game.tryGetObject("thing.4.1") == nullptr);
+	CHECK(game.find("thing.4.1") == nullptr);
 
 	REQUIRE(first->drawn.bitmap);
 	CHECK(first->drawn.bitmap->width == 8);
 	CHECK(first->drawn.bitmap == last->drawn.bitmap);
 
 	// 8 pixel cells, 2 apart.
-	CHECK(game.getObject("thing.2.1").position.x == 10.0f + 10.0f);
-	CHECK(game.getObject("thing.1.2").position.y == 20.0f + 10.0f);
+	CHECK(game.object("thing.2.1").position.x == 10.0f + 10.0f);
+	CHECK(game.object("thing.1.2").position.y == 20.0f + 10.0f);
 }
 
 TEST_CASE("svg sprites animate like any other pictures, if they are the same size", "[svg][animation][xml]")
@@ -421,7 +421,7 @@ TEST_CASE("svg sprites animate like any other pictures, if they are the same siz
 	Loaded loaded{ gameXml(objectWith(left + right, animation), "<show object=\"thing\" />") };
 	Game& game = loaded.game;
 	game.setCurrentState("playing");
-	const Object& thing = game.getObject("thing");
+	const Object& thing = game.object("thing");
 
 	REQUIRE(thing.animation.frames.shows().bitmaps.size() == 2);
 	CHECK(thing.animation.frames.shows().seconds == 0.5f);
@@ -530,7 +530,7 @@ TEST_CASE("Space Invaders 2 draws the ship, the bolt and three kinds of alien fr
 	for (const Kind& kind : { Kind{ "aliens.1.1", 56, 50 }, Kind{ "aliens.1.2", 56, 46 }, Kind{ "aliens.1.4", 56, 49 } })
 	{
 		INFO(kind.name);
-		const Object& alien = game.getObject(kind.name);
+		const Object& alien = game.object(kind.name);
 		REQUIRE(alien.drawn.bitmap);
 		REQUIRE(alien.animation.frames.shows().bitmaps.size() == 3);
 		CHECK(alien.animation.frames.shows().seconds == 0.5f);
@@ -556,7 +556,7 @@ TEST_CASE("Space Invaders 2 draws the ship, the bolt and three kinds of alien fr
 	// A kind keeps its own colour: pink squids, orange crabs, green octopuses.
 	const auto dominant = [&](const char* name)
 	{
-		const Bitmap& picture = *game.getObject(name).drawn.bitmap;
+		const Bitmap& picture = *game.object(name).drawn.bitmap;
 		long red = 0;
 		long green = 0;
 		long blue = 0;
@@ -581,15 +581,15 @@ TEST_CASE("Space Invaders 2 draws the ship, the bolt and three kinds of alien fr
 
 	// Laid out one kind under the other, a gap between, and one column pitch
 	// (56 and a gap of 15) the same for all of them.
-	CHECK(game.getObject("aliens.1.1").position.y == 120.0f);
-	CHECK(game.getObject("aliens.1.2").position.y == 185.0f);
-	CHECK(game.getObject("aliens.1.3").position.y == 246.0f);
-	CHECK(game.getObject("aliens.1.4").position.y == 307.0f);
-	CHECK(game.getObject("aliens.1.5").position.y == 371.0f);
+	CHECK(game.object("aliens.1.1").position.y == 120.0f);
+	CHECK(game.object("aliens.1.2").position.y == 185.0f);
+	CHECK(game.object("aliens.1.3").position.y == 246.0f);
+	CHECK(game.object("aliens.1.4").position.y == 307.0f);
+	CHECK(game.object("aliens.1.5").position.y == 371.0f);
 	for (const char* name : { "aliens.2.1", "aliens.2.2", "aliens.2.4" })
 	{
 		INFO(name);
-		CHECK(game.getObject(name).position.x == 80.0f + 71.0f);
+		CHECK(game.object(name).position.x == 80.0f + 71.0f);
 	}
 
 	// One block: one lockstep number.
@@ -600,14 +600,14 @@ TEST_CASE("Space Invaders 2 draws the ship, the bolt and three kinds of alien fr
 
 	// The ship is one drawn picture, in the middle of the screen; the bolt is
 	// thin and tall.
-	const Object& player = game.getObject("player");
+	const Object& player = game.object("player");
 	REQUIRE(player.drawn.bitmap);
 	CHECK(player.drawn.bitmap->width == 48);
 	CHECK(player.drawn.bitmap->height == 52);
 	CHECK(player.animation.frames.shows().bitmaps.empty());
 	CHECK(player.position.x == (1024.0f - 48.0f) / 2.0f);
 
-	const Object& bullet = game.getObject("bullet");
+	const Object& bullet = game.object("bullet");
 	REQUIRE(bullet.drawn.bitmap);
 	CHECK(bullet.drawn.bitmap->width < bullet.drawn.bitmap->height / 3);
 }
@@ -634,7 +634,7 @@ TEST_CASE("the aliens of Space Invaders 2 step through three pictures, all toget
 	CHECK(onPicture(1));
 
 	// Two pixels a frame to the right in the meantime, as before.
-	CHECK(game.getObject("aliens.1.1").position.x == 80.0f + 2.0f * 30.0f);
+	CHECK(game.object("aliens.1.1").position.x == 80.0f + 2.0f * 30.0f);
 
 	frames(game, 30);
 	CHECK(onPicture(2));
@@ -656,7 +656,7 @@ TEST_CASE("a shot from the ship of Space Invaders 2 can still kill an alien", "[
 	invasion.executor.executeInput(Command{ CmdTriggerAction{ "player", "gun" } }, true);
 	game.settleSpawns();
 	REQUIRE(copies::count(game, "bullet") == 1);
-	game.getObject("bullet.1").size = measureShapeSize(game.getObject("bullet.1").drawn.picture);
+	game.object("bullet.1").size = measureShapeSize(game.object("bullet.1").drawn.picture);
 	frames(game, 80);
 
 	CHECK(alive() == 54);
@@ -667,15 +667,15 @@ TEST_CASE("a bomb on the ship of Space Invaders 2 bursts it, the invasion standi
 {
 	Invasion invasion;
 	Game& game = invasion.game;
-	Object& ship = game.getObject("player");
+	Object& ship = game.object("player");
 	const std::string bomb = game.spawn("bomb")->name;
 	game.settleSpawns();
-	game.getObject(bomb).position = ship.position;
+	game.object(bomb).position = ship.position;
 	frames(game, 2);
 	CHECK(game.getCurrentState().name == "blasted");
 	CHECK_FALSE(ship.isVisible);
 	CHECK(ship.variable.at("lives") == 2.0f);
-	CHECK(game.isShown(game.getObject("wreck")));
+	CHECK(game.isShown(game.object("wreck")));
 
 	frames(game, 65);
 	CHECK(game.getCurrentState().name == "playing");
@@ -687,24 +687,24 @@ TEST_CASE("paused, Space Invaders 2 draws the invasion still under the word", "[
 {
 	Invasion invasion;
 	Game& game = invasion.game;
-	CHECK(game.getObject("aliens.1.1").name == "playing.aliens.1.1");
-	CHECK(game.getObject("player").name == "player"); // the game's own: the title, the settings and playing show it
+	CHECK(game.object("aliens.1.1").name == "playing.aliens.1.1");
+	CHECK(game.object("player").name == "player"); // the game's own: the title, the settings and playing show it
 
 	frames(game, 5);
 	game.pushState("paused");
-	const Vector2f at = game.getObject("aliens.1.1").position;
+	const Vector2f at = game.object("aliens.1.1").position;
 	frames(game, 30);
-	CHECK(game.getObject("aliens.1.1").position.x == at.x);
-	CHECK(game.isStill(game.getObject("aliens.1.1")));
-	CHECK(game.isStill(game.getObject("player")));
-	CHECK(game.isShown(game.getObject("paused")));
+	CHECK(game.object("aliens.1.1").position.x == at.x);
+	CHECK(game.isStill(game.object("aliens.1.1")));
+	CHECK(game.isStill(game.object("player")));
+	CHECK(game.isShown(game.object("paused")));
 	game.popState();
-	CHECK(game.isShown(game.getObject("aliens.1.1")));
+	CHECK(game.isShown(game.object("aliens.1.1")));
 
 	game.pushState("over");
-	CHECK(game.isStill(game.getObject("aliens.1.1")));
-	CHECK(game.isShown(game.getObject("over.message")));
-	CHECK(game.isShown(game.getObject("continue")));
+	CHECK(game.isStill(game.object("aliens.1.1")));
+	CHECK(game.isShown(game.object("over.message")));
+	CHECK(game.isShown(game.object("continue")));
 }
 
 // ----------------------------------------------------------------- schema

@@ -72,7 +72,7 @@ namespace
 			game = std::make_unique<Game>(file.path.string());
 		}
 
-		const Object& object(int number) { return game->getObject("o" + std::to_string(number)); }
+		const Object& object(int number) { return game->object("o" + std::to_string(number)); }
 	};
 
 	// An L, so every flip and turn of it is different.
@@ -176,7 +176,7 @@ TEST_CASE("Space Invaders 2's alien bolts are the sheet's bolt turned upside dow
 	Game game{ "descriptions/spaceinvaders2.xml" };
 	Pictures sheet({ "<svg><path>assets/Space Invaders Color Sprites.svg</path><x>11</x><y>37</y><width>10</width><height>23</height><scale>1.5</scale><hide>backdrop</hide></svg>" });
 
-	const Object& bolt = game.getObject("bomb");
+	const Object& bolt = game.object("bomb");
 	CHECK(samePixels(*bolt.drawn.bitmap, flipBitmap(*sheet.object(1).drawn.bitmap, false, true)));
 }
 

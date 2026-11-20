@@ -69,9 +69,9 @@ namespace
 
 		std::string state() { return game.getCurrentState().name; }
 		std::string screen() { return game.currentScene("playing"); }
-		Object& harry() { return game.getObject("harry"); }
+		Object& harry() { return game.object("harry"); }
 		float feet() { return harry().position.y + harry().size.y; }
-		float status(const char* name) { return game.getObject("status").variable.at(name); }
+		float status(const char* name) { return game.object("status").variable.at(name); }
 
 		// Puts Harry standing at `x`, on the path or the tunnel floor.
 		void standAt(float x, float top = kSurface)
@@ -160,7 +160,7 @@ TEST_CASE("a log knocks Harry back and costs points; a jump clears it", "[pitfal
 {
 	Pitfall play;
 	play.start();
-	Object& log = play.game.getObject("playing.screen1.logs.1");
+	Object& log = play.game.object("playing.screen1.logs.1");
 
 	// Running at it, he is thrown back the way it rolls, again and again,
 	// and never gets past it.
@@ -178,7 +178,7 @@ TEST_CASE("a log knocks Harry back and costs points; a jump clears it", "[pitfal
 	// Jumping as he runs at it, he lands past it with nothing taken.
 	Pitfall jump;
 	jump.start();
-	Object& rolling = jump.game.getObject("playing.screen1.logs.1");
+	Object& rolling = jump.game.object("playing.screen1.logs.1");
 	jump.standAt(rolling.position.x - 40.0f);
 	jump.engine.handleKeyPressed(KeyCode::D);
 	jump.tap(KeyCode::Space);
@@ -195,7 +195,7 @@ TEST_CASE("the tar pit costs a life, unless Harry jumps over it", "[pitfall]")
 	play.start();
 	play.runRight();
 	REQUIRE(play.screen() == "playing.screen2");
-	const float tar = play.game.getObject("tar").position.x;
+	const float tar = play.game.object("tar").position.x;
 
 	// Walking in.
 	play.standAt(tar - 40.0f);
@@ -227,7 +227,7 @@ TEST_CASE("a crocodile can be stood on until its jaws open; the water drowns", "
 	play.enter("playing.screen3");
 
 	// On the first head, between bites.
-	const Object& croc = play.game.getObject("crocs.1");
+	const Object& croc = play.game.object("crocs.1");
 	play.standAt(croc.position.x + 7.0f, croc.position.y);
 	play.frames(60);
 	CHECK(play.status("lives") == 3);
@@ -255,7 +255,7 @@ TEST_CASE("the ladder takes Harry down to the tunnel and back up", "[pitfall]")
 	play.enter("playing.screen4");
 
 	// The hole is too narrow to fall down.
-	const Object& ladder = play.game.getObject("ladder");
+	const Object& ladder = play.game.object("ladder");
 	play.standAt(ladder.position.x + 2.0f);
 	play.frames(30);
 	CHECK(play.feet() == Approx(kSurface));
@@ -281,7 +281,7 @@ TEST_CASE("a treasure is taken once, a screen left keeps it taken, and all four 
 
 	play.runRight();
 	REQUIRE(play.screen() == "playing.screen2");
-	const Object& silver = play.game.getObject("playing.screen2.treasure");
+	const Object& silver = play.game.object("playing.screen2.treasure");
 	CHECK(silver.position.x == Approx(570.0f));
 	CHECK(silver.position.y + silver.size.y == Approx(kSurface));
 	play.standAt(540.0f);
@@ -309,7 +309,7 @@ TEST_CASE("a treasure is taken once, a screen left keeps it taken, and all four 
 	play.hold(KeyCode::D, 15);
 	CHECK(play.status("score") == 9000);
 	play.enter("playing.screen4");
-	const Object& ring = play.game.getObject("playing.screen4.treasure");
+	const Object& ring = play.game.object("playing.screen4.treasure");
 	CHECK(ring.position.y + ring.size.y == Approx(kFloor));
 	play.standAt(540.0f, kFloor);
 	play.hold(KeyCode::D, 15);
@@ -319,12 +319,12 @@ TEST_CASE("a treasure is taken once, a screen left keeps it taken, and all four 
 
 	// The money bag, past the logs, is the fourth, once they have rolled by.
 	play.enter("playing.screen1");
-	play.game.getObject("playing.screen1.logs.1").position.x = 100.0f;
-	play.game.getObject("playing.screen1.logs.2").position.x = 200.0f;
+	play.game.object("playing.screen1.logs.1").position.x = 100.0f;
+	play.game.object("playing.screen1.logs.2").position.x = 200.0f;
 	play.standAt(560.0f);
 	play.hold(KeyCode::D, 15);
 	CHECK(play.state() == "over");
-	CHECK(play.game.getObject("over.message").lookName() == "won");
+	CHECK(play.game.object("over.message").lookName() == "won");
 	CHECK(play.status("found") == 4);
 }
 
@@ -336,10 +336,10 @@ TEST_CASE("the clock counts down a second at a time, and running out ends the ga
 	play.frames(120);
 	CHECK(play.status("time") == Approx(time - 2.0f));
 
-	play.game.getObject("status").variable.at("time") = 1;
+	play.game.object("status").variable.at("time") = 1;
 	play.frames(61);
 	CHECK(play.state() == "over");
-	CHECK(play.game.getObject("over.message").lookName() == "lost");
+	CHECK(play.game.object("over.message").lookName() == "lost");
 
 	play.tap(KeyCode::Space);
 	CHECK(play.state() == "title");
@@ -355,7 +355,7 @@ TEST_CASE("the pond can be crossed by jumping from head to head between bites", 
 	// The next bite a good while off, so the crossing is clear.
 	for (const char* croc : { "crocs.1", "crocs.2", "crocs.3" })
 	{
-		play.game.clocksOf(play.game.getObject(croc))->at(0).counting = true; play.game.clocksOf(play.game.getObject(croc))->at(0).secondsLeft = 170.0 / 60.0;
+		play.game.clocksOf(play.game.object(croc))->at(0).counting = true; play.game.clocksOf(play.game.object(croc))->at(0).secondsLeft = 170.0 / 60.0;
 	}
 
 	// From the edge of the bank, one jump to each head and one to the far bank.
@@ -384,7 +384,7 @@ TEST_CASE("paused, the jungle is drawn still underneath and the clock stops", "[
 	play.tap(KeyCode::Pause);
 	REQUIRE(play.state() == "paused");
 	CHECK(play.game.isStill(play.harry()));
-	CHECK(play.game.isStill(play.game.getObject("playing.screen1.logs.1")));
+	CHECK(play.game.isStill(play.game.object("playing.screen1.logs.1")));
 	play.frames(180);
 	CHECK(play.status("time") == Approx(time));
 	CHECK(play.harry().position.x == Approx(x));

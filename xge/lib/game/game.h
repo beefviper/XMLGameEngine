@@ -131,8 +131,12 @@ namespace xge
 		// Whether the straight line from the middle of `from` to the middle of
 		// `to` crosses nothing in play of the classes `past` names (<sees>).
 		bool seesPast(const Object& from, const Object& to, const std::vector<Name>& past);
-		Object& getObject(Name name);
-		Object* tryGetObject(Name name) noexcept;
+
+		// The object of that name, or the first member of that group; a short
+		// name that ends one path finds it too. object throws when there is
+		// none, find gives null.
+		Object& object(Name name);
+		Object* find(Name name) noexcept;
 
 		// The object a handle names, among those in the game or spawned this
 		// frame; nullptr once it has been despawned and gone.
@@ -803,7 +807,7 @@ namespace xge
 		// pieces of `mover` (null for none); the cells of a mover (a shape's,
 		// or itself); putting one in a cell; its map's checks, asked; and a
 		// held move's next step, each frame (FrameRules::cellMoves).
-		Object* findAnywhere(Name name) noexcept;
+		Object* findSpawning(Name name) noexcept;
 		Object* cellHolder(Name map, int column, int row, const std::vector<Object*>& mover);
 		// While nothing moves (counting the moves, laying out the marks):
 		// who holds each cell, found once per map and looked up after
@@ -1001,11 +1005,11 @@ namespace xge
 		// Every object's handle and the parts it has (game/parts.h).
 		Parts objectParts;
 
-		// tryGetObject's answers: names never change while a game runs.
+		// find's answers: names never change while a game runs.
 		std::unordered_map<Name, Object*> foundObjects;
 		// What fullName found for a name, until the objects change.
 		mutable std::unordered_map<Name, Name> fullNames;
-		Object* findObject(Name name) noexcept;
+		Object* search(Name name) noexcept;
 
 		// The objects a condition's class and name filter matches (both
 		// fixed while a game runs), by index, kept per filter.

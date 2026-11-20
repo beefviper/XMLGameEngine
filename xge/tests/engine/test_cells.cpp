@@ -41,7 +41,7 @@ namespace
 		std::set<std::pair<int, int>> cells;
 		for (const std::string& part : game.cellPart(shape).shapeParts)
 		{
-			const Object& cell = game.getObject(part);
+			const Object& cell = game.object(part);
 			cells.insert({ static_cast<int>(game.place(cell).column), static_cast<int>(game.place(cell).row) });
 		}
 		return cells;

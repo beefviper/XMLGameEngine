@@ -106,7 +106,7 @@ namespace
 			paced.played = std::chrono::duration<double>(seen.lastStep - start).count();
 			paced.steps = seen.steps;
 			paced.pictures = seen.pictures;
-			paced.x = game.getObject("mover").position.x;
+			paced.x = game.object("mover").position.x;
 		}
 		std::error_code ignored;
 		std::filesystem::remove(path, ignored);

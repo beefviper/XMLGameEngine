@@ -62,7 +62,7 @@ namespace
 		}
 
 		std::string state() { return game.getCurrentState().name; }
-		Object& get(const std::string& name) { return game.getObject(name); }
+		Object& get(const std::string& name) { return game.object(name); }
 	};
 
 	float length(const Vector2f& v) { return std::hypot(v.x, v.y); }

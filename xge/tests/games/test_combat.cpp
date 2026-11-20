@@ -69,7 +69,7 @@ namespace
 		}
 
 		std::string state() { return game.getCurrentState().name; }
-		Object& tank1() { return game.getObject("tank1"); }
+		Object& tank1() { return game.object("tank1"); }
 		// Whether a copy of that name is in the game (a fired shell, shell1.1).
 		bool has(const std::string& name)
 		{
@@ -79,7 +79,7 @@ namespace
 			}
 			return false;
 		}
-		Object& tank2() { return game.getObject("tank2"); }
+		Object& tank2() { return game.object("tank2"); }
 	};
 }
 
@@ -124,11 +124,11 @@ TEST_CASE("a shell flies from the gun, one at a time, and a hit scores and knock
 	play.start();
 	// The two tanks face each other along the middle, with the middle wall
 	// in between: take it away for this.
-	play.game.getObject("walls.1").isVisible = false;
+	play.game.object("walls.1").isVisible = false;
 
 	play.tap(KeyCode::F);
 	play.frames(1);
-	Object& shell = play.game.getObject("shell1.1");
+	Object& shell = play.game.object("shell1.1");
 	REQUIRE(shell.isVisible);
 	CHECK(shell.velocity.x == Approx(360.0f));
 	CHECK(shell.velocity.y == Approx(0.0f).margin(0.01f));
@@ -167,7 +167,7 @@ TEST_CASE("a shell stops at a wall, and a tank bounces off one", "[combat]")
 	CHECK(play.tank2().variable.at("hits") == 0);
 
 	// Straight at the middle wall.
-	const Object& wall = play.game.getObject("walls.1");
+	const Object& wall = play.game.object("walls.1");
 	play.engine.handleKeyPressed(KeyCode::W);
 	play.frames(240);
 	play.engine.handleKeyReleased(KeyCode::W);
@@ -189,21 +189,21 @@ TEST_CASE("after two minutes sixteen the most hits win, and space plays again", 
 	CHECK(play.state() == "playing");
 	play.frames(62);
 	REQUIRE(play.state() == "over");
-	CHECK(play.game.getObject("over.winner").lookName() == "blue");
+	CHECK(play.game.object("over.winner").lookName() == "blue");
 	play.tap(KeyCode::Space);
 	CHECK(play.state() == "title");
 	CHECK(play.tank2().variable.at("hits") == 0);
-	CHECK(play.game.getObject("over.winner").lookName() == "draw");
+	CHECK(play.game.object("over.winner").lookName() == "draw");
 }
 
 TEST_CASE("paused, the field is drawn still: a shell in flight stops where it is", "[combat]")
 {
 	Combat play;
 	play.start();
-	play.game.getObject("walls.1").isVisible = false;
+	play.game.object("walls.1").isVisible = false;
 	play.tap(KeyCode::F);
 	play.frames(5);
-	Object& shell = play.game.getObject("shell1.1");
+	Object& shell = play.game.object("shell1.1");
 	REQUIRE(shell.isVisible);
 	const Vector2f shellAt = shell.position;
 
@@ -213,10 +213,10 @@ TEST_CASE("paused, the field is drawn still: a shell in flight stops where it is
 	CHECK(shell.position == shellAt);
 	CHECK(play.game.isStill(shell));
 	CHECK(play.game.isStill(play.tank1()));
-	CHECK(play.game.isStill(play.game.getObject("walls.2")));
+	CHECK(play.game.isStill(play.game.object("walls.2")));
 	CHECK_FALSE(play.has("shell2.1")); // never fired
 	CHECK_FALSE(play.game.isShown(play.tank1()));
-	CHECK(play.game.isShown(play.game.getObject("paused")));
+	CHECK(play.game.isShown(play.game.object("paused")));
 
 	play.tap(KeyCode::Pause);
 	REQUIRE(play.state() == "playing");
@@ -228,9 +228,9 @@ TEST_CASE("each state owns what it draws, and a win draws the field still under 
 {
 	Combat play;
 	CHECK(play.tank1().ownerState == "playing");
-	CHECK(play.game.getObject("keys.1").ownerState == "title");
-	CHECK(play.game.getObject("again").ownerState == "over");
-	CHECK(play.game.isShown(play.game.getObject("title.title")));
+	CHECK(play.game.object("keys.1").ownerState == "title");
+	CHECK(play.game.object("again").ownerState == "over");
+	CHECK(play.game.isShown(play.game.object("title.title")));
 	CHECK_FALSE(play.game.isShown(play.tank1()));
 
 	play.start();
@@ -239,8 +239,8 @@ TEST_CASE("each state owns what it draws, and a win draws the field still under 
 	play.frames(1);
 	REQUIRE(play.state() == "over");
 	CHECK(play.game.isStill(play.tank2()));
-	CHECK(play.game.isStill(play.game.getObject("score1")));
-	CHECK(play.game.isShown(play.game.getObject("over.winner")));
-	CHECK(play.game.getObject("over.winner").lookName() == "yellow");
-	CHECK(play.game.isShown(play.game.getObject("again")));
+	CHECK(play.game.isStill(play.game.object("score1")));
+	CHECK(play.game.isShown(play.game.object("over.winner")));
+	CHECK(play.game.object("over.winner").lookName() == "yellow");
+	CHECK(play.game.isShown(play.game.object("again")));
 }

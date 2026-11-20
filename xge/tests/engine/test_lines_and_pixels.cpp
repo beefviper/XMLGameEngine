@@ -403,7 +403,7 @@ TEST_CASE("a plain box mover is solid all over against a pixel object's pixels",
 TEST_CASE("a sprite of lines is drawn when the game loads and has the size of its picture", "[lines][xml]")
 {
 	Loaded loaded{ gameXml(kHut, "<show object=\"hut\" />") };
-	const Object& hut = loaded.game.getObject("hut");
+	const Object& hut = loaded.game.object("hut");
 
 	REQUIRE(hut.drawn.picture->kind == ShapeKind::Line);
 	REQUIRE(hut.drawn.bitmap);
@@ -434,7 +434,7 @@ TEST_CASE("the size of a sprite of lines can be used in an expression like any s
 		"<collisions><off /></collisions></object>";
 	Loaded loaded{ gameXml(kHut + second, "<show object=\"hut\" /><show object=\"flag\" />") };
 
-	const Object& flag = loaded.game.getObject("flag");
+	const Object& flag = loaded.game.object("flag");
 	CHECK(flag.position.x == 800.0f - 22.0f);
 	CHECK(flag.position.y == 12.0f);
 }
@@ -447,7 +447,7 @@ TEST_CASE("a random coordinate is drawn once, so the picture and its size agree"
 	for (int i = 0; i < 5; ++i)
 	{
 		Loaded loaded{ gameXml(objectWith(sprite), "<show object=\"thing\" />") };
-		const Object& thing = loaded.game.getObject("thing");
+		const Object& thing = loaded.game.object("thing");
 		const Vector2f size = measureShapeSize(thing.drawn.picture);
 
 		CHECK(size.x == static_cast<float>(thing.drawn.bitmap->width));
@@ -505,11 +505,11 @@ TEST_CASE("type is box when it is left out, and a circle or rectangle can be pix
 	const std::string circle = "<circle><radius>4</radius></circle>";
 
 	Loaded plain{ gameXml(objectWith(circle), "<show object=\"thing\" />") };
-	CHECK(plain.game.getObject("thing").kind->collisionData.type == CollisionType::Box);
-	CHECK_FALSE(plain.game.getObject("thing").drawn.bitmap);
+	CHECK(plain.game.object("thing").kind->collisionData.type == CollisionType::Box);
+	CHECK_FALSE(plain.game.object("thing").drawn.bitmap);
 
 	Loaded pixel{ gameXml(objectWith(circle, "<type>pixel</type>"), "<show object=\"thing\" />") };
-	CHECK(pixel.game.getObject("thing").kind->collisionData.type == CollisionType::Pixel);
+	CHECK(pixel.game.object("thing").kind->collisionData.type == CollisionType::Pixel);
 }
 
 // ------------------------------------------- verbs and filters for landing
@@ -553,7 +553,7 @@ namespace
 			game.setCurrentState("playing");
 		}
 
-		Object& ship() { return game.getObject("ship"); }
+		Object& ship() { return game.object("ship"); }
 		void key(const char* action, bool down) { executor.executeInput(Command{ CmdTriggerAction{ "ship", action } }, down); }
 		void frames(int count) { for (int i = 0; i < count; ++i) { game.updateObjects(xge::kSixtieth); } }
 	};

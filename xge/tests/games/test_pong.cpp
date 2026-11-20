@@ -55,7 +55,7 @@ namespace
 			for (int i = 0; i < count; ++i) { engine.input(); engine.update(xge::kSixtieth); }
 		}
 
-		Object& object(const std::string& name) { return game.getObject(name); }
+		Object& object(const std::string& name) { return game.object(name); }
 		bool shown(const std::string& name) { return game.isShown(object(name)); }
 		bool still(const std::string& name) { return game.isStill(object(name)); }
 		std::string state() { return game.getCurrentState().name; }

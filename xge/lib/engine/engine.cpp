@@ -539,7 +539,7 @@ namespace xge
 			bool answer = true;
 			if (trigger && !trigger->from.empty())
 			{
-				const Object& object = game.getObject(trigger->object);
+				const Object& object = game.object(trigger->object);
 				if (object.name == trigger->object || !object.inGroup(trigger->object)) { answer = object.lookName() == trigger->from; }
 			}
 			answers.push_back(answer);

@@ -70,8 +70,8 @@ namespace
 		}
 
 		std::string state() { return game.getCurrentState().name; }
-		Object& man() { return game.getObject("man"); }
-		Object& kong() { return game.getObject("kong"); }
+		Object& man() { return game.object("man"); }
+		Object& kong() { return game.object("kong"); }
 		float feet() { return man().position.y + man().size.y; }
 		float variable(const char* name) { return man().variable.at(name); }
 
@@ -90,7 +90,7 @@ namespace
 		{
 			const std::string name = game.spawn("barrel")->name;
 			game.settleSpawns();
-			return game.getObject(name);
+			return game.object(name);
 		}
 
 		// The top of a girder (floor, first, ... top, perch) at `x` across:
@@ -283,20 +283,20 @@ TEST_CASE("Kong's barrel rolls down every girder to the oil drum", "[donkeykong]
 	REQUIRE(play.barrelsInPlay() >= 1);
 
 	// Followed by its name while it lasts (it is despawned at the end).
-	REQUIRE(play.game.tryGetObject("barrel.1"));
+	REQUIRE(play.game.find("barrel.1"));
 	float lowest = 0.0f;
 	float lastX = 0.0f;
 	bool wentLeft = false;
 	for (int frame = 0; frame < 60 * 60; ++frame)
 	{
 		play.frames(1);
-		const Object* barrel = play.game.tryGetObject("barrel.1");
+		const Object* barrel = play.game.find("barrel.1");
 		if (!barrel) { break; }
 		lowest = std::max(lowest, barrel->position.y + barrel->size.y);
 		lastX = barrel->position.x;
 		if (barrel->velocity.x < 0.0f) { wentLeft = true; }
 	}
-	CHECK(play.game.tryGetObject("barrel.1") == nullptr);
+	CHECK(play.game.find("barrel.1") == nullptr);
 	CHECK(lowest == Approx(660.0f).margin(1.0f));
 	CHECK(wentLeft);
 	CHECK(lastX < 40.0f); // at the oil drum
@@ -356,7 +356,7 @@ TEST_CASE("saving Pauline scores the bonus, starts the climb again with Kong qui
 	}
 	play.frames(1);
 	CHECK(play.state() == "over");
-	CHECK(play.game.getObject("over.message").lookName() == "won");
+	CHECK(play.game.object("over.message").lookName() == "won");
 
 	// Space plays again from the start.
 	play.tap(KeyCode::Space);
@@ -373,7 +373,7 @@ TEST_CASE("paused, the girders are drawn still and a rolling barrel stops where 
 	play.game.clocksOf(play.kong())->at(0).counting = true; play.game.clocksOf(play.kong())->at(0).secondsLeft = 1.0 / 60.0;
 	play.frames(10);
 	REQUIRE(play.barrelsInPlay() >= 1);
-	Object& barrel = play.game.getObject("barrel.1");
+	Object& barrel = play.game.object("barrel.1");
 	const Vector2f barrelAt = barrel.position;
 
 	play.tap(KeyCode::Pause);
@@ -383,10 +383,10 @@ TEST_CASE("paused, the girders are drawn still and a rolling barrel stops where 
 	CHECK(play.game.isStill(barrel));
 	CHECK(play.game.isStill(play.man()));
 	CHECK(play.game.isStill(play.kong()));
-	CHECK(play.game.isStill(play.game.getObject("floor.1.1")));
+	CHECK(play.game.isStill(play.game.object("floor.1.1")));
 	CHECK_FALSE(play.game.isShown(barrel));
-	CHECK(play.game.isShown(play.game.getObject("paused")));
-	CHECK_FALSE(play.game.isStill(play.game.getObject("barrel"))); // the one written, never thrown itself
+	CHECK(play.game.isShown(play.game.object("paused")));
+	CHECK_FALSE(play.game.isStill(play.game.object("barrel"))); // the one written, never thrown itself
 
 	play.tap(KeyCode::Pause);
 	REQUIRE(play.state() == "playing");
@@ -398,27 +398,27 @@ TEST_CASE("each state owns what it draws, and game over draws the girders still 
 {
 	DonkeyKong play;
 	CHECK(play.man().ownerState == "playing");
-	CHECK(play.game.getObject("title").ownerState == "title");
-	CHECK(play.game.getObject("again").ownerState.empty());
-	CHECK(play.game.isShown(play.game.getObject("title")));
+	CHECK(play.game.object("title").ownerState == "title");
+	CHECK(play.game.object("again").ownerState.empty());
+	CHECK(play.game.isShown(play.game.object("title")));
 	CHECK_FALSE(play.game.isShown(play.man()));
 
 	play.start();
 	play.man().variable.at("lives") = 0;
 	play.frames(1);
 	REQUIRE(play.state() == "over");
-	CHECK(play.game.getObject("over.message").lookName() == "lost");
+	CHECK(play.game.object("over.message").lookName() == "lost");
 	CHECK(play.game.isStill(play.man()));
-	CHECK(play.game.isStill(play.game.getObject("score")));
-	CHECK(play.game.isShown(play.game.getObject("over.message")));
-	CHECK(play.game.isShown(play.game.getObject("again")));
+	CHECK(play.game.isStill(play.game.object("score")));
+	CHECK(play.game.isShown(play.game.object("over.message")));
+	CHECK(play.game.isShown(play.game.object("again")));
 }
 
 TEST_CASE("with the hammer a barrel is smashed for points, and the hammer wears off", "[donkeykong]")
 {
 	DonkeyKong play;
 	play.start();
-	Object& hammer = play.game.getObject("hammer");
+	Object& hammer = play.game.object("hammer");
 	// It hangs above the girder: he jumps to take it.
 	play.standAt(hammer.position.x, "third");
 	play.tap(KeyCode::Space);
@@ -456,12 +456,12 @@ TEST_CASE("the girders slope half a pixel a piece, down to their open ends", "[d
 {
 	DonkeyKong play;
 	play.start();
-	CHECK(play.game.getObject("first.1.1").position.y == Approx(548.0f));
-	CHECK(play.game.getObject("first.2.1").position.y == Approx(548.5f));
-	CHECK(play.game.getObject("first.45.1").position.y == Approx(570.0f));
-	CHECK(play.game.getObject("second.1.1").position.y == Approx(470.0f));
-	CHECK(play.game.getObject("second.44.1").position.y == Approx(448.5f));
-	CHECK(play.game.getObject("perch.13.1").position.y == Approx(85.0f));
+	CHECK(play.game.object("first.1.1").position.y == Approx(548.0f));
+	CHECK(play.game.object("first.2.1").position.y == Approx(548.5f));
+	CHECK(play.game.object("first.45.1").position.y == Approx(570.0f));
+	CHECK(play.game.object("second.1.1").position.y == Approx(470.0f));
+	CHECK(play.game.object("second.44.1").position.y == Approx(448.5f));
+	CHECK(play.game.object("perch.13.1").position.y == Approx(85.0f));
 
 	// Walking up the second girder he climbs with it, a step at a time.
 	play.standAt(200.0f, "second");
@@ -557,9 +557,9 @@ TEST_CASE("a barrel in the oil drum lets out a fireball, which costs a life and 
 	barrel.variable.at("luck") = 0.9f;
 	const std::string barrelName = barrel.name;
 	play.frames(30);
-	CHECK_FALSE(play.game.tryGetObject(barrelName));
-	REQUIRE(play.game.tryGetObject("fireball.1"));
-	Object& fire = play.game.getObject("fireball.1");
+	CHECK_FALSE(play.game.find(barrelName));
+	REQUIRE(play.game.find("fireball.1"));
+	Object& fire = play.game.object("fireball.1");
 	CHECK(fire.position.x < 60.0f);
 
 	// One sent at Jumpman on the floor.
@@ -570,13 +570,13 @@ TEST_CASE("a barrel in the oil drum lets out a fireball, which costs a life and 
 	play.frames(30);
 	play.frames(155); // he tumbles first, the girders standing still
 	CHECK(play.variable("lives") == 2);
-	CHECK_FALSE(play.game.tryGetObject("fireball.1"));
+	CHECK_FALSE(play.game.find("fireball.1"));
 
 	// One at the foot of a ladder, with no luck, climbs it to the girder above.
 	play.standAt(420.0f, "perch");
 	const std::string climberName = play.game.spawn("fireball")->name;
 	play.game.settleSpawns();
-	Object& climber = play.game.getObject(climberName);
+	Object& climber = play.game.object(climberName);
 	climber.variable.at("luck") = 0.0f;
 	climber.position = { 480.0f, play.top("floor", 490.0f) - climber.size.y };
 	climber.velocity = { 60.0f, 0.0f };
@@ -601,7 +601,7 @@ TEST_CASE("with the hammer a fireball is smashed for 500", "[donkeykong]")
 	play.game.setVariable("man", "hammer", 1.0f);
 	const std::string fireName = play.game.spawn("fireball")->name;
 	play.game.settleSpawns();
-	Object& fire = play.game.getObject(fireName);
+	Object& fire = play.game.object(fireName);
 	fire.variable.at("luck") = 0.9f;
 	fire.position = { 276.0f, play.feet() - fire.size.y };
 	fire.velocity = { 60.0f, 0.0f };

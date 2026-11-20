@@ -80,9 +80,9 @@ namespace
 				: number <= 6 ? "more." + std::to_string(number - 4) : "most." + std::to_string(number - 6);
 			return "playing." + scene + "." + part;
 		}
-		Object& missile(const std::string& scene, int number) { return game.getObject(missileName(scene, number)); }
-		Object& sight() { return game.getObject("sight"); }
-		float status(const char* name) { return game.getObject("status").variable.at(name); }
+		Object& missile(const std::string& scene, int number) { return game.object(missileName(scene, number)); }
+		Object& sight() { return game.object("sight"); }
+		float status(const char* name) { return game.object("status").variable.at(name); }
 
 		// Puts every missile of the wave (a scene: wave1, wave2, wave3) far up
 		// out of the way.
@@ -149,7 +149,7 @@ TEST_CASE("a counter-missile flies to the sight and bursts there", "[missilecomm
 	play.tap(KeyCode::Space);
 	play.frames(1);
 	REQUIRE(play.inPlay("playing.abm") == 1);
-	const Object& abm = play.game.getObject("abm.1");
+	const Object& abm = play.game.object("abm.1");
 	CHECK(abm.velocity.x < 0.0f);
 	CHECK(abm.velocity.y < 0.0f);
 	CHECK(std::hypot(abm.velocity.x, abm.velocity.y) == Approx(420.0f));
@@ -157,7 +157,7 @@ TEST_CASE("a counter-missile flies to the sight and bursts there", "[missilecomm
 	play.frames(60);
 	CHECK(play.inPlay("playing.abm") == 0);
 	REQUIRE(play.inPlay("playing.burst") == 1);
-	const Vector2f burst = middleOf(play.game.getObject("burst.1"));
+	const Vector2f burst = middleOf(play.game.object("burst.1"));
 	// It goes off where the counter-missile first touches the sight.
 	CHECK(burst.x == Approx(aimedAt.x).margin(12.0f));
 	CHECK(burst.y == Approx(aimedAt.y).margin(12.0f));
@@ -176,7 +176,7 @@ TEST_CASE("a missile that flies into a burst scores and starts again above the s
 	play.tap(KeyCode::Space);
 	play.frames(40);
 	REQUIRE(play.inPlay("playing.burst") == 1);
-	const Object& burst = play.game.getObject("burst.1");
+	const Object& burst = play.game.object("burst.1");
 
 	Object& missile = play.missile("wave1", 1);
 	missile.position = { middleOf(burst).x - 2.0f, burst.position.y - 30.0f };
@@ -193,7 +193,7 @@ TEST_CASE("a missile that reaches a city destroys it, and losing them all is the
 	play.start();
 	play.holdMissiles("wave1");
 
-	Object& city = play.game.getObject("cities.1");
+	Object& city = play.game.object("cities.1");
 	Object& missile = play.missile("wave1", 1);
 	missile.position = { middleOf(city).x, city.position.y - 20.0f };
 	missile.velocity = { 0.0f, 120.0f };
@@ -209,7 +209,7 @@ TEST_CASE("a missile that reaches a city destroys it, and losing them all is the
 	}
 	play.frames(2);
 	CHECK(play.state() == "over");
-	CHECK(play.game.getObject("over.message").lookName() == "lost");
+	CHECK(play.game.object("over.message").lookName() == "lost");
 
 	play.tap(KeyCode::Space);
 	CHECK(play.state() == "title");
@@ -222,7 +222,7 @@ TEST_CASE("each wave ends when enough missiles are done with, and the third wins
 	play.start();
 	play.holdMissiles("wave1");
 
-	play.game.getObject("status").variable.at("spent") = 12;
+	play.game.object("status").variable.at("spent") = 12;
 	play.frames(2);
 	CHECK(play.state() == "playing");
 	CHECK(play.wave() == "playing.wave2");
@@ -231,17 +231,17 @@ TEST_CASE("each wave ends when enough missiles are done with, and the third wins
 	CHECK(play.inPlay("playing.wave2.missiles") == 6);
 
 	play.holdMissiles("wave2");
-	play.game.getObject("status").variable.at("spent") = 18;
+	play.game.object("status").variable.at("spent") = 18;
 	play.frames(2);
 	CHECK(play.wave() == "playing.wave3");
 	CHECK(play.inPlay("playing.wave3.missiles") == 8);
 
 	play.holdMissiles("wave3");
-	play.game.getObject("status").variable.at("spent") = 24;
+	play.game.object("status").variable.at("spent") = 24;
 	play.frames(2);
 	CHECK(play.state() == "over");
-	CHECK(play.game.getObject("over.message").lookName() == "won");
-	CHECK(play.game.isStill(play.game.getObject("playing.base")));
+	CHECK(play.game.object("over.message").lookName() == "won");
+	CHECK(play.game.isStill(play.game.object("playing.base")));
 
 	play.tap(KeyCode::Space);
 	CHECK(play.state() == "title");
@@ -284,7 +284,7 @@ TEST_CASE("each wave's missiles fall at its own speed and in its own color, and 
 	CHECK(play.status("wave") == 1.0f);
 	play.start();
 	play.holdMissiles("wave1");
-	play.game.getObject("status").variable.at("spent") = 12;
+	play.game.object("status").variable.at("spent") = 12;
 	play.frames(2);
 	CHECK(play.status("wave") == 2.0f);
 }
@@ -297,7 +297,7 @@ TEST_CASE("a missile is a streak that points the way it flies", "[missilecommand
 	CHECK(missile.heading == Approx(180.0f));
 
 	// Above and to the left of the first city, it turns toward it.
-	const Object& first = play.game.getObject("cities.1");
+	const Object& first = play.game.object("cities.1");
 	missile.position = { middleOf(first).x - 200.0f, 100.0f };
 	play.frames(20);
 	CHECK(missile.velocity.x > 0.0f);
@@ -311,21 +311,21 @@ TEST_CASE("a counter-missile trails a line back to the base while it flies", "[m
 	play.start();
 	play.holdMissiles("wave1");
 	play.frames(1);
-	CHECK_FALSE(play.game.getObject("trail1").isVisible);
+	CHECK_FALSE(play.game.object("trail1").isVisible);
 
 	play.tap(KeyCode::Space);
 	play.frames(5);
-	const Object& abm = play.game.getObject("abm.1");
+	const Object& abm = play.game.object("abm.1");
 	REQUIRE(abm.isVisible);
-	const Object& trail = play.game.getObject("trail1");
+	const Object& trail = play.game.object("trail1");
 	CHECK(trail.isVisible);
 	CHECK(trail.position.y <= middleOf(abm).y + 1.0f);
-	CHECK(trail.position.y + trail.size.y >= middleOf(play.game.getObject("base")).y - 1.0f);
+	CHECK(trail.position.y + trail.size.y >= middleOf(play.game.object("base")).y - 1.0f);
 
 	// Burst at the sight, the shot and its trail are gone.
 	play.frames(60);
-	CHECK(play.game.tryGetObject("abm.1") == nullptr);
-	CHECK_FALSE(play.game.getObject("trail1").isVisible);
+	CHECK(play.game.find("abm.1") == nullptr);
+	CHECK_FALSE(play.game.object("trail1").isVisible);
 }
 
 TEST_CASE("a burst swells and shrinks, and goes after three quarters of a second", "[missilecommand]")
@@ -335,13 +335,13 @@ TEST_CASE("a burst swells and shrinks, and goes after three quarters of a second
 	play.holdMissiles("wave1");
 	play.tap(KeyCode::Space);
 	int frame = 0;
-	for (; frame < 120 && !play.game.tryGetObject("burst.1"); ++frame) { play.frames(1); }
-	REQUIRE(play.game.tryGetObject("burst.1"));
-	CHECK(play.game.getObject("burst.1").animation.index == 0);
+	for (; frame < 120 && !play.game.find("burst.1"); ++frame) { play.frames(1); }
+	REQUIRE(play.game.find("burst.1"));
+	CHECK(play.game.object("burst.1").animation.index == 0);
 	play.frames(18);
-	CHECK(play.game.getObject("burst.1").animation.index == 2); // full
+	CHECK(play.game.object("burst.1").animation.index == 2); // full
 	play.frames(30);
-	CHECK(play.game.tryGetObject("burst.1") == nullptr);
+	CHECK(play.game.find("burst.1") == nullptr);
 }
 
 TEST_CASE("paused, the game is drawn still underneath and nothing falls", "[missilecommand]")
@@ -375,14 +375,14 @@ TEST_CASE("when its city is gone a missile turns for another", "[missilecommand]
 
 	// One missile above the first city, heading for it.
 	Object& missile = play.missile("wave1", 2);
-	const Object& first = play.game.getObject("cities.1");
+	const Object& first = play.game.object("cities.1");
 	*play.game.clocksOf(missile) = chasing;
 	missile.position = { middleOf(first).x - 2.0f, 100.0f };
 	missile.velocity = { 0.0f, 48.0f };
 	play.frames(20);
 	CHECK(missile.velocity.x == Approx(0.0f).margin(3.0f));
 
-	play.game.getObject("cities.1").isVisible = false;
+	play.game.object("cities.1").isVisible = false;
 	play.frames(20);
 	CHECK(missile.velocity.x > 0.1f);
 }

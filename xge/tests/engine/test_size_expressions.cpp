@@ -52,7 +52,7 @@ namespace
 TEST_CASE("a text's size and the position made from it are known when the game loads", "[size_expressions]")
 {
 	Game game{ "descriptions/pong.xml" };
-	const Object& title = game.getObject("title"); // x = the middle - title.width / 2
+	const Object& title = game.object("title"); // x = the middle - title.width / 2
 
 	CHECK(game.usesSize(title));
 	REQUIRE(title.size.x > 0.0f);
@@ -68,7 +68,7 @@ TEST_CASE("a position is worked out again when the text's words change its size"
 {
 	Game game{ "descriptions/pong.xml" };
 	game.setCurrentState(0);
-	Object& score1 = game.getObject("score1"); // x = the middle - 80 - score1.width
+	Object& score1 = game.object("score1"); // x = the middle - 80 - score1.width
 	const float one = score1.size.x;            // "0"
 	CHECK(score1.position.x == 640.0f - 80.0f - one);
 
@@ -153,7 +153,7 @@ TEST_CASE("a shape's position that uses its own size is exact as soon as the gam
 	const ScratchFile scratch = writeGame(logoAt("logo.width", "<multiply><value>logo.height</value><value>2</value></multiply>"));
 
 	Game game{ scratch.path.string() };
-	const Object& logo = game.getObject("logo");
+	const Object& logo = game.object("logo");
 
 	CHECK_FALSE(game.usesSize(logo));
 	CHECK(logo.position.x == 200.0f);
@@ -165,8 +165,8 @@ TEST_CASE("an object can be placed by another object's size", "[size_expressions
 	const ScratchFile scratch = writeGame(logoAt("<add><value>title.width</value><value>10</value></add>", "title.height"));
 
 	Game game{ scratch.path.string() };
-	Object& logo = game.getObject("logo");
-	Object& title = game.getObject("title");
+	Object& logo = game.object("logo");
+	Object& title = game.object("title");
 
 	// The title is a text: placed by its size at once, and again if it changes.
 	CHECK(game.usesSize(logo));
@@ -191,8 +191,8 @@ TEST_CASE("an object's own <variable> named width is not replaced by its size", 
 	const ScratchFile scratch = writeGame(replacements);
 
 	Game game{ scratch.path.string() };
-	const Object& logo = game.getObject("logo");
-	const Object& paddle1 = game.getObject("paddle1");
+	const Object& logo = game.object("logo");
+	const Object& paddle1 = game.object("paddle1");
 
 	CHECK(paddle1.size.x == 30.0f);
 	CHECK(paddle1.size.y == 150.0f);

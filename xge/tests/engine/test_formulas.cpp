@@ -99,8 +99,8 @@ namespace
 		{
 		}
 
-		float x() { return game.getObject("o").position.x; }
-		float y() { return game.getObject("o").position.y; }
+		float x() { return game.object("o").position.x; }
+		float y() { return game.object("o").position.y; }
 	};
 
 	float xOf(const std::string& x, const std::string& variables = {})
@@ -525,7 +525,7 @@ namespace
 TEST_CASE("Pong's title is placed by an operation on its own size", "[formulas][games]")
 {
 	Game game{ "descriptions/pong.xml" };
-	Object& title = game.getObject("title");
+	Object& title = game.object("title");
 
 	// Known when the game loads, from the text as drawn.
 	CHECK(game.usesSize(title));
@@ -542,7 +542,7 @@ TEST_CASE("Pong's title is placed by an operation on its own size", "[formulas][
 TEST_CASE("Breakout's title is placed by operations on its own size", "[formulas][games]")
 {
 	Game game{ "descriptions/breakout.xml" };
-	Object& title = game.getObject("title");
+	Object& title = game.object("title");
 
 	CHECK(game.usesSize(title));
 
@@ -639,7 +639,7 @@ TEST_CASE("a position worked out again for a text's new size warns, once, instea
 		"<divide><value>100</value><value>t.width</value></divide>");
 
 	Loaded loaded(xml);
-	Object& text = loaded.game.getObject("t");
+	Object& text = loaded.game.object("t");
 	loaded.game.setCurrentState(0);
 	CHECK(loaded.game.usesSize(text));
 
@@ -680,12 +680,12 @@ TEST_CASE("a timer whose interval reaches a divisor of 0 keeps going, with one w
 	CaptureStderr captured;
 
 	for (int i = 0; i < 59; ++i) { REQUIRE_NOTHROW(loaded.game.updateObjects(xge::kSixtieth)); }
-	CHECK(loaded.game.getObject("c").variable.at("n") == 0.0f); // a second at 60 frames a second
+	CHECK(loaded.game.object("c").variable.at("n") == 0.0f); // a second at 60 frames a second
 
 	for (int i = 0; i < 10; ++i) { REQUIRE_NOTHROW(loaded.game.updateObjects(xge::kSixtieth)); }
 
-	CHECK(loaded.game.getObject("c").variable.at("rate") < 1.0f);
-	CHECK(loaded.game.getObject("c").variable.at("n") >= 2.0f);
+	CHECK(loaded.game.object("c").variable.at("rate") < 1.0f);
+	CHECK(loaded.game.object("c").variable.at("n") >= 2.0f);
 	CHECK(countOf(captured.text.str(), "the divisor is 0") == 1);
 }
 

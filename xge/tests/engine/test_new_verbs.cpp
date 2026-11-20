@@ -142,7 +142,7 @@ namespace
 		Object& frog;
 		Object& hedge;
 
-		Pair() : frog(game.getObject("frog")), hedge(game.getObject("hedge"))
+		Pair() : frog(game.object("frog")), hedge(game.object("hedge"))
 		{
 			frog.size = { 40.0f, 32.0f };
 			hedge.size = { 624.0f, 48.0f };

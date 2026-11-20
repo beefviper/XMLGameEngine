@@ -63,7 +63,7 @@ TEST_CASE("a held key stops driving the player while a state without it is up, a
 {
 	Game game{ "descriptions/breakout.xml" };
 	Engine engine(game, std::make_unique<NullWindow>());
-	Object& player = game.getObject("player");
+	Object& player = game.object("player");
 
 	tap(engine, KeyCode::Space); // title -> playing
 
@@ -86,7 +86,7 @@ TEST_CASE("a key pressed in a state that does not bind it starts driving the pla
 {
 	Game game{ "descriptions/breakout.xml" };
 	Engine engine(game, std::make_unique<NullWindow>());
-	Object& player = game.getObject("player");
+	Object& player = game.object("player");
 
 	tap(engine, KeyCode::Space); // title -> playing
 	tap(engine, KeyCode::Pause); // pause
@@ -105,7 +105,7 @@ TEST_CASE("releasing a key while paused leaves the player stopped after unpausin
 {
 	Game game{ "descriptions/breakout.xml" };
 	Engine engine(game, std::make_unique<NullWindow>());
-	Object& player = game.getObject("player");
+	Object& player = game.object("player");
 
 	tap(engine, KeyCode::Space); // title -> playing
 
@@ -121,7 +121,7 @@ TEST_CASE("a key pressed and released while paused never moves the player", "[en
 {
 	Game game{ "descriptions/breakout.xml" };
 	Engine engine(game, std::make_unique<NullWindow>());
-	Object& player = game.getObject("player");
+	Object& player = game.object("player");
 
 	tap(engine, KeyCode::Space); // title -> playing
 	tap(engine, KeyCode::Pause); // pause
@@ -150,7 +150,7 @@ TEST_CASE("an ordinary press and release in one state is unchanged", "[engine_in
 {
 	Game game{ "descriptions/breakout.xml" };
 	Engine engine(game, std::make_unique<NullWindow>());
-	Object& player = game.getObject("player");
+	Object& player = game.object("player");
 
 	tap(engine, KeyCode::Space); // title -> playing
 
@@ -280,11 +280,11 @@ TEST_CASE("Pac-Man sets off left as READY! ends, or the way a key held through i
 		if (holdRight) { engine.handleKeyPressed(KeyCode::D); }
 		engine.input(); engine.update(xge::kSixtieth);
 		CHECK(game.getCurrentState().name == "ready");
-		const float start = game.getObject("playing.pacman").position.x;
+		const float start = game.object("playing.pacman").position.x;
 		for (int frame = 0; frame < 300 && game.getCurrentState().name != "playing"; ++frame) { engine.input(); engine.update(xge::kSixtieth); }
 		CHECK(game.getCurrentState().name == "playing");
 		for (int frame = 0; frame < 10; ++frame) { engine.input(); engine.update(xge::kSixtieth); }
-		return game.getObject("playing.pacman").position.x - start;
+		return game.object("playing.pacman").position.x - start;
 	};
 
 	// About ten frames at his speed of 2, from where he stood (a held key

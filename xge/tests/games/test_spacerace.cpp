@@ -42,7 +42,7 @@ namespace
 			game.setCurrentState("playing");
 		}
 
-		Object& rocket(int player) { return game.getObject("rocket" + std::to_string(player)); }
+		Object& rocket(int player) { return game.object("rocket" + std::to_string(player)); }
 		float score(int player) { return rocket(player).variable.at("score"); }
 
 		void key(int player, const char* direction, bool down)
@@ -58,7 +58,7 @@ namespace
 		// Lets the clock run out: the bar is put at the bottom, and the race ends.
 		void timeUp()
 		{
-			game.getObject("clock").position.y = 600.0f;
+			game.object("clock").position.y = 600.0f;
 			frames(1);
 		}
 
@@ -92,7 +92,7 @@ TEST_CASE("spacerace.xml loads two rockets, a field of debris and the clock", "[
 	CHECK(table.rocket(1).position.y == 600.0f - 21.0f - 10.0f);
 
 	// The clock sinks a window's height in a minute.
-	CHECK(table.game.getObject("clock").velocity.y * 60.0f == Catch::Approx(600.0f));
+	CHECK(table.game.object("clock").velocity.y * 60.0f == Catch::Approx(600.0f));
 }
 
 TEST_CASE("a held key flies a rocket up and stops at the bottom of the screen", "[spacerace]")
@@ -117,7 +117,7 @@ TEST_CASE("a held key flies a rocket up and stops at the bottom of the screen", 
 TEST_CASE("a rocket hit by debris goes back to the start", "[spacerace]")
 {
 	Table table;
-	const Object& debris = table.game.getObject("debris.4.5");
+	const Object& debris = table.game.object("debris.4.5");
 
 	table.rocket(2).position = { debris.position.x - 4.0f, debris.position.y - 10.0f };
 	table.frames(1);
@@ -152,7 +152,7 @@ TEST_CASE("getting off the top scores a point and sends the rocket back", "[spac
 	CHECK(table.score(2) == 1.0f);
 	CHECK(table.score(1) == 0.0f);
 	CHECK(table.rocket(2).position.y > 560.0f); // back at the bottom (and one step up, the key was down)
-	CHECK(table.game.getObject("score2").drawn.picture->text == "1");
+	CHECK(table.game.object("score2").drawn.picture->text == "1");
 	CHECK(table.game.getCurrentState().name == "playing");
 }
 
@@ -175,7 +175,7 @@ TEST_CASE("when the clock runs out, the most crossings win", "[spacerace]")
 		table.timeUp();
 		REQUIRE(table.game.getCurrentState().name == "over");
 		table.frames(1);
-		CHECK(table.game.getObject("over.winner").lookName() == "player1");
+		CHECK(table.game.object("over.winner").lookName() == "player1");
 	}
 
 	SECTION("player 2, then a new game from the menu")
@@ -184,14 +184,14 @@ TEST_CASE("when the clock runs out, the most crossings win", "[spacerace]")
 		table.game.setVariable("rocket2", "score", 1.0f);
 		table.timeUp();
 		table.frames(1);
-		CHECK(table.game.getObject("over.winner").lookName() == "player2");
+		CHECK(table.game.object("over.winner").lookName() == "player2");
 
 		// Space starts a new game from the menu with the scores back at 0.
 		table.executor.executeInput(Command{ CmdReset{} }, true);
 		CHECK(table.game.getCurrentState().name == "title");
 		CHECK(table.score(2) == 0.0f);
-		CHECK(table.game.getObject("over.winner").lookName() == "draw");
-		CHECK(table.game.getObject("score2").drawn.picture->text == "0");
+		CHECK(table.game.object("over.winner").lookName() == "draw");
+		CHECK(table.game.object("score2").drawn.picture->text == "0");
 	}
 
 	SECTION("a draw")
@@ -201,7 +201,7 @@ TEST_CASE("when the clock runs out, the most crossings win", "[spacerace]")
 		table.game.setVariable("rocket2", "score", 2.0f);
 		table.timeUp();
 		table.frames(1);
-		CHECK(table.game.getObject("over.winner").lookName() == "draw");
+		CHECK(table.game.object("over.winner").lookName() == "draw");
 	}
 }
 
@@ -212,12 +212,12 @@ TEST_CASE("the debris loops round without losing its spacing", "[spacerace][wrap
 	// Eight to a row, a window width plus their own apart: 808 / 8 = 101.
 	const auto spacing = [&](int row)
 	{
-		const Object& first = table.game.getObject("debris.1." + std::to_string(row));
+		const Object& first = table.game.object("debris.1." + std::to_string(row));
 		const float loop = kWindowWidth + first.size.x;
 		std::vector<float> gaps;
 		for (int column = 2; column <= 8; ++column)
 		{
-			const Object& other = table.game.getObject("debris." + std::to_string(column) + "." + std::to_string(row));
+			const Object& other = table.game.object("debris." + std::to_string(column) + "." + std::to_string(row));
 			gaps.push_back(std::fmod(other.position.x - first.position.x + 2 * loop, loop));
 		}
 		return gaps;
@@ -253,22 +253,22 @@ TEST_CASE("each state has its own objects: the title, the race, the signs", "[sp
 {
 	Game game{ "descriptions/spacerace.xml" };
 	game.setCurrentState("title");
-	CHECK(game.isShown(game.getObject("title")));
-	CHECK_FALSE(game.isShown(game.getObject("rocket1")));
+	CHECK(game.isShown(game.object("title")));
+	CHECK_FALSE(game.isShown(game.object("rocket1")));
 
 	game.pushState("playing");
-	CHECK(game.getObject("rocket1").name == "playing.rocket1");
-	CHECK(game.getObject("debris.4.5").name == "playing.debris.4.5");
-	CHECK(game.isShown(game.getObject("debris.4.5")));
-	CHECK(game.isShown(game.getObject("score2")));
-	CHECK_FALSE(game.isShown(game.getObject("title")));
+	CHECK(game.object("rocket1").name == "playing.rocket1");
+	CHECK(game.object("debris.4.5").name == "playing.debris.4.5");
+	CHECK(game.isShown(game.object("debris.4.5")));
+	CHECK(game.isShown(game.object("score2")));
+	CHECK_FALSE(game.isShown(game.object("title")));
 }
 
 TEST_CASE("paused and the win screen draw the race still underneath", "[spacerace][states]")
 {
 	Table table;
-	Object& debris = table.game.getObject("debris.4.5"); // row 5: +1.5 a frame
-	Object& clock = table.game.getObject("clock");
+	Object& debris = table.game.object("debris.4.5"); // row 5: +1.5 a frame
+	Object& clock = table.game.object("clock");
 	const float x = debris.position.x;
 	const float y = clock.position.y;
 
@@ -278,7 +278,7 @@ TEST_CASE("paused and the win screen draw the race still underneath", "[spacerac
 	CHECK(clock.position.y == y);
 	CHECK(table.game.isStill(debris));
 	CHECK(table.game.isStill(table.rocket(1)));
-	CHECK(table.game.isShown(table.game.getObject("paused.paused")));
+	CHECK(table.game.isShown(table.game.object("paused.paused")));
 	table.game.popState();
 	table.frames(2);
 	CHECK(debris.position.x == Catch::Approx(x + 3.0f));
@@ -289,8 +289,8 @@ TEST_CASE("paused and the win screen draw the race still underneath", "[spacerac
 	REQUIRE(table.game.getCurrentState().name == "over");
 	table.frames(1);
 	CHECK(table.game.isStill(table.rocket(2)));
-	CHECK(table.game.isStill(table.game.getObject("score2")));
-	CHECK(table.game.isShown(table.game.getObject("over.winner")));
-	CHECK(table.game.getObject("over.winner").lookName() == "player2");
-	CHECK(table.game.isShown(table.game.getObject("continue")));
+	CHECK(table.game.isStill(table.game.object("score2")));
+	CHECK(table.game.isShown(table.game.object("over.winner")));
+	CHECK(table.game.object("over.winner").lookName() == "player2");
+	CHECK(table.game.isShown(table.game.object("continue")));
 }

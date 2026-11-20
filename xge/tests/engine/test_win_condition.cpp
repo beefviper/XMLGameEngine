@@ -68,8 +68,8 @@ TEST_CASE("killing the last alien ends the game", "[win_condition]")
 
 	game.updateObjects(xge::kSixtieth);
 	CHECK(game.getCurrentState().name == "gameover");
-	CHECK(game.isShown(game.getObject("youwin")));
-	CHECK(game.isShown(game.getObject("continue")));
+	CHECK(game.isShown(game.object("youwin")));
+	CHECK(game.isShown(game.object("continue")));
 }
 
 TEST_CASE("the last alien dying to a bullet ends the game", "[win_condition]")
@@ -83,7 +83,7 @@ TEST_CASE("the last alien dying to a bullet ends the game", "[win_condition]")
 		if (object.groupName == "aliens") { object.size = { 50.0f, 50.0f }; }
 	}
 
-	Object& last = game.getObject("aliens.6.3");
+	Object& last = game.object("aliens.6.3");
 	for (auto& object : game.getCurrentObjects())
 	{
 		if (object.groupName == "aliens" && &object != &last) { kill(object); }

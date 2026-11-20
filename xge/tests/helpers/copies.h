@@ -37,7 +37,7 @@ namespace copies
 		if (!made) { throw std::runtime_error("no more of '" + piece + "' may be spawned"); }
 		const std::string name = made->name;
 		game.settleSpawns();
-		return game.getObject(name);
+		return game.object(name);
 	}
 
 	// How many copies of `piece` are in the game (its name, or the end of

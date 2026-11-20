@@ -510,7 +510,7 @@ TEST_CASE("describe writes the state and every object in play as XML", "[cli][du
 	CHECK(said.rfind("<moment>\n  <frame>60</frame>\n  <seconds>1</seconds>\n  <state name=\"playing\" />\n", 0) == 0);
 	for (const std::string name : { "playing.ball", "playing.paddle1", "playing.paddle2" })
 	{
-		const Object& object = game.getObject(name);
+		const Object& object = game.object(name);
 		std::ostringstream position;
 		position << "<position><x>" << object.position.x << "</x><y>" << object.position.y << "</y></position>";
 		const auto at = said.find("<object name=\"" + name + "\"");

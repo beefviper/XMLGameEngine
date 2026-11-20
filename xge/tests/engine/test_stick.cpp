@@ -29,7 +29,7 @@ namespace
 	Object& startNearBottom(Game& game)
 	{
 		game.setCurrentState("playing");
-		Object& player = game.getObject("player");
+		Object& player = game.object("player");
 		player.size = measureShapeSize(player.drawn.picture);
 		player.position.y = kBottomBound - 20.0f;
 		return player;

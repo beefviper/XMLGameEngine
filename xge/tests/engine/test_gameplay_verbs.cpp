@@ -128,7 +128,7 @@ namespace
 
 		float variable(const std::string& object, const std::string& name)
 		{
-			return game.getObject(object).variable.at(name);
+			return game.object(object).variable.at(name);
 		}
 	};
 
@@ -262,7 +262,7 @@ TEST_CASE("a timer on an enemy fires its shots the way it faces", "[timers][faci
 	CHECK(copies::count(loaded.game, "bomb") == 0);
 	loaded.frames(1);
 	REQUIRE(copies::count(loaded.game, "bomb") == 1);
-	const Object& bomb = loaded.game.getObject("bomb.1");
+	const Object& bomb = loaded.game.object("bomb.1");
 	CHECK(bomb.collisionsOn);
 
 	// Below the middle of the enemy, falling at the bomb's own speed; it
@@ -285,7 +285,7 @@ TEST_CASE("an object with a <facing> faces the way it last moved, and fires that
 		shotPiece("shot", 4, 4, "<x>0</x><y>-360</y>")));
 
 	CommandExecutor executor(loaded.game);
-	Object& man = loaded.game.getObject("man");
+	Object& man = loaded.game.object("man");
 	// Fired: the copy, joined at once; put away again before the next.
 	const auto fire = [&]() -> const Object&
 	{
@@ -293,7 +293,7 @@ TEST_CASE("an object with a <facing> faces the way it last moved, and fires that
 		loaded.game.settleSpawns();
 		executor.executeInput(CmdTriggerAction{ "man", "gun" }, true);
 		loaded.game.settleSpawns();
-		return loaded.game.getObject("shot.1");
+		return loaded.game.object("shot.1");
 	};
 
 	const Object& up = fire();
@@ -334,7 +334,7 @@ TEST_CASE("a timed hop takes its time, passes over what is in the way, and meets
 		state("playing", { "man", "bar", "pit" })));
 
 	CommandExecutor executor(loaded.game);
-	Object& man = loaded.game.getObject("man");
+	Object& man = loaded.game.object("man");
 
 	executor.executeInput(CmdTriggerAction{ "man", "down" }, true);
 	REQUIRE(man.isAirborne());
@@ -367,7 +367,7 @@ TEST_CASE("nothing is touched in the air: a timed hop over a hazard and clear of
 	CommandExecutor executor(loaded.game);
 	executor.executeInput(CmdTriggerAction{ "man", "down" }, true);
 	loaded.frames(18); // 0.3 seconds
-	CHECK(loaded.game.getObject("man").position.y == Approx(180));
+	CHECK(loaded.game.object("man").position.y == Approx(180));
 	loaded.frames(5);
 	CHECK(loaded.variable("man", "hits") == 0);
 }
@@ -380,7 +380,7 @@ TEST_CASE("<reverse /> turns an object round, and a collision can reset another 
 		+ box("marker", 50, 50, 10, 10, "<off />", {}, {}, "<x>60</x><y>0</y>"),
 		state("playing", { "walker", "marker" })));
 
-	Object& walker = loaded.game.getObject("walker");
+	Object& walker = loaded.game.object("walker");
 	loaded.frames(29);
 	CHECK(walker.velocity.x == Approx(180));
 	loaded.frames(1);
@@ -390,7 +390,7 @@ TEST_CASE("<reverse /> turns an object round, and a collision can reset another 
 	// Off the right edge: the marker goes back to where it started.
 	walker.position = { 795, 100 };
 	walker.velocity = { 180, 0 };
-	Object& marker = loaded.game.getObject("marker");
+	Object& marker = loaded.game.object("marker");
 	CHECK(marker.position.x > 50);
 	loaded.frames(1);
 	CHECK(marker.position.x == Approx(51)); // back at 50, and moved on a pixel
@@ -495,7 +495,7 @@ TEST_CASE("an object with several named sprites can <become> each of them, and a
 	Loaded loaded(gameXml(lamp + ball,
 		state("playing", { "lamp", "ball" }, "<input button=\"space\"><become object=\"lamp\" sprite=\"off\" /></input>")));
 
-	Object& lamp1 = loaded.game.getObject("lamp");
+	Object& lamp1 = loaded.game.object("lamp");
 	CHECK(lamp1.lookName() == "off");
 	CHECK(lamp1.drawn.picture->color == "color.grey");
 
@@ -530,7 +530,7 @@ TEST_CASE("an edge rule with sprite= runs only while the object shows that look,
 		"</collisions><variables><variable name=\"hits\">0</variable></variables></object>";
 
 	Loaded loaded(gameXml(puck, state("playing", { "puck" })));
-	Object& one = loaded.game.getObject("puck");
+	Object& one = loaded.game.object("puck");
 	REQUIRE(one.lookName() == "whole");
 
 	loaded.frames(10);
@@ -559,9 +559,9 @@ TEST_CASE("an edge rule with unless= is passed over while the object touches som
 		state("playing", { "safe", "lost", "pad" })));
 
 	loaded.frames(3);
-	CHECK(loaded.game.getObject("safe").isVisible);
-	CHECK(loaded.game.getObject("safe").velocity.y < 0.0f);
-	CHECK_FALSE(loaded.game.getObject("lost").isVisible);
+	CHECK(loaded.game.object("safe").isVisible);
+	CHECK(loaded.game.object("safe").velocity.y < 0.0f);
+	CHECK_FALSE(loaded.game.object("lost").isVisible);
 }
 
 TEST_CASE("<reveal> brings hidden members of a pool back where they started, as many as asked", "[reveal]")
@@ -587,13 +587,13 @@ TEST_CASE("<reveal> brings hidden members of a pool back where they started, as 
 	CHECK(shown() == 0);
 	loaded.frames(60);
 	CHECK(shown() == 1);
-	CHECK(loaded.game.getObject("blocks.1").isVisible);
-	CHECK(loaded.game.getObject("blocks.1").position.x == Approx(10));
+	CHECK(loaded.game.object("blocks.1").isVisible);
+	CHECK(loaded.game.object("blocks.1").position.x == Approx(10));
 
 	CommandExecutor executor(loaded.game);
 	executor.executeInput(CmdReveal{ "blocks", 2 }, true);
 	CHECK(shown() == 3);
-	CHECK(loaded.game.getObject("blocks.3").position.x == Approx(50));
+	CHECK(loaded.game.object("blocks.3").position.x == Approx(50));
 
 	// None left to bring back: nothing happens.
 	loaded.frames(60);
@@ -613,7 +613,7 @@ TEST_CASE("a <reveal> back into play draws a <random> again (a copy, fired or sp
 		for (int frame = 0; frame < 600; ++frame)
 		{
 			loaded.game.updateObjects(xge::kSixtieth);
-			const Object& shown = loaded.game.getObject("rock");
+			const Object& shown = loaded.game.object("rock");
 			if (shown.isVisible) { seen.insert(static_cast<int>(std::lround(shown.velocity.x * 100.0f))); }
 		}
 		return seen.size();
@@ -682,7 +682,7 @@ TEST_CASE("<chase> heads straight for the nearest one in play, and stops when ne
 	Loaded loaded(gameXml(chaser + box("prey", 400, 500, 20, 20) + box("prey2", 0, 0, 20, 20, "<off />", "<waiting />"),
 		state("playing", { "hunter", "prey", "prey2" })));
 
-	Object& hunter = loaded.game.getObject("hunter");
+	Object& hunter = loaded.game.object("hunter");
 	loaded.frames(6);
 	// 300 across and 400 down: three fifths and four fifths of the speed.
 	CHECK(hunter.velocity.x == Approx(72.0f));
@@ -691,7 +691,7 @@ TEST_CASE("<chase> heads straight for the nearest one in play, and stops when ne
 
 	// It closes in, and stops within 50 of the prey's middle.
 	loaded.frames(400);
-	const Object& prey = loaded.game.getObject("prey");
+	const Object& prey = loaded.game.object("prey");
 	const float apart = std::hypot(prey.position.x - hunter.position.x, prey.position.y - hunter.position.y);
 	CHECK(apart <= 50.0f);
 	CHECK(apart > 35.0f); // a timer every 6 frames at 2 a frame: within 12 past it
@@ -709,10 +709,10 @@ TEST_CASE("<aim> sends the next shots straight at the target, at any angle, unti
 
 	loaded.frames(30);
 	REQUIRE(copies::count(loaded.game, "shot") == 1);
-	const Object& shot = loaded.game.getObject("shot.1");
+	const Object& shot = loaded.game.object("shot.1");
 	CHECK(shot.velocity.x == Approx(180.0f));
 	CHECK(shot.velocity.y == Approx(240.0f));
-	CHECK(loaded.game.getObject("gun").facing == Direction::Down);
+	CHECK(loaded.game.object("gun").facing == Direction::Down);
 
 	// It leaves from the middle of the gun, clear of it, along the aim.
 	const Vector2f middle = shot.position + shot.size * 0.5f;
@@ -721,7 +721,7 @@ TEST_CASE("<aim> sends the next shots straight at the target, at any angle, unti
 	// A key that moves the gun drops the aim: from its top again.
 	CommandExecutor executor(loaded.game);
 	executor.executeInput(CmdTriggerAction{ "gun", "left" }, true);
-	CHECK_FALSE(loaded.game.getObject("gun").aim.has_value());
+	CHECK_FALSE(loaded.game.object("gun").aim.has_value());
 }
 
 TEST_CASE("<aim> with <lined> fires only along one of the eight ways, when the target is lined up", "[aim]")
@@ -737,10 +737,10 @@ TEST_CASE("<aim> with <lined> fires only along one of the eight ways, when the t
 	CHECK(copies::count(loaded.game, "shot") == 0);
 
 	// 300 and 304: on the diagonal, within 8. The shot goes down it exactly.
-	loaded.game.getObject("target").position = { 400.0f, 404.0f };
+	loaded.game.object("target").position = { 400.0f, 404.0f };
 	loaded.frames(40);
 	REQUIRE(copies::count(loaded.game, "shot") == 1);
-	const Object& shot = loaded.game.getObject("shot.1");
+	const Object& shot = loaded.game.object("shot.1");
 	CHECK(shot.velocity.x == Approx(300.0f / std::sqrt(2.0f)));
 	CHECK(shot.velocity.y == Approx(300.0f / std::sqrt(2.0f)));
 
@@ -765,14 +765,14 @@ TEST_CASE("two move keys held across each other face the diagonal, and a <fire> 
 	executor.executeInput(CmdTriggerAction{ "gun", "gun" }, true);
 	loaded.frames(1);
 	REQUIRE(copies::count(loaded.game, "shot") == 1);
-	const Object& shot = loaded.game.getObject("shot.1");
+	const Object& shot = loaded.game.object("shot.1");
 	CHECK(shot.velocity.x == Approx(5.0f / std::sqrt(2.0f)));
 	CHECK(shot.velocity.y == Approx(-5.0f / std::sqrt(2.0f)));
 
 	// Up let go, right still held: straight right.
 	executor.executeInput(CmdTriggerAction{ "gun", "up" }, false);
-	CHECK(loaded.game.getObject("gun").facing == Direction::Right);
-	CHECK_FALSE(loaded.game.getObject("gun").aim.has_value());
+	CHECK(loaded.game.object("gun").facing == Direction::Right);
+	CHECK_FALSE(loaded.game.object("gun").aim.has_value());
 }
 
 TEST_CASE("<chase> and <aim> that name nothing are turned away when the game loads", "[chase][aim][errors]")
@@ -808,32 +808,32 @@ TEST_CASE("<copy> puts one variable's number into another, and <keeps> passes ob
 	{
 		Loaded loaded(xml, backend);
 		Game& game = loaded.game;
-		CHECK(game.getObject("best").kept);
-		CHECK(game.getObject("lamps.1").kept);
-		CHECK(game.getObject("lamps.2").kept);
-		CHECK_FALSE(game.getObject("player").kept);
+		CHECK(game.object("best").kept);
+		CHECK(game.object("lamps.1").kept);
+		CHECK(game.object("lamps.2").kept);
+		CHECK_FALSE(game.object("player").kept);
 
 		// From a key: the number as it is now, shown by what is bound to it.
 		CommandExecutor executor(game);
-		game.getObject("player").variable.at("score") = 3;
+		game.object("player").variable.at("score") = 3;
 		executor.executeInput(Command{ CmdCopy{ { "player", "score" }, { "best", "score" } } }, true);
 		CHECK(loaded.variable("best", "score") == 3);
-		CHECK(game.getObject("shown").drawn.picture->text == "3");
+		CHECK(game.object("shown").drawn.picture->text == "3");
 
 		// A full reset passes the kept ones over and puts the rest back.
-		game.getObject("lamps.2").isVisible = false;
-		game.getObject("best").position.x = 99;
+		game.object("lamps.2").isVisible = false;
+		game.object("best").position.x = 99;
 		game.resetAll();
 		CHECK(loaded.variable("player", "score") == 0);
 		CHECK(loaded.variable("best", "score") == 3);
-		CHECK(game.getObject("shown").drawn.picture->text == "3");
-		CHECK(game.getObject("best").position.x == 99);
-		CHECK_FALSE(game.getObject("lamps.2").isVisible);
+		CHECK(game.object("shown").drawn.picture->text == "3");
+		CHECK(game.object("best").position.x == 99);
+		CHECK_FALSE(game.object("lamps.2").isVisible);
 
 		// <reset object> still resets one by name.
 		game.resetObject("best");
 		CHECK(loaded.variable("best", "score") == 0);
-		CHECK(game.getObject("shown").drawn.picture->text == "0");
+		CHECK(game.object("shown").drawn.picture->text == "0");
 	}
 }
 
@@ -873,7 +873,7 @@ TEST_CASE("a <text> is its pieces: labels, numbers and letters, each following i
 	for (XmlBackend backend : { XmlBackend::Xerces, XmlBackend::PugiXml })
 	{
 		Loaded loaded(gameXml(owner + label, state("s", { "p", "label" })), backend);
-		Object& shown = loaded.game.getObject("label");
+		Object& shown = loaded.game.object("label");
 		// A space between pieces, but letters side by side are one word; a
 		// letter goes round (-1 is Z, 27 is B); a sum is worked out once.
 		CHECK(shown.drawn.picture->text == "SCORE 120 HZB 240");
@@ -895,7 +895,7 @@ TEST_CASE("a <choose> piece shows one of its words, picked by a number as it is 
 	for (XmlBackend backend : { XmlBackend::Xerces, XmlBackend::PugiXml })
 	{
 		Loaded loaded(gameXml(owner + label, state("s", { "p", "label" })), backend);
-		Object& shown = loaded.game.getObject("label");
+		Object& shown = loaded.game.object("label");
 		CHECK(shown.drawn.picture->text == "THE DRAGON IS ASLEEP");
 		loaded.game.addTo({ "p", "mood" });
 		CHECK(shown.drawn.picture->text == "THE DRAGON IS HUNGRY");
@@ -920,8 +920,8 @@ TEST_CASE("a group's text naming the group's variables shows each member's own",
 	Loaded loaded(gameXml(group, state("s", { "rows" })));
 	loaded.game.addTo({ "rows.2", "n" }, 9.0f);
 	loaded.game.addTo({ "rows.2", "l" });
-	CHECK(loaded.game.getObject("rows.1").drawn.picture->text == "A 0");
-	CHECK(loaded.game.getObject("rows.2").drawn.picture->text == "B 9");
+	CHECK(loaded.game.object("rows.1").drawn.picture->text == "A 0");
+	CHECK(loaded.game.object("rows.2").drawn.picture->text == "B 9");
 }
 
 TEST_CASE("<rank> puts an entry into its place in a table, the rest moving down", "[scores][rank]")
@@ -1083,7 +1083,7 @@ namespace
 			return loaded.variable("flag", "n") > before;
 		}
 
-		Object& object(const char* name) { return loaded.game.getObject(name); }
+		Object& object(const char* name) { return loaded.game.object(name); }
 	};
 }
 
@@ -1258,7 +1258,7 @@ TEST_CASE("a condition holds conditions, checked while it holds; its own command
 	CHECK(loaded.variable("flag", "out") == 9.0f);
 
 	// Another look: the light's conditions are passed over.
-	loaded.game.getObject("light").showLook(1);
+	loaded.game.object("light").showLook(1);
 	CHECK(run(1) == 5.0f);
 }
 
@@ -1290,7 +1290,7 @@ TEST_CASE("sprite= tests a look, alone or with a test, in a condition in a condi
 	Loaded alone(lights("<condition object=\"light\" sprite=\"red\"><set variable=\"flag.out\">1</set></condition>"));
 	alone.frames(1);
 	CHECK(alone.variable("flag", "out") == 0.0f);
-	alone.game.getObject("light").showLook(1);
+	alone.game.object("light").showLook(1);
 	alone.frames(1);
 	CHECK(alone.variable("flag", "out") == 1.0f);
 
@@ -1374,7 +1374,7 @@ TEST_CASE("a collision rule holds rules: what it says they say too, its <first> 
 		"<collision object=\"w\"><stop /></collision>"
 		"</collision>"
 		"<collision unless=\"wall\"><collision edge=\"horizontal\"><wrap /></collision></collision>"));
-	const CollisionData& rules = loaded.game.getObject("a").kind->collisionData;
+	const CollisionData& rules = loaded.game.object("a").kind->collisionData;
 	REQUIRE(rules.others.size() == 3);
 	for (const CollisionRule& rule : rules.others)
 	{
@@ -1433,7 +1433,7 @@ TEST_CASE("a key's trigger holds an <otherwise>, run only when its action is ref
 	{
 		played::Played played(path);
 		played.game.setCurrentState(0);
-		const auto value = [&](const char* name) { return played.game.getObject("a").variable.at(name); };
+		const auto value = [&](const char* name) { return played.game.object("a").variable.at(name); };
 
 		played.tap(KeyCode::Space);
 		CHECK(value("n") == 0.0f);

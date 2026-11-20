@@ -58,7 +58,7 @@ namespace
 
 		std::string state() { return game.getCurrentState().name; }
 		std::string wave() { return game.currentScene("playing"); }
-		Object& object(const std::string& name) { return game.getObject(name); }
+		Object& object(const std::string& name) { return game.object(name); }
 
 		// The demons of a wave (playing.wave2.), not hidden or dead.
 		int alive(const std::string& wave)
@@ -227,7 +227,7 @@ TEST_CASE("a big demon of the third wave takes two shots", "[demonattack]")
 
 	clearWave(play, "wave3");
 	CHECK(play.state() == "over");
-	CHECK(play.game.getObject("over.message").lookName() == "won");
+	CHECK(play.game.object("over.message").lookName() == "won");
 }
 
 TEST_CASE("a demon on the cannon costs a life, and three is game over", "[demonattack]")
@@ -252,7 +252,7 @@ TEST_CASE("a demon on the cannon costs a life, and three is game over", "[demona
 	player.variable.at("lives") = 0.0f;
 	play.frames(2);
 	CHECK(play.state() == "over");
-	CHECK(play.game.getObject("over.message").lookName() == "lost");
+	CHECK(play.game.object("over.message").lookName() == "lost");
 
 	play.tap(KeyCode::Space);
 	CHECK(play.state() == "title");
@@ -305,7 +305,7 @@ TEST_CASE("only the wave being played runs: the later waves wait where they star
 	play.object("player").variable.at("lives") = 0.0f;
 	play.frames(2);
 	REQUIRE(play.state() == "over");
-	CHECK(play.game.getObject("over.message").lookName() == "lost");
+	CHECK(play.game.object("over.message").lookName() == "lost");
 	play.tap(KeyCode::Space);
 	CHECK(play.state() == "title");
 	CHECK(play.wave() == "playing.wave1");

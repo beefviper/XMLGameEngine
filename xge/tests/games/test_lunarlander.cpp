@@ -51,9 +51,9 @@ namespace
 			game.setCurrentState("playing");
 		}
 
-		Object& lander() { return game.getObject("lander"); }
+		Object& lander() { return game.object("lander"); }
 		float fuel() { return lander().variable.at("fuel"); }
-		float score() { return game.getObject("status").variable.at("score"); }
+		float score() { return game.object("status").variable.at("score"); }
 		bool wrecked() { return !lander().isVisible; }
 		std::string state() { return game.getCurrentState().name; }
 
@@ -71,7 +71,7 @@ namespace
 		// moon's pull switched off so that nothing but the test moves it.
 		void over(const char* pad, float y, float fall)
 		{
-			const Object& at = game.getObject(pad);
+			const Object& at = game.object(pad);
 			lander().position = { at.position.x + at.size.x / 2 - lander().size.x / 2, y };
 			lander().velocity = { 0, fall };
 			lander().acceleration = {};
@@ -91,19 +91,19 @@ TEST_CASE("lunarlander.xml loads with a lander, terrain and three pads, all draw
 
 	for (const char* name : { "terrain", "pad2", "pad3", "pad5", "lander" })
 	{
-		const Object& object = moon.game.getObject(name);
+		const Object& object = moon.game.object(name);
 		CHECK(object.drawn.picture->kind == ShapeKind::Line);
 		CHECK(object.kind->collisionData.type == CollisionType::Pixel);
 		REQUIRE(object.drawn.bitmap);
 	}
 	for (const char* name : { "terrain", "pad2", "pad3", "pad5" })
 	{
-		CHECK(moon.game.getObject(name).objClass == "ground");
+		CHECK(moon.game.object(name).objClass == "ground");
 	}
 
 	// The narrower the pad, the more it is worth.
-	CHECK(moon.game.getObject("pad5").size.x < moon.game.getObject("pad3").size.x);
-	CHECK(moon.game.getObject("pad3").size.x < moon.game.getObject("pad2").size.x);
+	CHECK(moon.game.object("pad5").size.x < moon.game.object("pad3").size.x);
+	CHECK(moon.game.object("pad3").size.x < moon.game.object("pad2").size.x);
 
 	CHECK(moon.lander().turning.hasHeading);
 	CHECK(moon.lander().heading == 0.0f);
@@ -117,7 +117,7 @@ TEST_CASE("lunarlander.xml loads under every XML backend, checked against the sc
 	for (const XmlBackend backend : { XmlBackend::Xerces, XmlBackend::TinyXml2, XmlBackend::PugiXml, XmlBackend::RapidXml })
 	{
 		Game game{ readGame("descriptions/lunarlander.xml", backend) };
-		const Object& lander = game.getObject("lander");
+		const Object& lander = game.object("lander");
 
 		CHECK(lander.kind->collisionData.type == CollisionType::Pixel);
 		CHECK(lander.turning.hasHeading);
@@ -197,8 +197,8 @@ TEST_CASE("the fuel and score shown follow the lander's", "[lunarlander]")
 	moon.key("thrust", true);
 	moon.frames(25);
 
-	CHECK(moon.game.getObject("fuel").drawn.picture->text == "FUEL 975");
-	CHECK(moon.game.getObject("score").drawn.picture->text == "SCORE 0");
+	CHECK(moon.game.object("fuel").drawn.picture->text == "FUEL 975");
+	CHECK(moon.game.object("score").drawn.picture->text == "SCORE 0");
 }
 
 TEST_CASE("it cannot leave the sides or top of the screen", "[lunarlander]")
@@ -229,7 +229,7 @@ TEST_CASE("coming down slowly and upright onto a pad is a landing worth that pad
 		DYNAMIC_SECTION(pad.name)
 		{
 			Moon moon;
-			moon.over(pad.name, moon.game.getObject(pad.name).position.y - 80, 48.0f);
+			moon.over(pad.name, moon.game.object(pad.name).position.y - 80, 48.0f);
 
 			moon.untilDown(400);
 
@@ -237,8 +237,8 @@ TEST_CASE("coming down slowly and upright onto a pad is a landing worth that pad
 			CHECK_FALSE(moon.wrecked());
 			CHECK(moon.score() == pad.worth);
 			CHECK(moon.lander().velocity.y == 0.0f);
-			CHECK(moon.game.isShown(moon.game.getObject("landed.message")));
-			CHECK(moon.game.getObject("points").drawn.picture->text == std::to_string(static_cast<int>(pad.worth)) + " POINTS");
+			CHECK(moon.game.isShown(moon.game.object("landed.message")));
+			CHECK(moon.game.object("points").drawn.picture->text == std::to_string(static_cast<int>(pad.worth)) + " POINTS");
 
 			// It stays where it touched down, drawn still under the message.
 			const Vector2f where = moon.lander().position;
@@ -327,21 +327,21 @@ TEST_CASE("a wreck breaks the lander up, costs fuel, and the next one comes afte
 	moon.frames(1);
 
 	CHECK(moon.fuel() == 800.0f);
-	CHECK(moon.game.isShown(moon.game.getObject("wrecked")));
+	CHECK(moon.game.isShown(moon.game.object("wrecked")));
 	for (int piece = 1; piece <= 4; ++piece)
 	{
-		CHECK(moon.game.isShown(moon.game.getObject("debris." + std::to_string(piece) + ".1")));
+		CHECK(moon.game.isShown(moon.game.object("debris." + std::to_string(piece) + ".1")));
 	}
-	const float pieceY = moon.game.getObject("debris.1.1").position.y;
+	const float pieceY = moon.game.object("debris.1.1").position.y;
 	moon.frames(20);
-	CHECK(moon.game.getObject("debris.1.1").position.y != pieceY);
+	CHECK(moon.game.object("debris.1.1").position.y != pieceY);
 
 	moon.frames(150);
 
 	CHECK_FALSE(moon.wrecked());
 	CHECK(moon.lander().position.y < 45.0f);
-	CHECK_FALSE(moon.game.isShown(moon.game.getObject("wrecked")));
-	CHECK(moon.game.tryGetObject("debris.1.1") == nullptr); // taken away for the next lander
+	CHECK_FALSE(moon.game.isShown(moon.game.object("wrecked")));
+	CHECK(moon.game.find("debris.1.1") == nullptr); // taken away for the next lander
 	CHECK(moon.fuel() == 800.0f);
 }
 
@@ -354,7 +354,7 @@ TEST_CASE("the boxes overlap long before the pixels do, and nothing is hit until
 	moon.lander().position = { 262, 450 };
 	moon.lander().velocity = { 60, 0 };
 	moon.lander().acceleration = {};
-	REQUIRE(moon.lander().position.y + moon.lander().size.y > moon.game.getObject("terrain").position.y);
+	REQUIRE(moon.lander().position.y + moon.lander().size.y > moon.game.object("terrain").position.y);
 
 	moon.frames(20);
 
@@ -399,7 +399,7 @@ TEST_CASE("the last lander down with no fuel ends the game, and Space starts it 
 
 	REQUIRE(moon.state() == "over");
 	CHECK(moon.fuel() == 0.0f);
-	CHECK(moon.game.isShown(moon.game.getObject("over.message")));
+	CHECK(moon.game.isShown(moon.game.object("over.message")));
 
 	moon.game.resetAll();
 	CHECK(moon.state() == "title");
@@ -420,9 +420,9 @@ TEST_CASE("the pause screen holds the lander where it is", "[lunarlander]")
 
 	CHECK(moon.lander().position == where);
 	CHECK(moon.game.isStill(moon.lander()));
-	CHECK(moon.game.isStill(moon.game.getObject("terrain")));
-	CHECK(moon.game.isShown(moon.game.getObject("paused")));
-	CHECK_FALSE(moon.game.isStill(moon.game.getObject("title")));
+	CHECK(moon.game.isStill(moon.game.object("terrain")));
+	CHECK(moon.game.isShown(moon.game.object("paused")));
+	CHECK_FALSE(moon.game.isStill(moon.game.object("title")));
 
 	moon.game.popState();
 	moon.frames(10);

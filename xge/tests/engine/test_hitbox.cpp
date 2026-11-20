@@ -56,7 +56,7 @@ namespace
 			frames(1);
 		}
 
-		float hits() { return game.getObject("target").variable.at("hits"); }
+		float hits() { return game.object("target").variable.at("hits"); }
 	};
 
 	// A game of one state with these objects, written out to be played.
@@ -140,7 +140,7 @@ TEST_CASE("<solid char>: only those characters of a pixel-tested bitmap touch", 
 	Played play(file.path);
 
 	play.probe("1"); // into the bottom half alone, the brown
-	CHECK(play.game.getObject("probe").position.y == 111);
+	CHECK(play.game.object("probe").position.y == 111);
 	CHECK(play.hits() == 0);
 
 	play.probe("2"); // up into the top half
@@ -213,14 +213,14 @@ TEST_CASE("<hitbox> pulled in from the sides: the most particular word for a sid
 		// The probe at 101 to 111 across; his box from 112 across, or, mirrored, to 108.
 		const Scratch file(probe({ 87 }) + target(man, "<hitbox><left>12</left></hitbox>"));
 		Played play(file.path);
-		play.game.getObject("probe").position.x = 101.0f;
+		play.game.object("probe").position.x = 101.0f;
 		play.probe("1");
 		CHECK(play.hits() == 0);
 
 		const Scratch again(probe({ 87 }) + target(man, "<hitbox><left>12</left></hitbox>"));
 		Played mirrored(again.path);
-		mirrored.game.getObject("probe").position.x = 101.0f;
-		mirrored.game.getObject("target").mirror.flipped = true;
+		mirrored.game.object("probe").position.x = 101.0f;
+		mirrored.game.object("target").mirror.flipped = true;
 		mirrored.probe("1");
 		CHECK(mirrored.hits() == 1);
 	}
@@ -294,7 +294,7 @@ TEST_CASE("<hitbox name>: a rule's hitbox= and by= run only for a touch made wit
 	{
 		const Scratch file(made(counting));
 		Played play(file.path);
-		const auto count = [&](const char* name) { return play.game.getObject("target").variable.at(name); };
+		const auto count = [&](const char* name) { return play.game.object("target").variable.at(name); };
 
 		// Up by 87 the probe covers 113 to 123: his foot (116 to 120), with its tip too.
 		play.probe("1");
@@ -305,7 +305,7 @@ TEST_CASE("<hitbox name>: a rule's hitbox= and by= run only for a touch made wit
 	{
 		const Scratch file(made(counting));
 		Played play(file.path);
-		const auto count = [&](const char* name) { return play.game.getObject("target").variable.at(name); };
+		const auto count = [&](const char* name) { return play.game.object("target").variable.at(name); };
 		// Up by 99 it covers 101 to 111: the body (108 to 112), with its tail only.
 		play.probe("2");
 		CHECK(count("feet") == 0);
@@ -354,25 +354,25 @@ TEST_CASE("<frame> with <hitbox>es: a reach that touches only while that picture
 		const Scratch file(made(123));
 		Played play(file.path);
 		play.frames(10);
-		CHECK(play.game.getObject("bag").variable.at("hits") == 0);
+		CHECK(play.game.object("bag").variable.at("hits") == 0);
 		jab(play);
-		CHECK(play.game.getObject("bag").variable.at("hits") == 1);
-		CHECK(play.game.getObject("bag").variable.at("bumps") == 0);
-		CHECK(play.game.getObject("boxer").variable.at("landed") == 1);
-		CHECK(play.game.getObject("boxer").lookName() == "rest");
+		CHECK(play.game.object("bag").variable.at("hits") == 1);
+		CHECK(play.game.object("bag").variable.at("bumps") == 0);
+		CHECK(play.game.object("boxer").variable.at("landed") == 1);
+		CHECK(play.game.object("boxer").lookName() == "rest");
 	}
 	{
 		// Mirrored, the fist is out past his left side (94 to 100): the bag on the right is safe, one on the left is hit.
 		const Scratch right(made(123));
 		Played facingLeft(right.path);
-		facingLeft.game.getObject("boxer").mirror.flipped = true;
+		facingLeft.game.object("boxer").mirror.flipped = true;
 		jab(facingLeft);
-		CHECK(facingLeft.game.getObject("bag").variable.at("hits") == 0);
+		CHECK(facingLeft.game.object("bag").variable.at("hits") == 0);
 
 		const Scratch left(made(88));
 		Played play(left.path);
-		play.game.getObject("boxer").mirror.flipped = true;
+		play.game.object("boxer").mirror.flipped = true;
 		jab(play);
-		CHECK(play.game.getObject("bag").variable.at("hits") == 1);
+		CHECK(play.game.object("bag").variable.at("hits") == 1);
 	}
 }

@@ -55,7 +55,7 @@ namespace
 			game.setCurrentState("playing");
 		}
 
-		Object& chicken(int player) { return game.getObject("chicken" + std::to_string(player)); }
+		Object& chicken(int player) { return game.object("chicken" + std::to_string(player)); }
 		float score(int player) { return chicken(player).variable.at("score"); }
 
 		void hop(int player, const char* direction)
@@ -69,7 +69,7 @@ namespace
 		{
 			chicken(1).variable.at("score") = one;
 			chicken(2).variable.at("score") = two;
-			game.getObject("clock").variable.at("seconds") = 0.0f;
+			game.object("clock").variable.at("seconds") = 0.0f;
 			frames(2);
 		}
 
@@ -128,7 +128,7 @@ TEST_CASE("each lane sits in its own row, the top five driving left and the bott
 	for (int row = 1; row <= 10; ++row)
 	{
 		const std::string lane = "lane" + std::to_string(row);
-		const Object& first = table.game.getObject(lane + ".1.1");
+		const Object& first = table.game.object(lane + ".1.1");
 		INFO(lane);
 		CHECK(first.position.y == laneY(row));
 		CHECK(first.velocity.y == 0.0f);
@@ -144,7 +144,7 @@ TEST_CASE("each lane sits in its own row, the top five driving left and the bott
 				if (object.name == "playing." + name) { found = true; } // the playing state's own
 			}
 			if (!found) { continue; }
-			const Object& other = table.game.getObject(name);
+			const Object& other = table.game.object(name);
 			CHECK(other.position.y == first.position.y);
 			CHECK(other.velocity.x == first.velocity.x);
 		}
@@ -156,9 +156,9 @@ TEST_CASE("traffic loops: a car that has left one side comes in from the other",
 	Table table;
 
 	// Lane 7 heads right, lane 1 heads left.
-	Object& rightward = table.game.getObject("lane7.1.1");
+	Object& rightward = table.game.object("lane7.1.1");
 	rightward.position.x = kWindowWidth + 1.0f; // completely off the right side
-	Object& leftward = table.game.getObject("lane1.1.1");
+	Object& leftward = table.game.object("lane1.1.1");
 	leftward.position.x = -leftward.size.x - 1.0f; // completely off the left side
 	table.frames(1);
 
@@ -215,8 +215,8 @@ TEST_CASE("crossing scores a point and sends the chicken back to the start", "[f
 	CHECK(table.score(1) == 1.0f);
 	CHECK(table.score(2) == 0.0f);
 	CHECK(table.atStart(1));
-	CHECK(table.game.getObject("score1").drawn.picture->text == "1");
-	CHECK(table.game.getObject("score2").drawn.picture->text == "0");
+	CHECK(table.game.object("score1").drawn.picture->text == "1");
+	CHECK(table.game.object("score2").drawn.picture->text == "0");
 	CHECK(table.game.getCurrentState().name == "playing");
 }
 
@@ -229,7 +229,7 @@ TEST_CASE("being hit knocks the chicken back a lane and costs nothing else", "[f
 	// Halfway across, with a car of lane 5 on top of it.
 	table.chicken(2).position.y = rowY(5);
 	// (A pair in which nothing moves is not looked at, so the car keeps its lane's speed.)
-	Object& car = table.game.getObject("lane5.1.1");
+	Object& car = table.game.object("lane5.1.1");
 	car.position.x = table.chicken(2).position.x;
 	car.velocity.x = -180.0f;
 	table.frames(1);
@@ -245,7 +245,7 @@ TEST_CASE("a hop onto a lane where a car is waiting is a hit", "[freeway][hop]")
 	Table table;
 	table.clearTraffic();
 
-	Object& car = table.game.getObject("lane10.1.1");
+	Object& car = table.game.object("lane10.1.1");
 	car.position.x = table.chicken(1).position.x - 5.0f; // over the chicken's column
 	car.velocity = { 0.0f, 0.0f };
 	table.hop(1, "up");
@@ -273,9 +273,9 @@ TEST_CASE("the clock counts down from 136, and the one with more crossings wins 
 	{
 		Table table;
 		table.clearTraffic();
-		CHECK(table.game.getObject("clock").variable.at("seconds") == 136.0f);
+		CHECK(table.game.object("clock").variable.at("seconds") == 136.0f);
 		table.frames(60);
-		CHECK(table.game.getObject("clock").variable.at("seconds") == 135.0f);
+		CHECK(table.game.object("clock").variable.at("seconds") == 135.0f);
 		CHECK(table.game.getCurrentState().name == "playing");
 	}
 	{
@@ -283,21 +283,21 @@ TEST_CASE("the clock counts down from 136, and the one with more crossings wins 
 		table.clearTraffic();
 		table.timeUp(4.0f, 2.0f);
 		CHECK(table.game.getCurrentState().name == "over");
-		CHECK(table.game.getObject("over.winner").lookName() == "player1");
+		CHECK(table.game.object("over.winner").lookName() == "player1");
 	}
 	{
 		Table table;
 		table.clearTraffic();
 		table.timeUp(1.0f, 3.0f);
 		CHECK(table.game.getCurrentState().name == "over");
-		CHECK(table.game.getObject("over.winner").lookName() == "player2");
+		CHECK(table.game.object("over.winner").lookName() == "player2");
 	}
 	{
 		Table table;
 		table.clearTraffic();
 		table.timeUp(2.0f, 2.0f);
 		CHECK(table.game.getCurrentState().name == "over");
-		CHECK(table.game.getObject("over.winner").lookName() == "draw");
+		CHECK(table.game.object("over.winner").lookName() == "draw");
 	}
 }
 
@@ -313,10 +313,10 @@ TEST_CASE("space starts a new game from the end screen, with both scores and the
 	CHECK(table.game.getCurrentState().name == "title");
 	CHECK(table.score(1) == 0.0f);
 	CHECK(table.score(2) == 0.0f);
-	CHECK(table.game.getObject("score1").drawn.picture->text == "0");
-	CHECK(table.game.getObject("score2").drawn.picture->text == "0");
-	CHECK(table.game.getObject("clock").variable.at("seconds") == 136.0f);
-	CHECK(table.game.getObject("over.winner").lookName() == "draw");
+	CHECK(table.game.object("score1").drawn.picture->text == "0");
+	CHECK(table.game.object("score2").drawn.picture->text == "0");
+	CHECK(table.game.object("clock").variable.at("seconds") == 136.0f);
+	CHECK(table.game.object("over.winner").lookName() == "draw");
 }
 
 TEST_CASE("the keys drive the right chicken through the whole game", "[freeway][engine_input]")
@@ -332,8 +332,8 @@ TEST_CASE("the keys drive the right chicken through the whole game", "[freeway][
 		if (object.objClass == "traffic") { object.position.x = -5000.0f; object.velocity = { 0.0f, 0.0f }; }
 	}
 
-	Object& one = game.getObject("chicken1");
-	Object& two = game.getObject("chicken2");
+	Object& one = game.object("chicken1");
+	Object& two = game.object("chicken2");
 
 	engine.handleKeyPressed(KeyCode::W);
 	engine.handleKeyReleased(KeyCode::W);
@@ -390,21 +390,21 @@ TEST_CASE("each state has its own objects: the title, the road, the signs", "[fr
 {
 	Game game{ "descriptions/freeway.xml" };
 	game.setCurrentState("title");
-	CHECK(game.isShown(game.getObject("help.2")));
-	CHECK_FALSE(game.isShown(game.getObject("chicken1")));
+	CHECK(game.isShown(game.object("help.2")));
+	CHECK_FALSE(game.isShown(game.object("chicken1")));
 
 	game.pushState("playing");
-	CHECK(game.getObject("chicken1").name == "playing.chicken1");
-	CHECK(game.getObject("lane5.1.1").name == "playing.lane5.1.1");
-	CHECK(game.isShown(game.getObject("lane5.1.1")));
-	CHECK(game.isShown(game.getObject("score1")));
-	CHECK_FALSE(game.isShown(game.getObject("help.2")));
+	CHECK(game.object("chicken1").name == "playing.chicken1");
+	CHECK(game.object("lane5.1.1").name == "playing.lane5.1.1");
+	CHECK(game.isShown(game.object("lane5.1.1")));
+	CHECK(game.isShown(game.object("score1")));
+	CHECK_FALSE(game.isShown(game.object("help.2")));
 }
 
 TEST_CASE("paused and the endings draw the road still underneath, scores and all", "[freeway][states]")
 {
 	Table table;
-	Object& car = table.game.getObject("lane2.1.1"); // a truck, -1.5 a frame
+	Object& car = table.game.object("lane2.1.1"); // a truck, -1.5 a frame
 	const float x = car.position.x;
 
 	table.game.pushState("paused");
@@ -412,16 +412,16 @@ TEST_CASE("paused and the endings draw the road still underneath, scores and all
 	CHECK(car.position.x == x);
 	CHECK(table.game.isStill(car));
 	CHECK(table.game.isStill(table.chicken(1)));
-	CHECK(table.game.isShown(table.game.getObject("paused.paused")));
+	CHECK(table.game.isShown(table.game.object("paused.paused")));
 	table.game.popState();
 	CHECK(table.game.isShown(car));
 
 	table.timeUp(5.0f, 0.0f);
 	REQUIRE(table.game.getCurrentState().name == "over");
-	CHECK(table.game.isStill(table.game.getObject("score1")));
-	CHECK(table.game.isStill(table.game.getObject("score2")));
+	CHECK(table.game.isStill(table.game.object("score1")));
+	CHECK(table.game.isStill(table.game.object("score2")));
 	CHECK(table.game.isStill(car));
-	CHECK(table.game.isShown(table.game.getObject("over.winner")));
-	CHECK(table.game.getObject("over.winner").lookName() == "player1");
-	CHECK(table.game.isShown(table.game.getObject("over.again")));
+	CHECK(table.game.isShown(table.game.object("over.winner")));
+	CHECK(table.game.object("over.winner").lookName() == "player1");
+	CHECK(table.game.isShown(table.game.object("over.again")));
 }

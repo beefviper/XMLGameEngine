@@ -180,7 +180,7 @@ namespace xge
 			bool allThere = true;
 			for (const auto& dependency : use.sizesOf)
 			{
-				const Object* measured = tryGetObject(dependency);
+				const Object* measured = find(dependency);
 				if (!measured || measured->name != dependency)
 				{
 					allThere = false;
@@ -666,7 +666,7 @@ namespace xge
 		{
 			const Name what = carrying(carrier);
 			if (what.empty() || !carrier.ownerScene.empty()) { continue; }
-			Object* carried = tryGetObject(what);
+			Object* carried = find(what);
 			if (carried && carried->ownerState == state && !carried->ownerScene.empty()) { carried->ownerScene = scene; }
 		}
 		stageChanged();
@@ -707,9 +707,9 @@ namespace xge
 		return found.empty() || tied ? name : Name(found);
 	}
 
-	Object& Game::getObject(Name name)
+	Object& Game::object(Name name)
 	{
-		Object* object = tryGetObject(name);
+		Object* object = find(name);
 		if (!object)
 		{
 			throw std::out_of_range("no object named '" + name + "'");
@@ -719,19 +719,19 @@ namespace xge
 
 	// An object's own name (aliens.3.2) finds that object; the name of a
 	// <group> (aliens) finds its first member.
-	Object* Game::tryGetObject(Name name) noexcept
+	Object* Game::find(Name name) noexcept
 	{
 		if (const auto found = foundObjects.find(name); found != foundObjects.end())
 		{
 			return found->second;
 		}
 
-		Object* object = findObject(name);
+		Object* object = search(name);
 		foundObjects.emplace(name, object);
 		return object;
 	}
 
-	Object* Game::findObject(Name name) noexcept
+	Object* Game::search(Name name) noexcept
 	{
 		const auto exact = std::find_if(std::begin(objects), std::end(objects), [&](const Object& obj) { return obj.name == name; });
 		if (exact != std::end(objects))
@@ -747,7 +747,7 @@ namespace xge
 
 		// The end of one path: robots for playing.room1.robots.
 		const Name full = fullName(name);
-		return full == name ? nullptr : findObject(full);
+		return full == name ? nullptr : search(full);
 	}
 
 	float Game::getVariable(Name name)
@@ -929,7 +929,7 @@ namespace xge
 
 	float* Game::variableOf(const VariableName& name) noexcept
 	{
-		Object* owner = anyTurns ? tryGetObject(turnOwner(name.owner)) : tryGetObject(name.owner);
+		Object* owner = anyTurns ? find(turnOwner(name.owner)) : find(name.owner);
 		if (!owner) { return nullptr; }
 		const auto found = owner->variable.find(name.variable);
 		return found == owner->variable.end() ? nullptr : &found->second;
@@ -1192,7 +1192,7 @@ namespace xge
 			std::smatch match;
 			if (std::regex_match(line, match, objectLine))
 			{
-				object = tryGetObject(Name(match[1].str()));
+				object = find(Name(match[1].str()));
 				if (object && !object->kept) { object = nullptr; }
 				if (object && match[2].matched)
 				{
@@ -1220,7 +1220,7 @@ namespace xge
 
 	void Game::rank(const VariableName& entry, Name table)
 	{
-		Object* from = tryGetObject(entry.owner);
+		Object* from = find(entry.owner);
 		const std::string& by = entry.variable;
 		if (!from || !from->variable.countText(by))
 		{
@@ -1486,7 +1486,7 @@ namespace xge
 
 	bool Game::setVariable(Name objectName, Name variableName, float value)
 	{
-		Object* owner = tryGetObject(anyTurns ? turnOwner(objectName) : objectName);
+		Object* owner = find(anyTurns ? turnOwner(objectName) : objectName);
 		if (!owner)
 		{
 			return false;
@@ -1589,7 +1589,7 @@ namespace xge
 	void Game::resetObject(Name given)
 	{
 		const Name name = fullName(given);
-		Object* object = tryGetObject(name);
+		Object* object = find(name);
 		if (!object)
 		{
 			std::cout << "warning: <reset object=\"" << name << "\" />: no such object\n";
@@ -1614,7 +1614,7 @@ namespace xge
 		// Back where it started, it is no longer carried.
 		objectParts.carries.each([&](ObjectId, Object::Carry& carry)
 		{
-			const Object* carried = carry.what.empty() ? nullptr : tryGetObject(carry.what);
+			const Object* carried = carry.what.empty() ? nullptr : find(carry.what);
 			if (carried && (carried->named(name)))
 			{
 				carry.what.clear();
@@ -1942,7 +1942,7 @@ namespace xge
 			}
 			// Its own numbers (self.value) read from itself: a copy just
 			// spawned is not yet among the objects a name finds.
-			const Object* owner = piece.owner == object.name ? &object : tryGetObject(piece.owner);
+			const Object* owner = piece.owner == object.name ? &object : find(piece.owner);
 			if (!owner)
 			{
 				continue;
@@ -2521,7 +2521,7 @@ namespace xge
 		// A player the computer plays, on its turn.
 		for (const auto& [name, plays] : memberThinks)
 		{
-			const Object* member = tryGetObject(name);
+			const Object* member = find(name);
 			if (!member || !member->exists || !isShown(*member) || member->variable.find(words::turn)->second == 0.0f) { continue; }
 			play(plays);
 		}
@@ -2595,13 +2595,13 @@ namespace xge
 		{
 			for (const Condition::Read& read : condition.reads)
 			{
-				if (const Object* owner = tryGetObject(read.owner))
+				if (const Object* owner = find(read.owner))
 				{
 					if (const auto found = owner->variable.find(read.variable); found != owner->variable.end()) { *read.slot = found->second; }
 				}
 			}
-			const Object* self = condition.saysSelf && !condition.madeFor.empty() ? (testing ? testing : tryGetObject(condition.madeFor)) : nullptr;
-			const Object* other = condition.saysSelf && !condition.madeAgainst.empty() ? (testingOther ? testingOther : tryGetObject(condition.madeAgainst)) : nullptr;
+			const Object* self = condition.saysSelf && !condition.madeFor.empty() ? (testing ? testing : find(condition.madeFor)) : nullptr;
+			const Object* other = condition.saysSelf && !condition.madeAgainst.empty() ? (testingOther ? testingOther : find(condition.madeAgainst)) : nullptr;
 			const auto readOwn = [&](const Object* owner, const std::vector<Name>& reads)
 			{
 				if (!owner) { return; }

@@ -143,7 +143,7 @@ TEST_CASE("a state's own objects are in play while it is the current state, with
 		"<state name=\"playing\"><objects>" + box("ball", 100, 100, "<x>120</x>") + "</objects>" + kSpace + "</state>"), backend);
 
 	REQUIRE(loaded.has("playing.ball"));
-	Object& ball = loaded.game.getObject("playing.ball");
+	Object& ball = loaded.game.object("playing.ball");
 	CHECK_FALSE(loaded.game.isShown(ball));
 	loaded.frames(10);
 	CHECK(ball.position.x == Approx(100));
@@ -154,7 +154,7 @@ TEST_CASE("a state's own objects are in play while it is the current state, with
 	CHECK(ball.position.x == Approx(120));
 
 	// A short name finds it too, as the end of its path.
-	CHECK(&loaded.game.getObject("ball") == &ball);
+	CHECK(&loaded.game.object("ball") == &ball);
 }
 
 TEST_CASE("an object with no <sprite> only holds numbers: it is never drawn and needs no <position>", "[scenes]")
@@ -163,7 +163,7 @@ TEST_CASE("an object with no <sprite> only holds numbers: it is never drawn and 
 	Loaded loaded(gameXml(
 		"<state name=\"playing\"><objects><object name=\"tally\"><variables><variable name=\"kills\">4</variable></variables></object></objects>" + kSpace + "</state>"), backend);
 
-	Object& tally = loaded.game.getObject("playing.tally");
+	Object& tally = loaded.game.object("playing.tally");
 	CHECK_FALSE(tally.isDrawn);
 	CHECK(tally.position.x == Approx(0));
 	CHECK(tally.variable.at("kills") == Approx(4));
@@ -183,15 +183,15 @@ TEST_CASE("each scene that takes a piece gets its own copy, named by its path, a
 	CHECK_FALSE(loaded.has("playing.room2.sign"));
 
 	CHECK(loaded.game.currentScene("playing") == "playing.room1");
-	Object& one = loaded.game.getObject("playing.room1.rock");
-	Object& two = loaded.game.getObject("playing.room2.rock");
+	Object& one = loaded.game.object("playing.room1.rock");
+	Object& two = loaded.game.object("playing.room2.rock");
 	CHECK(two.velocity.x == Approx(180));
-	CHECK(loaded.game.getObject("playing.room3.rock").velocity.x == Approx(180)); // from room2, changed there
+	CHECK(loaded.game.object("playing.room3.rock").velocity.x == Approx(180)); // from room2, changed there
 
 	loaded.frames(10);
 	CHECK(one.position.x == Approx(110));
 	CHECK(two.position.x == Approx(100));
-	CHECK(loaded.game.isShown(loaded.game.getObject("playing.hero")));
+	CHECK(loaded.game.isShown(loaded.game.object("playing.hero")));
 
 	// Entering room2: room1 stops where it is, and is found as it was when
 	// it is entered again.
@@ -227,11 +227,11 @@ TEST_CASE("names inside a scene mean its own first, then its state's, then the g
 
 	loaded.game.pushState("playing");
 	loaded.frames(30);
-	CHECK(loaded.game.getObject("playing.room1.tally").variable.at("hits") == 1);
-	CHECK(loaded.game.getObject("playing.room2.tally").variable.at("hits") == 0);
-	CHECK(loaded.game.getObject("playing.hero").variable.at("score") == 1);
+	CHECK(loaded.game.object("playing.room1.tally").variable.at("hits") == 1);
+	CHECK(loaded.game.object("playing.room2.tally").variable.at("hits") == 0);
+	CHECK(loaded.game.object("playing.hero").variable.at("score") == 1);
 
-	const Object& shown = loaded.game.getObject("label");
+	const Object& shown = loaded.game.object("label");
 	CHECK(loaded.game.showsVariable(shown, "playing.room2.tally", "hits"));
 	CHECK(shown.position.x == Approx(10));
 
@@ -240,9 +240,9 @@ TEST_CASE("names inside a scene mean its own first, then its state's, then the g
 	executor.executeInput(CmdResetObject{ "shot" }, true);
 	loaded.game.enterScene("playing.room2");
 	loaded.frames(30);
-	CHECK(loaded.game.getObject("playing.room2.tally").variable.at("hits") == 1);
-	CHECK(loaded.game.getObject("playing.room1.tally").variable.at("hits") == 1);
-	CHECK(loaded.game.getObject("playing.hero").variable.at("score") == 2);
+	CHECK(loaded.game.object("playing.room2.tally").variable.at("hits") == 1);
+	CHECK(loaded.game.object("playing.room1.tally").variable.at("hits") == 1);
+	CHECK(loaded.game.object("playing.hero").variable.at("score") == 2);
 }
 
 TEST_CASE("a scene's variables are read inside it by their plain names, and a piece can change its own", "[scenes]")
@@ -256,10 +256,10 @@ TEST_CASE("a scene's variables are read inside it by their plain names, and a pi
 	Loaded loaded(gameXml(states, {}, {}, box("bomb", 100, 0, "<y>pace</y>", "<variables><variable name=\"drop\"><multiply><value>pace</value><value>2</value></multiply></variable></variables>")));
 
 	CHECK(loaded.game.getVariable("playing.wave2.pace") == Approx(3));
-	CHECK(loaded.game.getObject("playing.wave1.bomb").velocity.y == Approx(1));
-	CHECK(loaded.game.getObject("playing.wave2.bomb").velocity.y == Approx(3));
-	CHECK(loaded.game.getObject("playing.wave2.bomb").variable.at("drop") == Approx(6));
-	CHECK(loaded.game.getObject("playing.wave3.bomb").variable.at("drop") == Approx(7));
+	CHECK(loaded.game.object("playing.wave1.bomb").velocity.y == Approx(1));
+	CHECK(loaded.game.object("playing.wave2.bomb").velocity.y == Approx(3));
+	CHECK(loaded.game.object("playing.wave2.bomb").variable.at("drop") == Approx(6));
+	CHECK(loaded.game.object("playing.wave3.bomb").variable.at("drop") == Approx(7));
 }
 
 TEST_CASE("a condition that names no object looks only at the current scene, and <enter> moves on", "[scenes][conditions]")
@@ -278,12 +278,12 @@ TEST_CASE("a condition that names no object looks only at the current scene, and
 
 	loaded.frames(2);
 	CHECK(loaded.game.currentScene("playing") == "playing.wave1");
-	for (const char* name : { "playing.wave1.aliens.1", "playing.wave1.aliens.2" }) { loaded.game.getObject(name).isVisible = false; }
+	for (const char* name : { "playing.wave1.aliens.1", "playing.wave1.aliens.2" }) { loaded.game.object(name).isVisible = false; }
 	loaded.frames(1);
 	CHECK(loaded.game.currentScene("playing") == "playing.wave2");
 	CHECK(loaded.game.getCurrentState().name == "playing");
 
-	for (const char* name : { "playing.wave2.aliens.1", "playing.wave2.aliens.2" }) { loaded.game.getObject(name).isVisible = false; }
+	for (const char* name : { "playing.wave2.aliens.1", "playing.wave2.aliens.2" }) { loaded.game.object(name).isVisible = false; }
 	loaded.frames(1);
 	CHECK(loaded.game.getCurrentState().name == "won");
 
@@ -291,7 +291,7 @@ TEST_CASE("a condition that names no object looks only at the current scene, and
 	CommandExecutor executor(loaded.game);
 	executor.executeInput(CmdReset{}, true);
 	CHECK(loaded.game.currentScene("playing") == "playing.wave1");
-	CHECK(loaded.game.getObject("playing.wave2.aliens.1").isVisible);
+	CHECK(loaded.game.object("playing.wave2.aliens.1").isVisible);
 }
 
 TEST_CASE("from= copies the conditions, timers and ways of the scene it is from; its own are added, or take the place of one of the same name", "[scenes][conditions]")
@@ -331,18 +331,18 @@ TEST_CASE("from= copies the conditions, timers and ways of the scene it is from;
 
 	// Wave 2's copy of the condition counts wave 2's aliens and goes by wave 2's way.
 	loaded.game.enterScene("playing.wave2");
-	for (const char* name : { "playing.wave2.aliens.1", "playing.wave2.aliens.2" }) { loaded.game.getObject(name).isVisible = false; }
+	for (const char* name : { "playing.wave2.aliens.1", "playing.wave2.aliens.2" }) { loaded.game.object(name).isVisible = false; }
 	loaded.frames(1);
 	CHECK(loaded.game.currentScene("playing") == "playing.wave3");
 	CHECK(loaded.game.getCurrentState().name == "playing");
 
 	// Wave 3's own "tick", in place of the copy: ten at a time.
-	const float ticks = loaded.game.getObject("playing.clock").variable.at("ticks");
+	const float ticks = loaded.game.object("playing.clock").variable.at("ticks");
 	loaded.frames(31);
-	CHECK(loaded.game.getObject("playing.clock").variable.at("ticks") == Approx(ticks + 10));
+	CHECK(loaded.game.object("playing.clock").variable.at("ticks") == Approx(ticks + 10));
 
 	// Wave 3's own condition, in place of the copy: it wins.
-	for (const char* name : { "playing.wave3.aliens.1", "playing.wave3.aliens.2" }) { loaded.game.getObject(name).isVisible = false; }
+	for (const char* name : { "playing.wave3.aliens.1", "playing.wave3.aliens.2" }) { loaded.game.object(name).isVisible = false; }
 	loaded.frames(1);
 	CHECK(loaded.game.getCurrentState().name == "won");
 }
@@ -361,7 +361,7 @@ TEST_CASE("a class, or a name every scene has, counts the scene in play; a name 
 	};
 	const auto clearRoom2 = [](Loaded& loaded)
 	{
-		for (const char* name : { "playing.room2.robots.1", "playing.room2.robots.2" }) { loaded.game.getObject(name).isVisible = false; }
+		for (const char* name : { "playing.room2.robots.1", "playing.room2.robots.2" }) { loaded.game.object(name).isVisible = false; }
 		loaded.frames(1);
 	};
 
@@ -389,7 +389,7 @@ TEST_CASE("a class, or a name every scene has, counts the scene in play; a name 
 	SECTION("one of them by its path")
 	{
 		Loaded loaded(game("<condition object=\"playing.room2.robots.2\"><remaining>0</remaining><push state=\"won\" /></condition>"));
-		loaded.game.getObject("playing.room2.robots.2").isVisible = false;
+		loaded.game.object("playing.room2.robots.2").isVisible = false;
 		loaded.frames(1);
 		CHECK(loaded.game.getCurrentState().name == "won");
 	}
@@ -404,8 +404,8 @@ TEST_CASE("<reset scene> puts back what started in it, and leaves the other scen
 
 	CommandExecutor executor(loaded.game);
 	executor.executeInput(CmdResetScene{ "playing.room1", {} }, true);
-	CHECK(loaded.game.getObject("playing.room1.rock").position.x == Approx(100));
-	CHECK(loaded.game.getObject("playing.room2.rock").position.x == Approx(130));
+	CHECK(loaded.game.object("playing.room1.rock").position.x == Approx(100));
+	CHECK(loaded.game.object("playing.room2.rock").position.x == Approx(130));
 	CHECK(loaded.game.currentScene("playing") == "playing.room2");
 }
 
@@ -421,8 +421,8 @@ TEST_CASE("what a state's own object carries goes along into the next scene, and
 	Loaded loaded(gameXml(states));
 
 	loaded.frames(2);
-	Object& hero_ = loaded.game.getObject("playing.hero");
-	Object& sword = loaded.game.getObject("playing.room1.sword");
+	Object& hero_ = loaded.game.object("playing.hero");
+	Object& sword = loaded.game.object("playing.room1.sword");
 	REQUIRE(loaded.game.carrying(hero_) == "playing.room1.sword");
 
 	const float held = sword.position.x - hero_.position.x;
@@ -460,7 +460,7 @@ TEST_CASE("a <hidden /> object still runs and collides: an exit", "[scenes][hidd
 		"</scenes>" + kSpace + "</state>";
 	Loaded loaded(gameXml(states));
 
-	const Object& door = loaded.game.getObject("playing.room1.exit");
+	const Object& door = loaded.game.object("playing.room1.exit");
 	CHECK_FALSE(door.isDrawn);
 	CHECK(loaded.game.isShown(door));
 	loaded.frames(60);
@@ -475,7 +475,7 @@ TEST_CASE("<show state> draws that state's objects still, underneath, without ru
 		"<state name=\"paused\"><objects>" + box("sign", 300, 300) + "</objects><shows><show state=\"playing\" /></shows>" + kSpace + "</state>";
 	Loaded loaded(gameXml(states));
 
-	Object& ball = loaded.game.getObject("playing.ball");
+	Object& ball = loaded.game.object("playing.ball");
 	loaded.frames(5);
 	CHECK_FALSE(loaded.game.isStill(ball));
 	loaded.game.pushState("paused");
@@ -483,8 +483,8 @@ TEST_CASE("<show state> draws that state's objects still, underneath, without ru
 	CHECK(ball.position.x == Approx(110));
 	CHECK_FALSE(loaded.game.isShown(ball));
 	CHECK(loaded.game.isStill(ball));
-	CHECK(loaded.game.isShown(loaded.game.getObject("paused.sign")));
-	CHECK_FALSE(loaded.game.isStill(loaded.game.getObject("marker")));
+	CHECK(loaded.game.isShown(loaded.game.object("paused.sign")));
+	CHECK_FALSE(loaded.game.isStill(loaded.game.object("marker")));
 }
 
 TEST_CASE("names that could mean two things, and takes of nothing, stop the load", "[scenes][errors]")
@@ -554,13 +554,13 @@ TEST_CASE("an empty <sprite name> is a look that draws nothing, and an object of
 		"<object name=\"note\"><sprite name=\"none\" /><sprite name=\"shown\"><rectangle><width>10</width><height>10</height></rectangle></sprite>"
 		"<position><x>40</x><y>50</y></position></object>"
 		"</objects>" + kSpace + "</state>"));
-	const Object& phase = loaded.game.getObject("playing.phase");
+	const Object& phase = loaded.game.object("playing.phase");
 	CHECK(phase.position.x == Approx(0));
 	CHECK(phase.position.y == Approx(0));
 	CHECK(phase.size.x == Approx(0));
 	CHECK(phase.size.y == Approx(0));
 	CHECK(phase.looks.all().size() == 2);
-	const Object& note = loaded.game.getObject("playing.note");
+	const Object& note = loaded.game.object("playing.note");
 	CHECK(note.size.x == Approx(0));
 	CHECK(note.position.x == Approx(40));
 
@@ -575,10 +575,10 @@ TEST_CASE("<left>, <right>, <top> and <bottom> put that side of the object on th
 		"<object name=\"start\"><sprite><rectangle><width>10</width><height>20</height></rectangle></sprite>"
 		"<position><x><left><offset>5</offset></left></x><y><top /></y></position></object>";
 	Loaded loaded(gameXml("<state name=\"playing\"><objects>" + at + "</objects>" + kSpace + "</state>"));
-	const Object& corner = loaded.game.getObject("playing.corner");
+	const Object& corner = loaded.game.object("playing.corner");
 	CHECK(corner.position.x == Approx(800 - 10 - 12));
 	CHECK(corner.position.y == Approx(600 - 20));
-	const Object& start = loaded.game.getObject("playing.start");
+	const Object& start = loaded.game.object("playing.start");
 	CHECK(start.position.x == Approx(5));
 	CHECK(start.position.y == Approx(0));
 
@@ -592,7 +592,7 @@ TEST_CASE("a game variable written with a dot stays that variable beside a state
 	// ball.radius is the game's; the playing state's ball is another thing.
 	Loaded loaded(gameXml("<state name=\"playing\"><objects>" + box("ball", 0, 0, "<x>ball.radius</x>") + "</objects>" + kSpace + "</state>",
 		{}, "<variable name=\"ball.radius\">4</variable>"));
-	CHECK(loaded.game.getObject("playing.ball").velocity.x == Approx(4));
+	CHECK(loaded.game.object("playing.ball").velocity.x == Approx(4));
 }
 
 TEST_CASE("a game whose states own every object has no <objects> of its own", "[scenes]")
@@ -604,7 +604,7 @@ TEST_CASE("a game whose states own every object has no <objects> of its own", "[
 	Loaded loaded(xml, backend);
 	REQUIRE(loaded.game.getCurrentObjects().size() == 1);
 	loaded.frames(5);
-	CHECK(loaded.game.getObject("ball").position.x == Approx(5));
+	CHECK(loaded.game.object("ball").position.x == Approx(5));
 }
 
 TEST_CASE("a scene's <ways> say where its <enter way> and <reset way> lead, so one shared door serves every room", "[scenes][ways]")
@@ -631,13 +631,13 @@ TEST_CASE("a scene's <ways> say where its <enter way> and <reset way> lead, so o
 	loaded.frames(30);
 	CHECK(loaded.game.currentScene("playing") == "playing.room2");
 	CHECK(loaded.game.wayLeadsTo("on") == "playing.room1");
-	const float rockLeft = loaded.game.getObject("playing.room1.rock").position.x;
+	const float rockLeft = loaded.game.object("playing.room1.rock").position.x;
 	CHECK(rockLeft > 500.0f);
 
 	// Into room2's door: back to room1, which starts again.
 	loaded.frames(40);
 	CHECK(loaded.game.currentScene("playing") == "playing.room1");
-	CHECK(loaded.game.getObject("playing.room1.rock").position.x < rockLeft);
+	CHECK(loaded.game.object("playing.room1.rock").position.x < rockLeft);
 
 	// From C++ too, and a way the current scene does not have goes nowhere.
 	CommandExecutor executor(loaded.game);
@@ -705,11 +705,11 @@ TEST_CASE("a state from= an earlier one is a copy of it with its own parts over 
 		"<state name=\"theend\" from=\"gameover\"><objects><object name=\"message\"><position><y>80</y></position></object></objects>"
 		"<inputs><input button=\"escape\"><pop /></input></inputs></state>"), backend);
 
-	Object& over = loaded.game.getObject("gameover.message");
+	Object& over = loaded.game.object("gameover.message");
 	CHECK(over.drawn.picture->color == "color.red");
 	CHECK(over.position.x == Approx(100));          // copied
 	CHECK(loaded.has("gameover.skull"));            // its own
-	Object& end = loaded.game.getObject("theend.message");
+	Object& end = loaded.game.object("theend.message");
 	CHECK(end.drawn.picture->color == "color.red");   // a copy of a copy
 	CHECK(end.position.y == Approx(80));
 	CHECK(loaded.has("theend.skull"));

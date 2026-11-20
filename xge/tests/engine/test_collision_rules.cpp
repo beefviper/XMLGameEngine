@@ -35,7 +35,7 @@ using namespace xge;
 TEST_CASE("a collision with no selector still matches anything", "[collision_rules]")
 {
 	Game game{ "descriptions/pong_min.xml" };
-	const Object& ball = game.getObject("ball");
+	const Object& ball = game.object("ball");
 
 	// pong_min.xml's ball: <collision><deflect>45</deflect></collision>
 	REQUIRE(ball.kind->collisionData.others.size() == 1);
@@ -46,7 +46,7 @@ TEST_CASE("a collision with no selector still matches anything", "[collision_rul
 TEST_CASE("a collision naming only a class is an object rule for that class", "[collision_rules]")
 {
 	Game game{ "descriptions/spaceinvaders.xml" };
-	const Object& bullet = game.getObject("bullet");
+	const Object& bullet = game.object("bullet");
 
 	// spaceinvaders.xml's bullet: <collision class="aliens"><die /></collision>,
 	// then the same for the shields, the bombs and the mystery ship
@@ -64,7 +64,7 @@ TEST_CASE("a bullet fired from the ship survives touching it", "[collision_rules
 	Game game{ "descriptions/spaceinvaders.xml" };
 	game.setCurrentState("playing");
 
-	Object& player = game.getObject("player");
+	Object& player = game.object("player");
 	Object& bullet = copies::spawned(game, "bullet");
 	player.size = { 50.0f, 50.0f };
 	bullet.size = { 8.0f, 8.0f };
@@ -88,7 +88,7 @@ TEST_CASE("a bullet is taken away on touching an alien", "[collision_rules]")
 	Game game{ "descriptions/spaceinvaders.xml" };
 	game.setCurrentState("playing");
 
-	Object& alien = game.getObject("aliens");
+	Object& alien = game.object("aliens");
 	Object& bullet = copies::spawned(game, "bullet");
 	alien.size = { 50.0f, 50.0f };
 	bullet.size = { 8.0f, 8.0f };
@@ -146,7 +146,7 @@ namespace
 		float after(int frames)
 		{
 			for (int i = 0; i < frames; ++i) { game->updateObjects(xge::kSixtieth); }
-			return game->getObject("ball").position.y;
+			return game->object("ball").position.y;
 		}
 	};
 }
@@ -268,7 +268,7 @@ TEST_CASE("an object put somewhere has moved: it touches what it is put on, with
 	Game game(path.string());
 	game.setCurrentState(0);
 	for (auto& object : game.getCurrentObjects()) { object.size = { 4.0f, 4.0f }; }
-	Object& a = game.getObject("a");
+	Object& a = game.object("a");
 
 	// Standing still apart: nothing.
 	game.updateObjects(xge::kSixtieth);
@@ -284,9 +284,9 @@ TEST_CASE("an object put somewhere has moved: it touches what it is put on, with
 	CHECK(a.variable.at("hits") == 1.0f);
 
 	// b put on a: b has moved, so the pair is looked at.
-	game.getObject("b").position = { 200.0f, 0.0f };
+	game.object("b").position = { 200.0f, 0.0f };
 	game.updateObjects(xge::kSixtieth);
-	game.getObject("b").position = { 100.0f, 50.0f };
+	game.object("b").position = { 100.0f, 50.0f };
 	game.updateObjects(xge::kSixtieth);
 	CHECK(a.variable.at("hits") == 2.0f);
 

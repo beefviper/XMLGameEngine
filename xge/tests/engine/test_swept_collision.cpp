@@ -64,9 +64,9 @@ TEST_CASE("every cell of a group has its own name", "[swept_collision]")
 	CHECK(names.count("aliens") == 0);
 
 	// Columns and rows count from 1, and follow where the cell is.
-	const Object& first = game.getObject("aliens.1.1");
-	const Object& lastColumn = game.getObject("aliens.11.1");
-	const Object& lastRow = game.getObject("aliens.1.5");
+	const Object& first = game.object("aliens.1.1");
+	const Object& lastColumn = game.object("aliens.11.1");
+	const Object& lastRow = game.object("aliens.1.5");
 	CHECK(lastColumn.position.x > first.position.x);
 	CHECK(lastColumn.position.y == first.position.y);
 	CHECK(lastRow.position.y > first.position.y);
@@ -77,9 +77,9 @@ TEST_CASE("a plain object keeps its name, and the group's name finds its first c
 {
 	Game game{ invaders_fixture::path() };
 
-	CHECK(game.getObject("player").name == "player");
-	CHECK(game.getObject("aliens").name == "aliens.1.1"); // the first cell
-	CHECK(game.tryGetObject("nothing.1.1") == nullptr);
+	CHECK(game.object("player").name == "player");
+	CHECK(game.object("aliens").name == "aliens.1.1"); // the first cell
+	CHECK(game.find("nothing.1.1") == nullptr);
 }
 
 TEST_CASE("a state that shows a group shows every cell of it", "[swept_collision]")
@@ -87,10 +87,10 @@ TEST_CASE("a state that shows a group shows every cell of it", "[swept_collision
 	Game game{ invaders_fixture::path() };
 	game.setCurrentState("playing");
 
-	CHECK(game.isShown(game.getObject("aliens.6.3")));
+	CHECK(game.isShown(game.object("aliens.6.3")));
 
 	game.setCurrentState("paused");
-	CHECK_FALSE(game.isShown(game.getObject("aliens.6.3")));
+	CHECK_FALSE(game.isShown(game.object("aliens.6.3")));
 }
 
 TEST_CASE("a bullet moving faster than an alien is tall still hits it, and only that alien dies", "[swept_collision]")
@@ -99,7 +99,7 @@ TEST_CASE("a bullet moving faster than an alien is tall still hits it, and only 
 	game.setCurrentState("playing");
 	measureInvaders(game);
 
-	Object& target = game.getObject("aliens.4.5"); // bottom row: nothing below it to run into first
+	Object& target = game.object("aliens.4.5"); // bottom row: nothing below it to run into first
 	Object& bullet = ::bullet(game);
 
 	// Just below the bottom row, in line with the fourth column, moving 90 px
@@ -128,8 +128,8 @@ TEST_CASE("the bullet also hits a cell in the middle of the block, not just the 
 	game.setCurrentState("playing");
 	measureInvaders(game);
 
-	Object& front = game.getObject("aliens.6.5");
-	Object& behind = game.getObject("aliens.6.4");
+	Object& front = game.object("aliens.6.5");
+	Object& behind = game.object("aliens.6.4");
 	Object& bullet = ::bullet(game);
 
 	bullet.position = { front.position.x + 21.0f, front.position.y + 300.0f };
@@ -148,8 +148,8 @@ TEST_CASE("the rest of the step is played after a bounce", "[swept_collision]")
 	Game game{ "descriptions/pong.xml" };
 	game.setCurrentState("playing");
 
-	Object& ball = game.getObject("ball");
-	Object& paddle = game.getObject("paddle1");
+	Object& ball = game.object("ball");
+	Object& paddle = game.object("paddle1");
 	ball.size = { 20.0f, 20.0f };
 	paddle.size = { 30.0f, 150.0f };
 	paddle.position = { 100.0f, 300.0f };
@@ -171,8 +171,8 @@ TEST_CASE("a ball fast enough to pass the paddle in one step bounces off it inst
 	Game game{ "descriptions/pong.xml" };
 	game.setCurrentState("playing");
 
-	Object& ball = game.getObject("ball");
-	Object& paddle = game.getObject("paddle1");
+	Object& ball = game.object("ball");
+	Object& paddle = game.object("paddle1");
 	ball.size = { 20.0f, 20.0f };
 	paddle.size = { 30.0f, 150.0f };
 	paddle.position = { 100.0f, 300.0f };
@@ -193,7 +193,7 @@ TEST_CASE("a bullet is a piece: fired, a copy leaves the ship at its own velocit
 	game.setCurrentState("playing");
 	measureInvaders(game);
 
-	Object& player = game.getObject("player");
+	Object& player = game.object("player");
 	CommandExecutor executor(game);
 
 	// Not fired: no bullet in the game.
@@ -204,7 +204,7 @@ TEST_CASE("a bullet is a piece: fired, a copy leaves the ship at its own velocit
 	executor.executeInput(Command{ CmdTriggerAction{ "player", "gun" } }, true);
 	game.settleSpawns();
 	REQUIRE(copies::count(game, "bullet") == 1);
-	Object& bullet = game.getObject("bullet.1");
+	Object& bullet = game.object("bullet.1");
 	CHECK(bullet.collisionsOn);
 	CHECK(bullet.velocity.y == -720.0f);
 	CHECK(bullet.position.y == player.position.y);
@@ -223,7 +223,7 @@ TEST_CASE("a bullet is a piece: fired, a copy leaves the ship at its own velocit
 	executor.executeInput(Command{ CmdTriggerAction{ "player", "gun" } }, true);
 	game.settleSpawns();
 	CHECK(copies::count(game, "bullet") == 1);
-	CHECK(game.getObject("bullet.1").position.y == player.position.y);
+	CHECK(game.object("bullet.1").position.y == player.position.y);
 }
 
 TEST_CASE("a full reset takes away a bullet in flight and brings back a dead alien", "[swept_collision]")
@@ -231,7 +231,7 @@ TEST_CASE("a full reset takes away a bullet in flight and brings back a dead ali
 	Game game{ invaders_fixture::path() };
 	game.setCurrentState("playing");
 
-	Object& alien = game.getObject("aliens.2.2");
+	Object& alien = game.object("aliens.2.2");
 	CommandExecutor executor(game);
 
 	executor.executeInput(Command{ CmdTriggerAction{ "player", "gun" } }, true);

@@ -84,7 +84,7 @@ namespace
 			}
 		}
 
-		Object& object(const std::string& name) { return game.getObject(name); }
+		Object& object(const std::string& name) { return game.object(name); }
 		Object& hero() { return object("hero"); }
 		bool carrying(const std::string& name) { return game.carrying(hero()) == object(name).name; }
 
@@ -234,7 +234,7 @@ TEST_CASE("a dragon chases the hero and eats him; the sword slays it", "[adventu
 		play.put("yorgle", 350, 200);
 		play.frames(120);
 		CHECK(play.state() == "over");
-		CHECK(play.game.getObject("over.message").lookName() == "lost");
+		CHECK(play.game.object("over.message").lookName() == "lost");
 	}
 	{
 		// The sword lying between them: the dragon runs into it.
@@ -350,7 +350,7 @@ TEST_CASE("the chalice carried from the dungeon into the gold castle's hall wins
 	play.put("hero", 318, 230);
 	play.hold(KeyCode::Up, 60);
 	CHECK(play.state() == "over");
-	CHECK(play.game.getObject("over.message").lookName() == "won");
+	CHECK(play.game.object("over.message").lookName() == "won");
 	CHECK(play.game.isStill(play.hero()));
 
 	play.tap(KeyCode::Space);
