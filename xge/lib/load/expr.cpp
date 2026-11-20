@@ -160,7 +160,7 @@ namespace xge
 
 	}
 
-	void game_expr::init(const WindowDesc& windowDesc,
+	void Evaluator::init(const WindowDesc& windowDesc,
 		const std::vector<std::pair<std::string, RawValue>>& rawVariables, std::map<std::string, float>& variables,
 		std::vector<RawState>& rawStates, std::vector<State>& states,
 		std::vector<RawObject>& rawObjects, std::vector<Object>& objects,
@@ -187,7 +187,7 @@ namespace xge
 		shareKinds(objects);
 	}
 
-	void game_expr::shareKinds(std::vector<Object>& objects)
+	void Evaluator::shareKinds(std::vector<Object>& objects)
 	{
 		// Each was made and checked for itself; from here the first of its
 		// kind's is every one's.
@@ -203,7 +203,7 @@ namespace xge
 
 	// init's names: the window's edges, the game's variables, every object's
 	// variables and timers, and the live numbers, as names a text reads.
-	void game_expr::nameNumbers(const WindowDesc& windowDesc, const std::vector<std::pair<std::string, RawValue>>& rawVariables, std::map<std::string, float>& variables, std::vector<RawObject>& rawObjects)
+	void Evaluator::nameNumbers(const WindowDesc& windowDesc, const std::vector<std::pair<std::string, RawValue>>& rawVariables, std::map<std::string, float>& variables, std::vector<RawObject>& rawObjects)
 	{
 		// the window's edges and middles, then the game's variables, as names a text reads
 		calc.constant("window.top", 0);
@@ -319,7 +319,7 @@ namespace xge
 
 	// init's objects: every sprite measured once (its size a name), the
 	// cells of groups laid out, then each object made, groups in lockstep.
-	void game_expr::makeObjects(std::vector<RawObject>& rawObjects, std::vector<Object>& objects)
+	void Evaluator::makeObjects(std::vector<RawObject>& rawObjects, std::vector<Object>& objects)
 	{
 		// Every object's size as name.width / name.height, so an expression can
 		// place an object by its own size (or another's) the same way it reads
@@ -408,7 +408,7 @@ namespace xge
 
 	// init's tests on collision rules, edge guards and actions' conditions,
 	// once every object they can name is made.
-	void game_expr::makeRuleTests(const std::vector<RawObject>& rawObjects, std::vector<Object>& objects)
+	void Evaluator::makeRuleTests(const std::vector<RawObject>& rawObjects, std::vector<Object>& objects)
 	{
 		// The checks of the objects' collision rules, now that every object
 		// they can name is made.
@@ -468,7 +468,7 @@ namespace xge
 	}
 
 	// init's states: each one's inputs, conditions, timers and scenes.
-	void game_expr::makeStates(std::vector<RawState>& rawStates, std::vector<State>& states, const std::vector<Object>& objects)
+	void Evaluator::makeStates(std::vector<RawState>& rawStates, std::vector<State>& states, const std::vector<Object>& objects)
 	{
 		for (auto& rawState : rawStates)
 		{
@@ -551,7 +551,7 @@ namespace xge
 	}
 
 	// init's sounds, after everything else so that a length can use any variable.
-	void game_expr::makeSounds(const std::vector<RawSound>& rawSounds, std::vector<SoundDesc>& sounds)
+	void Evaluator::makeSounds(const std::vector<RawSound>& rawSounds, std::vector<SoundDesc>& sounds)
 	{
 		// The sounds, worked out after everything else so that a length can use
 		// any variable.
@@ -568,7 +568,7 @@ namespace xge
 
 	// init's paths, worked out last too, and each step's commands about
 	// its follower made for each object that can fly it.
-	void game_expr::makePaths(const std::vector<RawPath>& rawPaths, std::map<std::string, Path>& paths, const std::vector<State>& states, const std::vector<Object>& objects)
+	void Evaluator::makePaths(const std::vector<RawPath>& rawPaths, std::map<std::string, Path>& paths, const std::vector<State>& states, const std::vector<Object>& objects)
 	{
 		// The paths, worked out last too: a step's numbers can use any variable.
 		for (const RawPath& rawPath : rawPaths)
@@ -651,7 +651,7 @@ namespace xge
 		}
 	}
 
-	Object game_expr::spawnObject(RawObject& raw, const Object& from)
+	Object Evaluator::spawnObject(RawObject& raw, const Object& from)
 	{
 		// What its rules and others' read of it, under its own name, as init
 		// makes them known for every object the file has. A name used
@@ -696,7 +696,7 @@ namespace xge
 		return made;
 	}
 
-	SoundDesc game_expr::processSound(const RawSound& raw)
+	SoundDesc Evaluator::processSound(const RawSound& raw)
 	{
 		const std::string where = "sound '" + raw.name + "'";
 
@@ -795,7 +795,7 @@ namespace xge
 	}
 
 	// A <hitbox> worked out for `object` (its picture already made).
-	Hitbox game_expr::makeHitbox(const RawHitbox& raw, const Object& object, const std::string& where)
+	Hitbox Evaluator::makeHitbox(const RawHitbox& raw, const Object& object, const std::string& where)
 	{
 		if (object.kind->collisionData.type == CollisionType::Pixel)
 		{
@@ -843,7 +843,7 @@ namespace xge
 		return hitbox;
 	}
 
-	float game_expr::evaluateStart(const RawValue& value, const std::string& where)
+	float Evaluator::evaluateStart(const RawValue& value, const std::string& where)
 	{
 		if (!value.live) { return evaluate(value, where); }
 		// It may read where things are (reading 0 while loading): the game
@@ -863,7 +863,7 @@ namespace xge
 		}
 	}
 
-	float game_expr::evaluate(const RawValue& value, const std::string& where)
+	float Evaluator::evaluate(const RawValue& value, const std::string& where)
 	{
 		switch (value.kind)
 		{
@@ -907,7 +907,7 @@ namespace xge
 		return evaluateExpression(value.text, where);
 	}
 
-	bool game_expr::isLate(const std::string& name) const
+	bool Evaluator::isLate(const std::string& name) const
 	{
 		if (objectVariables.count(name)) { return true; }
 
@@ -924,7 +924,7 @@ namespace xge
 		return false;
 	}
 
-	game_expr::Answer game_expr::evaluateOperation(const RawOperation& operation, const std::string& where)
+	Evaluator::Answer Evaluator::evaluateOperation(const RawOperation& operation, const std::string& where)
 	{
 		const std::string here = where + " > <" + operation.op + ">";
 
@@ -1009,7 +1009,7 @@ namespace xge
 		return answer;
 	}
 
-	float game_expr::evaluateExpression(const std::string& text, const std::string& where)
+	float Evaluator::evaluateExpression(const std::string& text, const std::string& where)
 	{
 		// Each text is compiled once: a value worked out while the game runs
 		// (a timer starting over, a command made again each time it runs)
@@ -1078,12 +1078,12 @@ namespace xge
 		return value;
 	}
 
-	void game_expr::bind(const std::string& name, float& value)
+	void Evaluator::bind(const std::string& name, float& value)
 	{
 		unbound.emplace(Calc::nameOf(name), &value);
 	}
 
-	const std::vector<std::string>& game_expr::namesIn(const std::string& text) const
+	const std::vector<std::string>& Evaluator::namesIn(const std::string& text) const
 	{
 		auto found = namesInText.find(text);
 		if (found == namesInText.end())
@@ -1093,7 +1093,7 @@ namespace xge
 		return found->second;
 	}
 
-	bool game_expr::namesLive(const RawValue& value) const
+	bool Evaluator::namesLive(const RawValue& value) const
 	{
 		for (const std::string* text : value.expressions())
 		{
@@ -1107,7 +1107,7 @@ namespace xge
 	}
 
 
-	std::vector<Timer> game_expr::processTimers(const std::vector<RawTimer>& raw, const std::string& where)
+	std::vector<Timer> Evaluator::processTimers(const std::vector<RawTimer>& raw, const std::string& where)
 	{
 		std::vector<Timer> timers;
 		const std::string here = where + " > <timer>";
@@ -1153,7 +1153,7 @@ namespace xge
 		return timers;
 	}
 
-	std::vector<Command> game_expr::pathCommandsFor(const PathStep& step, const std::string& follower, const std::string& where)
+	std::vector<Command> Evaluator::pathCommandsFor(const PathStep& step, const std::string& follower, const std::string& where)
 	{
 		if (!step.ownRaw) { return {}; }
 		std::vector<RawCommand> own = *step.ownRaw;
@@ -1161,7 +1161,7 @@ namespace xge
 		return processCommands(own, where);
 	}
 
-	std::vector<Command> game_expr::processCommands(const std::vector<RawCommand>& raw, const std::string& where)
+	std::vector<Command> Evaluator::processCommands(const std::vector<RawCommand>& raw, const std::string& where)
 	{
 		std::vector<Command> commands;
 		commandValues = true;
@@ -1226,7 +1226,7 @@ namespace xge
 		return commands;
 	}
 
-	void game_expr::setObjectSize(const std::string& name, const Vector2f& size)
+	void Evaluator::setObjectSize(const std::string& name, const Vector2f& size)
 	{
 		if (auto it = objectSizes.find(name); it != objectSizes.end())
 		{
@@ -1234,7 +1234,7 @@ namespace xge
 		}
 	}
 
-	std::vector<std::string> game_expr::sizeDependenciesOf(const RawObject& rawObject) const
+	std::vector<std::string> Evaluator::sizeDependenciesOf(const RawObject& rawObject) const
 	{
 		std::vector<std::string> dependencies;
 

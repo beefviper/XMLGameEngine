@@ -3,7 +3,7 @@
 // author: beefviper
 // date: Nov 15, 2026
 //
-// A <condition> made ready when the game loads (game_expr::makeTest,
+// A <condition> made ready when the game loads (Evaluator::makeTest,
 // makeCondition): its test, checked against the objects it names, and its
 // commands, made for each object it matches when they name self or others.
 
@@ -100,12 +100,12 @@ namespace xge
 
 	// What a <condition> tests, made ready (with its <all> or
 	// <any>'s checks, each made the same way).
-	Condition game_expr::makeTest(const RawCondition& rawCondition, const std::string& where, const std::string& owner, const std::vector<Object>& objects)
+	Condition Evaluator::makeTest(const RawCondition& rawCondition, const std::string& where, const std::string& owner, const std::vector<Object>& objects)
 	{
 		return onLine(rawCondition.line, [&] { return makeTestHere(rawCondition, where, owner, objects); });
 	}
 
-	Condition game_expr::makeTestHere(const RawCondition& rawCondition, const std::string& where, const std::string& owner, const std::vector<Object>& objects)
+	Condition Evaluator::makeTestHere(const RawCondition& rawCondition, const std::string& where, const std::string& owner, const std::vector<Object>& objects)
 	{
 		Condition condition;
 		condition.line = rawCondition.line;
@@ -264,7 +264,7 @@ namespace xge
 
 	// makeTestHere's checks: what a test names (what it sees and what is in
 	// the way, a look, a distance, a variable) is something the game has.
-	void game_expr::checkTestNames(const RawCondition& rawCondition, const Condition& condition, const std::string& where, const std::string& owner, const std::vector<Object>& objects)
+	void Evaluator::checkTestNames(const RawCondition& rawCondition, const Condition& condition, const std::string& where, const std::string& owner, const std::vector<Object>& objects)
 	{
 		// <sees>: what is looked for is there, and so is each class in the way.
 		if (!condition.sees.empty() && !findObject(objects, condition.sees))
@@ -339,7 +339,7 @@ namespace xge
 	// self or others, its commands for each object it may match (the
 	// last test of an <all>'s, as a condition in a condition is), and
 	// they run for each one that holds.
-	Condition game_expr::makeConditionHere(const RawCondition& rawCondition, const std::string& where, const std::string& owner, const std::string& stateName, const std::vector<Object>& objects)
+	Condition Evaluator::makeConditionHere(const RawCondition& rawCondition, const std::string& where, const std::string& owner, const std::string& stateName, const std::vector<Object>& objects)
 	{
 		Condition condition = makeTest(rawCondition, where, owner, objects);
 		std::vector<RawCommand> probe = rawCondition.commands;
@@ -382,7 +382,7 @@ namespace xge
 		condition.commands = processCommands(once, where);
 		return condition;
 	}
-	Condition game_expr::makeCondition(const RawCondition& rawCondition, const std::string& where, const std::string& owner, const std::string& stateName, const std::vector<Object>& objects)
+	Condition Evaluator::makeCondition(const RawCondition& rawCondition, const std::string& where, const std::string& owner, const std::string& stateName, const std::vector<Object>& objects)
 	{
 		return onLine(rawCondition.line, [&] { return makeConditionHere(rawCondition, where, owner, stateName, objects); });
 	}

@@ -3,7 +3,7 @@
 // author: beefviper
 // date: Nov 15, 2026
 //
-// One object made from what the file says of it (game_expr::makeObject),
+// One object made from what the file says of it (Evaluator::makeObject),
 // in named steps: its looks and picture, names, numbers, ways of moving,
 // timers, board-game moves, holder, place and collisions, then actions.
 
@@ -20,7 +20,7 @@
 
 namespace xge
 {
-	Object game_expr::makeObject(RawObject& rawObject, const FirstPass& first, Vector2f cellOffset, int thisLockstep)
+	Object Evaluator::makeObject(RawObject& rawObject, const FirstPass& first, Vector2f cellOffset, int thisLockstep)
 	{
 		const std::string where = "object '" + rawObject.name + "'";
 		struct Self
@@ -76,7 +76,7 @@ namespace xge
 
 	// makeObject's looks: each named <sprite> or <animation> made, the first the
 	// very picture it starts with, and where each once look goes when it ends.
-	std::vector<Object::Look> game_expr::buildLooks(RawObject& rawObject, const FirstPass& first, const HeldPicture& picture, const std::string& where)
+	std::vector<Object::Look> Evaluator::buildLooks(RawObject& rawObject, const FirstPass& first, const HeldPicture& picture, const std::string& where)
 	{
 		std::vector<Object::Look> looks;
 		if (first.looks)
@@ -142,7 +142,7 @@ namespace xge
 
 	// makeObject's picture: the sprite it starts as, its animation, and a
 	// text's live pieces.
-	void game_expr::buildSprite(RawObject& rawObject, const FirstPass& first, const HeldPicture& picture, float animationSeconds, Object& object, const std::string& where)
+	void Evaluator::buildSprite(RawObject& rawObject, const FirstPass& first, const HeldPicture& picture, float animationSeconds, Object& object, const std::string& where)
 	{
 		object.drawn.picture = picture;
 		object.drawn.bitmap = first.bitmap;
@@ -174,7 +174,7 @@ namespace xge
 
 	// makeObject's names: its group, class and owners, and whether it is
 	// drawn, seen and there.
-	void game_expr::buildNames(RawObject& rawObject, Object& object)
+	void Evaluator::buildNames(RawObject& rawObject, Object& object)
 	{
 		object.groupName = Name::of(rawObject.groupName);
 		object.outerGroups = NameStore::program().listOf(rawObject.outerGroups);
@@ -202,7 +202,7 @@ namespace xge
 
 	// makeObject's numbers: its variables, then where it starts, what it
 	// follows, its velocity, acceleration and heading.
-	void game_expr::buildNumbers(RawObject& rawObject, Object& object, Vector2f cellOffset, const std::vector<std::string>& positionSizeDependencies, const std::string& where)
+	void Evaluator::buildNumbers(RawObject& rawObject, Object& object, Vector2f cellOffset, const std::vector<std::string>& positionSizeDependencies, const std::string& where)
 	{
 		// Its variables first, so its position and velocity can use them
 		// (a serve drawn as an angle: its speed times the cosine of its angle).
@@ -269,7 +269,7 @@ namespace xge
 	// A <drag> or <grip>, written as a half-life (the seconds to lose half
 	// the speed; 0: at once), as the rate its speed is lost at each second:
 	// kept over t is e to the -rate t; infinite, all of it at once.
-	float game_expr::lossRate(float written, const std::string& what) const
+	float Evaluator::lossRate(float written, const std::string& what) const
 	{
 		if (!(written >= 0.0f)) { throw std::runtime_error(what + " is " + formatDisplayNumber(written) + "; expected a half-life in seconds, 0 or more (0: at once)"); }
 		return written == 0.0f ? std::numeric_limits<float>::infinity() : std::log(2.0f) / written;
@@ -277,7 +277,7 @@ namespace xge
 
 	// makeObject's ways of moving: drag, surface, friction, mass, pulls,
 	// seeking, light and dark, altitude, a tether and which way it faces.
-	void game_expr::buildMotion(RawObject& rawObject, Object& object, const std::string& where)
+	void Evaluator::buildMotion(RawObject& rawObject, Object& object, const std::string& where)
 	{
 		if (rawObject.rawDrag)
 		{
@@ -390,7 +390,7 @@ namespace xge
 	}
 
 	// makeObject's timers, a named one's time left a number of its own.
-	void game_expr::buildTimers(RawObject& rawObject, Object& object, const std::string& where)
+	void Evaluator::buildTimers(RawObject& rawObject, Object& object, const std::string& where)
 	{
 		object.kind->timers = processTimers(rawObject.timers, where);
 		if (!object.kind->timers.empty()) { parts->clocks.add(object.id, parts->orderOf(object.id), std::vector<Timer::Clock>(object.kind->timers.size())); }
@@ -407,7 +407,7 @@ namespace xge
 
 	// makeObject's looks given it, the first one's animation, the look for
 	// each way it moves (<poses>) and for where what it is joined to lies.
-	void game_expr::buildLookParts(RawObject& rawObject, Object& object, const std::vector<Object::Look>& looks, const std::string& where)
+	void Evaluator::buildLookParts(RawObject& rawObject, Object& object, const std::vector<Object::Look>& looks, const std::string& where)
 	{
 		object.looks.set->all = looks;
 
@@ -487,7 +487,7 @@ namespace xge
 	}
 
 	// makeObject's board-game moves and marks, each set's look found.
-	void game_expr::buildMoves(RawObject& rawObject, Object& object, const std::vector<Object::Look>& looks, const std::string& where)
+	void Evaluator::buildMoves(RawObject& rawObject, Object& object, const std::vector<Object::Look>& looks, const std::string& where)
 	{
 		// A board game piece's moves, each set's look found.
 		for (const RawObject::RawMoveSet& rawSet : rawObject.moveSets)
@@ -547,7 +547,7 @@ namespace xge
 	}
 
 	// makeObject's holder (<holds>), hand, held item and turns.
-	void game_expr::buildHolder(RawObject& rawObject, Object& object, std::uint64_t order, const std::string& where)
+	void Evaluator::buildHolder(RawObject& rawObject, Object& object, std::uint64_t order, const std::string& where)
 	{
 		// Holders: a holder's rules, a hand, a held member.
 		if (rawObject.holder.is)
@@ -598,7 +598,7 @@ namespace xge
 
 	// makeObject's mirror, grip, timers' looks, its tile on a map, a
 	// maze's walls and its pivot.
-	void game_expr::buildPlace(RawObject& rawObject, Object& object, const std::vector<Object::Look>& looks, const std::string& where)
+	void Evaluator::buildPlace(RawObject& rawObject, Object& object, const std::vector<Object::Look>& looks, const std::string& where)
 	{
 		if (!rawObject.mirror.empty())
 		{
@@ -726,7 +726,7 @@ namespace xge
 
 	// makeObject's collisions: on or off, the kind, solid pixels, hitboxes
 	// (its own and each frame's), its edge rules and its rules with others.
-	void game_expr::buildCollisions(RawObject& rawObject, Object& object, const std::vector<Object::Look>& looks, int thisLockstep, const std::string& where)
+	void Evaluator::buildCollisions(RawObject& rawObject, Object& object, const std::vector<Object::Look>& looks, int thisLockstep, const std::string& where)
 	{
 		object.collisionsOn = rawObject.rawCollisionData.enabled;
 		startFor(object).isVisible = object.isVisible;
@@ -834,7 +834,7 @@ namespace xge
 	}
 
 	// makeObject's actions.
-	void game_expr::buildActions(RawObject& rawObject, Object& object, const std::string& where)
+	void Evaluator::buildActions(RawObject& rawObject, Object& object, const std::string& where)
 	{
 		for (auto& rawAction : rawObject.action)
 		{

@@ -37,14 +37,14 @@ namespace xge
 	// Whether a text sprite has a <number> or a <letter> among its pieces.
 	bool showsNumbers(const RawSprite& sprite);
 
-	class game_expr
+	class Evaluator
 	{
 	public:
-		game_expr() = default;
-		game_expr(game_expr&&) noexcept = default;
-		game_expr& operator=(game_expr&&) noexcept = default;
-		game_expr(const game_expr&) = delete;
-		game_expr& operator=(const game_expr&) = delete;
+		Evaluator() = default;
+		Evaluator(Evaluator&&) noexcept = default;
+		Evaluator& operator=(Evaluator&&) noexcept = default;
+		Evaluator(const Evaluator&) = delete;
+		Evaluator& operator=(const Evaluator&) = delete;
 
 		// Fills `variables` from rawVariables (in order, so a variable's value
 		// can use the ones declared before it), then builds every object, state

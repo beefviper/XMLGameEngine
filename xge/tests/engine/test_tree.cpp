@@ -61,8 +61,8 @@ namespace
 
 	struct SameSeed
 	{
-		SameSeed() { game_expr::fixRandomSeed(20261119u); }
-		~SameSeed() { game_expr::fixRandomSeed(std::nullopt); }
+		SameSeed() { Evaluator::fixRandomSeed(20261119u); }
+		~SameSeed() { Evaluator::fixRandomSeed(std::nullopt); }
 	};
 
 	std::vector<std::string> printed(Game&& game)

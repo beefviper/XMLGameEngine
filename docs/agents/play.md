@@ -10,7 +10,7 @@ Tips for changing values, objects, frames, touches, spawning and loading. Back t
 - A value's text is one number or one name (`load/calc`). Arithmetic or a function call in text stops the load: write an operation (`<subtract>`, `<smallest>`, ...). `window.width` is not a name (`window.right` is).
 - Live numbers are rows of `liveParts` (`game/object.cpp`); a new one is one row.
 - A new operation is a row in `operationShape` (`game/command.cpp`), a case in `evaluateOperation` (`load/expr.cpp`) and the schema types. Each `Answer` has a `late` flag for values not final while loading; keep it.
-- A text is compiled once (`game_expr::compiled`); a name is bound into `calc` only when first read. There is no second expression system.
+- A text is compiled once (`Evaluator::compiled`); a name is bound into `calc` only when first read. There is no second expression system.
 
 ## Objects, states and scenes
 
@@ -48,7 +48,7 @@ Tips for changing values, objects, frames, touches, spawning and loading. Back t
 
 ## Caches
 
-Each rests on something that never changes while a game runs: `FrameRules::partners` and `mazeGrid`; `find`'s answers and `matching`; `game_expr::compiled`; `isShown`, kept until `stageChanged()`. Anything new that changes the state stack, a scene or an object's owner calls `stageChanged()`.
+Each rests on something that never changes while a game runs: `FrameRules::partners` and `mazeGrid`; `find`'s answers and `matching`; `Evaluator::compiled`; `isShown`, kept until `stageChanged()`. Anything new that changes the state stack, a scene or an object's owner calls `stageChanged()`.
 
 `xgetest-long "[speed]"` prints every game's load and frame times to compare builds.
 

@@ -48,8 +48,8 @@ namespace
 	// Each library's copy draws its <random>s from the same seed.
 	struct SameSeed
 	{
-		SameSeed() { game_expr::fixRandomSeed(20261019u); }
-		~SameSeed() { game_expr::fixRandomSeed(std::nullopt); }
+		SameSeed() { Evaluator::fixRandomSeed(20261019u); }
+		~SameSeed() { Evaluator::fixRandomSeed(std::nullopt); }
 	};
 
 	void loadsTheSame(const std::string& game)

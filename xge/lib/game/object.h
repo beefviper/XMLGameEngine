@@ -1149,7 +1149,7 @@ namespace xge
 	// What the objects of one kind have alike and never change while they
 	// play (their rules, actions and timers): the members of a <group>, or
 	// a piece and the copies spawned of it (RawObject::kind). Made for each object as it loads, checked
-	// for each, then shared by the kind (game_expr::shareKinds).
+	// for each, then shared by the kind (Evaluator::shareKinds).
 	struct Kind
 	{
 		CollisionData collisionData;
@@ -1897,7 +1897,7 @@ namespace xge
 
 			// <grip>: how fast its speed closes on the velocity its held moves
 			// ask for, as a rate (kept over t is e to the -grip t; see
-			// game_expr::lossRate). Infinite, the default: at once. Finite, it
+			// Evaluator::lossRate). Infinite, the default: at once. Finite, it
 			// slides into a walk and out of one.
 			float grip{ std::numeric_limits<float>::infinity() };
 

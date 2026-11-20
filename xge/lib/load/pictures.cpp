@@ -4,7 +4,7 @@
 // date: Nov 15, 2026
 //
 // Pictures made when the game loads: a sprite's Picture and Bitmap
-// (game_expr::buildPicture), a text's pieces, animation frames and their
+// (Evaluator::buildPicture), a text's pieces, animation frames and their
 // times, flipped copies, palettes in other styles, and where the cells of
 // a group laid out in columns and rows go.
 
@@ -72,7 +72,7 @@ namespace xge
 		}
 	}
 
-	void game_expr::makePalettes(const std::vector<RawObject>& rawObjects, std::vector<Object>& objects, const std::map<std::string, std::vector<std::string>>& wanted)
+	void Evaluator::makePalettes(const std::vector<RawObject>& rawObjects, std::vector<Object>& objects, const std::map<std::string, std::vector<std::string>>& wanted)
 	{
 		for (Object& object : objects)
 		{
@@ -135,7 +135,7 @@ namespace xge
 		}
 	}
 
-	std::vector<TextPiece> game_expr::textPieces(const RawSprite& sprite, const std::string& where, const RawObject* self)
+	std::vector<TextPiece> Evaluator::textPieces(const RawSprite& sprite, const std::string& where, const RawObject* self)
 	{
 		std::vector<TextPiece> pieces;
 		for (const RawTextPiece& raw : sprite.text)
@@ -199,7 +199,7 @@ namespace xge
 		}
 	}
 
-	Picture game_expr::buildPicture(const RawSprite& sprite, const std::string& where,
+	Picture Evaluator::buildPicture(const RawSprite& sprite, const std::string& where,
 		PictureId* bitmap, std::shared_ptr<const Turnable>* turnable, const RawObject* self)
 	{
 		const std::string color = sprite.color.empty() ? "color.white" : sprite.color;
@@ -326,7 +326,7 @@ namespace xge
 
 	// buildPicture's steps 1 to 3 for a line, polygon, cell, svg or bitmap:
 	// read, drawn into a Bitmap and flipped; a line's segments kept to turn.
-	PictureId game_expr::drawPicture(const RawSprite& sprite, const std::string& where, const std::string& color, const std::shared_ptr<Turnable>& kept)
+	PictureId Evaluator::drawPicture(const RawSprite& sprite, const std::string& where, const std::string& color, const std::shared_ptr<Turnable>& kept)
 	{
 		PictureId drawn;
 		// 3. Flipped.
@@ -471,7 +471,7 @@ namespace xge
 		}
 		return drawn;
 	}
-	std::vector<PictureId> game_expr::buildAnimationBitmaps(const std::vector<RawSprite>& frames, const std::string& where,
+	std::vector<PictureId> Evaluator::buildAnimationBitmaps(const std::vector<RawSprite>& frames, const std::string& where,
 		std::vector<std::shared_ptr<const Turnable>>* turnables)
 	{
 		std::vector<PictureId> pictures;
@@ -508,7 +508,7 @@ namespace xge
 		return pictures;
 	}
 
-	std::shared_ptr<const std::map<PictureId, PictureId>> game_expr::flipsOf(const Object& object)
+	std::shared_ptr<const std::map<PictureId, PictureId>> Evaluator::flipsOf(const Object& object)
 	{
 		auto flips = std::make_shared<std::map<PictureId, PictureId>>();
 		const auto add = [&](const PictureId& picture)
@@ -538,7 +538,7 @@ namespace xge
 		return flips;
 	}
 
-	float game_expr::animationSecondsOf(const RawValue& interval, const std::string& where)
+	float Evaluator::animationSecondsOf(const RawValue& interval, const std::string& where)
 	{
 		// A live one may read its own object's numbers, not made yet: it is
 		// timed as the game starts, before anything is drawn (Game::follow).
@@ -552,7 +552,7 @@ namespace xge
 		return seconds;
 	}
 
-	std::vector<float> game_expr::animationTimesOf(const std::vector<RawValue>& times, float fallback, const std::string& where)
+	std::vector<float> Evaluator::animationTimesOf(const std::vector<RawValue>& times, float fallback, const std::string& where)
 	{
 		std::vector<float> frames;
 		for (std::size_t i = 0; i < times.size(); ++i)
@@ -564,7 +564,7 @@ namespace xge
 		return frames;
 	}
 
-	std::vector<std::vector<Command>> game_expr::frameCommandsOf(const std::vector<std::vector<RawCommand>>& frames, const std::string& where)
+	std::vector<std::vector<Command>> Evaluator::frameCommandsOf(const std::vector<std::vector<RawCommand>>& frames, const std::string& where)
 	{
 		std::vector<std::vector<Command>> made;
 		for (std::size_t i = 0; i < frames.size(); ++i)
@@ -586,7 +586,7 @@ namespace xge
 		}
 	}
 
-	std::map<std::string, Vector2f> game_expr::layOutCells(const std::vector<RawObject>& rawObjects,
+	std::map<std::string, Vector2f> Evaluator::layOutCells(const std::vector<RawObject>& rawObjects,
 		const std::map<std::string, Picture>& pictures)
 	{
 		// Each group's cells by row, in the order they were read: a row's

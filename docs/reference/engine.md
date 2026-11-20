@@ -115,7 +115,7 @@ Design: [build-and-layout](../designs/51-build-and-layout.md).
 | | `xml/tree.cpp` | an element held as plain C++ data (`TreeElement`), read as an `XmlNode` (`viewOfTree`): how a generated program holds its game |
 | | `load/reading.cpp` | what every reader shares: a child, an attribute, a value, `fail` |
 | | `load/merge.cpp` | pieces and `from=` on the XML (`layOut`, `addWaiting`) |
-| | `load/expr.cpp` | values, operations, building `Object`s and `State`s; the loading stages in order (`game_expr::init`) |
+| | `load/expr.cpp` | values, operations, building `Object`s and `State`s; the loading stages in order (`Evaluator::init`) |
 | | `load/build.cpp` | one `Object` from its `RawObject` (`makeObject`), a step per part: looks, numbers, motion, timers, rules, actions, holder, moves |
 | | `load/conditions.cpp` | conditions and their tests, as states, rules and holders use them |
 | | `load/pictures.cpp` | pictures (`buildPicture`, `drawPicture`), animations, styles and palettes, cell layout |
@@ -136,7 +136,7 @@ Design: [build-and-layout](../designs/51-build-and-layout.md).
 | | `play/maze.cpp` | walking a map's tiles |
 | | `play/numbers.h` | the one-number operations of a value (`sign`, `sine`, `cosine`) |
 | pictures | `picture/bitmap.cpp`, `svg.cpp`, `image.cpp`, `font.cpp`, `color.cpp` | pixels, flips and turns; SVG with lunasvg; picture sheets cut and shrunk (`<pictures>`); fonts and the 8x8 fallback; colour names |
-| resources | `engine/resources.cpp` | `Resources`, one a game (in its `game_expr`, `Game::resources()`): every picture loaded or made, held once and named by a `PictureId`, which objects hold; each sound's samples, shared by sounds that sound the same and handed to the audio library (`Audio::load`); a sheet's picture while the game loads |
+| resources | `engine/resources.cpp` | `Resources`, one a game (in its `Evaluator`, `Game::resources()`): every picture loaded or made, held once and named by a `PictureId`, which objects hold; each sound's samples, shared by sounds that sound the same and handed to the audio library (`Audio::load`); a sheet's picture while the game loads |
 | loop and libraries | `engine/engine.cpp`, `backends.cpp`, `keys.cpp`, `folder.cpp` | the loop (`run()`: `input()`, `update()`, `render()`), choosing libraries, key names, the games folder and `findSchema` |
 | | `window/*`, `audio/*`, `xml/*` | each kind's interface and factory, a file per library; `window/picture.cpp` draws a frame into one image (`--picture`); `audio/sound.cpp` is the synthesizer |
 | programs | `xge/cli/source/` | `cli.cpp` (options, finding the game), `generate.cpp` (`--generate`), `main.cpp` |

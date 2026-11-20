@@ -293,7 +293,7 @@ namespace xge
 		void retargetCheck(Condition& check, Name from, Name to);
 
 		// A value worked out now, from where everything is and how it is
-		// going (see game_expr::liveNumbers), and every variable as it is.
+		// going (see Evaluator::liveNumbers), and every variable as it is.
 		float evaluateNow(const RawValue& value, const std::string& where);
 		// The same for a value of that object's, saying it is the object's.
 		float evaluateFor(const RawValue& value, const Object& object);
@@ -922,7 +922,7 @@ namespace xge
 		// Each live number the expressions read, and whose it is and which
 		// part, worked out the first time (objects keep their places in
 		// `objects`).
-		// Only those a text has read are kept up (game_expr::liveRead).
+		// Only those a text has read are kept up (Evaluator::liveRead).
 		struct LiveLink { float* number; std::size_t object; std::size_t part; };
 		std::vector<LiveLink> liveLinks;
 		// For an object's name, the number each live part is read through
@@ -950,7 +950,7 @@ namespace xge
 
 		WindowDesc windowDesc;
 
-		game_expr expr;
+		Evaluator expr;
 
 		// How the game file was checked against xgedef.xsd (GameData),
 		// only ever read back by printGame().

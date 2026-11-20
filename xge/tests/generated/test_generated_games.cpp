@@ -79,7 +79,7 @@ namespace
 
 	struct SeedReset
 	{
-		~SeedReset() { game_expr::fixRandomSeed(std::nullopt); }
+		~SeedReset() { Evaluator::fixRandomSeed(std::nullopt); }
 	};
 }
 
@@ -90,12 +90,12 @@ TEST_CASE("every generated game plays frame for frame as the engine plays its fi
 	{
 		INFO(each.file);
 
-		game_expr::fixRandomSeed(20261011u);
+		Evaluator::fixRandomSeed(20261011u);
 		Game fromFile{ std::string(each.file) };
 		const std::vector<std::string> expected = play(fromFile);
 		CHECK(expected.front() != expected.back()); // the keys did play it
 
-		game_expr::fixRandomSeed(20261011u);
+		Evaluator::fixRandomSeed(20261011u);
 		Game generated{ each.read() };
 		const std::vector<std::string> played = play(generated);
 

@@ -43,7 +43,7 @@ namespace xge
 		const std::map<std::string, Path>& paths);
 
 	// The palettes the <become style>s can give each object, by its name,
-	// each style once (see game_expr::makePalettes).
+	// each style once (see Evaluator::makePalettes).
 	using WantedPalettes = std::map<std::string, std::vector<std::string>>;
 
 	// What a verb's check is given (Verb::check, verbs/verb.h): the game as
