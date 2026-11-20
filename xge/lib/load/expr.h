@@ -179,6 +179,9 @@ namespace xge
 		// Once loaded and checked: the objects of one kind share the first's
 		// Kind (see Kind).
 		void shareKinds(std::vector<Object>& objects);
+		// Objects whose looks came out the same (a group's members, a board's
+		// pieces) share one LookSet.
+		void shareLooks(std::vector<Object>& objects);
 		// The same for other, in a rule about touching something: the
 		// object a command saying other is made for at load.
 		std::string otherName;

@@ -231,6 +231,21 @@ TEST_CASE("a path under way is a part of only the objects flying one", "[store][
 	CHECK(galaxian.game.parts().onPaths.size() < galaxian.game.getCurrentObjects().size());
 }
 
+TEST_CASE("objects whose looks come out the same share one set of them", "[store][kind]")
+{
+	played::Played checkers("descriptions/checkers.xml");
+	std::set<const Object::LookSet*> sets;
+	std::size_t withLooks = 0;
+	for (const Object& object : checkers.game.getCurrentObjects())
+	{
+		if (object.looks.all().empty()) { continue; }
+		++withLooks;
+		sets.insert(object.looks.set.get());
+	}
+	CHECK(withLooks > 20);
+	CHECK(sets.size() < 10);
+}
+
 TEST_CASE("the members of a group share one kind: its rules and actions are held once", "[store][kind]")
 {
 	played::Played invaders("descriptions/spaceinvaders.xml");

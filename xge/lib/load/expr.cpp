@@ -185,6 +185,7 @@ namespace xge
 			for (CollisionRule& rule : object.kind->collisionData.others) { std::vector<std::vector<Command>>().swap(rule.loadChecks); }
 		}
 		shareKinds(objects);
+		shareLooks(objects);
 	}
 
 	void Evaluator::shareKinds(std::vector<Object>& objects)
@@ -198,6 +199,45 @@ namespace xge
 			if (written == 0) { continue; }
 			const auto [found, fresh] = first.emplace(written, object.kind);
 			if (!fresh) { object.kind = found->second; }
+		}
+	}
+
+	namespace
+	{
+		bool sameLook(const Object::Look& a, const Object::Look& b)
+		{
+			return a.name == b.name && a.picture == b.picture && a.bitmap == b.bitmap && a.frames.held == b.frames.held
+				&& a.thenLook == b.thenLook && a.turnables == b.turnables;
+		}
+
+		bool sameLooks(const std::vector<Object::Look>& a, const std::vector<Object::Look>& b)
+		{
+			return std::equal(a.begin(), a.end(), b.begin(), b.end(), sameLook);
+		}
+
+		bool samePalette(const Object::Palette& a, const Object::Palette& b)
+		{
+			return a.name == b.name && a.bitmap == b.bitmap && a.animation == b.animation && sameLooks(a.looks, b.looks);
+		}
+
+		bool sameLookSet(const Object::LookSet& a, const Object::LookSet& b)
+		{
+			const bool sameFlips = a.flips == b.flips || (a.flips && b.flips && *a.flips == *b.flips);
+			return a.first == b.first && a.hasPoses == b.hasPoses && a.poses == b.poses && a.hasJoins == b.hasJoins && a.joins == b.joins
+				&& a.changed == b.changed && sameFlips && sameLooks(a.all, b.all)
+				&& std::equal(a.palettes.begin(), a.palettes.end(), b.palettes.begin(), b.palettes.end(), samePalette);
+		}
+	}
+
+	void Evaluator::shareLooks(std::vector<Object>& objects)
+	{
+		std::vector<std::shared_ptr<Object::LookSet>> distinct;
+		for (Object& object : objects)
+		{
+			if (object.looks.set->all.empty()) { continue; }
+			const auto found = std::find_if(distinct.begin(), distinct.end(), [&](const std::shared_ptr<Object::LookSet>& set) { return sameLookSet(*set, *object.looks.set); });
+			if (found == distinct.end()) { distinct.push_back(object.looks.set); }
+			else { object.looks.set = *found; }
 		}
 	}
 
