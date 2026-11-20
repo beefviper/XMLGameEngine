@@ -17,20 +17,9 @@ struct GLFWwindow;
 
 namespace xge
 {
-	// The OpenGL Window backend: GLFW makes the window and the OpenGL context
-	// and reads the keyboard, and everything is drawn with OpenGL itself, as
-	// textured quads. Nothing outside this file, window/opengl.cpp, and
-	// WindowFactory::create (the one place that constructs one) ever names a
-	// GLFW or OpenGL type - see window/window.h.
-	//
-	// The drawing is plain OpenGL 1.1 (a projection of the window in pixels,
-	// one textured rectangle for each object), which every driver has and the
-	// system's OpenGL library exports as it is, so there is no OpenGL loader
-	// library to depend on.
-	//
-	// Like the other backends, each object's picture is the engine's
-	// (Window::pictureOf), uploaded as a texture and made again on
-	// visualDirty.
+	// GLFW makes the window and reads the keys; each object is a textured
+	// rectangle in plain OpenGL 1.1, which every system library exports, so
+	// no OpenGL loader is needed.
 	class OpenGLWindow : public Window
 	{
 	public:

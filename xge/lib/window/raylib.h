@@ -18,13 +18,6 @@
 
 namespace xge
 {
-	// The Raylib Window backend. Nothing outside this file, window/raylib.cpp,
-	// and WindowFactory::create (the one place that constructs one) ever
-	// names a raylib type - see window/window.h. Same bake-once-to-a-render-texture,
-	// rebuild-on-visualDirty architecture as SFMLWindow (see window/sfml.h),
-	// re-implemented against raylib's own render-texture/image API -
-	// raylib bundles its own image loading, so unlike the SDL2 backend this
-	// needs no extra dependency for image objects.
 	class RaylibWindow : public Window
 	{
 	public:

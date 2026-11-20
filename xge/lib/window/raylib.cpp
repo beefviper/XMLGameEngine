@@ -164,16 +164,9 @@ namespace xge
 
 	std::vector<std::pair<KeyCode, bool>> RaylibWindow::pollEvents()
 	{
-		// Raylib has no event queue to drain. It reads the keyboard and the
-		// close button itself, once per frame, at the end of EndDrawing() (see
-		// display()), so there is nothing to pump here: calling
-		// PollInputEvents() as well would read the keyboard a second time
-		// each frame, and whatever the first read saw (nearly everything,
-		// since the frame is spent waiting inside EndDrawing()) would be
-		// reset before it could be reported, losing key presses and window
-		// close requests. Instead, compare each key with how it was the last
-		// time this was called, which gives the same press/release changes
-		// as the other backends' queues.
+		// Raylib reads the keys itself at the end of EndDrawing(); calling
+		// PollInputEvents() too would read them twice and lose presses. So
+		// each key is compared with how it was at the last call.
 		std::vector<std::pair<KeyCode, bool>> events;
 
 		for (const auto& [rayKey, code] : keyTable)

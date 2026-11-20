@@ -14,16 +14,9 @@
 
 namespace xge
 {
-	// The Vulkan Window backend: GLFW makes the window and reads the keys
-	// (window/glfw.h, shared with OpenGL), and every object is drawn by Vulkan
-	// as one textured rectangle. volk finds the graphics driver's own Vulkan
-	// when the window opens, so no Vulkan SDK is needed to build or run it.
-	// Nothing outside this file, window/vulkan.cpp and WindowFactory::create
-	// names a GLFW or Vulkan type: they are all kept behind `Parts`.
-	//
-	// The window can be resized: the game is fitted to it with its
-	// proportions, centred, and its pictures are drawn sharp at that size once
-	// a resize settles, as in the SFML window.
+	// GLFW makes the window (window/glfw.h); each object is a textured
+	// rectangle drawn by Vulkan. volk finds the driver's Vulkan as the window
+	// opens, so no Vulkan SDK is needed. Vulkan's types stay behind `Parts`.
 	class VulkanWindow : public Window
 	{
 	public:

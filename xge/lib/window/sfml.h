@@ -16,14 +16,6 @@
 
 namespace xge
 {
-	// The SFML 3 Window backend. Nothing outside this file, window/sfml.cpp,
-	// and WindowFactory::create (the one place that constructs one) ever
-	// names an SFML type - see window/window.h.
-	//
-	// Absorbs what used to be the standalone game_sfml class: building each
-	// object's visual from its picture (circle/rectangle/text/image) is
-	// backend work, not Game's, so it lives here now as SFMLWindow's own
-	// cache instead of being baked into Object itself.
 	class SFMLWindow : public Window
 	{
 	public:

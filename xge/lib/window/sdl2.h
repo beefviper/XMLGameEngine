@@ -14,12 +14,6 @@
 
 namespace xge
 {
-	// The SDL2 Window backend. Nothing outside this file,
-	// window/sdl2.cpp, and WindowFactory::create (the one place that
-	// constructs one) ever names an SDL type - see window/window.h. Same
-	// bake-once-then-rebuild-on-visualDirty architecture as SFMLWindow and
-	// RaylibWindow, built on SDL_Texture render targets instead of
-	// sf::RenderTexture/RenderTexture2D.
 	class SDL2Window : public Window
 	{
 	public:

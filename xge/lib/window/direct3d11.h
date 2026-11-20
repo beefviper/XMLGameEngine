@@ -15,15 +15,8 @@
 
 namespace xge
 {
-	// The Direct3D 11 Window backend, on Windows only: the window is Win32's
-	// own (window/win32.h, shared with the other Direct3D backends), and every
-	// object is drawn by Direct3D 11 as one textured rectangle. Nothing
-	// outside this file, window/direct3d11.cpp and WindowFactory::create names
-	// a Direct3D type: they are all kept behind `Parts`.
-	//
-	// The window can be resized: the game is fitted to it with its
-	// proportions, centred, and its pictures are drawn sharp at that size once
-	// a resize settles, as in the SFML window.
+	// Windows only: a Win32 window (window/win32.h), each object one textured
+	// rectangle drawn by Direct3D 11. Direct3D's types stay behind `Parts`.
 	class Direct3D11Window : public Window
 	{
 	public:

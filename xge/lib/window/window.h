@@ -22,16 +22,8 @@
 
 namespace xge
 {
-	// What Engine needs from a window each frame - lifecycle, drawing, and
-	// keyboard input - expressed entirely in engine-level terms (WindowDesc,
-	// xge::Object, xge::KeyCode), so no particular windowing/graphics
-	// library's types leak into Engine or Game themselves. Four backends
-	// implement this today - SFML3, Raylib, SDL2 and OpenGL (see
-	// window/sfml.h, window/raylib.h, window/sdl2.h, window/opengl.h, and
-	// WindowFactory below).
-	//
-	// The contract, in full in docs/reference/engine.md "What a window must
-	// do". A window must:
+	// A window, in the engine's terms only. The contract, in full in
+	// docs/reference/engine.md "What a window must do". A window must:
 	//   1. open at the game's size times its scale, or throw runtime_error;
 	//   2. keep the game's proportions when resized (fit, centre, bars);
 	//   3. ask each object's picture (pictureOf) in init(), and again when
@@ -78,11 +70,8 @@ namespace xge
 		// game works them out when it loads.
 		virtual void init(std::vector<Object>& objects) = 0;
 
-		// Pumps the backend's event queue once. Returns every key that
-		// changed state since the last call, as {key, pressed} pairs. A
-		// close-request event closes the window directly rather than being
-		// reported here, so callers only need to recheck isOpen() afterward,
-		// not handle a "closed" event themselves.
+		// Every key that changed since the last call. A close request closes
+		// the window; callers check isOpen().
 		virtual std::vector<std::pair<KeyCode, bool>> pollEvents() = 0;
 
 		// What the mouse and the gamepads are doing now, asked for once a
@@ -247,12 +236,9 @@ namespace xge
 		object.position.y = ground;
 	}
 
-	// One picture of a game: the background, then every object in play, in
-	// the order they are listed. What the engine draws each frame, and a
-	// generated game too.
-	// The objects `which` says, in the order they are listed, except that
-	// those with a drawOrder (cards, a hand) come after the rest, lowest
-	// first.
+	// One picture of a game: the background, then the objects `which` says
+	// in the order listed, those with a drawOrder (cards, a hand) last,
+	// lowest first.
 	template <typename Which>
 	void drawInOrder(Window& window, std::vector<Object>& objects, Which which)
 	{
@@ -302,17 +288,10 @@ namespace xge
 		None   // a window never opened (window/null.h): always built, never the default
 	};
 
-	// Builds the concrete Window for the given description and backend - the
-	// one place that knows about all the backends. Adding another would only
-	// need a branch added here and in WindowBackend; Engine and everything
-	// else that calls WindowFactory::create stays untouched. Every backend
-	// opens a window of its own.
-	//
-	// A program is built with some of the backends, not necessarily all of
-	// them (options.cmake: SFML 3 alone by default, every one when the tests
-	// are built). WindowBackend names all four always, so that a name on the
-	// command line or in a settings file still means something, and available()
-	// says which can be made.
+	// The one place that knows every backend. A program is built with some
+	// (options.cmake: SFML 3 alone by default, all for the tests);
+	// WindowBackend names them all, so a name in a settings file still means
+	// something, and available() says which can be made.
 	class WindowFactory
 	{
 	public:
