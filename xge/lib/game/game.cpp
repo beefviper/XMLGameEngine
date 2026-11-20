@@ -1291,7 +1291,7 @@ namespace xge
 		}
 	}
 
-	bool Game::tickTimer(const Timer& timer, Timer::Clock& clock, const std::string& where, float& owed)
+	bool Game::tickTimer(const Timer& timer, Timer::Clock& clock, const TimerOwner& owner, float& owed)
 	{
 		if (clock.done)
 		{
@@ -1301,7 +1301,7 @@ namespace xge
 
 		if (!clock.counting)
 		{
-			clock.secondsLeft = static_cast<double>(evaluateNow(timer.interval, where));
+			clock.secondsLeft = static_cast<double>(evaluateNow(timer.interval, std::string(owner.kind) + " '" + owner.name + "' > <timer>"));
 			clock.counting = true;
 			// None at all: it goes off once a step.
 			if (!(clock.secondsLeft > 0.0)) { clock.secondsLeft = static_cast<double>(owed); }
@@ -1384,15 +1384,14 @@ namespace xge
 				}
 
 				// One that follows a look counts only while the object shows it.
-				const std::string& sprite = timers[t].sprite;
+				const Name sprite = timers[t].sprite;
 				if (!sprite.empty() && objects[i].lookName() != sprite)
 				{
 					continue;
 				}
 
 				// As often as the step owes it, its commands each time.
-				const std::string where = "object '" + objects[i].name + "' > <timer>";
-				for (float owed = seconds; owed > kTimeSlack && t < count() && tickTimer(timers[t], (*clocks())[t], where, owed);)
+				for (float owed = seconds; owed > kTimeSlack && t < count() && tickTimer(timers[t], (*clocks())[t], { "object", objects[i].name }, owed);)
 				{
 					// Its kind's: a command that resets the object leaves them be.
 					for (const auto& command : timers[t].commands)
@@ -1418,7 +1417,7 @@ namespace xge
 		const unsigned long changes = stateChanges;
 		const unsigned long scenes = sceneChanges;
 		const auto unchanged = [&] { return stateChanges == changes && sceneChanges == scenes; };
-		const auto count = [&](std::vector<Timer>& timers, const std::string& where)
+		const auto count = [&](std::vector<Timer>& timers, const TimerOwner& where)
 		{
 			for (std::size_t t = 0; t < timers.size() && unchanged(); ++t)
 			{
@@ -1434,14 +1433,14 @@ namespace xge
 				}
 			}
 		};
-		count(found->second, "state '" + stateName + "' > <timer>");
+		count(found->second, { "state", stateName });
 
 		// Then its current scene's.
 		const Name scene = currentScene(stateName);
 		const auto sceneFound = sceneTimers.find(scene);
 		if (unchanged() && sceneFound != sceneTimers.end())
 		{
-			count(sceneFound->second, "scene '" + scene + "' > <timer>");
+			count(sceneFound->second, { "scene", scene });
 		}
 	}
 
@@ -2060,7 +2059,7 @@ namespace xge
 		// Shared by a collision rule's class/object filter and a state
 		// condition's: empty filterClass/filterObject match anything; either or
 		// both narrow it to a specific class and/or one specific named object.
-		bool matchesClassOrObjectFilter(const std::string& filterClass, const Name filterObject, const Object& candidate)
+		bool matchesClassOrObjectFilter(const Name filterClass, const Name filterObject, const Object& candidate)
 		{
 			if (!filterClass.empty() && filterClass != candidate.objClass) { return false; }
 			if (!filterObject.empty() && !candidate.named(filterObject)) { return false; }

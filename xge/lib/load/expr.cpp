@@ -872,8 +872,14 @@ namespace xge
 			if (value.operations)
 			{
 				const RawOperation& ends = value.operations->front();
-				const float low = evaluate(ends.operands[0].value, where + " > <random> > <min>");
-				const float high = evaluate(ends.operands[1].value, where + " > <random> > <max>");
+				// Where each end is written is made only for a message.
+				const auto end = [&](const RawValue& written, const char* tag)
+				{
+					try { return evaluate(written, std::string{}); }
+					catch (const std::runtime_error& error) { throw std::runtime_error(where + " > <random> > <" + tag + ">" + error.what()); }
+				};
+				const float low = end(ends.operands[0].value, "min");
+				const float high = end(ends.operands[1].value, "max");
 				return randomBetween(low, high);
 			}
 			const float min = evaluateExpression(value.min, where);

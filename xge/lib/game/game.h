@@ -1156,7 +1156,9 @@ namespace xge
 		// `owed` seconds off one timer; true when it has gone off, with what
 		// the step had beyond that left in `owed` (0 when it did not go off),
 		// to be paid by calling again once its commands have run.
-		bool tickTimer(const Timer& timer, Timer::Clock& clock, const std::string& where, float& owed);
+		// Whose a timer is, for a message: an object, a state or a scene.
+		struct TimerOwner { const char* kind; Name name; };
+		bool tickTimer(const Timer& timer, Timer::Clock& clock, const TimerOwner& owner, float& owed);
 
 		// A named object timer's time left, whole seconds rounded up (0 once
 		// it has gone off), into the object's number of that name.
