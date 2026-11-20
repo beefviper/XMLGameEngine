@@ -147,11 +147,8 @@ namespace xge
 		// A computer thinks beside the game, which goes on being drawn.
 		game.thinkInBackground(true);
 
-		// Each frame: what came in, the game's step of the time that passed
-		// since the last, then the picture (the window may wait for the
-		// screen's refresh). The
-		// <framerate> is the most frames a second: a frame waits until that
-		// much time has passed.
+		// <framerate> is the most frames a second: a frame waits until its
+		// time has passed.
 		const Clock::duration shortest = std::chrono::duration_cast<Clock::duration>(
 			std::chrono::duration<double>(1.0 / std::max(1, mostFrames > 0 ? mostFrames : game.getWindowDesc().framerate)));
 

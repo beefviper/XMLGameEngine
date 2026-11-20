@@ -26,14 +26,8 @@ namespace xge
 	class Engine
 	{
 	public:
-		// backend picks which Window implementation actually opens (SFML3,
-		// Raylib, SDL2 or OpenGL - see window/window.h), and audioBackend which Audio
-		// plays the game's sounds (SFML3, Raylib, SDL2 or None - see audio/audio.h);
-		// both default to SFML3, or the first one built when SFML 3 is not (see
-		// WindowFactory::defaultBackend), so existing callers don't have to name one. A
-		// window that cannot be made throws; sound that cannot start is not
-		// worth stopping a game for, so it prints a warning and the game plays
-		// silently (NullAudio).
+		// A window that cannot be made throws; sound that cannot start is
+		// warned of, and the game plays silent.
 		explicit Engine(Game& game, WindowBackend backend = WindowFactory::defaultBackend(), AudioBackend audioBackend = AudioFactory::defaultBackend());
 
 		// Same, but with an already-built Window (and Audio) - what lets a test
@@ -98,25 +92,17 @@ namespace xge
 		// Never null: NullAudio when there is no sound.
 		Audio* currentAudio(void) noexcept { return audio.get(); }
 
-		// Swaps the Audio for another while the game is running, as
-		// replaceWindow() does the Window: the old one is destroyed first, then
-		// `create` is called and the game's sounds are loaded into the new one.
-		// If `create` throws (or gives nullptr), the game carries on silently
-		// with NullAudio, and the exception is passed on so the caller can say
-		// so.
+		// The old one goes first. If `create` throws or gives null, the game
+		// plays silent and the exception is passed on.
 		void replaceAudio(const std::function<std::unique_ptr<Audio>()>& create);
 
 		// Stops every sound that is playing: for a front end pausing the game.
 		void silence(void);
 
-		// Swaps the Window for another while the game is running: the old one
-		// is destroyed first (some libraries can only have one window at a
-		// time), then `create` is called for the new one, and every object's
-		// picture is built again for it. Nothing about the game changes - not
-		// the objects, the values, or the state the game is in - and the keys
-		// held stay held. If `create` throws, the engine has no window and can
-		// only be given one by calling this again (or destroyed); input(), update() and
-		// render() throw std::logic_error until then.
+		// The old one goes first (some libraries allow one window at a time);
+		// the game and the keys held are untouched. If `create` throws, there
+		// is no window, and input(), update() and render() throw
+		// std::logic_error until another is given.
 		void replaceWindow(const std::function<std::unique_ptr<Window>()>& create);
 
 		// What run() does each frame, for a front end that owns the event
@@ -207,14 +193,11 @@ namespace xge
 		// Game::stateChangeCount() as of the last syncHeldKeysToState().
 		unsigned long syncedStateChanges = 0;
 
-		// The current state decides what a held key means: when the state has
-		// changed, releases what the held keys were driving in the old one and
-		// resumes the new state's continuous bindings (an action's move.*) for
-		// the keys still down - so a paddle stops while a state that does not
-		// bind its key is up and moves again on return, with no re-press. A
-		// key's state-changing or one-shot commands are never resumed, only
-		// run on a real press (otherwise holding Space through a menu would
-		// pause the game the moment it started).
+		// After a state change: what held keys drove in the old state is let
+		// go, and the new state's continuous bindings (moves) for keys still
+		// down resume, so a paddle moves again on return with no new press.
+		// One-shot commands only ever run on a real press, or Space held
+		// through a menu would pause the game as it began.
 		void syncHeldKeysToState();
 
 		// Throws std::logic_error when there is no window (see replaceWindow).

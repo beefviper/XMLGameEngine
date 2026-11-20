@@ -12,17 +12,8 @@
 
 namespace xge
 {
-	// Every key a State's <input button="..."> can name, expressed as a
-	// backend-agnostic enum instead of the ad-hoc strings Engine used to
-	// compare directly (see utils.h's old sfmlKeyToString, whose vocabulary
-	// this mirrors exactly, one enumerator per string it could produce) -
-	// so pollEvents() and Engine's own per-frame key state can work the same
-	// way no matter which windowing backend is behind Window (see window/window.h).
-	// Each backend maps its own native key type to this set once, in its own
-	// pollEvents() (see window/sfml.cpp / window/raylib.cpp / window/sdl2.cpp).
-	//
-	// Count is a sentinel, not a real key - only ever used to size Engine's
-	// per-frame key-state array (see engine/engine.h). Keep it last.
+	// Every key a game can name, in no library's terms: each window maps its
+	// own keys to these. Count, last, only sizes arrays.
 	enum class KeyCode
 	{
 		Unknown,
@@ -109,10 +100,8 @@ namespace xge
 	std::string axisToString(Axis axis) noexcept;
 	std::vector<std::string> axisNames();
 
-	// Parses a State's <input button="..."> attribute (e.g. "space", "a",
-	// "f1") into a KeyCode. Returns KeyCode::Unknown for anything not
-	// recognized - same string vocabulary keyCodeToString() below produces,
-	// so a game's own XML round-trips through printGame() unchanged.
+	// "space", "a", "f1"...; Unknown for anything else. keyCodeToString
+	// gives the same names back.
 	KeyCode keyCodeFromString(const std::string& name) noexcept;
 
 	// Inverse of keyCodeFromString() - used for debug output (State's
