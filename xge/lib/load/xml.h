@@ -19,14 +19,10 @@
 
 namespace xge
 {
-	// The game under `file`, its root <game> element, as Game's raw data:
-	// the values, sprites, sounds and commands as the file says them, none
-	// of it worked out yet (load/expr's job). The element has the shape
-	// the schema says: load/file.cpp checks a file before it gets here, and
-	// a generated program's tree was checked when it was made. Read through
-	// XmlNode only (xml/document.h), never a particular XML library. A tag
-	// the file gets wrong in a way no schema can say (two states of one
-	// name, a char= on no tile) throws, saying where.
+	// The game under its root <game> element, as written: none of it worked
+	// out yet (load/expr's job). The tree already passed the schema; what no
+	// schema can say (two states of one name, a char= on no tile) throws,
+	// saying where.
 	GameData readGame(const XmlNode& file);
 
 	// A <demo> element: its seed, its frames, and each key pressed and let

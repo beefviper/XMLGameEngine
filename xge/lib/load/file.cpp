@@ -42,20 +42,10 @@ namespace xge
 			// find key points in document
 			std::unique_ptr<XmlNode> root = document->getRootElement();
 
-			// A game file names its schema the same way regardless of backend
-			// (xsi:noNamespaceSchemaLocation - see games/descriptions/*.xml), so this reads
-			// it directly off root rather than asking XmlDocument for it.
-			// Xerces already ran its own real validation as part of load()
-			// above whenever this is non-empty (see xml/xerces.cpp) - load()
-			// would have failed already otherwise, so reaching here means it
-			// passed. Every other backend can only check well-formedness on its
-			// own (see xml/document.h), so this falls back to XsdLiteValidator
-			// - this project's own interpreter for the subset of XSD this
-			// schema actually uses (see load/xsd.h) - against that same schema
-			// file, resolved relative to filename the same way Xerces resolves
-			// it relative to the document.
-			// One that names none is checked against the engine's own: the
-			// xgedef.xsd beside it or above it, else the games folder's.
+			// Xerces checked the schema the file names as it loaded; every other
+			// library is checked here by the engine's own checker (load/xsd.h),
+			// against the same file. A game that names none is checked against
+			// the xgedef.xsd beside it or above it, else the games folder's.
 			const std::string schemaLocation = root ? root->getAttribute("xsi:noNamespaceSchemaLocation") : std::string{};
 
 			if (!schemaLocation.empty() && backend == XmlBackend::Xerces)

@@ -30,13 +30,12 @@
 
 namespace xge
 {
-	// Works out what load/xml read: every WrittenValue to a number, every WrittenSprite
-	// to the Picture the window backends draw, every WrittenCommand to a
-	// typed Command. The arithmetic in a value's text is load/calc's job; the
-	// tags (<random>, the operations) are handled here and in game/command.cpp.
 	// Whether a text sprite has a <number> or a <letter> among its pieces.
 	bool showsNumbers(const WrittenSprite& sprite);
 
+	// Works out what load/xml read: every WrittenValue to a number, every
+	// WrittenSprite to the Picture the window backends draw, every
+	// WrittenCommand to a typed Command. A value's text is load/calc's job.
 	class Evaluator
 	{
 	public:
@@ -46,16 +45,9 @@ namespace xge
 		Evaluator(const Evaluator&) = delete;
 		Evaluator& operator=(const Evaluator&) = delete;
 
-		// Fills `variables` from writtenVariables (in order, so a variable's value
-		// can use the ones declared before it), then builds every object, state
-		// and sound. A wave, pitch or length a sound cannot use, and a <play>
-		// naming no sound, throw std::runtime_error saying where.
-		// Called when the game has been loaded. From then on a value worked out
-		// again while the game runs (a timer's interval, a position finished
-		// once a text is measured) never throws for a division by 0: see
-		// evaluateOperation.
-		// Loading is over: the sheets' pictures, held while their cells were
-		// cut, are let go.
+		// Loading is over: from now on a division by 0 warns instead of
+		// throwing (evaluateOperation), and the sheets' pictures, held while
+		// their cells were cut, are let go.
 		void finishLoading()
 		{
 			loading = false;
@@ -159,13 +151,10 @@ namespace xge
 			const std::vector<WrittenSound>& writtenSounds, std::vector<SoundDesc>& sounds,
 			const std::vector<WrittenPath>& writtenPaths, std::map<std::string, Path>& paths);
 
-		// Every object's size, keyed by object name and bound into symbolTable as
-		// "name.width" / "name.height" (unless the object declares a <variable>
-		// of that name, which wins). A circle's or rectangle's is exact from
-		// init(); a text's or image's stays {0,0} until setObjectSize() is
-		// given what a backend measured. See Object::Layout. A
-		// std::map's references stay valid across insertions, which is what
-		// makes binding into it safe.
+		// Every object's size, read as name.width and name.height unless the
+		// object has a <variable> of that name. A text's or image's is {0,0}
+		// until setObjectSize() gives what a backend measured. A std::map, so
+		// the numbers stay where calc bound them as more are added.
 		std::map<std::string, Vector2f> objectSizes;
 		std::map<std::string, ShapeKind> objectShapeKinds;
 		void setObjectSize(const std::string& name, const Vector2f& size);
@@ -240,17 +229,10 @@ namespace xge
 			bool late{ false };
 		};
 
-		// One <add>, <subtract>, <multiply> or <divide>: its
-		// first operand combined with each of the others in turn.
-		//
-		// A divisor of 0 is a load error (std::runtime_error saying which
-		// <divide>) when it is certainly 0 - a number, a global variable, or
-		// something made only of those - since nothing sensible can be placed or
-		// timed with an infinity. A divisor that is only 0 because it is `late`
-		// gives 0 and nothing is said: it is worked out again when it is known.
-		// Worked out again while the game runs, where throwing would end it, a
-		// divisor of 0 gives the answer 0 and a warning, printed once for each
-		// place it happens.
+		// One <add>, <subtract>, <multiply> or <divide>: its first operand
+		// combined with each of the others in turn. A divisor of 0 gives 0:
+		// while loading it is an error unless the divisor is `late`; while
+		// the game runs, where throwing would end it, a warning once a place.
 		Answer evaluateOperation(const WrittenOperation& operation, const std::string& where);
 
 		// Whether an operand's name is something that is `late` while loading.
@@ -354,14 +336,9 @@ namespace xge
 		// A <sound> worked out: its words checked and its lengths evaluated.
 		SoundDesc processSound(const WrittenSound& written);
 
-		// Every object-declared <variable>, keyed "ownerName.variableName", bound
-		// by reference into symbolTable (see init()) so any expression - not just
-		// the owning object's own commands - can read another object's variable
-		// (e.g. a HUD's sprite showing paddle1.score). A std::map's
-		// iterators/references to existing elements stay valid across further
-		// insertions, which is what makes binding into it safe here: init()
-		// pre-creates every key (so the symbol exists before anything compiles)
-		// and only ever assigns through an existing key afterwards.
+		// Every object's <variable>s as owner.name, so any value can read
+		// another object's (a score's text showing paddle1.score). A std::map,
+		// so the numbers stay where calc bound them as more are added.
 		std::map<std::string, float> objectVariables;
 
 		// The numbers every object has while the game runs (livePartNames:

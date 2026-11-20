@@ -260,13 +260,9 @@ namespace xge
 			}
 		}
 
-		// Pre-register every object's own <variable> entries, keyed
-		// "ownerName.variableName", so any expression evaluated below can refer
-		// to another object's variable regardless of which object appears first
-		// in the XML (e.g. score1's sprite reading paddle1.score, even though
-		// paddle1 is declared after score1). Values start at 0 here; the object
-		// loop further down fills in the real evaluated value once it reaches
-		// that object - see the objectVariables[...] assignment there.
+		// Every object's variables are named first, at 0, so a value may read
+		// one whose object comes later in the file; the object loop below
+		// gives each its real value.
 		for (auto& writtenObject : writtenObjects)
 		{
 			for (auto& writtenVariable : writtenObject.variable)
@@ -280,10 +276,8 @@ namespace xge
 		}
 
 		// The ones that draw no random number are worked out now as well, in
-		// file order, so a sprite measured below can use them (Pong's ball is
-		// a <circle> of radius ball.radius, its own variable); without this it
-		// read 0 and was drawn as nothing. One that reads what is not known
-		// yet (a size) keeps 0 here and gets its value in the object loop.
+		// file order, so a sprite measured below can use them (a <circle> of
+		// radius ball.radius). One that reads a size keeps 0 until the object loop.
 		for (auto& writtenObject : writtenObjects)
 		{
 			for (auto& writtenVariable : writtenObject.variable)
@@ -1119,13 +1113,10 @@ namespace xge
 			timer.interval = writtenTimer.interval;
 			timer.commands = processCommands(writtenTimer.commands, here);
 
-			// Worked out once now so that a mistake in it is a load error; it
-			// is worked out again every time the timer starts over. Only a plain
-			// number can be held to being above 0 now: an expression may read a
-			// variable that has no value yet (and at run time a timer never
-			// waits less than one frame).
-			// (A <random> in it is checked with the generator put back after, so that
-			// checking does not use up the numbers the game will draw.)
+			// Worked out once now so that a mistake in it is a load error, with
+			// the random generator put back after so the game's draws are not
+			// used up. Only a plain number can be held to being above 0 now: an
+			// expression may read a variable that has no value yet.
 			const std::mt19937 drawn = randomState();
 			commandValues = true;
 			const float seconds = evaluate(writtenTimer.interval, here);

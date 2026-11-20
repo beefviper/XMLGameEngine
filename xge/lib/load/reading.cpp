@@ -21,11 +21,6 @@ namespace xge
 		return text.substr(first, last - first + 1);
 	}
 
-	// The first child of parent named `name`, or nullptr if parent is null
-	// or none match. Schema elements have fixed names but a sequence still
-	// lets some be left out (an object with no <actions>), so this looks a
-	// child up by name rather than chaining getFirstChild()/getNextSibling()
-	// calls that assume a particular position.
 	std::unique_ptr<XmlNode> findChild(const XmlNode* parent, const std::string& name)
 	{
 		std::unique_ptr<XmlNode> child = parent ? parent->getFirstChild() : nullptr;

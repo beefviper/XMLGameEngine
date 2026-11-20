@@ -52,11 +52,8 @@ namespace xge
 	// Element Declarations Consistent), which Xerces skips too without full
 	// checking. test_schema_checker.cpp keeps it in step with Xerces.
 	//
-	// Exists because Xerces is the one backend able to run real schema
-	// validation (see xml/xerces.cpp); when the game loads through one of the
-	// other three, this runs instead, against the very same .xsd file, read
-	// through the same XmlNode/XmlDocument interface as everything else here:
-	// an XSD file is just XML, so no dedicated XSD parser is needed to walk it.
+	// Only Xerces checks a schema itself; with the other libraries this
+	// checks the same .xsd, read as XML through XmlNode like everything else.
 	class XsdLiteValidator
 	{
 	public:

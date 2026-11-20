@@ -226,12 +226,7 @@ namespace xge
 			return known;
 		}
 
-		// Strips any "prefix:" off a qualified name (e.g. "xs:element" ->
-		// "element") - every backend's getName()/getAttribute() hands back
-		// the raw qualified name as written (see xml/document.h), and this
-		// schema only ever uses one prefix ("xs"), but comparing against
-		// the local name rather than assuming that exact prefix string
-		// costs nothing and is one less thing to break if it ever changes.
+		// "xs:element" without its prefix, whatever the prefix is.
 		std::string localName(const std::string& qualifiedName)
 		{
 			const std::size_t colon = qualifiedName.find(':');

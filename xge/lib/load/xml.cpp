@@ -1303,15 +1303,11 @@ namespace xge
 		}
 
 
-		// A value and its name, such as <variable name="score">0</variable>.
 		// A name the engine's own words would hide. What starts a dotted
 		// name (an object, group, member, map or state) may not be one of the
-		// engine's words that start one (self.x, other.score, others,
-		// window.width, color.red); nothing may be a number. A variable is
-		// only ever after the dot, so its name may be a word (a card's
-		// color, a game's top). top.rank in a holder's rules is read
-		// before any name, so top is free. See docs/plan.md (backlog):
-		// a way to need no reserved names is open.
+		// engine's words that start one (self.x, window.width, color.red);
+		// nothing may be a number. A variable is only ever after the dot, so
+		// its name may be a word (a card's color).
 		void refuseReserved(const std::string& name, const char* kind, const std::string& where, bool startsNames = true)
 		{
 			static const std::set<std::string> reserved{ "self", "other", "others", "window", "color" };
@@ -1345,11 +1341,6 @@ namespace xge
 		std::unique_ptr<XmlNode> readCheck(const XmlNode& node, const std::string& here, WrittenCondition& written);
 		void readJoin(const XmlNode& join, const std::string& here, WrittenCondition& written);
 
-		// <collisions>: whether they are on, whether the objects move in lockstep
-		// with the others of their group, then the rules.
-		// A <collisions>, added to what `base` already has: a group inside
-		// another keeps the outer group's rules and adds its own after them.
-		// The tag read; readCollisions without the line.
 		// A <hitbox>: pulled in from the picture's sides, each side taking
 		// the most particular word given for it, or a shape and its place.
 		WrittenHitbox readHitbox(const XmlNode& hitbox, const std::string& here)
@@ -1408,6 +1399,8 @@ namespace xge
 			return read;
 		}
 
+		// A <collisions>, added to what `base` already has: a group inside
+		// another keeps the outer group's rules and adds its own after them.
 		WrittenCollisionData readCollisionsHere(const XmlNode& collisions, const std::string& where, WrittenCollisionData base);
 
 		WrittenCollisionData readCollisions(const XmlNode& collisions, const std::string& where, WrittenCollisionData base = {})
@@ -1495,12 +1488,6 @@ namespace xge
 			// neither means anything at all.
 			if (!edge.empty())
 			{
-				// Appends rather than overwrites, so more than one <collision
-				// edge="..."> touching the same edge (e.g. an "all" rule plus a
-				// specific "left" rule) both run instead of the later one
-				// silently winning.
-				// class= and object= pick the other object of a touch; an
-				// edge is no object, so there is nothing for them to pick
 				if (!said.hitbox.empty() || !said.by.empty())
 				{
 					fail(ruleHere, "edge= with hitbox= or by=; the window's edges are met by the whole picture");
@@ -2094,30 +2081,10 @@ namespace xge
 			char character = '\0';
 		};
 
-		// A <group> is read as one WrittenObject per member, which from then on is
-		// an ordinary object that remembers its group (see Object::groupName).
-		// The group gives what its members share (sprites, position, velocity,
-		// collisions, actions, variables, all optional), and each member gives
-		// what is its own and takes the rest from the group; after that it must
-		// be as complete as an <object>.
-		//
-		// The members are either listed, each a <member> (logrow3.2: the
-		// group's name and its number from 1, or name="..."), with its own
-		// <sprite>s, <animation>, <position> and <velocity>; or laid out in
-		// <columns> and <rows>, a cell to each place (bricks.5.3: column, then
-		// row; or a <cell>'s name="..."), top row first and left to right. A
-		// <row number="...">, <column number="..."> and <cell row="..."
-		// column="..."> change what the cells they pick have: <sprite>s, an
-		// <animation>, a <velocity> and <variables>, and for a row or column
-		// the gap before it (<padding>). A sprite that changes one of the
-		// group's need only give what changes (changeSprite).
-		//
-		// Or a group holds <group>s, which take from it the same way a member
-		// does from its group: whatever an inner group leaves out it takes from
-		// the outer, its sprites change the outer's by name, and its collision
-		// rules, actions, variables and timers add to the outer's (an action or
-		// variable of the same name replaces it). Its members are named after
-		// it, and the outer group's name means all of them.
+		// A <group>, read as one WrittenObject per member (logrow3.2, or
+		// bricks.5.3 for column 5, row 3), each taking from the group what it
+		// does not give itself; an inner <group> takes from the outer one the
+		// same way. What each part means: docs/reference/objects.md.
 		// The tag read; readGroup without the line.
 		void readGroupHere(const XmlNode& group, std::vector<WrittenObject>& out, const GroupShared& outer);
 
@@ -2632,12 +2599,8 @@ namespace xge
 			return note;
 		}
 
-		// <sound name="..." wave="square">: an optional <loop />, an optional
-		// <volume>, an optional <decay> (every note's), then <note>s and <rest>s in the order they play, or the
-		// <part>s that play together, each its own <note>s and <rest>s, or the
-		// <path> of a recording. The
-		// words (wave, pitch) are checked by load/expr, which also works out
-		// the lengths.
+		// A <sound>, as written: its words (wave, pitch) are checked, and its
+		// lengths worked out, by load/expr.
 		// The tag read; readSound without the line.
 		WrittenSound readSoundHere(const XmlNode& sound);
 
