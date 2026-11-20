@@ -18,12 +18,6 @@
 
 namespace xge
 {
-	// What a game says should happen, asked by playOneFrame as each moment
-	// of the frame comes. The engine's Game answers by looking in the game
-	// file (its rules, states and conditions); a generated game answers with
-	// code written from the same file. Everything not asked here (the order,
-	// the moving, the sweep, the pull, the arithmetic) is playOneFrame's own,
-	// so the two cannot play differently except by answering differently.
 	// The tiles of a <map>, as play/maze walks them: which objects (by index)
 	// stand on each tile, row by row. Fixed for the whole game.
 	struct MazeGrid
@@ -50,6 +44,10 @@ namespace xge
 	// long, rather than leaping through all the time it missed.
 	inline constexpr float kLongestStep = 0.25f;
 
+	// What a game says should happen, asked by playOneFrame as each moment
+	// of the frame comes: Game answers from the game file, a generated game
+	// with code written from it. Everything else (the order, the moving, the
+	// sweep, the pull) is playOneFrame's own, so the two play alike.
 	class FrameRules
 	{
 	public:

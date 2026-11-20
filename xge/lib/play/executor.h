@@ -71,11 +71,7 @@ namespace xge
 		const Command& now(const Command& command, Command& made, const Object* self, const Object* other);
 
 
-		// Runs an action's commands in order. On the press, a verb that can
-		// be refused (<fire> with nothing left to fire, a <hop>, <jump>
-		// or hunt by hops that cannot be made, an <aim> not lined up)
-		// and is refused ends the action there: what it would have done
-		// after (a sound, a look) is not done.
+		// Runs an action's commands in order; a refused verb ends it there.
 		// With `from`, only those showing that look run it. `byRule`: run by
 		// a rule, a timer or a condition rather than a key, so a <climb> in
 		// it takes the object along one ladder and then lets go.

@@ -85,18 +85,6 @@ namespace xge
 			return a.kind->collisionData.lockstep == 0 || a.kind->collisionData.lockstep != b.kind->collisionData.lockstep;
 		}
 
-		// Climbing (a <climb> in an action, held): an object at a ladder - an
-		// object of its climbClass with the climber's middle over it and its
-		// feet between the ladder's top and bottom - that is on the ground and
-		// asked to go up or down it, and can, gets on it, lined up with its
-		// middle. On it, it goes the step held each frame (none held: it stays
-		// put), its feet kept between the two ends, with no pull and no
-		// landing. The step is its velocity (none across, so no key walks it
-		// off), so it touches what it passes as anything moving does. Reaching
-		// either end it gets off, standing there, and the keys held take it on
-		// as before; a climb a rule or timer started lets go there. A ladder
-		// is also pieces stacked one on another, as wide and lined up: the
-		// whole stack is one ladder.
 		// Whether something the climber lands on (a class or object one of
 		// its <land /> rules names) is under it with its top at `feet`, give
 		// or take a couple of pixels (a sloped girder). Under any of it: a
@@ -124,6 +112,10 @@ namespace xge
 			return false;
 		}
 
+		// A <climb>: one on the ground at a ladder (its climbClass under its
+		// middle), asked to go up or down, gets on, lined up; on it, it goes
+		// the step held, with no pull, and gets off at either end (climbLadder).
+		// Pieces stacked one on another, as wide and lined up, are one ladder.
 		void applyClimbing(std::vector<Object>& objects, FrameRules& rules, float t)
 		{
 			if (rules.parts().climbs.size() == 0) { return; }
@@ -423,15 +415,9 @@ namespace xge
 						object.showHeading();
 					}
 
-					// A swing: held, it goes on through its stroke toward where
-					// it swings to; let go, back through it to where it started.
-					// The stroke is eased, as a half wave: it starts from still,
-					// is fastest half way and slows to a stop at the end, so
-					// its heading, its turn a frame and how that changes all
-					// come from one curve. The turn is its spin this frame: the
-					// move sweeps it from where it was to where it is now
-					// (moveObjects), and what it strikes on the way takes its
-					// speed there (velocityAt).
+					// A swing: held, on through its stroke; let go, back. The
+					// stroke is half a cosine, still at both ends and fastest half
+					// way. The turn is its spin this frame, swept by moveObjects.
 					object.turning.spin = 0.0f;
 					if (Object::Swing* swing = rules.parts().swings.find(object.id); swing && swing->seconds > 0.0f)
 					{
@@ -1070,17 +1056,9 @@ namespace xge
 			float played = 0.0f;
 		};
 
-		// Plays one frame of movement. Every object in play moves by its
-		// velocity (and by whatever it is riding), but not in one jump: each
-		// pair of objects that can touch is swept along its own path, the
-		// earliest touch anywhere is found, everything is moved up to that
-		// moment, that pair's rules run, and the rest of the frame carries on
-		// from there with whatever velocities the rules left behind
-		// (xge::playFrame) - so a ball that hits a brick a third of the way
-		// through its move spends the other two thirds heading back the way it
-		// came. Each object is swept by itself; a lockstep set has no bounding
-		// box of its own, so when most of the invaders are gone only the ones
-		// left are tested.
+		// Plays one frame of movement, from touch to touch (xge::playFrame).
+		// Each object is swept by itself; a lockstep set has no box of its
+		// own, so only the ones left are tested.
 		void moveObjects(std::vector<Object>& all, const WindowDesc& window, FrameRules& rules, float seconds)
 		{
 			applyHops(all, window, rules, seconds);
