@@ -50,7 +50,16 @@ namespace xge
 		rawObjects = std::move(data.objects);
 		rawSounds = std::move(data.sounds);
 		rawPaths = std::move(data.paths);
-		patterns = std::move(data.patterns);
+		worthName = nameOf("worth");
+		for (const RawPatterns& raw : data.patterns)
+		{
+			Patterns& set = patterns.emplace_back();
+			set.name = nameOf(raw.name);
+			for (const RawPatterns::Pattern& rawPattern : raw.patterns)
+			{
+				set.patterns.push_back({ nameOf(rawPattern.name), rawPattern.parts, expr.nameStore.of(rawPattern.by) });
+			}
+		}
 		const std::vector<std::string> keeps = std::move(data.keeps);
 		demo = std::move(data.demo);
 
@@ -88,13 +97,13 @@ namespace xge
 		}
 		startScenes();
 		// What a pattern compares is a variable of what is held.
-		for (const RawPatterns& set : patterns)
+		for (const Patterns& set : patterns)
 		{
-			for (const RawPatterns::Pattern& pattern : set.patterns)
+			for (const Patterns::Pattern& pattern : set.patterns)
 			{
-				for (const std::string& by : pattern.by)
+				for (const Name by : pattern.by)
 				{
-					if (by == "worth" || std::any_of(objects.begin(), objects.end(), [&](const Object& object) { return itemOf(object).is && object.variable.countText(by); })) { continue; }
+					if (by == worthName || std::any_of(objects.begin(), objects.end(), [&](const Object& object) { return itemOf(object).is && object.variable.count(by); })) { continue; }
 					throw std::runtime_error("<patterns name=\"" + set.name + "\"> > <pattern name=\"" + pattern.name + "\">: variable=\"" + by + "\"; nothing held has a variable of that name");
 				}
 			}
@@ -103,26 +112,26 @@ namespace xge
 		for (const Object& object : objects)
 		{
 			if (!isHolder(object)) { continue; }
-			if (!holderOf(object).score.empty() && std::none_of(patterns.begin(), patterns.end(), [&](const RawPatterns& each) { return each.name == holderOf(object).score; }))
+			if (!holderOf(object).score.empty() && std::none_of(patterns.begin(), patterns.end(), [&](const Patterns& each) { return each.name == holderOf(object).score; }))
 			{
 				throw std::runtime_error("<object name=\"" + object.name + "\"> > <holds> > <score patterns=\"" + holderOf(object).score + "\">: names no <patterns>");
 			}
-			for (const RawPatterns& set : patterns)
+			for (const Patterns& set : patterns)
 			{
 				if (set.name != holderOf(object).score) { continue; }
 				std::set<std::string> alike;
-				for (const RawPatterns::Pattern& pattern : set.patterns)
+				for (const Patterns::Pattern& pattern : set.patterns)
 				{
 					const std::string where = "<patterns name=\"" + set.name + "\"> > <pattern name=\"" + pattern.name + "\">";
 					for (std::size_t i = 0; i < pattern.parts.size(); ++i)
 					{
-						if (pattern.parts[i].first == RawPatterns::Part::Alike) { alike.insert(pattern.by[i]); }
+						if (pattern.parts[i].first == Patterns::Part::Alike) { alike.insert(pattern.by[i]); }
 						else if (pattern.by[i] != "worth") { throw std::runtime_error(where + ": scores a hand of " + object.name + "; for now such a run is of worth (runs of another variable are for <melds />)"); }
 					}
 					if (alike.size() > 4) { throw std::runtime_error(where + ": scores a hand of " + object.name + "; for now a set scoring a hand compares at most four variables"); }
 				}
 			}
-			if (!holderOf(object).melds.empty() && std::none_of(patterns.begin(), patterns.end(), [&](const RawPatterns& each) { return each.name == holderOf(object).melds; }))
+			if (!holderOf(object).melds.empty() && std::none_of(patterns.begin(), patterns.end(), [&](const Patterns& each) { return each.name == holderOf(object).melds; }))
 			{
 				throw std::runtime_error("<object name=\"" + object.name + "\"> > <holds> > <score patterns=\"" + holderOf(object).melds + "\"> with <melds />: names no <patterns>");
 			}

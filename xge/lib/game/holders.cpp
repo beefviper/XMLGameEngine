@@ -29,6 +29,7 @@ namespace xge
 	namespace
 	{
 		// An item's variable of that name (0: it has none).
+		float valueOf(const Object& item, Name variable) { return item.variable.valueOr(variable, 0.0f); }
 		float valueOf(const Object& item, const std::string& variable)
 		{
 			const auto value = item.variable.findText(variable);
@@ -138,15 +139,15 @@ namespace xge
 	// holds for all of them (<alike>: one value of its variable, <run>:
 	// values in a row, by worth an item counting any of its worths), and
 	// there are at least as many as its number.
-	bool Game::meldFits(const std::vector<const Object*>& group, const RawPatterns::Pattern& pattern)
+	bool Game::meldFits(const std::vector<const Object*>& group, const Patterns::Pattern& pattern)
 	{
 		const std::size_t n = group.size();
 		for (std::size_t p = 0; p < pattern.parts.size(); ++p)
 		{
 			const auto& [part, count] = pattern.parts[p];
-			const std::string& by = pattern.by[p];
+			const Name by = pattern.by[p];
 			if (n < static_cast<std::size_t>(count)) { return false; }
-			if (part == RawPatterns::Part::Alike)
+			if (part == Patterns::Part::Alike)
 			{
 				for (const Object* item : group)
 				{
@@ -159,7 +160,7 @@ namespace xge
 			for (const Object* starter : group)
 			{
 				// By worth, an item counting any of its worths; else the variable's value.
-				const auto valuesOf = [&](const Object& item) { return by == "worth" ? itemOf(item).worths : std::vector<float>{ valueOf(item, by) }; };
+				const auto valuesOf = [&](const Object& item) { return by == worthName ? itemOf(item).worths : std::vector<float>{ valueOf(item, by) }; };
 				for (const float start : valuesOf(*starter))
 				{
 					std::vector<bool> used(n, false);
@@ -200,7 +201,7 @@ namespace xge
 		const std::size_t n = items.size();
 		std::vector<float> value(n);
 		for (std::size_t i = 0; i < n; ++i) { value[i] = itemPoints(holder, *items[i]); }
-		const auto set = std::find_if(patterns.begin(), patterns.end(), [&](const RawPatterns& each) { return each.name == holderOf(holder).melds; });
+		const auto set = std::find_if(patterns.begin(), patterns.end(), [&](const Patterns& each) { return each.name == holderOf(holder).melds; });
 		if (set == patterns.end() || n > 16 || n != numbers.size())
 		{
 			float total = 0.0f;
@@ -220,7 +221,7 @@ namespace xge
 			{
 				if (mask & (std::uint32_t{ 1 } << i)) { group.push_back(items[i]); }
 			}
-			if (std::any_of(set->patterns.begin(), set->patterns.end(), [&](const RawPatterns::Pattern& pattern) { return meldFits(group, pattern); }))
+			if (std::any_of(set->patterns.begin(), set->patterns.end(), [&](const Patterns::Pattern& pattern) { return meldFits(group, pattern); }))
 			{
 				groups[static_cast<std::size_t>(std::countr_zero(mask))].push_back(mask);
 			}
@@ -532,28 +533,28 @@ namespace xge
 	{
 		// What a set's <alike> parts compare: each variable once, at most
 		// four (Game checks), and each part's place among them (-1: a run).
-		struct Slots
+		struct Compared
 		{
-			std::vector<std::string> by;
+			std::vector<Name> by;
 			std::vector<std::vector<int>> parts;   // a list for each pattern, a place for each part
 		};
 
-		Slots slotsOf(const RawPatterns& set)
+		Compared comparedOf(const Patterns& set)
 		{
-			Slots slots;
-			for (const RawPatterns::Pattern& pattern : set.patterns)
+			Compared compared;
+			for (const Patterns::Pattern& pattern : set.patterns)
 			{
-				std::vector<int>& places = slots.parts.emplace_back();
+				std::vector<int>& places = compared.parts.emplace_back();
 				for (std::size_t i = 0; i < pattern.parts.size(); ++i)
 				{
-					if (pattern.parts[i].first != RawPatterns::Part::Alike) { places.push_back(-1); continue; }
-					const std::string& by = pattern.by[i];
-					auto at = std::find(slots.by.begin(), slots.by.end(), by);
-					if (at == slots.by.end()) { at = slots.by.insert(slots.by.end(), by); }
-					places.push_back(static_cast<int>(at - slots.by.begin()));
+					if (pattern.parts[i].first != Patterns::Part::Alike) { places.push_back(-1); continue; }
+					const Name by = pattern.by[i];
+					auto at = std::find(compared.by.begin(), compared.by.end(), by);
+					if (at == compared.by.end()) { at = compared.by.insert(compared.by.end(), by); }
+					places.push_back(static_cast<int>(at - compared.by.begin()));
 				}
 			}
-			return slots;
+			return compared;
 		}
 
 		// An item as patterns see it: the value of each variable its set's
@@ -583,7 +584,7 @@ namespace xge
 		// first <alike> variable, bigger groups first, each group by worth;
 		// then the rest by worth. With `only` (from 1), that pattern alone
 		// is tried: -1 when the items do not make it.
-		int bestPattern(const RawPatterns& set, const Slots& slots, const std::vector<Scored>& items, std::vector<float>& deciding, int only = -1)
+		int bestPattern(const Patterns& set, const Compared& compared, const std::vector<Scored>& items, std::vector<float>& deciding, int only = -1)
 		{
 			// Counted in place (values are under 64; scoreHolder sees to
 			// that), as this runs thousands of times for the odds.
@@ -595,8 +596,8 @@ namespace xge
 			bool byBits = true;
 			for (const Scored& item : items)
 			{
-				for (std::size_t s = 0; s < slots.by.size(); ++s) { ++of[s][static_cast<std::size_t>(item.values[s])]; }
-				if (!slots.by.empty())
+				for (std::size_t s = 0; s < compared.by.size(); ++s) { ++of[s][static_cast<std::size_t>(item.values[s])]; }
+				if (!compared.by.empty())
 				{
 					const auto group = static_cast<std::size_t>(item.values[0]);
 					if (of[0][group] == 1) { groups[groupCount++] = item.values[0]; }
@@ -624,7 +625,7 @@ namespace xge
 			const auto inGroups = [&]()
 			{
 				deciding.clear();
-				if (slots.by.empty())
+				if (compared.by.empty())
 				{
 					for (const Scored& item : items) { deciding.push_back(highest(item)); }
 					std::sort(deciding.rbegin(), deciding.rend());
@@ -662,8 +663,8 @@ namespace xge
 			const std::size_t lowestTried = only > 0 ? highestTried - 1 : 0;
 			for (std::size_t index = highestTried; index-- > lowestTried;)
 			{
-				const RawPatterns::Pattern& pattern = set.patterns[index];
-				const std::vector<int>& places = slots.parts[index];
+				const Patterns::Pattern& pattern = set.patterns[index];
+				const std::vector<int>& places = compared.parts[index];
 				int longestRun = 0;
 				bool holds = true;
 				// Each <alike> a value of its own, the biggest first, each
@@ -688,8 +689,8 @@ namespace xge
 				}
 				for (const auto& [part, many] : pattern.parts)
 				{
-					if (part == RawPatterns::Part::Alike && many > static_cast<int>(items.size())) { holds = false; }
-					else if (part == RawPatterns::Part::Run) { longestRun = std::max(longestRun, many); }
+					if (part == Patterns::Part::Alike && many > static_cast<int>(items.size())) { holds = false; }
+					else if (part == Patterns::Part::Run) { longestRun = std::max(longestRun, many); }
 				}
 				if (!holds) { continue; }
 				const std::optional<float> top = longestRun > 0 ? runTop(longestRun) : std::nullopt;
@@ -725,7 +726,7 @@ namespace xge
 		// make, and a number ordering any two the same size by the pattern,
 		// then by what decides between two of it, in base `base` (one more
 		// than any worth).
-		float bestOf(const RawPatterns& set, const Slots& slots, const std::vector<Scored>& items, std::size_t best, float base, int& made)
+		float bestOf(const Patterns& set, const Compared& compared, const std::vector<Scored>& items, std::size_t best, float base, int& made)
 		{
 			const std::size_t size = best == 0 ? items.size() : std::min(best, items.size());
 			// Room reused call after call: the odds call this thousands of times.
@@ -735,7 +736,7 @@ namespace xge
 			// What all the items make is the most any `size` of them can
 			// (every part asks for at least so many), so that is tried
 			// first, and only when none of them makes it, every pattern.
-			made = bestPattern(set, slots, items, deciding);
+			made = bestPattern(set, compared, items, deciding);
 			if (size == items.size())
 			{
 				float strength = static_cast<float>(made);
@@ -755,7 +756,7 @@ namespace xge
 					{
 						if (chosen[i]) { some.push_back(items[i]); }
 					}
-					const int pattern = bestPattern(set, slots, some, deciding, onlyTheMost ? made : -1);
+					const int pattern = bestPattern(set, compared, some, deciding, onlyTheMost ? made : -1);
 					if (pattern < 0) { continue; }
 					float strength = static_cast<float>(pattern);
 					for (const float worth : deciding) { strength = strength * base + worth; }
@@ -825,9 +826,9 @@ namespace xge
 
 	void Game::scoreHolder(Object& holder)
 	{
-		const auto set = std::find_if(patterns.begin(), patterns.end(), [&](const RawPatterns& each) { return each.name == holderOf(holder).score; });
+		const auto set = std::find_if(patterns.begin(), patterns.end(), [&](const Patterns& each) { return each.name == holderOf(holder).score; });
 		if (set == patterns.end()) { return; }
-		const Slots slots = slotsOf(*set);
+		const Compared compared = comparedOf(*set);
 		const auto scored = [&](const Object& item)
 		{
 			std::uint64_t bits = 0;
@@ -837,7 +838,7 @@ namespace xge
 				bits |= std::uint64_t{ 1 } << static_cast<int>(worth);
 			}
 			Scored one{ {}, &itemOf(item).worths, bits };
-			for (std::size_t s = 0; s < slots.by.size(); ++s) { one.values[s] = static_cast<int>(std::lround(valueOf(item, slots.by[s]))); }
+			for (std::size_t s = 0; s < compared.by.size(); ++s) { one.values[s] = static_cast<int>(std::lround(valueOf(item, compared.by[s]))); }
 			return one;
 		};
 		float base = 1.0f;
@@ -846,7 +847,7 @@ namespace xge
 			if (!itemOf(object).is) { continue; }
 			// The values compared are counted in room for 0 to 63 (bestPattern).
 			const Scored one = scored(object);
-			if (std::any_of(one.values.begin(), one.values.begin() + static_cast<std::ptrdiff_t>(slots.by.size()), [](int value) { return value < 0 || value >= 64; })) { return; }
+			if (std::any_of(one.values.begin(), one.values.begin() + static_cast<std::ptrdiff_t>(compared.by.size()), [](int value) { return value < 0 || value >= 64; })) { return; }
 			base = std::max(base, highest(one) + 1.0f);
 		}
 
@@ -870,7 +871,7 @@ namespace xge
 		const std::size_t best = static_cast<std::size_t>(holderOf(holder).scoreBest);
 
 		int made = 0;
-		holderOf(holder).strength = own.empty() ? 0.0f : bestOf(*set, slots, own, best, base, made);
+		holderOf(holder).strength = own.empty() ? 0.0f : bestOf(*set, compared, own, best, base, made);
 		holderOf(holder).pattern = static_cast<float>(made);
 
 		// The odds: as many unseen items as this holder holds, against it,
@@ -913,8 +914,8 @@ namespace xge
 					}
 					for (std::size_t i = 0; i < mine; ++i) { theirs.push_back(unseen[more + i]); }
 					int ignored = 0;
-					const float us = bestOf(*set, slots, ours, best, base, ignored);
-					const float them = bestOf(*set, slots, theirs, best, base, ignored);
+					const float us = bestOf(*set, compared, ours, best, base, ignored);
+					const float them = bestOf(*set, compared, theirs, best, base, ignored);
 					won += us > them ? 1.0f : us == them ? 0.5f : 0.0f;
 				}
 				holderOf(holder).odds = std::round(won * 100.0f / static_cast<float>(trials));

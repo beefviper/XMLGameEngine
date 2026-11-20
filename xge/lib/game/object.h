@@ -586,6 +586,20 @@ namespace xge
 		std::vector<Pattern> patterns;
 	};
 
+	// A <patterns> set as played, its names held as Names.
+	struct Patterns
+	{
+		using Part = RawPatterns::Part;
+		struct Pattern
+		{
+			Name name;
+			std::vector<std::pair<Part, int>> parts;
+			std::vector<Name> by;   // each part's variable=
+		};
+		Name name;
+		std::vector<Pattern> patterns;
+	};
+
 	struct RawObject
 	{
 		std::string name;

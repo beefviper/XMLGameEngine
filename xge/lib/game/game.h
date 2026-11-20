@@ -718,7 +718,7 @@ namespace xge
 		Vector2f itemPlace(const Object& holder, std::size_t index);
 		bool holderTakes(Object& holder, const std::vector<int>& items, const Object* from = nullptr);
 		float itemPoints(const Object& holder, const Object& item);
-		bool meldFits(const std::vector<const Object*>& group, const RawPatterns::Pattern& pattern);
+		bool meldFits(const std::vector<const Object*>& group, const Patterns::Pattern& pattern);
 		float meldDeadwood(const Object& holder, const std::vector<int>& numbers, int best, std::vector<std::vector<int>>* melds);
 		void layOutMelds(Object& holder);
 		const Object* trickWinning(const Object& holder);
@@ -951,7 +951,9 @@ namespace xge
 		std::vector<RawSound> rawSounds;
 		std::vector<SoundDesc> sounds;
 		std::vector<RawPath> rawPaths;
-		std::vector<RawPatterns> patterns;
+		std::vector<Patterns> patterns;
+		// "worth", what a pattern by an item's worths names.
+		Name worthName;
 		std::map<std::string, Path> paths;
 		std::vector<std::string> soundRequests;
 		std::vector<std::string> silenceRequests;
