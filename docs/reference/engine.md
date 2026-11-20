@@ -142,7 +142,7 @@ Design: [build-and-layout](../designs/51-build-and-layout.md).
 | | `game/object.*`, `game/states.*`, `game/data.h`, `game/random.cpp` | the data model; the one random source |
 | | `game/name.h`, `game/variables.h`, `game/words.h` | `Name`, a name from a game file held once in the program's `NameStore` (`Name::of`, or a `std::string` made a `Name`) and compared as an id; `Variables`, an object's variables as one short list under `Name`s; `words`, the names the engine gives itself (`turn`, `worth`, `self`), made once |
 | | `game/parts.*`, `game/store.h` | every object's handle (`ObjectId`) and the parts it has, a `Store` per kind (`Game::parts()`) |
-| | `game/cells.*`, `game/holders.cpp`, `game/think.*` | maps of cells and board games (`CellMaps`, `Game::cellMaps()`); cards; the board-game search (`Thinker`). The game holds one of each, and they read it through its public functions |
+| | `game/cells.*`, `game/holders.*`, `game/think.*` | maps of cells and board games (`CellMaps`, `Game::cellMaps()`); cards in holders and hands (`Holders`, `Game::holders()`); the board-game search (`Thinker`). The game holds one of each, and they read it through its public functions |
 | the frame | `play/frame.cpp` | `playOneFrame`: the order of a frame and the moving |
 | | `play/geometry.cpp`, `play/collision.cpp` | touching (box, circle, swept, pixel walk, `contactOf`) and the verbs' arithmetic |
 | | `play/verbs.cpp`, `play/executor.cpp` | what several verbs and the frame do to an object; running a list of commands by their verbs |

@@ -991,7 +991,7 @@ namespace xge
 		{
 			if (object.exists && object.named(name)) { picker = &object; break; }
 		}
-		if (picker && game.isHand(*picker)) { return game.thinkHeld(think, *picker, seconds); }
+		if (picker && game.isHand(*picker)) { return game.holders().thinkHeld(think, *picker, seconds); }
 		if (!picker || !picker->onCells || think.objClass.empty()) { return std::nullopt; }
 
 		// Its move is thought about first (the frame its turn came is drawn

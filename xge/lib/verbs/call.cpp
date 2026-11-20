@@ -19,7 +19,7 @@ namespace xge
 
 	static bool runCall(const CmdCall& call, const Doer& doer)
 	{
-		return doer.self && doer.game().callValue(*doer.self, call.holder);
+		return doer.self && doer.game().holders().callValue(*doer.self, call.holder);
 	}
 
 	static void printCall(std::ostream& o, const CmdCall& call)

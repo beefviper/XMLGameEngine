@@ -45,7 +45,7 @@ namespace
 
 		Object& holder(const std::string& name) { return get(name); }
 		Object& hand() { return get("hand"); }
-		Object& item(int number) { return *game.itemAt(number); }
+		Object& item(int number) { return *game.holders().itemAt(number); }
 		Object& top(const std::string& name) { return item(holderOf(name).items.back()); }
 	};
 }
@@ -106,12 +106,12 @@ namespace
 			for (const auto& [suit, rank] : items)
 			{
 				const int number = cardOf(table, suit, rank);
-				table.game.turnItem(table.item(number), true);
+				table.game.holders().turnItem(table.item(number), true);
 				holder.items.push_back(number);
 			}
 			holder.itemCount = static_cast<float>(holder.items.size());
 		}
-		table.game.layOutItems();
+		table.game.holders().layOutItems();
 	}
 
 	void pointAt(Table& table, const std::string& holder, int at = -1)
@@ -231,7 +231,7 @@ TEST_CASE("klondike.xml: a run moves together, and the face-down card under it t
 {
 	Table table;
 	setUp(table, { { "columns.1.1", { { "clubs", "4" }, { "spades", "10" }, { "hearts", "9" }, { "clubs", "8" } } }, { "columns.2.1", { { "diamonds", "J" } } } });
-	table.game.turnItem(table.item(table.holderOf("columns.1.1").items[0]), false);
+	table.game.holders().turnItem(table.item(table.holderOf("columns.1.1").items[0]), false);
 	// The 10 and what is on it, onto the red jack.
 	pointAt(table, "columns.1.1", 1);
 	space(table);
@@ -244,7 +244,7 @@ TEST_CASE("klondike.xml: a run moves together, and the face-down card under it t
 	CHECK(table.game.itemOf(table.top("columns.1.1")).faceUp);
 	// A run that is not in order cannot be taken: a face-down card neither.
 	setUp(table, { { "columns.1.1", { { "clubs", "4" }, { "spades", "10" } } } });
-	table.game.turnItem(table.item(table.holderOf("columns.1.1").items[0]), false);
+	table.game.holders().turnItem(table.item(table.holderOf("columns.1.1").items[0]), false);
 	pointAt(table, "columns.1.1", 0);
 	table.tap(KeyCode::F);
 	table.frames(1);
@@ -522,8 +522,8 @@ TEST_CASE("klondike.xml: placing rules are conditions on the arriving card again
 	Object high = low;
 	high.variable.at("worth") = 6.0f;
 	const std::vector<HolderRule::VarRule> below{ takes.rules[2] };
-	CHECK(Game::acceptsBy(below, low, &top));
-	CHECK_FALSE(Game::acceptsBy(below, high, &top));
+	CHECK(Holders::acceptsBy(below, low, &top));
+	CHECK_FALSE(Holders::acceptsBy(below, high, &top));
 
 	// Klondike as written: the foundations one at a time, the same suit, one higher.
 	Played klondike("descriptions/klondike.xml");
@@ -542,7 +542,7 @@ TEST_CASE("a pack cut from a sheet: a face for each suit and rank, one back for 
 	Played hearts("descriptions/hearts.xml");
 	hearts.tap(KeyCode::Space);
 	hearts.frames(2);
-	Object& ace = *hearts.game.itemAt(1);
+	Object& ace = *hearts.game.holders().itemAt(1);
 	REQUIRE(ace.looks.all().size() == 2);
 	const Bitmap& face = *ace.looks.all()[0].bitmap;
 	REQUIRE(face.width == 96);
@@ -551,8 +551,8 @@ TEST_CASE("a pack cut from a sheet: a face for each suit and rank, one back for 
 	CHECK(face.solidAt(48, 70));               // the big spade
 	CHECK(face.rgba[(70 * 96 + 48) * 4] < 40);
 	CHECK(ace.looks.all()[1].name == "back");
-	CHECK(ace.looks.all()[1].bitmap == hearts.game.itemAt(52)->looks.all()[1].bitmap);   // one back, shared
-	CHECK(ace.looks.all()[0].bitmap != hearts.game.itemAt(14)->looks.all()[0].bitmap);
+	CHECK(ace.looks.all()[1].bitmap == hearts.game.holders().itemAt(52)->looks.all()[1].bitmap);   // one back, shared
+	CHECK(ace.looks.all()[0].bitmap != hearts.game.holders().itemAt(14)->looks.all()[0].bitmap);
 }
 
 TEST_CASE("sheets: a cell by column and row, by x and y, by cell size; runs of cells as frames and faces", "[cards][sheets]")
@@ -597,8 +597,8 @@ TEST_CASE("klondike.xml: the pack is a group whose cells cut their own faces fro
 	CHECK(table.game.itemOf(nine).number == 22);
 	CHECK(cardAxis(nine, "row") == 2);
 	CHECK(cardAxis(nine, "column") == 9);
-	CHECK((nine.looks.all()[0].bitmap->rgba == hearts.game.itemAt(22)->looks.all()[0].bitmap->rgba));
-	CHECK((nine.looks.all()[1].bitmap->rgba == hearts.game.itemAt(22)->looks.all()[1].bitmap->rgba));
+	CHECK((nine.looks.all()[0].bitmap->rgba == hearts.game.holders().itemAt(22)->looks.all()[0].bitmap->rgba));
+	CHECK((nine.looks.all()[1].bitmap->rgba == hearts.game.holders().itemAt(22)->looks.all()[1].bitmap->rgba));
 	CHECK(nine.variable.at("color") == 2.0f);
 	CHECK(table.item(cardOf(table, "clubs", "9")).variable.at("color") == 1.0f);
 }
@@ -635,7 +635,7 @@ namespace
 		Object& holder(const std::string& name) { return get(name); }
 		Object& hand() { return get("you"); }
 		Object& computer() { return get("computer"); }
-		Object& item(int number) { return *game.itemAt(number); }
+		Object& item(int number) { return *game.holders().itemAt(number); }
 		// 1 your turn, 2 the computer's, 3 yours to name a suit, 4 its.
 		float turn()
 		{
@@ -679,13 +679,13 @@ namespace
 				for (const std::string& each : items)
 				{
 					const auto space = each.find(' ');
-					game.putInHolder(holder(name), cardOf(each.substr(0, space), each.substr(space + 1)));
+					game.holders().putInHolder(holder(name), cardOf(each.substr(0, space), each.substr(space + 1)));
 				}
 			}
 			handOf(hand()).holder = holder("mine").name;
 			handOf(hand()).at = 0;
 			handOf(hand()).mouse = false;
-			game.layOutItems();
+			game.holders().layOutItems();
 		}
 
 		std::string name(int number) { return klondikeRanks[static_cast<std::size_t>(cardAxis(item(number), "column") - 1)] + " " + klondikeSuits[static_cast<std::size_t>(cardAxis(item(number), "row") - 1)]; }
@@ -1007,7 +1007,7 @@ TEST_CASE("blackjack.xml: over 21 is bust; blackjack pays three to two", "[cards
 	CHECK(play.get("result").lookName() == "bust");
 	CHECK(play.table("bank") == 190.0f);
 	// The dealer's hidden card shows.
-	for (const int number : play.holderOf("dealer").items) { CHECK(play.game.itemOf(*play.game.itemAt(number)).faceUp); }
+	for (const int number : play.holderOf("dealer").items) { CHECK(play.game.itemOf(*play.game.holders().itemAt(number)).faceUp); }
 
 	play.press(KeyCode::Space);
 	play.stack({ "A hearts", "6 spades", "K clubs", "5 diamonds" });
@@ -1100,7 +1100,7 @@ namespace
 			yours.clear();
 			board.clear();
 			for (std::size_t i = 0; i < seven.size(); ++i) { (i < 2 ? yours : board).push_back(cardOf(seven[i])); }
-			game.scoreHolder(holder("yours"));
+			game.holders().scoreHolder(holder("yours"));
 		}
 
 		void press(KeyCode key)
@@ -1196,7 +1196,7 @@ TEST_CASE("holdem.xml: the deal antes five each; checked through, the better han
 	CHECK(play.chips("you") == 495.0f);
 	CHECK(play.holderOf("yours").items.size() == 2);
 	CHECK(play.holderOf("theirs").items.size() == 2);
-	for (const int number : play.holderOf("theirs").items) { CHECK_FALSE(play.game.itemOf(*play.game.itemAt(number)).faceUp); }
+	for (const int number : play.holderOf("theirs").items) { CHECK_FALSE(play.game.itemOf(*play.game.holders().itemAt(number)).faceUp); }
 	CHECK(play.get("you").lookName() == "act");
 
 	// You check each round; the computer, with little, checks too.
@@ -1210,7 +1210,7 @@ TEST_CASE("holdem.xml: the deal antes five each; checked through, the better han
 	CHECK(play.get("result").lookName() == "youwin");
 	CHECK(play.chips("you") == 505.0f);
 	CHECK(play.chips("cpu") == 495.0f);
-	for (const int number : play.holderOf("theirs").items) { CHECK(play.game.itemOf(*play.game.itemAt(number)).faceUp); }
+	for (const int number : play.holderOf("theirs").items) { CHECK(play.game.itemOf(*play.game.holders().itemAt(number)).faceUp); }
 	CHECK(play.get("you").lookName() == "done");
 }
 
@@ -1361,7 +1361,7 @@ namespace
 			game.passPlayersTo("players", 0);
 			frames(2);
 			// Dealt a card a round to the players in turn: you, west, north and east.
-			game.stackedStart = roundRobin(*this, hands);
+			game.holders().stackedStart = roundRobin(*this, hands);
 			tap(KeyCode::Space);
 			for (int i = 0; i < 100 && look() != "playing" && look() != "bid"; ++i) { frames(1); }
 			frames(2);
@@ -1442,8 +1442,8 @@ TEST_CASE("hearts.xml: the deal: thirteen each, yours face up in suit order, the
 	const auto& mine = play.holderOf("mine").items;
 	for (std::size_t i = 1; i < mine.size(); ++i)
 	{
-		const Object& before = *play.game.itemAt(mine[i - 1]);
-		const Object& after = *play.game.itemAt(mine[i]);
+		const Object& before = *play.game.holders().itemAt(mine[i - 1]);
+		const Object& after = *play.game.holders().itemAt(mine[i]);
 		CHECK(std::make_pair(cardAxis(before, "row"), play.game.itemOf(before).worths.back()) < std::make_pair(cardAxis(after, "row"), play.game.itemOf(after).worths.back()));
 		CHECK(play.game.itemOf(after).faceUp);
 	}
@@ -1476,7 +1476,7 @@ TEST_CASE("hearts.xml: the suit led is followed; hearts lead only once broken, o
 	CHECK(play.table("tricks") == 1.0f);
 	// A heart has been laid: hearts are broken.
 	const auto& broken = play.holderOf("trick").broken;
-	CHECK(std::find(broken.begin(), broken.end(), cardAxis(*play.game.itemAt(play.cardOf("A hearts")), "row")) != broken.end());
+	CHECK(std::find(broken.begin(), broken.end(), cardAxis(*play.game.holders().itemAt(play.cardOf("A hearts")), "row")) != broken.end());
 	// West led again (its diamond), north shed another heart, east followed;
 	// you have no diamond, so anything goes.
 	CHECK(play.holderOf("trick").items.size() == 3);
@@ -1572,7 +1572,7 @@ TEST_CASE("hearts.xml: a whole hand, you playing the first card that goes: 26 po
 		const std::vector<int> mine = play.holderOf("mine").items;
 		for (const int number : mine)
 		{
-			const Object& item = *play.game.itemAt(number);
+			const Object& item = *play.game.holders().itemAt(number);
 			if (play.play(nameOf(item)))
 			{
 				played = true;
@@ -1740,7 +1740,7 @@ TEST_CASE("spades.xml: a whole hand, you playing the first card that goes: 13 tr
 		const std::vector<int> mine = play.holderOf("mine").items;
 		for (const int number : mine)
 		{
-			const Object& item = *play.game.itemAt(number);
+			const Object& item = *play.game.holders().itemAt(number);
 			if (play.play(nameOf(item)))
 			{
 				played = true;
@@ -1775,9 +1775,9 @@ namespace
 				for (std::size_t i = from; i < std::min(from + count, top.size()); ++i) { items.push_back(top[i]); }
 				return items;
 			};
-			game.stackedStart = roundRobin(*this, { part(0, 10), part(10, 10) });
+			game.holders().stackedStart = roundRobin(*this, { part(0, 10), part(10, 10) });
 			const std::vector<int> turned = roundRobin(*this, { part(20, 1) });
-			game.stackedStart.insert(game.stackedStart.end(), turned.begin(), turned.end());
+			game.holders().stackedStart.insert(game.holders().stackedStart.end(), turned.begin(), turned.end());
 			for (int i = 0; i < 100 && look() == "dealing"; ++i) { frames(1); }
 			frames(2);
 		}
@@ -1840,7 +1840,7 @@ TEST_CASE("gin.xml: cards laid out in the melds that leave the least deadwood, t
 	const auto& mine = play.holderOf("mine").items;
 	REQUIRE(mine.size() == 10);
 	std::vector<std::string> last;
-	for (std::size_t i = 6; i < 10; ++i) { last.push_back(nameOf(*play.game.itemAt(mine[i]))); }
+	for (std::size_t i = 6; i < 10; ++i) { last.push_back(nameOf(*play.game.holders().itemAt(mine[i]))); }
 	CHECK(std::find(last.begin(), last.end(), "5 hearts") != last.end());
 	CHECK(std::find(last.begin(), last.end(), "A diamonds") != last.end());
 	CHECK(std::find(last.begin(), last.end(), "7 hearts") == last.end());
@@ -1883,7 +1883,7 @@ TEST_CASE("gin.xml: a knock with ten or less scores the difference, north's card
 	CHECK(play.look() == "done");
 	CHECK(play.of("you", "score") == 56.0f);
 	CHECK(play.get("message").lookName() == "youknock");
-	for (const int number : play.holderOf("northcards").items) { CHECK(play.game.itemOf(*play.game.itemAt(number)).faceUp); }
+	for (const int number : play.holderOf("northcards").items) { CHECK(play.game.itemOf(*play.game.holders().itemAt(number)).faceUp); }
 }
 
 TEST_CASE("gin.xml: gin scores 25 more", "[cards][gin]")
@@ -1952,7 +1952,7 @@ TEST_CASE("gin.xml: north knocks as soon as its discard leaves ten or less", "[c
 	CHECK(play.of("north", "score") == play.holderOf("mine").deadwood - play.holderOf("northcards").deadwood);
 	CHECK(play.of("you", "turn") == 0.0f);
 	CHECK(play.of("north", "turn") == 0.0f);
-	for (const int number : play.holderOf("northcards").items) { CHECK(play.game.itemOf(*play.game.itemAt(number)).faceUp); }
+	for (const int number : play.holderOf("northcards").items) { CHECK(play.game.itemOf(*play.game.holders().itemAt(number)).faceUp); }
 }
 
 TEST_CASE("gin.xml: at 100 after a hand the higher score wins", "[cards][gin]")
@@ -1996,15 +1996,15 @@ namespace
 					std::iter_swap(at, target.end() - 1);
 					break;
 				}
-				Object& moved = *game.itemAt(number);
-				Object& other = *game.itemAt(target.back());
+				Object& moved = *game.holders().itemAt(number);
+				Object& other = *game.holders().itemAt(target.back());
 				const bool up = game.itemOf(other).faceUp;
-				game.turnItem(other, game.itemOf(moved).faceUp);
-				game.turnItem(moved, up);
+				game.holders().turnItem(other, game.itemOf(moved).faceUp);
+				game.holders().turnItem(moved, up);
 				*at = target.back();
 				target.back() = number;
 			}
-			game.layOutItems();
+			game.holders().layOutItems();
 		}
 
 		bool holds(const std::string& pileName, const std::string& name)
@@ -2108,7 +2108,7 @@ TEST_CASE("pyramid.xml: the pyramid cleared wins", "[cards][pyramid]")
 			Object& each = play.holder("row" + std::to_string(row) + "." + std::to_string(column) + ".1");
 			for (const int number : play.holderOf(each).items) { play.holderOf("pairs").items.push_back(number); }
 			play.holderOf(each).items.clear();
-			play.game.refreshHolder(each);
+			play.game.holders().refreshHolder(each);
 		}
 	}
 	play.frames(2);
@@ -2160,14 +2160,14 @@ TEST_CASE("<starts> deals a pack in its order, the first on top; a holder's top.
 	Object& pile = play.get("playing.pile");
 	REQUIRE(play.holderOf(pile).items.size() == 3);
 	CHECK(pile.variable.at("top.n") == 1.0f);
-	CHECK(play.game.itemAt(play.holderOf(pile).items.back())->lookName() == "face");
+	CHECK(play.game.holders().itemAt(play.holderOf(pile).items.back())->lookName() == "face");
 
 	play.tap(KeyCode::Space);
 	play.frames(1);
 	CHECK(pile.variable.at("top.n") == 2.0f);
 	// The one left on top turns face up, as <top> says, after a <send> too.
-	CHECK(play.game.itemAt(play.holderOf(pile).items.back())->lookName() == "face");
-	CHECK(play.game.itemAt(play.holderOf(pile).items.front())->lookName() == "back");
+	CHECK(play.game.holders().itemAt(play.holderOf(pile).items.back())->lookName() == "face");
+	CHECK(play.game.holders().itemAt(play.holderOf(pile).items.front())->lookName() == "back");
 
 	play.tap(KeyCode::Space);
 	play.frames(1);
@@ -2214,7 +2214,7 @@ TEST_CASE("an <order> in <starts> shuffles what starts in that holder", "[cards]
 		const Tokens file("<order group=\"pile\"><random /></order>");
 		Played play(file.path);
 		play.frames(1);
-		if (play.get("playing.pile").variable.at("top.n") == 1.0f && play.game.itemAt(play.holderOf("playing.pile").items.front())->variable.at("n") == 3.0f) { ++inOrder; }
+		if (play.get("playing.pile").variable.at("top.n") == 1.0f && play.game.holders().itemAt(play.holderOf("playing.pile").items.front())->variable.at("n") == 3.0f) { ++inOrder; }
 	}
 	CHECK(inOrder < 20);
 }

@@ -69,7 +69,7 @@ namespace xge
 			if (!become.sprite.empty()) { game.showLook(*self, become.sprite); }
 			if (!become.style.empty()) { wearPaletteNamed(*self, become.style); }
 			// A hand sits centred on its card by its look's size.
-			if (game.isHand(*self) && self->lookName() != before) { game.layOutItems(); }
+			if (game.isHand(*self) && self->lookName() != before) { game.holders().layOutItems(); }
 		}
 	}
 

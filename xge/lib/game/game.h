@@ -16,6 +16,7 @@
 #include "game/states.h"
 #include "game/think.h"
 #include "game/cells.h"
+#include "game/holders.h"
 
 #include <functional>
 #include <iostream>
@@ -71,6 +72,7 @@ namespace xge
 		void thinkInBackground(bool aside) noexcept { thinker.inBackground(aside); }
 		// Maps with <cells /> and the board games on them.
 		CellMaps& cellMaps() noexcept { return cellMapping; }
+		Holders& holders() noexcept { return itemHolders; }
 
 		// The full name a name means: itself, when it names an object or a
 		// group, or else the one path that ends with it (robots for
@@ -105,6 +107,14 @@ namespace xge
 
 		// Every picture the game has loaded or made, each held once.
 		const Resources& resources() const noexcept { return expr.resources; }
+		// The expressions worked out while loading, and the names each reads.
+		const Evaluator& evaluator() const noexcept { return expr; }
+		// The <patterns> of that name; null when there are none.
+		const Patterns* patternsNamed(Name name) const noexcept;
+
+		// An object's variable is now `value`: expressions read it, and every
+		// text that shows it is made again.
+		void variableChanged(Name ownerName, Name variableName, float value);
 
 		// Whether the object is in play: it moves, animates, counts its timers
 		// and collides (and is drawn, unless it is <hidden />). It
@@ -594,71 +604,6 @@ namespace xge
 		void pressBegins();
 		void pressEnds();
 
-		// Items (game/holders.cpp): a hand's verbs, each false when refused;
-		// moving it among the holders; the deal at the start of a game.
-		bool takeItems(Object& hand);
-		bool layItems(Object& hand, Name holder);
-		bool dropItems(Object& hand);
-		bool sendPicked(Object& hand, Name from = {}, Name faces = {});
-		// For tests: the next <starts> puts these items on top of the starting
-		// holder after shuffling, the first on top, before the holders are dealt.
-		std::vector<int> stackedStart;
-		// Members of a held class, holder to holder: the top `count` of
-		// `from` (or all; a group's name: every member, wherever it is)
-		// into `into`, showing `sprite` if given; a holder's items at
-		// random; a holder's items turned to a look of theirs. False when
-		// refused (nothing to send, no such holder or look).
-		bool sendHeld(Name from, Name into, int count, bool all, Name sprite);
-		bool orderHeld(Name holder);
-		bool turnHeld(Object& holder, Name sprite);
-		bool callValue(Object& hand, Name holder);
-		bool hopHand(Object& hand, Direction direction);
-		void trackHand(Object& hand, bool horizontal, float at);
-		void sendStarts();
-		void layOutItems();
-		bool isCovered(const Object& item, const Object& own);   // overlapped by a later-drawn item of another shown holder
-		Object* itemAt(int number);
-		Object* holderNamed(Name name);
-		void turnItem(Object& item, bool up);
-		void putInHolder(Object& holder, int number);
-		int takeTop(Object& holder);
-		void showTop(Object& holder);
-		// Shows the held member that look of its two, face (the first) or back.
-		void showHeld(Object& item, Name look);
-		Vector2f itemPlace(const Object& holder, std::size_t index);
-		bool holderTakes(Object& holder, const std::vector<int>& items, const Object* from = nullptr);
-		float itemPoints(const Object& holder, const Object& item);
-		bool meldFits(const std::vector<const Object*>& group, const Patterns::Pattern& pattern);
-		float meldDeadwood(const Object& holder, const std::vector<int>& numbers, int best, std::vector<std::vector<int>>* melds);
-		void layOutMelds(Object& holder);
-		const Object* trickWinning(const Object& holder);
-		const Object* trickHolder();
-		bool isTrump(const HolderRule& rule, const Object& item);
-		bool beatsInTrick(const HolderRule& rule, const Object& item, const Object& best);
-		float reckonTricks(const Object& own, const HolderRule& trick);
-
-		// <pick /> by a hand of items: takes what it points at, or from a
-		// holder with <picked> sends as that says (then false: nothing held).
-		bool pickItems(Object& hand);
-		static bool follows(const HolderRule& rule, const Object& below, const Object& next);
-		// `called`: a variable whose value on `below` counts as `value` (0: its own).
-		static bool acceptsBy(const std::vector<HolderRule::VarRule>& rules, const Object& next, const Object* below, const std::string& called = {}, float value = 0.0f);
-		void layHeld(Object& hand, Object& holder);
-		static bool isWild(const HolderRule& rule, const Object& item);
-		void refreshCall(Object& holder);
-		void refreshHolder(Object& holder);
-		void scoreHolder(Object& holder);
-		// Marks each scored holder whose `odds` nothing reads: no condition,
-		// shown text or expression names them (Object::Holder::oddsRead).
-		void markOddsRead();
-		void scoreDueHolders();
-		bool scoresDue{ false };
-		std::optional<KeyCode> thinkHeld(const CmdThink& think, Object& hand, float seconds);
-		int playToTrick(Object& trick, const Object& hand, const Object& own, bool avoid);
-		// Seconds before the computer's hand next moves or plays, and how
-		// long it waits each time: half a second.
-		float itemWait{};
-		static constexpr float kItemPace = 0.5f;
 		// Players as a group: back to the first member's turn, the rest
 		// showing their <turns sprite=>; each member the computer plays,
 		// with its <think>; whether the computer is pressing now.
@@ -667,10 +612,6 @@ namespace xge
 		std::map<Name, CmdThink> memberThinks;
 		bool anyTurns{ false };
 		bool computerPresses{ false };
-		std::vector<Object*> shownHolders();
-		// Where each item's object is in `objects`, by its number less one
-		// (looked over again when a copy taken away moved them).
-		std::vector<std::size_t> itemIndex;
 
 		// Joins the objects spawned to the game's, and takes out the copies
 		// despawned: what updateObjects does before and after a frame. A
@@ -722,6 +663,7 @@ namespace xge
 		void cellMoves(float seconds) override;
 		Thinker thinker;
 		CellMaps cellMapping{ *this };
+		Holders itemHolders{ *this };
 
 
 		// Marks the objects (and every member of the groups) of these names
@@ -757,9 +699,6 @@ namespace xge
 		std::unordered_map<VariableName, float*, VariableName::Hash> expressionSlots;
 		std::size_t expressionSlotsOf = 0;
 
-		// An object's variable is now `value`: expressions read it, and every
-		// text that shows it is made again.
-		void variableChanged(Name ownerName, Name variableName, float value);
 
 		WindowDesc windowDesc;
 
@@ -855,7 +794,7 @@ namespace xge
 		bool hasRules(const Object& object) override { return !object.kind->collisionData.others.empty(); }
 		void touched(Object& a, Object& b, const Contact& contact) override;
 		void follow() override;
-		void conditions() override { scoreDueHolders(); cellMapping.countMoves(); cellMapping.showMarks(); checkConditions(); }
+		void conditions() override { itemHolders.scoreDueHolders(); cellMapping.countMoves(); cellMapping.showMarks(); checkConditions(); }
 
 		// Sets the velocity of every shown object that is on a path for this
 		// frame's part of it (see Path), starting its next leg when one is

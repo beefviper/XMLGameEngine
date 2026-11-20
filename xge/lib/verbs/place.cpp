@@ -18,7 +18,7 @@ namespace xge
 	{
 		Game& game = doer.game();
 		Object* const self = doer.self;
-		return self && (game.isHand(*self) ? game.layItems(*self, place.into) : game.cellMaps().placePiece(*self));
+		return self && (game.isHand(*self) ? game.holders().layItems(*self, place.into) : game.cellMaps().placePiece(*self));
 	}
 
 	static void printPlace(std::ostream& o, const CmdPlace& place)

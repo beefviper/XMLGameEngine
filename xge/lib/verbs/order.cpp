@@ -31,7 +31,7 @@ namespace xge
 
 	static bool runOrder(const CmdOrder& order, const Doer& doer)
 	{
-		return doer.game().orderHeld(order.group);
+		return doer.game().holders().orderHeld(order.group);
 	}
 
 	static void printOrder(std::ostream& o, const CmdOrder& order)

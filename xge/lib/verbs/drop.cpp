@@ -33,7 +33,7 @@ namespace xge
 		Object* const self = doer.self;
 		// A picker puts back the piece it holds; refused in the middle of a run
 		// of jumps.
-		if (self && game.isHand(*self)) { return game.dropItems(*self); }
+		if (self && game.isHand(*self)) { return game.holders().dropItems(*self); }
 		if (self && !game.pickerOf(*self).picked.empty()) { return game.cellMaps().dropPiece(*self); }
 		if (self) { if (Object::Carry* carry = game.parts().carries.find(self->id)) { xge::drop(*carry); } }
 		return true;

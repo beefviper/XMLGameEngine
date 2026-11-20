@@ -136,9 +136,9 @@ namespace xge
 				throw std::runtime_error("<object name=\"" + object.name + "\"> > <holds> > <score patterns=\"" + holderOf(object).melds + "\"> with <melds />: names no <patterns>");
 			}
 		}
-		markOddsRead();
-		sendStarts();
-		scoreDueHolders();
+		itemHolders.markOddsRead();
+		itemHolders.sendStarts();
+		itemHolders.scoreDueHolders();
 		// The players: the first one's turn; those the computer plays.
 		for (const WrittenObject& written : writtenObjects)
 		{
@@ -894,6 +894,12 @@ namespace xge
 		return stateChanges;
 	}
 
+	const Patterns* Game::patternsNamed(Name name) const noexcept
+	{
+		const auto set = std::find_if(patterns.begin(), patterns.end(), [&](const Patterns& each) { return each.name == name; });
+		return set == patterns.end() ? nullptr : &*set;
+	}
+
 	const std::vector<State>& Game::getStates(void) const noexcept
 	{
 		return states;
@@ -1642,7 +1648,7 @@ namespace xge
 				const bool own = std::any_of(object.looks.all().begin(), object.looks.all().end(), [&](const Object::Look& look) { return look.name == sprite; });
 				if (!sprite.empty() && isHolder(object) && !own)
 				{
-					turnHeld(object, sprite);
+					itemHolders.turnHeld(object, sprite);
 					continue;
 				}
 				if (!sprite.empty()) { showLook(object, sprite); }
@@ -1651,7 +1657,7 @@ namespace xge
 			}
 		}
 		// A hand sits centred on what it points at, by the size of its look.
-		if (handChanged) { layOutItems(); }
+		if (handChanged) { itemHolders.layOutItems(); }
 	}
 
 	void Game::reveal(Name target, int count)
@@ -1902,7 +1908,7 @@ namespace xge
 		setCurrentState(0);
 
 		// A new game: the cards shuffled and dealt again, the first player's turn.
-		sendStarts();
+		itemHolders.sendStarts();
 		startPlayers();
 	}
 
@@ -2516,7 +2522,7 @@ namespace xge
 		if (!thought)
 		{
 			thinker.stop();
-			itemWait = kItemPace;
+			itemHolders.itemWait = Holders::kItemPace;
 		}
 		return held;
 	}

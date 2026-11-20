@@ -89,7 +89,7 @@ namespace xge
 		if (!turnsOf(member).takes || member.variable[words::turn] == 0.0f) { return false; }
 		// Not while a holder waits for the call its wild card asks of the
 		// one who laid it.
-		for (Object* holder : shownHolders())
+		for (Object* holder : itemHolders.shownHolders())
 		{
 			if (holderOf(*holder).calling > 0.0f) { return false; }
 		}
@@ -136,8 +136,8 @@ namespace xge
 		}
 		// A moment before the computer plays the one whose turn came, and the
 		// game's conditions see the turn change first.
-		itemWait = kItemPace;
-		layOutItems();
+		itemHolders.itemWait = Holders::kItemPace;
+		itemHolders.layOutItems();
 	}
 
 	Name Game::turnClass()

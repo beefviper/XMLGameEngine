@@ -94,7 +94,7 @@ namespace xge
 	{
 		// On a cell map: whole cells (one, with no distance), refused (and
 		// touching) when it cannot go.
-		if (game.isHand(object)) { return game.hopHand(object, hop.direction); }
+		if (game.isHand(object)) { return game.holders().hopHand(object, hop.direction); }
 		if (object.onCells && !hop.onto.empty()) { return game.cellMaps().hopOnto(object, hop.direction, hop.onto); }
 		if (object.onCells)
 		{
