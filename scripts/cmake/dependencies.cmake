@@ -68,6 +68,13 @@ macro(xge_dependency name)
 			if (${XD_VARIABLE})
 				set(XD_FOUND TRUE)
 				set(${XD_UPPER}_PACKAGE_FOUND TRUE)
+				# A header has no package to give its version, but may say it
+				# near the top ("// Version 1.13", as RapidXML's does).
+				unset(XD_HEADER_VERSION)
+				file(STRINGS "${${XD_VARIABLE}}/${XD_HEADER}" XD_VERSION_LINE REGEX "Version [0-9]+(\\.[0-9]+)*" LIMIT_COUNT 1)
+				if (XD_VERSION_LINE MATCHES "Version ([0-9]+(\\.[0-9]+)*)")
+					set(XD_HEADER_VERSION "${CMAKE_MATCH_1}")
+				endif()
 			endif()
 
 			set(XD_VERB "download it locally")
@@ -88,10 +95,13 @@ macro(xge_dependency name)
 		# Say what was found, or fetch it.
 		if (XD_FOUND)
 			# The version, as the sanity check it is: the copy found can be older
-			# than the tag pinned below. Not every library says (a header search
-			# cannot), and then there is just the name.
+			# than the tag pinned below. Not every library says (OpenGL's version
+			# is the driver's, known only when a window opens), and then there
+			# is just the name.
 			if (XD_PACKAGE_NAME AND ${XD_PACKAGE_NAME}_VERSION)
 				message(STATUS "Found ${name} ${${XD_PACKAGE_NAME}_VERSION}")
+			elseif (XD_HEADER AND XD_HEADER_VERSION)
+				message(STATUS "Found ${name} ${XD_HEADER_VERSION}")
 			else()
 				message(STATUS "Found ${name}")
 			endif()
