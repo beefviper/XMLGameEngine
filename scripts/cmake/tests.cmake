@@ -187,6 +187,71 @@ include(Catch)
 catch_discover_tests(xgetest
 	WORKING_DIRECTORY "$<TARGET_FILE_DIR:xgetest>/games")
 
+# A test program kept out of the ordinary ctest, given to ctest in a folder
+# of its own, build/<folder>, so its cases are counted and timed as
+# xgetest's are and run side by side:
+#
+#     ctest --test-dir build/<folder> -C Debug -j 16 --output-on-failure
+#
+# Every case is a test (catch_discover_tests, after the program is built),
+# but those tagged in EACH_GAME, which take a section per game: each game is
+# a test of its own, "<tag>: <game>", over the games in GAMES. Those tagged
+# in SERIAL are a test per tag, run with nothing beside them (they time the
+# engine against the clock).
+function(xge_ctest_folder target folder)
+	cmake_parse_arguments(arg "" "" "EACH_GAME;GAMES;SERIAL" ${ARGN})
+	set(folder_dir "${CMAKE_BINARY_DIR}/${folder}")
+	set(program "$<TARGET_FILE:${target}>")
+	set(games_dir "$<TARGET_FILE_DIR:${target}>/games")
+
+	set(lines "if(EXISTS \"${program}\")\n")
+	foreach(tag IN LISTS arg_EACH_GAME)
+		foreach(game IN LISTS arg_GAMES)
+			string(APPEND lines
+				"  add_test(\"${tag}: ${game}\" \"${program}\" \"[${tag}]\" -c \"${game}\")\n"
+				"  set_tests_properties(\"${tag}: ${game}\" PROPERTIES WORKING_DIRECTORY \"${games_dir}\")\n")
+		endforeach()
+	endforeach()
+	foreach(tag IN LISTS arg_SERIAL)
+		string(APPEND lines
+			"  add_test(\"${tag}\" \"${program}\" \"[${tag}]\")\n"
+			"  set_tests_properties(\"${tag}\" PROPERTIES WORKING_DIRECTORY \"${games_dir}\" RUN_SERIAL ON)\n")
+	endforeach()
+	string(APPEND lines "endif()\n")
+
+	get_property(multi_config GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+	if (multi_config)
+		file(GENERATE OUTPUT "${folder_dir}/each-$<CONFIG>.cmake" CONTENT "${lines}")
+		set(each_file "${folder_dir}/each-\${CTEST_CONFIGURATION_TYPE}.cmake")
+	else()
+		file(GENERATE OUTPUT "${folder_dir}/each.cmake" CONTENT "${lines}")
+		set(each_file "${folder_dir}/each.cmake")
+	endif()
+
+	# The cases left, found by Catch; its file is taken back out of this
+	# folder's tests, so the ordinary ctest does not run them.
+	set(spec "")
+	foreach(tag IN LISTS arg_EACH_GAME arg_SERIAL)
+		string(APPEND spec "~[${tag}]")
+	endforeach()
+	get_property(before DIRECTORY PROPERTY TEST_INCLUDE_FILES)
+	catch_discover_tests(${target}
+		TEST_SPEC "${spec}"
+		WORKING_DIRECTORY "${games_dir}")
+	get_property(after DIRECTORY PROPERTY TEST_INCLUDE_FILES)
+	set(discovered "${after}")
+	if (before)
+		list(REMOVE_ITEM discovered ${before})
+	endif()
+	set_property(DIRECTORY PROPERTY TEST_INCLUDE_FILES "${before}")
+
+	set(testfile "include(\"${each_file}\" OPTIONAL)\n")
+	foreach(file IN LISTS discovered)
+		string(APPEND testfile "include(\"${file}\" OPTIONAL)\n")
+	endforeach()
+	file(WRITE "${folder_dir}/CTestTestfile.cmake" "${testfile}")
+endfunction()
+
 # The generated games' tests are a second test program, xgetest-generated,
 # built only when asked for (cmake --build build --target xgetest-generated,
 # or scripts/shell/windows/games-test-all.bat), never by an ordinary build:
@@ -325,3 +390,21 @@ target_link_libraries(xgetest-long PRIVATE xgelib Catch2::Catch2WithMain)
 xge_link_xslt(xgetest-long)
 add_dependencies(xgetest-long xgedata)
 xge_place_program(xgetest-long)
+
+# ctest --test-dir build/long -C <config>: a test per game for the random
+# keys and the damaged files.
+set(shipped_games "")
+foreach(game_file IN LISTS data_xml)
+	get_filename_component(game "${game_file}" NAME_WE)
+	list(APPEND shipped_games "${game}")
+endforeach()
+xge_ctest_folder(xgetest-long long
+	EACH_GAME keys damaged
+	GAMES ${shipped_games}
+	SERIAL speed pace)
+
+# ctest --test-dir build/generated -C <config>: a test per generated game,
+# and the games windows-cpp writes as one.
+xge_ctest_folder(xgetest-generated generated
+	EACH_GAME generated_games
+	GAMES ${shipped_games})

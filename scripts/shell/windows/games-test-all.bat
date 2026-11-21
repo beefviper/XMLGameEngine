@@ -7,6 +7,7 @@ rem Builds and runs xgetest-generated, the generated games' tests
 rem (xge/tests/generated/test_generated_games.cpp): building it generates every game
 rem into build\generated\ and compiles each one's data in, and each is played
 rem beside the engine playing its file, every object compared every frame.
+rem ctest runs it from build\generated, a test per game.
 rem An ordinary build never builds it. Run it from the repo root:
 rem
 rem     scripts\shell\windows\games-test-all.bat [config]
@@ -39,7 +40,7 @@ if errorlevel 1 (
 )
 
 echo.
-"%ROOT%\output\%CONFIG%\xgetest-generated.exe"
+ctest --test-dir "%ROOT%\build\generated" -C %CONFIG% -j 16 --output-on-failure
 set "RESULT=%errorlevel%"
 
 popd

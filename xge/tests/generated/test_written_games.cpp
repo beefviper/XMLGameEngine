@@ -16,7 +16,9 @@ TEST_CASE("every game windows-cpp writes does what its file says", "[generate][w
 {
 	for (const WrittenGame& each : writtenGames)
 	{
-		INFO(each.game);
-		each.plays();
+		DYNAMIC_SECTION(each.game)
+		{
+			each.plays();
+		}
 	}
 }

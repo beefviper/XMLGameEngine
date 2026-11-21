@@ -19,6 +19,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 
+#include <filesystem>
 #include <iterator>
 #include <memory>
 #include <optional>
@@ -88,24 +89,27 @@ TEST_CASE("every generated game plays frame for frame as the engine plays its fi
 	const SeedReset reset;
 	for (const GeneratedGame& each : generatedGames)
 	{
-		INFO(each.file);
-
-		Evaluator::fixRandomSeed(20261011u);
-		Game fromFile{ std::string(each.file) };
-		const std::vector<std::string> expected = play(fromFile);
-		CHECK(expected.front() != expected.back()); // the keys did play it
-
-		Evaluator::fixRandomSeed(20261011u);
-		Game generated{ each.read() };
-		const std::vector<std::string> played = play(generated);
-
-		REQUIRE(played.size() == expected.size());
-		for (std::size_t frame = 0; frame < expected.size(); ++frame)
+		DYNAMIC_SECTION(std::filesystem::path(each.file).stem().string())
 		{
-			if (played[frame] != expected[frame])
+			INFO(each.file);
+
+			Evaluator::fixRandomSeed(20261011u);
+			Game fromFile{ std::string(each.file) };
+			const std::vector<std::string> expected = play(fromFile);
+			CHECK(expected.front() != expected.back()); // the keys did play it
+
+			Evaluator::fixRandomSeed(20261011u);
+			Game generated{ each.read() };
+			const std::vector<std::string> played = play(generated);
+
+			REQUIRE(played.size() == expected.size());
+			for (std::size_t frame = 0; frame < expected.size(); ++frame)
 			{
-				INFO("frame " << frame << "\nfrom the file:\n" << expected[frame] << "\ngenerated:\n" << played[frame]);
-				FAIL("the generated game played differently");
+				if (played[frame] != expected[frame])
+				{
+					INFO("frame " << frame << "\nfrom the file:\n" << expected[frame] << "\ngenerated:\n" << played[frame]);
+					FAIL("the generated game played differently");
+				}
 			}
 		}
 	}

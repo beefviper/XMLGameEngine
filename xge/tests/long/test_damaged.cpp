@@ -18,6 +18,7 @@
 #include "game/game.h"
 #include "game/random.h"
 #include "load/xml.h"
+#include "random_keys.h"
 #include "scratch.h"
 #include "window/null.h"
 
@@ -209,60 +210,67 @@ TEST_CASE("every game broken 40 ways stops with a message or plays on, never cra
 	constexpr int kFrames = 600;
 	const std::string scratch = scratchName("descriptions/damaged.xml");
 
-	int copies = 0;
-	int refused = 0;
-	int stoppedPlaying = 0;
-	int played = 0;
-	std::mt19937 pick(1);
-	for (const std::string& file : xge::gameFilesIn("descriptions"))
+	for (const std::string& file : played::shippedGames(xge::gameFilesIn("descriptions")))
 	{
 		if (file.find("damaged") != std::string::npos) { continue; }
-		std::ifstream in(file);
-		const Node original = Reader(fileText(in)).document();
-		for (int copy = 0; copy < kCopies; ++copy)
+		const std::string name = played::gameName(file);
+		DYNAMIC_SECTION(name)
 		{
-			Node broken = original;
-			const std::string how = damage(broken, pick);
-			std::string text = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
-			write(broken, text);
-			std::ofstream(scratch, std::ios::binary | std::ios::trunc) << text;
-			++copies;
-
-			// Xerces (full schema) for half, TinyXML2 (the weaker check) for the rest.
-			const xge::XmlBackend xml = copy % 2 == 0 ? xge::XmlBackend::Xerces : xge::XmlBackend::TinyXml2;
-			INFO(file << ", copy " << copy << ": " << how);
-			std::streambuf* const before = std::cout.rdbuf();
-			std::ostringstream unheard;
-			std::cout.rdbuf(unheard.rdbuf());
-			try
+			int copies = 0;
+			int refused = 0;
+			int stoppedPlaying = 0;
+			int playedOn = 0;
+			// Seeded by the game's name, so a game is damaged the same ways
+			// whether it runs alone or with the rest.
+			unsigned seed = 1;
+			for (const char letter : name) { seed = seed * 31u + static_cast<unsigned char>(letter); }
+			std::mt19937 pick(seed);
+			std::ifstream in(file);
+			const Node original = Reader(fileText(in)).document();
+			for (int copy = 0; copy < kCopies; ++copy)
 			{
-				xge::fixRandomSeed(static_cast<unsigned>(copy + 1));
-				xge::Game game{ xge::readGame(scratch, xml) };
-				xge::Engine engine(game, std::make_unique<xge::NullWindow>(game.getWindowDesc()), nullptr);
+				Node broken = original;
+				const std::string how = damage(broken, pick);
+				std::string text = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
+				write(broken, text);
+				std::ofstream(scratch, std::ios::binary | std::ios::trunc) << text;
+				++copies;
+
+				// Xerces (full schema) for half, TinyXML2 (the weaker check) for the rest.
+				const xge::XmlBackend xml = copy % 2 == 0 ? xge::XmlBackend::Xerces : xge::XmlBackend::TinyXml2;
+				INFO(file << ", copy " << copy << ": " << how);
+				std::streambuf* const before = std::cout.rdbuf();
+				std::ostringstream unheard;
+				std::cout.rdbuf(unheard.rdbuf());
 				try
 				{
-					for (int frame = 0; frame < kFrames; ++frame)
+					xge::fixRandomSeed(static_cast<unsigned>(copy + 1));
+					xge::Game game{ xge::readGame(scratch, xml) };
+					xge::Engine engine(game, std::make_unique<xge::NullWindow>(game.getWindowDesc()), nullptr);
+					try
 					{
-						if (frame % 30 == 0) { engine.handleKeyPressed(xge::KeyCode::Space); engine.handleKeyReleased(xge::KeyCode::Space); }
-						engine.input(); engine.update(xge::kSixtieth);
+						for (int frame = 0; frame < kFrames; ++frame)
+						{
+							if (frame % 30 == 0) { engine.handleKeyPressed(xge::KeyCode::Space); engine.handleKeyReleased(xge::KeyCode::Space); }
+							engine.input(); engine.update(xge::kSixtieth);
+						}
+						++playedOn;
 					}
-					++played;
+					catch (const std::exception&)
+					{
+						++stoppedPlaying;
+					}
 				}
 				catch (const std::exception&)
 				{
-					++stoppedPlaying;
+					++refused;
 				}
+				std::cout.rdbuf(before);
 			}
-			catch (const std::exception&)
-			{
-				++refused;
-			}
-			std::cout.rdbuf(before);
+			std::printf("%s: damaged copies: %d; refused at load: %d; stopped while playing: %d; played %d frames: %d\n",
+				name.c_str(), copies, refused, stoppedPlaying, kFrames, playedOn);
+			CHECK(copies == refused + stoppedPlaying + playedOn);
 		}
 	}
 	std::filesystem::remove(scratch);
-
-	std::printf("damaged copies: %d; refused at load: %d; stopped while playing: %d; played %d frames: %d\n",
-		copies, refused, stoppedPlaying, kFrames, played);
-	CHECK(copies == refused + stoppedPlaying + played);
 }

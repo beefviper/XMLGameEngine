@@ -19,6 +19,9 @@ TEST_CASE("every game survives 20,000 frames of random keys, from two seeds", "[
 {
 	for (const std::string& file : played::shippedGames(xge::gameFilesIn("descriptions")))
 	{
-		for (const unsigned seed : { 1u, 2u }) { played::playRandomKeys(file, seed, 20000); }
+		DYNAMIC_SECTION(played::gameName(file))
+		{
+			for (const unsigned seed : { 1u, 2u }) { played::playRandomKeys(file, seed, 20000); }
+		}
 	}
 }

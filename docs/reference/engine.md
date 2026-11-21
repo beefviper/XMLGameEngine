@@ -98,8 +98,8 @@ cmake --build build --parallel
 output/Debug/xgecli frogger
 cmake -B build -DBUILD_TESTING=ON   # every backend, and the tests
 output/Debug/xgetest                # Catch2 filters work: "[kaboom]"
-cmake --build build --target xgetest-generated && output/Debug/xgetest-generated
-cmake --build build --target xgetest-long && output/Debug/xgetest-long   # minutes
+cmake --build build --target xgetest-generated && ctest --test-dir build/generated -j16
+cmake --build build --target xgetest-long && ctest --test-dir build/long -j16   # minutes
 xvfb-run -a output/Debug/xgetest "[window]"   # opens every window backend (no xvfb-run on Windows)
 ```
 
@@ -107,7 +107,7 @@ xvfb-run -a output/Debug/xgetest "[window]"   # opens every window backend (no x
 |---|---|
 | `xgelib` | the engine (`xge/lib/`), static by default (`-DXGE_BUILD_SHARED=ON` for shared) |
 | `xgecli`, `xgegui` | the programs (`xge/cli/`, `xge/gui/`; the second only when Qt 6 is found) |
-| `xgetest`, `xgetest-generated`, `xgetest-long` | the tests; the second generates every game, the third runs for minutes (every game played 20,000 frames on random keys from two seeds, every game damaged 40 ways, load and frame times, frame pace by the clock); neither is in an ordinary build |
+| `xgetest`, `xgetest-generated`, `xgetest-long` | the tests; the second generates every game, the third runs for minutes (every game played 20,000 frames on random keys from two seeds, every game damaged 40 ways, load and frame times, frame pace by the clock); neither is in an ordinary build, nor in the ordinary `ctest`: each has its own folder, `build/generated` and `build/long`, with a test per game for the every-game cases (`xge_ctest_folder` in `scripts/cmake/tests.cmake`). On a multi-config generator (Visual Studio) add `-C Debug` |
 | `xgedata` | copies `games/` beside the programs |
 
 - **Output.** Everything to run lands in `output/<Config>/`: the programs, a copy of `games/` with the schema, and the libraries in `libraries/` (found through a manifest on Windows, a relative run path elsewhere). The folder can be copied anywhere.

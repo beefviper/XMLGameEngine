@@ -16,6 +16,7 @@
 
 #include <cmath>
 #include <exception>
+#include <filesystem>
 #include <random>
 #include <set>
 #include <string>
@@ -93,6 +94,14 @@ namespace played
 			if (file.find("_scratch") == std::string::npos) { games.push_back(file); }
 		}
 		return games;
+	}
+
+	// A game's name, its file's name without the folder or ".xml": the name
+	// of its section in a long test over every game, which ctest runs as a
+	// test of its own (scripts/cmake/tests.cmake, xge_ctest_folder).
+	inline std::string gameName(const std::string& file)
+	{
+		return std::filesystem::path(file).stem().string();
 	}
 
 	// Every `parts`-th of `files`, starting at the `part`-th (1 to parts):
