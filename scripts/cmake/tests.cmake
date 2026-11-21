@@ -207,27 +207,49 @@ catch_discover_tests(xgetest
 # but those tagged in EACH_GAME, which take a section per game: each game is
 # a test of its own, "<tag>: <game>", over the games in GAMES. Those tagged
 # in SERIAL are a test per tag, run with nothing beside them (they time the
-# engine against the clock).
+# engine against the clock). Those tagged in WHOLE are a test per tag.
+#
+# With BUILD_FIRST, a first test builds the program (and xgecli), and every
+# other test waits for it, so the folder needs no build beforehand. Catch
+# cannot find cases in a program not built yet when ctest starts, so every
+# case is named in EACH_GAME, SERIAL or WHOLE. LINES are more
+# tests, written as they are into the folder's test file (with BUILD_FIRST,
+# each says FIXTURES_REQUIRED <target> itself).
 function(xge_ctest_folder target folder)
-	cmake_parse_arguments(arg "" "SPEC" "EACH_GAME;GAMES;SERIAL" ${ARGN})
+	cmake_parse_arguments(arg "BUILD_FIRST" "SPEC" "EACH_GAME;GAMES;SERIAL;WHOLE;LINES" ${ARGN})
 	set(folder_dir "${CMAKE_BINARY_DIR}/${folder}")
 	set(program "$<TARGET_FILE:${target}>")
 	set(games_dir "${XGE_OUTPUT_DIR}/games")
 
-	set(lines "if(EXISTS \"${program}\")\n")
+	if (arg_BUILD_FIRST)
+		string(CONCAT lines
+			"add_test(\"build ${target}\" \"${CMAKE_COMMAND}\" --build \"${CMAKE_BINARY_DIR}\" --config \"$<CONFIG>\" --target xgecli ${target})\n"
+			"set_tests_properties(\"build ${target}\" PROPERTIES FIXTURES_SETUP ${target})\n")
+		set(after_build " FIXTURES_REQUIRED ${target}")
+		set(end "")
+	else()
+		set(lines "if(EXISTS \"${program}\")\n")
+		set(after_build "")
+		set(end "endif()\n")
+	endif()
 	foreach(tag IN LISTS arg_EACH_GAME)
 		foreach(game IN LISTS arg_GAMES)
 			string(APPEND lines
 				"  add_test(\"${tag}: ${game}\" \"${program}\" \"${arg_SPEC}[${tag}]\" -c \"${game}\")\n"
-				"  set_tests_properties(\"${tag}: ${game}\" PROPERTIES WORKING_DIRECTORY \"${games_dir}\")\n")
+				"  set_tests_properties(\"${tag}: ${game}\" PROPERTIES WORKING_DIRECTORY \"${games_dir}\"${after_build})\n")
 		endforeach()
 	endforeach()
 	foreach(tag IN LISTS arg_SERIAL)
 		string(APPEND lines
 			"  add_test(\"${tag}\" \"${program}\" \"${arg_SPEC}[${tag}]\")\n"
-			"  set_tests_properties(\"${tag}\" PROPERTIES WORKING_DIRECTORY \"${games_dir}\" RUN_SERIAL ON)\n")
+			"  set_tests_properties(\"${tag}\" PROPERTIES WORKING_DIRECTORY \"${games_dir}\" RUN_SERIAL ON${after_build})\n")
 	endforeach()
-	string(APPEND lines "endif()\n")
+	foreach(tag IN LISTS arg_WHOLE)
+		string(APPEND lines
+			"  add_test(\"${tag}\" \"${program}\" \"${arg_SPEC}[${tag}]\")\n"
+			"  set_tests_properties(\"${tag}\" PROPERTIES WORKING_DIRECTORY \"${games_dir}\"${after_build})\n")
+	endforeach()
+	string(APPEND lines ${arg_LINES} "${end}")
 
 	get_property(multi_config GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
 	if (multi_config)
@@ -238,10 +260,16 @@ function(xge_ctest_folder target folder)
 		set(each_file "${folder_dir}/each.cmake")
 	endif()
 
+	set(testfile "include(\"${each_file}\" OPTIONAL)\n")
+	if (arg_BUILD_FIRST)
+		file(WRITE "${folder_dir}/CTestTestfile.cmake" "${testfile}")
+		return()
+	endif()
+
 	# The cases left, found by Catch; its file is taken back out of this
 	# folder's tests, so the ordinary ctest does not run them.
 	set(spec "${arg_SPEC}")
-	foreach(tag IN LISTS arg_EACH_GAME arg_SERIAL)
+	foreach(tag IN LISTS arg_EACH_GAME arg_SERIAL arg_WHOLE)
 		string(APPEND spec "~[${tag}]")
 	endforeach()
 	get_property(before DIRECTORY PROPERTY TEST_INCLUDE_FILES)
@@ -255,7 +283,6 @@ function(xge_ctest_folder target folder)
 	endif()
 	set_property(DIRECTORY PROPERTY TEST_INCLUDE_FILES "${before}")
 
-	set(testfile "include(\"${each_file}\" OPTIONAL)\n")
 	foreach(file IN LISTS discovered)
 		string(APPEND testfile "include(\"${file}\" OPTIONAL)\n")
 	endforeach()
@@ -263,8 +290,8 @@ function(xge_ctest_folder target folder)
 endfunction()
 
 # The generated games' tests are a second test program, xgetest-generated,
-# built only when asked for (cmake --build build --target xgetest-generated,
-# or scripts/shell/windows/games-test-all.bat), never by an ordinary build:
+# built only when asked for (by ctest --test-dir build/generated, below, or
+# cmake --build build --target xgetest-generated), never by an ordinary build:
 # building it generates every game (xgecli --generate engine-cpp) into
 # build/generated/ and compiles each one's data (source/<game>.cpp) in, and
 # test_generated_games.cpp plays each against its file, frame by frame.
@@ -393,8 +420,26 @@ xge_ctest_folder(xgetest long
 	GAMES ${shipped_games}
 	SERIAL speed pace)
 
-# ctest --test-dir build/generated -C <config>: a test per generated game,
-# and the games windows-cpp writes as one.
+# ctest --test-dir build/generated -C <config>: first xgetest-generated is
+# built, then a test per generated game played against its file, the games
+# windows-cpp writes as one, and a test per game written out as a program of
+# its own and built at full warnings (build_generated.cmake), each under
+# output/<config>/generated/games/<game>.
+set(program_tests "")
+foreach(game IN LISTS shipped_games)
+	set(build_one "\"${CMAKE_COMMAND}\" -DGAME=${game} \"-DXGECLI=$<TARGET_FILE:xgecli>\""
+		" \"-DOUTPUT=${XGE_OUTPUT_DIR}/generated/games/${game}\" -DCONFIG=$<CONFIG>"
+		" \"-DGENERATOR=${CMAKE_GENERATOR}\" \"-DPLATFORM=${CMAKE_GENERATOR_PLATFORM}\""
+		" \"-DTOOLCHAIN=${CMAKE_TOOLCHAIN_FILE}\" \"-DDEPS=${CMAKE_BINARY_DIR}/_deps\""
+		" -P \"${CMAKE_CURRENT_SOURCE_DIR}/scripts/cmake/build_generated.cmake\"")
+	string(CONCAT build_one ${build_one})
+	string(APPEND program_tests
+		"add_test(\"program: ${game}\" ${build_one})\n"
+		"set_tests_properties(\"program: ${game}\" PROPERTIES PROCESSORS 4 FIXTURES_REQUIRED xgetest-generated)\n")
+endforeach()
 xge_ctest_folder(xgetest-generated generated
+	BUILD_FIRST
 	EACH_GAME generated_games
-	GAMES ${shipped_games})
+	GAMES ${shipped_games}
+	WHOLE written_games
+	LINES "${program_tests}")

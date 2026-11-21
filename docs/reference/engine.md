@@ -98,7 +98,7 @@ cmake --build build --parallel
 output/Debug/xgecli frogger
 cmake -B build -DBUILD_TESTING=ON   # every backend, and the tests
 output/Debug/xgetest                # Catch2 filters work: "[kaboom]"
-cmake --build build --target xgetest-generated && ctest --test-dir build/generated -j16
+ctest --test-dir build/generated -j16
 ctest --test-dir build/long -j16   # xgetest's hidden [.long] tests: minutes
 xvfb-run -a output/Debug/xgetest "[window]"   # opens every window backend (no xvfb-run on Windows)
 ```
@@ -107,11 +107,11 @@ xvfb-run -a output/Debug/xgetest "[window]"   # opens every window backend (no x
 |---|---|
 | `xgelib` | the engine (`xge/lib/`), static by default (`-DXGE_BUILD_SHARED=ON` for shared) |
 | `xgecli`, `xgegui` | the programs (`xge/cli/`, `xge/gui/`; the second only when Qt 6 is found) |
-| `xgetest`, `xgetest-generated` | the tests. `xgetest` holds hidden long ones (`[.long]`: every game played 20,000 frames on random keys from two seeds, every game damaged 40 ways, load and frame times, frame pace by the clock) that an ordinary run skips; `xgetest-generated` generates every game and is not in an ordinary build. Neither the long tests nor the generated ones are in the ordinary `ctest`: each has its own folder, `build/long` and `build/generated`, with a test per game for the every-game cases (`xge_ctest_folder` in `scripts/cmake/tests.cmake`). On a multi-config generator (Visual Studio) add `-C Debug` |
+| `xgetest`, `xgetest-generated` | the tests. `xgetest` holds hidden long ones (`[.long]`: every game played 20,000 frames on random keys from two seeds, every game damaged 40 ways, load and frame times, frame pace by the clock) that an ordinary run skips; `xgetest-generated` generates every game and is not in an ordinary build. Neither the long tests nor the generated ones are in the ordinary `ctest`: each has its own folder, `build/long` and `build/generated`, with a test per game for the every-game cases (`xge_ctest_folder` in `scripts/cmake/tests.cmake`). `build/generated` builds `xgetest-generated` as its first test, and has a test `program: <game>` per game that generates it, builds it as a program of its own and fails on any warning (`scripts/cmake/build_generated.cmake`); a clean build keeps the program in `<game>/output/` and its `build.log`, and drops its near-gigabyte build folder. On a multi-config generator (Visual Studio) add `-C Debug` |
 | `pong`, `pong_min` | the hand-written prototypes (`games/prototypes/`) |
 | `xgedata` | copies `games/` beside the programs |
 
-`output/<config>/` holds the programs, `games/` and `libraries/`, and `generated/` what belongs to the generator: `xgetest-generated`, `prototypes/` (`pong`, `pong_min`), and `games/<game>/`, where `games-generate-all.bat` writes every game. In Visual Studio `xgetest-generated` is in the `XGETestGenerated` folder and the prototypes in `XGETestGenerated/XGETestPrototypes`.
+`output/<config>/` holds the programs, `games/` and `libraries/`, and `generated/` what belongs to the generator: `xgetest-generated`, `prototypes/` (`pong`, `pong_min`), and `games/<game>/`, where the `program: <game>` tests write and build each game. In Visual Studio `xgetest-generated` is in the `XGETestGenerated` folder and the prototypes in `XGETestGenerated/XGETestPrototypes`.
 
 - **Output.** Everything to run lands in `output/<Config>/`: the programs, a copy of `games/` with the schema, and the libraries in `libraries/` (found through a manifest on Windows, a relative run path elsewhere). The folder can be copied anywhere.
 - **Dependencies** are found through vcpkg or the system, or fetched and built (`FORCE_LOCAL_<NAME>` forces a fetch). Qt 6 and libxslt are only found, never fetched. Vulkan needs no SDK: Khronos's headers and volk are fetched, and volk opens the driver's own Vulkan library when the window opens. In Visual Studio every fetched library's projects sit in one solution folder, `CMakeFetchedLibraries` (`xge_fold_fetched_targets`). CMake modules are in `scripts/cmake/`.

@@ -50,6 +50,6 @@ The first target wrote each game as a program a person might write (Pong about 4
 ## Open
 
 - Other targets (another language, an 8-bit machine) need the runtime in that language: a port, not a generator.
-- Built with GCC and Clang on Linux, and MSVC at `/W4` by `games-build-all.bat`.
+- Built with GCC and Clang on Linux, and MSVC at `/W4`, each game by its own `program: <game>` test in `build/generated`.
 - Not yet in `windows-cpp`: colours other than white, a `<move>` for something with its own `<velocity>`, a touch rule on a group, and the deflect off a top or bottom is untried by any game.
 - `windows-cpp` writes one game so far (`pong_min.xml`). For any other it lists every part it has no words for and writes nothing: what it covers is said as match patterns in `covers.xsl` and in each verb's file, so a new verb says where it may stand beside how it is written. The list doubles as the to-do for the next game.

@@ -70,7 +70,7 @@ Every task has the same shape: why, then numbered steps with a box each, then th
   - [ ] **6. Breakout (M).** Groups in columns and rows, looks. **Check:** as step 5. **Then the author** reads the output again.
   - [ ] **7. One game a step after that (M each),** simplest first: Space Race, Kaboom, Freeway, Frogger (`ride`, lanes), Space Invaders (lockstep, timers, spawn). Each adds a few templates and a line in the covered list. **Check:** step 4's test for that game.
 - **Not doing.** Cards, the board-game search and cell puzzles in this target: they are large engines in themselves, and a "weekend" version would be those files copied. They stay on `engine-cpp` until the author asks otherwise. Another platform is a later task: [targets](designs/57-ideas.md).
-- **Files.** `games/prototypes/pong_min/`, `games/generators/windows-cpp/`, `xge/cli/source/generate.cpp` (targets are folders already; add the coverage check), `xge/tests/generated/test_generated_games.cpp`, `scripts/cmake/assets.cmake` (`data_generators`), `scripts/shell/windows/games-*.bat` (a target argument), `docs/reference/programs.md`, `docs/designs/40-generator.md`.
+- **Files.** `games/prototypes/pong_min/`, `games/generators/windows-cpp/`, `xge/cli/source/generate.cpp` (targets are folders already; add the coverage check), `xge/tests/generated/test_generated_games.cpp`, `scripts/cmake/assets.cmake` (`data_generators`), `scripts/cmake/build_generated.cmake` (a target argument), `docs/reference/programs.md`, `docs/designs/40-generator.md`.
 - **Done, first milestone:** `xgecli pong --generate windows-cpp` writes a program under 300 lines of its own code that builds with no warnings at `/W4` and GCC's strict set, and does what the file says, by its behaviour checks.
 
 #### A7. The next backend is cheap
@@ -186,7 +186,6 @@ Games the vocabulary cannot say yet: [near misses](designs/54-games.md#near-miss
 - Objects not shown (`isShown`) are left out of the swept collision pass in `play/frame.cpp`, so nothing hidden can touch or be touched; a game with invisible things that collide would need them in it.
 - Astrosmash's test "a crude player who shoots the lowest rock in the sights scores" fails for about 1 Catch2 seed in 250 (`--rng-seed 179`, `235`, `349`): no score in twenty seconds. The test's player or the game's rocks, not the engine; it fails the same before and after A4.
 - Kaboom's test "each wave's bomber is quicker and drops faster bombs more often" fails for about 3 Catch2 seeds in 200 (`--rng-seed 9`, `48`, `106`): 4 bombs falling at 85 frames, not 5, one already caught or landed. Seen after DT4; not looked into.
-- Building generated programs is by hand: `scripts/shell/windows/games-run-all.bat` generates, builds at MSVC `/W4` and tests them all.
 
 ## Waiting for a look on Windows
 

@@ -21,7 +21,7 @@ cmake -B build -DBUILD_TESTING=ON
 cmake --build build --parallel
 output/Debug/xgetest            # Catch2 filters work, e.g. "[kaboom]"
 cd build && ctest -j16          # each case its own run, side by side
-cmake --build build --target xgetest-generated && ctest --test-dir build/generated -j16   # generated games
+ctest --test-dir build/generated -j16   # generated games, and each built as a program: long
 ctest --test-dir build/long -j16    # xgetest's hidden [.long] tests: minutes
 xvfb-run -a output/Debug/xgetest "[window]"   # opens every window backend
 output/Debug/xgecli frogger     # -w window, -x xml, -a audio libraries
