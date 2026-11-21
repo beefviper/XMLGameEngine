@@ -3,7 +3,7 @@
 // author: beefviper
 // date: Nov 10, 2026
 //
-// A long test (xgetest-long): every game played for 20,000 frames of random
+// A long test (hidden in xgetest: [.long]): every game played for 20,000 frames of random
 // presses of the keys it binds, from two seeds, on the null window. Nothing
 // may throw, and no position or speed may stop being a finite number. A
 // short run of the same is in xgetest (engine/test_vocabulary.cpp).
@@ -15,7 +15,7 @@
 
 #include <string>
 
-TEST_CASE("every game survives 20,000 frames of random keys, from two seeds", "[long][keys]")
+TEST_CASE("every game survives 20,000 frames of random keys, from two seeds", "[.long][keys]")
 {
 	for (const std::string& file : played::shippedGames(xge::gameFilesIn("descriptions")))
 	{

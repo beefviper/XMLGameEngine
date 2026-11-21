@@ -4,7 +4,7 @@ rem XML Game Engine
 rem author: beefviper
 rem
 rem Builds every program that games-generate-all.bat wrote to
-rem output\<config>\generated\<game>\ , each in its own build\ folder, with
+rem output\<config>\generated\games\<game>\ , each in its own build\ folder, with
 rem Visual Studio at /W4. Run it from the repo root:
 rem
 rem     scripts\shell\windows\games-build-all.bat [config]
@@ -22,7 +22,7 @@ if "%CONFIG%"=="" set "CONFIG=Debug"
 rem this file is <root>\scripts\shell\windows, so the root is three up
 pushd "%~dp0..\..\.."
 set "ROOT=%CD%"
-set "GENERATED=%ROOT%\output\%CONFIG%\generated"
+set "GENERATED=%ROOT%\output\%CONFIG%\generated\games"
 
 if not exist "%GENERATED%" (
     echo error: %GENERATED% not found. Run games-generate-all.bat %CONFIG% first.

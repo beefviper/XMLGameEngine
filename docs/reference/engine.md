@@ -99,7 +99,7 @@ output/Debug/xgecli frogger
 cmake -B build -DBUILD_TESTING=ON   # every backend, and the tests
 output/Debug/xgetest                # Catch2 filters work: "[kaboom]"
 cmake --build build --target xgetest-generated && ctest --test-dir build/generated -j16
-cmake --build build --target xgetest-long && ctest --test-dir build/long -j16   # minutes
+ctest --test-dir build/long -j16   # xgetest's hidden [.long] tests: minutes
 xvfb-run -a output/Debug/xgetest "[window]"   # opens every window backend (no xvfb-run on Windows)
 ```
 
@@ -107,8 +107,11 @@ xvfb-run -a output/Debug/xgetest "[window]"   # opens every window backend (no x
 |---|---|
 | `xgelib` | the engine (`xge/lib/`), static by default (`-DXGE_BUILD_SHARED=ON` for shared) |
 | `xgecli`, `xgegui` | the programs (`xge/cli/`, `xge/gui/`; the second only when Qt 6 is found) |
-| `xgetest`, `xgetest-generated`, `xgetest-long` | the tests; the second generates every game, the third runs for minutes (every game played 20,000 frames on random keys from two seeds, every game damaged 40 ways, load and frame times, frame pace by the clock); neither is in an ordinary build, nor in the ordinary `ctest`: each has its own folder, `build/generated` and `build/long`, with a test per game for the every-game cases (`xge_ctest_folder` in `scripts/cmake/tests.cmake`). On a multi-config generator (Visual Studio) add `-C Debug` |
+| `xgetest`, `xgetest-generated` | the tests. `xgetest` holds hidden long ones (`[.long]`: every game played 20,000 frames on random keys from two seeds, every game damaged 40 ways, load and frame times, frame pace by the clock) that an ordinary run skips; `xgetest-generated` generates every game and is not in an ordinary build. Neither the long tests nor the generated ones are in the ordinary `ctest`: each has its own folder, `build/long` and `build/generated`, with a test per game for the every-game cases (`xge_ctest_folder` in `scripts/cmake/tests.cmake`). On a multi-config generator (Visual Studio) add `-C Debug` |
+| `pong`, `pong_min` | the hand-written prototypes (`games/prototypes/`) |
 | `xgedata` | copies `games/` beside the programs |
+
+`output/<config>/` holds the programs, `games/` and `libraries/`, and `generated/` what belongs to the generator: `xgetest-generated`, `prototypes/` (`pong`, `pong_min`), and `games/<game>/`, where `games-generate-all.bat` writes every game. In Visual Studio `xgetest-generated` is in the `XGETestGenerated` folder and the prototypes in `XGETestGenerated/XGETestPrototypes`.
 
 - **Output.** Everything to run lands in `output/<Config>/`: the programs, a copy of `games/` with the schema, and the libraries in `libraries/` (found through a manifest on Windows, a relative run path elsewhere). The folder can be copied anywhere.
 - **Dependencies** are found through vcpkg or the system, or fetched and built (`FORCE_LOCAL_<NAME>` forces a fetch). Qt 6 and libxslt are only found, never fetched. Vulkan needs no SDK: Khronos's headers and volk are fetched, and volk opens the driver's own Vulkan library when the window opens. In Visual Studio every fetched library's projects sit in one solution folder, `CMakeFetchedLibraries` (`xge_fold_fetched_targets`). CMake modules are in `scripts/cmake/`.
@@ -158,4 +161,4 @@ Design: [build-and-layout](../designs/51-build-and-layout.md).
 | | `games/generators/windows-cpp/` | `generate.xsl`, `covers.xsl`, `game.xsl`, `names.xsl`, `values.xsl`, `program.xsl`, `verbs/` (a file per verb it can write) |
 | | `games/prototypes/pong_min/` | `pong_min.xml` as a stand-alone SFML game, the `pong_min` program: what the `windows-cpp` generator writes for it |
 | | `games/prototypes/pong/` | `pong.xml` as a stand-alone SFML game with no engine code (states, texts, sounds, a computer player), the `pong` program: what it is to write next |
-| tests | `xge/tests/` | `engine/` one `test_<topic>.cpp` per area (`test_vocabulary.cpp`: every schema word used by a game or listed with why, in the docs, and every game through 1,000 frames of random keys; `test_names.cpp`: names that match nothing); `games/` one per game (played frame by frame); `generated/` the generated games (`xgetest-generated`: `engine-cpp` for every game, `windows-cpp` for those it covers); `written/` what each game `windows-cpp` covers must do, run on its prototype and its generated copy; `long/` the long runs (`xgetest-long`: random keys, damaged files, load and frame times, `test_pace.cpp` frame pace in real time); `helpers/` what they share: `played.h`, `invaders_fixture.h` a frozen Space Invaders, `scratch.h` a scratch name per run, `test_main.cpp` |
+| tests | `xge/tests/` | `engine/` one `test_<topic>.cpp` per area (`test_vocabulary.cpp`: every schema word used by a game or listed with why, in the docs, and every game through 1,000 frames of random keys; `test_names.cpp`: names that match nothing); `games/` one per game (played frame by frame); `generated/` the generated games (`xgetest-generated`: `engine-cpp` for every game, `windows-cpp` for those it covers); `written/` what each game `windows-cpp` covers must do, run on its prototype and its generated copy; `long/` the long runs (hidden in `xgetest` as `[.long]`: random keys, damaged files, load and frame times, `test_pace.cpp` frame pace in real time); `helpers/` what they share: `played.h`, `invaders_fixture.h` a frozen Space Invaders, `scratch.h` a scratch name per run, `test_main.cpp` |

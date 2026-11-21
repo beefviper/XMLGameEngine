@@ -3,7 +3,7 @@
 // author: beefviper
 // date: Nov 10, 2026
 //
-// A long test (xgetest-long): every game broken 40 ways, each copy loaded as
+// A long test (hidden in xgetest: [.long]): every game broken 40 ways, each copy loaded as
 // --check loads it and, if it loads, played for 600 frames on the null
 // window. A broken game may stop with a message, at load or while it plays;
 // it may never crash or hang, so getting to the end is the test. What
@@ -204,7 +204,7 @@ namespace
 	}
 }
 
-TEST_CASE("every game broken 40 ways stops with a message or plays on, never crashes", "[long][damaged]")
+TEST_CASE("every game broken 40 ways stops with a message or plays on, never crashes", "[.long][damaged]")
 {
 	constexpr int kCopies = 40;
 	constexpr int kFrames = 600;

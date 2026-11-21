@@ -20,7 +20,7 @@ The language had a pass that asked of every word whether it was needed. The C++ 
 | One tag | Written in about twelve places: `<drag>` was in the schema, the object reader, the group reader, the written object, `load/build.cpp`, `Object::Motion`, the frame, the printer and the generator's second reader |
 | Comments | 19% of the lines in `game/`, 12% in `load/` |
 
-`xgetest-long "[size]"` prints these, each game started and played 600 frames into a window that keeps textures as the backends do:
+`xgetest "[size]"` prints these, each game started and played 600 frames into a window that keeps textures as the backends do:
 
 | Game | Objects | Pictures held | Picture KB | Textures | Textures built | KB built |
 |---|---|---|---|---|---|---|
@@ -37,7 +37,7 @@ A4 put an object's fields into parts by feature, which made it readable. It did 
 
 | Task | Result |
 |---|---|
-| CR1 | sizes on record (`xgetest-long "[size]"`); one walk over a command's values (`forEachValue`) in place of six hand lists, five of which missed `<arc>` and `<below>` |
+| CR1 | sizes on record (`xgetest "[size]"`); one walk over a command's values (`forEachValue`) in place of six hand lists, five of which missed `<arc>` and `<below>` |
 | CR3 | parts in a store each (`Store`, `Parts`), a handle with a generation (`ObjectId`); what a piece shares in one `Kind` and `LookSet`; names as ids; an object 4,752 to 536 bytes; features in their own classes (`CellMaps`, `Holders`, `Players`, `Sounds`, `Thinker`), `game.h` 1,172 to 845 lines |
 | CR2 | `Resources` (`engine/resources.h`): each picture and sound held once, named by an id; windows keep a texture a picture |
 | CR4 | `Engine::run` is `input()`, `update(seconds)`, `render()`; `Game::updateObjects` and `playOneFrame` are named stages only |

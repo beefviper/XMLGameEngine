@@ -4,8 +4,8 @@
 // date: Nov 17, 2026
 //
 // How big the engine's things are, and how many pictures and textures a game
-// holds. Not a check, and part of xgetest-long, so ordinary runs skip it: run
-// `xgetest-long "[size]"` to print the table, and compare a build before and
+// holds. Not a check, and hidden in xgetest ([.long]), so ordinary runs skip it: run
+// `xgetest "[size]"` to print the table, and compare a build before and
 // after a change (the C++ review in docs/plan.md).
 
 #include "played.h"
@@ -105,7 +105,7 @@ namespace
 	};
 }
 
-TEST_CASE("The size of the engine's things", "[long][size]")
+TEST_CASE("The size of the engine's things", "[.long][size]")
 {
 	std::printf("%-12s %8s\n", "type", "bytes");
 	std::printf("%-12s %8zu\n", "Object", sizeof(xge::Object));

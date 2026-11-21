@@ -4,7 +4,7 @@ rem XML Game Engine
 rem author: beefviper
 rem
 rem Generates every game in games\descriptions\ as a engine-cpp program, into
-rem output\<config>\generated\<game>\ . Run it from the repo root:
+rem output\<config>\generated\games\<game>\ . Run it from the repo root:
 rem
 rem     scripts\shell\windows\games-generate-all.bat [config]
 rem
@@ -34,7 +34,7 @@ set "FAILS="
 
 for %%G in ("%ROOT%\games\descriptions\*.xml") do (
     echo generating %%~nG
-    "%XGECLI%" --generate engine-cpp --output "%ROOT%\output\%CONFIG%\generated\%%~nG" "%%~nxG" >nul
+    "%XGECLI%" --generate engine-cpp --output "%ROOT%\output\%CONFIG%\generated\games\%%~nG" "%%~nxG" >nul
     if errorlevel 1 (
         echo   FAILED
         set /a FAILED+=1
@@ -45,7 +45,7 @@ for %%G in ("%ROOT%\games\descriptions\*.xml") do (
 )
 
 echo.
-echo generated !DONE!, failed !FAILED! into output\%CONFIG%\generated\
+echo generated !DONE!, failed !FAILED! into output\%CONFIG%\generated\games\
 if !FAILED! gtr 0 (
     echo failed:!FAILS!
     popd

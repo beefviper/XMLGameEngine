@@ -37,7 +37,8 @@ endif()
 
 # The tests are in folders: helpers/ (what the others share), engine/ (the
 # language and the engine, a file per area), games/ (a file per game, played
-# frame by frame) and generated/ (the generated games, a program of their own).
+# frame by frame), long/ (hidden: [.long]) and generated/ (the generated
+# games, a program of their own).
 #
 # The slowest tests' files come first (the XML libraries loading every game,
 # then Pac-Man, sound, Donkey Kong and Berserk), so a ctest run with no timings
@@ -151,6 +152,12 @@ add_executable(xgetest
 	"games/prototypes/pong/source/pong.cpp"
 	"xge/cli/source/cli.cpp"
 	"xge/cli/source/generate.cpp"
+	"xge/tests/long/test_random_keys.cpp"
+	"xge/tests/long/test_damaged.cpp"
+	"xge/tests/long/test_speed.cpp"
+	"xge/tests/long/test_size.cpp"
+	"xge/tests/long/test_pace.cpp"
+	"xge/tests/long/test_whole_games.cpp"
 )
 
 # cli.cpp and generate.cpp are xgecli's own code, compiled in again here so
@@ -193,16 +200,17 @@ catch_discover_tests(xgetest
 #
 #     ctest --test-dir build/<folder> -C Debug -j 16 --output-on-failure
 #
-# Every case is a test (catch_discover_tests, after the program is built),
+# Every case is a test (catch_discover_tests, after the program is built;
+# with SPEC, only the cases it picks, as "[long]" picks the hidden long ones),
 # but those tagged in EACH_GAME, which take a section per game: each game is
 # a test of its own, "<tag>: <game>", over the games in GAMES. Those tagged
 # in SERIAL are a test per tag, run with nothing beside them (they time the
 # engine against the clock).
 function(xge_ctest_folder target folder)
-	cmake_parse_arguments(arg "" "" "EACH_GAME;GAMES;SERIAL" ${ARGN})
+	cmake_parse_arguments(arg "" "SPEC" "EACH_GAME;GAMES;SERIAL" ${ARGN})
 	set(folder_dir "${CMAKE_BINARY_DIR}/${folder}")
 	set(program "$<TARGET_FILE:${target}>")
-	set(games_dir "$<TARGET_FILE_DIR:${target}>/games")
+	set(games_dir "${XGE_OUTPUT_DIR}/games")
 
 	set(lines "if(EXISTS \"${program}\")\n")
 	foreach(tag IN LISTS arg_EACH_GAME)
@@ -230,7 +238,7 @@ function(xge_ctest_folder target folder)
 
 	# The cases left, found by Catch; its file is taken back out of this
 	# folder's tests, so the ordinary ctest does not run them.
-	set(spec "")
+	set(spec "${arg_SPEC}")
 	foreach(tag IN LISTS arg_EACH_GAME arg_SERIAL)
 		string(APPEND spec "~[${tag}]")
 	endforeach()
@@ -267,12 +275,14 @@ add_executable(xgetest-generated EXCLUDE_FROM_ALL
 	"xge/tests/written/pong_min.h"
 )
 # Visual Studio's Build Solution leaves it out too.
-set_target_properties(xgetest-generated PROPERTIES EXCLUDE_FROM_DEFAULT_BUILD ON)
+# In an IDE, out of the way in a folder of its own (with the hand-written
+# Pongs, executables.cmake).
+set_target_properties(xgetest-generated PROPERTIES EXCLUDE_FROM_DEFAULT_BUILD ON FOLDER XGETestGenerated)
 target_compile_features(xgetest-generated PRIVATE cxx_std_20)
 xge_warnings(xgetest-generated)
 target_link_libraries(xgetest-generated PRIVATE xgelib Catch2::Catch2WithMain)
 add_dependencies(xgetest-generated xgedata)
-xge_place_program(xgetest-generated)
+xge_place_program(xgetest-generated FOLDER generated)
 
 set(XGE_GENERATED_DIR "${CMAKE_BINARY_DIR}/generated")
 set(generated_declarations "")
@@ -365,40 +375,18 @@ file(WRITE "${XGE_GENERATED_DIR}/written_games.h.in"
 	"inline const WrittenGame writtenGames[] = {\n${written_entries}};\n")
 configure_file("${XGE_GENERATED_DIR}/written_games.h.in" "${XGE_GENERATED_DIR}/written_games.h" COPYONLY)
 
-# The long tests are a third test program, xgetest-long, built and run only
-# when asked for (cmake --build build --target xgetest-long, then
-# output/<config>/xgetest-long): every game with random keys for a long while,
-# every game damaged many ways, and every game's load and frame times. They
-# take minutes, so they stay out of xgetest and ctest.
-add_executable(xgetest-long EXCLUDE_FROM_ALL
-	"xge/tests/helpers/test_main.cpp"
-	"xge/tests/long/test_random_keys.cpp"
-	"xge/tests/long/test_damaged.cpp"
-	"xge/tests/long/test_speed.cpp"
-	"xge/tests/long/test_size.cpp"
-	"xge/tests/long/test_pace.cpp"
-	"xge/tests/long/test_whole_games.cpp"
-	"xge/tests/engine/test_step_lengths.cpp"
-	"xge/cli/source/cli.cpp"
-	"xge/cli/source/generate.cpp"
-)
-set_target_properties(xgetest-long PROPERTIES EXCLUDE_FROM_DEFAULT_BUILD ON)
-target_include_directories(xgetest-long PRIVATE xge/cli/include xge/tests/helpers)
-target_compile_features(xgetest-long PRIVATE cxx_std_20)
-xge_warnings(xgetest-long)
-target_link_libraries(xgetest-long PRIVATE xgelib Catch2::Catch2WithMain)
-xge_link_xslt(xgetest-long)
-add_dependencies(xgetest-long xgedata)
-xge_place_program(xgetest-long)
-
-# ctest --test-dir build/long -C <config>: a test per game for the random
-# keys and the damaged files.
+# The long tests (xge/tests/long/) are in xgetest, hidden ([.long]), so an
+# ordinary run skips them: every game with random keys for a long while,
+# every game damaged many ways, load and frame times, pace by the clock.
+# ctest --test-dir build/long -C <config> runs them, a test per game for the
+# random keys and the damaged files.
 set(shipped_games "")
 foreach(game_file IN LISTS data_xml)
 	get_filename_component(game "${game_file}" NAME_WE)
 	list(APPEND shipped_games "${game}")
 endforeach()
-xge_ctest_folder(xgetest-long long
+xge_ctest_folder(xgetest long
+	SPEC "[long]"
 	EACH_GAME keys damaged
 	GAMES ${shipped_games}
 	SERIAL speed pace)

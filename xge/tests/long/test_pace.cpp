@@ -5,7 +5,7 @@
 //
 // Engine::loop plays one step a frame, of the real time that passed, at no
 // more frames a second than the game's <framerate>, whatever the window
-// does. These tests wait in real time, so they are part of xgetest-long,
+// does. These tests wait in real time, so they are hidden in xgetest ([.long]),
 // run on its own, never beside others with ctest -j.
 
 #include "engine/engine.h"
@@ -114,7 +114,7 @@ namespace
 	}
 }
 
-TEST_CASE("a mover goes as far in two real seconds however slow the window is to show a picture", "[long][pace]")
+TEST_CASE("a mover goes as far in two real seconds however slow the window is to show a picture", "[.long][pace]")
 {
 	int lastPictures = -1;
 	for (const int slowness : { 5, 20, 100 })
@@ -131,7 +131,7 @@ TEST_CASE("a mover goes as far in two real seconds however slow the window is to
 	}
 }
 
-TEST_CASE("a game is played no more often than its framerate", "[long][pace]")
+TEST_CASE("a game is played no more often than its framerate", "[.long][pace]")
 {
 	const Paced paced = playMover(2.0, std::chrono::milliseconds(0));
 	CHECK(paced.steps <= 122);
@@ -140,7 +140,7 @@ TEST_CASE("a game is played no more often than its framerate", "[long][pace]")
 	CHECK(paced.x == Approx(100.0 * paced.played).margin(5.0));
 }
 
-TEST_CASE("after a stall the game goes on from now, with one step a quarter second long", "[long][pace]")
+TEST_CASE("after a stall the game goes on from now, with one step a quarter second long", "[.long][pace]")
 {
 	// Each picture takes half a second; each step after the first (a frame
 	// long: no picture was shown before it) is cut to a quarter, so in 3

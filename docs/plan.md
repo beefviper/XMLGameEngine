@@ -196,7 +196,7 @@ What only eyes, ears or MSVC can check. Whoever lands a change that needs one ad
 
 ## Known untested
 
-- Sanitizers: the whole of `xgetest` is clean under `-DXGE_SANITIZE=address` (address and undefined behaviour), as are `xgetest-long`'s random keys and damaged files; the board-game search on its own thread is clean under `-DXGE_SANITIZE=thread`.
+- Sanitizers: the whole of `xgetest` is clean under `-DXGE_SANITIZE=address` (address and undefined behaviour), as are its hidden long tests' random keys and damaged files; the board-game search on its own thread is clean under `-DXGE_SANITIZE=thread`.
   - The damaged files found one fault: a line out at 1e9 or a text of a huge size asked for hundreds of gigabytes.
   - Pictures and texts are now at most 4096 pixels a side (`refusePictureSize`).
   - Generated programs and `xgegui` have not been run under one.

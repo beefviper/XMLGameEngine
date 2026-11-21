@@ -50,7 +50,7 @@ Tips for changing values, objects, frames, touches, spawning and loading. Back t
 
 Each rests on something that never changes while a game runs: `FrameRules::partners` and `mazeGrid`; `find`'s answers and `matching`; `Evaluator::compiled`; `isShown`, kept until `stageChanged()`. Anything new that changes the state stack, a scene or an object's owner calls `stageChanged()`.
 
-`xgetest-long "[speed]"` prints every game's load and frame times to compare builds.
+`xgetest "[speed]"` prints every game's load and frame times to compare builds.
 
 ## Loading
 

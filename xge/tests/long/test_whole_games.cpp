@@ -6,7 +6,7 @@
 // Whole shipped games played from a fresh load at 8, 30, 60, 144 and 240
 // steps a second and in uneven steps: nothing throws, everything stays at
 // a finite place and speed, and one measure a game, in game seconds,
-// agrees with the run at 60 within its range. Part of xgetest-long.
+// agrees with the run at 60 within its range. Hidden in xgetest ([.long]).
 
 #include "played.h"
 #include "random_keys.h"
@@ -102,7 +102,7 @@ namespace
 	xge::Vector2f middleOf(const xge::Object& object) { return object.position + object.size * 0.5f; }
 }
 
-TEST_CASE("Pong's first point comes as soon at every step length", "[long][steps][pong]")
+TEST_CASE("Pong's first point comes as soon at every step length", "[.long][steps][pong]")
 {
 	// Two players, neither pressing a key: the computer's paddle, held to
 	// a band about the ball, would send it back at angles that change with
@@ -120,7 +120,7 @@ TEST_CASE("Pong's first point comes as soon at every step length", "[long][steps
 	});
 }
 
-TEST_CASE("Asteroids' ship goes as far after a second of thrust at every step length", "[long][steps][asteroids]")
+TEST_CASE("Asteroids' ship goes as far after a second of thrust at every step length", "[.long][steps][asteroids]")
 {
 	agreeAtEveryRate("descriptions/asteroids.xml", "pixels gone in 3 seconds after 1 second of thrust", 0.05, true, [](Played& play, Pacer& pacer)
 	{
@@ -149,7 +149,7 @@ TEST_CASE("Asteroids' ship goes as far after a second of thrust at every step le
 	});
 }
 
-TEST_CASE("Mario's jump goes as high and is in the air as long at every step length", "[long][steps][mariobros]")
+TEST_CASE("Mario's jump goes as high and is in the air as long at every step length", "[.long][steps][mariobros]")
 {
 	// From the ground between the low left floor and the POW, where nothing
 	// is overhead for a whole jump. The landing is worked out inside the
@@ -194,7 +194,7 @@ TEST_CASE("Mario's jump goes as high and is in the air as long at every step len
 	agreeAtEveryRate("descriptions/mariobros.xml", "seconds in the air", 0.05, true, [&](Played& play, Pacer& pacer) { return jump(play, pacer, false); });
 }
 
-TEST_CASE("Space Invaders' block is in the same place after 10 seconds at every step length", "[long][steps][spaceinvaders]")
+TEST_CASE("Space Invaders' block is in the same place after 10 seconds at every step length", "[.long][steps][spaceinvaders]")
 {
 	// Within one of its own steps: 15 pixels a note.
 	agreeAtEveryRate("descriptions/spaceinvaders.xml", "the block's x after 10 seconds", 15.0, false, [](Played& play, Pacer& pacer)
@@ -206,7 +206,7 @@ TEST_CASE("Space Invaders' block is in the same place after 10 seconds at every 
 	});
 }
 
-TEST_CASE("Snake's head has gone as many cells after 2.45 seconds at every step length", "[long][steps][snake]")
+TEST_CASE("Snake's head has gone as many cells after 2.45 seconds at every step length", "[.long][steps][snake]")
 {
 	// 8 cells a second: 19 cells, short of the wall the field's right side
 	// makes at 22.
@@ -220,7 +220,7 @@ TEST_CASE("Snake's head has gone as many cells after 2.45 seconds at every step 
 	});
 }
 
-TEST_CASE("Pinball's ball goes as high from a full plunger at every step length", "[long][steps][pinball]")
+TEST_CASE("Pinball's ball goes as high from a full plunger at every step length", "[.long][steps][pinball]")
 {
 	agreeAtEveryRate("descriptions/pinball.xml", "pixels the ball rises", 0.05, true, [](Played& play, Pacer& pacer)
 	{
