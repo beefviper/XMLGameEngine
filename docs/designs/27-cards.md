@@ -32,7 +32,7 @@
 - **Patterns, not poker:** a `<patterns>` set from `<alike variable>` (the grid games' word for sharing a value; once `<same>`) and `<run variable>`, the same parts rummy and dice use. Each reads the variable it names off the cards, so a pack's suit and rank are only names; ties go by groups of the set's first `<alike>` variable, poker's kickers without a poker word.
   - The engine finds the best and orders two by one general tie rule; a holder `<score>`s `<with>` a shared pile, the `<best>` so many.
   - `<run variable="rank">` runs by column (Gin's court cards are worth 10).
-  - **Melds** split the whole holder for least deadwood and lay it out that way.
+  - **Melds** split the whole holder for least deadwood and lay it out that way. The groups are grown a card at a time, in order, and given up as soon as no pattern could still be made (unlike in an `<alike>`, a value twice in a run): Gin tries a few dozen groups, not every one of its 2,048.
 - **A trick is a holder with a rule:** `<trick variable="suit">`, `<breaks>`, `<trumps>`; it knows who laid each card and gives `lead` and `winner`. It follows the row or the column, by either name.
 - **Card words kept on purpose:** `<trick>`, `<breaks>`, `<trumps>` and `<melds />` name mechanics every rule book calls by those names, so another word would only need explaining. `<call>` (naming what a wild one stands for) stays for the same reason. Holders say `object=` like every other tag (`<call object>`, `<with object>`; once `pile=`).
 - **Covering is drawn, not written:** a card is free when no card of a later holder overlaps it. Listing 28 covering pairs was the alternative; overlap serves TriPeaks too.

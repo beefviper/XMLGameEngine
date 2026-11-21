@@ -176,7 +176,7 @@ The names are the program's, not each game's (the author chose it on a card): on
 
 After the step (callgrind, same run): string work, copies included, fell from 184G of 555G instructions to 26G of 536G. Left, each small: a value that says `self` is copied and renamed for the object running it (`stepHalf`, `makeNow`); a text that shows a number is made again when the number changes, which is what it is for; a message's text is made only when something fails. Maps the frame iterates in order (`memberThinks`, an object's actions) stay sorted by text, so that play is the same each run; maps only looked up are hashed by id.
 
-Not a name, but found on the way: the card search (`meldDeadwood`, gin rummy's think) is 40% of all play, and builds a `std::vector<float>` for each meld it tries (10%).
+Not a name, but found on the way: the card search (`meldDeadwood`, gin rummy's think) was 40% of all play. It now reads each card's values once and grows only groups that could still be a meld ([cards](27-cards.md)).
 
 ## Open
 

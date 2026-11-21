@@ -137,46 +137,83 @@ namespace xge
 		return game.itemOf(item).worths.empty() ? 0.0f : game.itemOf(item).worths.front();
 	}
 
-	// Whether these items, every one of them, make the pattern: each part
-	// holds for all of them (<alike>: one value of its variable, <run>:
-	// values in a row, by worth an item counting any of its worths), and
-	// there are at least as many as its number.
-	bool Holders::meldFits(const std::vector<const Object*>& group, const Patterns::Pattern& pattern)
+	// Each item's values for each part of each pattern of a <melds> set, read
+	// once: a run by worth, all its worths; else its variable's one value.
+	Holders::MeldValues Holders::meldValues(const std::vector<const Object*>& items, const Patterns& set)
+	{
+		MeldValues values;
+		for (const Patterns::Pattern& pattern : set.patterns)
+		{
+			std::vector<std::vector<std::vector<float>>> parts;
+			for (std::size_t p = 0; p < pattern.parts.size(); ++p)
+			{
+				const Name by = pattern.by[p];
+				std::vector<std::vector<float>> each;
+				for (const Object* item : items)
+				{
+					const bool worths = by == words::worth && pattern.parts[p].first == Patterns::Part::Run;
+					each.push_back(worths ? game.itemOf(*item).worths : std::vector<float>{ valueOf(*item, by) });
+				}
+				parts.push_back(std::move(each));
+			}
+			values.push_back(std::move(parts));
+		}
+		return values;
+	}
+
+	// Whether the items in `group` (indexes) make the pattern, every one of
+	// them: each part holds for all of them (<alike>: one value of its
+	// variable, <run>: values in a row, an item counting any of its worths),
+	// and there are at least as many as its number. With `growing`, only
+	// whether more items could still make it: alike so far, and no value
+	// twice in a run.
+	bool Holders::meldFits(const std::vector<std::size_t>& group, const Patterns::Pattern& pattern, const std::vector<std::vector<std::vector<float>>>& values, bool growing)
 	{
 		const std::size_t n = group.size();
 		for (std::size_t p = 0; p < pattern.parts.size(); ++p)
 		{
 			const auto& [part, count] = pattern.parts[p];
-			const Name by = pattern.by[p];
-			if (n < static_cast<std::size_t>(count)) { return false; }
+			const std::vector<std::vector<float>>& of = values[p];
+			if (!growing && n < static_cast<std::size_t>(count)) { return false; }
 			if (part == Patterns::Part::Alike)
 			{
-				for (const Object* item : group)
+				for (const std::size_t i : group)
 				{
-					if (valueOf(*item, by) != valueOf(*group.front(), by)) { return false; }
+					if (of[i].front() != of[group.front()].front()) { return false; }
 				}
 				continue;
 			}
-			// A run: some start from which each value in turn is a different item's.
-			bool found = false;
-			for (const Object* starter : group)
+			// A run of items with one value each: no value twice, and, whole,
+			// as many apart as there are items.
+			if (std::all_of(group.begin(), group.end(), [&](std::size_t i) { return of[i].size() == 1; }))
 			{
-				// By worth, an item counting any of its worths; else the variable's value.
-				const auto valuesOf = [&](const Object& item) { return by == words::worth ? game.itemOf(item).worths : std::vector<float>{ valueOf(item, by) }; };
-				for (const float start : valuesOf(*starter))
+				std::vector<float> run;
+				for (const std::size_t i : group) { run.push_back(of[i].front()); }
+				std::sort(run.begin(), run.end());
+				if (std::adjacent_find(run.begin(), run.end()) != run.end()) { return false; }
+				if (!growing && run.back() - run.front() != static_cast<float>(n - 1)) { return false; }
+				continue;
+			}
+			if (growing) { continue; }
+			// Some item counting more than one worth: some start from which
+			// each value in turn is a different item's.
+			bool found = false;
+			for (const std::size_t starter : group)
+			{
+				for (const float start : of[starter])
 				{
 					std::vector<bool> used(n, false);
 					const auto take = [&](const auto& self, std::size_t step) -> bool
 					{
 						if (step == n) { return true; }
 						const float wanted = start + static_cast<float>(step);
-						for (std::size_t i = 0; i < n; ++i)
+						for (std::size_t k = 0; k < n; ++k)
 						{
-							const std::vector<float> worths = valuesOf(*group[i]);
-							if (used[i] || std::find(worths.begin(), worths.end(), wanted) == worths.end()) { continue; }
-							used[i] = true;
+							const std::vector<float>& worths = of[group[k]];
+							if (used[k] || std::find(worths.begin(), worths.end(), wanted) == worths.end()) { continue; }
+							used[k] = true;
 							if (self(self, step + 1)) { return true; }
-							used[i] = false;
+							used[k] = false;
 						}
 						return false;
 					};
@@ -211,23 +248,36 @@ namespace xge
 			return total;
 		}
 
-		// Every group of the items that makes a pattern, by its lowest item.
+		// Every group of the items that makes a pattern, by its lowest item:
+		// grown an item at a time, in order, and only while some pattern could
+		// still be made of it, so a hand of unlike items tries few.
 		const std::uint32_t all = (std::uint32_t{ 1 } << n) - 1;
+		const MeldValues values = meldValues(items, *set);
 		std::vector<std::vector<std::uint32_t>> groups(n);
-		std::vector<const Object*> group;
-		for (std::uint32_t mask = 1; mask <= all; ++mask)
+		std::vector<std::size_t> group;
+		const auto anyPattern = [&](bool growing)
 		{
-			if (std::popcount(mask) < 2) { continue; }
-			group.clear();
-			for (std::size_t i = 0; i < n; ++i)
+			for (std::size_t p = 0; p < set->patterns.size(); ++p)
 			{
-				if (mask & (std::uint32_t{ 1 } << i)) { group.push_back(items[i]); }
+				if (meldFits(group, set->patterns[p], values[p], growing)) { return true; }
 			}
-			if (std::any_of(set->patterns.begin(), set->patterns.end(), [&](const Patterns::Pattern& pattern) { return meldFits(group, pattern); }))
+			return false;
+		};
+		const auto grow = [&](const auto& self, std::uint32_t mask) -> void
+		{
+			for (std::size_t i = group.empty() ? 0 : group.back() + 1; i < n; ++i)
 			{
-				groups[static_cast<std::size_t>(std::countr_zero(mask))].push_back(mask);
+				group.push_back(i);
+				if (anyPattern(true))
+				{
+					const std::uint32_t with = mask | (std::uint32_t{ 1 } << i);
+					if (group.size() >= 2 && anyPattern(false)) { groups[group.front()].push_back(with); }
+					self(self, with);
+				}
+				group.pop_back();
 			}
-		}
+		};
+		grow(grow, 0);
 		// The least left over by each set of the items: its lowest item left
 		// over, or in one of its groups.
 		std::vector<float> left(std::size_t{ all } + 1, 0.0f);

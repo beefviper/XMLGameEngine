@@ -90,7 +90,9 @@ namespace xge
 		static bool isWild(const HolderRule& rule, const Object& item);
 		void refreshCall(Object& holder);
 		float itemPoints(const Object& holder, const Object& item);
-		bool meldFits(const std::vector<const Object*>& group, const Patterns::Pattern& pattern);
+		using MeldValues = std::vector<std::vector<std::vector<std::vector<float>>>>;
+		MeldValues meldValues(const std::vector<const Object*>& items, const Patterns& set);
+		static bool meldFits(const std::vector<std::size_t>& group, const Patterns::Pattern& pattern, const std::vector<std::vector<std::vector<float>>>& values, bool growing);
 		float meldDeadwood(const Object& holder, const std::vector<int>& numbers, int best, std::vector<std::vector<int>>* melds);
 		void layOutMelds(Object& holder);
 		const Object* trickWinning(const Object& holder);
