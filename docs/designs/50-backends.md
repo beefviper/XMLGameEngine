@@ -10,7 +10,7 @@ The prototype was hard-wired to Xerces and SFML. Each library sits behind an int
 
 - Dropping some to save upkeep was proposed and rejected.
 - Lower-level ones are wanted next (OpenGL, Vulkan and Direct3D 9, 10, 11 and 12 are there), and Xerces as the full validator with a lighter built-in one behind the other parsers is intended.
-- What follows is making the next backend cheap: with text and image files made by the engine, a backend only opens a window, shows bitmaps and reads keys ([plan](../plan.md#a7-the-next-backend-is-cheap)).
+- A backend is cheap: with text and image files made by the engine, it only opens a window, shows bitmaps and reads keys, and a test opens every one built (`test_backends.cpp`). The next is added the way Direct3D 9 to 12 and Vulkan were, one small file at a time.
 
 ## XML: `XmlDocument` and `XmlNode`
 

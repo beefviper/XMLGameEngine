@@ -457,10 +457,12 @@ TEST_CASE("the keys play the game through the engine", "[astrosmash][engine_inpu
 TEST_CASE("a crude player who shoots the lowest rock in the sights scores", "[astrosmash][play]")
 {
 	// Sit under the lowest rock above the ship and fire whenever the gun is
-	// ready. Over twenty seconds a ship that is always trying must score.
+	// ready. Over twenty seconds a ship that is always trying must hit
+	// something; the score itself can still fall, as rocks that land take
+	// points off.
 	Table table;
 	table.keepPlaying();
-	const float startScore = table.score();
+	int hits = 0;
 
 	for (int frame = 0; frame < 20 * 60; ++frame)
 	{
@@ -478,11 +480,13 @@ TEST_CASE("a crude player who shoots the lowest rock in the sights scores", "[as
 		table.key("left", centre > targetX + 6.0f);
 		table.key("right", centre < targetX - 6.0f);
 		if (!table.inFlight() && centre > targetX - 10.0f && centre < targetX + 10.0f) { table.press("gun"); }
+		const float before = table.score();
 		table.frames(1);
+		if (table.score() > before) { ++hits; }
 		if (table.game.getCurrentState().name != "playing") { break; }
 	}
 
-	CHECK(table.score() > startScore);
+	CHECK(hits > 0);
 }
 
 TEST_CASE("each state has its own objects: the title, the sky, the signs", "[astrosmash][states]")

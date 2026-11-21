@@ -334,9 +334,11 @@ TEST_CASE("each wave's bomber is quicker and drops faster bombs more often", "[k
 
 	CHECK(table.game.getVariable("playing.wave2.drop") == Approx(0.6));
 
-	// The last wave drops a bomb every 0.24 seconds.
+	// The last wave drops a bomb every 0.24 seconds; the bucket is out of
+	// the way, so none is caught before it is counted.
 	Table last("wave8");
 	last.keepPlaying();
+	last.bucket().collisionsOn = false;
 	last.frames(85); // bombs at about 0.24, 0.48, 0.72, 0.96 and 1.2 seconds
 	CHECK(last.falling("wave8").size() >= 5);
 }
