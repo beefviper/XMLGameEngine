@@ -281,19 +281,19 @@ Players take turns as the arcade machines did: each plays a game of their own, a
 
 ## Attract mode
 
-A game's `<demo>`, after `<states>`, is a recorded game: the random seed, how many steps, and each key pressed and released on its step. No shipped game has one for now: they are recorded again once demos keep their steps' lengths.
+A game's `<demo>`, after `<states>`, is a recorded game: the random seed, how long it lasts, and each key pressed and released at its time, all in seconds to the millisecond. No shipped game has one yet.
 
 ```xml
 <demo>
   <seed>20261016</seed>
-  <frames>1200</frames>
-  <press button="space">30</press>
-  <release button="space">34</release>
+  <seconds>20</seconds>
+  <press button="space">0.5</press>
+  <release button="space">0.567</release>
   ...
 </demo>
 ```
 
-`<demo />` plays it as a new game from the seed. Played on the steps it was recorded on (`xgecli --frames` with `--keys`), it plays out exactly as recorded; in a window, on that window's steps, only roughly. A key pressed, or the recording running out, ends it with a new game, kept things as they were (a demo never sets the best). `xgecli <game> --record` writes one into the file, keeping its line endings.
+`<demo />` plays it as a new game from the seed. A step is split where a key falls inside it, so every key lands at its own time on any steps. On the steps it was recorded on (`xgecli --frames` with `--keys`) it plays out exactly as recorded. In a window, on that window's steps, it is the same play to within a few pixels, so things that bounce or line up drift apart: most games stay the same game for half a minute, some much less (the `demos` long test prints each). A key pressed, or the recording running out, ends it with a new game, kept things as they were (a demo never sets the best). `xgecli <game> --record` writes one into the file, keeping its line endings.
 
 ## Computer players
 

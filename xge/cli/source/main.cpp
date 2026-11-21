@@ -203,7 +203,7 @@ int main(int argc, char* argv[])
 			{
 				throw std::runtime_error("could not write the demo into " + filename);
 			}
-			std::cout << "recorded " << demo.frames << " frames and " << demo.keys.size() << " key changes into " << std::filesystem::absolute(filename).string() << " as its <demo>\n";
+			std::cout << "recorded " << demo.seconds << " seconds and " << demo.keys.size() << " key changes into " << std::filesystem::absolute(filename).string() << " as its <demo>\n";
 		}
 	}
 	catch (const std::exception& error)

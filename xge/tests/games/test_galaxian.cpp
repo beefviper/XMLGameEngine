@@ -859,8 +859,8 @@ TEST_CASE("a demo given to Galaxian plays to its end, or until a key is pressed,
 	WrittenDemo demo;
 	demo.recorded = true;
 	demo.seed = 20261016;
-	demo.frames = 300;
-	demo.keys = { { "space", true, 30 }, { "space", false, 34 }, { "left", true, 200 }, { "left", false, 260 } };
+	demo.seconds = 5;
+	demo.keys = { { "space", true, 0.5 }, { "space", false, 0.567 }, { "left", true, 3.333 }, { "left", false, 4.333 } };
 	const auto given = [&]
 	{
 		GameData data = readGame("descriptions/galaxian.xml");
@@ -884,7 +884,7 @@ TEST_CASE("a demo given to Galaxian plays to its end, or until a key is pressed,
 	CHECK(play.object("ship").position.x != Approx(startX)); // it moved the ship
 
 	// To its end, and the title comes back.
-	play.frames(static_cast<int>(demo.frames) - 271);
+	play.frames(300 - 271);
 	CHECK(play.engine.isPlayingDemo());
 	play.frames(1);
 	CHECK_FALSE(play.engine.isPlayingDemo());
@@ -939,13 +939,13 @@ TEST_CASE("a game recorded plays back the same as it was played", "[galaxian][de
 
 	const WrittenDemo demo = played.engine.recorded();
 	CHECK(demo.recorded);
-	CHECK(demo.frames == 469u);
+	CHECK(demo.seconds == Approx(469.0 / 60));
 	REQUIRE(demo.keys.size() == 17);
 	CHECK(demo.keys[0].button == "space");
 	CHECK(demo.keys[0].pressed);
-	CHECK(demo.keys[0].frame == 0u);
+	CHECK(demo.keys[0].seconds == 0);
 	CHECK(demo.keys[2].button == "left");
-	CHECK(demo.keys[3].frame == 190u);
+	CHECK(demo.keys[3].seconds == Approx(190.0 / 60));
 	CHECK(demo.keys.back().button == "right");
 
 	// Played back, frame for frame.
@@ -955,7 +955,7 @@ TEST_CASE("a game recorded plays back the same as it was played", "[galaxian][de
 	replay.game.requestDemo();
 	replay.frames(1);
 	REQUIRE(replay.engine.isPlayingDemo());
-	replay.frames(static_cast<int>(demo.frames) - 1);
+	replay.frames(469 - 1);
 	REQUIRE(replay.engine.isPlayingDemo());
 
 	CHECK(replay.state() == state);

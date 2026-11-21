@@ -1616,12 +1616,18 @@
     </xs:restriction>
   </xs:simpleType>
 
+  <xs:simpleType name="demoSecondsType">
+    <xs:restriction base="xs:decimal">
+      <xs:minInclusive value="0" />
+    </xs:restriction>
+  </xs:simpleType>
+
   <xs:complexType name="demoKeyType">
     <xs:annotation>
-      <xs:documentation><![CDATA[A key of a recorded <demo>: which, and the frame it happened at.]]></xs:documentation>
+      <xs:documentation><![CDATA[A key of a recorded <demo>: which, and the time it happened at, in seconds from the start.]]></xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
-      <xs:extension base="xs:unsignedInt">
+      <xs:extension base="demoSecondsType">
         <xs:attribute name="button" type="xs:NMTOKEN" use="required" />
       </xs:extension>
     </xs:simpleContent>
@@ -3818,15 +3824,16 @@
           <xs:annotation>
             <xs:documentation><![CDATA[
               A recorded game for the attract mode (written by recording a game with xgecli):
-              the random seed it was played with, how many frames long it is,
-              then each key pressed and let go, at the frame it happened. A
-              <demo /> command plays it.
+              the random seed it was played with, how many seconds long it is,
+              then each key pressed and let go, at the time it happened. A
+              <demo /> command plays it, on whatever steps the window makes:
+              a key lands at its own time, so play goes much as recorded.
             ]]></xs:documentation>
           </xs:annotation>
           <xs:complexType>
             <xs:sequence>
               <xs:element name="seed" type="xs:unsignedInt" />
-              <xs:element name="frames" type="xs:unsignedInt" />
+              <xs:element name="seconds" type="demoSecondsType" />
               <xs:choice minOccurs="0" maxOccurs="unbounded">
                 <xs:element name="press" type="demoKeyType" />
                 <xs:element name="release" type="demoKeyType" />

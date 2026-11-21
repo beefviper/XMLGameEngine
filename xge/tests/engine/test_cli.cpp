@@ -21,6 +21,7 @@
 #include "picture/color.h"
 #include "picture/image.h"
 
+#include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
 #include <cstdlib>
@@ -407,12 +408,15 @@ namespace
 	}
 }
 
+using Catch::Approx;
+
 TEST_CASE("keys plays back what record recorded and ends the same", "[cli][frames][demo]")
 {
 	// Ten seconds of Pong played and recorded, keys pressed between frames
 	// as a window would report them.
 	WrittenDemo recording;
 	std::string atEnd;
+	float paddleAtEnd = 0;
 	{
 		Game game{ readGame("descriptions/pong.xml", XmlBackend::TinyXml2) };
 		Engine engine(game, WindowBackend::None, AudioBackend::None);
@@ -435,10 +439,11 @@ TEST_CASE("keys plays back what record recorded and ends the same", "[cli][frame
 		}
 		recording = engine.recorded();
 		atEnd = everything(game);
+		paddleAtEnd = game.object("paddle1").position.y;
 	}
-	REQUIRE(recording.frames == 600);
+	REQUIRE(recording.seconds == Approx(10));
 	REQUIRE(recording.keys.size() == 8);
-	CHECK(recording.keys[2].frame == 60);
+	CHECK(recording.keys[2].seconds == Approx(1));
 
 	// Written into a copy of the game, as --record writes it, and read back.
 	const std::filesystem::path recorded = scratchName("descriptions/keys_recorded.xml");
@@ -451,7 +456,7 @@ TEST_CASE("keys plays back what record recorded and ends the same", "[cli][frame
 		INFO(XmlDocumentFactory::name(xml));
 		const WrittenDemo read = readDemo(recorded.string(), xml);
 		CHECK(read.seed == recording.seed);
-		CHECK(read.frames == 600);
+		CHECK(read.seconds == Approx(10));
 		CHECK(read.keys.size() == 8);
 	}
 
@@ -462,6 +467,23 @@ TEST_CASE("keys plays back what record recorded and ends the same", "[cli][frame
 		engine.replay(readDemo(recorded.string(), XmlBackend::TinyXml2));
 		for (int frame = 0; frame < 600; ++frame) { engine.input(); engine.update(xge::kSixtieth); }
 		CHECK(everything(game) == atEnd);
+	}
+
+	// On other steps, uneven ones from 9 to 24 ms, each key still lands at
+	// its own time: the paddle, moved only by them, ends where it did.
+	{
+		Game game{ readGame("descriptions/pong.xml", XmlBackend::TinyXml2) };
+		Engine engine(game, WindowBackend::None, AudioBackend::None);
+		engine.replay(readDemo(recorded.string(), XmlBackend::TinyXml2));
+		const float steps[] = { 0.009f, 0.017f, 0.024f, 0.013f, 0.021f };
+		float played = 0;
+		for (int frame = 0; played < 10.0f - 0.0001f; ++frame)
+		{
+			const float step = std::min(steps[frame % 5], 10.0f - played);
+			engine.input(); engine.update(step);
+			played += step;
+		}
+		CHECK(game.object("paddle1").position.y == Approx(paddleAtEnd).margin(0.01));
 	}
 
 	// The keys made the difference: the same seed with none ends elsewhere.

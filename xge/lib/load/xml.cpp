@@ -3190,8 +3190,8 @@ namespace xge
 
 	namespace
 	{
-		// A <demo> as --record writes it: its seed, its frames, and each key
-		// pressed and let go with the frame it happened in.
+		// A <demo> as --record writes it: its seed, its length in seconds,
+		// and each key pressed and let go with the time it happened at.
 		WrittenDemo readDemoElement(const XmlNode& demoNode)
 		{
 			WrittenDemo demo;
@@ -3205,9 +3205,22 @@ namespace xge
 				}
 				return static_cast<unsigned int>(std::stoul(text));
 			};
+			const auto seconds = [&](const XmlNode& node, const std::string& here)
+			{
+				const std::string text = readText(node);
+				std::size_t used = 0;
+				double value = -1;
+				try { value = std::stod(text, &used); }
+				catch (const std::exception&) { used = 0; }
+				if (text.empty() || used != text.size() || value < 0)
+				{
+					fail(here, "\"" + text + "\" is not a time in seconds");
+				}
+				return value;
+			};
 			demo.recorded = true;
 			demo.seed = whole(*requireChild(demoNode, "seed", demoWhere), demoWhere + " > <seed>");
-			demo.frames = whole(*requireChild(demoNode, "frames", demoWhere), demoWhere + " > <frames>");
+			demo.seconds = seconds(*requireChild(demoNode, "seconds", demoWhere), demoWhere + " > <seconds>");
 			for (std::unique_ptr<XmlNode> child = demoNode.getFirstChild(); child != nullptr; child = child->getNextSibling())
 			{
 				const std::string tag = child->getName();
@@ -3216,7 +3229,7 @@ namespace xge
 				DemoKey key;
 				key.button = requireAttribute(*child, "button", here);
 				key.pressed = tag == "press";
-				key.frame = whole(*child, here);
+				key.seconds = seconds(*child, here);
 				if (keyCodeFromString(key.button) == KeyCode::Unknown)
 				{
 					fail(here, "there is no key named '" + key.button + "'" + didYouMean(key.button, keyNames()));

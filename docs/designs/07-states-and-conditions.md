@@ -39,7 +39,7 @@ A state is a **mode**: menu, play, pause, game over. It says what is shown, whic
 - **A best table from three small pieces,** not a table element: a text of `<content>`, `<number>` and `<letter>` parts (initials are three numbers); a group's text naming the group's variable means each member's; `<rank variable into>` takes the first place it beats. A tie goes below, as on the arcade machines.
 - **On disk:** kept objects are written to `saves/<game>.xml` when a new game starts and on close, read a line at a time without an XML library (a generated program has none). Nothing in the game file asks for it.
 - **Turns swap the play,** as arcade boards swapped RAM: each player has a whole game of their own (every object not kept, every timer, the current scenes), so any one-player game becomes two-player in a few lines. Swaps happen only from a state's commands, never mid-frame.
-- **Attract mode is recorded play:** the same seed and the same keys on the same frames give the same game, so a `<demo>` is a seed, a length and key changes. Rejected: a scripted computer player, replaying positions.
+- **Attract mode is recorded play:** the same seed and the same keys at the same times give much the same game, so a `<demo>` is a seed, a length and key changes ([time](29-time.md)). Rejected: a scripted computer player, replaying positions.
 
 ## Players as a group
 

@@ -207,34 +207,52 @@ namespace xge
 		// what it silenced, and keeps its looping sounds playing.
 		void playRequestedSounds(void);
 
-		// Recording (record()): its seed, the frames played since, and the keys.
-		bool recording = false;
-		WrittenDemo recordedSoFar;
-
-		// Playing the demo: the frame of it reached, the next key of it to
-		// press or let go, and what the game kept before it started.
-		bool demoPlaying = false;
 		// setFramerate's, or 0 for the game's own.
 		int mostFrames = 0;
-		unsigned int demoFrame = 0;
 
 		// The buttons the state's <computer> is holding down, which it presses
 		// and lets go as a player would, and is not recorded doing.
 		std::set<KeyCode> computerHeld;
 		bool computerPressing = false;
 		void playComputer(float seconds);
-		std::size_t demoNext = 0;
+
+		// Recording (record()): its seed, the time played since, and the keys.
+		bool recording = false;
+		WrittenDemo recordedSoFar;
+
+		// A recording played: the time of it reached and the next key of it
+		// to press or let go.
+		struct Playback
+		{
+			const WrittenDemo* demo{ nullptr };
+			double seconds{ 0 };
+			std::size_t next{ 0 };
+		};
+
+		// Plays `seconds` of the game, split at each key of the recording
+		// that falls inside them, so a key lands at its own time whatever
+		// steps the window makes. A key within half a millisecond of a step's
+		// start is pressed before it, so on the steps it was recorded on it
+		// plays out as recorded.
+		void playRecording(Playback& playback, float seconds);
+
+		// The game's own demo (startDemo), and what the game kept before it.
+		bool demoPlaying = false;
+		Playback demoPlayback;
 		std::string keptBeforeDemo;
 
-		// Playing a recording back (replay()): its keys, the frame of it
-		// reached, and the next key to press or let go.
+		// A recording played back by replay().
 		bool replaying = false;
 		WrittenDemo replayed;
-		unsigned int replayFrame = 0;
-		std::size_t replayNext = 0;
+		Playback replayPlayback;
+
 		void startDemo(void);
 		void stopDemo(void);
 		void releaseHeldKeys(void);
+
+		// One step of the game, with no recording played: the computer's and
+		// the held keys, everything moved and checked, sounds played.
+		void step(float seconds);
 
 		// Where what the game keeps is written (empty: nowhere), and
 		// Game::resetCount() when it last was.

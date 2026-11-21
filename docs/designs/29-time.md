@@ -57,15 +57,16 @@ With steps of any length, the sums must give the same answer however a second is
 - **Tests give the step.** `Game` is stepped with a length, so a test that plays 600 steps of a sixtieth plays the same game every time, and the same tests can be run at other lengths and at uneven ones.
 - **`xgecli --frames`** plays steps of a sixtieth unless told otherwise.
 - **The board-game search** counts moves, not time.
-- **A recorded demo** played with `--frames` gets the steps it is told, so it is exact. In a window it is the open point: [below](#open).
+- **A recorded demo** keeps its keys' times, not its steps. Played back, a step is split at each key inside it, so a key lands on time whatever the window's steps; on its own steps it is exact, and on others it drifts, slowly for most games.
 
 ## What we looked at
 
 - **A fixed step with per-second units,** the loop as it was: repeatable for free and no change to the sums. Rejected by the author: it is not real delta time, and a game would still be bound to its step.
 - **Per-frame units kept, converted at load:** a number read or set while playing cannot know its units. Rejected.
 - **Splitting a long step into short ones:** hides the problem and costs time when the machine is already slow. Rejected by the author.
+- **For demos, every step's length kept, or one constant step:** exact, but a line per step in the game file, or a fixed step after all. Rejected by the author: an attract-mode demo only has to look like play, so key times alone, with steps split at a key, were chosen. Measured over 30 seconds of random keys on steps of 9 to 24 ms, 37 of 59 games stayed within 8 pixels of the recording and most stayed the same game for all of it; Space Invaders and Pac-Man drifted within seconds.
 
 ## Open
 
-- **A recorded demo.** A recording is only the same game if it is played back on the same steps. Either a demo keeps the length of every step, or recording and playback both run at one constant step kept in the demo, the one place a fixed step would remain. The author: the shipped demo is dropped for now and new ones are recorded once this is chosen.
+- Recording the shipped games' demos again.
 - Whether a window with no `<framerate>` follows the screen's refresh or stays at 60.

@@ -44,6 +44,7 @@ What the engine cannot do today. Why, and what might come, is in the [design fil
 - A state shown still is frozen whole, so a demo plays as a game of its own, not behind an attract screen. An object shown in two states runs in both.
 - A state with scenes cannot be copied with `from=`, and a copied condition or timer can be replaced but not removed.
 - Players taking turns see only their own game.
+- A demo played on steps other than its own drifts from the recording (Space Invaders and Pac-Man within seconds; card and board games not in thirty seconds).
 - A demo records keys, not the mouse or a stick; game-level `<random>`s do not follow its seed; an old demo plays its keys into a changed game.
 - A table of the best has no place numbers unless each member's text has its own. A save holds numbers and looks, not places.
 

@@ -153,6 +153,7 @@ add_executable(xgetest
 	"xge/cli/source/cli.cpp"
 	"xge/cli/source/generate.cpp"
 	"xge/tests/long/test_random_keys.cpp"
+	"xge/tests/long/test_demo_drift.cpp"
 	"xge/tests/long/test_damaged.cpp"
 	"xge/tests/long/test_speed.cpp"
 	"xge/tests/long/test_size.cpp"
@@ -416,7 +417,7 @@ foreach(game_file IN LISTS data_xml)
 endforeach()
 xge_ctest_folder(xgetest long
 	SPEC "[long]"
-	EACH_GAME keys damaged
+	EACH_GAME keys damaged demos
 	GAMES ${shipped_games}
 	SERIAL speed pace)
 

@@ -16,24 +16,23 @@
 
 namespace xge
 {
-	// A key of a recorded game: pressed or let go, at a frame counted from
-	// the start of the recording.
+	// A key of a recorded game: pressed or let go, at a time in seconds
+	// from the start of the recording.
 	struct DemoKey
 	{
 		std::string button;
 		bool pressed{ true };
-		unsigned int frame{ 0 };
+		double seconds{ 0 };
 	};
 
 	// A <demo>: a game recorded with xgecli --record, which <demo /> plays
 	// back (Engine). It starts from a new game, with the random numbers
-	// drawn from `seed`, and lasts `frames` frames. None when `recorded` is
-	// false.
+	// drawn from `seed`, and lasts `seconds`. None when `recorded` is false.
 	struct WrittenDemo
 	{
 		bool recorded{ false };
 		unsigned int seed{ 0 };
-		unsigned int frames{ 0 };
+		double seconds{ 0 };
 		std::vector<DemoKey> keys;
 	};
 

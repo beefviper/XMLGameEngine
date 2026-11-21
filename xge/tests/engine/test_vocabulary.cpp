@@ -74,7 +74,6 @@ namespace
 		{ "compare", "an operation: a test as 1 or 0" },
 		{ "demo", "a recorded game, and the verb that plays it: no game ships one until new ones are recorded on the real steps" },
 		{ "floor", "an operation, beside ceiling and round" },
-		{ "frames", "a <demo>'s length in steps" },
 		{ "framerate", "a window's; 60 when left out" },
 		{ "fullscreen", "a window's whole screen; a window when left out" },
 		{ "gap", "a group's, between cells" },

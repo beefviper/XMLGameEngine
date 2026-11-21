@@ -217,25 +217,9 @@ namespace xge
 			events.clear();
 		}
 
-		if (demoPlaying)
+		// A recording's keys are pressed by update(), each at its own time.
+		if (!demoPlaying)
 		{
-			const std::vector<DemoKey>& keys = game.getDemo().keys;
-			for (; demoNext < keys.size() && keys[demoNext].frame <= demoFrame; ++demoNext)
-			{
-				const KeyCode key = keyCodeFromString(keys[demoNext].button);
-				if (keys[demoNext].pressed) { handleKeyPressed(key); }
-				else { handleKeyReleased(key); }
-			}
-		}
-		else
-		{
-			for (; replaying && replayNext < replayed.keys.size() && replayed.keys[replayNext].frame <= replayFrame; ++replayNext)
-			{
-				const KeyCode key = keyCodeFromString(replayed.keys[replayNext].button);
-				if (replayed.keys[replayNext].pressed) { handleKeyPressed(key); }
-				else { handleKeyReleased(key); }
-			}
-
 			for (const auto& [key, pressed] : events)
 			{
 				if (pressed) { handleKeyPressed(key); }
@@ -249,6 +233,48 @@ namespace xge
 	void Engine::update(float seconds)
 	{
 		requireWindow();
+		if (demoPlaying) { playRecording(demoPlayback, seconds); }
+		else if (replaying) { playRecording(replayPlayback, seconds); }
+		else { step(seconds); }
+
+		if (recording && !demoPlaying)
+		{
+			recordedSoFar.seconds += static_cast<double>(seconds);
+		}
+		if (demoPlaying && demoPlayback.seconds >= game.getDemo().seconds)
+		{
+			stopDemo();
+		}
+		if (game.takeDemoRequest() && !demoPlaying && game.getDemo().recorded)
+		{
+			startDemo();
+		}
+	}
+
+	void Engine::playRecording(Playback& playback, float seconds)
+	{
+		constexpr double halfMillisecond = 0.0005;
+		const std::vector<DemoKey>& keys = playback.demo->keys;
+		const double end = playback.seconds + static_cast<double>(seconds);
+		while (playback.next < keys.size() && keys[playback.next].seconds < end - halfMillisecond)
+		{
+			const DemoKey& key = keys[playback.next];
+			if (key.seconds - playback.seconds > halfMillisecond)
+			{
+				step(static_cast<float>(key.seconds - playback.seconds));
+				playback.seconds = key.seconds;
+			}
+			const KeyCode code = keyCodeFromString(key.button);
+			if (key.pressed) { handleKeyPressed(code); }
+			else { handleKeyReleased(code); }
+			++playback.next;
+		}
+		if (end - playback.seconds > 0) { step(static_cast<float>(end - playback.seconds)); }
+		playback.seconds = end;
+	}
+
+	void Engine::step(float seconds)
+	{
 		game.beginStep(seconds);
 
 		// The computer presses as a player would, by the time that passed;
@@ -271,23 +297,6 @@ namespace xge
 			keptResets = game.resetCount();
 			writeKept();
 		}
-
-		if (recording && !demoPlaying)
-		{
-			++recordedSoFar.frames;
-		}
-		if (replaying && !demoPlaying)
-		{
-			++replayFrame;
-		}
-		if (demoPlaying && ++demoFrame >= game.getDemo().frames)
-		{
-			stopDemo();
-		}
-		if (game.takeDemoRequest() && !demoPlaying && game.getDemo().recorded)
-		{
-			startDemo();
-		}
 	}
 
 	void Engine::record(void)
@@ -304,8 +313,7 @@ namespace xge
 	{
 		replayed = demo;
 		replaying = true;
-		replayFrame = 0;
-		replayNext = 0;
+		replayPlayback = Playback{ &replayed };
 		setRandomState(std::mt19937{ demo.seed });
 		game.resetAll();
 	}
@@ -334,8 +342,7 @@ namespace xge
 		keptBeforeDemo = kept.str();
 
 		demoPlaying = true;
-		demoFrame = 0;
-		demoNext = 0;
+		demoPlayback = Playback{ &game.getDemo() };
 		setRandomState(std::mt19937{ game.getDemo().seed });
 		game.resetAll();
 	}
@@ -462,7 +469,7 @@ namespace xge
 
 		if (recording && !demoPlaying && !computerPressing)
 		{
-			recordedSoFar.keys.push_back({ keyCodeToString(key), true, recordedSoFar.frames });
+			recordedSoFar.keys.push_back({ keyCodeToString(key), true, recordedSoFar.seconds });
 		}
 
 		// Held keys repeat as press events on some backends; only the first
@@ -495,7 +502,7 @@ namespace xge
 		const bool wasDown = heldKeys.isDown(key);
 		if (recording && !demoPlaying && !computerPressing && wasDown)
 		{
-			recordedSoFar.keys.push_back({ keyCodeToString(key), false, recordedSoFar.frames });
+			recordedSoFar.keys.push_back({ keyCodeToString(key), false, recordedSoFar.seconds });
 		}
 
 		heldKeys.release(key);

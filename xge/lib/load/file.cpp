@@ -10,6 +10,7 @@
 #include "load/reading.h"
 #include "load/xsd.h"
 
+#include <cstdio>
 #include <filesystem>
 #include <memory>
 #include <sstream>
@@ -26,6 +27,17 @@ namespace xge
 	namespace
 	{
 		constexpr const char* engineSchema = "xgedef.xsd";
+
+		// A demo's time to the millisecond, with no zeros on the end: 0.5, 12.034.
+		std::string demoSeconds(double seconds)
+		{
+			char text[32];
+			std::snprintf(text, sizeof text, "%.3f", seconds);
+			std::string written = text;
+			written.erase(written.find_last_not_of('0') + 1);
+			if (written.back() == '.') { written.pop_back(); }
+			return written;
+		}
 
 		// The game file loaded and checked against its schema.
 		std::unique_ptr<XmlDocument> loadGameFile(const std::string& filename, XmlBackend backend, SchemaValidation& validation)
@@ -116,11 +128,11 @@ namespace xge
 		std::ostringstream element;
 		element << "  <demo>\n"
 			<< "    <seed>" << demo.seed << "</seed>\n"
-			<< "    <frames>" << demo.frames << "</frames>\n";
+			<< "    <seconds>" << demoSeconds(demo.seconds) << "</seconds>\n";
 		for (const DemoKey& key : demo.keys)
 		{
 			const char* tag = key.pressed ? "press" : "release";
-			element << "    <" << tag << " button=\"" << key.button << "\">" << key.frame << "</" << tag << ">\n";
+			element << "    <" << tag << " button=\"" << key.button << "\">" << demoSeconds(key.seconds) << "</" << tag << ">\n";
 		}
 		element << "  </demo>\n";
 

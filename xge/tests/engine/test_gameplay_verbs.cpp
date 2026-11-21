@@ -986,18 +986,18 @@ TEST_CASE("<alternate> names the players' states, and goes only where a state's 
 		ContainsSubstring("unexpected element <pass>"));
 }
 
-TEST_CASE("withDemo writes a <demo> in before </game>, in place of the one there, as the file's lines end", "[demo]")
+TEST_CASE("withDemo writes a <demo> in before </game>, to the millisecond, in place of the one there, as the file's lines end", "[demo]")
 {
 	WrittenDemo demo;
 	demo.recorded = true;
 	demo.seed = 7;
-	demo.frames = 90;
-	demo.keys = { { "space", true, 3 }, { "space", false, 5 }, { "left", true, 40 } };
+	demo.seconds = 1.5;
+	demo.keys = { { "space", true, 0.05 }, { "space", false, 0.0834 }, { "left", true, 0.6667 } };
 
 	const std::string game = "<game>\n  <states>\n  </states>\n</game>\n";
 	const std::string once = withDemo(game, demo);
-	CHECK(once == "<game>\n  <states>\n  </states>\n  <demo>\n    <seed>7</seed>\n    <frames>90</frames>\n"
-		"    <press button=\"space\">3</press>\n    <release button=\"space\">5</release>\n    <press button=\"left\">40</press>\n"
+	CHECK(once == "<game>\n  <states>\n  </states>\n  <demo>\n    <seed>7</seed>\n    <seconds>1.5</seconds>\n"
+		"    <press button=\"space\">0.05</press>\n    <release button=\"space\">0.083</release>\n    <press button=\"left\">0.667</press>\n"
 		"  </demo>\n</game>\n");
 
 	// Recorded again: the new one replaces it.
@@ -1022,8 +1022,8 @@ TEST_CASE("a <demo> is read by every XML library, and a <demo /> needs one", "[d
 	WrittenDemo demo;
 	demo.recorded = true;
 	demo.seed = 12;
-	demo.frames = 60;
-	demo.keys = { { "space", true, 0 }, { "space", false, 2 } };
+	demo.seconds = 1;
+	demo.keys = { { "space", true, 0 }, { "space", false, 0.033 } };
 	const std::string game = gameXml(box("o", 0, 0, 1, 1), state("s", { "o" }, "<input button=\"space\"><pop /></input>", "<timers><timer><after>1</after><demo /></timer></timers>"));
 
 	for (const XmlBackend backend : { XmlBackend::Xerces, XmlBackend::TinyXml2, XmlBackend::PugiXml, XmlBackend::RapidXml })
@@ -1032,11 +1032,11 @@ TEST_CASE("a <demo> is read by every XML library, and a <demo /> needs one", "[d
 		const WrittenDemo& read = loaded.game.getDemo();
 		CHECK(read.recorded);
 		CHECK(read.seed == 12u);
-		CHECK(read.frames == 60u);
+		CHECK(read.seconds == Approx(1));
 		REQUIRE(read.keys.size() == 2);
 		CHECK(read.keys[1].button == "space");
 		CHECK_FALSE(read.keys[1].pressed);
-		CHECK(read.keys[1].frame == 2u);
+		CHECK(read.keys[1].seconds == Approx(0.033));
 	}
 	CHECK_THROWS_WITH(Loaded(game), ContainsSubstring("xgecli --record"));
 }
