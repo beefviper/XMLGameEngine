@@ -46,28 +46,36 @@ set /a BUILT=0
 set /a FAILED=0
 set /a WARNED=0
 set "FAILS="
+set /a TOTAL=0
+for /d %%D in ("%GENERATED%\*") do set /a TOTAL+=1
+set /a AT=0
 
+rem Each game is configured and built on its own, the whole engine with it,
+rem so each takes minutes: a line for each step says where it is.
 for /d %%D in ("%GENERATED%\*") do (
     set "GAME=%%~nxD"
     set "LOG=%%D\build\build.log"
+    set /a AT+=1
     if not exist "%%D\build" mkdir "%%D\build"
     set "STAGE=configure"
+    echo [!AT!/!TOTAL!] !GAME!: configuring, started !TIME:~0,8!
     cmake -S "%%D" -B "%%D\build" -G "Visual Studio 17 2022" -DCMAKE_TOOLCHAIN_FILE="%TOOLCHAIN%" -DCMAKE_CXX_FLAGS="/W4 /EHsc" > "!LOG!" 2>&1
     if not errorlevel 1 (
         set "STAGE=build"
+        echo [!AT!/!TOTAL!] !GAME!: building
         cmake --build "%%D\build" --config %CONFIG% --parallel >> "!LOG!" 2>&1
     )
     if errorlevel 1 (
-        echo !GAME!: FAILED ^(!STAGE!, see !LOG!^)
+        echo [!AT!/!TOTAL!] !GAME!: FAILED ^(!STAGE!, see !LOG!^)
         set /a FAILED+=1
         set "FAILS=!FAILS! !GAME!"
     ) else (
         set /a W=0
         for /f "delims=" %%L in ('findstr /c:"warning C" "!LOG!"') do set /a W+=1
         if !W!==0 (
-            echo !GAME!: ok
+            echo [!AT!/!TOTAL!] !GAME!: ok, done !TIME:~0,8!
         ) else (
-            echo !GAME!: ok, !W! warning^(s^), see !LOG!
+            echo [!AT!/!TOTAL!] !GAME!: ok, !W! warning^(s^), see !LOG!
             set /a WARNED+=1
         )
         set /a BUILT+=1
