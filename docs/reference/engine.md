@@ -111,7 +111,7 @@ xvfb-run -a output/Debug/xgetest "[window]"   # opens every window backend (no x
 | `xgedata` | copies `games/` beside the programs |
 
 - **Output.** Everything to run lands in `output/<Config>/`: the programs, a copy of `games/` with the schema, and the libraries in `libraries/` (found through a manifest on Windows, a relative run path elsewhere). The folder can be copied anywhere.
-- **Dependencies** are found through vcpkg or the system, or fetched and built (`FORCE_LOCAL_<NAME>` forces a fetch). Qt 6 and libxslt are only found, never fetched. Vulkan needs no SDK: Khronos's headers and volk are fetched, and volk opens the driver's own Vulkan library when the window opens. CMake modules are in `scripts/cmake/`.
+- **Dependencies** are found through vcpkg or the system, or fetched and built (`FORCE_LOCAL_<NAME>` forces a fetch). Qt 6 and libxslt are only found, never fetched. Vulkan needs no SDK: Khronos's headers and volk are fetched, and volk opens the driver's own Vulkan library when the window opens. In Visual Studio every fetched library's projects sit in one solution folder, `CMakeFetchedLibraries` (`xge_fold_fetched_targets`). CMake modules are in `scripts/cmake/`.
 - **Warnings** stay at zero under a strict set on GCC, Clang and MSVC (`xge_warnings()`, `platform.cmake`).
 - **Sanitizers** (GCC and Clang, off unless asked for): `-DXGE_SANITIZE=address` checks memory and undefined behaviour, `-DXGE_SANITIZE=thread` data races.
   - Only the project's own targets are instrumented, unoptimized (`-O0`) and without the strict warnings: with a sanitizer, either makes GCC take minutes to hours a file.

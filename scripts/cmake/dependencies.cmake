@@ -319,3 +319,25 @@ endif()
 if(XGE_WITH_XERCES AND NOT TARGET XercesC::XercesC)
 	add_library(XercesC::XercesC ALIAS xerces-c)
 endif()
+
+# Every target of a fetched library, in one folder of the IDE's project list
+# (Visual Studio's "solution folder"), CMakeFetchedLibraries, beside CMake's
+# own CMakePredefinedTargets. A library that sorts its targets into folders
+# of its own keeps them, inside it. Called at the end of the top
+# CMakeLists.txt, once every library is fetched: the project adds no
+# subdirectory of its own, so every one is a fetched library's.
+function(xge_fold_fetched_targets directory)
+	get_property(subdirectories DIRECTORY "${directory}" PROPERTY SUBDIRECTORIES)
+	foreach(subdirectory IN LISTS subdirectories)
+		get_property(targets DIRECTORY "${subdirectory}" PROPERTY BUILDSYSTEM_TARGETS)
+		foreach(target IN LISTS targets)
+			get_target_property(folder ${target} FOLDER)
+			if (folder)
+				set_target_properties(${target} PROPERTIES FOLDER "CMakeFetchedLibraries/${folder}")
+			else()
+				set_target_properties(${target} PROPERTIES FOLDER "CMakeFetchedLibraries")
+			endif()
+		endforeach()
+		xge_fold_fetched_targets("${subdirectory}")
+	endforeach()
+endfunction()

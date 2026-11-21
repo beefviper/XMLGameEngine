@@ -201,3 +201,6 @@ include(scripts/cmake/executables.cmake)
 if (BUILD_TESTING)
 	include(scripts/cmake/tests.cmake)
 endif()
+
+# The fetched libraries out of the way in an IDE (dependencies.cmake).
+xge_fold_fetched_targets("${CMAKE_SOURCE_DIR}")
