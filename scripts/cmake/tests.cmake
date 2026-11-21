@@ -201,7 +201,9 @@ catch_discover_tests(xgetest
 #     ctest --test-dir build/<folder> -C Debug -j 16 --output-on-failure
 #
 # Every case is a test (catch_discover_tests, after the program is built;
-# with SPEC, only the cases it picks, as "[long]" picks the hidden long ones),
+# with SPEC, only the cases it picks, as "[long]" picks the hidden long ones;
+# the per-game and serial tests are picked within it too, since xgetest has
+# other cases tagged [keys] or [speed]),
 # but those tagged in EACH_GAME, which take a section per game: each game is
 # a test of its own, "<tag>: <game>", over the games in GAMES. Those tagged
 # in SERIAL are a test per tag, run with nothing beside them (they time the
@@ -216,13 +218,13 @@ function(xge_ctest_folder target folder)
 	foreach(tag IN LISTS arg_EACH_GAME)
 		foreach(game IN LISTS arg_GAMES)
 			string(APPEND lines
-				"  add_test(\"${tag}: ${game}\" \"${program}\" \"[${tag}]\" -c \"${game}\")\n"
+				"  add_test(\"${tag}: ${game}\" \"${program}\" \"${arg_SPEC}[${tag}]\" -c \"${game}\")\n"
 				"  set_tests_properties(\"${tag}: ${game}\" PROPERTIES WORKING_DIRECTORY \"${games_dir}\")\n")
 		endforeach()
 	endforeach()
 	foreach(tag IN LISTS arg_SERIAL)
 		string(APPEND lines
-			"  add_test(\"${tag}\" \"${program}\" \"[${tag}]\")\n"
+			"  add_test(\"${tag}\" \"${program}\" \"${arg_SPEC}[${tag}]\")\n"
 			"  set_tests_properties(\"${tag}\" PROPERTIES WORKING_DIRECTORY \"${games_dir}\" RUN_SERIAL ON)\n")
 	endforeach()
 	string(APPEND lines "endif()\n")
