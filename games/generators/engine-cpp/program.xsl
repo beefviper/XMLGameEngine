@@ -131,7 +131,7 @@ add_executable(</xsl:text>
     <xsl:for-each select="$engine">
       <xsl:value-of select="concat('&#9;engine/', substring-after(., '/'), '&#10;')" />
     </xsl:for-each>
-    <xsl:value-of select="concat(')&#10;target_include_directories(', $name, ' PRIVATE engine)&#10;target_compile_features(', $name, ' PRIVATE cxx_std_20)&#10;target_link_libraries(', $name, ' PRIVATE SFML::Graphics SFML::Audio lunasvg::lunasvg plutovg::plutovg Threads::Threads)&#10;')" />
+    <xsl:value-of select="concat(')&#10;target_include_directories(', $name, ' PRIVATE engine)&#10;target_compile_features(', $name, ' PRIVATE cxx_std_20)&#10;target_link_libraries(', $name, ' PRIVATE SFML::Graphics SFML::Audio lunasvg::lunasvg plutovg::plutovg Threads::Threads)&#10;if (WIN32)&#10;&#9;target_link_libraries(', $name, ' PRIVATE winmm)&#10;endif()&#10;')" />
     <xsl:text>
 # The verbs are a small file each (engine/verbs/): compiled as one.
 file(GLOB verbs CONFIGURE_DEPENDS engine/verbs/*.cpp)

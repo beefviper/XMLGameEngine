@@ -13,6 +13,11 @@ target_include_directories(xgelib PUBLIC xge/lib)
 # A computer player's search runs on a thread of its own (game/think.cpp).
 find_package(Threads REQUIRED)
 target_link_libraries(xgelib PUBLIC Threads::Threads)
+# Windows: winmm, so the frame wait can sleep to the millisecond
+# (timeBeginPeriod in engine/engine.cpp).
+if (WIN32)
+	target_link_libraries(xgelib PUBLIC winmm)
+endif()
 
 # Only the backends that are built (options.cmake) are linked, and each one
 # defines XGE_WITH_<NAME> for the engine and its users: the factories (window/window.cpp,

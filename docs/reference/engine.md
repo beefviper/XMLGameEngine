@@ -44,7 +44,7 @@ An object is **in play** when it is not out of play (`<waiting />`, dead, despaw
 
 **Pace.** `update` steps the game by the real time that passed since the last frame. There is no fixed step and no sub-step: every sum takes the step's length ([time](../designs/29-time.md)).
 
-- `<framerate>` is the most frames a second: a frame waits until that much time has passed.
+- `<framerate>` is the most frames a second: a frame waits until that much time has passed. On Windows the engine asks for 1 ms sleeps while it runs (`timeBeginPeriod`), or a wait would end on the 15.6 ms tick.
 - Every library waits for the screen's refresh (vsync) but sets no speed of its own, so a game plays at the same speed with any library and on any screen.
 - No step is longer than a quarter second (`kLongestStep`): after a stall (the window dragged, a breakpoint) the game goes on from now.
 - `xgegui` and the tests call `input()`, `update()` and `render()` themselves, the same way.

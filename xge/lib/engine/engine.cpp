@@ -21,10 +21,37 @@
 #include <thread>
 #include <utility>
 
+#if defined(_WIN32)
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
+#include <timeapi.h>
+#if defined(_MSC_VER)
+#pragma comment(lib, "winmm.lib")
+#endif
+#endif
+
 namespace xge
 {
 	namespace
 	{
+		// Windows wakes a sleep on its own tick, 15.6 ms, unless a program
+		// asks for 1 ms while it runs: a frame of a 60 a second game would
+		// often wait two ticks.
+		struct FineSleep
+		{
+#if defined(_WIN32)
+			FineSleep() { timeBeginPeriod(1); }
+			~FineSleep() { timeEndPeriod(1); }
+			FineSleep(const FineSleep&) = delete;
+			FineSleep& operator=(const FineSleep&) = delete;
+#endif
+		};
+
 		// Sleeping wakes late by a few milliseconds on some systems (Windows
 		// wakes on its own tick), so the last of the wait is spent yielding.
 		void waitFor(std::chrono::steady_clock::duration time)
@@ -143,6 +170,7 @@ namespace xge
 	void Engine::run(void)
 	{
 		using Clock = std::chrono::steady_clock;
+		[[maybe_unused]] const FineSleep fineSleep;
 
 		// A computer thinks beside the game, which goes on being drawn.
 		game.thinkInBackground(true);
