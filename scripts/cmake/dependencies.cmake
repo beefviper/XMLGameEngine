@@ -17,7 +17,8 @@ include(FetchContent)
 #       PACKAGE <find_package args>     look for it with find_package(<args> QUIET),
 #                                       or
 #       HEADER <file>                   with find_path(), for a header-only library
-#                                       that has no CMake package
+#                                       that has no CMake package (also in a
+#                                       folder of its lowercase name)
 #       REPO <git url> TAG <tag or commit>
 #       [SETTINGS <VARIABLE=VALUE>...]  ON/OFF cache settings for the fetched copy
 #       [BROUGHT_BY <library>]          the fetched copy of that library builds this
@@ -58,7 +59,10 @@ macro(xge_dependency name)
 			if (FORCE_LOCAL_${XD_UPPER})
 				unset(${XD_VARIABLE} CACHE)
 			else()
-				find_path(${XD_VARIABLE} "${XD_HEADER}")
+				# vcpkg puts a header-only library's header in a folder named
+				# for it (include/rapidxml/rapidxml.hpp), so that is looked in too.
+				string(TOLOWER "${name}" XD_LOWER)
+				find_path(${XD_VARIABLE} "${XD_HEADER}" PATH_SUFFIXES "${XD_LOWER}")
 			endif()
 
 			if (${XD_VARIABLE})
