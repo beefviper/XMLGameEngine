@@ -38,7 +38,9 @@ namespace xge
 
 	// One step of a sound: a tone of one wave that slides from startHz to
 	// endHz (the same for a steady note) over `seconds`, or, for a rest,
-	// silence that long.
+	// silence that long. A `decay` above 0 is the seconds its volume takes
+	// to fall evenly from full to nothing, from the note's start (a pluck,
+	// a bell); 0 keeps it at full for the whole note.
 	struct SoundNote
 	{
 		bool rest{ false };
@@ -50,21 +52,20 @@ namespace xge
 		// Which part (voice) of the sound it is in, from 0. A sound's parts
 		// play at the same time, each its notes one after another.
 		unsigned part{ 0 };
+
+		// Seconds to die away over (see above); 0 for none.
+		float decay{ 0.0f };
 	};
 
-	// A sound from the game file's <sounds>, worked out: its name (what
-	// <play sound="..." /> asks for), whether it loops (<loop />: it plays
-	// over and over until it is silenced), how loud (0 to 1) and its notes in
-	// the order they play, each in its part (the parts play together, as a
-	// sound chip's channels do). Nothing about any audio library is in it; an Audio
-	// backend (audio/audio.h) is given these and turns each into samples with
-	// synthesize() below.
+	// A <sound> worked out: whether it loops, how loud (0 to 1), and its notes
+	// in order, each in its part; the parts play together.
 	struct SoundDesc
 	{
 		std::string name;
 		bool loop{ false };
 		float volume{ 0.3f };
 		std::vector<SoundNote> notes;
+		std::string path; // a recording (audio/wave.h) played in place of notes
 	};
 
 	// The rate every sound is made at and played back at: CD quality, which
@@ -83,6 +84,14 @@ namespace xge
 	// starts and stops without a click; a noise note is the same hiss every
 	// time it plays (its random numbers are seeded per note).
 	std::vector<std::int16_t> synthesize(const SoundDesc& sound, unsigned sampleRate = kSoundSampleRate);
+
+	// The one place a sound becomes samples: its recording at its volume, or
+	// synthesize().
+	std::vector<std::int16_t> samplesOf(const SoundDesc& sound);
+
+	// Everything that decides a sound's samples, as text with its numbers
+	// exact: two sounds with the same key sound the same (Resources::samples).
+	std::string soundKey(const SoundDesc& sound);
 
 	std::ostream& operator<<(std::ostream& o, const SoundDesc& sound);
 }

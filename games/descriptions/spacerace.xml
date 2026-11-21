@@ -10,8 +10,8 @@
   back for another go. The clock is the bar down the middle, sinking out of
   sight; when it is gone, the most points win.
 
-  Player 1 is W and S, player 2 the up and down arrows; Space starts,
-  pauses (or P) and plays again.
+  Player 1 is W and S, player 2 the up and down arrows; Space starts
+  and plays again, Pause pauses.
 
   How it is written:
   * The rockets are one group: the picture, the moves, the rules (a point
@@ -33,46 +33,29 @@
     <height>600</height>
   </window>
   <variables>
-    <variable name="step">2.5</variable>
+    <variable name="step">150</variable>
     <variable name="margin">10</variable>
     <variable name="seconds">60</variable>
   </variables>
-  <sounds>
-    <sound name="score" wave="triangle">
-      <volume>0.4</volume>
-      <note pitch="E4" to="E5">0.3</note>
-    </sound>
-    <sound name="crash" wave="noise">
-      <volume>0.4</volume>
-      <note pitch="2500" to="200">0.35</note>
-    </sound>
-    <sound name="end">
-      <volume>0.2</volume>
-      <note pitch="C5">0.1</note>
-      <note pitch="E5">0.1</note>
-      <note pitch="G5">0.1</note>
-      <note pitch="C6">0.3</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>110</size></style>
     <style name="prompt"><size>40</size></style>
     <style name="hud"><size>56</size></style>
   </styles>
   <states>
-    <state name="mainmenu">
+    <state name="title">
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>SPACE RACE</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 80</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-80</offset></centered></y></position>
         </object>
         <object name="help">
           <sprite><text style="prompt"><content>w s and up down, the most crossings in a minute</content><size>24</size><color>color.lightgrey</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 10</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>10</offset></centered></y></position>
         </object>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 90</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>90</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
@@ -85,34 +68,40 @@
         <object name="clock">
           <sprite><rectangle><width>4</width><height>window.bottom</height></rectangle></sprite>
           <position><x><centered /></x><y>0</y></position>
-          <velocity><y>window.bottom / (seconds * 60)</y></velocity>
+          <velocity><y>
+            <divide>
+              <value>window.bottom</value>
+              <value>seconds</value>
+            </divide>
+          </y></velocity>
         </object>
         <group name="debris" class="debris">
           <columns>8</columns>
           <rows>12</rows>
-          <padding><x>(window.right + 8) / 8 - 8</x><y>28</y></padding>
+          <padding><x>
+            <subtract>
+              <value>
+                <divide>
+                  <value><add><value>window.right</value><value>8</value></add></value>
+                  <value>8</value>
+                </divide>
+              </value>
+              <value>8</value>
+            </subtract>
+          </x><y>28</y></padding>
           <sprite><rectangle><width>8</width><height>4</height></rectangle></sprite>
           <position><x>0</x><y>50</y></position>
           <collisions>
             <collision edge="horizontal"><wrap /></collision>
           </collisions>
-          <row><number>1</number><number>5</number><number>9</number><velocity><x>1.5</x></velocity></row>
-          <row><number>2</number><number>6</number><number>10</number><velocity><x>-2.5</x></velocity></row>
-          <row><number>3</number><number>7</number><number>11</number><velocity><x>2</x></velocity></row>
-          <row><number>4</number><number>8</number><number>12</number><velocity><x>-1</x></velocity></row>
+          <row><number>1</number><number>5</number><number>9</number><velocity><x>90</x></velocity></row>
+          <row><number>2</number><number>6</number><number>10</number><velocity><x>-150</x></velocity></row>
+          <row><number>3</number><number>7</number><number>11</number><velocity><x>120</x></velocity></row>
+          <row><number>4</number><number>8</number><number>12</number><velocity><x>-60</x></velocity></row>
         </group>
         <group name="rockets" class="rocket">
           <sprite>
-            <bitmap>
-              <row>..*..</row>
-              <row>..*..</row>
-              <row>.***.</row>
-              <row>.***.</row>
-              <row>.***.</row>
-              <row>*****</row>
-              <row>*.*.*</row>
-              <scale>3</scale>
-            </bitmap>
+            <bitmap from="rockets" />
           </sprite>
           <collisions>
             <type>pixel</type>
@@ -134,16 +123,37 @@
           <variables>
             <variable name="score">0</variable>
           </variables>
-          <member name="rocket1"><position><x><centered>window.right / 4</centered></x><y>window.bottom - 21 - margin</y></position></member>
-          <member name="rocket2"><position><x><centered>window.right * 3 / 4</centered></x><y>window.bottom - 21 - margin</y></position></member>
+          <member name="rocket1"><position><x><centered><divide><value>window.right</value><value>4</value></divide></centered></x><y><subtract><value>window.bottom</value><value>21</value><value>margin</value></subtract></y></position></member>
+          <member name="rocket2"><position><x><centered>
+            <divide>
+              <value><multiply><value>window.right</value><value>3</value></multiply></value>
+              <value>4</value>
+            </divide>
+          </centered></x><y><subtract><value>window.bottom</value><value>21</value><value>margin</value></subtract></y></position></member>
         </group>
         <object name="score1">
           <sprite><text style="hud"><number>rocket1.score</number></text></sprite>
-          <position><x>window.right / 4 - 60 - score1.width</x><y>window.bottom - score1.height - margin</y></position>
+          <position><x>
+            <subtract>
+              <value><divide><value>window.right</value><value>4</value></divide></value>
+              <value>60</value>
+              <value>score1.width</value>
+            </subtract>
+          </x><y><bottom><offset>margin</offset></bottom></y></position>
         </object>
         <object name="score2">
           <sprite><text style="hud"><number>rocket2.score</number></text></sprite>
-          <position><x>window.right * 3 / 4 + 60</x><y>window.bottom - score2.height - margin</y></position>
+          <position><x>
+            <add>
+              <value>
+                <divide>
+                  <value><multiply><value>window.right</value><value>3</value></multiply></value>
+                  <value>4</value>
+                </divide>
+              </value>
+              <value>60</value>
+            </add>
+          </x><y><bottom><offset>margin</offset></bottom></y></position>
         </object>
       </objects>
       <inputs>
@@ -151,12 +161,12 @@
         <input button="s"><trigger object="rocket1" action="down" /></input>
         <input button="up"><trigger object="rocket2" action="up" /></input>
         <input button="down"><trigger object="rocket2" action="down" /></input>
-        <input><button>space</button><button>p</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <condition object="clock" variable="y">
           <atleast>window.bottom</atleast>
-          <push state="wins" />
+          <push state="over" />
           <play sound="end" />
         </condition>
       </conditions>
@@ -172,20 +182,20 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
-    <state name="wins">
+    <state name="over">
       <objects>
         <object name="winner">
           <sprite name="draw"><text style="banner"><content>A DRAW</content><size>80</size></text></sprite>
           <sprite name="player1"><text style="banner"><content>PLAYER 1 WINS</content><size>80</size></text></sprite>
           <sprite name="player2"><text style="banner"><content>PLAYER 2 WINS</content><size>80</size></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
         </object>
         <object name="continue">
           <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 50</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>50</offset></centered></y></position>
         </object>
       </objects>
       <shows>
@@ -206,4 +216,33 @@
       </conditions>
     </state>
   </states>
+  <sounds>
+    <sound name="score" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="E4" to="E5">0.3</note>
+    </sound>
+    <sound name="crash" wave="noise">
+      <volume>0.4</volume>
+      <note pitch="2500" to="200">0.35</note>
+    </sound>
+    <sound name="end">
+      <volume>0.2</volume>
+      <note pitch="C5">0.1</note>
+      <note pitch="E5">0.1</note>
+      <note pitch="G5">0.1</note>
+      <note pitch="C6">0.3</note>
+    </sound>
+  </sounds>
+  <pictures>
+    <bitmap name="rockets">
+      <row>..*..</row>
+      <row>..*..</row>
+      <row>.***.</row>
+      <row>.***.</row>
+      <row>.***.</row>
+      <row>*****</row>
+      <row>*.*.*</row>
+      <scale>3</scale>
+    </bitmap>
+  </pictures>
 </game>

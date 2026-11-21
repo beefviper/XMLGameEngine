@@ -6,9 +6,14 @@
 
 - **One top-level `CMakeLists.txt`, the logic in modules in `scripts/cmake/`** (`assets`, `dependencies`, `executables`, `options`, `output`, `platform`, `targets`, `tests`, `deploy_libraries`). Rejected: a `CMakeLists.txt` per folder.
 - **Dependencies** are found through vcpkg or the system, or fetched; `FORCE_LOCAL_<NAME>` forces a fetch. One macro, `xge_dependency()`, does the finding, status line and fetch for every library (it was written out twelve times before). Qt 6 and libxslt are only found: without Qt there is no `xgegui`, without libxslt `--generate` says so.
-- **Only the backends built are looked for.** All eight were once always built, so one game fetched SDL2, raylib, GLFW and three XML libraries. **Chosen:** SFML 3 and Xerces by default, the rest by `XGE_WITH_<NAME>` or `XGE_ALL_BACKENDS`, and `BUILD_TESTING` implies all, since the tests play every game through every backend. The OpenGL window needs SDL2_image and SDL2_ttf (`XGE_NEEDS_SDL2`). Rejected: plug-in libraries, not worth it for four small wrappers.
+- **Only the backends built are looked for.** All eight were once always built, so one game fetched SDL2, raylib, GLFW and three XML libraries.
+  - **Chosen:** SFML 3 and Xerces by default, the rest by `XGE_WITH_<NAME>` or `XGE_ALL_BACKENDS`, and `BUILD_TESTING` implies all, since the tests play every game through every backend.
+  - Rejected: plug-in libraries, not worth it for four small wrappers.
 - **Warnings.** A fetched library once passed `-w` on its interface, silencing the engine itself. **Chosen:** `xge_warnings()` gives the engine's targets one strict set (GCC and Clang: all, extra, pedantic, shadow, conversion, old-style-cast and more; MSVC `/W4` and extras); third-party headers are system headers; fetched sources build with `-w`. No `-Werror`: a new compiler should not break a user's build.
-- **`output/<Config>/`** holds the programs, a copy of `games/` and `libraries/`. Directories are set before any target so fetched libraries follow.
+- **Sanitizers.** **Chosen:** `XGE_SANITIZE` (`address`, which brings `undefined`, or `thread`, the two cannot be mixed), off by default, on the engine's own targets through `xge_warnings()`, which then drops the strict warnings and builds at `-O0`: with the warnings GCC 13 took over fifteen minutes on each large file, and at `-O1` over two hours on the verbs' one unit; at `-O0` without them, seconds.
+  - GCC and Clang only; MSVC has `/fsanitize=address` alone, a possible later addition.
+  - Rejected: instrumenting the fetched libraries (a rebuild of everything for little).
+- **`output/<Config>/`** holds the programs, a copy of `games/` and `libraries/`, and `generated/` for the generator's programs (its test program, the prototypes, every game written out), so they do not crowd the main ones. Directories are set before any target so fetched libraries follow.
 - **DLLs in `libraries/` on Windows** by a private assembly: each program embeds a manifest naming the assembly `libraries`, whose manifest lists every DLL. Delay-loading was out (Qt and SFML export data). Linux and macOS use the run path `$ORIGIN/libraries`. Qt plug-ins go through `windeployqt`.
 - C++20. Shell scripts install prerequisites for apt, dnf and pacman.
 
@@ -18,6 +23,7 @@
 - Fetching SFML and raylib both static fails on Linux with duplicate `stbi_*` symbols; `-DBUILD_SHARED_LIBS=ON` links.
 - vcpkg's raylib turns on every feature (JPEG for Pong's paddles); another raylib may not load them.
 - A target named `m` collides with plutovg's `-lm`.
+- **No automatic builds (the author's choice).** A build-only job on a Windows machine was proposed, to catch MSVC-only warnings and Windows header macros, and declined: agents build and test on Linux, the author on Windows, and what needs Windows eyes is listed in [the plan](../plan.md#waiting-for-a-look-on-windows).
 - Nothing builds the default configuration automatically, so a change to the `#ifdef`s needs a build with no options as well as with tests.
 
 ## Layout

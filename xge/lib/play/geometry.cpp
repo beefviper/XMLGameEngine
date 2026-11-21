@@ -129,9 +129,9 @@ namespace xge
 			// radius away from that corner point.
 			const Vector2f corner{ at.x < box.left() ? box.left() : box.right(), at.y < box.top() ? box.top() : box.bottom() };
 			const Vector2f offset = start - corner;
-			const float a = move.x * move.x + move.y * move.y;
-			const float b = 2 * (offset.x * move.x + offset.y * move.y);
-			const float c = offset.x * offset.x + offset.y * offset.y - radius * radius;
+			const float a = dotOf(move, move);
+			const float b = 2 * dotOf(offset, move);
+			const float c = dotOf(offset, offset) - radius * radius;
 			const float discriminant = b * b - 4 * a * c;
 			if (a == 0.0f || discriminant < 0.0f)
 			{
@@ -153,9 +153,9 @@ namespace xge
 		{
 			const Vector2f offset = mover.middle() - still.middle();
 			const float reach = (mover.size.x + still.size.x) / 2;
-			const float a = move.x * move.x + move.y * move.y;
-			const float b = 2 * (offset.x * move.x + offset.y * move.y);
-			const float c = offset.x * offset.x + offset.y * offset.y - reach * reach;
+			const float a = dotOf(move, move);
+			const float b = 2 * dotOf(offset, move);
+			const float c = dotOf(offset, offset) - reach * reach;
 			const float discriminant = b * b - 4 * a * c;
 			if (a == 0.0f || b >= 0.0f || discriminant < 0.0f)
 			{
@@ -205,7 +205,7 @@ namespace xge
 		const Vector2f nearest{ std::clamp(midpoint.x, box.left(), box.right()), std::clamp(midpoint.y, box.top(), box.bottom()) };
 		const Vector2f away = midpoint - nearest;
 
-		if (std::sqrt(away.x * away.x + away.y * away.y) >= circle.size.x / 2)
+		if (std::sqrt(dotOf(away, away)) >= circle.size.x / 2)
 		{
 			return std::nullopt;
 		}
@@ -239,7 +239,7 @@ namespace xge
 	{
 		const Vector2f away = a.middle() - b.middle();
 		const float reach = (a.size.x + b.size.x) / 2;
-		if (away.x * away.x + away.y * away.y >= reach * reach)
+		if (dotOf(away, away) >= reach * reach)
 		{
 			return std::nullopt;
 		}
@@ -377,11 +377,6 @@ namespace xge
 			return { std::clamp(point.x, box.left(), box.right()), std::clamp(point.y, box.top(), box.bottom()) };
 		}
 
-		float lengthOf(const Vector2f& v) noexcept
-		{
-			return std::hypot(v.x, v.y);
-		}
-
 		// A circle (its middle and radius) against a box: the point on the box
 		// they meet at, the way out of the box towards the circle, and how far
 		// in the circle is. With the middle inside the box, out through
@@ -473,6 +468,15 @@ namespace xge
 		return contact;
 	}
 
+	Touch touchAcross(Edge edge) noexcept
+	{
+		Touch touch;
+		touch.edge = edge;
+		touch.normal = outOf(opposite(edge));
+		touch.along = 0.5f;
+		return touch;
+	}
+
 	Touch touchOfFirst(const Contact& contact) noexcept
 	{
 		return { opposite(contact.edgeOfSecond), contact.point, contact.normal, contact.alongSecond, contact.depth, contact.time };
@@ -494,6 +498,25 @@ namespace xge
 		}
 
 		return false;
+	}
+
+	std::optional<float> timeToWindowEdge(const Box& thing, const Vector2f& move, const Vector2f& window, Edge edge) noexcept
+	{
+		// The coordinate that goes past, where it meets the side, and the
+		// way out.
+		float at{};
+		float line{};
+		float going{};
+		switch (edge)
+		{
+		case Edge::Left:   at = thing.position.x; line = 0.0f; going = -move.x; break;
+		case Edge::Right:  at = thing.position.x; line = window.x - thing.size.x; going = move.x; break;
+		case Edge::Top:    at = thing.position.y; line = 0.0f; going = -move.y; break;
+		case Edge::Bottom: at = thing.position.y; line = window.y - thing.size.y; going = move.y; break;
+		}
+		const float toGo = edge == Edge::Left || edge == Edge::Top ? at - line : line - at;
+		if (!(going > 0.0f) || toGo >= going) { return std::nullopt; }
+		return std::max(toGo, 0.0f) / going;
 	}
 
 	bool insideWindow(const Box& at, const Vector2f& window) noexcept
@@ -518,7 +541,7 @@ namespace xge
 
 	Vector2f deflected(const Vector2f& velocity, const Box& mover, const Box& other, Edge edge, float maxDegrees) noexcept
 	{
-		const float speed = std::hypot(velocity.x, velocity.y);
+		const float speed = lengthOf(velocity);
 
 		const Vector2f middle = mover.middle();
 		const Vector2f otherMiddle = other.middle();
@@ -545,14 +568,13 @@ namespace xge
 
 	float settleSpeed(const Vector2f& acceleration, const Vector2f& way) noexcept
 	{
-		return 4.0f * std::max(0.0f, acceleration.x * way.x + acceleration.y * way.y);
+		return 4.0f / 60.0f * std::max(0.0f, dotOf(acceleration, way));
 	}
 
 	std::optional<Knocked> knockedApart(const Vector2f& first, float firstMass, const Vector2f& second, float secondMass, const Vector2f& way, float bounce, float settle) noexcept
 	{
-		const auto dot = [](const Vector2f& a, const Vector2f& b) { return a.x * b.x + a.y * b.y; };
-		const float firstAlong = dot(first, way);
-		const float secondAlong = dot(second, way);
+		const float firstAlong = dotOf(first, way);
+		const float secondAlong = dotOf(second, way);
 		const float closing = firstAlong - secondAlong;
 		if (!(closing > 0.0f))
 		{
@@ -600,27 +622,27 @@ namespace xge
 		return false;
 	}
 
+	void stopGoingOut(Vector2f& velocity, Edge edge) noexcept
+	{
+		switch (edge)
+		{
+		case Edge::Left: velocity.x = std::max(velocity.x, 0.0f); break;
+		case Edge::Right: velocity.x = std::min(velocity.x, 0.0f); break;
+		case Edge::Top: velocity.y = std::max(velocity.y, 0.0f); break;
+		case Edge::Bottom: velocity.y = std::min(velocity.y, 0.0f); break;
+		}
+	}
+
 	void stickInside(Vector2f& position, Vector2f& velocity, const Vector2f& size, const Vector2f& window, Edge edge) noexcept
 	{
 		switch (edge)
 		{
-		case Edge::Left:
-			position.x = std::max(position.x, 0.0f);
-			velocity.x = std::max(velocity.x, 0.0f);
-			break;
-		case Edge::Right:
-			position.x = std::min(position.x, window.x - size.x);
-			velocity.x = std::min(velocity.x, 0.0f);
-			break;
-		case Edge::Top:
-			position.y = std::max(position.y, 0.0f);
-			velocity.y = std::max(velocity.y, 0.0f);
-			break;
-		case Edge::Bottom:
-			position.y = std::min(position.y, window.y - size.y);
-			velocity.y = std::min(velocity.y, 0.0f);
-			break;
+		case Edge::Left: position.x = std::max(position.x, 0.0f); break;
+		case Edge::Right: position.x = std::min(position.x, window.x - size.x); break;
+		case Edge::Top: position.y = std::max(position.y, 0.0f); break;
+		case Edge::Bottom: position.y = std::min(position.y, window.y - size.y); break;
 		}
+		stopGoingOut(velocity, edge);
 	}
 
 	void wrapAround(Vector2f& position, const Vector2f& size, const Vector2f& heading, const Vector2f& window, Edge edge) noexcept
@@ -654,7 +676,7 @@ namespace xge
 		return true;
 	}
 
-	float leapSpeed(float pull, float height) noexcept
+	float jumpSpeed(float pull, float height) noexcept
 	{
 		return std::sqrt(2.0f * pull * height);
 	}
@@ -681,7 +703,7 @@ namespace xge
 	std::optional<Vector2f> wayTo(const Vector2f& from, const Vector2f& to) noexcept
 	{
 		const Vector2f apart = to - from;
-		const float distance = std::hypot(apart.x, apart.y);
+		const float distance = lengthOf(apart);
 		if (distance == 0.0f) { return std::nullopt; }
 		return apart * (1.0f / distance);
 	}
@@ -725,7 +747,7 @@ namespace xge
 
 	Vector2f turnedToward(const Vector2f& velocity, const Vector2f& way, float degrees) noexcept
 	{
-		const float speed = std::hypot(velocity.x, velocity.y);
+		const float speed = lengthOf(velocity);
 		if (speed == 0.0f || (way.x == 0.0f && way.y == 0.0f)) { return velocity; }
 
 		const float now = std::atan2(velocity.y, velocity.x);
@@ -737,10 +759,10 @@ namespace xge
 		return { speed * std::cos(after), speed * std::sin(after) };
 	}
 
-	std::optional<Vector2f> chase(const Vector2f& from, const Vector2f& to, float speed, float stopWithin, Vector2f& velocity) noexcept
+	std::optional<Vector2f> chase(const Vector2f& from, const Vector2f& to, float speed, float stopWithin, float t, Vector2f& velocity) noexcept
 	{
 		const Vector2f apart = to - from;
-		const float distance = std::hypot(apart.x, apart.y);
+		const float distance = lengthOf(apart);
 		if (distance <= stopWithin || distance == 0.0f)
 		{
 			velocity = {};
@@ -748,7 +770,8 @@ namespace xge
 		}
 
 		const Vector2f way = apart * (1.0f / distance);
-		velocity = way * speed;
+		const float most = t > 0.0f ? (distance - stopWithin) / t : speed;
+		velocity = way * std::min(speed, most);
 		return way;
 	}
 
@@ -760,7 +783,7 @@ namespace xge
 			&& feet >= ladder.top() - 0.5f && feet <= ladder.bottom() + 0.5f;
 	}
 
-	bool climbLadder(Vector2f& position, Vector2f& velocity, const Vector2f& size, float step, bool& climbing, bool grounded, const Box& ladder,
+	bool climbLadder(Vector2f& position, Vector2f& velocity, const Vector2f& size, float step, float t, bool& climbing, bool grounded, const Box& ladder,
 		bool holdTop, bool holdBottom) noexcept
 	{
 		const float top = ladder.top();
@@ -776,8 +799,10 @@ namespace xge
 			position.x = ladder.middle().x - size.x / 2.0f;
 		}
 
-		const float newFeet = std::clamp(feet + step, top, bottom);
-		velocity = { 0.0f, newFeet - feet };
+		// The climb goes its speed times the time passed, stopping at an
+		// end; the sweep then moves it velocity times t.
+		const float newFeet = std::clamp(feet + step * t, top, bottom);
+		velocity = { 0.0f, t > 0.0f ? (newFeet - feet) / t : 0.0f };
 
 		if (step != 0.0f && ((newFeet <= top && !holdTop) || (newFeet >= bottom && !holdBottom)))
 		{
@@ -799,22 +824,6 @@ namespace xge
 		return { shooter.middle() + way * (std::max(shooter.size.x, shooter.size.y) / 2.0f) - shotSize * 0.5f, way * speed };
 	}
 
-	Shot shotFacing(const Box& shooter, const Vector2f& shotSize, Direction facing, float speed) noexcept
-	{
-		const float middleX = shooter.left() + shooter.size.x / 2 - shotSize.x / 2;
-		const float middleY = shooter.top() + shooter.size.y / 2 - shotSize.y / 2;
-
-		switch (facing)
-		{
-		case Direction::Up:    return { { middleX, shooter.top() - shotSize.y }, { 0.0f, -speed } };
-		case Direction::Down:  return { { middleX, shooter.bottom() }, { 0.0f, speed } };
-		case Direction::Left:  return { { shooter.left() - shotSize.x, middleY }, { -speed, 0.0f } };
-		case Direction::Right: return { { shooter.right(), middleY }, { speed, 0.0f } };
-		}
-
-		return {};
-	}
-
 	Vector2f shotFromTop(const Box& shooter, const Vector2f& shotSize) noexcept
 	{
 		return { shooter.left() + shooter.size.x / 2 - shotSize.x / 2, shooter.top() };
@@ -822,7 +831,7 @@ namespace xge
 
 	std::optional<Vector2f> pathStep(const Vector2f& left, float speed) noexcept
 	{
-		const float distance = std::hypot(left.x, left.y);
+		const float distance = lengthOf(left);
 		if (distance < 0.001f) { return std::nullopt; }
 		return distance <= speed ? left : left * (speed / distance);
 	}

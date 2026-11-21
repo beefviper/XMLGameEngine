@@ -1,0 +1,110 @@
+// reset.cpp
+// XML Game Engine
+// author: beefviper
+// date: Nov 10, 2026
+
+#include "verbs/verb.h"
+#include "game/game.h"
+#include "play/verbs.h"
+#include "load/check.h"
+#include "load/reading.h"
+#include "load/spelling.h"
+
+#include <algorithm>
+#include <stdexcept>
+
+namespace xge
+{
+	// <reset>: Back to how it started: the object running it, a named one, a
+	// scene, or the whole game.
+	static void readReset(const XmlNode&, const std::string& where, WrittenCommand& command)
+	{
+		if ((!command.object.empty()) + (!command.scene.empty()) + (!command.way.empty()) > 1)
+		{
+			fail(where, "<reset> puts back an object=, a scene= or a way=, one of them");
+		}
+	}
+
+	static Command makeReset(const WrittenCommand& written, const ValueEvaluator&)
+	{
+		// <reset /> puts the object in the rule (or, in a state's input or
+		// condition, the whole game) back; <reset object="name" /> that one object.
+		if (!written.scene.empty() || !written.way.empty()) { return CmdResetScene{ written.scene, written.way }; }
+		if (written.object.empty()) { return CmdReset{}; }
+		return CmdResetObject{ written.object };
+	}
+
+	static void checkReset(const Command& command, const Checking& checking)
+	{
+		if (const auto* scene = std::get_if<CmdResetScene>(&command)) { checkScene(checking, "reset", scene->scene, scene->way); }
+		else if (const auto* object = std::get_if<CmdResetObject>(&command))
+		{
+			checkObject(checking, object->target, "<reset object>");
+		}
+	}
+
+	// A bare <reset /> on an object: back where it started, facing the way
+	// it started and going the way it started, with any <random> in that
+	// start drawn again (a new serve). While a held key is moving it, that
+	// key still decides its velocity.
+	static void startAgain(Game& game, Object& object)
+	{
+		game.drawStartAgain(object);
+		const Moment& start = game.startOf(object);
+		const Drive* drive = game.parts().drives.find(object.id);
+		object.position = start.position;
+		object.footing.climbing = false;
+		object.footing.jumping = false;
+		object.footing.grounded = false;
+		object.aim.reset();
+		const bool keyHeld = drive && std::any_of(drive->moveStep.begin(), drive->moveStep.end(), [](float step) { return step != 0.0f; });
+		if (!keyHeld)
+		{
+			object.velocity = start.velocity;
+		}
+		object.heading = start.heading;
+		object.showHeading();
+	}
+
+	static bool runReset(const Command& command, const Doer& doer)
+	{
+		Game& game = doer.game();
+		if (const auto* object = std::get_if<CmdResetObject>(&command)) { game.resetObject(object->target); }
+		else if (const auto* scene = std::get_if<CmdResetScene>(&command)) { game.reset(*scene); }
+		else if (doer.self) { startAgain(game, *doer.self); }
+		else { game.resetAll(); }
+		return true;
+	}
+
+	static void printReset(std::ostream& o, const Command& command)
+	{
+		if (std::holds_alternative<CmdReset>(command))
+		{
+			o << "reset";
+			return;
+		}
+		if (const auto* pr = std::get_if<CmdResetObject>(&command))
+		{
+			const CmdResetObject& r = *pr;
+			o << "reset(" << r.target << ")";
+			return;
+		}
+		if (const auto* pr = std::get_if<CmdResetScene>(&command))
+		{
+			const CmdResetScene& r = *pr;
+			o << "reset(" << (r.way.empty() ? "scene " + r.scene : "way " + r.way) << ")";
+			return;
+		}
+	}
+
+	extern const Verb resetVerb;
+	const Verb resetVerb{
+		.name = "reset",
+		.forms = { { "<reset />", places::changes, kindOf<CmdReset>() }, { "<reset object>", places::changes, kindOf<CmdResetObject>() }, { "<reset scene>", places::changes, kindOf<CmdResetScene>() } },
+		.read = readReset,
+		.make = makeReset,
+		.check = checkReset,
+		.run = runReset,
+		.print = printReset,
+	};
+}

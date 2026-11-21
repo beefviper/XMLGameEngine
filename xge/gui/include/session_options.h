@@ -26,7 +26,12 @@ namespace xge
 		SFML3,
 		SDL2,
 		Raylib,
-		OpenGL
+		OpenGL,
+		Vulkan,
+		Direct3D9,
+		Direct3D10,
+		Direct3D11,
+		Direct3D12
 	};
 
 	// What the Options dialog chooses. The Qt renderer, Xerces and SFML 3's

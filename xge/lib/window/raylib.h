@@ -11,7 +11,6 @@
 
 #include <array>
 #include <cstddef>
-#include <optional>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -19,13 +18,6 @@
 
 namespace xge
 {
-	// The Raylib Window backend. Nothing outside this file, window/raylib.cpp,
-	// and WindowFactory::create (the one place that constructs one) ever
-	// names a raylib type - see window/window.h. Same bake-once-to-a-render-texture,
-	// rebuild-on-visualDirty architecture as SFMLWindow (see window/sfml.h),
-	// re-implemented against raylib's own render-texture/font/image API -
-	// raylib bundles its own image and TrueType font loading, so unlike the
-	// SDL2 backend this needs no extra dependencies for text/image objects.
 	class RaylibWindow : public Window
 	{
 	public:
@@ -45,25 +37,20 @@ namespace xge
 		void prepare(Object& object) override;
 		void draw(Object& object) override;
 		void display() override;
+		float fit() const override;
+		Bitmap capture() override;
 
 	private:
 		// <window><scale>: window pixels to one of the game's.
 		float scale{ 1.0f };
 
-		// What SFMLWindow keeps a RenderTexture+Sprite pair for, raylib only
-		// needs the RenderTexture2D itself for - draw() blits its .texture
-		// straight at object.position, no separate sprite object needed.
+		// What an object shows: the texture of its picture, which objects
+		// showing the same picture share (id 0 for an empty picture).
 		struct CachedVisual
 		{
-			RenderTexture2D renderTexture{};
-			bool loaded{ false };
-
-			CachedVisual() = default;
-			~CachedVisual() { if (loaded) { UnloadRenderTexture(renderTexture); } }
-			CachedVisual(const CachedVisual&) = delete;
-			CachedVisual& operator=(const CachedVisual&) = delete;
-			CachedVisual(CachedVisual&&) = delete;
-			CachedVisual& operator=(CachedVisual&&) = delete;
+			Texture2D texture{};
+			float drawnAt{ 0.0f };   // the pictureScale it was drawn at
+			bool built{ false };
 		};
 
 		bool isOpenFlag{ false };
@@ -73,30 +60,15 @@ namespace xge
 		std::array<bool, 512> keyWasDown{};
 
 		// Whether display() has to finish the frame itself - swap the buffers,
-		// read the keyboard and window, and wait out the frame time - because
+		// read the keyboard and window - because
 		// this raylib was built with SUPPORT_CUSTOM_FRAME_CONTROL, which makes
-		// EndDrawing() do none of that. Worked out once, after the first frame.
+		// EndDrawing() do neither. Worked out once, after the first frame.
 		bool frameControlChecked{ false };
 		bool manualFrameControl{ false };
-		double frameTarget{ 0.0 };
-		double frameStart{ 0.0 };
-		// Each font file opened, by its name; null for one that could not be
-		// loaded, whose text is then drawn from the engine's built-in font
-		// (see picture/font.h).
-		std::unordered_map<std::string, std::optional<Font>> fonts;
-		std::unordered_map<std::string, CachedVisual> visuals;
+		Textures<Texture2D> textures{ *this };
+		std::unordered_map<std::string, CachedVisual> visuals;  // by object name
 
-		const Font* getFont(const std::string& file);
-		static void reloadTexture(CachedVisual& visual, int width, int height);
-
-		void buildShapeOnly(Object& object, CachedVisual& visual);
-		void buildCircle(Object& object, CachedVisual& visual);
-		void buildRectangle(Object& object, CachedVisual& visual);
-		void buildText(Object& object, CachedVisual& visual);
-		void buildImage(Object& object, CachedVisual& visual);
-		void buildLines(Object& object, CachedVisual& visual);
-		void buildBitmap(Object& object, CachedVisual& visual, const Bitmap& bitmap);
-
-		void finalizeVisual(Object& object, CachedVisual& visual);
+		// Makes the object's picture again, at pictureScale().
+		void build(Object& object, CachedVisual& visual);
 	};
 }

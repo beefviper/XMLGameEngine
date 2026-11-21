@@ -41,22 +41,34 @@ set(ENGINE_SOURCES
 	"xge/lib/game/game.cpp"
 	"xge/lib/game/cells.cpp"
 	"xge/lib/game/think.cpp"
-	"xge/lib/game/cards.cpp"
+	"xge/lib/game/holders.cpp"
+	"xge/lib/game/players.cpp"
+	"xge/lib/game/sounds.cpp"
+	"xge/lib/game/parts.cpp"
 	"xge/lib/engine/folder.cpp"
 	"xge/lib/engine/engine.cpp"
 	"xge/lib/engine/backends.cpp"
+	"xge/lib/engine/resources.cpp"
 	"xge/lib/game/object.cpp"
 	"xge/lib/game/states.cpp"
 	"xge/lib/picture/color.cpp"
 	"xge/lib/picture/bitmap.cpp"
 	"xge/lib/picture/svg.cpp"
+	"xge/lib/picture/image.cpp"
 	"xge/lib/picture/font.cpp"
+	"xge/lib/picture/shapes.cpp"
 	"xge/lib/engine/keys.cpp"
 	"xge/lib/load/spelling.cpp"
 	"xge/lib/load/merge.cpp"
 	"xge/lib/load/xml.cpp"
+	"xge/lib/load/file.cpp"
+	"xge/lib/xml/tree.cpp"
+	"xge/lib/load/reading.cpp"
 	"xge/lib/xml/document.cpp"
 	"xge/lib/load/xsd.cpp"
+	"xge/lib/load/build.cpp"
+	"xge/lib/load/conditions.cpp"
+	"xge/lib/load/pictures.cpp"
 	"xge/lib/load/expr.cpp"
 	"xge/lib/load/check.cpp"
 	"xge/lib/load/calc.cpp"
@@ -70,7 +82,11 @@ set(ENGINE_SOURCES
 	"xge/lib/play/collision.cpp"
 	"xge/lib/play/executor.cpp"
 	"xge/lib/window/window.cpp"
+	"xge/lib/window/factory.cpp"
+	"xge/lib/window/null.cpp"
+	"xge/lib/window/picture.cpp"
 	"xge/lib/audio/sound.cpp"
+	"xge/lib/audio/wave.cpp"
 	"xge/lib/audio/audio.cpp"
 )
 
@@ -82,16 +98,30 @@ set(ENGINE_HEADERS
 	"xge/lib/game/states.h"
 	"xge/lib/game/condition.h"
 	"xge/lib/game/scenes.h"
+	"xge/lib/game/name.h"
+	"xge/lib/game/words.h"
+	"xge/lib/game/think.h"
+	"xge/lib/game/cells.h"
+	"xge/lib/game/holders.h"
+	"xge/lib/game/players.h"
+	"xge/lib/game/sounds.h"
+	"xge/lib/game/variables.h"
+	"xge/lib/game/store.h"
+	"xge/lib/game/parts.h"
 	"xge/lib/game/types.h"
 	"xge/lib/picture/color.h"
 	"xge/lib/picture/bitmap.h"
 	"xge/lib/picture/svg.h"
 	"xge/lib/picture/font.h"
+	"xge/lib/picture/shapes.h"
 	"xge/lib/engine/keys.h"
+	"xge/lib/engine/resources.h"
 	"xge/lib/load/spelling.h"
 	"xge/lib/load/merge.h"
 	"xge/lib/load/xml.h"
+	"xge/lib/load/reading.h"
 	"xge/lib/xml/document.h"
+	"xge/lib/xml/tree.h"
 	"xge/lib/load/xsd.h"
 	"xge/lib/game/data.h"
 	"xge/lib/load/expr.h"
@@ -99,6 +129,7 @@ set(ENGINE_HEADERS
 	"xge/lib/load/calc.h"
 	"xge/lib/game/command.h"
 	"xge/lib/play/geometry.h"
+	"xge/lib/play/numbers.h"
 	"xge/lib/play/verbs.h"
 	"xge/lib/play/frame.h"
 	"xge/lib/play/maze.h"
@@ -106,13 +137,17 @@ set(ENGINE_HEADERS
 	"xge/lib/play/collision.h"
 	"xge/lib/play/executor.h"
 	"xge/lib/window/window.h"
+	"xge/lib/window/null.h"
+	"xge/lib/window/picture.h"
 	"xge/lib/audio/sound.h"
+	"xge/lib/audio/wave.h"
 	"xge/lib/audio/audio.h"
 )
 
 # The backends that are built (options.cmake), each a pair of files named after
-# it in the folder of its kind (window/sfml.cpp). SFML 3, raylib and SDL2 give a window and a sound backend; OpenGL a
-# window only.
+# it in the folder of its kind (window/sfml.cpp). SFML 3, raylib and SDL2 give a window and a sound backend; OpenGL and
+# Vulkan and Direct3D a window only. The Direct3D windows share one Win32 window (window/win32.cpp), and
+# OpenGL and Vulkan their GLFW keys and pads (window/glfw.cpp).
 foreach(backend IN ITEMS xerces tinyxml2 pugixml rapidxml)
 	string(TOUPPER ${backend} upper)
 	if (XGE_WITH_${upper})
@@ -121,7 +156,7 @@ foreach(backend IN ITEMS xerces tinyxml2 pugixml rapidxml)
 	endif()
 endforeach()
 
-foreach(backend IN ITEMS sfml raylib sdl2 opengl)
+foreach(backend IN ITEMS sfml raylib sdl2 opengl vulkan direct3d9 direct3d10 direct3d11 direct3d12)
 	string(TOUPPER ${backend} upper)
 	if (backend STREQUAL "sfml")
 		set(upper SFML3)
@@ -131,20 +166,41 @@ foreach(backend IN ITEMS sfml raylib sdl2 opengl)
 		list(APPEND ENGINE_SOURCES "xge/lib/window/${backend}.cpp")
 		list(APPEND ENGINE_HEADERS "xge/lib/window/${backend}.h")
 
-		if (NOT backend STREQUAL "opengl")
+		if (NOT backend MATCHES "^(opengl|vulkan|direct3d)")
 			list(APPEND ENGINE_SOURCES "xge/lib/audio/${backend}.cpp")
 			list(APPEND ENGINE_HEADERS "xge/lib/audio/${backend}.h")
 		endif()
 	endif()
 endforeach()
 
+if (XGE_WITH_OPENGL OR XGE_WITH_VULKAN)
+	list(APPEND ENGINE_SOURCES "xge/lib/window/glfw.cpp")
+	list(APPEND ENGINE_HEADERS "xge/lib/window/glfw.h")
+endif()
+
+if (XGE_WITH_DIRECT3D9 OR XGE_WITH_DIRECT3D10 OR XGE_WITH_DIRECT3D11 OR XGE_WITH_DIRECT3D12)
+	list(APPEND ENGINE_SOURCES "xge/lib/window/win32.cpp")
+	list(APPEND ENGINE_HEADERS "xge/lib/window/win32.h")
+endif()
+
+# The verbs: a file each in xge/lib/verbs/, listed in its all.cpp. They are
+# small, so they are compiled as one.
+file(GLOB ENGINE_VERBS CONFIGURE_DEPENDS "xge/lib/verbs/*.cpp")
+list(APPEND ENGINE_SOURCES ${ENGINE_VERBS})
+list(APPEND ENGINE_HEADERS "xge/lib/verbs/verb.h")
+set_source_files_properties(${ENGINE_VERBS} PROPERTIES UNITY_GROUP verbs)
+
 target_sources(xgelib PRIVATE
 	${ENGINE_SOURCES}
 	${ENGINE_HEADERS}
 )
+set_target_properties(xgelib PROPERTIES UNITY_BUILD ON UNITY_BUILD_MODE GROUP)
 
 include(scripts/cmake/executables.cmake)
 
 if (BUILD_TESTING)
 	include(scripts/cmake/tests.cmake)
 endif()
+
+# The fetched libraries out of the way in an IDE (dependencies.cmake).
+xge_fold_fetched_targets("${CMAKE_SOURCE_DIR}")

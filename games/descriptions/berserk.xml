@@ -18,7 +18,7 @@
   first room's yellow robots do not fire at all.
 
   W A S D or the arrow keys walk, two at once on a diagonal, and Space
-  fires the way he last walked, diagonals too. P or Escape pauses.
+  fires the way he last walked, diagonals too. Pause pauses.
 
   How it is written:
   * The rooms are the <scenes> of the playing state. The man, his shot, the
@@ -27,7 +27,7 @@
   * Each room is the arcade's five cells across and three down, written as
     a <map>: a pillar (+) at every corner of a cell and a wall (- or |)
     between two, on tiles half a cell across, so the file shows the room as
-    it looks. The kit's map "maze" says what each character is, and each
+    it looks. The map piece "maze" says what each character is, and each
     room takes it and gives only its <row>s. n, s, w and e are the gaps of
     the outer wall, the exits, never drawn, each a class of its side and a
     way of its own. The four rooms are a square of two by two that goes
@@ -41,22 +41,25 @@
     arcade does, and shuts that doorway behind him: the state's group
     "doors" has one just inside each gap, out of play until revealed, and
     electrified like the walls. No robot starts where he comes in.
-  * The robots are one group of the kit, a member for every robot of every
+  * The robots are one group piece, a member for every robot of every
     room, each room taking its own by name and saying where it stands. An
     inner group gives each room's robots their colour, and every group but
     the first room's an <aim> and <fire> timer, whose wait is drawn again
     after every shot, between ends that shrink as player.depth grows.
-  * A robot fires only when lined up with the man, across, up or down or
-    on a diagonal, within 8 pixels (<aim> with <lined>), as the arcade's do.
+  * A robot fires only when it can see the man past the walls (<sees>) and
+    is lined up with him, across, up or down or on a diagonal, within 8
+    pixels (<aim> with <lined>), as the arcade's do.
   * Now and then (every 1 to 2.5 seconds, so it stands a while first) a
     robot turns to <chase> the man, a little faster the deeper he has gone; a
     robot that touches a wall or another robot is destroyed (its action
     "destroyed", which a shot runs too).
   * The man has four looks, one for each way he faces, and <become> in his
     actions picks it; <facing> makes <fire> leave the way he looks.
-  * Every rule that costs the man a life is his own, because the <reset />
-    in a rule puts only that object back at the start, where a
-    <reset object="player" /> would put his variables back too.
+  * Every rule that costs the man a life is his own: he goes out of play
+    and the state zapped stands the room still while a stand-in flashes
+    (a <once /> animation). Its timer takes the life and <reveal>s him at
+    the start, which keeps his variables, where a <reset object="player" />
+    would put them back too.
   * player.kills counts the robots destroyed in this room; once none is left
     the state's condition pays 10 for each and clears the count, and
     another brings Otto at once. player.lifepoints is the score since the
@@ -79,9 +82,682 @@
     <variable name="wide">112</variable>
     <variable name="tall">128</variable>
     <variable name="top">48</variable>
-    <variable name="walk">2</variable>
+    <variable name="walk">120</variable>
   </variables>
 
+
+  <styles>
+    <style name="banner"><size>96</size></style>
+    <style name="prompt"><size>32</size><color>color.green</color></style>
+    <style name="help"><size>20</size><color>color.lightgrey</color></style>
+    <style name="hud"><size>28</size></style>
+    <style name="player"><scale>2</scale><color>color.green</color></style>
+  </styles>
+  <objects>
+    <!-- his shot: one at a time, like the arcade game -->
+    <object name="bullet" class="bullet">
+      <sprite><rectangle><width>5</width><height>5</height><color>color.green</color></rectangle></sprite>
+      <velocity><y>-480</y></velocity>
+      <most>1</most>
+      <collisions>
+        <collision edge="all"><despawn /></collision>
+        <collision class="wall"><despawn /></collision>
+        <collision class="otto"><despawn /></collision>
+      </collisions>
+    </object>
+    <!-- every robot of every room: each room takes its own by name -->
+    <group name="robots" class="robot">
+      <sprite name="a">
+        <bitmap from="robots-a" />
+      </sprite>
+      <sprite name="b">
+        <bitmap from="robots-b" />
+      </sprite>
+      <animation>
+        <seconds>0.25</seconds>
+        <frame sprite="a" />
+        <frame sprite="b" />
+      </animation>
+      <position><x>0</x><y>0</y></position>
+      <collisions>
+        <collision class="wall"><trigger action="destroyed" /></collision>
+        <collision class="robot"><trigger action="destroyed" /></collision>
+        <collision class="northexit"><reverse /></collision>
+        <collision class="southexit"><reverse /></collision>
+        <collision class="westexit"><reverse /></collision>
+        <collision class="eastexit"><reverse /></collision>
+        <collision object="bullet">
+          <trigger action="destroyed" />
+          <despawn object="bullet" />
+        </collision>
+      </collisions>
+      <actions>
+        <action name="destroyed">
+          <die />
+          <inc variable="player.score">50</inc>
+          <inc variable="player.lifepoints">50</inc>
+          <inc variable="player.kills" />
+          <play sound="boom" />
+        </action>
+      </actions>
+      <timers>
+        <timer>
+          <every><random><min>1</min><max>2.5</max></random></every>
+          <chase object="player">
+            <add>
+              <value>15</value>
+              <value><multiply><value>player.depth</value><value>3</value></multiply></value>
+            </add>
+          </chase>
+        </timer>
+      </timers>
+      <!-- room one's: they do not fire -->
+      <group name="quiet">
+        <member name="y1" />
+        <member name="y2" />
+        <member name="y3" />
+      </group>
+      <!-- the rest aim at the man and fire, sooner the deeper he is -->
+      <group name="armed">
+        <actions>
+          <!-- only at a man it can see, past the walls -->
+          <action name="shoot">
+            <condition>
+              <sees object="player"><past class="wall" /></sees>
+              <aim object="player"><lined>8</lined></aim>
+              <fire object="robotshot" />
+              <play sound="robotshoot" />
+            </condition>
+          </action>
+        </actions>
+        <timers>
+          <timer>
+            <every>
+              <random>
+                <min>
+                  <largest>
+                    <value>0.8</value>
+                    <value>
+                      <subtract>
+                        <value>3</value>
+                        <value><multiply><value>player.depth</value><value>0.25</value></multiply></value>
+                      </subtract>
+                    </value>
+                  </largest>
+                </min>
+                <max>
+                  <largest>
+                    <value>2</value>
+                    <value>
+                      <subtract>
+                        <value>7</value>
+                        <value><multiply><value>player.depth</value><value>0.5</value></multiply></value>
+                      </subtract>
+                    </value>
+                  </largest>
+                </max>
+              </random>
+            </every>
+            <trigger action="shoot" />
+          </timer>
+        </timers>
+        <group name="red">
+          <sprite name="a"><bitmap><color>color.red</color></bitmap></sprite>
+          <sprite name="b"><bitmap><color>color.red</color></bitmap></sprite>
+          <member name="r1" />
+          <member name="r2" />
+          <member name="r3" />
+          <member name="r4" />
+        </group>
+        <group name="cyan">
+          <sprite name="a"><bitmap><color>color.cyan</color></bitmap></sprite>
+          <sprite name="b"><bitmap><color>color.cyan</color></bitmap></sprite>
+          <member name="c1" />
+          <member name="c2" />
+          <member name="c3" />
+          <member name="c4" />
+          <member name="c5" />
+        </group>
+        <group name="green">
+          <sprite name="a"><bitmap><color>color.green</color></bitmap></sprite>
+          <sprite name="b"><bitmap><color>color.green</color></bitmap></sprite>
+          <member name="g1" />
+          <member name="g2" />
+          <member name="g3" />
+          <member name="g4" />
+          <member name="g5" />
+          <member name="g6" />
+        </group>
+      </group>
+    </group>
+    <!-- a robot's shot: spawned when one fires, four at most in the room -->
+    <object name="robotshot" class="robotshot">
+      <sprite><rectangle><width>5</width><height>5</height><color>color.orange</color></rectangle></sprite>
+      <velocity><y>180</y></velocity>
+      <most>4</most>
+      <collisions>
+        <collision edge="all"><despawn /></collision>
+        <collision class="wall"><despawn /></collision>
+        <collision object="player"><despawn /></collision>
+      </collisions>
+    </object>
+    <!-- a room: what each character of its <row>s is; each room gives its rows -->
+    <map name="maze">
+      <tile><width><divide><value>wide</value><value>2</value></divide></width><height><divide><value>tall</value><value>2</value></divide></height></tile>
+      <position><x>
+        <subtract>
+          <value><divide><value>margin</value><value>2</value></divide></value>
+          <value><divide><value>wide</value><value>4</value></divide></value>
+        </subtract>
+      </x><y>
+        <subtract>
+          <value>
+            <add>
+              <value>top</value>
+              <value><divide><value>margin</value><value>2</value></divide></value>
+            </add>
+          </value>
+          <value><divide><value>tall</value><value>4</value></divide></value>
+        </subtract>
+      </y></position>
+      <group name="walls" class="wall">
+        <sprite><rectangle><width>margin</width><height>margin</height><color>color.blue</color></rectangle></sprite>
+        <collisions />
+        <group name="post" char="+" />
+        <group name="across" char="-"><sprite><rectangle><width><subtract><value>wide</value><value>margin</value></subtract></width></rectangle></sprite></group>
+        <group name="down" char="|"><sprite><rectangle><height><subtract><value>tall</value><value>margin</value></subtract></height></rectangle></sprite></group>
+      </group>
+      <!-- the gaps, a class for each side, so the man knows which side to
+           come in at in the next room -->
+      <group name="exits">
+        <sprite><rectangle><width><subtract><value>wide</value><value>margin</value></subtract></width><height>margin</height><color>color.black</color></rectangle></sprite>
+        <hidden />
+        <group name="north" char="n" class="northexit">
+          <collisions><collision object="player"><reset way="north" /><enter way="north" /></collision></collisions>
+        </group>
+        <group name="south" char="s" class="southexit">
+          <collisions><collision object="player"><reset way="south" /><enter way="south" /></collision></collisions>
+        </group>
+        <group name="sides">
+          <sprite><rectangle><width>margin</width><height><subtract><value>tall</value><value>margin</value></subtract></height></rectangle></sprite>
+          <group name="west" char="w" class="westexit">
+            <collisions><collision object="player"><reset way="west" /><enter way="west" /></collision></collisions>
+          </group>
+          <group name="east" char="e" class="eastexit">
+            <collisions><collision object="player"><reset way="east" /><enter way="east" /></collision></collisions>
+          </group>
+        </group>
+      </group>
+    </map>
+  </objects>
+  <states>
+    <state name="title">
+      <objects>
+        <object name="title">
+          <sprite><text style="banner"><content>BERSERK</content></text></sprite>
+          <position><x><centered /></x><y>70</y></position>
+        </object>
+        <object name="taunt">
+          <sprite><text><content>Chicken! Fight like a robot!</content><size>30</size><color>color.yellow</color></text></sprite>
+          <position><x><centered /></x><y>205</y></position>
+        </object>
+        <group name="help">
+          <rows>2</rows>
+          <padding><y>35</y></padding>
+          <sprite><text style="help" /></sprite>
+          <position><x><centered /></x><y>270</y></position>
+          <row number="1"><sprite><text><content>W A S D or the arrow keys walk, Space fires the way you face</content></text></sprite></row>
+          <row number="2"><sprite><text><content>The walls are electrified: leave by any gap. Pause pauses.</content></text></sprite></row>
+        </group>
+        <object name="start">
+          <sprite><text style="prompt"><content>Press Space to start</content></text></sprite>
+          <position><x><centered /></x><y>380</y></position>
+        </object>
+      </objects>
+      <inputs>
+        <input button="space"><push state="playing" /></input>
+      </inputs>
+    </state>
+
+    <state name="playing">
+      <objects>
+        <!-- the man. He faces the way he last walked (<facing>), shows it with one of
+             four looks, and shoots that way. -->
+        <object name="player" class="player">
+          <sprite name="down">
+            <bitmap from="player-down" />
+          </sprite>
+          <sprite name="up">
+            <bitmap from="player-up" />
+          </sprite>
+          <sprite name="left">
+            <bitmap from="player-left" />
+          </sprite>
+          <sprite name="right">
+            <bitmap from="player-right" />
+          </sprite>
+          <position><x>21</x><y>233</y></position>
+          <facing>right</facing>
+          <collisions>
+            <!-- the walls are electrified, and so is everything else that touches him -->
+            <collision class="wall"><trigger action="lose" /></collision>
+            <collision class="robotshot"><trigger action="lose" /></collision>
+            <collision class="otto"><trigger action="lose" /></collision>
+            <collision class="robot"><trigger action="lose" /></collision>
+            <!-- through an exit (the exit's own rule goes on to the next room):
+                 in at the side opposite, with that doorway shut behind him -->
+            <collision class="northexit">
+              <trigger action="through" />
+              <set variable="player.x">277</set>
+              <set variable="player.y">395</set>
+              <reveal object="southdoor" />
+            </collision>
+            <collision class="southexit">
+              <trigger action="through" />
+              <set variable="player.x">277</set>
+              <set variable="player.y">66</set>
+              <reveal object="northdoor" />
+            </collision>
+            <collision class="westexit">
+              <trigger action="through" />
+              <set variable="player.x">533</set>
+              <reveal object="eastdoor" />
+            </collision>
+            <collision class="eastexit">
+              <trigger action="through" />
+              <reveal object="westdoor" />
+            </collision>
+            <collision edge="all"><stick /></collision>
+          </collisions>
+          <actions>
+            <!-- out of play while he is zapped (the state zapped) -->
+            <action name="lose">
+              <die />
+              <play sound="zap" />
+              <set variable="player.zapped">1</set>
+            </action>
+            <!-- one room deeper, and the room tidied: the man back at the
+                 start, the doorways open, until a rule shuts the one he came by -->
+            <action name="through">
+              <inc variable="player.depth">1</inc>
+              <set variable="player.kills">0</set>
+              <play sound="door" />
+              <reset />
+              <despawn object="bullet" />
+              <despawn object="robotshot" />
+              <reset object="otto" />
+              <reset object="doors" />
+            </action>
+            <action name="up"><move direction="up">walk</move><become sprite="up" /></action>
+            <action name="down"><move direction="down">walk</move><become sprite="down" /></action>
+            <action name="left"><move direction="left">walk</move><become sprite="left" /></action>
+            <action name="right"><move direction="right">walk</move><become sprite="right" /></action>
+            <action name="gun">
+              <fire object="bullet" />
+              <play sound="shoot" />
+            </action>
+          </actions>
+          <variables>
+            <variable name="score">0</variable>
+            <variable name="lives">3</variable>
+            <!-- touched: the state zapped comes next -->
+            <variable name="zapped">0</variable>
+            <variable name="lifepoints">0</variable>
+            <variable name="depth">0</variable>
+            <variable name="kills">0</variable>
+          </variables>
+        </object>
+
+        <!-- the doorway he came in by, shut behind him: electrified like
+             the walls, out of play until he goes through an exit; just
+             inside the gap, so he touches it before the way out -->
+        <group name="doors" class="wall">
+          <sprite><rectangle><width><subtract><value>wide</value><value>margin</value></subtract></width><height>margin</height><color>color.blue</color></rectangle></sprite>
+          <waiting />
+          <collisions />
+          <member name="northdoor"><position><x>232</x><y>56</y></position></member>
+          <member name="southdoor"><position><x>232</x><y>424</y></position></member>
+          <member name="westdoor">
+            <sprite><rectangle><width>margin</width><height><subtract><value>tall</value><value>margin</value></subtract></height></rectangle></sprite>
+            <position><x>8</x><y>184</y></position>
+          </member>
+          <member name="eastdoor">
+            <sprite><rectangle><width>margin</width><height><subtract><value>tall</value><value>margin</value></subtract></height></rectangle></sprite>
+            <position><x>552</x><y>184</y></position>
+          </member>
+        </group>
+
+        <!-- Evil Otto: comes straight for the man over the walls, cannot be shot -->
+        <object name="otto" class="otto">
+          <sprite>
+            <bitmap from="otto" />
+          </sprite>
+          <position><x>504</x><y>72</y></position>
+          <velocity><x>-72</x><y>54</y></velocity>
+          <waiting />
+          <collisions>
+            <collision edge="all"><bounce /></collision>
+            <collision object="player"><die /></collision>
+          </collisions>
+          <!-- faster once the room has no robot left (a reset puts it back) -->
+          <variables>
+            <variable name="speed">66</variable>
+          </variables>
+          <timers>
+            <timer>
+              <every>0.1</every>
+              <chase object="player">otto.speed</chase>
+            </timer>
+          </timers>
+        </object>
+
+        <!-- the score, and the men left -->
+        <object name="score">
+          <sprite><text style="hud"><number>player.score</number><color>color.green</color></text></sprite>
+          <position><x>margin</x><y>margin</y></position>
+        </object>
+        <object name="lives">
+          <sprite><text style="hud"><number>player.lives</number><color>color.green</color></text></sprite>
+          <position><x><right><offset>margin</offset></right></x><y>margin</y></position>
+        </object>
+        <object name="liveicon">
+          <sprite>
+            <bitmap from="player-down" />
+          </sprite>
+          <position><x>
+            <subtract>
+              <value>window.right</value>
+              <value>lives.width</value>
+              <value><multiply><value>margin</value><value>2</value></multiply></value>
+              <value>14</value>
+            </subtract>
+          </x><y>margin</y></position>
+        </object>
+      </objects>
+
+      <scenes>
+
+        <!-- ======================================================== room 1 -->
+        <scene name="room1">
+          <ways>
+            <way name="north" scene="room3" />
+            <way name="south" scene="room3" />
+            <way name="west" scene="room2" />
+            <way name="east" scene="room2" />
+          </ways>
+          <objects>
+            <map name="maze">
+              <row>+-+-+n+-+-+</row>
+              <row>|         |</row>
+              <row>+ +-+ + + +</row>
+              <row>w   | |   e</row>
+              <row>+ + + +-+ +</row>
+              <row>|     |   |</row>
+              <row>+-+-+s+-+-+</row>
+            </map>
+            <!-- 3 robots, yellow, and they do not fire -->
+            <object name="y1"><position><x>389</x><y>107</y></position></object>
+            <object name="y2"><position><x>501</x><y>363</y></position></object>
+            <object name="y3"><position><x>389</x><y>235</y></position></object>
+          </objects>
+          <!-- Otto comes if the man lingers: sooner the deeper he has gone -->
+          <timers>
+            <timer>
+              <every>
+                <largest>
+                  <value>6</value>
+                  <value><subtract><value>14</value><value>player.depth</value></subtract></value>
+                </largest>
+              </every>
+              <reveal object="otto" />
+              <play sound="otto" />
+            </timer>
+          </timers>
+        </scene>
+
+        <!-- ======================================================== room 2 -->
+        <scene name="room2">
+          <ways>
+            <way name="north" scene="room4" />
+            <way name="south" scene="room4" />
+            <way name="west" scene="room1" />
+            <way name="east" scene="room1" />
+          </ways>
+          <objects>
+            <map name="maze">
+              <row>+-+-+n+-+-+</row>
+              <row>|   |     |</row>
+              <row>+ + +-+ +-+</row>
+              <row>w   |     e</row>
+              <row>+-+ + + + +</row>
+              <row>|       | |</row>
+              <row>+-+-+s+-+-+</row>
+            </map>
+            <!-- 4 robots, red -->
+            <object name="r1"><position><x>165</x><y>107</y></position></object>
+            <object name="r2"><position><x>389</x><y>235</y></position></object>
+            <object name="r3"><position><x>165</x><y>363</y></position></object>
+            <object name="r4"><position><x>389</x><y>363</y></position></object>
+          </objects>
+          <!-- Otto comes if the man lingers: sooner the deeper he has gone -->
+          <timers>
+            <timer>
+              <every>
+                <largest>
+                  <value>6</value>
+                  <value><subtract><value>14</value><value>player.depth</value></subtract></value>
+                </largest>
+              </every>
+              <reveal object="otto" />
+              <play sound="otto" />
+            </timer>
+          </timers>
+        </scene>
+
+        <!-- ======================================================== room 3 -->
+        <scene name="room3">
+          <ways>
+            <way name="north" scene="room1" />
+            <way name="south" scene="room1" />
+            <way name="west" scene="room4" />
+            <way name="east" scene="room4" />
+          </ways>
+          <objects>
+            <map name="maze">
+              <row>+-+-+n+-+-+</row>
+              <row>|     |   |</row>
+              <row>+-+ + + + +</row>
+              <row>w   |   | e</row>
+              <row>+ + +-+ + +</row>
+              <row>|   |     |</row>
+              <row>+-+-+s+-+-+</row>
+            </map>
+            <!-- 5 robots, cyan -->
+            <object name="c1"><position><x>165</x><y>107</y></position></object>
+            <object name="c2"><position><x>501</x><y>107</y></position></object>
+            <object name="c3"><position><x>277</x><y>235</y></position></object>
+            <object name="c4"><position><x>165</x><y>363</y></position></object>
+            <object name="c5"><position><x>389</x><y>363</y></position></object>
+          </objects>
+          <!-- Otto comes if the man lingers: sooner the deeper he has gone -->
+          <timers>
+            <timer>
+              <every>
+                <largest>
+                  <value>6</value>
+                  <value><subtract><value>14</value><value>player.depth</value></subtract></value>
+                </largest>
+              </every>
+              <reveal object="otto" />
+              <play sound="otto" />
+            </timer>
+          </timers>
+        </scene>
+
+        <!-- ======================================================== room 4 -->
+        <scene name="room4">
+          <ways>
+            <way name="north" scene="room2" />
+            <way name="south" scene="room2" />
+            <way name="west" scene="room3" />
+            <way name="east" scene="room3" />
+          </ways>
+          <objects>
+            <map name="maze">
+              <row>+-+-+n+-+-+</row>
+              <row>| |       |</row>
+              <row>+ + +-+-+ +</row>
+              <row>w     |   e</row>
+              <row>+ +-+ + +-+</row>
+              <row>|   |     |</row>
+              <row>+-+-+s+-+-+</row>
+            </map>
+            <!-- 6 robots, green -->
+            <object name="g1"><position><x>165</x><y>107</y></position></object>
+            <object name="g2"><position><x>501</x><y>107</y></position></object>
+            <object name="g3"><position><x>277</x><y>235</y></position></object>
+            <object name="g4"><position><x>389</x><y>235</y></position></object>
+            <object name="g5"><position><x>165</x><y>363</y></position></object>
+            <object name="g6"><position><x>389</x><y>363</y></position></object>
+          </objects>
+          <!-- Otto comes if the man lingers: sooner the deeper he has gone -->
+          <timers>
+            <timer>
+              <every>
+                <largest>
+                  <value>6</value>
+                  <value><subtract><value>14</value><value>player.depth</value></subtract></value>
+                </largest>
+              </every>
+              <reveal object="otto" />
+              <play sound="otto" />
+            </timer>
+          </timers>
+        </scene>
+      </scenes>
+      <inputs>
+        <input><button>up</button><button>w</button><trigger object="player" action="up" /></input>
+        <input><button>down</button><button>s</button><trigger object="player" action="down" /></input>
+        <input><button>left</button><button>a</button><trigger object="player" action="left" /></input>
+        <input><button>right</button><button>d</button><trigger object="player" action="right" /></input>
+        <input button="space"><trigger object="player" action="gun" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
+      </inputs>
+      <conditions>
+        <condition object="player" variable="zapped"><atleast>1</atleast>
+          <set variable="player.zapped">0</set>
+          <push state="zapped" />
+        </condition>
+        <!-- out of lives -->
+        <condition object="player" variable="lives">
+          <atmost>0</atmost>
+          <push state="over" />
+        </condition>
+        <!-- an extra man for every 2000 points: lifepoints is the score since the last one -->
+        <condition object="player" variable="lifepoints">
+          <atleast>2000</atleast>
+          <inc variable="player.lives">1</inc>
+          <dec variable="player.lifepoints">2000</dec>
+          <play sound="extralife" />
+        </condition>
+        <!-- no robot left in the room: ten more for each destroyed -->
+        <condition class="robot"><remaining>0</remaining>
+          <condition object="player" variable="kills"><atleast>1</atleast>
+            <inc variable="player.score"><multiply><value>10</value><value>player.kills</value></multiply></inc>
+            <inc variable="player.lifepoints"><multiply><value>10</value><value>player.kills</value></multiply></inc>
+            <set variable="player.kills">0</set>
+            <play sound="bonus" />
+          </condition>
+        </condition>
+        <!-- and Otto comes at once, and faster -->
+        <condition class="robot">
+          <remaining>0</remaining>
+          <reveal object="otto" />
+          <set variable="otto.speed">120</set>
+        </condition>
+      </conditions>
+    </state>
+
+    <!-- the room still underneath -->
+    <!-- electrocuted: he flashes, everything standing still -->
+    <state name="zapped">
+      <objects>
+        <object name="shock">
+          <sprite name="red"><bitmap from="zap-red" /></sprite>
+          <sprite name="white"><bitmap from="zap-white" /></sprite>
+          <sprite name="yellow"><bitmap from="zap-yellow" /></sprite>
+          <sprite name="cyan"><bitmap from="zap-cyan" /></sprite>
+          <animation>
+            <seconds>0.1</seconds>
+            <once />
+            <frame sprite="red" />
+            <frame sprite="white" />
+            <frame sprite="yellow" />
+            <frame sprite="cyan" />
+            <frame sprite="red" />
+            <frame sprite="white" />
+            <frame sprite="yellow" />
+            <frame sprite="cyan" />
+            <frame sprite="red" />
+            <frame sprite="white" />
+            <frame sprite="yellow" />
+            <frame sprite="cyan" />
+          </animation>
+          <position><x update="live">player.x</x><y update="live">player.y</y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
+      </inputs>
+      <timers>
+        <timer>
+          <after>1.4</after>
+          <dec variable="player.lives">1</dec>
+          <reveal object="player" />
+          <despawn object="bullet" />
+          <despawn object="robotshot" />
+          <reset object="shock" />
+          <pop />
+        </timer>
+      </timers>
+    </state>
+    <state name="paused">
+      <objects>
+        <object name="paused">
+          <sprite><text style="banner"><content>PAUSED</content></text></sprite>
+          <position><x><centered /></x><y>150</y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
+      </inputs>
+    </state>
+
+    <state name="over">
+      <objects>
+        <object name="gameover">
+          <sprite><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>
+          <position><x><centered /></x><y>120</y></position>
+        </object>
+        <object name="again">
+          <sprite><text style="prompt"><content>Press Space to play again</content></text></sprite>
+          <position><x><centered /></x><y>300</y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input button="space"><reset /></input>
+      </inputs>
+    </state>
+  </states>
   <sounds>
     <sound name="shoot" wave="square">
       <volume>0.15</volume>
@@ -123,630 +799,93 @@
       <note pitch="C6">0.2</note>
     </sound>
   </sounds>
-
-  <styles>
-    <style name="banner"><size>96</size></style>
-    <style name="prompt"><size>32</size><color>color.green</color></style>
-    <style name="help"><size>20</size><color>color.lightgrey</color></style>
-    <style name="hud"><size>28</size></style>
-    <style name="player"><scale>2</scale><color>color.green</color></style>
-  </styles>
-  <kit>
-    <!-- every robot of every room: each room takes its own by name -->
-    <group name="robots" class="robot">
-      <sprite name="a">
-        <bitmap>
-          <row>.*****.</row><row>.*.*.*.</row><row>.*****.</row><row>..***..</row><row>*******</row><row>*.***.*</row><row>..*.*..</row><row>..*.*..</row><row>.**.**.</row>
-          <scale>2</scale>
-          <color>color.yellow</color>
-        </bitmap>
-      </sprite>
-      <sprite name="b">
-        <bitmap>
-          <row>.*****.</row><row>.*.*.*.</row><row>.*****.</row><row>..***..</row><row>.*****.</row><row>*.***.*</row><row>.*...*.</row><row>.*...*.</row><row>**...**</row>
-          <scale>2</scale>
-          <color>color.yellow</color>
-        </bitmap>
-      </sprite>
-      <animation>
-        <interval>0.25</interval>
-        <frame sprite="a" />
-        <frame sprite="b" />
-      </animation>
-      <position><x>0</x><y>0</y></position>
-      <collisions>
-        <collision class="wall"><trigger action="destroyed" /></collision>
-        <collision class="robot"><trigger action="destroyed" /></collision>
-        <collision class="northexit"><reverse /></collision>
-        <collision class="southexit"><reverse /></collision>
-        <collision class="westexit"><reverse /></collision>
-        <collision class="eastexit"><reverse /></collision>
-        <collision object="bullet">
-          <trigger action="destroyed" />
-          <reset object="bullet" />
-        </collision>
-      </collisions>
-      <actions>
-        <action name="destroyed">
-          <die />
-          <inc variable="player.score">50</inc>
-          <inc variable="player.lifepoints">50</inc>
-          <inc variable="player.kills" />
-          <play sound="boom" />
-        </action>
-      </actions>
-      <timers>
-        <timer>
-          <every><random><min>1</min><max>2.5</max></random></every>
-          <chase object="player">0.25 + player.depth * 0.05</chase>
-        </timer>
-      </timers>
-      <!-- room one's: they do not fire -->
-      <group name="quiet">
-        <member name="y1" />
-        <member name="y2" />
-        <member name="y3" />
-      </group>
-      <!-- the rest aim at the man and fire, sooner the deeper he is -->
-      <group name="armed">
-        <timers>
-          <timer>
-            <every>
-              <random>
-                <min>
-                  <formula>
-                    <largest>
-                      <value>0.8</value>
-                      <value>
-                        <subtract>
-                          <minuend>3</minuend>
-                          <subtrahend><multiply><multiplicand>player.depth</multiplicand><multiplier>0.25</multiplier></multiply></subtrahend>
-                        </subtract>
-                      </value>
-                    </largest>
-                  </formula>
-                </min>
-                <max>
-                  <formula>
-                    <largest>
-                      <value>2</value>
-                      <value>
-                        <subtract>
-                          <minuend>7</minuend>
-                          <subtrahend><multiply><multiplicand>player.depth</multiplicand><multiplier>0.5</multiplier></multiply></subtrahend>
-                        </subtract>
-                      </value>
-                    </largest>
-                  </formula>
-                </max>
-              </random>
-            </every>
-            <aim object="player"><lined>8</lined></aim>
-            <fire object="robotshot" />
-            <play sound="robotshoot" />
-          </timer>
-        </timers>
-        <group name="red">
-          <sprite name="a"><bitmap><color>color.red</color></bitmap></sprite>
-          <sprite name="b"><bitmap><color>color.red</color></bitmap></sprite>
-          <member name="r1" />
-          <member name="r2" />
-          <member name="r3" />
-          <member name="r4" />
-        </group>
-        <group name="cyan">
-          <sprite name="a"><bitmap><color>color.cyan</color></bitmap></sprite>
-          <sprite name="b"><bitmap><color>color.cyan</color></bitmap></sprite>
-          <member name="c1" />
-          <member name="c2" />
-          <member name="c3" />
-          <member name="c4" />
-          <member name="c5" />
-        </group>
-        <group name="green">
-          <sprite name="a"><bitmap><color>color.green</color></bitmap></sprite>
-          <sprite name="b"><bitmap><color>color.green</color></bitmap></sprite>
-          <member name="g1" />
-          <member name="g2" />
-          <member name="g3" />
-          <member name="g4" />
-          <member name="g5" />
-          <member name="g6" />
-        </group>
-      </group>
-    </group>
-    <!-- a robot's shot: spawned when one fires, four at most in the room -->
-    <object name="robotshot" class="robotshot">
-      <sprite><rectangle><width>5</width><height>5</height><color>color.orange</color></rectangle></sprite>
-      <velocity><y>3</y></velocity>
-      <most>4</most>
-      <collisions>
-        <collision edge="all"><despawn /></collision>
-        <collision class="wall"><despawn /></collision>
-        <collision object="player"><despawn /></collision>
-      </collisions>
-    </object>
-    <!-- a room: what each character of its <row>s is; each room gives its rows -->
-    <map name="maze">
-      <tile><width>wide / 2</width><height>tall / 2</height></tile>
-      <position><x>margin / 2 - wide / 4</x><y>top + margin / 2 - tall / 4</y></position>
-      <group name="walls" class="wall">
-        <sprite><rectangle><width>margin</width><height>margin</height><color>color.blue</color></rectangle></sprite>
-        <collisions />
-        <group name="post" char="+" />
-        <group name="across" char="-"><sprite><rectangle><width>wide - margin</width></rectangle></sprite></group>
-        <group name="down" char="|"><sprite><rectangle><height>tall - margin</height></rectangle></sprite></group>
-      </group>
-      <!-- the gaps, a class for each side, so the man knows which side to
-           come in at in the next room -->
-      <group name="exits">
-        <sprite><rectangle><width>wide - margin</width><height>margin</height><color>color.black</color></rectangle></sprite>
-        <drawn>false</drawn>
-        <group name="north" char="n" class="northexit">
-          <collisions><collision object="player"><reset way="north" /><enter way="north" /></collision></collisions>
-        </group>
-        <group name="south" char="s" class="southexit">
-          <collisions><collision object="player"><reset way="south" /><enter way="south" /></collision></collisions>
-        </group>
-        <group name="sides">
-          <sprite><rectangle><width>margin</width><height>tall - margin</height></rectangle></sprite>
-          <group name="west" char="w" class="westexit">
-            <collisions><collision object="player"><reset way="west" /><enter way="west" /></collision></collisions>
-          </group>
-          <group name="east" char="e" class="eastexit">
-            <collisions><collision object="player"><reset way="east" /><enter way="east" /></collision></collisions>
-          </group>
-        </group>
-      </group>
-    </map>
-  </kit>
-  <states>
-    <state name="title">
-      <objects>
-        <object name="title">
-          <sprite><text style="banner"><content>BERSERK</content></text></sprite>
-          <position><x><centered /></x><y>70</y></position>
-        </object>
-        <object name="taunt">
-          <sprite><text><content>Chicken! Fight like a robot!</content><size>30</size><color>color.yellow</color></text></sprite>
-          <position><x><centered /></x><y>205</y></position>
-        </object>
-        <object name="help1">
-          <sprite><text style="help"><content>W A S D or the arrow keys walk, Space fires the way you face</content></text></sprite>
-          <position><x><centered /></x><y>270</y></position>
-        </object>
-        <object name="help2">
-          <sprite><text style="help"><content>The walls are electrified: leave by any gap. P pauses.</content></text></sprite>
-          <position><x><centered /></x><y>305</y></position>
-        </object>
-        <object name="start">
-          <sprite><text style="prompt"><content>Press Space to start</content></text></sprite>
-          <position><x><centered /></x><y>380</y></position>
-        </object>
-      </objects>
-      <inputs>
-        <input button="space"><push state="playing" /></input>
-      </inputs>
-    </state>
-
-    <state name="playing">
-      <objects>
-        <!-- the man. He faces the way he last walked (<facing>), shows it with one of
-             four looks, and shoots that way. -->
-        <object name="player" class="player">
-          <sprite name="down">
-            <bitmap style="player">
-              <row>..***..</row><row>.*.*.*.</row><row>..***..</row><row>...*...</row><row>.*****.</row><row>*..*..*</row><row>*..*..*</row><row>..*.*..</row><row>..*.*..</row><row>..*.*..</row><row>.**.**.</row>
-            </bitmap>
-          </sprite>
-          <sprite name="up">
-            <bitmap style="player">
-              <row>..***..</row><row>.*****.</row><row>..***..</row><row>*..*..*</row><row>*.***.*</row><row>*..*..*</row><row>...*...</row><row>..*.*..</row><row>..*.*..</row><row>..*.*..</row><row>.**.**.</row>
-            </bitmap>
-          </sprite>
-          <sprite name="left">
-            <bitmap style="player">
-              <row>..***..</row><row>.**.**.</row><row>..***..</row><row>...*...</row><row>*****..</row><row>*..*...</row><row>...*...</row><row>..*.*..</row><row>..*.*..</row><row>..*.*..</row><row>.**.**.</row>
-            </bitmap>
-          </sprite>
-          <sprite name="right">
-            <bitmap style="player">
-              <row>..***..</row><row>.**.**.</row><row>..***..</row><row>...*...</row><row>..*****</row><row>...*..*</row><row>...*...</row><row>..*.*..</row><row>..*.*..</row><row>..*.*..</row><row>.**.**.</row>
-            </bitmap>
-          </sprite>
-          <position><x>21</x><y>233</y></position>
-          <facing>right</facing>
-          <collisions>
-            <!-- the walls are electrified, and so is everything else that touches him -->
-            <collision class="wall"><trigger action="lose" /></collision>
-            <collision class="robotshot"><trigger action="lose" /></collision>
-            <collision class="otto"><trigger action="lose" /></collision>
-            <collision class="robot"><trigger action="lose" /></collision>
-            <!-- through an exit (the exit's own rule goes on to the next room):
-                 in at the side opposite, with that doorway shut behind him -->
-            <collision class="northexit">
-              <trigger action="through" />
-              <set variable="player.x">277</set>
-              <set variable="player.y">395</set>
-              <reveal object="southdoor" />
-            </collision>
-            <collision class="southexit">
-              <trigger action="through" />
-              <set variable="player.x">277</set>
-              <set variable="player.y">66</set>
-              <reveal object="northdoor" />
-            </collision>
-            <collision class="westexit">
-              <trigger action="through" />
-              <set variable="player.x">533</set>
-              <reveal object="eastdoor" />
-            </collision>
-            <collision class="eastexit">
-              <trigger action="through" />
-              <reveal object="westdoor" />
-            </collision>
-            <collision edge="all"><stick /></collision>
-          </collisions>
-          <actions>
-            <action name="lose">
-              <dec variable="player.lives">1</dec>
-              <play sound="zap" />
-              <reset />
-              <reset object="bullet" />
-              <despawn object="robotshot" />
-            </action>
-            <!-- one room deeper, and the room tidied: the man back at the
-                 start, the doorways open, until a rule shuts the one he came by -->
-            <action name="through">
-              <inc variable="player.depth">1</inc>
-              <set variable="player.kills">0</set>
-              <play sound="door" />
-              <reset />
-              <reset object="bullet" />
-              <despawn object="robotshot" />
-              <reset object="otto" />
-              <reset object="doors" />
-            </action>
-            <action name="up"><move direction="up">walk</move><become sprite="up" /></action>
-            <action name="down"><move direction="down">walk</move><become sprite="down" /></action>
-            <action name="left"><move direction="left">walk</move><become sprite="left" /></action>
-            <action name="right"><move direction="right">walk</move><become sprite="right" /></action>
-            <action name="gun">
-              <fire object="bullet" />
-              <play sound="shoot" />
-            </action>
-          </actions>
-          <variables>
-            <variable name="score">0</variable>
-            <variable name="lives">3</variable>
-            <variable name="lifepoints">0</variable>
-            <variable name="depth">0</variable>
-            <variable name="kills">0</variable>
-          </variables>
-        </object>
-
-        <!-- the doorway he came in by, shut behind him: electrified like
-             the walls, out of play until he goes through an exit; just
-             inside the gap, so he touches it before the way out -->
-        <group name="doors" class="wall">
-          <sprite><rectangle><width>wide - margin</width><height>margin</height><color>color.blue</color></rectangle></sprite>
-          <active>false</active>
-          <collisions />
-          <member name="northdoor"><position><x>232</x><y>56</y></position></member>
-          <member name="southdoor"><position><x>232</x><y>424</y></position></member>
-          <member name="westdoor">
-            <sprite><rectangle><width>margin</width><height>tall - margin</height></rectangle></sprite>
-            <position><x>8</x><y>184</y></position>
-          </member>
-          <member name="eastdoor">
-            <sprite><rectangle><width>margin</width><height>tall - margin</height></rectangle></sprite>
-            <position><x>552</x><y>184</y></position>
-          </member>
-        </group>
-
-        <!-- his shot: one at a time, like the arcade game -->
-        <object name="bullet" class="bullet">
-          <sprite><rectangle><width>5</width><height>5</height><color>color.green</color></rectangle></sprite>
-          <position><x>0</x><y>0</y></position>
-          <velocity><y>-8</y></velocity>
-          <active>false</active>
-          <collisions>
-            <enabled>false</enabled>
-            <collision edge="all"><die /></collision>
-            <collision class="wall"><die /></collision>
-            <collision class="otto"><die /></collision>
-          </collisions>
-        </object>
-
-        <!-- Evil Otto: comes straight for the man over the walls, cannot be shot -->
-        <object name="otto" class="otto">
-          <sprite>
-            <bitmap>
-              <row>..*****..</row><row>.*.....*.</row><row>*.**.**.*</row><row>*.**.**.*</row><row>*.......*</row><row>*.*...*.*</row><row>*..***..*</row><row>.*.....*.</row><row>..*****..</row>
-              <scale>3</scale>
-              <color>color.yellow</color>
-            </bitmap>
-          </sprite>
-          <position><x>504</x><y>72</y></position>
-          <velocity><x>-1.2</x><y>0.9</y></velocity>
-          <active>false</active>
-          <collisions>
-            <collision edge="all"><bounce /></collision>
-            <collision object="player"><die /></collision>
-          </collisions>
-          <!-- faster once the room has no robot left (a reset puts it back) -->
-          <variables>
-            <variable name="speed">1.1</variable>
-          </variables>
-          <timers>
-            <timer>
-              <every>0.1</every>
-              <chase object="player">otto.speed</chase>
-            </timer>
-          </timers>
-        </object>
-
-        <!-- the score, and the men left -->
-        <object name="score">
-          <sprite><text style="hud"><number>player.score</number><color>color.green</color></text></sprite>
-          <position><x>margin</x><y>margin</y></position>
-        </object>
-        <object name="lives">
-          <sprite><text style="hud"><number>player.lives</number><color>color.green</color></text></sprite>
-          <position><x>window.right - lives.width - margin</x><y>margin</y></position>
-        </object>
-        <object name="liveicon">
-          <sprite>
-            <bitmap style="player">
-              <row>..***..</row><row>.*.*.*.</row><row>..***..</row><row>...*...</row><row>.*****.</row><row>*..*..*</row><row>*..*..*</row><row>..*.*..</row><row>..*.*..</row><row>..*.*..</row><row>.**.**.</row>
-            </bitmap>
-          </sprite>
-          <position><x>window.right - lives.width - margin * 2 - 14</x><y>margin</y></position>
-        </object>
-      </objects>
-
-      <scenes>
-
-        <!-- ======================================================== room 1 -->
-        <scene name="room1">
-          <ways>
-            <way name="north" scene="room3" />
-            <way name="south" scene="room3" />
-            <way name="west" scene="room2" />
-            <way name="east" scene="room2" />
-          </ways>
-          <objects>
-            <map name="maze">
-              <row>+-+-+n+-+-+</row>
-              <row>|         |</row>
-              <row>+ +-+ + + +</row>
-              <row>w   | |   e</row>
-              <row>+ + + +-+ +</row>
-              <row>|     |   |</row>
-              <row>+-+-+s+-+-+</row>
-            </map>
-            <!-- 3 robots, yellow, and they do not fire -->
-            <object name="y1"><position><x>389</x><y>107</y></position></object>
-            <object name="y2"><position><x>501</x><y>363</y></position></object>
-            <object name="y3"><position><x>389</x><y>235</y></position></object>
-          </objects>
-          <!-- Otto comes if the man lingers: sooner the deeper he has gone -->
-          <timers>
-            <timer>
-              <every>
-                <formula>
-                  <largest>
-                    <value>6</value>
-                    <value><subtract><minuend>14</minuend><subtrahend>player.depth</subtrahend></subtract></value>
-                  </largest>
-                </formula>
-              </every>
-              <reveal object="otto" />
-              <play sound="otto" />
-            </timer>
-          </timers>
-        </scene>
-
-        <!-- ======================================================== room 2 -->
-        <scene name="room2">
-          <ways>
-            <way name="north" scene="room4" />
-            <way name="south" scene="room4" />
-            <way name="west" scene="room1" />
-            <way name="east" scene="room1" />
-          </ways>
-          <objects>
-            <map name="maze">
-              <row>+-+-+n+-+-+</row>
-              <row>|   |     |</row>
-              <row>+ + +-+ +-+</row>
-              <row>w   |     e</row>
-              <row>+-+ + + + +</row>
-              <row>|       | |</row>
-              <row>+-+-+s+-+-+</row>
-            </map>
-            <!-- 4 robots, red -->
-            <object name="r1"><position><x>165</x><y>107</y></position></object>
-            <object name="r2"><position><x>389</x><y>235</y></position></object>
-            <object name="r3"><position><x>165</x><y>363</y></position></object>
-            <object name="r4"><position><x>389</x><y>363</y></position></object>
-          </objects>
-          <!-- Otto comes if the man lingers: sooner the deeper he has gone -->
-          <timers>
-            <timer>
-              <every>
-                <formula>
-                  <largest>
-                    <value>6</value>
-                    <value><subtract><minuend>14</minuend><subtrahend>player.depth</subtrahend></subtract></value>
-                  </largest>
-                </formula>
-              </every>
-              <reveal object="otto" />
-              <play sound="otto" />
-            </timer>
-          </timers>
-        </scene>
-
-        <!-- ======================================================== room 3 -->
-        <scene name="room3">
-          <ways>
-            <way name="north" scene="room1" />
-            <way name="south" scene="room1" />
-            <way name="west" scene="room4" />
-            <way name="east" scene="room4" />
-          </ways>
-          <objects>
-            <map name="maze">
-              <row>+-+-+n+-+-+</row>
-              <row>|     |   |</row>
-              <row>+-+ + + + +</row>
-              <row>w   |   | e</row>
-              <row>+ + +-+ + +</row>
-              <row>|   |     |</row>
-              <row>+-+-+s+-+-+</row>
-            </map>
-            <!-- 5 robots, cyan -->
-            <object name="c1"><position><x>165</x><y>107</y></position></object>
-            <object name="c2"><position><x>501</x><y>107</y></position></object>
-            <object name="c3"><position><x>277</x><y>235</y></position></object>
-            <object name="c4"><position><x>165</x><y>363</y></position></object>
-            <object name="c5"><position><x>389</x><y>363</y></position></object>
-          </objects>
-          <!-- Otto comes if the man lingers: sooner the deeper he has gone -->
-          <timers>
-            <timer>
-              <every>
-                <formula>
-                  <largest>
-                    <value>6</value>
-                    <value><subtract><minuend>14</minuend><subtrahend>player.depth</subtrahend></subtract></value>
-                  </largest>
-                </formula>
-              </every>
-              <reveal object="otto" />
-              <play sound="otto" />
-            </timer>
-          </timers>
-        </scene>
-
-        <!-- ======================================================== room 4 -->
-        <scene name="room4">
-          <ways>
-            <way name="north" scene="room2" />
-            <way name="south" scene="room2" />
-            <way name="west" scene="room3" />
-            <way name="east" scene="room3" />
-          </ways>
-          <objects>
-            <map name="maze">
-              <row>+-+-+n+-+-+</row>
-              <row>| |       |</row>
-              <row>+ + +-+-+ +</row>
-              <row>w     |   e</row>
-              <row>+ +-+ + +-+</row>
-              <row>|   |     |</row>
-              <row>+-+-+s+-+-+</row>
-            </map>
-            <!-- 6 robots, green -->
-            <object name="g1"><position><x>165</x><y>107</y></position></object>
-            <object name="g2"><position><x>501</x><y>107</y></position></object>
-            <object name="g3"><position><x>277</x><y>235</y></position></object>
-            <object name="g4"><position><x>389</x><y>235</y></position></object>
-            <object name="g5"><position><x>165</x><y>363</y></position></object>
-            <object name="g6"><position><x>389</x><y>363</y></position></object>
-          </objects>
-          <!-- Otto comes if the man lingers: sooner the deeper he has gone -->
-          <timers>
-            <timer>
-              <every>
-                <formula>
-                  <largest>
-                    <value>6</value>
-                    <value><subtract><minuend>14</minuend><subtrahend>player.depth</subtrahend></subtract></value>
-                  </largest>
-                </formula>
-              </every>
-              <reveal object="otto" />
-              <play sound="otto" />
-            </timer>
-          </timers>
-        </scene>
-      </scenes>
-      <inputs>
-        <input><button>up</button><button>w</button><trigger object="player" action="up" /></input>
-        <input><button>down</button><button>s</button><trigger object="player" action="down" /></input>
-        <input><button>left</button><button>a</button><trigger object="player" action="left" /></input>
-        <input><button>right</button><button>d</button><trigger object="player" action="right" /></input>
-        <input button="space"><trigger object="player" action="gun" /></input>
-        <input><button>p</button><button>escape</button><push state="paused" /></input>
-      </inputs>
-      <conditions>
-        <!-- out of lives -->
-        <condition object="player" variable="lives">
-          <atmost>0</atmost>
-          <push state="gameover" />
-        </condition>
-        <!-- an extra man for every 2000 points: lifepoints is the score since the last one -->
-        <condition object="player" variable="lifepoints">
-          <atleast>2000</atleast>
-          <inc variable="player.lives">1</inc>
-          <dec variable="player.lifepoints">2000</dec>
-          <play sound="extralife" />
-        </condition>
-        <!-- no robot left in the room: ten more for each destroyed -->
-        <condition>
-          <all>
-            <condition class="robot"><remaining>0</remaining></condition>
-            <condition object="player" variable="kills"><atleast>1</atleast></condition>
-          </all>
-          <inc variable="player.score">10 * player.kills</inc>
-          <inc variable="player.lifepoints">10 * player.kills</inc>
-          <set variable="player.kills">0</set>
-          <play sound="bonus" />
-        </condition>
-        <!-- and Otto comes at once, and faster -->
-        <condition class="robot">
-          <remaining>0</remaining>
-          <reveal object="otto" />
-          <set variable="otto.speed">2</set>
-        </condition>
-      </conditions>
-    </state>
-
-    <!-- the room still underneath -->
-    <state name="paused">
-      <objects>
-        <object name="paused">
-          <sprite><text style="banner"><content>PAUSED</content></text></sprite>
-          <position><x><centered /></x><y>150</y></position>
-        </object>
-      </objects>
-      <shows>
-        <show state="playing" />
-      </shows>
-      <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><pop /></input>
-      </inputs>
-    </state>
-
-    <state name="gameover">
-      <objects>
-        <object name="gameover">
-          <sprite><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>
-          <position><x><centered /></x><y>120</y></position>
-        </object>
-        <object name="again">
-          <sprite><text style="prompt"><content>Press Space to play again</content></text></sprite>
-          <position><x><centered /></x><y>300</y></position>
-        </object>
-      </objects>
-      <shows>
-        <show state="playing" />
-      </shows>
-      <inputs>
-        <input button="space"><reset /></input>
-      </inputs>
-    </state>
-  </states>
+  <pictures>
+    <bitmap name="zap-red">
+      <row>..***..</row>
+      <row>.*.*.*.</row>
+      <row>..***..</row>
+      <row>...*...</row>
+      <row>.*****.</row>
+      <row>*..*..*</row>
+      <row>*..*..*</row>
+      <row>..*.*..</row>
+      <row>..*.*..</row>
+      <row>..*.*..</row>
+      <row>.**.**.</row>
+      <scale>2</scale>
+      <color>color.red</color>
+    </bitmap>
+    <bitmap name="zap-white">
+      <row>*.***.*</row>
+      <row>.*.*.*.</row>
+      <row>..***..</row>
+      <row>*..*..*</row>
+      <row>.*****.</row>
+      <row>...*...</row>
+      <row>...*...</row>
+      <row>..*.*..</row>
+      <row>.*...*.</row>
+      <row>*.....*</row>
+      <row>*.....*</row>
+      <scale>2</scale>
+      <color>color.white</color>
+    </bitmap>
+    <bitmap name="zap-yellow">
+      <row>..***..</row>
+      <row>.*.*.*.</row>
+      <row>..***..</row>
+      <row>...*...</row>
+      <row>.*****.</row>
+      <row>*..*..*</row>
+      <row>*..*..*</row>
+      <row>..*.*..</row>
+      <row>..*.*..</row>
+      <row>..*.*..</row>
+      <row>.**.**.</row>
+      <scale>2</scale>
+      <color>color.yellow</color>
+    </bitmap>
+    <bitmap name="zap-cyan">
+      <row>*.***.*</row>
+      <row>.*.*.*.</row>
+      <row>..***..</row>
+      <row>*..*..*</row>
+      <row>.*****.</row>
+      <row>...*...</row>
+      <row>...*...</row>
+      <row>..*.*..</row>
+      <row>.*...*.</row>
+      <row>*.....*</row>
+      <row>*.....*</row>
+      <scale>2</scale>
+      <color>color.cyan</color>
+    </bitmap>
+    <bitmap name="robots-a">
+      <row>.*****.</row><row>.*.*.*.</row><row>.*****.</row><row>..***..</row><row>*******</row><row>*.***.*</row><row>..*.*..</row><row>..*.*..</row><row>.**.**.</row>
+      <scale>2</scale>
+      <color>color.yellow</color>
+    </bitmap>
+    <bitmap name="robots-b">
+      <row>.*****.</row><row>.*.*.*.</row><row>.*****.</row><row>..***..</row><row>.*****.</row><row>*.***.*</row><row>.*...*.</row><row>.*...*.</row><row>**...**</row>
+      <scale>2</scale>
+      <color>color.yellow</color>
+    </bitmap>
+    <bitmap name="player-down" style="player">
+      <row>..***..</row><row>.*.*.*.</row><row>..***..</row><row>...*...</row><row>.*****.</row><row>*..*..*</row><row>*..*..*</row><row>..*.*..</row><row>..*.*..</row><row>..*.*..</row><row>.**.**.</row>
+    </bitmap>
+    <bitmap name="player-up" style="player">
+      <row>..***..</row><row>.*****.</row><row>..***..</row><row>*..*..*</row><row>*.***.*</row><row>*..*..*</row><row>...*...</row><row>..*.*..</row><row>..*.*..</row><row>..*.*..</row><row>.**.**.</row>
+    </bitmap>
+    <bitmap name="player-left" style="player">
+      <row>..***..</row><row>.**.**.</row><row>..***..</row><row>...*...</row><row>*****..</row><row>*..*...</row><row>...*...</row><row>..*.*..</row><row>..*.*..</row><row>..*.*..</row><row>.**.**.</row>
+    </bitmap>
+    <bitmap name="player-right" style="player">
+      <row>..***..</row><row>.**.**.</row><row>..***..</row><row>...*...</row><row>..*****</row><row>...*..*</row><row>...*...</row><row>..*.*..</row><row>..*.*..</row><row>..*.*..</row><row>.**.**.</row>
+    </bitmap>
+    <bitmap name="otto">
+      <row>..*****..</row><row>.*.....*.</row><row>*.**.**.*</row><row>*.**.**.*</row><row>*.......*</row><row>*.*...*.*</row><row>*..***..*</row><row>.*.....*.</row><row>..*****..</row>
+      <scale>3</scale>
+      <color>color.yellow</color>
+    </bitmap>
+  </pictures>
 </game>

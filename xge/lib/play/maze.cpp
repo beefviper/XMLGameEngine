@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <cmath>
 #include <map>
+#include <deque>
 #include <optional>
 #include <string>
 
@@ -39,7 +40,7 @@ namespace xge
 		float distanceSquared(const Vector2f& a, const Vector2f& b) noexcept
 		{
 			const Vector2f apart = a - b;
-			return apart.x * apart.x + apart.y * apart.y;
+			return dotOf(apart, apart);
 		}
 
 		// A map's tiles, and the objects on each (by index), as this frame
@@ -50,14 +51,14 @@ namespace xge
 		class Walker
 		{
 		public:
-			Walker(Object& who, std::vector<Object>& everything, const Grid& map, FrameRules& frameRules)
-				: walker(who), objects(everything), grid(map), rules(frameRules)
+			Walker(Object& who, Maze& part, std::vector<Object>& everything, const Grid& map, FrameRules& frameRules, float stepTime)
+				: walker(who), maze(part), objects(everything), grid(map), rules(frameRules), t(stepTime)
 			{
 			}
 
 			void walk()
 			{
-				Walk& walk = walker.walk;
+				Walk& walk = maze.walk;
 				const Vector2f size = sizeOf(walker);
 				const Vector2f middle = walker.position + size * 0.5f;
 				const int column = static_cast<int>(std::floor((middle.x - grid.origin.x) / grid.tile.x));
@@ -66,15 +67,25 @@ namespace xge
 				speed = onMap ? walk.speed * shareAt(column, row) : walk.speed;
 
 				// Standing still: on a tile, it starts from the middle of it,
-				// any way open (a <go>: only the way wished).
+				// any way open (a <go>: only the way wished). One off the
+				// middle only along that way (Pac-Man, between two tiles)
+				// starts from where it is, and chooses at the next middle.
 				if (walker.velocity.x == 0.0f && walker.velocity.y == 0.0f)
 				{
 					if (!onMap) { return; }
-					walker.position = grid.middle(column, row) - size * 0.5f;
-					if (const auto way = choose(column, row, walk.going, false))
+					const Vector2f tileMiddle = grid.middle(column, row);
+					const auto way = choose(column, row, walk.going, false);
+					const bool across = way && (*way == Direction::Left || *way == Direction::Right);
+					const bool offAlong = way && (across ? middle.y == tileMiddle.y && middle.x != tileMiddle.x
+						: middle.x == tileMiddle.x && middle.y != tileMiddle.y);
+					if (offAlong)
 					{
-						setOff(*way, column, row);
+						walk.chose = false;
+						head(*way);
+						return;
 					}
+					walker.position = tileMiddle - size * 0.5f;
+					if (way) { setOff(*way, column, row); }
 					return;
 				}
 
@@ -112,11 +123,12 @@ namespace xge
 					return;
 				}
 
-				// It chooses in the frame that would take it to (or past) the
+				// It chooses in the step that would take it to (or past) the
 				// middle of the tile.
 				constexpr float slack = 0.01f;
+				const float reach = speed * t;
 				const float ahead = (lane.x - middle.x) * unit(going).x + (lane.y - middle.y) * unit(going).y;
-				if (ahead < -slack || ahead >= speed - slack)
+				if (ahead < -slack || ahead >= reach - slack)
 				{
 					head(going);
 					return;
@@ -134,24 +146,58 @@ namespace xge
 					walker.velocity = {};
 					return;
 				}
-				if (*way != going)
+
+				// A long step passes the middles of the tiles beyond as well,
+				// choosing at each.
+				Vector2f at = lane;
+				Direction now = *way;
+				float left = reach - ahead;
+				int atColumn = column;
+				int atRow = row;
+				for (int passed = 0; passed < kMostTilesAStep; ++passed)
 				{
-					// Round the corner exactly at the middle: as far back along
-					// the new way as it was short of the middle, so this frame's
-					// move goes the whole speed.
-					walker.position = lane - size * 0.5f - unit(*way) * ahead;
+					const Vector2f along = unit(now);
+					const float tileLength = std::abs(along.x) * grid.tile.x + std::abs(along.y) * grid.tile.y;
+					if (!(tileLength < left - slack)) { break; }
+					const int nextColumn = atColumn + static_cast<int>(along.x);
+					const int nextRow = atRow + static_cast<int>(along.y);
+					if (!grid.onMap(nextColumn, nextRow)) { break; }
+					atColumn = nextColumn;
+					atRow = nextRow;
+					at = grid.middle(atColumn, atRow);
+					left -= tileLength;
+					walk.chosenColumn = atColumn;
+					walk.chosenRow = atRow;
+					const auto next = choose(atColumn, atRow, now, true);
+					if (!next)
+					{
+						walker.position = at - size * 0.5f;
+						walker.velocity = {};
+						return;
+					}
+					now = *next;
 				}
-				head(*way);
+
+				// Round the corner exactly at the middle: as far back along
+				// the new way as the step went before it, so this step's
+				// move goes the whole reach and ends `left` past the middle.
+				walker.position = at - size * 0.5f - unit(now) * (reach - left);
+				head(now);
 			}
 
 		private:
 			Object& walker;
+			Maze& maze;
 			std::vector<Object>& objects;
 			const Grid& grid;
 			FrameRules& rules;
+			// The step's length in seconds.
+			float t;
+			// The most tile middles one step passes.
+			static constexpr int kMostTilesAStep = 64;
 
 			// The nearest in play of that name or group, other than the walker.
-			const Object* nearest(const std::string& name) const
+			const Object* nearest(Name name) const
 			{
 				return nearestInPlay(objects, walker, name, [this](const Object& other) { return rules.inPlay(other); });
 			}
@@ -164,9 +210,9 @@ namespace xge
 			// whose class something in play on the tile has, or the whole.
 			float shareAt(int column, int row) const
 			{
-				if (walker.mazeSlows.empty()) { return 1.0f; }
+				if (maze.slows.empty()) { return 1.0f; }
 				const auto& here = grid.at[static_cast<std::size_t>(row) * static_cast<std::size_t>(grid.columns) + static_cast<std::size_t>(column)];
-				for (const MazeSlow& slow : walker.mazeSlows)
+				for (const MazeSlow& slow : maze.slows)
 				{
 					for (const std::size_t index : here)
 					{
@@ -183,7 +229,7 @@ namespace xge
 				for (const std::size_t index : here)
 				{
 					const Object& other = objects[index];
-					for (const MazeWall& wall : walker.mazeWalls)
+					for (const MazeWall& wall : maze.walls)
 					{
 						if (other.objClass == wall.objClass && (wall.sprite.empty() || wall.sprite == walker.lookName()) && rules.inPlay(other))
 						{
@@ -210,7 +256,7 @@ namespace xge
 			// not in play.
 			std::optional<Vector2f> target() const
 			{
-				const CmdHunt& hunt = walker.walk.hunt;
+				const CmdHunt& hunt = maze.walk.hunt;
 				const Object* quarry = nearest(hunt.target);
 				if (!quarry) { return std::nullopt; }
 
@@ -235,7 +281,7 @@ namespace xge
 			// when it stops. A hunter or wanderer at a dead end turns round.
 			std::optional<Direction> choose(int column, int row, Direction going, bool moving) const
 			{
-				const Walk& walk = walker.walk;
+				const Walk& walk = maze.walk;
 				if (walk.mode == Walk::Mode::Go)
 				{
 					if (open(column, row, walk.wish, going, moving)) { return walk.wish; }
@@ -271,6 +317,11 @@ namespace xge
 					return choices.front();
 				}
 
+				if (walk.hunt.search)
+				{
+					if (const std::optional<Direction> way = searched(column, row, choices, *point)) { return way; }
+				}
+
 				std::optional<Direction> best;
 				float bestDistance = 0.0f;
 				for (const Direction way : choices)
@@ -286,26 +337,60 @@ namespace xge
 				return best;
 			}
 
+			// <search />: of the choices, the one whose next tile is fewest
+			// steps from the target's tile (on the map, the nearest tile to
+			// it); none when no choice leads there.
+			std::optional<Direction> searched(int column, int row, const std::vector<Direction>& choices, const Vector2f& point) const
+			{
+				const int toColumn = std::clamp(static_cast<int>(std::floor((point.x - grid.origin.x) / grid.tile.x)), 0, grid.columns - 1);
+				const int toRow = std::clamp(static_cast<int>(std::floor((point.y - grid.origin.y) / grid.tile.y)), 0, grid.rows - 1);
+				Walk& walk = maze.walk;
+				const std::size_t tiles = static_cast<std::size_t>(grid.columns) * static_cast<std::size_t>(grid.rows);
+				if (walk.searchColumn != toColumn || walk.searchRow != toRow || walk.searchSteps.size() != tiles)
+				{
+					walk.searchSteps = mazeDistances(grid.columns, grid.rows, toColumn, toRow, [this](int c, int r) { return blocked(c, r); });
+					walk.searchColumn = toColumn;
+					walk.searchRow = toRow;
+				}
+
+				std::optional<Direction> best;
+				int fewest = 0;
+				for (const Direction way : choices)
+				{
+					const Vector2f step = unit(way);
+					const int nextColumn = column + static_cast<int>(step.x);
+					const int nextRow = row + static_cast<int>(step.y);
+					if (!grid.onMap(nextColumn, nextRow)) { continue; }
+					const int steps = walk.searchSteps[static_cast<std::size_t>(nextRow) * static_cast<std::size_t>(grid.columns) + static_cast<std::size_t>(nextColumn)];
+					if (steps >= 0 && (!best || steps < fewest))
+					{
+						best = way;
+						fewest = steps;
+					}
+				}
+				return best;
+			}
+
 			// Going that way at its speed, facing it.
 			void head(Direction way)
 			{
 				walker.velocity = unit(way) * speed;
-				walker.walk.going = way;
+				maze.walk.going = way;
 				face(way);
 			}
 
 			void setOff(Direction way, int column, int row)
 			{
-				walker.walk.chose = true;
-				walker.walk.chosenColumn = column;
-				walker.walk.chosenRow = row;
+				maze.walk.chose = true;
+				maze.walk.chosenColumn = column;
+				maze.walk.chosenRow = row;
 				head(way);
 			}
 
 			void face(Direction way)
 			{
 				walker.facing = way;
-				if (walker.hasHeading)
+				if (walker.turning.hasHeading)
 				{
 					walker.heading = headingOf(unit(way));
 					walker.showHeading();
@@ -314,39 +399,69 @@ namespace xge
 		};
 	}
 
-	void startGo(Object& walker, const CmdGo& go)
+	std::vector<int> mazeDistances(int columns, int rows, int toColumn, int toRow, const std::function<bool(int, int)>& blocked)
 	{
-		walker.walk.mode = Walk::Mode::Go;
-		walker.walk.speed = go.speed;
-		walker.walk.wish = go.direction;
+		std::vector<int> steps(static_cast<std::size_t>(std::max(0, columns)) * static_cast<std::size_t>(std::max(0, rows)), -1);
+		const auto at = [columns](int column, int row) { return static_cast<std::size_t>(row) * static_cast<std::size_t>(columns) + static_cast<std::size_t>(column); };
+		if (toColumn < 0 || toRow < 0 || toColumn >= columns || toRow >= rows) { return steps; }
+
+		// Out from the target a step at a time: each tile first reached is
+		// as few steps away as it can be.
+		std::deque<std::pair<int, int>> next{ { toColumn, toRow } };
+		steps[at(toColumn, toRow)] = 0;
+		while (!next.empty())
+		{
+			const auto [column, row] = next.front();
+			next.pop_front();
+			for (const Direction way : ways)
+			{
+				const Vector2f step = unit(way);
+				const int c = column + static_cast<int>(step.x);
+				const int r = row + static_cast<int>(step.y);
+				if (c < 0 || r < 0 || c >= columns || r >= rows || steps[at(c, r)] >= 0 || blocked(c, r)) { continue; }
+				steps[at(c, r)] = steps[at(column, row)] + 1;
+				next.emplace_back(c, r);
+			}
+		}
+		return steps;
 	}
 
-	void startHunt(Object& walker, const CmdHunt& hunt)
+	void startGo(Maze& maze, const CmdGo& go)
 	{
-		walker.walk.mode = Walk::Mode::Hunt;
-		walker.walk.speed = hunt.speed;
-		walker.walk.hunt = hunt;
+		maze.walk.mode = Walk::Mode::Go;
+		maze.walk.speed = go.speed;
+		maze.walk.wish = go.direction;
 	}
 
-	void startWander(Object& walker, const CmdWander& wander)
+	void startHunt(Maze& maze, const CmdHunt& hunt)
 	{
-		walker.walk.mode = Walk::Mode::Wander;
-		walker.walk.speed = wander.speed;
+		maze.walk.mode = Walk::Mode::Hunt;
+		maze.walk.speed = hunt.speed;
+		maze.walk.hunt = hunt;
+		maze.walk.searchColumn = -1;
 	}
 
-	void walkMazes(std::vector<Object>& objects, FrameRules& rules)
+	void startWander(Maze& maze, const CmdWander& wander)
 	{
+		maze.walk.mode = Walk::Mode::Wander;
+		maze.walk.speed = wander.speed;
+	}
+
+	void walkMazes(std::vector<Object>& objects, FrameRules& rules, float t)
+	{
+		if (rules.parts().mazes.size() == 0) { return; }
 		for (Object& object : objects)
 		{
-			if (!object.walksMaze() || object.walk.mode == Walk::Mode::None || object.isFollowing() || object.isAirborne() || !rules.inPlay(object))
+			Maze* maze = rules.parts().mazes.find(object.id);
+			if (!maze || maze->walk.mode == Walk::Mode::None || rules.parts().onPaths.has(object.id) || object.isAirborne() || !rules.inPlay(object))
 			{
 				continue;
 			}
 
-			const Grid& grid = rules.mazeGrid(objects, object.mazeMap);
+			const Grid& grid = rules.mazeGrid(objects, maze->map);
 			if (grid.at.empty() || !(grid.tile.x > 0.0f) || !(grid.tile.y > 0.0f)) { continue; }
 
-			Walker(object, objects, grid, rules).walk();
+			Walker(object, *maze, objects, grid, rules, t).walk();
 		}
 	}
 }

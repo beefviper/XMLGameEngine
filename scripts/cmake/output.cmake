@@ -93,13 +93,25 @@ endif()
 # the program into libraries/ and writes libraries/libraries.manifest listing
 # every DLL there. Call it after any other POST_BUILD step that puts DLLs in
 # place (windeployqt) and before any that runs the program (catch_discover_tests).
+#
+# A FOLDER (generated, generated/prototypes) puts it in that folder of
+# output/<config> instead, with its own libraries/ on Windows; on Linux and
+# macOS it finds the shared libraries/ above it.
 function(xge_place_program target)
-	set_target_properties(${target} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${XGE_OUTPUT_DIR}")
+	cmake_parse_arguments(arg "" "FOLDER" "" ${ARGN})
+	set(place "${XGE_OUTPUT_DIR}")
+	set(up "")
+	if (arg_FOLDER)
+		set(place "${XGE_OUTPUT_DIR}/${arg_FOLDER}")
+		string(REGEX REPLACE "[^/]+" ".." up "${arg_FOLDER}")
+		set(up "${up}/")
+	endif()
+	set_target_properties(${target} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${place}")
 
 	if (APPLE)
-		set_target_properties(${target} PROPERTIES BUILD_RPATH "@loader_path/${XGE_LIBRARY_FOLDER}")
+		set_target_properties(${target} PROPERTIES BUILD_RPATH "@loader_path/${up}${XGE_LIBRARY_FOLDER}")
 	elseif (UNIX)
-		set_target_properties(${target} PROPERTIES BUILD_RPATH "$ORIGIN/${XGE_LIBRARY_FOLDER}")
+		set_target_properties(${target} PROPERTIES BUILD_RPATH "$ORIGIN/${up}${XGE_LIBRARY_FOLDER}")
 	endif()
 
 	if (MSVC)

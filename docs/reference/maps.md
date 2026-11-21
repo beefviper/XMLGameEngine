@@ -1,6 +1,6 @@
 # Maps
 
-A `<map>` is level data drawn as text: each `<row>` is a row of tiles, one character a tile, so the file shows the level as it looks. It stands in any `<objects>`, or in the kit. With `<cells />` it is a playfield of cells for grid puzzles and [board games](boards.md).
+A `<map>` is level data drawn as text: each `<row>` is a row of tiles, one character a tile, so the file shows the level as it looks. It stands in any `<objects>`, the top-level one making it a piece. With `<cells />` it is a playfield of cells for grid puzzles and [board games](boards.md).
 
 ## Drawing a map
 
@@ -23,14 +23,14 @@ A `<map>` is level data drawn as text: each `<row>` is a row of tiles, one chara
 
 - `<tile>` is a tile's size, `<position>` the map's top left. Rows must be equally wide.
 - **A group** with `char="x"` has a member in the middle of every tile of that character, named under the map in reading order (`maze.dots.1`). It has no position or members of its own, but everything else a group has, inner groups too.
-- **An object** picks a character found on exactly one tile, where it starts.
+- **An object** picks a character found on exactly one tile, where it starts, or on two side by side, and starts between them (Pac-Man's `@@`, half a tile off the grid as in the arcade). Not on a cell map, where a piece is always on a cell.
 - A character nothing picks is an empty tile; two pieces may not pick one character. Rows are trimmed, so an empty tile at an end is a character nobody picks (Pac-Man's `,`), not a space.
 - The map's name means everything on it (`<reset object="maze" />`).
-- **A map in the kit.** Maps that share their tile, place and pieces (Berserk's rooms) take one kit map and give only what differs, usually the rows: `<map name="maze"><row>+-+x+-+</row> ... </map>`.
+- **A map piece.** Maps that share their tile, place and pieces (Berserk's rooms) take one map piece and give only what differs, usually the rows: `<map name="maze"><row>+-+x+-+</row> ... </map>`.
 
 ## Walking a map
 
-An object with `<maze map="maze">` walks that map's tiles: it keeps to the middle of its lane, chooses its way only in the middle of a tile, and never steps onto a tile that is a wall to it.
+An object with `<maze map="maze">` walks that map's tiles: it keeps to the middle of its lane, chooses its way only in the middle of a tile (at every middle a long step passes), and never steps onto a tile that is a wall to it.
 
 ```xml
 <maze map="maze">
@@ -42,9 +42,10 @@ An object with `<maze map="maze">` walks that map's tiles: it keeps to the middl
 
 - **Walls** are the `<wall>`s: every object of that class on the map in play, optionally only while the walker shows a [look](pictures.md#looks). So ghost eyes go in through a door that stops ghosts.
 - **Slow ground**: on a tile holding an object of that class (drawn or not), it goes at that share of its speed.
-- **How it chooses** is the last [steering verb](commands.md#steering) it was given: `<go>` (a player's stick), `<hunt>` (arcade targeting), `<wander>` (at random).
+- **How it chooses** is the last [steering verb](commands.md#steering) it was given: `<go>` (a player's stick), `<hunt>` (arcade targeting, or with `<search />` the shortest way round the walls), `<wander>` (at random).
 - Off the map (a tunnel) it goes straight on; an edge's `<wrap />` brings it round.
 - It faces the way it goes. `<reverse />` turns it round; `<stop />` or a reset stops it until told again.
+- Standing still, it sets off from the middle of its tile; one between two tiles along the way it sets off (Pac-Man at the start) sets off from where it is.
 - A tile is found from the walker's middle, so any size works; keep it under half a tile a frame.
 
 ## Cells
@@ -91,9 +92,9 @@ A map with `<cells />` is a playfield such as Tetris's well: pieces move a whole
 |---|---|
 | `<hop direction="down" />` | one cell (its content: that many) |
 | `<move direction="left">12<wait>0.2</wait></move>` | held: one step, waits, then 12 cells a second |
-| `<slide direction="down" />` | cell by cell at once until refused (Tetris's hard drop) |
+| `<slide direction="down" />` | cell by cell at once until refused (Tetris's hard drop). `class="tile"`: every piece of that class, the one nearest that way first; refused if none moved (Doubles) |
 | `<turn direction="clockwise" />` | a quarter turn of a shape, once a press |
-| `<cycle />` | each cell of a shape moves on along its outline (Columns) |
+| `<cycle />` | each cell of a shape moves on along its outline (Columns); `direction="backward"` the other way |
 | `<go direction="up">8</go>` | keeps going 8 cells a second until another `<go>` |
 
 - **A refused move is a touch.** A step into a taken cell or off the map is not made, and runs both sides' rules: `<collision class="block" side="bottom">`, `<collision edge="bottom">`. If the rules take away what was in the way (`<despawn />`), the step goes on: that is how Snake eats. A [`<through />`](commands.md#touching) makes the step into the taken cell anyway, the two sharing it.
@@ -126,6 +127,24 @@ Asked after each settle or put:
 - Alike is the same group (a copy is of its piece's group), or with `<alike variable="hue" />` the same value of that variable.
 - `<fall />` drops every loose piece down its column; `<fall class="pill" />` only that class, the rest holding things up.
 - A check runs no `<push>`: set a variable and let a condition answer.
+
+### Pushing, merging and counting
+
+Turn-by-turn puzzles (Crates, Doubles, Minefield) are cell pieces moved by keys and touches:
+
+- **`<shove />`** in a rule for a refused step: the piece in the way is pushed one cell on (its whole shape if it is part of one), and the step goes on. A shove that is itself refused (a crate against a wall) leaves both where they were, so a worker pushes one crate, never two.
+- **`<merge variable="value" />`** in a rule: if the other piece's variable is equal, the other is despawned, this one's variable becomes the sum and the step goes on. A piece merges once a slide.
+- **Maps laid in the same place** (same tile and position) are layers: a piece meets only pieces of its own map, so the worker walks over the floor's spots.
+- **`<here />` and `<around>`** in a `<count>` or a `<trigger class>` name cells: `<here />` this piece's cell, `<around>` the eight round it (`<straight />`: the four beside it; `<alike variable="value" />`: only pieces whose variable equals this one's). Every layer is looked at.
+
+```xml
+<count class="spot" into="self.home"><here /></count>
+<count class="mine" into="self.near"><here /><!-- or --><around /></count>
+<trigger class="square" action="open"><around /></trigger>
+```
+
+- A trigger about the cells around runs each piece once a press, however often it is reached, so a square with no mines near opening those round it floods (Minefield).
+- **`<undo />`** in a key's input puts every piece, look and number back as before the last press that moved a cell piece, as many times as there were such presses. A new scene starts with nothing to undo.
 
 ### A second map: the next-piece box
 

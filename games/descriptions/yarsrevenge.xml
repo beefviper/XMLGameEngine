@@ -15,7 +15,7 @@
 
   W A S D or the arrows fly Yar (two at once go diagonally), Space fires
   his energy missile the way he last flew, and the cannon when it is there,
-  P or Escape pauses, Space starts and plays again.
+  Pause pauses, Space starts and plays again.
 
   How it is written:
   * The shield is a <map>: the cells are drawn as the shape they make, with
@@ -24,8 +24,8 @@
     together; <reset object="shield" /> puts the whole map back.
   * The destroyer missile has a <seek object="yar">; Yar's rule about it
     has unless="zone", so in the zone it does nothing.
-  * The cannon is out of play until a bite <reveal>s it; a timer sets its y
-    to Yar's every frame, and its action fires the blast and puts it away.
+  * The cannon is out of play until a bite <reveal>s it; its y is
+    update="live", level with Yar's every frame, and its action fires the blast and puts it away.
     An object out of play does not act on a key, so Space without the
     cannon fires only Yar's missile.
   * The Swirl does not exist until the Qotile <spawn>s it where it is
@@ -33,6 +33,9 @@
     at that moment, in a straight line, and <despawn>s at an edge or hit.
   * The neutral zone is a column of bands, each an <animation> of two
     bitmaps of colors; the even bands run it the other way round.
+  * Hit, Yar goes out of play and the state hit stands everything still
+    while a burst plays where he was (a <once /> animation); its timer
+    takes the life and puts Yar, the missile and the Swirl back.
   Not in it: the ghost of Yar, the Qotile's ion zone colors, Yar bouncing
   off the shield, the cannon hitting Yar, the levels getting harder.
 -->
@@ -43,42 +46,10 @@
     <height>600</height>
   </window>
   <variables>
-    <variable name="fly">3</variable>
-    <variable name="sway">1</variable>
+    <variable name="fly">180</variable>
+    <variable name="sway">60</variable>
     <variable name="turnround">6</variable>
   </variables>
-  <sounds>
-    <!-- the low buzz the game makes all the while -->
-    <sound name="hum" wave="noise">
-      <loop />
-      <volume>0.05</volume>
-      <note pitch="90">1</note>
-    </sound>
-    <sound name="nibble" wave="square">
-      <volume>0.2</volume>
-      <note pitch="G5">0.03</note>
-    </sound>
-    <sound name="shoot" wave="square">
-      <volume>0.15</volume>
-      <note pitch="C6" to="C5">0.06</note>
-    </sound>
-    <sound name="cannon" wave="noise">
-      <volume>0.3</volume>
-      <note pitch="900" to="200">0.3</note>
-    </sound>
-    <sound name="swirl" wave="sawtooth">
-      <volume>0.2</volume>
-      <note pitch="C3" to="C6">0.5</note>
-    </sound>
-    <sound name="hit" wave="triangle">
-      <volume>0.4</volume>
-      <note pitch="C5" to="C2">0.4</note>
-    </sound>
-    <sound name="boom" wave="noise">
-      <volume>0.5</volume>
-      <note pitch="2000" to="60">1.5</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>90</size><color>color.green</color></style>
     <style name="help"><size>28</size><color>color.white</color></style>
@@ -92,39 +63,39 @@
       <color char="y">color.yellow</color>
     </style>
   </styles>
-  <kit>
+  <objects>
+    <!-- the Zorlon cannon's blast, straight across -->
+    <object name="blast">
+      <sprite><rectangle><width>24</width><height>10</height><color>color.yellow</color></rectangle></sprite>
+      <velocity><x>480</x><y>0</y></velocity>
+      <most>1</most>
+      <collisions>
+        <collision edge="right"><despawn /></collision>
+        <collision class="shield"><despawn /></collision>
+        <collision object="qotile"><despawn /></collision>
+        <collision object="swirl"><despawn /></collision>
+      </collisions>
+    </object>
+    <!-- Yar's energy missile: one at a time, the way he last flew -->
+    <object name="energy">
+      <sprite><rectangle><width>6</width><height>4</height><color>color.white</color></rectangle></sprite>
+      <velocity><x>420</x><y>0</y></velocity>
+      <most>1</most>
+      <collisions>
+        <collision edge="all"><despawn /></collision>
+        <collision class="shield"><despawn /></collision>
+      </collisions>
+    </object>
     <!-- the Swirl: a spinning Qotile that waits a moment, then flies at where Yar is -->
     <object name="swirl">
       <sprite name="one">
-        <bitmap>
-          <row>..**....</row>
-          <row>...**...</row>
-          <row>*...**.*</row>
-          <row>**.**.**</row>
-          <row>**.**.**</row>
-          <row>*.**...*</row>
-          <row>...**...</row>
-          <row>....**..</row>
-          <scale>3</scale>
-          <color>color.magenta</color>
-        </bitmap>
+        <bitmap from="swirl-one" />
       </sprite>
       <sprite name="two">
-        <bitmap>
-          <row>....**..</row>
-          <row>...**...</row>
-          <row>*.**...*</row>
-          <row>**.**.**</row>
-          <row>**.**.**</row>
-          <row>*...**.*</row>
-          <row>...**...</row>
-          <row>..**....</row>
-          <scale>3</scale>
-          <color>color.magenta</color>
-        </bitmap>
+        <bitmap from="swirl-two" />
       </sprite>
       <animation>
-        <interval>0.06</interval>
+        <seconds>0.06</seconds>
         <frame sprite="one" />
         <frame sprite="two" />
       </animation>
@@ -139,28 +110,28 @@
         </collision>
       </collisions>
       <timers>
-        <timer><after>1</after><chase object="yar">4</chase></timer>
+        <timer><after>1</after><chase object="yar">240</chase></timer>
       </timers>
     </object>
-  </kit>
+  </objects>
   <states>
-    <state name="mainmenu">
+    <state name="title">
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>YARS' REVENGE</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 140</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-140</offset></centered></y></position>
         </object>
-        <object name="help">
-          <sprite><text style="help"><content>eat through the shield, then fire the cannon into the qotile</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
-        </object>
-        <object name="keys">
-          <sprite><text style="help"><content>w a s d or the arrows fly, space fires, p pauses</content><color>color.lightgrey</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 10</centered></y></position>
-        </object>
+        <group name="help">
+          <rows>2</rows>
+          <padding><y>50</y></padding>
+          <sprite><text style="help" /></sprite>
+          <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
+          <row number="1"><sprite><text><content>eat through the shield, then fire the cannon into the qotile</content></text></sprite></row>
+          <row number="2"><sprite><text><content>w a s d or the arrows fly, space fires, pause key pauses</content><color>color.lightgrey</color></text></sprite></row>
+        </group>
         <object name="start">
           <sprite><text style="help"><content>spacebar to start</content><size>40</size></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 110</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>110</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
@@ -174,21 +145,13 @@
           <columns>1</columns>
           <rows>10</rows>
           <sprite name="a">
-            <bitmap style="zone">
-              <row>rbgm</row>
-              <row>gmrb</row>
-              <row>bryg</row>
-            </bitmap>
+            <bitmap from="zone-a" />
           </sprite>
           <sprite name="b">
-            <bitmap style="zone">
-              <row>ygbr</row>
-              <row>rbmg</row>
-              <row>gmrb</row>
-            </bitmap>
+            <bitmap from="zone-b" />
           </sprite>
           <animation>
-            <interval>0.05</interval>
+            <seconds>0.05</seconds>
             <frame sprite="a" />
             <frame sprite="b" />
           </animation>
@@ -196,7 +159,7 @@
           <collisions />
           <row><even />
             <animation>
-              <interval>0.05</interval>
+              <seconds>0.05</seconds>
               <frame sprite="b" />
               <frame sprite="a" />
             </animation>
@@ -206,6 +169,8 @@
           <variables>
             <variable name="score">0</variable>
             <variable name="lives">4</variable>
+            <!-- hit: the state hit comes next -->
+            <variable name="hit">0</variable>
           </variables>
         </object>
         <object name="score">
@@ -214,7 +179,7 @@
         </object>
         <object name="lives">
           <sprite><text style="hud"><content>YARS </content><number>player.lives</number></text></sprite>
-          <position><x>window.right - lives.width - 40</x><y>12</y></position>
+          <position><x><right><offset>40</offset></right></x><y>12</y></position>
         </object>
         <!-- the shield, in the shape it is, and the Qotile in its cup -->
         <map name="shield">
@@ -250,16 +215,7 @@
           </group>
           <object name="qotile" char="Q">
             <sprite>
-              <bitmap>
-                <row>..****..</row>
-                <row>.******.</row>
-                <row>**.**.**</row>
-                <row>********</row>
-                <row>.*.**.*.</row>
-                <row>*......*</row>
-                <scale>4</scale>
-                <color>color.red</color>
-              </bitmap>
+              <bitmap from="qotile" />
             </sprite>
             <velocity><x>0</x><y>sway</y></velocity>
             <collisions>
@@ -281,37 +237,13 @@
         </map>
         <object name="yar">
           <sprite name="up">
-            <bitmap>
-              <row>**....**</row>
-              <row>.**..**.</row>
-              <row>..****..</row>
-              <row>.*****o.</row>
-              <row>..****..</row>
-              <row>...**...</row>
-              <row>..*..*..</row>
-              <row>........</row>
-              <scale>3</scale>
-              <color>color.green</color>
-              <color char="o">color.white</color>
-            </bitmap>
+            <bitmap from="yar-up" />
           </sprite>
           <sprite name="down">
-            <bitmap>
-              <row>........</row>
-              <row>........</row>
-              <row>..****..</row>
-              <row>******o*</row>
-              <row>..****..</row>
-              <row>.**..**.</row>
-              <row>**....**</row>
-              <row>........</row>
-              <scale>3</scale>
-              <color>color.green</color>
-              <color char="o">color.white</color>
-            </bitmap>
+            <bitmap from="yar-down" />
           </sprite>
           <animation>
-            <interval>0.08</interval>
+            <seconds>0.08</seconds>
             <frame sprite="up" />
             <frame sprite="down" />
           </animation>
@@ -321,18 +253,12 @@
             <collision edge="horizontal"><stick /></collision>
             <collision edge="vertical"><wrap /></collision>
             <collision object="qotile"><reveal object="cannon" /></collision>
+            <!-- out of play while it bursts (the state hit) -->
             <collision object="missile" unless="zone">
-              <dec variable="player.lives" />
-              <play sound="hit" />
-              <reset />
-              <reset object="missile" />
+              <trigger action="lose" />
             </collision>
             <collision object="swirl">
-              <dec variable="player.lives" />
-              <play sound="hit" />
-              <reset />
-              <reset object="missile" />
-              <reset object="swirl" />
+              <trigger action="lose" />
             </collision>
           </collisions>
           <actions>
@@ -344,43 +270,29 @@
               <fire object="energy" />
               <play sound="shoot" />
             </action>
+            <action name="lose">
+              <die />
+              <play sound="hit" />
+              <set variable="player.hit">1</set>
+            </action>
           </actions>
-        </object>
-        <!-- Yar's energy missile: one at a time, the way he last flew -->
-        <object name="energy">
-          <sprite><rectangle><width>6</width><height>4</height><color>color.white</color></rectangle></sprite>
-          <position><x>0</x><y>0</y></position>
-          <velocity><x>7</x><y>0</y></velocity>
-          <active>false</active>
-          <collisions>
-            <enabled>false</enabled>
-            <collision edge="all"><die /></collision>
-            <collision class="shield"><die /></collision>
-          </collisions>
         </object>
         <!-- the destroyer missile: always turning toward Yar -->
         <object name="missile">
           <sprite><rectangle><width>6</width><height>6</height><color>color.white</color></rectangle></sprite>
           <position><x>700</x><y>296</y></position>
-          <velocity><x>-1.6</x><y>0</y></velocity>
-          <seek object="yar">2</seek>
+          <velocity><x>-96</x><y>0</y></velocity>
+          <seek object="yar">120</seek>
           <collisions />
         </object>
         <!-- the Zorlon cannon at the left edge, level with Yar while it is there -->
         <object name="cannon">
           <sprite>
-            <bitmap>
-              <row>****....</row>
-              <row>********</row>
-              <row>********</row>
-              <row>****....</row>
-              <scale>4</scale>
-              <color>color.yellow</color>
-            </bitmap>
+            <bitmap from="cannon" />
           </sprite>
-          <position><x>0</x><y>292</y></position>
+          <position><x>0</x><y update="live"><add><value>yar.y</value><value>4</value></add></y></position>
           <facing>right</facing>
-          <active>false</active>
+          <waiting />
           <actions>
             <action name="fire">
               <fire object="blast" />
@@ -388,22 +300,6 @@
               <die />
             </action>
           </actions>
-          <timers>
-            <timer><every>0.01</every><set variable="cannon.y">yar.y + 4</set></timer>
-          </timers>
-        </object>
-        <object name="blast">
-          <sprite><rectangle><width>24</width><height>10</height><color>color.yellow</color></rectangle></sprite>
-          <position><x>0</x><y>0</y></position>
-          <velocity><x>8</x><y>0</y></velocity>
-          <active>false</active>
-          <collisions>
-            <enabled>false</enabled>
-            <collision edge="right"><die /></collision>
-            <collision class="shield"><die /></collision>
-            <collision object="qotile"><die /></collision>
-            <collision object="swirl"><die /></collision>
-          </collisions>
         </object>
       </objects>
       <music sound="hum" />
@@ -416,12 +312,16 @@
           <trigger object="cannon" action="fire" />
           <trigger object="yar" action="fire" />
         </input>
-        <input><button>p</button><button>escape</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
+        <condition object="player" variable="hit"><atleast>1</atleast>
+          <set variable="player.hit">0</set>
+          <push state="hit" />
+        </condition>
         <condition object="player" variable="lives">
           <atmost>0</atmost>
-          <push state="gameover" />
+          <push state="over" />
         </condition>
         <condition object="qotile">
           <remaining>0</remaining>
@@ -440,22 +340,61 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
-    <!-- the Qotile hit: a moment to see it, then the shield is back whole -->
-    <state name="destroyed">
+    <!-- hit: the Yar bursts, everything standing still -->
+    <state name="hit">
       <objects>
-        <object name="message">
-          <sprite><text style="banner"><content>QOTILE DESTROYED</content><size>70</size></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
+        <object name="wreck">
+          <sprite name="a"><bitmap from="wreck-a" /></sprite>
+          <sprite name="b"><bitmap from="wreck-b" /></sprite>
+          <sprite name="c"><bitmap from="wreck-c" /></sprite>
+          <sprite name="d"><bitmap from="wreck-d" /></sprite>
+          <animation>
+            <seconds>0.12</seconds>
+            <once />
+            <frame sprite="a" />
+            <frame sprite="b" />
+            <frame sprite="c" />
+            <frame sprite="b" />
+            <frame sprite="c" />
+            <frame sprite="d"><seconds>0.4</seconds></frame>
+          </animation>
+          <position><x update="live">yar.x</x><y update="live">yar.y</y></position>
         </object>
       </objects>
       <shows>
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>p</button><button>escape</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
+      </inputs>
+      <timers>
+        <timer>
+          <after>1.4</after>
+          <dec variable="player.lives" />
+          <reset object="yar" />
+          <reset object="missile" />
+          <reset object="swirl" />
+          <reset object="wreck" />
+          <pop />
+        </timer>
+      </timers>
+    </state>
+    <!-- the Qotile hit: a moment to see it, then the shield is back whole -->
+    <state name="destroyed">
+      <objects>
+        <object name="message">
+          <sprite><text style="banner"><content>QOTILE DESTROYED</content><size>70</size></text></sprite>
+          <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <timers>
         <timer>
@@ -468,15 +407,15 @@
         </timer>
       </timers>
     </state>
-    <state name="gameover">
+    <state name="over">
       <objects>
         <object name="message">
           <sprite><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
         </object>
         <object name="again">
           <sprite><text style="help"><content>spacebar to play again</content><size>40</size></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>70</offset></centered></y></position>
         </object>
       </objects>
       <shows>
@@ -487,4 +426,173 @@
       </inputs>
     </state>
   </states>
+  <sounds>
+    <!-- the low buzz the game makes all the while -->
+    <sound name="hum" wave="noise">
+      <loop />
+      <volume>0.05</volume>
+      <note pitch="90">1</note>
+    </sound>
+    <sound name="nibble" wave="square">
+      <volume>0.2</volume>
+      <note pitch="G5">0.03</note>
+    </sound>
+    <sound name="shoot" wave="square">
+      <volume>0.15</volume>
+      <note pitch="C6" to="C5">0.06</note>
+    </sound>
+    <sound name="cannon" wave="noise">
+      <volume>0.3</volume>
+      <note pitch="900" to="200">0.3</note>
+    </sound>
+    <sound name="swirl" wave="sawtooth">
+      <volume>0.2</volume>
+      <note pitch="C3" to="C6">0.5</note>
+    </sound>
+    <sound name="hit" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="C5" to="C2">0.4</note>
+    </sound>
+    <sound name="boom" wave="noise">
+      <volume>0.5</volume>
+      <note pitch="2000" to="60">1.5</note>
+    </sound>
+  </sounds>
+  <pictures>
+    <!-- a burst, four pictures: a flash, a ball, its pieces flying, the last sparks -->
+    <bitmap name="wreck-a">
+      <row>.........</row>
+      <row>.........</row>
+      <row>....*....</row>
+      <row>...*o*...</row>
+      <row>..*ooo*..</row>
+      <row>...*o*...</row>
+      <row>....*....</row>
+      <row>.........</row>
+      <row>.........</row>
+      <scale>4</scale>
+      <color>color.white</color>
+      <color char="o">color.magenta</color>
+    </bitmap>
+    <bitmap name="wreck-b">
+      <row>.........</row>
+      <row>..*...*..</row>
+      <row>...*o*...</row>
+      <row>..*ooo*..</row>
+      <row>.*oo.oo*.</row>
+      <row>..*ooo*..</row>
+      <row>...*o*...</row>
+      <row>..*...*..</row>
+      <row>.........</row>
+      <scale>4</scale>
+      <color>color.white</color>
+      <color char="o">color.magenta</color>
+    </bitmap>
+    <bitmap name="wreck-c">
+      <row>*...*...*</row>
+      <row>.*.....*.</row>
+      <row>...o.o...</row>
+      <row>..o...o..</row>
+      <row>*.......*</row>
+      <row>..o...o..</row>
+      <row>...o.o...</row>
+      <row>.*.....*.</row>
+      <row>*...*...*</row>
+      <scale>4</scale>
+      <color>color.white</color>
+      <color char="o">color.magenta</color>
+    </bitmap>
+    <bitmap name="wreck-d">
+      <row>o.......o</row>
+      <row>.........</row>
+      <row>.........</row>
+      <row>.........</row>
+      <row>....o....</row>
+      <row>.........</row>
+      <row>.........</row>
+      <row>.........</row>
+      <row>o.......o</row>
+      <scale>4</scale>
+      <color>color.magenta</color>
+      <color char="o">color.magenta</color>
+    </bitmap>
+    <bitmap name="swirl-one">
+      <row>..**....</row>
+      <row>...**...</row>
+      <row>*...**.*</row>
+      <row>**.**.**</row>
+      <row>**.**.**</row>
+      <row>*.**...*</row>
+      <row>...**...</row>
+      <row>....**..</row>
+      <scale>3</scale>
+      <color>color.magenta</color>
+    </bitmap>
+    <bitmap name="swirl-two">
+      <row>....**..</row>
+      <row>...**...</row>
+      <row>*.**...*</row>
+      <row>**.**.**</row>
+      <row>**.**.**</row>
+      <row>*...**.*</row>
+      <row>...**...</row>
+      <row>..**....</row>
+      <scale>3</scale>
+      <color>color.magenta</color>
+    </bitmap>
+    <bitmap name="zone-a" style="zone">
+      <row>rbgm</row>
+      <row>gmrb</row>
+      <row>bryg</row>
+    </bitmap>
+    <bitmap name="zone-b" style="zone">
+      <row>ygbr</row>
+      <row>rbmg</row>
+      <row>gmrb</row>
+    </bitmap>
+    <bitmap name="qotile">
+      <row>..****..</row>
+      <row>.******.</row>
+      <row>**.**.**</row>
+      <row>********</row>
+      <row>.*.**.*.</row>
+      <row>*......*</row>
+      <scale>4</scale>
+      <color>color.red</color>
+    </bitmap>
+    <bitmap name="yar-up">
+      <row>**....**</row>
+      <row>.**..**.</row>
+      <row>..****..</row>
+      <row>.*****o.</row>
+      <row>..****..</row>
+      <row>...**...</row>
+      <row>..*..*..</row>
+      <row>........</row>
+      <scale>3</scale>
+      <color>color.green</color>
+      <color char="o">color.white</color>
+    </bitmap>
+    <bitmap name="yar-down">
+      <row>........</row>
+      <row>........</row>
+      <row>..****..</row>
+      <row>******o*</row>
+      <row>..****..</row>
+      <row>.**..**.</row>
+      <row>**....**</row>
+      <row>........</row>
+      <scale>3</scale>
+      <color>color.green</color>
+      <color char="o">color.white</color>
+    </bitmap>
+    <bitmap name="cannon">
+      <row>****....</row>
+      <row>********</row>
+      <row>********</row>
+      <row>****....</row>
+      <scale>4</scale>
+      <color>color.yellow</color>
+    </bitmap>
+  </pictures>
 </game>

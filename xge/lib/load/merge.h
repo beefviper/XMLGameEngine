@@ -18,7 +18,7 @@ namespace xge
 {
 	// An element of the file copied out of it, so that what something starts
 	// from can be changed by what is written over it, and then read as if it
-	// had been written out whole: a piece of the <kit> taken, an object of a
+	// had been written out whole: a piece of the top-level <objects> taken, an object of a
 	// state or scene that another is from=.
 	struct Element;
 	using ElementPtr = std::shared_ptr<const Element>;
@@ -29,12 +29,20 @@ namespace xge
 		std::vector<std::pair<std::string, std::string>> attributes;
 		std::string text;
 		std::vector<ElementPtr> children;
+		// The line of the file it was copied from, as XmlNode::line (0: not
+		// known, or made by the merge). An element changed by another keeps
+		// the line of the one it started from.
+		int line{ 0 };
 
 		// "" when it has none, as XmlNode::getAttribute.
 		std::string attribute(const std::string& key) const;
 	};
 
 	ElementPtr copyElement(const XmlNode& node);
+
+	// The element `node` views (viewOf), shared, since an element is never
+	// changed once made; a node read from a file is copied (copyElement).
+	ElementPtr elementOf(const XmlNode& node);
 
 	// The element read as an XmlNode, so load/xml reads it like any other.
 	std::unique_ptr<XmlNode> viewOf(const ElementPtr& element);
@@ -56,20 +64,29 @@ namespace xge
 	//   * anything else replaces base's of that tag.
 	ElementPtr changed(const ElementPtr& base, const ElementPtr& over, const std::string& where);
 
+	// The game with every <bitmap from="..."> outside its <pictures> made
+	// the <pictures> bitmap of that name, changed by what it gives itself:
+	// its own <row>s replace all the picture's, a <scale> or <flip> the
+	// picture's, a <color> the picture's of the same char= (or none), and
+	// its attributes the picture's. A sprite's <drawing from="..." /> is
+	// the <pictures> drawing of that name's lines (or polygons), as they are.
+	// So the rest of the file is read as if each picture had been written out
+	// where it is taken.
+	ElementPtr withPictures(const ElementPtr& game);
+
 	// The names an element can be called by: its own, and those of the
 	// groups, members and objects inside it.
 	std::set<std::string> namesIn(const ElementPtr& element);
 
 	class Kit;
 
-	// The objects that a <spawn>, <fire> or <release> in it names, and in a
-	// path it <follow>s, a <keys> set its <inputs keys> take or a
-	// <conditions> set a <condition set> takes.
+	// The objects that a <spawn> or <fire> in it names, and in a
+	// path it <follow>s.
 	std::set<std::string> spawnedIn(const ElementPtr& element, const Kit& kit);
 
-	// The game's <kit>: pieces written once (objects, groups and maps), which
-	// are in play only where something takes them. A piece can be from= an
-	// earlier one.
+	// The pieces, the top-level <objects> (the kit, in the code): written
+	// once (objects, groups and maps), in play only where something takes
+	// them. A piece can be from= an earlier one.
 	class Kit
 	{
 	public:
@@ -91,8 +108,7 @@ namespace xge
 
 		std::vector<std::string> names() const;
 
-		// The game's <path>s, and the <keys> and <conditions> sets of its
-		// <states>, by tag and name, for what they spawn.
+		// The game's <path>s, by tag and name, for what they spawn.
 		void addSet(const std::string& tag, const std::string& name, const ElementPtr& set);
 		ElementPtr setOf(const std::string& tag, const std::string& name) const;
 
@@ -106,11 +122,11 @@ namespace xge
 	// The objects of an <objects>: those of what it is from= (`inherited`),
 	// each changed by an object or group written of the same name (or of
 	// the name of a member or a group inside one of them), then the rest
-	// written, in order, each its own, or a piece of the kit taken (by
+	// written, in order, each its own, or a piece taken (by
 	// from=, or by having the name of a piece or of a named member).
 	std::vector<ElementPtr> layOut(const XmlNode& objects, std::vector<ElementPtr> inherited, const Kit& kit, const std::string& where);
 
-	// A piece of the kit a <spawn>, <fire> or <release> names (in `spawned`,
+	// A piece a <spawn> or <fire> names (in `spawned`,
 	// or in an object of the list), and that nothing in `list` or `seen`
 	// is called, is added to the list as one that does not exist until it is
 	// spawned; and so on for what those name. Alphabetical, round by round.

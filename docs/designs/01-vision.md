@@ -26,13 +26,23 @@
 
 ## The VGDL landscape (reference only)
 
-- Academic VGDL (Ebner et al. 2013; Schaul's `py-vgdl`) is declarative and text-based for 2D arcade games: hierarchical sprite sets with inheritance, a level map with a legend, collision-only interaction rules, win/lose termination sets. No scripting. It became the base of the GVGAI competition (survey: arXiv 1802.10363) and was largely replaced in AI research by Griddly (arXiv 2011.06363, YAML GDY, C++ core). LLMs have since been used to write VGDL directly (arXiv 2404.08706).
+- Academic VGDL (Ebner et al. 2013; Schaul's `py-vgdl`) is declarative and text-based for 2D arcade games: hierarchical sprite sets with inheritance, a level map with a legend, collision-only interaction rules, win/lose termination sets.
+  - No scripting.
+  - It became the base of the GVGAI competition (survey: arXiv 1802.10363) and was largely replaced in AI research by Griddly (arXiv 2011.06363, YAML GDY, C++ core).
+  - LLMs have since been used to write VGDL directly (arXiv 2404.08706).
 - Cousins: GDL (logic-based, verbose, nothing built in; the opposite philosophy), RBG and Ludii (board games), PuzzleScript (find-and-replace rules on a grid; the closest in spirit). Entity-component systems are the nearest structural neighbor.
 - Why the field stayed small: built for one job (benchmark games for AI), a closed vocabulary means a closed language (a new dynamic needs engine code), and each generation is renamed and re-implemented.
-- "No loops or conditionals" is really a production-rule system: the engine's tick is the loop and collision matching is the conditional. The price is the same everywhere: the language stops where its vocabulary runs out. XMLGameEngine makes the same bet, with plain `+ - * /` text and `<formula>` tags carrying per-rule arithmetic.
+- "No loops or conditionals" is really a production-rule system: the engine's tick is the loop and collision matching is the conditional. The price is the same everywhere: the language stops where its vocabulary runs out. XMLGameEngine makes the same bet, with operation tags carrying per-rule arithmetic.
 - Only the arXiv pages for GVGAI, Griddly and the two GitHub repositories were confirmed to exist; other links from the research were never re-checked.
 - Open research angle: how small can a vocabulary be and still describe a class of games.
 
+
+## Keeping the language small
+
+The same thing has happened many times: a first form was built, grew by additions, and was later replaced by something smaller (function-call strings by operation tags, pools by copies, `<kit>` by the top-level `<objects>`, phase numbers by looks, card nouns by holders). Two rules came out of it.
+
+- **When a simpler form lands, finish the job in the same change.** Move every game, remove the old word from the schema, reader, generator, checker and docs, and rename the C++ to match. Each time this was skipped, the old form stayed alive somewhere.
+- **A feature that needs its third addition is a warning sign.** Stop and ask which assumption made the additions necessary. The author's phrase: test the assumptions that only emerged, and reduce like a fraction.
 
 ## Open
 

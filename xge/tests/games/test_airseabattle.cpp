@@ -1,0 +1,247 @@
+// test_airseabattle.cpp
+// XML Game Engine
+// author: beefviper
+// date: Oct 7, 2026
+//
+// Catch2 tests for games/descriptions/airseabattle.xml, played through a real
+// xge::Engine with no window and the keys two players would press: the
+// lanes of planes going round, a gun pointed one of three ways (<set> of
+// its heading) and fired along it, a plane brought down scoring for the right player and coming back
+// (<reveal>), and the clock ending the battle.
+//
+// Window::init() normally measures each object's size once a backend exists;
+// the helper gives every shape the size its sprite implies instead.
+
+#include "engine/engine.h"
+#include "game/game.h"
+#include "window/null.h"
+
+#include <catch2/catch_approx.hpp>
+#include <catch2/catch_test_macros.hpp>
+
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
+using namespace xge;
+using Catch::Approx;
+
+namespace
+{
+	struct AirSeaBattle
+	{
+		Game game{ "descriptions/airseabattle.xml" };
+		Engine engine{ game, std::make_unique<NullWindow>() };
+
+		AirSeaBattle()
+		{
+			for (auto& object : game.getCurrentObjects())
+			{
+				object.size = measureShapeSize(object.drawn.picture);
+			}
+		}
+
+		void tap(KeyCode key)
+		{
+			engine.handleKeyPressed(key);
+			engine.handleKeyReleased(key);
+		}
+
+		void frames(int count)
+		{
+			for (int i = 0; i < count; ++i) { engine.input(); engine.update(xge::kSixtieth); }
+		}
+
+		void hold(KeyCode key, int count)
+		{
+			engine.handleKeyPressed(key);
+			frames(count);
+			engine.handleKeyReleased(key);
+		}
+
+		void start()
+		{
+			tap(KeyCode::Space);
+			REQUIRE(state() == "playing");
+		}
+
+		std::string state() { return game.getCurrentState().name; }
+		float score(const char* gun) { return game.object(gun).variable.at("score"); }
+	};
+}
+
+TEST_CASE("airseabattle.xml loads, and the planes fly in and go round", "[airseabattle]")
+{
+	AirSeaBattle play;
+	CHECK(play.state() == "title");
+	play.start();
+
+	Object& jet = play.game.object("jets.1");
+	CHECK(jet.position.x < 0.0f);
+	play.frames(120);
+	CHECK(jet.position.x > 0.0f);
+	CHECK(jet.position.x < 640.0f);
+
+	// Off the right and back in from the left, in its own lane.
+	play.frames(240);
+	CHECK(jet.isVisible);
+	CHECK(jet.position.x < 400.0f);
+	CHECK(jet.position.y == Approx(60.0f));
+
+	Object& bomber = play.game.object("bombers.1");
+	CHECK(bomber.velocity.x < 0.0f);
+}
+
+TEST_CASE("a gun points left, up or right, and fires along the way it points", "[airseabattle]")
+{
+	AirSeaBattle play;
+	play.start();
+
+	play.tap(KeyCode::W);
+	play.frames(1);
+	const Object& straight = play.game.object("shell1.1");
+	REQUIRE(straight.isVisible);
+	CHECK(straight.velocity.x == Approx(0.0f).margin(0.01f));
+	CHECK(straight.velocity.y == Approx(-360.0f));
+
+	// To the right, at once: 45 degrees, however long the key is held.
+	play.hold(KeyCode::D, 15);
+	CHECK(play.game.object("gun1").heading == Approx(45.0f));
+	play.tap(KeyCode::W);
+	play.frames(1);
+	const Object& slanted = play.game.object("shell1.2");
+	REQUIRE(slanted.isVisible);
+	CHECK(slanted.velocity.x == Approx(254.56f).margin(0.05f));
+	CHECK(slanted.velocity.y == Approx(-254.56f).margin(0.05f));
+
+	// Two in the air is all there is.
+	play.tap(KeyCode::W);
+	play.frames(1);
+	CHECK(play.game.object("shell1.1").isVisible);
+	CHECK(play.game.object("shell1.2").isVisible);
+	CHECK(play.game.find("shell1.3") == nullptr);
+
+	// Left and back up; player two's gun is its own.
+	play.tap(KeyCode::A);
+	CHECK(play.game.object("gun1").heading == Approx(315.0f));
+	play.tap(KeyCode::S);
+	CHECK(play.game.object("gun1").heading == Approx(0.0f));
+	play.tap(KeyCode::Right);
+	CHECK(play.game.object("gun2").heading == Approx(45.0f));
+	CHECK(play.game.object("gun1").heading == Approx(0.0f));
+}
+
+TEST_CASE("a plane shot down scores for whoever shot it, and comes back", "[airseabattle]")
+{
+	AirSeaBattle play;
+	play.start();
+
+	// A blimp over player two's gun.
+	Object& blimp = play.game.object("blimps.1");
+	const Object& gun = play.game.object("gun2");
+	blimp.position.x = gun.position.x + gun.size.x / 2 - blimp.size.x / 2;
+	blimp.velocity = { 0.0f, 0.0f };
+	play.tap(KeyCode::Up);
+	play.frames(60);
+	CHECK(play.score("gun2") == 1);
+	CHECK(play.score("gun1") == 0);
+	CHECK_FALSE(blimp.isVisible);
+
+	// Back off the side it came from.
+	play.frames(90);
+	CHECK(blimp.isVisible);
+	CHECK(blimp.position.x < 30.0f);
+	CHECK(blimp.position.y == Approx(200.0f));
+}
+
+TEST_CASE("the battle lasts 2:16", "[airseabattle]")
+{
+	AirSeaBattle play;
+	play.start();
+	play.frames(120);
+	CHECK(play.game.object("status").variable.at("time") == Approx(134.0f));
+
+	play.tap(KeyCode::Pause);
+	CHECK(play.state() == "paused");
+	play.frames(120);
+	play.tap(KeyCode::Pause);
+	CHECK(play.game.object("status").variable.at("time") == Approx(134.0f));
+
+	play.game.object("status").variable.at("time") = 1;
+	play.frames(61);
+	CHECK(play.state() == "over");
+	CHECK(play.game.object("over.outcome").lookName() == "draw"); // no hits either side
+	play.tap(KeyCode::Space);
+	CHECK(play.state() == "title");
+}
+
+TEST_CASE("at time up the scores are compared, and the screen says who won", "[airseabattle][conditions]")
+{
+	const auto endWith = [](float yellow, float white)
+	{
+		AirSeaBattle play;
+		play.start();
+		play.game.object("gun1").variable.at("score") = yellow;
+		play.game.object("gun2").variable.at("score") = white;
+		play.game.object("status").variable.at("time") = 1;
+		play.frames(62);
+		REQUIRE(play.state() == "over");
+		return play.game.object("over.outcome").lookName();
+	};
+
+	CHECK(endWith(7, 3) == "yellow");
+	CHECK(endWith(3, 7) == "white");
+	CHECK(endWith(5, 5) == "draw");
+	CHECK(endWith(0, 1) == "white");
+}
+
+TEST_CASE("paused, the battle is drawn still: the planes stop and the clock never shows", "[airseabattle]")
+{
+	AirSeaBattle play;
+	play.start();
+	play.frames(30);
+	Object& jet = play.game.object("jets.1");
+	const Vector2f jetAt = jet.position;
+
+	play.tap(KeyCode::Pause);
+	REQUIRE(play.state() == "paused");
+	play.frames(60);
+	CHECK(jet.position == jetAt);
+	CHECK(play.game.isStill(jet));
+	CHECK(play.game.isStill(play.game.object("gun1")));
+	CHECK(play.game.isStill(play.game.object("clock")));
+	CHECK_FALSE(play.game.isShown(jet));
+	CHECK(play.game.isShown(play.game.object("paused")));
+	CHECK_FALSE(play.game.isStill(play.game.object("shell1"))); // never fired itself
+
+	// The clock's holder runs in the battle but is never drawn.
+	Object& status = play.game.object("status");
+	CHECK(status.ownerState == "playing");
+	CHECK_FALSE(status.isDrawn);
+
+	play.tap(KeyCode::Pause);
+	REQUIRE(play.state() == "playing");
+	play.frames(1);
+	CHECK(jet.position != jetAt);
+}
+
+TEST_CASE("each end screen draws the battle still under TIME UP and its message", "[airseabattle]")
+{
+	AirSeaBattle play;
+	CHECK(play.game.object("keys.1").ownerState == "title");
+	CHECK(play.game.object("timeup").ownerState.empty());
+	CHECK_FALSE(play.game.isShown(play.game.object("timeup")));
+
+	play.start();
+	play.game.object("gun1").variable.at("score") = 7;
+	play.game.object("status").variable.at("time") = 1;
+	play.frames(62);
+	REQUIRE(play.state() == "over");
+	CHECK(play.game.isStill(play.game.object("score1")));
+	CHECK(play.game.isStill(play.game.object("sea")));
+	CHECK(play.game.isShown(play.game.object("timeup")));
+	CHECK(play.game.isShown(play.game.object("again")));
+	CHECK(play.game.isShown(play.game.object("outcome")));
+	CHECK(play.game.object("outcome").lookName() == "yellow");
+}

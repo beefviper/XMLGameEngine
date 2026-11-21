@@ -11,19 +11,27 @@ One `<game>` root, its children in this order (the schema enforces it):
       xsi:noNamespaceSchemaLocation="../xgedef.xsd">
   <window name="Pong"> ... </window>   <!-- size, scale, background, frame rate -->
   <variables> ... </variables>         <!-- numbers the whole game uses -->
-  <sounds> ... </sounds>               <!-- optional: notes and music -->
   <paths> ... </paths>                 <!-- optional: routes objects fly -->
   <styles> ... </styles>               <!-- optional: named text and bitmap looks -->
-  <kit> ... </kit>                     <!-- optional: pieces written once, taken below -->
-  <objects> ... </objects>             <!-- optional: what every state shares -->
+  <patterns> ... </patterns>           <!-- optional: what cards may make -->
+  <objects> ... </objects>             <!-- optional: pieces, written once, never in play themselves -->
   <keeps> ... </keeps>                 <!-- optional: what a new game passes over -->
-  <states> ... </states>               <!-- title, playing, paused, game over ... -->
+  <states>                             <!-- title, playing, paused, game over ... -->
+    <objects> ... </objects>           <!-- optional: what every state shares -->
+    <state> ... </state>
+  </states>
+  <sounds> ... </sounds>               <!-- optional: notes and music -->
+  <pictures> ... </pictures>           <!-- optional: bitmaps and drawings sprites take, sheets -->
   <demo> ... </demo>                   <!-- optional: a recorded game -->
 </game>
 ```
 
-- **Where an object is written says how long it lasts:** the game's `<objects>` for the whole game, a [state](states.md#states)'s while it is current, a [scene](states.md#scenes)'s while that scene is current. What is written once and used in several places, or only spawned, goes in the [`<kit>`](objects.md#the-kit-and-from).
-- A game with no `xsi:noNamespaceSchemaLocation` is not validated. The schema checks shape and where each command may go; the loader checks names and meaning once everything is read.
+- **How it plays comes first; what it sounds and looks like last.** Sounds and pictures are long and say little about the rules, so they sit under the states, and a sprite takes a picture by name: `<bitmap from="ship" />` ([bitmaps](pictures.md#bitmaps)).
+
+- **Where an object is written says how long it lasts,** and the deeper it is written, the shorter: the top-level `<objects>` never (they are [pieces](objects.md#pieces-and-from), taken below or only spawned), `<states>`' own `<objects>` for the whole game, a [state](states.md#states)'s while it is current, a [scene](states.md#scenes)'s while that scene is current. An object is only a definition; where it stands says whether, and for how long, it is in play.
+- **Numbers are a second:** speeds are pixels a second, pulls pixels a second each second, turns degrees a second, held counts added each second, and `<drag>` and `<grip>` half-lives in seconds ([units](../designs/29-time.md#units)).
+- A game with no `xsi:noNamespaceSchemaLocation` is checked against the engine's own: the `xgedef.xsd` beside it or in the nearest folder above it, else the one in the working folder (the games folder). The schema checks shape and where each command may go; the loader checks names and meaning once everything is read.
+- **A load error says where:** the path to the tag, then the line of the file it is on: `object 'frog' > <sprite> > <polygon>: unknown <corner>; ... (line 8)`. A misspelt name found once everything is read gives the line of what holds it (the rule, condition, object or state; for a command in an action, its object). A member of a group gives its group's line; a generated program, which has no file, gives none.
 
 ## The format's one rule
 
@@ -34,12 +42,14 @@ One `<game>` root, its children in this order (the schema enforces it):
 <collision edge="left"> ... </collision>                  <!-- picks -->
 <radius>10</radius>                                       <!-- a number: content -->
 <chase object="hero">2</chase>                            <!-- a verb's one number: content -->
-<jump direction="up">rowgap<seconds>leap</seconds></jump> <!-- more numbers: named tags -->
+<hop direction="up">rowgap<seconds>hoptime</seconds></hop> <!-- more numbers: named tags -->
 ```
 
 - Attributes are labels that cannot be computed: `name`, `class`, `object`, `variable`, `state`, `action`, `button`, `edge`, `direction`, `unless`, `sound`, `wave`, `pitch`, `to`.
 - What something *does* is a list of command tags, run in the order written. No `;`-separated strings.
-- An attribute holds one name. Several are an element each, written first: `<button>a</button><button>left</button>`, `<keys>`, a row's `<number>`. A note's `pitch="F#4"` is one standard name, like a colour's.
+- An attribute holds one name. Several are an element each, written first: `<button>a</button><button>left</button>`, a row's `<number>`. A note's `pitch="F#4"` is one standard name, like a colour's.
+- The schema holds such a name as `xs:NMTOKEN`: letters, digits and `.` `-` `_`, no spaces, so `class="left paddle"` is refused. The window's `name` (its title) and a note's `pitch` and `to` are the exceptions.
+- Every tag is documented in the schema itself (`xs:documentation`), so an editor with an XML extension shows what a tag does on hover and in completion lists.
 
 ## Values
 
@@ -47,37 +57,39 @@ Every number in a game (a position, a speed, a size, a threshold) is a **value**
 
 | Form | Example |
 |---|---|
-| arithmetic as text | `window.width.center - title.width / 2` |
+| a number or a name | `-7`, `window.right`, `paddle.width` |
 | `<random>` | `<random><min>-7</min><max>7</max></random>` |
-| `<formula>` | the same arithmetic as tags ([below](#arithmetic-as-tags)) |
+| an operation | arithmetic as tags: `<subtract><value>window.right</value><value>4</value></subtract>` ([below](#arithmetic-as-tags)) |
 
-- **Text** is numbers, names, `+ - * /`, a sign in front and brackets, worked out by the engine's own `load/calc`. Nothing more: a function call (`max(6, x)`) stops the load and says to write a `<formula>`.
-- **`<random>`** draws from min to max (either order; each end text or a `<formula>`).
+- **Text** is one number (a sign in front allowed) or one name, nothing more. Arithmetic in text (`window.right - 4`) stops the load and shows the operation to write instead (`<subtract><value>window.right</value><value>4</value></subtract>`); so does a function call (`max(6, x)`).
+- **Sides:** in an `<x>`, `<left>` and `<right>` put that side of the object on the window's side, `<top>` and `<bottom>` likewise in a `<y>`, with an optional `<offset>` measured in from the side: `<right><offset>12</offset></right>`.
+- **`<random>`** draws from min to max (either order; each end a number, a name or an operation).
 
 ### When a value is worked out
 
 Once, at load, except:
 
 - a timer's `<every>` and `<after>`, worked out again each time it starts over;
-- a position naming a text's or image's size, finished once the window measures it and again whenever that size changes;
-- a command's values and a condition's test, read as they run ([below](#values-read-when-used)).
+- a position naming a text's size, worked out again whenever that text's words change its size;
+- a command's values and a condition's test, read as they run ([below](#values-read-when-used));
+- an object's number written `update="live"` ([below](#live-numbers-of-an-object)).
 
-A `<random>` is drawn at load and again whenever its object comes back into play: a reset (of it, its scene or the game), a `<reveal>`, `<release>` or `<fire>`, or a new copy. So each Pong serve is new. A game-level `<random>` is drawn once; entering a scene draws nothing.
+A `<random>` is drawn at load and again whenever its object comes back into play: a reset (of it, its scene or the game), a `<reveal>`, or a new copy. So each Pong serve is new. A game-level `<random>` is drawn once; entering a scene draws nothing.
 
 ### Names a value can use
 
 | Name | Value |
 |---|---|
 | `window.top`, `window.left` | 0 |
-| `window.bottom`, `window.right` | the window's height, its width |
+| `window.bottom`, `window.right` | the window's height, its width (its bottom and right edges) |
+| `window.height`, `window.width` | the same numbers, for a size |
 | `window.width.center`, `window.height.center` | half the width, half the height |
 | a game `<variable>` | its value (worked out in the order written) |
 | `object.variable` | that object's variable, wherever the object is written |
 | `object.width`, `object.height` | its size (its sprite's footprint); meant for `<position>` |
 | `object.timer` | a named object timer's [time left](timers.md#time-left) |
-| `object.x`, `.y`, `.velocity.x`, `.velocity.y`, `.heading`, `.altitude`, `.rise`, `.light`, `.blink` | **live numbers**: its top left, how it goes, its [height](pictures.md#height-and-shadows), [light](pictures.md#light-and-dark), [blinking](pictures.md#poses-mirror-grip-and-blinking) |
-| `self.` before any of these | in an object's own rules, actions and timers, the object running it |
-| `touch.x`, `.y`, `.along`, `.depth`, `.normal.x`, `.normal.y` | in a rule about another object: the point, where along the object's side (0 to 1), how deep, the way out of the other |
+| `object.x`, `.y`, `.velocity.x`, `.velocity.y`, `.heading`, `.altitude`, `.rise`, `.light`, `.blink`, `.speed` | **live numbers**: its top left, how it goes (`speed` how fast, read only; in a touch rule, as the touch happened), its [height](pictures.md#height-and-shadows), [light](pictures.md#light-and-dark), [blinking](pictures.md#poses-mirror-grip-and-blinking) |
+| `self.` before any of these | in an object's own rules, actions, timers and numbers, the object running it |
 
 An object's own `<variable>` named like a size or live number (`width`, `x`) wins over it.
 
@@ -87,34 +99,44 @@ A command whose numbers name something that changes is worked out each time it r
 
 ```xml
 <inc variable="player.score">self.worth</inc>                     <!-- the worth of the fish just landed -->
-<set variable="shark.velocity.x">shark.velocity.x * 1.1</set>     <!-- speed the shark up -->
+<set variable="shark.velocity.x"><multiply><value>shark.velocity.x</value><value>1.1</value></multiply></set>     <!-- speed the shark up -->
 <above>gun2.score</above>                                         <!-- a test following gun 2's score -->
 ```
 
-Every other value is fixed at load, and one that is not a command's (a position, a size) naming a live number stops the load, since nothing is anywhere yet.
+Every other value is fixed at load, and one that is not a command's (a position, a size) naming a live number stops the load, since nothing is anywhere yet, unless it is `update="live"`.
+
+### Live numbers of an object
+
+`update="live"` on an object's `<variable>`, a half of its `<position>`, its `<heading>` or an animation's `<seconds>` ([animation](pictures.md#animation)) works it out again every frame from what it reads, after the move and before the conditions, and as the game starts. Left out (or `update="once"`), it is worked out once, as ever.
+
+```xml
+<position><x update="live"><add><value>player.x</value><value>18</value></add></x><y>0</y></position>      <!-- Demon Attack's shot, steered by the cannon -->
+<heading update="live"><subtract><value>self.level</value><value><multiply><value>self.side</value><value>self.elevation</value></multiply></value></subtract></heading>  <!-- Cannon Hill's barrel follows its elevation -->
+<variable name="tipx" update="live"><add>...<sine><value>self.heading</value></sine>...</add></variable>
+```
+
+- It may read anything a command can: live numbers, other variables, `self`, an operation. A group's live half is worked out for each member, its place in the group added.
+- No command can change it: a `<set>`, `<inc>`, `<dec>` or `<copy into>` naming it stops the load. Change what it reads instead. A live half is put back each frame whatever moved it; the other half moves as ever.
+- Its heading and position are worked out before its variables, so a variable can read them. One reading another live number gets it as it was worked out this frame if that came first, else as it was last frame.
+- Use it for what follows something (a steered shot, a part riding a turret, a number made from others). A snapshot (what the bet was, the power just fired) or a start that then changes (fuel that burns) stays once.
 
 ### Arithmetic as tags
 
-A `<formula>` is one operation whose operands are elements, each a name, a number, a `<random>` or another operation. Precedence is the nesting, so nothing is parsed. Plain sums stay text; what text cannot say is a formula.
+An operation is written straight in a value. Its operands are `<value>`s, each a name, a number, a `<random>` or another operation. Precedence is the nesting, so nothing is parsed, and a game turned into another language keeps its order.
 
 ```xml
 <x>
-  <formula>
-    <subtract>
-      <minuend>window.width.center</minuend>
-      <subtrahend><divide><dividend>title.width</dividend><divisor>2</divisor></divide></subtrahend>
-    </subtract>
-  </formula>
+  <subtract>
+    <value>window.width.center</value>
+    <value><divide><value>title.width</value><value>2</value></divide></value>
+  </subtract>
 </x>
 ```
 
 | Operation | Operands | Gives |
 |---|---|---|
-| `<add>` | `<augend>`, `<addend>`s | sum |
-| `<subtract>` | `<minuend>`, `<subtrahend>`s | difference |
-| `<multiply>` | `<multiplicand>`, `<multiplier>`s | product |
-| `<divide>` | `<dividend>`, `<divisor>`s | quotient |
-| `<remainder>` | `<dividend>`, one `<divisor>` | what is left, from 0 up to the divisor (-1 of 4 is 3) |
+| `<add>`, `<subtract>`, `<multiply>`, `<divide>` | two or more `<value>`s | sum, difference, product, quotient |
+| `<remainder>` | two `<value>`s | what is left of the first, from 0 up to the second (-1 of 4 is 3) |
 | `<smallest>`, `<largest>` | two or more `<value>`s | the smallest, the largest |
 | `<absolute>`, `<negate>`, `<sign>` | one `<value>` | without its sign; turned over; -1, 0 or 1 |
 | `<floor>`, `<ceiling>`, `<round>` | one `<value>` | down, up, nearest (a half away from 0) |
@@ -123,9 +145,10 @@ A `<formula>` is one operation whose operands are elements, each a name, a numbe
 | `<compare>` | `<value>`, then one of `<above>`, `<below>`, `<atleast>`, `<atmost>`, `<equal>` | 1 if it passes, else 0 |
 
 - An operand is a **name or a number**, never an expression.
-- Several second operands chain left to right: `a - b - c` is one `<subtract>` with two `<subtrahend>`s.
+- The first value is combined with each of the others in turn: `a - b - c` is one `<subtract>` of three `<value>`s.
 - `<compare>` uses a [condition's test words](states.md#conditions). Pac-Man chases for ever from wave four: `20 + 100000 ×` a `<compare><value>mode.waves</value><atleast>4</atleast></compare>`.
-- **Dividing by 0.** A divisor certainly 0 at load stops the load, naming the `<divide>`. One that is 0 only because it is not known yet (another object's variable, an unmeasured text) gives 0, and a position or interval made from it is worked out again later. While running, it gives 0 and one warning per place.
+- **Dividing by 0** in a `<divide>`. A divisor certainly 0 at load stops the load, naming the `<divide>`. One that is 0 only because it is not known yet (another object's variable) gives 0, and a position or interval made from it is worked out again later. While running, it gives 0 and one warning per place.
+- **Too big a number.** A value that comes out as infinity or not a number at load (`1e30 * 1e30`) stops the load.
 
 ## Names
 
@@ -142,7 +165,7 @@ Names are dotted, and every dot means "inside":
 
 - **Inside out.** A name is looked for from where it is written: the scene's own, the state's, the game's, then as the end of exactly one path. So inside a scene `robots` means its own, and `hero` means `playing.hero` anywhere.
 - **Every scene's.** A scene's object also answers to `state.name` (`playing.robots`), the robots of whichever scene is met. Where a short name could mean two things the shortest path wins; two as short stop the load.
-- A name given twice where both can be seen, or two scenes of one name, stop the load.
+- A name given twice where both can be seen stops the load: two objects, groups or maps of one name in one `<objects>` (changing one is for what a `from=` state or scene, or a piece, gave), two states of one name, or two scenes of one name in a state.
 - A reference splits at its **last** dot into owner and variable.
 - `class="..."` puts an object in a kind that rules and conditions match, as in CSS: a name picks one object, a class all of its kind.
 
@@ -152,18 +175,18 @@ Names are dotted, and every dot means "inside":
 
 | Element | Default | Meaning |
 |---|---|---|
-| `<width>`, `<height>` | required | the game's size in pixels, plain whole numbers |
+| `<width>`, `<height>` | required | the game's size in pixels, plain whole numbers, 1 or more |
 | `<scale>` | 1 | each game pixel drawn this many window pixels across. Mario Bros. is 256 by 224 at `<scale>3</scale>`. The mouse is read back in game pixels |
 | `<background>` | `color.black` | a [colour](#colours) |
-| `<fullscreen>` | `false` | |
-| `<framerate>` | 60 | frames a second, up to 255. It is how often the whole engine runs, keys and timers too, so a slow game keeps 60 and steps on a timer |
+| `<fullscreen />` | a window | the whole screen |
+| `<framerate>` | 60 | the most frames a second, 1 or more. Each frame plays the time that passed, so the game's speed does not change with it; a slow game keeps 60 and steps on a timer |
 
 ## Variables
 
 ```xml
 <variables>
   <variable name="margin">30</variable>
-  <variable name="paddle">margin * 4</variable>
+  <variable name="paddle"><multiply><value>margin</value><value>4</value></multiply></variable>
   <variable name="start"><random><min>1</min><max>3</max></random></variable>
 </variables>
 ```

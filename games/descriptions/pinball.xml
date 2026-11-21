@@ -10,7 +10,7 @@
   top (light all three for a bonus). Three balls.
 
   A or Left works the left flipper, D or Right the right one, Space held then
-  let go shoots, P or Escape pauses, Space starts and plays again.
+  let go shoots, Pause pauses, Space starts and plays again.
 
   It is the game the third stage of tables and tracks was made for:
   * A flipper is a <line> turned about its <pivot>, the hinge at one end:
@@ -18,8 +18,8 @@
     turns it up its <degrees> (clockwise or counterclockwise) in a stroke <seconds> long while its key is
     held: from still, fastest half way, slowing to a stop at the top. Let
     go, it comes back down to where it started the same way.
-  * The frame's sweep follows the swing: the flipper's turn and the ball's
-    move are looked at together through the frame, so a ball is struck
+  * The step's sweep follows the swing: the flipper's turn and the ball's
+    move are looked at together through the step, so a ball is struck
     wherever the flipper meets it, however fast either goes.
   * The flipper's rule <knock>s the ball, which has a <mass>: the flipper
     lends the speed of the point it strikes with, its turn times how far
@@ -31,9 +31,10 @@
   * The ball has a little <friction>: wedged between a raised flipper and
     the slope above it, it comes to rest, perfectly still, until the
     flipper drops and it rolls down it.
-  * The plunger is a key's three moments: held (on="hold") pulls it back a
-    little more every frame, let go (on="release") shoots the ball from it,
-    both only while the ball sits on it (its loaded look).
+  * The plunger is a key's three moments: held (on="hold") pulls it back,
+    120 power a second up to 100, let go (on="release") shoots the ball
+    from it at 240 and 8.4 a power pixels a second, both only while the
+    ball sits on it (its loaded look).
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
@@ -46,34 +47,18 @@
     <variable name="radius">6</variable>
     <variable name="laneX">445</variable>
     <variable name="plungerTop">600</variable>
-    <variable name="pull">2</variable>
+    <variable name="pull">120</variable>
     <variable name="most">100</variable>
-    <variable name="shot">0.14</variable>
+    <variable name="shot">8.4</variable>
     <variable name="balls">3</variable>
   </variables>
-  <sounds>
-    <sound name="flip"><volume>0.2</volume><note pitch="C3">0.03</note></sound>
-    <sound name="wall"><volume>0.1</volume><note pitch="C4">0.02</note></sound>
-    <sound name="bumper" wave="triangle"><volume>0.35</volume><note pitch="E6">0.05</note></sound>
-    <sound name="sling" wave="triangle"><volume>0.3</volume><note pitch="B5">0.04</note></sound>
-    <sound name="lane" wave="triangle"><volume>0.3</volume><note pitch="G5">0.06</note></sound>
-    <sound name="shoot"><volume>0.3</volume><note pitch="G3">0.06</note></sound>
-    <sound name="bonus" wave="triangle">
-      <volume>0.4</volume>
-      <note pitch="C5">0.08</note>
-      <note pitch="E5">0.08</note>
-      <note pitch="G5">0.08</note>
-      <note pitch="C6">0.16</note>
-    </sound>
-    <sound name="drain"><volume>0.3</volume><note pitch="E3">0.12</note><note pitch="C3">0.2</note></sound>
-  </sounds>
   <styles>
     <style name="banner"><size>80</size><color>color.yellow</color></style>
     <style name="prompt"><size>34</size></style>
     <style name="help"><size>24</size></style>
     <style name="hud"><size>22</size><color>color.lightgrey</color></style>
   </styles>
-  <kit>
+  <objects>
     <!-- a round bumper: kicks the ball off faster than it came, and lights -->
     <object name="bumper" class="bumper">
       <sprite name="dark"><circle><radius>18</radius><color>color.red</color></circle></sprite>
@@ -117,31 +102,31 @@
         <collision class="ball"><knock>0.3</knock></collision>
       </collisions>
     </object>
-  </kit>
-  <objects>
-    <object name="again">
-      <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
-      <position><x><centered /></x><y><centered>window.height.center + 90</centered></y></position>
-    </object>
   </objects>
   <states>
+    <objects>
+      <object name="again">
+        <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
+        <position><x><centered /></x><y><centered><offset>90</offset></centered></y></position>
+      </object>
+    </objects>
     <state name="title">
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>PINBALL</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 140</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-140</offset></centered></y></position>
         </object>
-        <object name="help">
-          <sprite><text style="help"><content>three balls: light the three lanes for a bonus</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
-        </object>
-        <object name="keys">
-          <sprite><text style="help"><content>a and d or the arrows flip, hold spacebar and let go to shoot</content><color>color.lightgrey</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 6</centered></y></position>
-        </object>
+        <group name="help">
+          <rows>2</rows>
+          <padding><y>46</y></padding>
+          <sprite><text style="help" /></sprite>
+          <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
+          <row number="1"><sprite><text><content>three balls: light the three lanes for a bonus</content></text></sprite></row>
+          <row number="2"><sprite><text><content>a and d or the arrows flip, hold spacebar and let go to shoot</content><color>color.lightgrey</color></text></sprite></row>
+        </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 110</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>110</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
@@ -242,11 +227,22 @@
           <actions>
             <action name="pull">
               <inc variable="plunger.power">pull</inc>
-              <set variable="plunger.power"><formula><smallest><value>plunger.power</value><value>most</value></smallest></formula></set>
-              <set variable="plunger.y">plungerTop + plunger.power / 5</set>
+              <set variable="plunger.power"><smallest><value>plunger.power</value><value>most</value></smallest></set>
+              <set variable="plunger.y">
+                <add>
+                  <value>plungerTop</value>
+                  <value><divide><value>plunger.power</value><value>5</value></divide></value>
+                </add>
+              </set>
             </action>
             <action name="shoot">
-              <set variable="ball.velocity.y">0 - 4 - plunger.power * shot</set>
+              <set variable="ball.velocity.y">
+                <subtract>
+                  <value>0</value>
+                  <value>240</value>
+                  <value><multiply><value>plunger.power</value><value>shot</value></multiply></value>
+                </subtract>
+              </set>
               <set variable="plunger.power">0</set>
               <set variable="plunger.y">plungerTop</set>
               <become sprite="empty" />
@@ -260,8 +256,13 @@
 
         <object name="ball" class="ball">
           <sprite><circle><radius>radius</radius><color>color.white</color></circle></sprite>
-          <position><x>laneX - radius</x><y>plungerTop - radius * 2</y></position>
-          <acceleration><x>0</x><y>0.2</y></acceleration>
+          <position><x><subtract><value>laneX</value><value>radius</value></subtract></x><y>
+            <subtract>
+              <value>plungerTop</value>
+              <value><multiply><value>radius</value><value>2</value></multiply></value>
+            </subtract>
+          </y></position>
+          <acceleration><x>0</x><y>720</y></acceleration>
           <friction>0.05</friction>
           <mass>1</mass>
           <collisions>
@@ -284,8 +285,13 @@
             <collision edge="bottom">
               <play sound="drain" />
               <dec variable="table.balls" />
-              <set variable="self.x">laneX - radius</set>
-              <set variable="self.y">plungerTop - radius * 2</set>
+              <set variable="self.x"><subtract><value>laneX</value><value>radius</value></subtract></set>
+              <set variable="self.y">
+                <subtract>
+                  <value>plungerTop</value>
+                  <value><multiply><value>radius</value><value>2</value></multiply></value>
+                </subtract>
+              </set>
               <set variable="self.velocity.x">0</set>
               <set variable="self.velocity.y">0</set>
             </collision>
@@ -297,7 +303,7 @@
         <input><button>d</button><button>right</button><trigger object="rightflipper" action="flip" /><play sound="flip" /></input>
         <input button="space" on="hold"><trigger object="plunger" action="pull" from="loaded" /></input>
         <input button="space" on="release"><trigger object="plunger" action="shoot" from="loaded" /></input>
-        <input><button>p</button><button>escape</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <!-- all three lanes lit: a bonus, a flash, and dark again -->
@@ -328,7 +334,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>p</button><button>escape</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
 
@@ -336,11 +342,11 @@
       <objects>
         <object name="message">
           <sprite><text style="banner"><content>GAME OVER</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 90</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-90</offset></centered></y></position>
         </object>
         <object name="final">
           <sprite><text style="prompt"><content>SCORE</content><number>table.score</number></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center</centered></y></position>
+          <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
       <shows>
@@ -352,4 +358,21 @@
       </inputs>
     </state>
   </states>
+  <sounds>
+    <sound name="flip"><volume>0.2</volume><note pitch="C3">0.03</note></sound>
+    <sound name="wall"><volume>0.1</volume><note pitch="C4">0.02</note></sound>
+    <!-- a bumper rings like a bell: struck, then dying away -->
+    <sound name="bumper" wave="triangle"><volume>0.35</volume><decay>0.4</decay><note pitch="E6">0.4</note></sound>
+    <sound name="sling" wave="triangle"><volume>0.3</volume><note pitch="B5">0.04</note></sound>
+    <sound name="lane" wave="triangle"><volume>0.3</volume><note pitch="G5">0.06</note></sound>
+    <sound name="shoot"><volume>0.3</volume><note pitch="G3">0.06</note></sound>
+    <sound name="bonus" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="C5">0.08</note>
+      <note pitch="E5">0.08</note>
+      <note pitch="G5">0.08</note>
+      <note pitch="C6">0.16</note>
+    </sound>
+    <sound name="drain"><volume>0.3</volume><note pitch="E3">0.12</note><note pitch="C3">0.2</note></sound>
+  </sounds>
 </game>

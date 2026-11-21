@@ -1,0 +1,46 @@
+// slide.cpp
+// XML Game Engine
+// author: beefviper
+// date: Nov 10, 2026
+
+#include "verbs/verb.h"
+#include "game/game.h"
+#include "load/reading.h"
+
+namespace xge
+{
+	// <slide>: As far as it can go one way over the cells.
+	static void readSlide(const XmlNode& node, const std::string& where, WrittenCommand&)
+	{
+		requireAttribute(node, "direction", where);
+	}
+
+	static Command makeSlide(const WrittenCommand& written, const ValueEvaluator&)
+	{
+		return CmdSlide{ directionFromName(written.direction, written.verb), written.objClass };
+	}
+
+	static bool runSlide(const CmdSlide& slide, const Doer& doer)
+	{
+		Game& game = doer.game();
+		if (!slide.objClass.empty()) { return game.cellMaps().slideClass(slide.objClass, slide.direction); }
+		if (doer.self && doer.self->onCells) { game.cellMaps().slideCells(*doer.self, slide.direction); }
+		return true;
+	}
+
+	static void printSlide(std::ostream& o, const CmdSlide& slide)
+	{
+		o << "slide." << ((slide.direction == Direction::Up) ? "up" : (slide.direction == Direction::Down) ? "down" : (slide.direction == Direction::Left) ? "left" : "right");
+		if (!slide.objClass.empty()) { o << "(" << slide.objClass << ")"; }
+	}
+
+	extern const Verb slideVerb;
+	const Verb slideVerb{
+		.name = "slide",
+		.forms = { { "<slide>", places::self, kindOf<CmdSlide>() } },
+		.read = readSlide,
+		.make = makeSlide,
+		.run = runAs<runSlide>,
+		.print = printAs<printSlide>,
+	};
+}

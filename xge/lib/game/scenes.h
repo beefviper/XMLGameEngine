@@ -14,7 +14,7 @@ namespace xge
 	// read from its file and one a generated program wrote out.
 	//
 	// Each scene's objects are made: what it is from= first, then, in the
-	// order written, the pieces it takes from its state's kit (or from that
+	// order written, the pieces it takes from its state's pieces (or from that
 	// scene) with what it changes in them, and its own. Each copy is its own
 	// object, named by its path: the state, the scene and the name as
 	// written (playing.room1.robots.3); a state's own objects by the state and
@@ -43,5 +43,5 @@ namespace xge
 	// state before it, a change of an object the copy has not got, and a
 	// copy of a state with scenes stop the load (std::runtime_error). Run
 	// before layOutScenes, so the copies are named by their own state.
-	void takeStates(std::vector<RawState>& states);
+	void takeStates(std::vector<WrittenState>& states);
 }

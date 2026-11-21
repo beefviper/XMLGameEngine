@@ -7,14 +7,14 @@
 - **Problem:** a Frogger lane is three logs sharing shape, speed, row and rule, differing only in start. As separate objects, 42 of Frogger's 59 objects repeated their neighbours.
 - **Chosen: a `<group>` beside `<object>`, with one rule: whatever a member leaves out it takes from its group.** Then it must be complete like an object. Position and velocity can come in halves (the group gives `<y>`, each member `<x>`).
 - A member may give its own sprites, animation, position and velocity, never collisions, actions, variables or timers: members act alike, and one that acts differently is an object beside the group.
-- **Members are ordinary objects.** A group is read as one raw object per member; the engine remembers only `groupName`. The group's name means every member wherever a name is taken.
+- **Members are ordinary objects.** A group is read as one written object per member; the engine remembers only `groupName`. The group's name means every member wherever a name is taken.
 - Frogger and Space Race got about 30% smaller.
 
 | Option | Verdict |
 |---|---|
 | **One group, members override what differs** | Chosen: one rule |
 | Group position as an origin | Reads worse, hides off-screen starts |
-| Reusable named templates | A different idea (opt-in parts; later the [kit](13-kit.md)) |
+| Reusable named templates | A different idea (opt-in parts; later [pieces](13-pieces.md)) |
 | Members overriding collisions or actions | Not allowed |
 
 ## Columns and rows
@@ -25,6 +25,7 @@
 - **A sprite that changes one thing gives only that** (`<rectangle><color>color.orange</color></rectangle>`); another shape must be complete. This partial-sprite merge is what later made nesting possible.
 - **The gap is `<padding>`**, not `<x><inc>3</inc></x>`: a verb inside a value would break the format's one rule.
 - **A row and a column changing the same thing in one cell is an error**, not "the later wins". A `<cell>` beats both.
+- **A cell knows its place:** its `column` and `row` are variables of its own, and `<columns name>`/`<rows name>` add a second name. This began as the card engine's suit and rank; made general, a pack is just a grid group and a card game names the axes it reads.
 - A slot is its row's sprite size; a bigger cell sits centred and its neighbours do not move. A picture shared by many cells is drawn once (`drawOnce`).
 - Open: a named row or column, picking a range, a cell changing its collisions.
 
@@ -41,10 +42,10 @@
 ## Maps
 
 - **Problem:** Pac-Man's maze is hundreds of pieces; as groups the file would not show the maze.
-- **Chosen: `<map>`, rows of characters.** Pieces pick their character with `char=`; a group gets a member on every tile of it, an object takes the one tile it is on. Any character can be any piece.
+- **Chosen: `<map>`, rows of characters.** Pieces pick their character with `char=`; a group gets a member on every tile of it, an object takes the one tile it is on, or starts between two side by side (Pac-Man starts between two tiles in the arcade; a second character for "half a tile right" was the other way, and the doubled character reads as what it is). Any character can be any piece.
 - A map's members are named under the map (`maze.dots.17`), so two maps can each have `walls`; the group's own name still means all of them.
-- The layout is shared code (`RawMap`, `tilesOf`, `placeOnMap`), so a generated game lays a map out the same.
-- Rejected: one element per piece kind, a separate legend. Open: a map taking pieces one by one from the kit.
+- The layout is shared code (`WrittenMap`, `tilesOf`, `placeOnMap`), so a generated game lays a map out the same.
+- Rejected: one element per piece kind, a separate legend. Open: a map taking pieces one by one from the pieces.
 
 ## Cells
 

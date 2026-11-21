@@ -449,7 +449,7 @@ namespace xge
 		auto object = [this, i]() -> Object& { return game().getCurrentObjects()[i]; };
 		const Object& first = object();
 
-		QString summary = text(shapeName(first.picture.kind));
+		QString summary = text(shapeName(first.drawn.picture->kind));
 		if (!first.objClass.empty())
 		{
 			summary += "  [" + text(first.objClass) + "]";
@@ -459,7 +459,7 @@ namespace xge
 
 		addText(node, tr("class"),
 			[object]() { return text(object().objClass); },
-			[object](const QString& value) { object().objClass = value.toStdString(); });
+			[this, object](const QString& value) { object().objClass = xge::Name::of(value.toStdString()); });
 		addBool(node, tr("visible"),
 			[object]() { return object().isVisible ? 1.0 : 0.0; },
 			[object](double value) { object().isVisible = value != 0; });
@@ -482,12 +482,12 @@ namespace xge
 		addBool(collision, tr("enabled"),
 			[object]() { return object().collisionsOn ? 1.0 : 0.0; },
 			[object](double value) { object().collisionsOn = value != 0; });
-		addInfo(collision, tr("type"), first.collisionData.type == CollisionType::Pixel ? tr("pixel") : tr("box"));
-		addInfo(collision, tr("rules about other objects"), QString::number(first.collisionData.others.size()));
-		addInfo(collision, tr("top"), commandsText(first.collisionData.edges[edgeIndex(Edge::Top)].commands));
-		addInfo(collision, tr("bottom"), commandsText(first.collisionData.edges[edgeIndex(Edge::Bottom)].commands));
-		addInfo(collision, tr("left"), commandsText(first.collisionData.edges[edgeIndex(Edge::Left)].commands));
-		addInfo(collision, tr("right"), commandsText(first.collisionData.edges[edgeIndex(Edge::Right)].commands));
+		addInfo(collision, tr("type"), first.kind->collisionData.type == CollisionType::Pixel ? tr("pixel") : tr("box"));
+		addInfo(collision, tr("rules about other objects"), QString::number(first.kind->collisionData.others.size()));
+		addInfo(collision, tr("top"), commandsText(first.kind->collisionData.edges[edgeIndex(Edge::Top)].commands));
+		addInfo(collision, tr("bottom"), commandsText(first.kind->collisionData.edges[edgeIndex(Edge::Bottom)].commands));
+		addInfo(collision, tr("left"), commandsText(first.kind->collisionData.edges[edgeIndex(Edge::Left)].commands));
+		addInfo(collision, tr("right"), commandsText(first.kind->collisionData.edges[edgeIndex(Edge::Right)].commands));
 
 		if (!first.variable.empty())
 		{
@@ -496,22 +496,22 @@ namespace xge
 			{
 				const std::string variableName = entry.first;
 				addFloat(variables, text(variableName),
-					[object, variableName]() { return static_cast<double>(object().variable[variableName]); },
+					[object, variableName]() { return static_cast<double>(object().variable.at(variableName)); },
 					[this, object, variableName](double v) { game().setVariable(object().name, variableName, static_cast<float>(v)); },
 					1, 2);
 			}
 		}
 
-		if (!first.action.empty())
+		if (!first.kind->action.empty())
 		{
-			auto* actions = addNode(node, tr("actions"), tr("%1").arg(first.action.size()));
-			for (const auto& entry : first.action)
+			auto* actions = addNode(node, tr("actions"), tr("%1").arg(first.kind->action.size()));
+			for (const auto& entry : first.kind->action)
 			{
 				addInfo(actions, text(entry.first), commandsText(entry.second));
 			}
 		}
 
-		for (const TextPiece& piece : first.textPieces)
+		for (const TextPiece& piece : game().textPiecesOf(first))
 		{
 			if (!piece.owner.empty())
 			{
@@ -524,19 +524,20 @@ namespace xge
 	{
 		auto object = [this, i]() -> Object& { return game().getCurrentObjects()[i]; };
 		const Object& first = object();
-		auto* sprite = addNode(parent, tr("sprite"), text(shapeName(first.picture.kind)));
+		auto* sprite = addNode(parent, tr("sprite"), text(shapeName(first.drawn.picture->kind)));
 
 		// A part of the picture that is a number, and one that is text
 		// (`part` gives it); either way the object's picture is built again
-		// (visualDirty).
+		// (visualDirty) and its size is the new picture's.
 		auto addParamNumber = [&](const QString& name, auto part, bool whole)
 		{
 			using Number = std::remove_reference_t<decltype(part(std::declval<Picture&>()))>;
-			auto get = [object, part]() { return static_cast<double>(part(object().picture)); };
+			auto get = [object, part]() { Picture shown = object().drawn.picture; return static_cast<double>(part(shown)); };
 			auto set = [object, part](double v)
 			{
-				part(object().picture) = static_cast<Number>(v);
-				object().visualDirty = true;
+				part(object().drawn.picture.edit()) = static_cast<Number>(v);
+				object().drawn.visualDirty = true;
+				object().size = object().pictureSize();
 			};
 
 			if (whole)
@@ -552,34 +553,47 @@ namespace xge
 		auto addParamText = [&](const QString& name, std::string Picture::* part)
 		{
 			addText(sprite, name,
-				[object, part]() { return text(object().picture.*part); },
+				[object, part]() { return text(object().drawn.picture.shows().*part); },
 				[object, part](const QString& value)
 				{
-					object().picture.*part = value.toStdString();
-					object().visualDirty = true;
+					object().drawn.picture.edit().*part = value.toStdString();
+					object().drawn.visualDirty = true;
+					object().size = object().pictureSize();
 				});
 		};
 
-		switch (first.picture.kind)
+		auto addParamName = [&](const QString& name, Name Picture::* part)
+		{
+			addText(sprite, name,
+				[object, part]() { return text(object().drawn.picture.shows().*part); },
+				[this, object, part](const QString& value)
+				{
+					object().drawn.picture.edit().*part = xge::Name::of(value.toStdString());
+					object().drawn.visualDirty = true;
+					object().size = object().pictureSize();
+				});
+		};
+
+		switch (first.drawn.picture->kind)
 		{
 		case ShapeKind::Circle:
 			addParamNumber(tr("radius"), [](Picture& picture) -> float& { return picture.radius; }, false);
-			addParamText(tr("color"), &Picture::color);
+			addParamName(tr("color"), &Picture::color);
 			break;
 		case ShapeKind::Rectangle:
 			addParamNumber(tr("width"), [](Picture& picture) -> float& { return picture.size.x; }, false);
 			addParamNumber(tr("height"), [](Picture& picture) -> float& { return picture.size.y; }, false);
-			addParamText(tr("color"), &Picture::color);
+			addParamName(tr("color"), &Picture::color);
 			break;
 		case ShapeKind::Text:
 			addParamText(tr("content"), &Picture::text);
 			addParamNumber(tr("size"), [](Picture& picture) -> int& { return picture.textSize; }, true);
-			addParamText(tr("color"), &Picture::color);
+			addParamName(tr("color"), &Picture::color);
 			break;
 		case ShapeKind::Image:
-			addInfo(sprite, tr("file"), text(first.picture.file));
-			if (first.picture.flipHorizontal) { addInfo(sprite, tr("flip"), tr("horizontal")); }
-			if (first.picture.flipVertical) { addInfo(sprite, tr("flip"), tr("vertical")); }
+			addInfo(sprite, tr("file"), text(first.drawn.picture->file));
+			if (first.drawn.picture->flipHorizontal) { addInfo(sprite, tr("flip"), tr("horizontal")); }
+			if (first.drawn.picture->flipVertical) { addInfo(sprite, tr("flip"), tr("vertical")); }
 			break;
 		case ShapeKind::Line:
 			addInfo(sprite, tr("drawn from"), tr("pixels"));

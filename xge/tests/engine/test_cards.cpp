@@ -1,0 +1,2220 @@
+// test_cards.cpp
+// XML Game Engine
+// author: beefviper
+// date: Nov 1, 2026
+//
+// Catch2 tests for cards: a pack laid out as a group, holders and their
+// rules, the deal, and a picker that picks, places and puts back, game by
+// game.
+
+#include "game/random.h"
+#include "played.h"
+#include "scratch.h"
+
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_string.hpp>
+
+#include <cstdint>
+#include <filesystem>
+#include <fstream>
+#include <optional>
+#include <sstream>
+#include <string>
+#include <utility>
+#include <vector>
+
+using namespace xge;
+using played::Played;
+
+namespace
+{
+	// A held member's row or column in its pack, from 1.
+	int cardAxis(const xge::Object& item, const char* axis)
+	{
+		const auto value = item.variable.findText(axis);
+		return value == item.variable.end() ? 0 : static_cast<int>(value->second);
+	}
+
+	struct Table : Played
+	{
+		Table() : Played("descriptions/klondike.xml")
+		{
+			tap(KeyCode::Space);
+			frames(2);
+		}
+
+		Object& holder(const std::string& name) { return get(name); }
+		Object& hand() { return get("hand"); }
+		Object& item(int number) { return *game.holders().itemAt(number); }
+		Object& top(const std::string& name) { return item(holderOf(name).items.back()); }
+	};
+}
+
+TEST_CASE("klondike.xml: the deal: a staircase of columns, their tops face up, the rest in the stock", "[cards]")
+{
+	Table table;
+	int total = 0;
+	for (int column = 1; column <= 7; ++column)
+	{
+		Object& holder = table.holder("columns." + std::to_string(column) + ".1");
+		const std::vector<int>& items = table.holderOf(holder).items;
+		REQUIRE(items.size() == static_cast<std::size_t>(column));
+		total += column;
+		for (std::size_t i = 0; i < items.size(); ++i)
+		{
+			CHECK(table.game.itemOf(table.item(items[i])).faceUp == (i + 1 == items.size()));
+		}
+		CHECK(table.top("columns." + std::to_string(column) + ".1").lookName() == "face");
+	}
+	CHECK(total == 28);
+	CHECK(table.holderOf("stock").items.size() == 24);
+	CHECK(table.holderOf("stock").itemCount == 24.0f);
+}
+
+namespace
+{
+	// Klondike's pack is a group: a card's suit is its row (spades,
+	// hearts, clubs, diamonds) and its rank its column (A to K).
+	const std::vector<std::string> klondikeSuits{ "spades", "hearts", "clubs", "diamonds" };
+	const std::vector<std::string> klondikeRanks{ "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K" };
+
+	int numberIn(const std::vector<std::string>& names, const std::string& name)
+	{
+		return static_cast<int>(std::find(names.begin(), names.end(), name) - names.begin()) + 1;
+	}
+
+	// The card of that suit and rank.
+	int cardOf(Table& table, const std::string& suit, const std::string& rank)
+	{
+		for (Object& object : table.game.getCurrentObjects())
+		{
+			if (table.game.itemOf(object).is && cardAxis(object, "row") == numberIn(klondikeSuits, suit) && cardAxis(object, "column") == numberIn(klondikeRanks, rank)) { return table.game.itemOf(object).number; }
+		}
+		return 0;
+	}
+
+	// Every holder emptied, then these cards (bottom first, face up) on each.
+	void setUp(Table& table, const std::vector<std::pair<std::string, std::vector<std::pair<std::string, std::string>>>>& holders)
+	{
+		for (Object& object : table.game.getCurrentObjects())
+		{
+			if (table.isHolder(object)) { table.holderOf(object).items.clear(); table.holderOf(object).itemCount = 0.0f; }
+		}
+		for (const auto& [name, items] : holders)
+		{
+			Holder& holder = table.holderOf(name);
+			for (const auto& [suit, rank] : items)
+			{
+				const int number = cardOf(table, suit, rank);
+				table.game.holders().turnItem(table.item(number), true);
+				holder.items.push_back(number);
+			}
+			holder.itemCount = static_cast<float>(holder.items.size());
+		}
+		table.game.holders().layOutItems();
+	}
+
+	void pointAt(Table& table, const std::string& holder, int at = -1)
+	{
+		Object& hand = table.hand();
+		table.handOf(hand).holder = table.holder(holder).name;
+		table.handOf(hand).at = at < 0 ? static_cast<int>(table.holderOf(holder).items.size()) - 1 : at;
+		table.handOf(hand).mouse = false;
+	}
+
+	void space(Table& table)
+	{
+		table.tap(KeyCode::Space);
+		table.frames(1);
+	}
+
+	std::string topOf(Table& table, const std::string& holder)
+	{
+		const std::vector<int>& items = table.holderOf(holder).items;
+		if (items.empty()) { return ""; }
+		const Object& item = table.item(items.back());
+		return klondikeRanks[static_cast<std::size_t>(cardAxis(item, "column") - 1)] + " " + klondikeSuits[static_cast<std::size_t>(cardAxis(item, "row") - 1)];
+	}
+}
+
+TEST_CASE("klondike.xml: the stock deals to the waste face up, and empty, takes the waste back face down", "[cards]")
+{
+	Table table;
+	const int first = table.holderOf("stock").items.back();
+	pointAt(table, "stock");
+	space(table);
+	CHECK(table.holderOf("stock").items.size() == 23);
+	REQUIRE(table.holderOf("waste").items.size() == 1);
+	CHECK(table.holderOf("waste").items.back() == first);
+	CHECK(table.game.itemOf(table.item(first)).faceUp);
+	CHECK(table.hand().lookName() == "free");
+	for (int i = 0; i < 23; ++i) { space(table); }
+	CHECK(table.holderOf("stock").items.empty());
+	CHECK(table.holderOf("waste").items.size() == 24);
+	space(table);
+	CHECK(table.holderOf("waste").items.empty());
+	REQUIRE(table.holderOf("stock").items.size() == 24);
+	CHECK(table.holderOf("stock").items.back() == first);
+	CHECK_FALSE(table.game.itemOf(table.item(first)).faceUp);
+}
+
+TEST_CASE("klondike.xml: a column takes a card one lower of the other colour, an empty one only a king", "[cards]")
+{
+	Table table;
+	setUp(table, { { "waste", { { "hearts", "9" } } }, { "columns.1.1", { { "spades", "10" } } }, { "columns.2.1", { { "clubs", "10" } } } });
+	pointAt(table, "waste");
+	space(table);
+	REQUIRE(table.hand().lookName() == "held");
+	CHECK(table.holderOf("waste").items.empty());
+	// Onto an empty column: refused, still held.
+	pointAt(table, "columns.3.1");
+	space(table);
+	CHECK(table.hand().lookName() == "held");
+	CHECK(table.holderOf("columns.3.1").items.empty());
+	pointAt(table, "columns.1.1");
+	space(table);
+	CHECK(table.hand().lookName() == "free");
+	CHECK(topOf(table, "columns.1.1") == "9 hearts");
+	// A black 9 does not go on the black 10.
+	setUp(table, { { "waste", { { "spades", "9" } } }, { "columns.2.1", { { "clubs", "10" } } } });
+	pointAt(table, "waste");
+	space(table);
+	pointAt(table, "columns.2.1");
+	space(table);
+	CHECK(table.hand().lookName() == "held");
+	// Put back.
+	table.tap(KeyCode::X);
+	table.frames(1);
+	CHECK(table.hand().lookName() == "free");
+	CHECK(topOf(table, "waste") == "9 spades");
+	// A king on an empty column.
+	setUp(table, { { "waste", { { "diamonds", "K" } } } });
+	pointAt(table, "waste");
+	space(table);
+	pointAt(table, "columns.4.1");
+	space(table);
+	CHECK(topOf(table, "columns.4.1") == "K diamonds");
+}
+
+TEST_CASE("klondike.xml: a foundation takes an ace, then the same suit up, one card at a time", "[cards]")
+{
+	Table table;
+	setUp(table, { { "waste", { { "hearts", "2" }, { "hearts", "A" } } }, { "columns.1.1", { { "clubs", "3" }, { "hearts", "2" } } } });
+	// The ace home by F, then the 2 by F.
+	pointAt(table, "waste");
+	table.tap(KeyCode::F);
+	table.frames(1);
+	CHECK(topOf(table, "foundations.1.1") == "A hearts");
+	CHECK(table.hand().lookName() == "free");
+	pointAt(table, "waste");
+	table.tap(KeyCode::F);
+	table.frames(1);
+	CHECK(topOf(table, "foundations.1.1") == "2 hearts");
+	// The 3 of clubs does not go home: put back where it was.
+	pointAt(table, "columns.1.1", 0);
+	table.tap(KeyCode::F);
+	table.frames(1);
+	CHECK(table.holderOf("columns.1.1").items.size() == 2);
+	CHECK(table.handOf(table.hand()).held.empty());
+	CHECK(table.hand().lookName() == "free");
+	// Nor a run of two onto a foundation.
+	setUp(table, { { "foundations.2.1", { { "spades", "A" } } }, { "columns.1.1", { { "spades", "2" }, { "hearts", "A" } } } });
+	pointAt(table, "columns.1.1", 0);
+	table.tap(KeyCode::F);
+	table.frames(1);
+	CHECK(table.handOf(table.hand()).held.empty());
+	CHECK(table.holderOf("columns.1.1").items.size() == 2);
+	CHECK(table.holderOf("foundations.2.1").items.size() == 1);
+}
+
+TEST_CASE("klondike.xml: a run moves together, and the face-down card under it turns up", "[cards]")
+{
+	Table table;
+	setUp(table, { { "columns.1.1", { { "clubs", "4" }, { "spades", "10" }, { "hearts", "9" }, { "clubs", "8" } } }, { "columns.2.1", { { "diamonds", "J" } } } });
+	table.game.holders().turnItem(table.item(table.holderOf("columns.1.1").items[0]), false);
+	// The 10 and what is on it, onto the red jack.
+	pointAt(table, "columns.1.1", 1);
+	space(table);
+	REQUIRE(table.handOf(table.hand()).held.size() == 3);
+	pointAt(table, "columns.2.1");
+	space(table);
+	CHECK(table.holderOf("columns.2.1").items.size() == 4);
+	CHECK(topOf(table, "columns.2.1") == "8 clubs");
+	CHECK(table.holderOf("columns.1.1").items.size() == 1);
+	CHECK(table.game.itemOf(table.top("columns.1.1")).faceUp);
+	// A run that is not in order cannot be taken: a face-down card neither.
+	setUp(table, { { "columns.1.1", { { "clubs", "4" }, { "spades", "10" } } } });
+	table.game.holders().turnItem(table.item(table.holderOf("columns.1.1").items[0]), false);
+	pointAt(table, "columns.1.1", 0);
+	table.tap(KeyCode::F);
+	table.frames(1);
+	CHECK(table.handOf(table.hand()).held.empty());
+	CHECK(table.holderOf("columns.1.1").items.size() == 2);
+}
+
+TEST_CASE("klondike.xml: the hand goes along the rows and up and down a column's run", "[cards]")
+{
+	Table table;
+	pointAt(table, "stock");
+	table.tap(KeyCode::D);
+	CHECK(table.handOf(table.hand()).holder == table.holder("waste").name);
+	table.tap(KeyCode::D);
+	CHECK(table.handOf(table.hand()).holder == table.holder("foundations.1.1").name);
+	table.tap(KeyCode::S);
+	CHECK(table.handOf(table.hand()).holder == table.holder("columns.4.1").name);
+	setUp(table, { { "columns.4.1", { { "spades", "10" }, { "hearts", "9" } } } });
+	pointAt(table, "columns.4.1");
+	table.tap(KeyCode::W);
+	CHECK(table.handOf(table.hand()).at == 0);
+	table.tap(KeyCode::W);
+	CHECK(table.handOf(table.hand()).holder == table.holder("foundations.1.1").name);
+	table.tap(KeyCode::A);
+	CHECK(table.handOf(table.hand()).holder == table.holder("waste").name);
+	table.tap(KeyCode::A);
+	CHECK(table.handOf(table.hand()).holder == table.holder("stock").name);
+	table.tap(KeyCode::A);
+	CHECK(table.handOf(table.hand()).holder == table.holder("stock").name);
+}
+
+TEST_CASE("klondike.xml: the mouse takes a card, drags it and lays it", "[cards][mouse]")
+{
+	Table table;
+	setUp(table, { { "waste", { { "hearts", "9" } } }, { "columns.1.1", { { "spades", "10" } } } });
+	const auto mouse = [&](float x, float y)
+	{
+		Controls controls;
+		controls.pointerInside = true;
+		controls.pointerX = x;
+		controls.pointerY = y;
+		table.engine.handleControls(controls);
+		table.frames(1);
+	};
+	const Vector2f waste = table.holder("waste").position;
+	mouse(waste.x + 20.0f, waste.y + 30.0f);
+	table.engine.handleKeyPressed(KeyCode::MouseLeft);
+	table.frames(1);
+	REQUIRE(table.handOf(table.hand()).held.size() == 1);
+	// The card follows the pointer, held where it was taken.
+	mouse(300.0f, 400.0f);
+	CHECK(table.item(table.handOf(table.hand()).held.front()).position.x == 280.0f);
+	CHECK(table.item(table.handOf(table.hand()).held.front()).position.y == 370.0f);
+	const Vector2f column = table.top("columns.1.1").position;
+	mouse(column.x + 20.0f, column.y + 30.0f);
+	table.engine.handleKeyReleased(KeyCode::MouseLeft);
+	table.frames(1);
+	CHECK(topOf(table, "columns.1.1") == "9 hearts");
+	CHECK(table.hand().lookName() == "free");
+	// Let go over nothing: back where it came from.
+	const Vector2f nine = table.top("columns.1.1").position;
+	mouse(nine.x + 20.0f, nine.y + 30.0f);
+	table.engine.handleKeyPressed(KeyCode::MouseLeft);
+	table.frames(1);
+	mouse(20.0f, 580.0f);
+	table.engine.handleKeyReleased(KeyCode::MouseLeft);
+	table.frames(1);
+	CHECK(topOf(table, "columns.1.1") == "9 hearts");
+	CHECK(table.handOf(table.hand()).held.empty());
+}
+
+TEST_CASE("klondike.xml: a click takes, and sounds, only over a card", "[cards][mouse]")
+{
+	Table table;
+	setUp(table, { { "waste", { { "hearts", "9" } } } });
+	const auto mouse = [&](float x, float y, bool down, bool inside = true)
+	{
+		Controls controls;
+		controls.pointerInside = inside;
+		controls.pointerX = x;
+		controls.pointerY = y;
+		controls.mouse[0] = down;
+		table.engine.handleControls(controls);
+	};
+	const Vector2f waste = table.holder("waste").position;
+	mouse(waste.x + 20.0f, waste.y + 30.0f, false);
+	table.frames(1);
+	(void)table.game.sounds().takeRequests();
+	// On the green, away from every holder: nothing taken, no sound.
+	mouse(20.0f, 580.0f, false);
+	mouse(20.0f, 580.0f, true);
+	CHECK(table.handOf(table.hand()).held.empty());
+	CHECK(table.game.sounds().takeRequests().empty());
+	mouse(20.0f, 580.0f, false);
+	table.frames(1);
+	// Off the playfield (a bar beside the picture, the title bar), even
+	// with the hand last over the card: no press.
+	mouse(waste.x + 20.0f, waste.y + 30.0f, false);
+	mouse(-30.0f, 300.0f, false);
+	mouse(-30.0f, 300.0f, true);
+	CHECK(table.handOf(table.hand()).held.empty());
+	mouse(-30.0f, 300.0f, false);
+	mouse(100.0f, -20.0f, true, false);
+	CHECK(table.handOf(table.hand()).held.empty());
+	// Held down off it and brought over the card: still no press.
+	mouse(waste.x + 20.0f, waste.y + 30.0f, true);
+	CHECK(table.handOf(table.hand()).held.empty());
+	CHECK(table.game.sounds().takeRequests().empty());
+	mouse(waste.x + 20.0f, waste.y + 30.0f, false);
+	// Pressed on the card: taken, with its sound.
+	mouse(waste.x + 20.0f, waste.y + 30.0f, true);
+	CHECK(table.handOf(table.hand()).held.size() == 1);
+	CHECK(table.game.sounds().takeRequests() == std::vector<std::string>{ "card" });
+}
+
+TEST_CASE("klondike.xml: all 52 home wins, and a new game deals again", "[cards]")
+{
+	Table table;
+	std::vector<std::pair<std::string, std::string>> spades;
+	for (const char* rank : { "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q" }) { spades.emplace_back("spades", rank); }
+	std::vector<std::pair<std::string, std::string>> hearts;
+	std::vector<std::pair<std::string, std::string>> clubs;
+	std::vector<std::pair<std::string, std::string>> diamonds;
+	for (const char* rank : { "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K" })
+	{
+		hearts.emplace_back("hearts", rank);
+		clubs.emplace_back("clubs", rank);
+		diamonds.emplace_back("diamonds", rank);
+	}
+	setUp(table, { { "foundations.1.1", spades }, { "foundations.2.1", hearts }, { "foundations.3.1", clubs }, { "foundations.4.1", diamonds }, { "waste", { { "spades", "K" } } } });
+	table.frames(1);
+	CHECK(table.state() == "playing");
+	pointAt(table, "waste");
+	table.tap(KeyCode::F);
+	table.frames(2);
+	CHECK(table.state() == "over");
+	table.tap(KeyCode::Space);
+	table.frames(2);
+	CHECK(table.state() == "title");
+	CHECK(table.holderOf("stock").items.size() == 24);
+	CHECK(table.holderOf("columns.7.1").items.size() == 7);
+	CHECK(table.holderOf("foundations.1.1").items.empty());
+}
+
+namespace
+{
+	// A game of one state holding `objects`, with the card sheet as two
+	// <pictures>: "cards", a grid of 13 by 5, and "loose", no grid but a
+	// margin and gap that change nothing (cells by x and y).
+	struct SheetGame
+	{
+		std::string path;
+		explicit SheetGame(const std::string& objects, const std::string& sheets = "")
+			: path(scratchName("descriptions/sheet_scratch.xml"))
+		{
+			std::ofstream out(path);
+			out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
+				"<window name=\"sheets\"><width>800</width><height>600</height><background>color.black</background></window>"
+				"<variables><variable name=\"unused\">0</variable></variables>"
+				"<states><state name=\"playing\"><objects>" << objects << "</objects><inputs><input><button>escape</button><pop /></input></inputs></state></states>"
+				"<pictures><sheet name=\"cards\"><path>assets/cards.png</path><columns>13</columns><rows>5</rows></sheet>"
+				"<sheet name=\"sized\"><path>assets/cards.png</path><cell><width>192</width><height>280</height></cell></sheet>" << sheets << "</pictures></game>";
+		}
+		~SheetGame() { std::error_code ignored; std::filesystem::remove(path, ignored); }
+	};
+}
+
+namespace
+{
+	// Klondike (or another game) with pieces of its file changed, written to a scratch file.
+	struct Changed
+	{
+		std::string path;
+		Changed(const std::vector<std::pair<std::string, std::string>>& changes, const std::string& game = "klondike")
+			: path(scratchName("descriptions/" + game + "_scratch.xml"))
+		{
+			std::ifstream in("descriptions/" + game + ".xml");
+			std::stringstream read;
+			read << in.rdbuf();
+			std::string text = read.str();
+			for (const auto& [from, to] : changes)
+			{
+				const std::size_t at = text.find(from);
+				REQUIRE(at != std::string::npos);
+				text.replace(at, from.size(), to);
+			}
+			std::ofstream(path) << text;
+		}
+		~Changed() { std::error_code ignored; std::filesystem::remove(path, ignored); }
+	};
+}
+
+TEST_CASE("a pack's rows and columns are row and column, and the names <rows name> and <columns name> give them", "[cards]")
+{
+	// Klondike names them suit and rank: each card has all four, the same numbers.
+	{
+		Played play("descriptions/klondike.xml");
+		int items = 0;
+		for (const Object& object : play.game.getCurrentObjects())
+		{
+			if (!play.game.itemOf(object).is) { continue; }
+			++items;
+			CHECK(object.variable.at("row") == object.variable.at("suit"));
+			CHECK(object.variable.at("column") == object.variable.at("rank"));
+		}
+		CHECK(items == 52);
+	}
+	// Unnamed, they are row and column only, and a rule may say either.
+	{
+		Changed plain({ { "<columns name=\"rank\">13</columns>", "<columns>13</columns>" },
+			{ "<condition variable=\"rank\"><equal><subtract><value>top.rank</value><value>1</value></subtract></equal></condition>", "<condition variable=\"column\"><equal><subtract><value>top.column</value><value>1</value></subtract></equal></condition>" },
+			{ "<condition variable=\"rank\"><equal><add><value>top.rank</value><value>1</value></add></equal></condition>", "<condition variable=\"column\"><equal><add><value>top.column</value><value>1</value></add></equal></condition>" },
+			{ "<empty><condition variable=\"rank\"><equal>1</equal></condition></empty>", "<empty><condition variable=\"column\"><equal>1</equal></condition></empty>" },
+			{ "<empty><condition variable=\"rank\"><equal>13</equal></condition></empty>", "<empty><condition variable=\"column\"><equal>13</equal></condition></empty>" } });
+		Played play(plain.path);
+		for (const Object& object : play.game.getCurrentObjects())
+		{
+			if (play.game.itemOf(object).is) { CHECK_FALSE(object.variable.countText("rank")); }
+		}
+	}
+	// A name its group gives that a member has a variable of already stops the load.
+	Changed worth({ { "<columns name=\"rank\">13</columns>", "<columns name=\"worth\">13</columns>" } }, "gin");
+	CHECK_THROWS_WITH(Played(worth.path), Catch::Matchers::ContainsSubstring("it has a variable of that name already"));
+
+	// A pattern or a trick by a variable nothing has stops the load.
+	Changed pattern({ { "<alike variable=\"suit\">5</alike></pattern>", "<alike variable=\"colour\">5</alike></pattern>" } }, "holdem");
+	CHECK_THROWS_WITH(Played(pattern.path), Catch::Matchers::ContainsSubstring("nothing held has a variable of that name"));
+	Changed trick({ { "<trick variable=\"suit\"><breaks>", "<trick variable=\"suite\"><breaks>" } }, "hearts");
+	CHECK_THROWS_WITH(Played(trick.path), Catch::Matchers::ContainsSubstring("no object has a variable or number of that name"));
+}
+
+TEST_CASE("klondike.xml: placing rules are conditions on the arriving card against top; mistakes in them stop the load", "[cards][accepts]")
+{
+	const std::string column = "<condition variable=\"rank\"><equal><subtract><value>top.rank</value><value>1</value></subtract></equal></condition>";
+	const std::string king = "<empty><condition variable=\"rank\"><equal>13</equal></condition></empty>";
+	const auto fails = [&](const std::string& to, const std::string& message, const std::string& from = {})
+	{
+		Changed changed({ { from.empty() ? column : from, to } });
+		CHECK_THROWS_WITH(Played(changed.path), Catch::Matchers::ContainsSubstring(message));
+	};
+	fails("<condition variable=\"rank\"><equal><multiply><value>top.rank</value><value>2</value></multiply></equal></condition>", "multiply");
+	fails("<condition variable=\"rank\"><equal>top.</equal></condition>", "expected top. and a variable of it");
+	fails("<condition variable=\"rank\"><equal><subtract><value>top.rank</value><value>x</value></subtract></equal></condition>", "<subtract>");
+	fails("<condition><equal>1</equal></condition>", "needs variable=");
+	fails("<condition total=\"count\"><equal>2</equal></condition>", "<equal>1</equal> for now");
+	fails("<empty><condition variable=\"rank\"><equal>top.rank</equal></condition></empty>", "nothing lies under it", king);
+
+	// A plain number, <unequal> one, and another variable of the top: a column that takes anything but a queen,
+	// a worth below the top's suit (any test of numbers), never a king on an empty one.
+	Changed plain({ { column, "<condition variable=\"rank\"><unequal>12</unequal></condition><condition variable=\"worth\"><below><add><value>top.suit</value><value>3</value></add></below></condition>" },
+		{ king, "<empty><condition variable=\"rank\"><atmost>12</atmost></condition></empty>" } });
+	Played played(plain.path);
+	using Kind = HolderRule::VarRule::Kind;
+	const HolderRule& takes = played.holderOf("columns.1.1").takes;
+	REQUIRE(takes.rules.size() == 3);
+	CHECK(takes.rules[0].kind == Kind::Unequal);
+	CHECK(takes.rules[0].top);
+	CHECK(takes.rules[1].kind == Kind::Unequal);
+	CHECK_FALSE(takes.rules[1].top);
+	CHECK(takes.rules[1].amount == 12.0f);
+	CHECK(takes.rules[2].kind == Kind::Below);
+	CHECK(takes.rules[2].top);
+	CHECK(takes.rules[2].topVariable == "suit");
+	CHECK(takes.rules[2].amount == 3.0f);
+	REQUIRE(takes.emptyRules.size() == 1);
+	CHECK(takes.emptyRules[0].kind == Kind::AtMost);
+
+	// So a worth of 3 goes on a top of suit 1 (3 < 4) and of 6 does not.
+	NameStore names;
+	Object top;
+	top.variable[names.of("suit")] = 1.0f;
+	Object low;
+	low.variable[names.of("rank")] = 2.0f;
+	low.variable[names.of("worth")] = 3.0f;
+	Object high = low;
+	high.variable.at("worth") = 6.0f;
+	const std::vector<HolderRule::VarRule> below{ takes.rules[2] };
+	CHECK(Holders::acceptsBy(below, low, &top));
+	CHECK_FALSE(Holders::acceptsBy(below, high, &top));
+
+	// Klondike as written: the foundations one at a time, the same suit, one higher.
+	Played klondike("descriptions/klondike.xml");
+	const HolderRule& home = klondike.holderOf("foundations.1.1").takes;
+	CHECK(home.one);
+	REQUIRE(home.rules.size() == 2);
+	CHECK(home.rules[0].kind == HolderRule::VarRule::Kind::Equal);
+	CHECK(home.rules[0].top);
+	CHECK(home.rules[0].amount == 0.0f);
+	CHECK(home.rules[1].kind == HolderRule::VarRule::Kind::Equal);
+	CHECK(home.rules[1].amount == 1.0f);
+}
+
+TEST_CASE("a pack cut from a sheet: a face for each suit and rank, one back for all", "[cards][sheets]")
+{
+	Played hearts("descriptions/hearts.xml");
+	hearts.tap(KeyCode::Space);
+	hearts.frames(2);
+	Object& ace = *hearts.game.holders().itemAt(1);
+	REQUIRE(ace.looks.all().size() == 2);
+	const Bitmap& face = *ace.looks.all()[0].bitmap;
+	REQUIRE(face.width == 96);
+	REQUIRE(face.height == 140);
+	CHECK_FALSE(face.solidAt(0, 0));          // a rounded corner
+	CHECK(face.solidAt(48, 70));               // the big spade
+	CHECK(face.rgba[(70 * 96 + 48) * 4] < 40);
+	CHECK(ace.looks.all()[1].name == "back");
+	CHECK(ace.looks.all()[1].bitmap == hearts.game.holders().itemAt(52)->looks.all()[1].bitmap);   // one back, shared
+	CHECK(ace.looks.all()[0].bitmap != hearts.game.holders().itemAt(14)->looks.all()[0].bitmap);
+}
+
+TEST_CASE("sheets: a cell by column and row, by x and y, by cell size; runs of cells as frames and faces", "[cards][sheets]")
+{
+	const std::string at = "<position><x>0</x><y>0</y></position>";
+	SheetGame sheet(
+		// the ace of hearts three ways, at half the sheet's size
+		"<object name=\"grid\"><sprite><cell sheet=\"cards\"><column>1</column><row>2</row><scale>0.5</scale></cell></sprite>" + at + "</object>"
+		"<object name=\"part\"><sprite><cell sheet=\"cards\"><x>0</x><y>280</y><width>192</width><height>280</height><scale>0.5</scale></cell></sprite>" + at + "</object>"
+		"<object name=\"sized\"><sprite><cell sheet=\"sized\"><row>2</row><scale>0.5</scale></cell></sprite>" + at + "</object>"
+		// an animation: three cells of the second row, then one of the third
+		"<object name=\"walker\"><animation><seconds>0.1</seconds>"
+		"<cells sheet=\"cards\"><row>2</row><count>3</count><scale>0.5</scale></cells>"
+		"<cell sheet=\"cards\"><row>3</row><scale>0.5</scale></cell></animation>" + at + "</object>"
+		// a group whose only pictures are its animation's, a run down a column
+		"<group name=\"flock\"><animation><seconds>0.1</seconds><cells sheet=\"cards\"><count>2</count><down /><scale>0.5</scale></cells></animation>" + at +
+		"<member name=\"bird\" /></group>");
+	Played play(sheet.path);
+	Object& grid = play.get("grid");
+	const auto drawn = [](const Object& object) -> const Bitmap& { return *object.drawn.bitmap; };
+	REQUIRE(drawn(grid).width == 96);
+	CHECK((drawn(grid).rgba == drawn(play.get("part")).rgba));
+	CHECK((drawn(grid).rgba == drawn(play.get("sized")).rgba));
+
+	Object& walker = play.get("walker");
+	REQUIRE(walker.animation.frames.shows().bitmaps.size() == 4);
+	CHECK((walker.animation.frames.shows().bitmaps[0]->rgba == drawn(grid).rgba));
+	CHECK((walker.animation.frames.shows().bitmaps[1]->rgba != drawn(grid).rgba));
+	Object& bird = play.get("bird");
+	REQUIRE(bird.animation.frames.shows().bitmaps.size() == 2);
+	CHECK((bird.animation.frames.shows().bitmaps[1]->rgba == drawn(grid).rgba));   // column 1 down to row 2: the ace of hearts
+}
+
+TEST_CASE("klondike.xml: the pack is a group whose cells cut their own faces from the sheet", "[cards][sheets]")
+{
+	Table table;
+	Played hearts("descriptions/hearts.xml");
+	hearts.tap(KeyCode::Space);
+	hearts.frames(2);
+	// Card 22 is the 9 of hearts in both: row 2, column 9.
+	Object& nine = table.item(cardOf(table, "hearts", "9"));
+	CHECK(table.game.itemOf(nine).number == 22);
+	CHECK(cardAxis(nine, "row") == 2);
+	CHECK(cardAxis(nine, "column") == 9);
+	CHECK((nine.looks.all()[0].bitmap->rgba == hearts.game.holders().itemAt(22)->looks.all()[0].bitmap->rgba));
+	CHECK((nine.looks.all()[1].bitmap->rgba == hearts.game.holders().itemAt(22)->looks.all()[1].bitmap->rgba));
+	CHECK(nine.variable.at("color") == 2.0f);
+	CHECK(table.item(cardOf(table, "clubs", "9")).variable.at("color") == 1.0f);
+}
+
+TEST_CASE("sheets: a cell off the grid and a sheet not there stop the load", "[cards][sheets]")
+{
+	const std::string at = "<position><x>0</x><y>0</y></position>";
+	{
+		SheetGame sheet("<object name=\"off\"><sprite><cell sheet=\"cards\"><column>14</column></cell></sprite>" + at + "</object>");
+		CHECK_THROWS(Played(sheet.path));
+	}
+	{
+		SheetGame sheet("<object name=\"none\"><sprite><cell sheet=\"nothing\" /></sprite>" + at + "</object>");
+		CHECK_THROWS(Played(sheet.path));
+	}
+	{
+		SheetGame sheet("<object name=\"lost\"><sprite><cell sheet=\"missing\" /></sprite>" + at + "</object>",
+			"<sheet name=\"missing\"><path>assets/nothing.png</path><columns>1</columns><rows>1</rows></sheet>");
+		CHECK_THROWS(Played(sheet.path));
+	}
+}
+
+namespace
+{
+	// Crazy Eights, dealt: you against the computer.
+	struct Eights : Played
+	{
+		Eights() : Played("descriptions/crazyeights.xml")
+		{
+			tap(KeyCode::Space);
+			frames(2);
+		}
+
+		Object& holder(const std::string& name) { return get(name); }
+		Object& hand() { return get("you"); }
+		Object& computer() { return get("computer"); }
+		Object& item(int number) { return *game.holders().itemAt(number); }
+		// 1 your turn, 2 the computer's, 3 yours to name a suit, 4 its.
+		float turn()
+		{
+			const bool yours = hand().variable.at("turn") == 1.0f;
+			const bool calling = (yours ? hand() : computer()).lookName() == "calling";
+			return (yours ? 1.0f : 2.0f) + (calling ? 2.0f : 0.0f);
+		}
+		// The computer's turn, as a pass would give it.
+		void computersTurn()
+		{
+			game.setVariable(hand().name, "turn", 0.0f);
+			game.showLook(hand(), "waiting");
+			game.setVariable(computer().name, "turn", 1.0f);
+			computer().showLook(0);
+		}
+
+		int cardOf(const std::string& rank, const std::string& suit)
+		{
+			for (Object& object : game.getCurrentObjects())
+			{
+				if (game.itemOf(object).is && cardAxis(object, "row") == numberIn(klondikeSuits, suit) && cardAxis(object, "column") == numberIn(klondikeRanks, rank)) { return game.itemOf(object).number; }
+			}
+			return 0;
+		}
+
+		// Every holder emptied, then these cards (as "8 hearts", bottom first)
+		// put on each by the holder's own way (face up or down, sorted).
+		void setUp(const std::vector<std::pair<std::string, std::vector<std::string>>>& holders)
+		{
+			for (Object& object : game.getCurrentObjects())
+			{
+				if (!isHolder(object)) { continue; }
+				Holder& holder = holderOf(object);
+				holder.items.clear();
+				holder.itemCount = 0.0f;
+				holder.called = 0.0f;
+				holder.calling = 0.0f;
+			}
+			for (const auto& [name, items] : holders)
+			{
+				for (const std::string& each : items)
+				{
+					const auto space = each.find(' ');
+					game.holders().putInHolder(holder(name), cardOf(each.substr(0, space), each.substr(space + 1)));
+				}
+			}
+			handOf(hand()).holder = holder("mine").name;
+			handOf(hand()).at = 0;
+			handOf(hand()).mouse = false;
+			game.holders().layOutItems();
+		}
+
+		std::string name(int number) { return klondikeRanks[static_cast<std::size_t>(cardAxis(item(number), "column") - 1)] + " " + klondikeSuits[static_cast<std::size_t>(cardAxis(item(number), "row") - 1)]; }
+		std::string top(const std::string& name) { return holderOf(name).items.empty() ? "" : this->name(holderOf(name).items.back()); }
+
+		// Points your hand at that card of yours.
+		void pointAt(const std::string& which)
+		{
+			const auto& items = holderOf("mine").items;
+			for (std::size_t i = 0; i < items.size(); ++i)
+			{
+				if (name(items[i]) == which) { handOf(hand()).holder = holder("mine").name; handOf(hand()).at = static_cast<int>(i); }
+			}
+		}
+
+		void space()
+		{
+			tap(KeyCode::Space);
+			frames(1);
+		}
+
+		// Frames until it is your turn again (or the game is over).
+		void untilYourTurn()
+		{
+			for (int i = 0; i < 2000 && (turn() != 1.0f && state() == "playing"); ++i) { frames(1); }
+		}
+	};
+}
+
+TEST_CASE("crazyeights.xml: the deal: seven each, yours face up in order, one turned up, the rest the stock", "[cards][eights]")
+{
+	Eights table;
+	const auto& mine = table.holderOf("mine").items;
+	REQUIRE(mine.size() == 7);
+	for (std::size_t i = 0; i < mine.size(); ++i)
+	{
+		CHECK(table.game.itemOf(table.item(mine[i])).faceUp);
+		if (i > 0) { CHECK(std::make_pair(cardAxis(table.item(mine[i - 1]), "row"), cardAxis(table.item(mine[i - 1]), "column")) < std::make_pair(cardAxis(table.item(mine[i]), "row"), cardAxis(table.item(mine[i]), "column"))); }
+	}
+	REQUIRE(table.holderOf("theirs").items.size() == 7);
+	for (const int number : table.holderOf("theirs").items) { CHECK_FALSE(table.game.itemOf(table.item(number)).faceUp); }
+	REQUIRE(table.holderOf("discard").items.size() == 1);
+	CHECK(table.game.itemOf(table.item(table.holderOf("discard").items.back())).faceUp);
+	CHECK(table.holderOf("stock").items.size() == 37);
+	CHECK(table.handOf(table.hand()).holder == table.holder("mine").name);
+	CHECK(table.turn() == 1.0f);
+	CHECK(table.hand().lookName() == "free");
+	CHECK(table.computer().lookName() == "waiting");
+	CHECK(table.game.textPiecesOf(table.get("whoseturn")).front().shown == "your turn: play a card that matches, or draw");
+}
+
+TEST_CASE("crazyeights.xml: keys reach only the player on its turn, and never the one the computer plays", "[cards][eights][players]")
+{
+	Eights table;
+	table.setUp({ { "discard", { "5 hearts" } }, { "mine", { "K clubs", "5 spades" } }, { "theirs", { "3 clubs", "4 clubs" } }, { "stock", { "6 clubs" } } });
+	table.computersTurn();
+	table.handOf(table.computer()).holder = table.holder("theirs").name;
+	table.handOf(table.computer()).at = 0;
+	table.handOf(table.hand()).at = 1;
+	// Space and the arrows: nobody's, the computer's cards stay where they are.
+	table.engine.handleKeyPressed(KeyCode::Space);
+	table.engine.handleKeyReleased(KeyCode::Space);
+	table.engine.handleKeyPressed(KeyCode::D);
+	table.engine.handleKeyReleased(KeyCode::D);
+	CHECK(table.holderOf("theirs").items.size() == 2);
+	CHECK(table.holderOf("mine").items.size() == 2);
+	CHECK(table.handOf(table.hand()).at == 1);
+	CHECK(table.handOf(table.computer()).at == 0);
+	CHECK(table.game.textPiecesOf(table.get("whoseturn")).front().shown == "the computer is playing");
+}
+
+TEST_CASE("crazyeights.xml: a card goes on the holder by suit or rank; one that does not goes back in your hand", "[cards][eights]")
+{
+	Eights table;
+	table.setUp({ { "discard", { "5 hearts" } }, { "mine", { "K clubs", "5 spades", "9 hearts", "2 diamonds" } }, { "theirs", { "3 clubs", "4 clubs" } }, { "stock", { "6 clubs" } } });
+	table.pointAt("K clubs");
+	table.space();
+	CHECK(table.top("discard") == "5 hearts");
+	CHECK(table.holderOf("mine").items.size() == 4);
+	CHECK(table.handOf(table.hand()).held.empty());
+	CHECK(table.turn() == 1.0f);
+
+	table.pointAt("5 spades");
+	table.space();
+	CHECK(table.top("discard") == "5 spades");
+	CHECK(table.holderOf("mine").items.size() == 3);
+	CHECK(table.turn() == 2.0f);
+	// Your hand still points into your own cards.
+	CHECK(table.handOf(table.hand()).holder == table.holder("mine").name);
+}
+
+TEST_CASE("crazyeights.xml: an eight goes on anything, you name a suit, and the computer follows it", "[cards][eights]")
+{
+	Eights table;
+	table.setUp({ { "discard", { "5 hearts" } }, { "mine", { "8 diamonds", "2 spades", "K clubs" } }, { "theirs", { "Q hearts", "8 clubs", "3 spades", "J diamonds" } }, { "stock", { "6 clubs", "7 clubs" } } });
+	table.pointAt("8 diamonds");
+	table.space();
+	table.frames(1);
+	CHECK(table.top("discard") == "8 diamonds");
+	CHECK(table.holderOf("discard").calling == 1.0f);
+	CHECK(table.turn() == 3.0f);
+	CHECK(table.hand().lookName() == "calling");
+
+	// Spades: the suit of the card pointed at.
+	table.pointAt("2 spades");
+	table.space();
+	CHECK(table.holderOf("discard").called == 1.0f);
+	CHECK(table.holderOf("discard").calling == 0.0f);
+	CHECK(table.turn() == 2.0f);
+	CHECK(table.holderOf("mine").items.size() == 2);
+	table.frames(1);
+	CHECK(table.game.textPiecesOf(table.get("called")).front().shown == "spades");
+
+	// It plays its spade, not its eight.
+	table.untilYourTurn();
+	CHECK(table.top("discard") == "3 spades");
+	CHECK(table.holderOf("theirs").items.size() == 3);
+	CHECK(table.holderOf("discard").called == 0.0f);
+	CHECK(table.hand().lookName() == "free");
+}
+
+TEST_CASE("crazyeights.xml: the computer draws until it can play, and names the suit it holds most of after its eight", "[cards][eights]")
+{
+	Eights table;
+	table.setUp({ { "discard", { "5 hearts" } }, { "mine", { "2 spades", "K clubs" } }, { "theirs", { "Q spades" } }, { "stock", { "8 clubs", "4 diamonds", "9 diamonds" } } });
+	// The computer's turn.
+	table.computersTurn();
+	table.untilYourTurn();
+	// Drawn: the 9 and 4 of diamonds, then the 8 of clubs, which it plays and names diamonds.
+	CHECK(table.top("discard") == "8 clubs");
+	CHECK(table.holderOf("theirs").items.size() == 3);
+	CHECK(table.holderOf("stock").items.empty());
+	CHECK(table.holderOf("discard").called == 4.0f);
+	CHECK(table.turn() == 1.0f);
+}
+
+TEST_CASE("crazyeights.xml: drawn from empty, the stock takes the discard holder but its top, face down", "[cards][eights]")
+{
+	Eights table;
+	table.setUp({ { "discard", { "5 hearts", "6 hearts", "7 hearts" } }, { "mine", { "2 spades" } }, { "theirs", { "K clubs" } } });
+	table.handOf(table.hand()).holder = table.holder("stock").name;
+	table.handOf(table.hand()).at = -1;
+	table.space();
+	CHECK(table.top("discard") == "7 hearts");
+	CHECK(table.holderOf("discard").items.size() == 1);
+	REQUIRE(table.holderOf("stock").items.size() == 2);
+	for (const int number : table.holderOf("stock").items) { CHECK_FALSE(table.game.itemOf(table.item(number)).faceUp); }
+	// Then a draw into your hand, which stays your turn.
+	table.space();
+	CHECK(table.holderOf("mine").items.size() == 2);
+	CHECK(table.holderOf("stock").items.size() == 1);
+	CHECK(table.turn() == 1.0f);
+}
+
+TEST_CASE("crazyeights.xml: a long hand squeezes into its width; your last card out wins", "[cards][eights]")
+{
+	Eights table;
+	std::vector<std::string> many;
+	for (const char* rank : { "A", "2", "3", "4", "5", "6", "7", "9", "10", "J", "Q", "K" }) { many.push_back(std::string(rank) + " spades"); }
+	for (const char* rank : { "A", "2", "3", "4", "5", "6", "7", "9" }) { many.push_back(std::string(rank) + " clubs"); }
+	table.setUp({ { "discard", { "5 hearts" } }, { "mine", many }, { "theirs", { "K hearts" } } });
+	const Object& last = table.item(table.holderOf("mine").items.back());
+	CHECK(last.position.x + 96.0f <= 56.0f + 768.0f + 0.5f);
+	CHECK(last.position.x + 96.0f >= 56.0f + 768.0f - 0.5f);
+
+	table.setUp({ { "discard", { "5 hearts" } }, { "mine", { "9 hearts" } }, { "theirs", { "K clubs" } } });
+	table.space();
+	table.frames(2);
+	CHECK(table.state() == "over");
+	CHECK(table.get("over.winner").lookName() == "you");
+}
+
+TEST_CASE("crazyeights.xml: a whole game against the computer, playing the first card that goes, ends", "[cards][eights]")
+{
+	Eights table;
+	// The bound only catches a game that never ends. This player draws one card
+	// whenever nothing goes, so games run long: over 1,200 seeds half ended
+	// within 35 turns, 99% within 263, the longest at 540.
+	constexpr int most = 2000;
+	int turns = 0;
+	for (; turns < most && table.state() == "playing"; ++turns)
+	{
+		REQUIRE(table.turn() == 1.0f);
+		// The first card of yours that goes, else a draw; after an eight, your first card's suit.
+		bool played = false;
+		for (std::size_t i = 0; i < table.holderOf("mine").items.size() && !played; ++i)
+		{
+			table.handOf(table.hand()).holder = table.holder("mine").name;
+			table.handOf(table.hand()).at = static_cast<int>(i);
+			table.space();
+			played = table.turn() != 1.0f;
+		}
+		// Your last card out wins at once, the turn still yours: nothing to
+		// draw then (Space on the win screen would start again).
+		if (table.state() != "playing") { break; }
+		if (!played)
+		{
+			table.handOf(table.hand()).holder = table.holder("stock").name;
+			table.handOf(table.hand()).at = -1;
+			table.space();
+			continue;
+		}
+		table.frames(1);
+		if (table.state() == "playing" && table.turn() == 3.0f)
+		{
+			table.handOf(table.hand()).holder = table.holder("mine").name;
+			table.handOf(table.hand()).at = 0;
+			table.space();
+		}
+		table.untilYourTurn();
+	}
+	CHECK(table.state() == "over");
+	CHECK(turns < most);
+	CHECK(table.holderOf("mine").items.size() + table.holderOf("theirs").items.size() + table.holderOf("stock").items.size() + table.holderOf("discard").items.size() == 52);
+}
+
+namespace
+{
+	// Blackjack, at the table, betting.
+	struct Twentyone : Played
+	{
+		Twentyone() : Played("descriptions/blackjack.xml")
+		{
+			tap(KeyCode::Space);
+			frames(2);
+		}
+
+		Object& holder(const std::string& name) { return get(name); }
+		float table(const std::string& name) { return get("table").variable.at(name); }
+
+		// A card of the pack by name ("A", "hearts"): its column and row.
+		int cardOf(const std::string& rank, const std::string& suit)
+		{
+			const std::vector<std::string> suits{ "spades", "hearts", "clubs", "diamonds" };
+			const std::vector<std::string> ranks{ "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K" };
+			const int row = static_cast<int>(std::find(suits.begin(), suits.end(), suit) - suits.begin()) + 1;
+			const int column = static_cast<int>(std::find(ranks.begin(), ranks.end(), rank) - ranks.begin()) + 1;
+			for (Object& object : game.getCurrentObjects())
+			{
+				if (game.itemOf(object).is && cardAxis(object, "row") == row && cardAxis(object, "column") == column) { return game.itemOf(object).number; }
+			}
+			return 0;
+		}
+
+		// The stock stacked so these come off it in this order (as "A hearts").
+		void stack(const std::vector<std::string>& next)
+		{
+			auto& items = holderOf("stock").items;
+			for (auto each = next.rbegin(); each != next.rend(); ++each)
+			{
+				const auto space = each->find(' ');
+				const int number = cardOf(each->substr(0, space), each->substr(space + 1));
+				items.erase(std::find(items.begin(), items.end(), number));
+				items.push_back(number);
+			}
+		}
+
+		void press(KeyCode key)
+		{
+			tap(key);
+			frames(1);
+		}
+
+		// Frames until the hand is over.
+		void untilDone()
+		{
+			for (int i = 0; i < 2000 && get("table").lookName() != "done" && state() == "playing"; ++i) { frames(1); }
+		}
+	};
+}
+
+TEST_CASE("blackjack.xml: points count face-up cards, an ace 11 while within 21, and the dealer's second card is hidden", "[cards][blackjack]")
+{
+	Twentyone play;
+	// You: A, 6; the dealer: 9 and a hidden K.
+	play.stack({ "A hearts", "9 spades", "6 clubs", "K diamonds" });
+	play.press(KeyCode::Space);
+	CHECK(play.table("bank") == 190.0f);
+	CHECK(play.holderOf("player").points == 17.0f);
+	CHECK(play.holderOf("dealer").points == 9.0f);
+	CHECK(play.holderOf("dealer").itemCount == 2.0f);
+	CHECK(play.get("dealerpoints").drawn.picture->text == "dealer 9");
+
+	// A 9: the ace counts 1 now.
+	play.stack({ "9 hearts" });
+	play.press(KeyCode::W);
+	CHECK(play.holderOf("player").points == 16.0f);
+	CHECK(play.get("yourpoints").drawn.picture->text == "you 16");
+}
+
+TEST_CASE("blackjack.xml: the dealer draws to 17, and the nearer to 21 wins", "[cards][blackjack]")
+{
+	Twentyone play;
+	// You: 10, 9 (19); the dealer: 6, 5, then 3 (14), 4 (18).
+	play.stack({ "10 hearts", "6 spades", "9 clubs", "5 diamonds", "3 hearts", "4 hearts" });
+	play.press(KeyCode::Space);
+	play.press(KeyCode::S);
+	play.untilDone();
+	CHECK(play.holderOf("dealer").items.size() == 4);
+	CHECK(play.holderOf("dealer").points == 18.0f);
+	CHECK(play.get("result").lookName() == "win");
+	CHECK(play.table("bank") == 210.0f);
+
+	// The next hand clears the table.
+	play.press(KeyCode::Space);
+	CHECK(play.holderOf("player").items.empty());
+	CHECK(play.holderOf("stock").items.size() == 52);
+	CHECK(play.get("table").lookName() == "betting");
+}
+
+TEST_CASE("blackjack.xml: over 21 is bust; blackjack pays three to two", "[cards][blackjack]")
+{
+	Twentyone play;
+	play.stack({ "10 hearts", "6 spades", "9 clubs", "5 diamonds", "K clubs" });
+	play.press(KeyCode::Space);
+	play.press(KeyCode::W);
+	play.frames(2);
+	CHECK(play.holderOf("player").points == 29.0f);
+	CHECK(play.get("result").lookName() == "bust");
+	CHECK(play.table("bank") == 190.0f);
+	// The dealer's hidden card shows.
+	for (const int number : play.holderOf("dealer").items) { CHECK(play.game.itemOf(*play.game.holders().itemAt(number)).faceUp); }
+
+	play.press(KeyCode::Space);
+	play.stack({ "A hearts", "6 spades", "K clubs", "5 diamonds" });
+	play.press(KeyCode::Space);
+	play.untilDone();
+	CHECK(play.get("result").lookName() == "blackjack");
+	CHECK(play.table("bank") == 205.0f);
+}
+
+TEST_CASE("blackjack.xml: the bet stays from 10 to 100 and within your chips", "[cards][blackjack]")
+{
+	Twentyone play;
+	play.press(KeyCode::A);
+	play.frames(1);
+	CHECK(play.table("bet") == 10.0f);
+	for (int i = 0; i < 15; ++i) { play.press(KeyCode::D); play.frames(1); }
+	CHECK(play.table("bet") == 100.0f);
+	play.get("table").variable.at("bank") = 40.0f;
+	play.frames(2);
+	CHECK(play.table("bet") == 40.0f);
+	play.get("table").variable.at("bank") = 5.0f;
+	play.frames(2);
+	CHECK(play.state() == "over");
+}
+
+namespace
+{
+	// A card of the pack (rows spades, hearts, clubs, diamonds; columns A
+	// to K) by its name, "Q spades"; and a card's name.
+	const std::vector<std::string> packSuits{ "spades", "hearts", "clubs", "diamonds" };
+	const std::vector<std::string> packRanks{ "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K" };
+
+	int cardNamed(Game& game, const std::string& name)
+	{
+		const auto space = name.find(' ');
+		const auto numberOf = [](const std::vector<std::string>& names, const std::string& given) { return static_cast<int>(std::find(names.begin(), names.end(), given) - names.begin()) + 1; };
+		const int column = numberOf(packRanks, name.substr(0, space));
+		const int row = numberOf(packSuits, name.substr(space + 1));
+		for (Object& object : game.getCurrentObjects())
+		{
+			if (game.itemOf(object).is && cardAxis(object, "column") == column && cardAxis(object, "row") == row) { return game.itemOf(object).number; }
+		}
+		return 0;
+	}
+
+	std::string nameOf(const Object& item)
+	{
+		return packRanks[static_cast<std::size_t>(cardAxis(item, "column") - 1)] + " " + packSuits[static_cast<std::size_t>(cardAxis(item, "row") - 1)];
+	}
+}
+
+namespace
+{
+	struct Holdem : Played
+	{
+		Holdem() : Played("descriptions/holdem.xml")
+		{
+			tap(KeyCode::Space);
+			frames(2);
+		}
+
+		Object& holder(const std::string& name) { return get(name); }
+		float table(const std::string& name) { return get("table").variable.at(name); }
+		float chips(const std::string& who) { return get(who).variable.at("chips"); }
+		// Where the hand is, and the street the betting is on: their looks.
+		std::string hand() { return get("hand").lookName(); }
+		std::string street() { return get("street").lookName(); }
+		bool preflop() { return hand() == "betting" && street() == "preflop"; }
+
+		int cardOf(const std::string& name) { return cardNamed(game, name); }
+
+		// The stock stacked so these come off it in this order: yours,
+		// the computer's, yours, the computer's, then the board.
+		void stack(const std::vector<std::string>& next)
+		{
+			auto& items = holderOf("stock").items;
+			for (auto each = next.rbegin(); each != next.rend(); ++each)
+			{
+				const int number = cardOf(*each);
+				items.erase(std::find(items.begin(), items.end(), number));
+				items.push_back(number);
+			}
+		}
+
+		// Seven cards (as "A hearts"): two in yours, the rest on the board, scored.
+		void lay(const std::vector<std::string>& seven)
+		{
+			auto& yours = holderOf("yours").items;
+			auto& board = holderOf("board").items;
+			yours.clear();
+			board.clear();
+			for (std::size_t i = 0; i < seven.size(); ++i) { (i < 2 ? yours : board).push_back(cardOf(seven[i])); }
+			game.holders().scoreHolder(holder("yours"));
+		}
+
+		void press(KeyCode key)
+		{
+			tap(key);
+			frames(1);
+		}
+
+		// Space between hands shuffles; the stock stacked then, the cards come.
+		void deal(const std::vector<std::string>& next)
+		{
+			press(KeyCode::Space);
+			stack(next);
+			for (int i = 0; i < 100 && !preflop(); ++i) { frames(1); }
+		}
+
+		// Frames until it is your move, or the hand is over.
+		void untilYou()
+		{
+			for (int i = 0; i < 600; ++i)
+			{
+				frames(1);
+				const std::string look = get("you").lookName();
+				if (look != "wait" && get("you").variable.at("turn") == 1.0f) { return; }
+				if (hand() != "betting") { frames(2); return; }
+			}
+		}
+	};
+}
+
+TEST_CASE("holdem.xml: the best five of seven: the kinds in order, a wheel the lowest straight", "[cards][holdem]")
+{
+	Holdem play;
+	const auto kindOf = [&](const std::vector<std::string>& seven)
+	{
+		play.lay(seven);
+		return play.holderOf("yours").pattern;
+	};
+	CHECK(kindOf({ "A hearts", "K clubs", "2 spades", "7 diamonds", "9 clubs", "J hearts", "4 spades" }) == 0.0f);
+	CHECK(kindOf({ "A hearts", "A clubs", "2 spades", "7 diamonds", "9 clubs", "J hearts", "4 spades" }) == 1.0f);
+	CHECK(kindOf({ "A hearts", "A clubs", "2 spades", "7 diamonds", "9 clubs", "2 hearts", "4 spades" }) == 2.0f);
+	CHECK(kindOf({ "A hearts", "A clubs", "A spades", "7 diamonds", "9 clubs", "J hearts", "4 spades" }) == 3.0f);
+	CHECK(kindOf({ "A hearts", "2 clubs", "3 spades", "4 diamonds", "5 clubs", "J hearts", "J spades" }) == 4.0f);
+	CHECK(kindOf({ "A hearts", "2 hearts", "9 hearts", "4 hearts", "5 clubs", "J hearts", "J spades" }) == 5.0f);
+	CHECK(kindOf({ "A hearts", "A clubs", "J diamonds", "4 diamonds", "5 clubs", "J hearts", "J spades" }) == 6.0f);
+	CHECK(kindOf({ "J clubs", "A clubs", "J diamonds", "4 diamonds", "5 clubs", "J hearts", "J spades" }) == 7.0f);
+	CHECK(kindOf({ "10 hearts", "K hearts", "Q hearts", "J hearts", "A hearts", "2 clubs", "3 spades" }) == 8.0f);
+	CHECK(play.get("yourchips").drawn.picture->text == "you: 500 chips, a straight flush");
+
+	// A wheel (ace to five) is under a six-high straight; a flush beats both.
+	const float wheel = (play.lay({ "A hearts", "2 clubs", "3 spades", "4 diamonds", "5 clubs", "K hearts", "K spades" }), play.holderOf("yours").strength);
+	const float sixHigh = (play.lay({ "6 hearts", "2 clubs", "3 spades", "4 diamonds", "5 clubs", "K hearts", "K spades" }), play.holderOf("yours").strength);
+	const float flush = (play.lay({ "2 hearts", "7 hearts", "3 hearts", "4 diamonds", "5 clubs", "K hearts", "9 hearts" }), play.holderOf("yours").strength);
+	CHECK(wheel < sixHigh);
+	CHECK(sixHigh < flush);
+
+	// Two pair: the higher pair decides, then the lower, then the fifth card.
+	const float kingsSevens = (play.lay({ "K hearts", "K clubs", "7 spades", "7 diamonds", "2 clubs", "3 hearts", "4 spades" }), play.holderOf("yours").strength);
+	const float kingsSixesAce = (play.lay({ "K hearts", "K clubs", "6 spades", "6 diamonds", "A clubs", "3 hearts", "4 spades" }), play.holderOf("yours").strength);
+	const float kingsSevensAce = (play.lay({ "K hearts", "K clubs", "7 spades", "7 diamonds", "A clubs", "3 hearts", "4 spades" }), play.holderOf("yours").strength);
+	CHECK(kingsSixesAce < kingsSevens);
+	CHECK(kingsSevens < kingsSevensAce);
+}
+
+TEST_CASE("holdem.xml: the odds against one unseen hand: a pair of aces about 85, seven-two about 35", "[cards][holdem]")
+{
+	Holdem play;
+	// Only the computer's odds are read by the game; yours are worked out
+	// only when something asks.
+	CHECK(play.holderOf("theirs").oddsRead);
+	CHECK_FALSE(play.holderOf("yours").oddsRead);
+	play.holderOf("yours").oddsRead = true;
+	play.lay({ "A hearts", "A clubs" });
+	CHECK(play.holderOf("yours").odds >= 80.0f);
+	CHECK(play.holderOf("yours").odds <= 90.0f);
+	play.lay({ "7 hearts", "2 clubs" });
+	CHECK(play.holderOf("yours").odds >= 28.0f);
+	CHECK(play.holderOf("yours").odds <= 40.0f);
+	// The same cards, the same odds.
+	const float once = play.holderOf("yours").odds;
+	play.lay({ "7 hearts", "2 clubs" });
+	CHECK(play.holderOf("yours").odds == once);
+	// A made hand on the river: nothing left to come, a straight flush cannot lose.
+	play.lay({ "10 hearts", "K hearts", "Q hearts", "J hearts", "A hearts", "2 clubs", "3 spades" });
+	CHECK(play.holderOf("yours").odds == 100.0f);
+}
+
+TEST_CASE("holdem.xml: the deal antes five each; checked through, the better hand takes the pot at the showdown", "[cards][holdem]")
+{
+	Holdem play;
+	play.deal({ "A hearts", "2 clubs", "K hearts", "7 diamonds", "Q hearts", "J hearts", "10 hearts", "3 spades", "4 clubs" });
+	CHECK(play.table("pot") == 10.0f);
+	CHECK(play.chips("you") == 495.0f);
+	CHECK(play.holderOf("yours").items.size() == 2);
+	CHECK(play.holderOf("theirs").items.size() == 2);
+	for (const int number : play.holderOf("theirs").items) { CHECK_FALSE(play.game.itemOf(*play.game.holders().itemAt(number)).faceUp); }
+	CHECK(play.get("you").lookName() == "act");
+
+	// You check each round; the computer, with little, checks too.
+	for (int street = 0; street < 4 && play.hand() == "betting"; ++street)
+	{
+		play.press(KeyCode::Space);
+		play.untilYou();
+	}
+	CHECK(play.holderOf("board").items.size() == 5);
+	CHECK(play.holderOf("yours").pattern == 8.0f);
+	CHECK(play.get("result").lookName() == "youwin");
+	CHECK(play.chips("you") == 505.0f);
+	CHECK(play.chips("cpu") == 495.0f);
+	for (const int number : play.holderOf("theirs").items) { CHECK(play.game.itemOf(*play.game.holders().itemAt(number)).faceUp); }
+	CHECK(play.get("you").lookName() == "done");
+}
+
+TEST_CASE("holdem.xml: the same best five splits the pot", "[cards][holdem]")
+{
+	Holdem play;
+	play.deal({ "2 hearts", "2 clubs", "3 hearts", "3 clubs", "A spades", "K spades", "Q spades", "J spades", "10 spades" });
+	for (int street = 0; street < 4 && play.hand() == "betting"; ++street)
+	{
+		play.press(KeyCode::Space);
+		play.untilYou();
+	}
+	CHECK(play.get("result").lookName() == "split");
+	CHECK(play.chips("you") == 500.0f);
+	CHECK(play.chips("cpu") == 500.0f);
+}
+
+TEST_CASE("holdem.xml: a bet the computer's odds do not pay for, it folds; you fold, it takes the pot", "[cards][holdem]")
+{
+	Holdem play;
+	// Your aces against its seven-two; the flop gives you a third ace.
+	play.deal({ "A hearts", "7 clubs", "A clubs", "2 diamonds", "A spades", "K spades", "9 hearts", "4 hearts", "5 spades" });
+	play.press(KeyCode::Space);
+	play.untilYou();
+	REQUIRE(play.street() == "flop");
+	play.press(KeyCode::W);
+	CHECK(play.table("owed") == 10.0f);
+	play.untilYou();
+	CHECK(play.get("cpusays").lookName() == "fold");
+	CHECK(play.get("result").lookName() == "cpufolds");
+	CHECK(play.chips("you") + play.chips("cpu") == 1000.0f);
+	CHECK(play.chips("you") > 500.0f);
+
+	// The next hand the computer acts first; you fold to whatever it does.
+	const float yoursBefore = play.chips("you");
+	play.deal({});
+	CHECK(play.table("first") == 2.0f);
+	play.untilYou();
+	play.press(KeyCode::X);
+	play.frames(2);
+	CHECK(play.get("result").lookName() == "youfold");
+	CHECK(play.table("pot") == 0.0f);
+	CHECK(play.chips("you") == yoursBefore - 5.0f);
+	CHECK(play.chips("you") + play.chips("cpu") == 1000.0f);
+}
+
+TEST_CASE("holdem.xml: raises stop at three a round; out of chips between hands ends the match", "[cards][holdem]")
+{
+	Holdem play;
+	play.deal({ "A hearts", "A clubs", "A diamonds", "A spades", "K spades", "K hearts", "9 hearts", "4 hearts", "5 spades" });
+	for (int i = 0; i < 6 && play.preflop(); ++i)
+	{
+		if (play.get("you").lookName() == "act") { play.press(KeyCode::W); }
+		else { play.press(KeyCode::Space); }
+		play.untilYou();
+	}
+	CHECK(play.table("raises") <= 3.0f);
+	CHECK(play.street() != "preflop");
+
+	play.get("cpu").variable.at("chips") = 0.0f;
+	play.game.showLook(play.get("hand"), "done");
+	play.frames(2);
+	CHECK(play.state() == "over");
+	CHECK(play.get("over.winner").lookName() == "you");
+}
+
+TEST_CASE("holdem.xml: hand after hand, you calling everything, every hand ends and no chip is lost", "[cards][holdem]")
+{
+	Holdem play;
+	int hands = 0;
+	for (; hands < 20 && play.state() == "playing"; ++hands)
+	{
+		play.deal({});
+		for (int i = 0; i < 20 && play.hand() == "betting"; ++i)
+		{
+			play.untilYou();
+			if (play.hand() == "betting") { play.press(KeyCode::Space); }
+		}
+		play.frames(2);
+		REQUIRE(play.hand() == "done");
+		CHECK(play.table("pot") == 0.0f);
+		CHECK(play.chips("you") + play.chips("cpu") == 1000.0f);
+	}
+	CHECK(hands > 0);
+}
+
+namespace
+{
+	// The order a stock is stacked in (first on top) so that a deal a
+	// card a round gives each holder its cards, the holders in deal order.
+	template <typename Table>
+	std::vector<int> roundRobin(Table& table, const std::vector<std::vector<std::string>>& holders)
+	{
+		std::vector<int> order;
+		for (std::size_t round = 0;; ++round)
+		{
+			bool any = false;
+			for (const auto& items : holders)
+			{
+				if (round < items.size())
+				{
+					order.push_back(table.cardOf(items[round]));
+					any = true;
+				}
+			}
+			if (!any) { break; }
+		}
+		return order;
+	}
+
+	// A trick game of four, you, west, north and east (Hearts, Spades).
+	struct Tricks : Played
+	{
+		explicit Tricks(const std::string& file) : Played(file)
+		{
+			tap(KeyCode::Space);
+			frames(2);
+		}
+
+		Object& holder(const std::string& name) { return get(name); }
+		float table(const std::string& name) { return get("table").variable.at(name); }
+		// Where the hand is: the table's look.
+		std::string look() { return get("table").lookName(); }
+		float of(const std::string& hand, const std::string& name) { return get(hand).variable.at(name); }
+		void set(const std::string& object, const std::string& name, float value) { game.setVariable(get(object).name, name, value); }
+
+		// Whose turn it is: the number of the player on it, 0 nobody's.
+		float turn()
+		{
+			const char* names[] = { "you", "west", "north", "east" };
+			for (int i = 0; i < 4; ++i)
+			{
+				if (of(names[i], "turn") == 1.0f) { return static_cast<float>(i + 1); }
+			}
+			return 0.0f;
+		}
+
+		int cardOf(const std::string& name) { return cardNamed(game, name); }
+
+		// A new deal from a stacked stock: thirteen each to you, west,
+		// north and east, in that order, the rest of each suit by rank
+		// filling up; `leader` leads the first trick.
+		void deal(const std::vector<std::vector<std::string>>& hands, int leader)
+		{
+			set("table", "first", static_cast<float>(leader == 1 ? 4 : leader - 1));
+			// As a hand ends: the table done, nobody's turn.
+			game.showLook(get("table"), "done");
+			game.players().passPlayersTo("players", 0);
+			frames(2);
+			// Dealt a card a round to the players in turn: you, west, north and east.
+			game.holders().stackedStart = roundRobin(*this, hands);
+			tap(KeyCode::Space);
+			for (int i = 0; i < 100 && look() != "playing" && look() != "bid"; ++i) { frames(1); }
+			frames(2);
+		}
+
+		// Your hand pointed at that card (as "Q spades"), and Space.
+		bool play(const std::string& name)
+		{
+			const auto& mine = holderOf("mine").items;
+			const auto at = std::find(mine.begin(), mine.end(), cardOf(name));
+			if (at == mine.end()) { return false; }
+			Object& hand = get("you");
+			handOf(hand).holder = "playing.mine";
+			handOf(hand).at = static_cast<int>(at - mine.begin());
+			tap(KeyCode::Space);
+			frames(1);
+			return std::find(holderOf("trick").items.begin(), holderOf("trick").items.end(), cardOf(name)) != holderOf("trick").items.end();
+		}
+
+		// Frames until it is your turn to play, or the hand is over.
+		void untilYou()
+		{
+			for (int i = 0; i < 3000; ++i)
+			{
+				if (look() == "done" || state() != "playing") { return; }
+				if (look() == "playing" && turn() == 1.0f && get("you").lookName() == "free")
+				{
+					// The computer's own press of the same key let go first.
+					frames(1);
+					return;
+				}
+				frames(1);
+			}
+		}
+	};
+
+	struct Hearts : Tricks
+	{
+		Hearts() : Tricks("descriptions/hearts.xml") {}
+	};
+
+	// Spades: the first deal comes after a moment; then you bid.
+	struct Spades : Tricks
+	{
+		Spades() : Tricks("descriptions/spades.xml")
+		{
+			for (int i = 0; i < 100 && look() != "bid"; ++i) { frames(1); }
+			frames(2);
+		}
+
+		void deal(const std::vector<std::vector<std::string>>& hands, int leader)
+		{
+			Tricks::deal(hands, leader);
+			tap(KeyCode::Space);
+			frames(2);
+		}
+	};
+
+	std::vector<std::string> suitOf(const std::string& suit, std::initializer_list<const char*> ranks)
+	{
+		std::vector<std::string> items;
+		for (const char* rank : ranks) { items.push_back(std::string(rank) + " " + suit); }
+		return items;
+	}
+
+	std::vector<std::string> joined(std::vector<std::string> a, const std::vector<std::string>& b)
+	{
+		a.insert(a.end(), b.begin(), b.end());
+		return a;
+	}
+}
+
+TEST_CASE("hearts.xml: the deal: thirteen each, yours face up in suit order, the ace last", "[cards][hearts]")
+{
+	Hearts play;
+	for (const char* name : { "mine", "westcards", "northcards", "eastcards" }) { CHECK(play.holderOf(name).items.size() == 13); }
+	CHECK(play.holderOf("stock").items.empty());
+	const auto& mine = play.holderOf("mine").items;
+	for (std::size_t i = 1; i < mine.size(); ++i)
+	{
+		const Object& before = *play.game.holders().itemAt(mine[i - 1]);
+		const Object& after = *play.game.holders().itemAt(mine[i]);
+		CHECK(std::make_pair(cardAxis(before, "row"), play.game.itemOf(before).worths.back()) < std::make_pair(cardAxis(after, "row"), play.game.itemOf(after).worths.back()));
+		CHECK(play.game.itemOf(after).faceUp);
+	}
+	CHECK(play.turn() == 1.0f);
+	CHECK(play.get("you").lookName() == "free");
+}
+
+TEST_CASE("hearts.xml: the suit led is followed; hearts lead only once broken, or when nothing else is held", "[cards][hearts]")
+{
+	Hearts play;
+	// You: the 2 of clubs, a heart and eleven spades; west the other clubs and a diamond;
+	// north every heart but yours; east the queen of spades and the diamonds.
+	play.deal({
+		joined(joined(suitOf("clubs", { "2" }), suitOf("hearts", { "A" })), suitOf("spades", { "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "K" })),
+		joined(suitOf("clubs", { "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A" }), suitOf("diamonds", { "2" })),
+		joined(suitOf("hearts", { "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K" }), suitOf("spades", { "A" })),
+		joined(suitOf("spades", { "Q" }), suitOf("diamonds", { "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A" })),
+	}, 1);
+	REQUIRE(play.turn() == 1.0f);
+	// Hearts are not broken: no heart leads.
+	CHECK_FALSE(play.play("A hearts"));
+	CHECK(play.holderOf("mine").items.size() == 13);
+	CHECK(play.play("2 clubs"));
+	CHECK(play.holderOf("trick").lead == 3.0f);
+
+	// West follows low; north and east, with no clubs, shed their worst:
+	// north its king of hearts, east the queen of spades.
+	play.untilYou();
+	CHECK(play.of("west", "got") == 14.0f);
+	CHECK(play.table("tricks") == 1.0f);
+	// A heart has been laid: hearts are broken.
+	const auto& broken = play.holderOf("trick").broken;
+	CHECK(std::find(broken.begin(), broken.end(), cardAxis(*play.game.holders().itemAt(play.cardOf("A hearts")), "row")) != broken.end());
+	// West led again (its diamond), north shed another heart, east followed;
+	// you have no diamond, so anything goes.
+	CHECK(play.holderOf("trick").items.size() == 3);
+	CHECK(play.play("A hearts"));
+}
+
+TEST_CASE("hearts.xml: a card not of the suit led is refused while you hold one", "[cards][hearts]")
+{
+	Hearts play;
+	// West leads its 2 of clubs; you hold a club and must play it.
+	play.deal({
+		joined(suitOf("clubs", { "K" }), suitOf("diamonds", { "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K" })),
+		joined(suitOf("clubs", { "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "A" }), suitOf("diamonds", { "A" })),
+		suitOf("hearts", { "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A" }),
+		suitOf("spades", { "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A" }),
+	}, 2);
+	play.untilYou();
+	REQUIRE(play.holderOf("trick").items.size() == 3);
+	CHECK(play.holderOf("trick").lead == 3.0f);
+	CHECK_FALSE(play.play("5 diamonds"));
+	CHECK(play.get("you").lookName() == "free");
+	CHECK(play.play("K clubs"));
+	// Yours is the highest club: you take it, with north's heart and east's queen of spades.
+	play.untilYou();
+	CHECK(play.of("you", "got") == 14.0f);
+	CHECK(play.holderOf("stock").items.size() == 4);
+	CHECK(play.turn() == 1.0f);
+}
+
+TEST_CASE("hearts.xml: holding nothing but hearts, one leads before they are broken", "[cards][hearts]")
+{
+	Hearts play;
+	play.deal({
+		suitOf("hearts", { "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A" }),
+		suitOf("clubs", { "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A" }),
+		suitOf("diamonds", { "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A" }),
+		suitOf("spades", { "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A" }),
+	}, 1);
+	CHECK(play.play("2 hearts"));
+	// Nobody else has a heart: you take your own, and east sheds the queen of spades on it.
+	play.untilYou();
+	CHECK(play.of("you", "got") == 14.0f);
+}
+
+TEST_CASE("hearts.xml: the hand's points to the scores; all 26 to one shoots the moon", "[cards][hearts]")
+{
+	Hearts play;
+	play.set("table", "tricks", 13.0f);
+	play.set("you", "got", 3.0f);
+	play.set("west", "got", 13.0f);
+	play.set("north", "got", 10.0f);
+	play.frames(2);
+	CHECK(play.of("you", "score") == 3.0f);
+	CHECK(play.of("west", "score") == 13.0f);
+	CHECK(play.of("north", "score") == 10.0f);
+	CHECK(play.look() == "done");
+	CHECK(play.get("table").lookName() == "done");
+	CHECK(play.turn() == 0.0f);
+
+	play.set("you", "got", 0.0f);
+	play.set("west", "got", 0.0f);
+	play.set("north", "got", 26.0f);
+	play.game.showLook(play.get("table"), "playing");
+	play.frames(2);
+	CHECK(play.of("you", "score") == 29.0f);
+	CHECK(play.of("west", "score") == 39.0f);
+	CHECK(play.of("north", "score") == 10.0f);
+	CHECK(play.of("east", "score") == 26.0f);
+	CHECK(play.get("message").lookName() == "moon");
+}
+
+TEST_CASE("hearts.xml: at 100 after a hand the lowest score wins", "[cards][hearts]")
+{
+	Hearts play;
+	play.set("you", "score", 40.0f);
+	play.set("west", "score", 104.0f);
+	play.set("north", "score", 35.0f);
+	play.set("east", "score", 60.0f);
+	play.game.showLook(play.get("table"), "done");
+	play.frames(2);
+	CHECK(play.state() == "over");
+	CHECK(play.get("over.winner").lookName() == "north");
+}
+
+TEST_CASE("hearts.xml: a whole hand, you playing the first card that goes: 26 points are taken", "[cards][hearts]")
+{
+	Hearts play;
+	for (int trick = 0; trick < 13 && play.look() != "done"; ++trick)
+	{
+		play.untilYou();
+		if (play.look() == "done") { break; }
+		bool played = false;
+		const std::vector<int> mine = play.holderOf("mine").items;
+		for (const int number : mine)
+		{
+			const Object& item = *play.game.holders().itemAt(number);
+			if (play.play(nameOf(item)))
+			{
+				played = true;
+				break;
+			}
+		}
+		REQUIRE(played);
+		play.frames(2);
+	}
+	play.untilYou();
+	REQUIRE(play.look() == "done");
+	const float total = play.of("you", "score") + play.of("west", "score") + play.of("north", "score") + play.of("east", "score");
+	CHECK((total == 26.0f || total == 78.0f));
+	CHECK(play.holderOf("stock").items.size() == 52);
+
+	// Space deals again; the next to lead is west.
+	play.frames(2);
+	play.tap(KeyCode::Space);
+	for (int i = 0; i < 100 && play.look() != "playing"; ++i) { play.frames(1); }
+	play.frames(1);
+	CHECK(play.holderOf("mine").items.size() == 13);
+	CHECK(play.turn() == 2.0f);
+}
+
+TEST_CASE("spades.xml: everyone bids what their cards should take; you change yours and bid", "[cards][spades]")
+{
+	Spades play;
+	REQUIRE(play.look() == "bid");
+	CHECK(play.get("table").lookName() == "bid");
+	CHECK(play.turn() == 0.0f);
+	for (const auto& [hand, holder] : { std::make_pair("west", "westcards"), std::make_pair("north", "northcards"), std::make_pair("east", "eastcards"), std::make_pair("you", "mine") })
+	{
+		CHECK(play.of(hand, "bid") == std::max(play.holderOf(holder).tricks, 1.0f));
+	}
+	const float first = play.of("you", "bid");
+	play.tap(KeyCode::W);
+	play.frames(1);
+	CHECK(play.of("you", "bid") == std::min(first + 1.0f, 13.0f));
+	for (int i = 0; i < 16; ++i) { play.tap(KeyCode::S); }
+	play.frames(2);
+	CHECK(play.of("you", "bid") == 1.0f);
+	play.tap(KeyCode::Space);
+	play.frames(2);
+	CHECK(play.look() == "playing");
+	CHECK(play.table("usbid") == 1.0f + play.of("north", "bid"));
+	CHECK(play.table("thembid") == play.of("west", "bid") + play.of("east", "bid"));
+}
+
+TEST_CASE("spades.xml: a hand's live number tricks reckons high cards, trumps and short suits", "[cards][spades]")
+{
+	Spades play;
+	// Seven spades from the ace (three honours, four past three), three side aces, a guarded king.
+	play.deal({
+		joined(joined(suitOf("spades", { "A", "K", "Q", "J", "10", "9", "8" }), suitOf("hearts", { "A", "K" })), joined(suitOf("diamonds", { "A", "2" }), suitOf("clubs", { "A", "2" }))),
+		joined(suitOf("spades", { "2", "3", "4", "5", "6", "7" }), suitOf("hearts", { "2", "3", "4", "5", "6", "7", "8" })),
+		joined(suitOf("hearts", { "9", "10", "J", "Q" }), suitOf("diamonds", { "3", "4", "5", "6", "7", "8", "9", "10", "J" })),
+		joined(suitOf("diamonds", { "Q", "K" }), suitOf("clubs", { "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K" })),
+	}, 1);
+	CHECK(play.holderOf("mine").tricks == 11.0f);
+	CHECK(play.of("you", "bid") == 11.0f);
+	// Six small trumps, no clubs or diamonds: three past three, and ruffs for the two missing suits.
+	CHECK(play.holderOf("westcards").tricks == 5.0f);
+}
+
+TEST_CASE("spades.xml: spades lead only once broken; a spade takes a trick of another suit", "[cards][spades]")
+{
+	Spades play;
+	play.deal({
+		joined(suitOf("spades", { "2" }), suitOf("diamonds", { "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K" })),
+		suitOf("clubs", { "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A" }),
+		suitOf("hearts", { "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A" }),
+		joined(suitOf("spades", { "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A" }), suitOf("diamonds", { "A" })),
+	}, 2);
+	// West leads its ace of clubs; north sheds a heart, east lets its partner's ace stand.
+	play.untilYou();
+	REQUIRE(play.holderOf("trick").items.size() == 3);
+	CHECK(play.holderOf("trick").winner == 2.0f);
+	CHECK(play.holderOf("eastcards").items.size() == 12);
+	CHECK(std::find(play.holderOf("eastcards").items.begin(), play.holderOf("eastcards").items.end(), play.cardOf("A diamonds")) == play.holderOf("eastcards").items.end());
+	// No club: your two of spades trumps the ace.
+	CHECK(play.play("2 spades"));
+	CHECK(play.holderOf("trick").winner == 1.0f);
+	play.untilYou();
+	CHECK(play.of("you", "won") == 1.0f);
+	CHECK(play.of("north", "won") == 0.0f);
+}
+
+TEST_CASE("spades.xml: no spade leads before spades are broken, unless only spades are held", "[cards][spades]")
+{
+	Spades play;
+	play.deal({
+		joined(suitOf("spades", { "2", "3", "4", "5", "6", "7", "8" }), suitOf("diamonds", { "2", "3", "4", "5", "6", "7" })),
+		joined(suitOf("spades", { "9", "10", "J", "Q", "K", "A" }), suitOf("diamonds", { "8", "9", "10", "J", "Q", "K", "A" })),
+		suitOf("hearts", { "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A" }),
+		suitOf("clubs", { "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A" }),
+	}, 1);
+	CHECK_FALSE(play.play("2 spades"));
+	CHECK(play.play("2 diamonds"));
+}
+
+TEST_CASE("spades.xml: a partner's winning ace stands: north plays low under it", "[cards][spades]")
+{
+	Spades play;
+	play.deal({
+		joined(suitOf("hearts", { "A" }), suitOf("diamonds", { "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K" })),
+		joined(suitOf("hearts", { "3", "4", "5", "6", "7", "8" }), suitOf("clubs", { "2", "3", "4", "5", "6", "7", "8" })),
+		joined(joined(suitOf("hearts", { "K", "2" }), suitOf("clubs", { "9", "10", "J", "Q", "K", "A" })), suitOf("spades", { "2", "3", "4", "5", "6" })),
+		joined(joined(suitOf("hearts", { "9", "10", "J", "Q" }), suitOf("spades", { "7", "8", "9", "10", "J", "Q", "K", "A" })), suitOf("diamonds", { "A" })),
+	}, 1);
+	CHECK(play.play("A hearts"));
+	play.untilYou();
+	CHECK(play.of("you", "won") == 1.0f);
+	const auto& north = play.holderOf("northcards").items;
+	CHECK(std::find(north.begin(), north.end(), play.cardOf("K hearts")) != north.end());
+	CHECK(std::find(north.begin(), north.end(), play.cardOf("2 hearts")) == north.end());
+}
+
+TEST_CASE("spades.xml: a side that makes its bid scores ten a trick and a bag each over; short, it loses ten a trick", "[cards][spades]")
+{
+	Spades play;
+	play.tap(KeyCode::Space);
+	play.frames(2);
+	play.set("table", "usbid", 4.0f);
+	play.set("you", "won", 3.0f);
+	play.set("north", "won", 2.0f);
+	play.set("table", "thembid", 9.0f);
+	play.set("west", "won", 4.0f);
+	play.set("east", "won", 4.0f);
+	play.set("table", "tricks", 13.0f);
+	play.frames(2);
+	CHECK(play.table("us") == 41.0f);
+	CHECK(play.table("usbags") == 1.0f);
+	CHECK(play.table("them") == -90.0f);
+	CHECK(play.look() == "done");
+	CHECK(play.get("message").lookName() == "made10");
+
+	// Ten bags cost a hundred.
+	play.set("table", "usbags", 11.0f);
+	play.frames(2);
+	CHECK(play.table("us") == -59.0f);
+	CHECK(play.table("usbags") == 1.0f);
+}
+
+TEST_CASE("spades.xml: at 500 after a hand the higher score wins", "[cards][spades]")
+{
+	Spades play;
+	play.set("table", "us", 320.0f);
+	play.set("table", "them", 512.0f);
+	play.game.showLook(play.get("table"), "done");
+	play.frames(2);
+	CHECK(play.state() == "over");
+	CHECK(play.get("over.winner").lookName() == "them");
+}
+
+TEST_CASE("spades.xml: a whole hand, you playing the first card that goes: 13 tricks scored", "[cards][spades]")
+{
+	Spades play;
+	play.tap(KeyCode::Space);
+	play.frames(2);
+	for (int trick = 0; trick < 13 && play.look() != "done"; ++trick)
+	{
+		play.untilYou();
+		if (play.look() == "done") { break; }
+		bool played = false;
+		const std::vector<int> mine = play.holderOf("mine").items;
+		for (const int number : mine)
+		{
+			const Object& item = *play.game.holders().itemAt(number);
+			if (play.play(nameOf(item)))
+			{
+				played = true;
+				break;
+			}
+		}
+		REQUIRE(played);
+		play.frames(2);
+	}
+	play.untilYou();
+	REQUIRE(play.look() == "done");
+	CHECK(play.of("you", "won") + play.of("north", "won") + play.of("west", "won") + play.of("east", "won") == 13.0f);
+	CHECK(play.table("us") != 0.0f);
+	CHECK(play.table("them") != 0.0f);
+	CHECK(play.holderOf("stock").items.size() == 52);
+}
+
+namespace
+{
+	// Gin rummy: the first deal comes from a stock stacked as given, top
+	// first: your ten, north's ten, the card turned up, then the stock.
+	struct Gin : Played
+	{
+		explicit Gin(const std::vector<std::string>& top) : Played("descriptions/gin.xml")
+		{
+			tap(KeyCode::Space);
+			frames(1);
+			// Dealt a card a round to you and north, then one turned up.
+			const auto part = [&](std::size_t from, std::size_t count)
+			{
+				std::vector<std::string> items;
+				for (std::size_t i = from; i < std::min(from + count, top.size()); ++i) { items.push_back(top[i]); }
+				return items;
+			};
+			game.holders().stackedStart = roundRobin(*this, { part(0, 10), part(10, 10) });
+			const std::vector<int> turned = roundRobin(*this, { part(20, 1) });
+			game.holders().stackedStart.insert(game.holders().stackedStart.end(), turned.begin(), turned.end());
+			for (int i = 0; i < 100 && look() == "dealing"; ++i) { frames(1); }
+			frames(2);
+		}
+
+		Object& holder(const std::string& name) { return get(name); }
+		float of(const std::string& player, const std::string& name) { return get(player).variable.at(name); }
+		float table(const std::string& name) { return get("table").variable.at(name); }
+		// Where the hand is: the table's look.
+		std::string look() { return get("table").lookName(); }
+		void set(const std::string& object, const std::string& name, float value) { game.setVariable(get(object).name, name, value); }
+
+		int cardOf(const std::string& name) { return cardNamed(game, name); }
+
+		bool holds(const std::string& pileName, const std::string& item)
+		{
+			const auto& items = holderOf(pileName).items;
+			return std::find(items.begin(), items.end(), cardOf(item)) != items.end();
+		}
+
+		// The hand at the top of the discard holder, and Space.
+		void drawDiscard()
+		{
+			Object& hand = get("you");
+			handOf(hand).holder = "playing.discard";
+			handOf(hand).at = static_cast<int>(holderOf("discard").items.size()) - 1;
+			tap(KeyCode::Space);
+			frames(2);
+		}
+
+		// The hand at that card of yours, and the key.
+		void discard(const std::string& name, KeyCode key)
+		{
+			const auto& mine = holderOf("mine").items;
+			Object& hand = get("you");
+			handOf(hand).holder = "playing.mine";
+			handOf(hand).at = static_cast<int>(std::find(mine.begin(), mine.end(), cardOf(name)) - mine.begin());
+			tap(key);
+			frames(2);
+		}
+	};
+
+	std::vector<std::string> cardsOf(std::initializer_list<std::vector<std::string>> parts)
+	{
+		std::vector<std::string> all;
+		for (const auto& part : parts) { all.insert(all.end(), part.begin(), part.end()); }
+		return all;
+	}
+
+	const std::vector<std::string> ginJunk{ "A spades", "3 spades", "5 spades", "9 diamonds", "J diamonds", "K clubs", "2 diamonds", "4 clubs", "6 clubs", "8 hearts" };
+}
+
+TEST_CASE("gin.xml: cards laid out in the melds that leave the least deadwood, the court cards ten", "[cards][gin]")
+{
+	// The seven of hearts in a run or in the set of sevens: the set leaves less.
+	Gin play(cardsOf({ suitOf("hearts", { "5", "6", "7" }), { "7 spades", "7 diamonds" }, suitOf("spades", { "J", "Q", "K" }), { "A diamonds", "2 spades" }, ginJunk, { "10 hearts" } }));
+	REQUIRE(play.look() == "drawing");
+	CHECK(play.holderOf("mine").deadwood == 14.0f);
+	CHECK(play.holderOf("northcards").deadwood == 58.0f);
+	// Melds first, then the deadwood.
+	const auto& mine = play.holderOf("mine").items;
+	REQUIRE(mine.size() == 10);
+	std::vector<std::string> last;
+	for (std::size_t i = 6; i < 10; ++i) { last.push_back(nameOf(*play.game.holders().itemAt(mine[i]))); }
+	CHECK(std::find(last.begin(), last.end(), "5 hearts") != last.end());
+	CHECK(std::find(last.begin(), last.end(), "A diamonds") != last.end());
+	CHECK(std::find(last.begin(), last.end(), "7 hearts") == last.end());
+}
+
+TEST_CASE("gin.xml: a draw from the discard holder, then a discard; the deadwood counts the best ten", "[cards][gin]")
+{
+	Gin play(cardsOf({ suitOf("hearts", { "3", "4", "5" }), { "7 spades", "7 hearts", "7 diamonds" }, suitOf("clubs", { "9", "10", "J" }), { "K diamonds" }, ginJunk, { "2 spades" } }));
+	CHECK(play.holderOf("mine").deadwood == 10.0f);
+	play.drawDiscard();
+	CHECK(play.holderOf("mine").items.size() == 11);
+	CHECK(play.look() == "discarding");
+	CHECK(play.holderOf("mine").deadwood == 2.0f);
+	CHECK(play.get("you").lookName() == "discard");
+	play.discard("K diamonds", KeyCode::Space);
+	CHECK(play.holds("discard", "K diamonds"));
+	CHECK(play.of("north", "turn") == 1.0f);
+}
+
+TEST_CASE("gin.xml: before the draw, Space on a card of your own does nothing", "[cards][gin]")
+{
+	Gin play(cardsOf({ suitOf("hearts", { "3", "4", "5" }), { "7 spades", "7 hearts", "7 diamonds" }, suitOf("clubs", { "9", "10", "J" }), { "K diamonds" }, ginJunk, { "2 spades" } }));
+	play.discard("K diamonds", KeyCode::Space);
+	CHECK(play.holderOf("mine").items.size() == 10);
+	CHECK(play.holds("mine", "K diamonds"));
+	CHECK(play.handOf(play.get("you")).held.empty());
+	CHECK(play.look() == "drawing");
+	CHECK(play.get("you").lookName() == "draw");
+	play.drawDiscard();
+	CHECK(play.holderOf("mine").items.size() == 11);
+	CHECK(play.get("you").lookName() == "discard");
+}
+
+TEST_CASE("gin.xml: a knock with ten or less scores the difference, north's cards shown", "[cards][gin]")
+{
+	Gin play(cardsOf({ suitOf("hearts", { "3", "4", "5" }), { "7 spades", "7 hearts", "7 diamonds" }, suitOf("clubs", { "9", "10", "J" }), { "K diamonds" }, ginJunk, { "2 spades" } }));
+	play.drawDiscard();
+	play.discard("K diamonds", KeyCode::K);
+	play.frames(2);
+	CHECK(play.look() == "done");
+	CHECK(play.of("you", "score") == 56.0f);
+	CHECK(play.get("message").lookName() == "youknock");
+	for (const int number : play.holderOf("northcards").items) { CHECK(play.game.itemOf(*play.game.holders().itemAt(number)).faceUp); }
+}
+
+TEST_CASE("gin.xml: gin scores 25 more", "[cards][gin]")
+{
+	Gin play(cardsOf({ suitOf("hearts", { "3", "4", "5" }), { "7 spades", "7 hearts", "7 diamonds" }, suitOf("clubs", { "9", "10", "J", "Q" }), ginJunk, { "K diamonds" } }));
+	play.drawDiscard();
+	play.discard("K diamonds", KeyCode::K);
+	play.frames(2);
+	CHECK(play.of("you", "score") == 83.0f);
+	CHECK(play.get("message").lookName() == "yougin");
+}
+
+TEST_CASE("gin.xml: a knock against no more deadwood is undercut: 25 and the difference to the other", "[cards][gin]")
+{
+	Gin play(cardsOf({ suitOf("hearts", { "3", "4", "5" }), { "7 spades", "7 hearts", "7 diamonds" }, suitOf("clubs", { "9", "10", "J" }), { "9 diamonds" },
+		suitOf("spades", { "A", "2", "3" }), suitOf("diamonds", { "4", "5", "6" }), { "8 clubs", "8 hearts", "8 spades", "2 clubs" }, { "K diamonds" } }));
+	CHECK(play.holderOf("northcards").deadwood == 2.0f);
+	play.drawDiscard();
+	play.discard("K diamonds", KeyCode::K);
+	play.frames(2);
+	CHECK(play.of("north", "score") == 32.0f);
+	CHECK(play.of("you", "score") == 0.0f);
+	CHECK(play.get("message").lookName() == "youcut");
+}
+
+TEST_CASE("gin.xml: a knock with more than ten left is only a discard", "[cards][gin]")
+{
+	Gin play(cardsOf({ suitOf("hearts", { "3", "4", "5" }), { "7 spades", "7 hearts", "7 diamonds" }, suitOf("clubs", { "9", "10", "J" }), { "K diamonds" }, ginJunk, { "Q spades" } }));
+	play.drawDiscard();
+	play.discard("9 clubs", KeyCode::K);
+	play.frames(2);
+	CHECK(play.table("knocking") == 0.0f);
+	CHECK(play.of("north", "turn") == 1.0f);
+	CHECK(play.look() != "done");
+}
+
+TEST_CASE("gin.xml: north draws a discard that melds, and lets go of what melds least", "[cards][gin]")
+{
+	Gin play(cardsOf({ suitOf("hearts", { "3", "4", "5" }), { "7 spades", "7 hearts", "7 diamonds" }, suitOf("clubs", { "9", "10", "J" }), { "6 diamonds" },
+		{ "4 diamonds", "5 diamonds", "A spades", "3 spades", "9 spades", "J spades", "K clubs", "2 clubs", "4 clubs", "8 hearts" }, { "Q hearts" } }));
+	play.drawDiscard();
+	play.discard("6 diamonds", KeyCode::Space);
+	for (int i = 0; i < 600 && play.of("you", "turn") != 1.0f; ++i) { play.frames(1); }
+	REQUIRE(play.of("you", "turn") == 1.0f);
+	CHECK(play.holds("northcards", "6 diamonds"));
+	CHECK(play.holderOf("northcards").items.size() == 10);
+	CHECK(play.holderOf("northcards").deadwood == 37.0f);
+}
+
+TEST_CASE("gin.xml: north knocks as soon as its discard leaves ten or less", "[cards][gin]")
+{
+	// Yours: hearts, clubs and diamonds that meld nowhere. North's: three melds and the king of spades.
+	Gin play(cardsOf({ { "2 hearts", "4 hearts", "6 hearts", "8 hearts", "10 hearts", "Q hearts", "2 clubs", "4 clubs", "6 clubs", "8 clubs" },
+		suitOf("spades", { "A", "2", "3" }), suitOf("diamonds", { "4", "5", "6" }), { "9 clubs", "9 hearts", "9 spades", "K spades" }, { "Q diamonds" } }));
+	REQUIRE(play.holderOf("northcards").deadwood == 10.0f);
+	// North's draw from the stock melds nowhere, so it cannot go gin.
+	auto& stock = play.holderOf("stock").items;
+	const int king = play.cardOf("K hearts");
+	stock.erase(std::find(stock.begin(), stock.end(), king));
+	stock.push_back(king);
+	play.drawDiscard();
+	play.discard("Q diamonds", KeyCode::Space);
+	for (int i = 0; i < 600 && play.look() != "done"; ++i) { play.frames(1); }
+	REQUIRE(play.look() == "done");
+	CHECK(play.get("message").lookName() == "northknock");
+	CHECK(play.of("north", "score") == play.holderOf("mine").deadwood - play.holderOf("northcards").deadwood);
+	CHECK(play.of("you", "turn") == 0.0f);
+	CHECK(play.of("north", "turn") == 0.0f);
+	for (const int number : play.holderOf("northcards").items) { CHECK(play.game.itemOf(*play.game.holders().itemAt(number)).faceUp); }
+}
+
+TEST_CASE("gin.xml: at 100 after a hand the higher score wins", "[cards][gin]")
+{
+	Gin play(ginJunk);
+	play.set("you", "score", 105.0f);
+	play.set("north", "score", 40.0f);
+	play.game.showLook(play.get("table"), "done");
+	play.frames(2);
+	CHECK(play.state() == "over");
+	CHECK(play.get("over.winner").lookName() == "you");
+}
+
+namespace
+{
+	struct Pyramid : Played
+	{
+		Pyramid() : Played("descriptions/pyramid.xml")
+		{
+			tap(KeyCode::Space);
+			frames(2);
+		}
+
+		Object& holder(const std::string& name) { return get(name); }
+
+		int cardOf(const std::string& name) { return cardNamed(game, name); }
+
+		// That card swapped with the one on that holder.
+		void put(const std::string& name, const std::string& onto)
+		{
+			const int number = cardOf(name);
+			auto& target = holderOf(onto).items;
+			for (Object& object : game.getCurrentObjects())
+			{
+				if (!isHolder(object)) { continue; }
+				auto& items = holderOf(object).items;
+				const auto at = std::find(items.begin(), items.end(), number);
+				if (at == items.end()) { continue; }
+				if (&items == &target)
+				{
+					std::iter_swap(at, target.end() - 1);
+					break;
+				}
+				Object& moved = *game.holders().itemAt(number);
+				Object& other = *game.holders().itemAt(target.back());
+				const bool up = game.itemOf(other).faceUp;
+				game.holders().turnItem(other, game.itemOf(moved).faceUp);
+				game.holders().turnItem(moved, up);
+				*at = target.back();
+				target.back() = number;
+			}
+			game.holders().layOutItems();
+		}
+
+		bool holds(const std::string& pileName, const std::string& name)
+		{
+			const auto& items = holderOf(pileName).items;
+			return std::find(items.begin(), items.end(), cardOf(name)) != items.end();
+		}
+
+		void space(const std::string& at)
+		{
+			Object& hand = get("hand");
+			handOf(hand).holder = holder(at).name;
+			handOf(hand).at = static_cast<int>(holderOf(at).items.size()) - 1;
+			handOf(hand).mouse = false;
+			tap(KeyCode::Space);
+			frames(1);
+		}
+	};
+}
+
+TEST_CASE("pyramid.xml: 28 cards in seven rows, 24 in the stock", "[cards][pyramid]")
+{
+	Pyramid play;
+	int dealt = 0;
+	for (int row = 1; row <= 7; ++row)
+	{
+		for (int column = 1; column <= row; ++column)
+		{
+			const auto& items = play.holderOf("row" + std::to_string(row) + "." + std::to_string(column) + ".1").items;
+			CHECK(items.size() == 1);
+			dealt += static_cast<int>(items.size());
+		}
+	}
+	CHECK(dealt == 28);
+	CHECK(play.holderOf("stock").items.size() == 24);
+}
+
+TEST_CASE("pyramid.xml: a covered card cannot be taken; a king goes alone", "[cards][pyramid]")
+{
+	Pyramid play;
+	play.put("K spades", "row1.1.1");
+	play.space("row1.1.1");
+	CHECK(play.holds("row1.1.1", "K spades"));
+	CHECK(play.get("hand").lookName() == "free");
+	play.put("K hearts", "row7.4.1");
+	play.space("row7.4.1");
+	CHECK(play.holds("pairs", "K hearts"));
+	CHECK(play.holderOf("row7.4.1").items.empty());
+	CHECK(play.get("hand").lookName() == "free");
+}
+
+TEST_CASE("pyramid.xml: two free cards making 13 go together; two that do not go back", "[cards][pyramid]")
+{
+	Pyramid play;
+	play.put("Q hearts", "row7.1.1");
+	play.put("A spades", "row7.2.1");
+	play.put("5 hearts", "row7.3.1");
+	play.put("6 clubs", "row7.4.1");
+	play.space("row7.1.1");
+	CHECK(play.get("hand").lookName() == "held");
+	play.space("row7.2.1");
+	CHECK(play.holds("pairs", "Q hearts"));
+	CHECK(play.holds("pairs", "A spades"));
+	CHECK(play.get("hand").lookName() == "free");
+
+	play.space("row7.3.1");
+	play.space("row7.4.1");
+	CHECK(play.holds("row7.3.1", "5 hearts"));
+	CHECK(play.holds("row7.4.1", "6 clubs"));
+	CHECK(play.get("hand").lookName() == "free");
+
+	// Row seven's first two gone: the first of row six is free.
+	play.put("J diamonds", "row6.1.1");
+	play.put("2 clubs", "row7.5.1");
+	play.space("row6.1.1");
+	play.space("row7.5.1");
+	CHECK(play.holds("pairs", "J diamonds"));
+	CHECK(play.holds("pairs", "2 clubs"));
+}
+
+TEST_CASE("pyramid.xml: the stock turns onto the waste, whose top pairs with the pyramid", "[cards][pyramid]")
+{
+	Pyramid play;
+	play.put("10 spades", "stock");
+	play.put("3 hearts", "row7.7.1");
+	play.space("stock");
+	CHECK(play.holds("waste", "10 spades"));
+	play.space("waste");
+	play.space("row7.7.1");
+	CHECK(play.holds("pairs", "10 spades"));
+	CHECK(play.holds("pairs", "3 hearts"));
+}
+
+TEST_CASE("pyramid.xml: the pyramid cleared wins", "[cards][pyramid]")
+{
+	Pyramid play;
+	for (int row = 1; row <= 7; ++row)
+	{
+		for (int column = 1; column <= row; ++column)
+		{
+			Object& each = play.holder("row" + std::to_string(row) + "." + std::to_string(column) + ".1");
+			for (const int number : play.holderOf(each).items) { play.holderOf("pairs").items.push_back(number); }
+			play.holderOf(each).items.clear();
+			play.game.holders().refreshHolder(each);
+		}
+	}
+	play.frames(2);
+	CHECK(play.state() == "over");
+}
+
+namespace
+{
+	// A pile of three tokens (n 1 to 3) dealt in order by <starts>, face
+	// down but the top, and three kinds of piece. Space sends the top one
+	// out and spawns the kind its number picks.
+	struct Tokens
+	{
+		std::string path = scratchName("descriptions/tokens_scratch.xml");
+		explicit Tokens(const std::string& order = "")
+		{
+			std::ofstream(path) << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
+				"<window name=\"tokens\"><width>800</width><height>600</height><background>color.black</background></window>"
+				"<variables><variable name=\"unused\">0</variable></variables>"
+				"<states><state name=\"playing\"><objects>"
+				"<group name=\"tokens\" class=\"token\"><columns name=\"n\">3</columns><rows>1</rows>"
+				"<sprite name=\"face\"><rectangle><width>10</width><height>10</height></rectangle></sprite>"
+				"<sprite name=\"back\"><rectangle><width>10</width><height>10</height><color>color.red</color></rectangle></sprite>"
+				"<position><x>0</x><y>0</y></position></group>"
+				"<object name=\"pile\"><sprite /><position><x>100</x><y>100</y></position><holds class=\"token\" sprite=\"back\"><top sprite=\"face\" /></holds></object>"
+				"<object name=\"out\"><sprite /><position><x>300</x><y>100</y></position><holds class=\"token\" sprite=\"back\" /></object>"
+				"<group name=\"kinds\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite><position><x>0</x><y>300</y></position>"
+				"<member name=\"one\" /><member name=\"two\" /><member name=\"three\" /></group>"
+				"</objects><starts><send from=\"tokens\" into=\"pile\"><all /></send>" << order << "</starts>"
+				"<inputs><input button=\"space\"><spawn object=\"kinds\"><member>pile.top.n</member></spawn><send from=\"pile\" into=\"out\">1</send></input></inputs>"
+				"</state></states></game>";
+		}
+		~Tokens() { std::error_code ignored; std::filesystem::remove(path, ignored); }
+	};
+
+	int copiesOf(Played& play, const std::string& name)
+	{
+		int count = 0;
+		for (const Object& object : play.game.getCurrentObjects()) { if (object.exists && object.copyOf == name) { ++count; } }
+		return count;
+	}
+}
+
+TEST_CASE("<starts> deals a pack in its order, the first on top; a holder's top.<variable> and <top sprite> follow each send", "[cards][holders]")
+{
+	const Tokens file;
+	Played play(file.path);
+	play.frames(1);
+	Object& pile = play.get("playing.pile");
+	REQUIRE(play.holderOf(pile).items.size() == 3);
+	CHECK(pile.variable.at("top.n") == 1.0f);
+	CHECK(play.game.holders().itemAt(play.holderOf(pile).items.back())->lookName() == "face");
+
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	CHECK(pile.variable.at("top.n") == 2.0f);
+	// The one left on top turns face up, as <top> says, after a <send> too.
+	CHECK(play.game.holders().itemAt(play.holderOf(pile).items.back())->lookName() == "face");
+	CHECK(play.game.holders().itemAt(play.holderOf(pile).items.front())->lookName() == "back");
+
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	CHECK(play.holderOf(pile).items.empty());
+	CHECK(pile.variable.at("top.n") == 0.0f); // nothing on top
+}
+
+TEST_CASE("<spawn> with a <member> makes that member of a group, and is refused past the last", "[holders][spawn]")
+{
+	const Tokens file;
+	Played play(file.path);
+	play.frames(1);
+	for (int i = 0; i < 3; ++i)
+	{
+		play.tap(KeyCode::Space);
+		play.frames(1);
+	}
+	CHECK(copiesOf(play, "playing.one") == 1);
+	CHECK(copiesOf(play, "playing.two") == 1);
+	CHECK(copiesOf(play, "playing.three") == 1);
+	// The pile empty, top.n is 0: no member 0, so nothing more is made.
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	CHECK(copiesOf(play, "playing.one") + copiesOf(play, "playing.two") + copiesOf(play, "playing.three") == 3);
+}
+
+TEST_CASE("an <order> in <starts> shuffles what starts in that holder", "[cards][holders]")
+{
+	// With 3 tokens, the pack's order comes up 1 in 6 times; over 20 games, never every time.
+	// Each load seeds the numbers again, so each game takes its own seed: with one seed for all
+	// twenty, every game shuffled alike and the test failed on 1 run's seed in 6.
+	const std::optional<unsigned int> runSeed = xge::fixedRandomSeed();
+	struct SeedBack
+	{
+		std::optional<unsigned int> seed;
+		~SeedBack() { xge::fixRandomSeed(seed); }
+	} seedBack{ runSeed };
+	int inOrder = 0;
+	for (unsigned int game = 0; game < 20; ++game)
+	{
+		xge::fixRandomSeed(runSeed.value_or(0u) + game);
+		const Tokens file("<order group=\"pile\"><random /></order>");
+		Played play(file.path);
+		play.frames(1);
+		if (play.get("playing.pile").variable.at("top.n") == 1.0f && play.game.holders().itemAt(play.holderOf("playing.pile").items.front())->variable.at("n") == 3.0f) { ++inOrder; }
+	}
+	CHECK(inOrder < 20);
+}

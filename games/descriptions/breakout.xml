@@ -9,8 +9,8 @@
   brick is worth 1, green 3, orange 5 and red 7. Three balls; clear the wall
   and a second one is built, clear that too and you win.
 
-  A and D, the arrow keys, the mouse or a pad move the paddle; Space starts,
-  pauses (or P) and plays again.
+  A and D, the arrow keys, the mouse or a pad move the paddle; Space starts
+  and plays again, Pause pauses.
 
   How it is written:
   * The wall is a group of four groups, a colour each: the wall gives the
@@ -38,73 +38,38 @@
     <variable name="line">18</variable>
     <variable name="top">110</variable>
     <variable name="paddle">64</variable>
-    <variable name="step">8</variable>
+    <variable name="step">480</variable>
   </variables>
-  <sounds>
-    <sound name="wall"><note pitch="A3">0.03</note></sound>
-    <sound name="paddle"><note pitch="A4">0.04</note></sound>
-    <sound name="red"><note pitch="C6">0.05</note></sound>
-    <sound name="orange"><note pitch="G5">0.05</note></sound>
-    <sound name="green"><note pitch="C5">0.05</note></sound>
-    <sound name="yellow"><note pitch="G4">0.05</note></sound>
-    <sound name="lost" wave="triangle">
-      <volume>0.4</volume>
-      <note pitch="E4" to="E2">0.4</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>100</size><color>color.orange</color></style>
     <style name="prompt"><size>36</size></style>
     <style name="help"><size>26</size><color>color.lightgrey</color></style>
     <style name="hud"><size>64</size></style>
   </styles>
-  <objects>
-    <object name="again">
-      <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
-      <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
-    </object>
-  </objects>
   <states>
-    <state name="mainmenu">
+    <objects>
+      <object name="again">
+        <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
+        <position><x><centered /></x><y><centered><offset>70</offset></centered></y></position>
+      </object>
+    </objects>
+    <state name="title">
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>BREAKOUT</content></text></sprite>
-          <!-- x is window.width.center - title.width / 2 and y is window.height.center - title.height / 2 + (-110), written as <formula>s: one operation, its operands nested inside it -->
-          <position>
-            <x>
-              <formula>
-                <subtract>
-                  <minuend>window.width.center</minuend>
-                  <subtrahend><divide><dividend>title.width</dividend><divisor>2</divisor></divide></subtrahend>
-                </subtract>
-              </formula>
-            </x>
-            <y>
-              <formula>
-                <add>
-                  <augend>
-                    <subtract>
-                      <minuend>window.height.center</minuend>
-                      <subtrahend><divide><dividend>title.height</dividend><divisor>2</divisor></divide></subtrahend>
-                    </subtract>
-                  </augend>
-                  <addend>-110</addend>
-                </add>
-              </formula>
-            </y>
-          </position>
+          <position><x><centered /></x><y><centered><offset>-110</offset></centered></y></position>
         </object>
-        <object name="help">
-          <sprite><text style="help"><content>three balls, two walls: yellow 1, green 3, orange 5, red 7</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 10</centered></y></position>
-        </object>
-        <object name="keys">
-          <sprite><text style="help"><content>a and d, the arrows or the mouse move the paddle</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 30</centered></y></position>
-        </object>
+        <group name="help">
+          <rows>2</rows>
+          <padding><y>40</y></padding>
+          <sprite><text style="help" /></sprite>
+          <position><x><centered /></x><y><centered><offset>-10</offset></centered></y></position>
+          <row number="1"><sprite><text><content>three balls, two walls: yellow 1, green 3, orange 5, red 7</content></text></sprite></row>
+          <row number="2"><sprite><text><content>a and d, the arrows or the mouse move the paddle</content></text></sprite></row>
+        </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 120</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>120</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
@@ -126,15 +91,26 @@
         </object>
         <object name="balls">
           <sprite><text style="hud"><number>status.balls</number></text></sprite>
-          <position><x>window.right - 40 - balls.width</x><y>16</y></position>
+          <position><x><right><offset>40</offset></right></x><y>16</y></position>
         </object>
         <!-- the wall: fourteen bricks across, two rows of each colour -->
         <group name="wall" class="brick">
           <columns>14</columns>
           <rows>2</rows>
           <padding><x>gap</x><y>gap</y></padding>
-          <sprite><rectangle><width>brick</width><height>line - gap</height></rectangle></sprite>
-          <position><x>(window.right - 14 * brick - 13 * gap) / 2</x></position>
+          <sprite><rectangle><width>brick</width><height><subtract><value>line</value><value>gap</value></subtract></height></rectangle></sprite>
+          <position><x>
+            <divide>
+              <value>
+                <subtract>
+                  <value>window.right</value>
+                  <value><multiply><value>14</value><value>brick</value></multiply></value>
+                  <value><multiply><value>13</value><value>gap</value></multiply></value>
+                </subtract>
+              </value>
+              <value>2</value>
+            </divide>
+          </x></position>
           <collisions>
             <collision object="ball">
               <inc variable="status.score">self.worth</inc>
@@ -149,27 +125,27 @@
           </group>
           <group name="orange">
             <sprite><rectangle><color>color.orange</color></rectangle></sprite>
-            <position><y>top + 2 * line</y></position>
+            <position><y><add><value>top</value><value><multiply><value>2</value><value>line</value></multiply></value></add></y></position>
             <collisions><collision object="ball"><play sound="orange" /></collision></collisions>
             <variables><variable name="worth">5</variable></variables>
           </group>
           <group name="green">
             <sprite><rectangle><color>color.green</color></rectangle></sprite>
-            <position><y>top + 4 * line</y></position>
+            <position><y><add><value>top</value><value><multiply><value>4</value><value>line</value></multiply></value></add></y></position>
             <collisions><collision object="ball"><play sound="green" /></collision></collisions>
             <variables><variable name="worth">3</variable></variables>
           </group>
           <group name="yellow">
             <sprite><rectangle><color>color.yellow</color></rectangle></sprite>
-            <position><y>top + 6 * line</y></position>
+            <position><y><add><value>top</value><value><multiply><value>6</value><value>line</value></multiply></value></add></y></position>
             <collisions><collision object="ball"><play sound="yellow" /></collision></collisions>
             <variables><variable name="worth">1</variable></variables>
           </group>
         </group>
         <object name="player">
           <sprite name="full"><rectangle><width>paddle</width><height>12</height><color>color.cyan</color></rectangle></sprite>
-          <sprite name="half"><rectangle><width>paddle / 2</width><height>12</height><color>color.cyan</color></rectangle></sprite>
-          <position><x><centered /></x><y>window.bottom - 60</y></position>
+          <sprite name="half"><rectangle><width><divide><value>paddle</value><value>2</value></divide></width><height>12</height><color>color.cyan</color></rectangle></sprite>
+          <position><x><centered /></x><y><subtract><value>window.bottom</value><value>60</value></subtract></y></position>
           <collisions>
             <collision edge="horizontal"><stick /></collision>
           </collisions>
@@ -183,7 +159,7 @@
         <object name="ball">
           <sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>
           <position><x><centered /></x><y><centered /></y></position>
-          <velocity><x><random><min>-3</min><max>3</max></random></x><y>4</y></velocity>
+          <velocity><x><random><min>-180</min><max>180</max></random></x><y>240</y></velocity>
           <collisions>
             <collision edge="horizontal">
               <bounce />
@@ -213,18 +189,21 @@
             </collision>
             <collision class="brick"><bounce /></collision>
             <collision class="brick">
-              <all>
-                <condition variable="y"><below>top + 4 * line</below></condition>
-                <condition variable="deep"><equal>0</equal></condition>
-              </all>
+              <condition variable="y"><below>
+                <add>
+                  <value>top</value>
+                  <value><multiply><value>4</value><value>line</value></multiply></value>
+                </add>
+              </below></condition>
+              <condition variable="deep"><equal>0</equal></condition>
               <inc variable="ball.deep" />
               <trigger action="faster" />
             </collision>
           </collisions>
           <actions>
             <action name="faster">
-              <set variable="ball.velocity.x">ball.velocity.x * 1.25</set>
-              <set variable="ball.velocity.y">ball.velocity.y * 1.25</set>
+              <set variable="ball.velocity.x"><multiply><value>ball.velocity.x</value><value>1.25</value></multiply></set>
+              <set variable="ball.velocity.y"><multiply><value>ball.velocity.y</value><value>1.25</value></multiply></set>
             </action>
           </actions>
           <variables>
@@ -237,15 +216,14 @@
         <input><button>a</button><button>left</button><button>pad1.left</button><trigger object="player" action="left" /></input>
         <input><button>d</button><button>right</button><button>pad1.right</button><trigger object="player" action="right" /></input>
         <input axis="mouse.x"><trigger object="player" action="steer" /></input>
-        <input><button>space</button><button>p</button><button>pad1.start</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
-        <condition>
-          <all>
-            <condition object="wall"><remaining>0</remaining></condition>
-            <condition object="status" variable="walls"><atleast>1</atleast></condition>
-          </all>
-          <push state="youwin" />
+        <condition object="wall"><remaining>0</remaining>
+          <condition object="status" variable="walls"><atleast>1</atleast>
+            <become object="over.message" sprite="won" />
+            <push state="over" />
+          </condition>
         </condition>
         <!-- the first wall cleared: a second, and a new ball -->
         <condition object="wall">
@@ -256,7 +234,8 @@
         </condition>
         <condition object="status" variable="balls">
           <atmost>0</atmost>
-          <push state="gameover" />
+          <become object="over.message" sprite="lost" />
+          <push state="over" />
         </condition>
       </conditions>
     </state>
@@ -271,14 +250,15 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>pad1.start</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
-    <state name="youwin">
+    <state name="over">
       <objects>
         <object name="message">
-          <sprite><text style="banner"><content>YOU WIN</content><color>color.green</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
+          <sprite name="won"><text style="banner"><content>YOU WIN</content><color>color.green</color></text></sprite>
+          <sprite name="lost"><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>
+          <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
         </object>
       </objects>
       <shows>
@@ -289,12 +269,17 @@
         <input><button>space</button><button>pad1.start</button><reset /></input>
       </inputs>
     </state>
-    <state name="gameover" from="youwin">
-      <objects>
-        <object name="message">
-          <sprite><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>
-        </object>
-      </objects>
-    </state>
   </states>
+  <sounds>
+    <sound name="wall"><note pitch="A3">0.03</note></sound>
+    <sound name="paddle"><note pitch="A4">0.04</note></sound>
+    <sound name="red"><note pitch="C6">0.05</note></sound>
+    <sound name="orange"><note pitch="G5">0.05</note></sound>
+    <sound name="green"><note pitch="C5">0.05</note></sound>
+    <sound name="yellow"><note pitch="G4">0.05</note></sound>
+    <sound name="lost" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="E4" to="E2">0.4</note>
+    </sound>
+  </sounds>
 </game>

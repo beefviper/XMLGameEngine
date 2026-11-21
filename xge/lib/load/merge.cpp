@@ -9,6 +9,8 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <functional>
+#include <map>
 #include <stdexcept>
 
 namespace xge
@@ -36,6 +38,9 @@ namespace xge
 			std::string getAttribute(const std::string& key) const override { return self->attribute(key); }
 			std::vector<std::pair<std::string, std::string>> getAttributes() const override { return self->attributes; }
 			std::string getText() const override { return self->text; }
+			int line() const override { return self->line; }
+
+			const ElementPtr& element() const { return self; }
 
 			std::unique_ptr<XmlNode> getFirstChild() const override
 			{
@@ -98,7 +103,7 @@ namespace xge
 			if (parent == "collisions")
 			{
 				if (tag == "collision") { return Match::Added; }
-				return tag == "solid" ? Match::All : Match::Tag;
+				return tag == "solid" || tag == "hitbox" ? Match::All : Match::Tag;
 			}
 			if (parent == "position" || parent == "velocity" || parent == "acceleration" || parent == "pivot" || parent == "padding") { return Match::Tag; }
 			if (tag == "sprite" || tag == "animation") { return Match::Whole; }
@@ -108,10 +113,18 @@ namespace xge
 			return isLayout(tag) ? Match::All : Match::Tag;
 		}
 
+		// Two tags that are one setting said either way: <ready /> written over
+		// a <waiting /> takes its place, as a tag does its own.
+		bool alike(const std::string& one, const std::string& other)
+		{
+			const auto kind = [](const std::string& tag) { return tag == "ready" ? std::string("waiting") : tag; };
+			return kind(one) == kind(other);
+		}
+
 		bool sameKind(Match match, const ElementPtr& one, const ElementPtr& other)
 		{
 			if (match == Match::All && isLayout(one->name)) { return isLayout(other->name); }
-			if (one->name != other->name) { return false; }
+			if (!alike(one->name, other->name)) { return false; }
 			if (match == Match::Whole || match == Match::Deep || match == Match::Named) { return one->attribute("name") == other->attribute("name"); }
 			return true;
 		}
@@ -145,10 +158,10 @@ namespace xge
 				if (match == Match::Tag && like)
 				{
 					// all of over's of the tag, where base's first of it was
-					const bool first = std::none_of(base.begin(), base.begin() + static_cast<std::ptrdiff_t>(i), [&](const ElementPtr& each) { return each->name == child->name; });
+					const bool first = std::none_of(base.begin(), base.begin() + static_cast<std::ptrdiff_t>(i), [&](const ElementPtr& each) { return alike(each->name, child->name); });
 					if (first)
 					{
-						for (const ElementPtr& each : over) { if (each->name == child->name) { made.push_back(each); } }
+						for (const ElementPtr& each : over) { if (alike(each->name, child->name)) { made.push_back(each); } }
 					}
 					continue;
 				}
@@ -161,7 +174,7 @@ namespace xge
 				if (match == Match::All || match == Match::Added) { made.push_back(child); continue; }
 				if (match == Match::Tag)
 				{
-					if (std::none_of(base.begin(), base.end(), [&](const ElementPtr& each) { return each->name == child->name; })) { made.push_back(child); }
+					if (std::none_of(base.begin(), base.end(), [&](const ElementPtr& each) { return alike(each->name, child->name); })) { made.push_back(child); }
 					continue;
 				}
 				if (match == Match::Named && child->attribute("name").empty()) { made.push_back(child); continue; }
@@ -255,7 +268,7 @@ namespace xge
 			if (!asGroup && (!rest->children.empty() || !rest->attributes.empty()))
 			{
 				fail(where, "changes '" + member + "', a member of group '" + group->attribute("name")
-					+ "', and a member changes only its <sprite>s, <animation>s, <position> and <velocity>; change the group, or take the member on its own from the <kit>");
+					+ "', and a member changes only its <sprite>s, <animation>s, <position> and <velocity>; change the group, or take the member on its own from the top-level <objects>");
 			}
 
 			const auto apply = [&](const auto& self, const ElementPtr& holder) -> ElementPtr
@@ -290,24 +303,11 @@ namespace xge
 				if (set && taken.emplace(tag, name).second) { collect(set, kit, names, taken); }
 			};
 			const std::string& tag = element->name;
-			if (tag == "spawn" || tag == "fire" || tag == "release")
+			if (tag == "spawn" || tag == "fire")
 			{
 				if (const std::string object = element->attribute("object"); !object.empty()) { names.insert(object); }
 			}
 			else if (tag == "follow") { look("path", element->attribute("path")); }
-			else if (tag == "condition" && !element->attribute("set").empty()) { look("conditions", element->attribute("set")); }
-			else if (tag == "inputs")
-			{
-				// keys="player", or a <keys> each.
-				if (const std::string set = element->attribute("keys"); !set.empty()) { look("keys", set); }
-				for (const ElementPtr& child : element->children)
-				{
-					if (child->name != "keys") { continue; }
-					const std::size_t begin = child->text.find_first_not_of(" \t\r\n");
-					const std::size_t end = child->text.find_last_not_of(" \t\r\n");
-					if (begin != std::string::npos) { look("keys", child->text.substr(begin, end - begin + 1)); }
-				}
-			}
 			for (const ElementPtr& child : element->children) { collect(child, kit, names, taken); }
 		}
 	}
@@ -327,6 +327,7 @@ namespace xge
 		made->name = node.getName();
 		made->attributes = node.getAttributes();
 		made->text = node.getText();
+		made->line = node.line();
 		for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
 		{
 			made->children.push_back(copyElement(*child));
@@ -334,15 +335,120 @@ namespace xge
 		return made;
 	}
 
+	ElementPtr elementOf(const XmlNode& node)
+	{
+		if (const auto* view = dynamic_cast<const ElementNode*>(&node)) { return view->element(); }
+		return copyElement(node);
+	}
+
 	std::unique_ptr<XmlNode> viewOf(const ElementPtr& element)
 	{
 		return std::make_unique<ElementNode>(element, nullptr, 0);
+	}
+
+	ElementPtr withPictures(const ElementPtr& game)
+	{
+		std::map<std::string, ElementPtr> bitmaps;
+		std::map<std::string, ElementPtr> drawings;
+		for (const ElementPtr& child : game->children)
+		{
+			if (child->name != "pictures") { continue; }
+			for (const ElementPtr& picture : child->children)
+			{
+				if (picture->name == "drawing")
+				{
+					const std::string name = picture->attribute("name");
+					if (name.empty()) { fail("<pictures> > <drawing>", "needs a name=, which a sprite's <drawing from=\"...\" /> takes it by"); }
+					if (!drawings.emplace(name, picture).second) { fail("<pictures>", "two <drawing>s are called '" + name + "'"); }
+					continue;
+				}
+				if (picture->name != "bitmap") { continue; }
+				const std::string name = picture->attribute("name");
+				if (name.empty()) { fail("<pictures> > <bitmap>", "needs a name=, which a sprite's <bitmap from=\"...\" /> takes it by"); }
+				if (!bitmaps.emplace(name, picture).second) { fail("<pictures>", "two <bitmap>s are called '" + name + "'"); }
+			}
+		}
+
+		const auto taken = [&](const ElementPtr& over)
+		{
+			const std::string name = over->attribute("from");
+			const auto found = bitmaps.find(name);
+			if (found == bitmaps.end()) { fail("<bitmap from=\"" + name + "\">", "names no <bitmap> of the <pictures>"); }
+			const ElementPtr& base = found->second;
+
+			Made made = std::make_shared<Element>(*base);
+			dropAttribute(*made, "name");
+			for (const auto& [key, value] : over->attributes)
+			{
+				if (key != "from") { setAttribute(*made, key, value); }
+			}
+			const auto gives = [&](const std::string& tag) { return std::any_of(over->children.begin(), over->children.end(), [&](const ElementPtr& c) { return c->name == tag; }); };
+			const auto sameColor = [](const ElementPtr& a, const ElementPtr& b) { return a->name == "color" && b->name == "color" && a->attribute("char") == b->attribute("char"); };
+
+			// In the schema's order: rows, scale, colors, flip.
+			Children children;
+			for (const char* tag : { "row", "scale", "color", "flip" })
+			{
+				const std::string each = tag;
+				if (each == "color")
+				{
+					for (const ElementPtr& c : base->children)
+					{
+						if (c->name != "color") { continue; }
+						const auto mine = std::find_if(over->children.begin(), over->children.end(), [&](const ElementPtr& o) { return sameColor(o, c); });
+						children.push_back(mine != over->children.end() ? *mine : c);
+					}
+					for (const ElementPtr& o : over->children)
+					{
+						if (o->name == "color" && std::none_of(base->children.begin(), base->children.end(), [&](const ElementPtr& c) { return sameColor(o, c); })) { children.push_back(o); }
+					}
+					continue;
+				}
+				const ElementPtr& from = gives(each) ? over : base;
+				for (const ElementPtr& c : from->children)
+				{
+					if (c->name == each) { children.push_back(c); }
+				}
+			}
+			made->children = std::move(children);
+			return ElementPtr(made);
+		};
+
+		const std::function<ElementPtr(const ElementPtr&)> walk = [&](const ElementPtr& element) -> ElementPtr
+		{
+			if (element->name == "pictures") { return element; }
+			if (element->name == "bitmap" && !element->attribute("from").empty()) { return taken(element); }
+			Children children;
+			bool any = false;
+			for (const ElementPtr& child : element->children)
+			{
+				// <drawing from="rock" />: the drawing's lines (or polygons) in its place
+				if (child->name == "drawing" && element->name == "sprite")
+				{
+					const std::string name = child->attribute("from");
+					const auto found = drawings.find(name);
+					if (found == drawings.end()) { fail("<drawing from=\"" + name + "\">", "names no <drawing> of the <pictures>"); }
+					children.insert(children.end(), found->second->children.begin(), found->second->children.end());
+					any = true;
+					continue;
+				}
+				children.push_back(walk(child));
+				any = any || children.back() != child;
+			}
+			if (!any) { return element; }
+			Made made = std::make_shared<Element>(*element);
+			made->children = std::move(children);
+			return ElementPtr(made);
+		};
+		return walk(game);
 	}
 
 	ElementPtr changed(const ElementPtr& base, const ElementPtr& over, const std::string& where)
 	{
 		Made made = std::make_shared<Element>(*base);
 		dropAttribute(*made, "from");
+		// A group from= an object is a group, its members sharing what the object has.
+		if (base->name == "object" && over->name == "group") { made->name = "group"; }
 		for (const auto& [key, value] : over->attributes)
 		{
 			if (key != "from") { setAttribute(*made, key, value); }
@@ -381,12 +487,12 @@ namespace xge
 		if (piece->name != "object" && piece->name != "group" && piece->name != "map") { fail(where, "holds <object>s, <group>s and <map>s, not a <" + piece->name + ">"); }
 		if (name.empty()) { fail(where, "has a <" + piece->name + "> with no name=\"...\""); }
 		if (name.find('.') != std::string::npos) { fail(here, "a piece's name has no dots: they join the parts of a path"); }
-		if (has(name)) { fail(here, "the <kit> has another piece (or a member of one) called '" + name + "'"); }
+		if (has(name)) { fail(here, "the top-level <objects> has another piece (or a member of one) called '" + name + "'"); }
 
 		ElementPtr made = piece;
 		if (const std::string from = piece->attribute("from"); !from.empty())
 		{
-			if (!isPiece(from)) { fail(here, "from=\"" + from + "\" names no piece of the <kit> before it" + didYouMean(from, names())); }
+			if (!isPiece(from)) { fail(here, "from=\"" + from + "\" names no piece of the top-level <objects> before it" + didYouMean(from, names())); }
 			if (isMap(from) != (piece->name == "map")) { fail(here, "from=\"" + from + "\": a <map> is from= a <map>, and an object or a group from= an object or a group"); }
 			made = take(from, piece, here);
 		}
@@ -401,7 +507,7 @@ namespace xge
 					const std::string member = child->attribute("name");
 					if (has(member) || member == name || std::any_of(named.begin(), named.end(), [&](const auto& each) { return each.first == member; }))
 					{
-						fail(here, "has a member called '" + member + "', and the <kit> has another piece or member of that name");
+						fail(here, "has a member called '" + member + "', and the top-level <objects> has another piece or member of that name");
 					}
 					named.emplace_back(member, name);
 				}
@@ -439,7 +545,7 @@ namespace xge
 			return changed(piece->second, over, where);
 		}
 		const auto member = members.find(name);
-		if (member == members.end()) { fail(where, "takes '" + name + "', which the <kit> has no piece or member called" + didYouMean(name, names())); }
+		if (member == members.end()) { fail(where, "takes '" + name + "', which the top-level <objects> has no piece or member called" + didYouMean(name, names())); }
 		const ElementPtr only = onlyMember(pieces.at(member->second), name);
 		return changedMember(only, name, over, true, overName, where);
 	}
@@ -472,9 +578,12 @@ namespace xge
 	std::vector<ElementPtr> layOut(const XmlNode& objects, std::vector<ElementPtr> inherited, const Kit& kit, const std::string& where)
 	{
 		std::vector<ElementPtr> list = std::move(inherited);
+		// The names written in this list: a second is a mistake, never a change
+		// (changing is for what an outer list or a piece gave).
+		std::set<std::string> writtenHere;
 		for (std::unique_ptr<XmlNode> node = objects.getFirstChild(); node != nullptr; node = node->getNextSibling())
 		{
-			const ElementPtr written = copyElement(*node);
+			const ElementPtr written = elementOf(*node);
 			const std::string tag = written->name;
 			const std::string name = written->attribute("name");
 			const std::string from = written->attribute("from");
@@ -488,16 +597,18 @@ namespace xge
 			const auto same = std::find_if(list.begin(), list.end(), [&](const ElementPtr& each) { return each->attribute("name") == name; });
 			if (!from.empty())
 			{
-				if (!kit.has(from)) { fail(here, "from=\"" + from + "\" names no piece of the <kit>" + didYouMean(from, kit.names())); }
+				if (!kit.has(from)) { fail(here, "from=\"" + from + "\" names no piece of the top-level <objects>" + didYouMean(from, kit.names())); }
 				if (kit.isMap(from) != (tag == "map"))
 				{
-					fail(here, tag == "map" ? "from=\"" + from + "\" names a piece that is not a <map>; a <map> takes a <map> of the kit"
-						: "from=\"" + from + "\" names a <map> of the kit, which only a <map> takes");
+					fail(here, tag == "map" ? "from=\"" + from + "\" names a piece that is not a <map>; a <map> takes a <map> piece"
+						: "from=\"" + from + "\" names a <map> piece, which only a <map> takes");
 				}
 				if (same != list.end()) { fail(here, "there is already an object or group called '" + name + "' here"); }
+				writtenHere.insert(name);
 				list.push_back(kit.take(from, written, here));
 				continue;
 			}
+			if (!writtenHere.insert(name).second) { fail(here, "this <objects> already has an object, group or map called '" + name + "'"); }
 			if (same != list.end())
 			{
 				*same = changed(*same, written, here);
@@ -515,7 +626,7 @@ namespace xge
 				*outer = changedInner(*outer, name, written, here);
 				continue;
 			}
-			// by its name: a map a map of the kit, anything else an object
+			// by its name: a map a map piece, anything else an object
 			// or a group (or a member)
 			if (kit.has(name) && kit.isMap(name) == (tag == "map"))
 			{

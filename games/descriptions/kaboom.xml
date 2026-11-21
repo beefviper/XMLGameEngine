@@ -16,7 +16,7 @@
   through the eighth to win.
 
   A and D, the arrows, a pad or the mouse (the Atari's paddle) move the
-  buckets; Space starts and pauses, as does P.
+  buckets; Space starts; Pause pauses.
 
   How it is written:
   * The buckets are one object with three looks, a stack of three, two and
@@ -24,11 +24,11 @@
     <become from=>s, the two of them first, so only one of them changes it.
     A shorter stack is a smaller picture, so it catches less.
   * The waves are the <scenes> of the playing state. The bomber, his
-    bombs and the wave's label are in the <kit>; the first wave takes them, and
+    bombs and the wave's label are pieces (top-level <objects>); the first wave takes them, and
     each later wave is the one before (from=) with its own <variables>: its
     number, the score it ends at, how fast the bomber paces, how often he
     drops a bomb (drop, seconds), how fast it falls and what it is worth,
-    read by plain names in the kit (the label shows <number>wave</number>).
+    read by plain names in the pieces (the label shows <number>wave</number>).
   * The bomber has two <timers>. One <reverse />s him after a random wait
     (worked out again each time), so his path is never the same; the other
     <fire>s a bomb every `drop` seconds. He has <facing>down</facing>, so a
@@ -51,35 +51,10 @@
     <background>color.forestgreen</background>
   </window>
   <variables>
-    <variable name="step">9</variable>
+    <variable name="step">540</variable>
     <variable name="margin">20</variable>
     <variable name="roof">104</variable>
   </variables>
-  <sounds>
-    <sound name="catch" wave="square">
-      <volume>0.2</volume>
-      <note pitch="C5" to="G5">0.05</note>
-    </sound>
-    <sound name="boom" wave="noise">
-      <volume>0.45</volume>
-      <note pitch="3000" to="200">0.6</note>
-      <note pitch="600" to="60">0.6</note>
-    </sound>
-    <sound name="wave" wave="triangle">
-      <volume>0.4</volume>
-      <note pitch="C4">0.08</note>
-      <note pitch="E4">0.08</note>
-      <note pitch="G4">0.08</note>
-      <note pitch="C5">0.16</note>
-    </sound>
-    <sound name="gameover" wave="square">
-      <volume>0.2</volume>
-      <note pitch="E4">0.2</note>
-      <note pitch="D#4">0.2</note>
-      <note pitch="D4">0.2</note>
-      <note pitch="C#4" to="C3">0.6</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>128</size><color>color.red</color></style>
     <style name="prompt"><size>48</size></style>
@@ -91,7 +66,7 @@
       <color char="b">color.blue</color>
     </style>
   </styles>
-  <kit>
+  <objects>
     <!-- the wall of the building, and the ledge the bomber walks along -->
     <object name="rooftop">
       <sprite><rectangle><width>window.right</width><height>roof</height><color>color.darkgrey</color></rectangle></sprite>
@@ -104,28 +79,9 @@
     <!-- the Mad Bomber: black hat, grin and striped convict's shirt -->
     <object name="bomber" class="bomber">
       <sprite>
-        <bitmap>
-          <row>...kkkkkk...</row>
-          <row>...kkkkkk...</row>
-          <row>.kkkkkkkkkk.</row>
-          <row>...ffffff...</row>
-          <row>...fkffkf...</row>
-          <row>...ffffff...</row>
-          <row>...fkkkkf...</row>
-          <row>....ffff....</row>
-          <row>..********..</row>
-          <row>.kkkkkkkkkk.</row>
-          <row>f**********f</row>
-          <row>.kkkkkkkkkk.</row>
-          <row>..********..</row>
-          <row>...kk..kk...</row>
-          <scale>4</scale>
-          <color>color.white</color>
-          <color char="k">color.black</color>
-          <color char="f">color.orange</color>
-        </bitmap>
+        <bitmap from="bomber" />
       </sprite>
-      <position><x><centered /></x><y>roof - bomber.height</y></position>
+      <position><x><centered /></x><y><subtract><value>roof</value><value>bomber.height</value></subtract></y></position>
       <velocity><x>pace</x></velocity>
       <facing>down</facing>
       <collisions>
@@ -145,35 +101,13 @@
     <!-- a bomb, there once the bomber drops it: ten at most -->
     <object name="bomb" class="bomb">
       <sprite name="fizz">
-        <bitmap>
-          <row>....y.</row>
-          <row>...o..</row>
-          <row>.kkk..</row>
-          <row>kkkkk.</row>
-          <row>kkkkk.</row>
-          <row>.kkk..</row>
-          <scale>4</scale>
-          <color char="y">color.yellow</color>
-          <color char="o">color.lightgrey</color>
-          <color char="k">color.black</color>
-        </bitmap>
+        <bitmap from="bomb-fizz" />
       </sprite>
       <sprite name="spark">
-        <bitmap>
-          <row>...y.y</row>
-          <row>...oy.</row>
-          <row>.kkk..</row>
-          <row>kkkkk.</row>
-          <row>kkkkk.</row>
-          <row>.kkk..</row>
-          <scale>4</scale>
-          <color char="y">color.red</color>
-          <color char="o">color.lightgrey</color>
-          <color char="k">color.black</color>
-        </bitmap>
+        <bitmap from="bomb-spark" />
       </sprite>
       <animation>
-        <interval>0.1</interval>
+        <seconds>0.1</seconds>
         <frame sprite="fizz" />
         <frame sprite="spark" />
       </animation>
@@ -196,27 +130,27 @@
     </object>
     <object name="wavelabel">
       <sprite><text style="hud"><content>WAVE</content><number>wave</number></text></sprite>
-      <position><x>window.right - wavelabel.width - margin</x><y>12</y></position>
+      <position><x><right><offset>margin</offset></right></x><y>12</y></position>
     </object>
-  </kit>
+  </objects>
   <states>
-    <state name="mainmenu">
+    <state name="title">
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>KABOOM!</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 110</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-110</offset></centered></y></position>
         </object>
-        <object name="help">
-          <sprite><text style="help"><content>the mad bomber drops them; catch every one</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 10</centered></y></position>
-        </object>
-        <object name="keys">
-          <sprite><text style="help"><content>a and d, the arrows or the mouse move the buckets</content><size>30</size><color>color.lightgrey</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 40</centered></y></position>
-        </object>
+        <group name="help">
+          <rows>2</rows>
+          <padding><y>50</y></padding>
+          <sprite><text style="help" /></sprite>
+          <position><x><centered /></x><y><centered><offset>-10</offset></centered></y></position>
+          <row number="1"><sprite><text><content>the mad bomber drops them; catch every one</content></text></sprite></row>
+          <row number="2"><sprite><text><content>a and d, the arrows or the mouse move the buckets</content><size>30</size><color>color.lightgrey</color></text></sprite></row>
+        </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 130</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>130</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
@@ -232,37 +166,13 @@
         <!-- the buckets: a stack of three, then two, then one -->
         <object name="bucket">
           <sprite name="three">
-            <bitmap style="bucket">
-              <row>bbbbbbbbbbbbbbbbbbbbbb</row>
-              <row>.********************.</row>
-              <row>..******************..</row>
-              <row>......................</row>
-              <row>bbbbbbbbbbbbbbbbbbbbbb</row>
-              <row>.********************.</row>
-              <row>..******************..</row>
-              <row>......................</row>
-              <row>bbbbbbbbbbbbbbbbbbbbbb</row>
-              <row>.********************.</row>
-              <row>..******************..</row>
-            </bitmap>
+            <bitmap from="bucket-three" />
           </sprite>
           <sprite name="two">
-            <bitmap style="bucket">
-              <row>bbbbbbbbbbbbbbbbbbbbbb</row>
-              <row>.********************.</row>
-              <row>..******************..</row>
-              <row>......................</row>
-              <row>bbbbbbbbbbbbbbbbbbbbbb</row>
-              <row>.********************.</row>
-              <row>..******************..</row>
-            </bitmap>
+            <bitmap from="bucket-two" />
           </sprite>
           <sprite name="one">
-            <bitmap style="bucket">
-              <row>bbbbbbbbbbbbbbbbbbbbbb</row>
-              <row>.********************.</row>
-              <row>..******************..</row>
-            </bitmap>
+            <bitmap from="bucket-one" />
           </sprite>
           <position><x><centered /></x><y>420</y></position>
           <collisions>
@@ -290,9 +200,9 @@
           <variables>
             <variable name="wave">1</variable>
             <variable name="upto">10</variable>
-            <variable name="pace">2.5</variable>
+            <variable name="pace">150</variable>
             <variable name="drop">0.7</variable>
-            <variable name="fall">2.5</variable>
+            <variable name="fall">150</variable>
             <variable name="points">1</variable>
           </variables>
           <objects>
@@ -316,9 +226,9 @@
           <variables>
             <variable name="wave">2</variable>
             <variable name="upto">50</variable>
-            <variable name="pace">3</variable>
+            <variable name="pace">180</variable>
             <variable name="drop">0.6</variable>
-            <variable name="fall">3</variable>
+            <variable name="fall">180</variable>
             <variable name="points">2</variable>
           </variables>
         </scene>
@@ -327,9 +237,9 @@
           <variables>
             <variable name="wave">3</variable>
             <variable name="upto">140</variable>
-            <variable name="pace">3.5</variable>
+            <variable name="pace">210</variable>
             <variable name="drop">0.5</variable>
-            <variable name="fall">3.5</variable>
+            <variable name="fall">210</variable>
             <variable name="points">3</variable>
           </variables>
         </scene>
@@ -338,9 +248,9 @@
           <variables>
             <variable name="wave">4</variable>
             <variable name="upto">300</variable>
-            <variable name="pace">4</variable>
+            <variable name="pace">240</variable>
             <variable name="drop">0.42</variable>
-            <variable name="fall">4</variable>
+            <variable name="fall">240</variable>
             <variable name="points">4</variable>
           </variables>
         </scene>
@@ -349,9 +259,9 @@
           <variables>
             <variable name="wave">5</variable>
             <variable name="upto">550</variable>
-            <variable name="pace">4.5</variable>
+            <variable name="pace">270</variable>
             <variable name="drop">0.36</variable>
-            <variable name="fall">4.5</variable>
+            <variable name="fall">270</variable>
             <variable name="points">5</variable>
           </variables>
         </scene>
@@ -360,9 +270,9 @@
           <variables>
             <variable name="wave">6</variable>
             <variable name="upto">1000</variable>
-            <variable name="pace">5</variable>
+            <variable name="pace">300</variable>
             <variable name="drop">0.31</variable>
-            <variable name="fall">5</variable>
+            <variable name="fall">300</variable>
             <variable name="points">6</variable>
           </variables>
         </scene>
@@ -371,9 +281,9 @@
           <variables>
             <variable name="wave">7</variable>
             <variable name="upto">1700</variable>
-            <variable name="pace">5.5</variable>
+            <variable name="pace">330</variable>
             <variable name="drop">0.27</variable>
-            <variable name="fall">5.5</variable>
+            <variable name="fall">330</variable>
             <variable name="points">7</variable>
           </variables>
         </scene>
@@ -381,9 +291,9 @@
           <variables>
             <variable name="wave">8</variable>
             <variable name="upto">2900</variable>
-            <variable name="pace">6</variable>
+            <variable name="pace">360</variable>
             <variable name="drop">0.24</variable>
-            <variable name="fall">6</variable>
+            <variable name="fall">360</variable>
             <variable name="points">8</variable>
           </variables>
           <conditions>
@@ -391,7 +301,8 @@
             <condition name="reached" object="bucket" variable="score">
               <atleast>upto</atleast>
               <despawn object="bomb" />
-              <push state="youwin" />
+              <become object="over.message" sprite="won" />
+              <push state="over" />
               <play sound="wave" />
             </condition>
           </conditions>
@@ -403,12 +314,13 @@
         <!-- the mouse, or a pad's stick, is the Atari's paddle -->
         <input axis="mouse.x"><trigger object="bucket" action="steer" /></input>
         <input axis="pad1.x"><trigger object="bucket" action="steer" /></input>
-        <input><button>space</button><button>p</button><button>pad1.start</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <condition object="bucket" variable="buckets">
           <atmost>0</atmost>
-          <push state="gameover" />
+          <become object="over.message" sprite="lost" />
+          <push state="over" />
           <play sound="gameover" />
         </condition>
       </conditions>
@@ -425,18 +337,19 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>pad1.start</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
-    <state name="youwin">
+    <state name="over">
       <objects>
         <object name="message">
-          <sprite><text style="banner"><content>YOU WIN</content><color>color.yellow</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
+          <sprite name="won"><text style="banner"><content>YOU WIN</content><color>color.yellow</color></text></sprite>
+          <sprite name="lost"><text style="banner"><content>GAME OVER</content></text></sprite>
+          <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
         </object>
         <object name="again">
           <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>70</offset></centered></y></position>
         </object>
       </objects>
       <shows>
@@ -446,12 +359,103 @@
         <input><button>space</button><button>pad1.start</button><reset /></input>
       </inputs>
     </state>
-    <state name="gameover" from="youwin">
-      <objects>
-        <object name="message">
-          <sprite><text style="banner"><content>GAME OVER</content></text></sprite>
-        </object>
-      </objects>
-    </state>
   </states>
+  <sounds>
+    <sound name="catch" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5" to="G5">0.05</note>
+    </sound>
+    <sound name="boom" wave="noise">
+      <volume>0.45</volume>
+      <note pitch="3000" to="200">0.6</note>
+      <note pitch="600" to="60">0.6</note>
+    </sound>
+    <sound name="wave" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="C4">0.08</note>
+      <note pitch="E4">0.08</note>
+      <note pitch="G4">0.08</note>
+      <note pitch="C5">0.16</note>
+    </sound>
+    <sound name="gameover" wave="square">
+      <volume>0.2</volume>
+      <note pitch="E4">0.2</note>
+      <note pitch="D#4">0.2</note>
+      <note pitch="D4">0.2</note>
+      <note pitch="C#4" to="C3">0.6</note>
+    </sound>
+  </sounds>
+  <pictures>
+    <bitmap name="bomber">
+      <row>...kkkkkk...</row>
+      <row>...kkkkkk...</row>
+      <row>.kkkkkkkkkk.</row>
+      <row>...ffffff...</row>
+      <row>...fkffkf...</row>
+      <row>...ffffff...</row>
+      <row>...fkkkkf...</row>
+      <row>....ffff....</row>
+      <row>..********..</row>
+      <row>.kkkkkkkkkk.</row>
+      <row>f**********f</row>
+      <row>.kkkkkkkkkk.</row>
+      <row>..********..</row>
+      <row>...kk..kk...</row>
+      <scale>4</scale>
+      <color>color.white</color>
+      <color char="k">color.black</color>
+      <color char="f">color.orange</color>
+    </bitmap>
+    <bitmap name="bomb-fizz">
+      <row>....y.</row>
+      <row>...o..</row>
+      <row>.kkk..</row>
+      <row>kkkkk.</row>
+      <row>kkkkk.</row>
+      <row>.kkk..</row>
+      <scale>4</scale>
+      <color char="y">color.yellow</color>
+      <color char="o">color.lightgrey</color>
+      <color char="k">color.black</color>
+    </bitmap>
+    <bitmap name="bomb-spark">
+      <row>...y.y</row>
+      <row>...oy.</row>
+      <row>.kkk..</row>
+      <row>kkkkk.</row>
+      <row>kkkkk.</row>
+      <row>.kkk..</row>
+      <scale>4</scale>
+      <color char="y">color.red</color>
+      <color char="o">color.lightgrey</color>
+      <color char="k">color.black</color>
+    </bitmap>
+    <bitmap name="bucket-three" style="bucket">
+      <row>bbbbbbbbbbbbbbbbbbbbbb</row>
+      <row>.********************.</row>
+      <row>..******************..</row>
+      <row>......................</row>
+      <row>bbbbbbbbbbbbbbbbbbbbbb</row>
+      <row>.********************.</row>
+      <row>..******************..</row>
+      <row>......................</row>
+      <row>bbbbbbbbbbbbbbbbbbbbbb</row>
+      <row>.********************.</row>
+      <row>..******************..</row>
+    </bitmap>
+    <bitmap name="bucket-two" style="bucket">
+      <row>bbbbbbbbbbbbbbbbbbbbbb</row>
+      <row>.********************.</row>
+      <row>..******************..</row>
+      <row>......................</row>
+      <row>bbbbbbbbbbbbbbbbbbbbbb</row>
+      <row>.********************.</row>
+      <row>..******************..</row>
+    </bitmap>
+    <bitmap name="bucket-one" style="bucket">
+      <row>bbbbbbbbbbbbbbbbbbbbbb</row>
+      <row>.********************.</row>
+      <row>..******************..</row>
+    </bitmap>
+  </pictures>
 </game>

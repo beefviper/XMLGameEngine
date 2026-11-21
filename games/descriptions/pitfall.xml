@@ -14,23 +14,23 @@
   first again. Take all four treasures before the clock runs out to win.
   Three lives, and the best score is kept.
 
-  A and D (or the arrows) run, Space jumps, W and S climb the ladder, P or
-  Escape pauses.
+  A and D (or the arrows) run, Space jumps, W and S climb the ladder, Pause
+  pauses.
 
   How it is written:
   * Harry, the jungle behind him (the canopy, the trunks, the earth and the
     tunnel floor), the score, the clock and the lives are the playing
     state's own objects, there on every screen. The clock is a timer of the
     state taking a second off status.time.
-  * The four jungle screens are the <scenes> of the playing state. The kit
-    holds the pieces a screen is made of: the whole path, the banks of a
-    pond, a path with a ladder hole, the ladder, the logs, a tar pit, the
-    pond with its crocodiles, a fire, a scorpion and a
+  * The four jungle screens are the <scenes> of the playing state. The
+    pieces (top-level <objects>) are what a screen is made of: the whole
+    path, the banks of a pond, a path with a ladder hole, the ladder, the
+    logs, a tar pit, the pond with its crocodiles, a fire, a scorpion and a
     treasure. Each screen takes what it has and changes what differs: the
     fourth screen's scorpion is further along, and each treasure has its own
     look and place. What a screen's treasure is worth is the screen's
     variable `worth`.
-  * The kit also holds an unseen strip (<drawn>false</drawn>) for each side,
+  * The pieces also hold an unseen strip (<hidden />) for each side,
     and every screen takes both. Harry walking into one goes that way: each
     screen's <ways> say which screen lies east and which west, and the
     strip says <enter way="east" />. His own rule for that side <move>s him
@@ -38,13 +38,16 @@
     jungle goes round. A screen left stays as it was:
     a treasure taken stays taken, a log rolls on from where it was.
   * Harry falls (an <acceleration>), stands on the ground with <land />,
-    jumps with <leap> and climbs the ladder of the fourth screen with
+    jumps (<jump>) and climbs the ladder of the fourth screen with
     <climb>, as Jumpman does in Donkey Kong.
   * The score, the lives, the clock and the treasures found are variables
     of `status`, an object never drawn, so any rule can put Harry back where
     he started with <reset object="harry" /> without losing them. A treasure
     taken counts itself in status.found and four win: a condition counting
     the treasures left would see only the screen Harry is on.
+  * Caught, Harry goes out of play and the state caught stands the jungle
+    still while a stand-in flickers (a <once /> animation); its timer takes
+    the life and puts Harry back.
   * The crocodiles are platforms with two looks, shut and open, each with a
     timer that turns it to the other: three seconds shut, one open, and
     open they bite whoever stands on them.
@@ -52,7 +55,7 @@
     the logs, the tar pit, the crocodiles, the flickering fire (an
     <animation>) and the treasures as bitmaps of several inks, the ladder
     as <line>s.
-  * Paused, won and game over draw the jungle still underneath (<show state>).
+  * Paused and over draw the jungle still underneath (<show state>).
   Not in it: the swinging vines, quicksand, the wall at the end of the tunnel,
   and a tunnel that goes three screens at a time.
 -->
@@ -68,48 +71,17 @@
     <variable name="surface">300</variable>
     <variable name="tunnel">440</variable>
     <variable name="thick">16</variable>
-    <variable name="pull">0.4</variable>
-    <variable name="run">2.5</variable>
-    <variable name="climbstep">2</variable>
-    <variable name="leapheight">48</variable>
-    <variable name="roll">1.5</variable>
-    <variable name="crawl">1</variable>
+    <variable name="pull">1440</variable>
+    <variable name="run">150</variable>
+    <variable name="climbstep">120</variable>
+    <variable name="jumpheight">48</variable>
+    <variable name="roll">90</variable>
+    <variable name="crawl">60</variable>
     <!-- what a rolling log does to Harry each time it knocks into him: the
          points it takes away and how far back it throws him -->
     <variable name="bump">50</variable>
     <variable name="knock">24</variable>
   </variables>
-  <sounds>
-    <sound name="jump" wave="square">
-      <volume>0.2</volume>
-      <note pitch="C5" to="G5">0.1</note>
-    </sound>
-    <sound name="treasure" wave="square">
-      <volume>0.25</volume>
-      <note pitch="E5">0.08</note>
-      <note pitch="G5">0.08</note>
-      <note pitch="C6">0.08</note>
-      <note pitch="E6">0.2</note>
-    </sound>
-    <!-- caught: the 2600's falling tune -->
-    <sound name="die" wave="square">
-      <volume>0.25</volume>
-      <note pitch="G4">0.12</note>
-      <note pitch="E4">0.12</note>
-      <note pitch="C4">0.12</note>
-      <note pitch="G3">0.12</note>
-      <note pitch="E3">0.12</note>
-      <note pitch="C3">0.36</note>
-    </sound>
-    <sound name="thud" wave="noise">
-      <volume>0.3</volume>
-      <note pitch="400" to="80">0.12</note>
-    </sound>
-    <sound name="snap" wave="noise">
-      <volume>0.2</volume>
-      <note pitch="2000" to="600">0.1</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>100</size><color>color.yellow</color></style>
     <style name="prompt"><size>40</size></style>
@@ -122,7 +94,7 @@
       <color char="k">color.brown</color>
     </style>
   </styles>
-  <kit>
+  <objects>
     <!-- what Harry stands on: the whole path, the banks of a pond, or a
          path with a ladder hole too narrow to fall down -->
     <object name="path" class="ground">
@@ -173,37 +145,17 @@
     </group>
     <!-- the ladder from the path down to the tunnel -->
     <object name="ladder" class="ladder">
-      <sprite>
-        <line><from><x>0</x><y>0</y></from><to><x>0</x><y>tunnel - surface - 2</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-        <line><from><x>18</x><y>0</y></from><to><x>18</x><y>tunnel - surface - 2</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-        <line><from><x>0</x><y>20</y></from><to><x>18</x><y>20</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-        <line><from><x>0</x><y>44</y></from><to><x>18</x><y>44</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-        <line><from><x>0</x><y>68</y></from><to><x>18</x><y>68</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-        <line><from><x>0</x><y>92</y></from><to><x>18</x><y>92</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-        <line><from><x>0</x><y>116</y></from><to><x>18</x><y>116</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-      </sprite>
+      <sprite><drawing from="ladder" /></sprite>
       <position><x>310</x><y>surface</y></position>
     </object>
 
     <!-- two logs rolling along the path -->
     <group name="logs" class="log">
       <sprite>
-        <bitmap>
-          <row>...******...</row>
-          <row>.*******ooo.</row>
-          <row>**.***.*obbo</row>
-          <row>***.***obbbo</row>
-          <row>**.***.*obbo</row>
-          <row>.*******ooo.</row>
-          <row>...******...</row>
-          <scale>3</scale>
-          <color>color.brown</color>
-          <color char="o">color.orange</color>
-          <color char="b">color.yellow</color>
-        </bitmap>
+        <bitmap from="logs" />
       </sprite>
-      <position><y>surface - 21</y></position>
-      <velocity><x>-roll</x></velocity>
+      <position><y><subtract><value>surface</value><value>21</value></subtract></y></position>
+      <velocity><x><negate><value>roll</value></negate></x></velocity>
       <collisions>
         <collision edge="horizontal">
           <wrap />
@@ -216,16 +168,9 @@
     <!-- a tar pit on the path -->
     <object name="tar" class="hazard">
       <sprite>
-        <bitmap>
-          <row>...******************...</row>
-          <row>************************</row>
-          <row>.**********************.</row>
-          <row>....****************....</row>
-          <scale>2</scale>
-          <color>color.black</color>
-        </bitmap>
+        <bitmap from="tar" />
       </sprite>
-      <position><x>300</x><y>surface - 1</y></position>
+      <position><x>300</x><y><subtract><value>surface</value><value>1</value></subtract></y></position>
       <collisions />
     </object>
 
@@ -239,36 +184,17 @@
           <color>color.blue</color>
         </rectangle>
       </sprite>
-      <position><x>220</x><y>surface + 4</y></position>
+      <position><x>220</x><y><add><value>surface</value><value>4</value></add></y></position>
       <collisions />
     </object>
     <group name="crocs" class="croc">
       <sprite name="shut">
-        <bitmap>
-          <row>....g..g.......</row>
-          <row>.ggwkggwkgggggg</row>
-          <row>ggggggggggggggg</row>
-          <row>.ggggggggggggg.</row>
-          <scale>2</scale>
-          <color char="g">color.darkgreen</color>
-          <color char="w">color.white</color>
-          <color char="k">color.black</color>
-        </bitmap>
+        <bitmap from="crocs-shut" />
       </sprite>
       <sprite name="open">
-        <bitmap>
-          <row>....g..g...gggg</row>
-          <row>.ggwkggwkggrrrr</row>
-          <row>ggggggggggrrrrr</row>
-          <row>.ggggggggggwwww</row>
-          <scale>2</scale>
-          <color char="g">color.darkgreen</color>
-          <color char="w">color.white</color>
-          <color char="k">color.black</color>
-          <color char="r">color.red</color>
-        </bitmap>
+        <bitmap from="crocs-open" />
       </sprite>
-      <position><y>surface - 2</y></position>
+      <position><y><subtract><value>surface</value><value>2</value></subtract></y></position>
       <collisions>
         <collision object="harry" sprite="open">
           <trigger object="harry" action="lose" />
@@ -293,53 +219,26 @@
     <!-- a fire on the path -->
     <object name="fire" class="hazard">
       <sprite name="high">
-        <bitmap style="fire">
-          <row>...r....</row>
-          <row>..rr..r.</row>
-          <row>..ror.r.</row>
-          <row>.roooor.</row>
-          <row>.rooyor.</row>
-          <row>rooyyoor</row>
-          <row>royyyyor</row>
-          <row>.kkkkkk.</row>
-        </bitmap>
+        <bitmap from="fire-high" />
       </sprite>
       <sprite name="low">
-        <bitmap style="fire">
-          <row>........</row>
-          <row>....r...</row>
-          <row>.r..rr..</row>
-          <row>.rr.ror.</row>
-          <row>.roooor.</row>
-          <row>rooyyoor</row>
-          <row>royyyyor</row>
-          <row>.kkkkkk.</row>
-        </bitmap>
+        <bitmap from="fire-low" />
       </sprite>
       <animation>
-        <interval>0.12</interval>
+        <seconds>0.12</seconds>
         <frame sprite="high" />
         <frame sprite="low" />
       </animation>
-      <position><x>170</x><y>surface - fire.height</y></position>
+      <position><x>170</x><y><subtract><value>surface</value><value>fire.height</value></subtract></y></position>
       <collisions />
     </object>
 
     <!-- a scorpion pacing the tunnel -->
     <object name="scorpion" class="hazard">
       <sprite>
-        <bitmap>
-          <row>.......**.</row>
-          <row>........*.</row>
-          <row>.**.....*.</row>
-          <row>*..******.</row>
-          <row>.********.</row>
-          <row>*.*.*.*.*.</row>
-          <scale>2</scale>
-          <color>color.white</color>
-        </bitmap>
+        <bitmap from="scorpion" />
       </sprite>
-      <position><x>200</x><y>tunnel - 12</y></position>
+      <position><x>200</x><y><subtract><value>tunnel</value><value>12</value></subtract></y></position>
       <velocity><x>crawl</x></velocity>
       <collisions>
         <collision edge="horizontal">
@@ -352,22 +251,9 @@
          otherwise, worth the screen's `worth` -->
     <object name="treasure" class="treasure">
       <sprite>
-        <bitmap>
-          <row>..k**k..</row>
-          <row>...kk...</row>
-          <row>.******.</row>
-          <row>***dd***</row>
-          <row>**d*****</row>
-          <row>***dd***</row>
-          <row>*****d**</row>
-          <row>.**dd**.</row>
-          <scale>2</scale>
-          <color>color.lightgrey</color>
-          <color char="k">color.brown</color>
-          <color char="d">color.darkgrey</color>
-        </bitmap>
+        <bitmap from="treasure" />
       </sprite>
-      <position><x>580</x><y>surface - treasure.height</y></position>
+      <position><x>580</x><y><subtract><value>surface</value><value>treasure.height</value></subtract></y></position>
       <collisions>
         <collision object="harry">
           <inc variable="status.score">worth</inc>
@@ -385,8 +271,8 @@
           <color>color.black</color>
         </rectangle>
       </sprite>
-      <position><x>window.right - 4</x><y>0</y></position>
-      <drawn>false</drawn>
+      <position><x><subtract><value>window.right</value><value>4</value></subtract></x><y>0</y></position>
+      <hidden />
       <collisions>
         <collision object="harry">
           <enter way="east" />
@@ -402,80 +288,49 @@
         </rectangle>
       </sprite>
       <position><x>0</x><y>0</y></position>
-      <drawn>false</drawn>
+      <hidden />
       <collisions>
         <collision object="harry">
           <enter way="west" />
         </collision>
       </collisions>
     </object>
-  </kit>
-  <objects>
-    <!-- after a game, in both endings -->
-    <object name="again">
-      <sprite>
-        <text style="prompt">
-          <content>spacebar to play again</content>
-        </text>
-      </sprite>
-      <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
-    </object>
-    <!-- the best score, kept from game to game -->
-    <object name="best">
-      <sprite>
-        <text style="hud">
-          <content>BEST</content>
-          <number>best.score</number>
-          <color>color.lightgrey</color>
-        </text>
-      </sprite>
-      <position><x><centered /></x><y>window.bottom - best.height - 4</y></position>
-      <variables>
-        <variable name="score">0</variable>
-      </variables>
-    </object>
   </objects>
   <keeps>
     <keep object="best" />
   </keeps>
   <states>
+    <objects>
+      <!-- after a game, in both endings -->
+      <object name="again">
+        <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
+        <position><x><centered /></x><y><centered><offset>70</offset></centered></y></position>
+      </object>
+      <!-- the best score, kept from game to game -->
+      <object name="best">
+        <sprite><text style="hud"><content>BEST</content><number>best.score</number><color>color.lightgrey</color></text></sprite>
+        <position><x><centered /></x><y><bottom><offset>4</offset></bottom></y></position>
+        <variables>
+          <variable name="score">0</variable>
+        </variables>
+      </object>
+    </objects>
     <state name="title">
       <objects>
         <object name="title">
-          <sprite>
-            <text style="banner">
-              <content>PITFALL!</content>
-            </text>
-          </sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 140</centered></y></position>
+          <sprite><text style="banner"><content>PITFALL!</content></text></sprite>
+          <position><x><centered /></x><y><centered><offset>-140</offset></centered></y></position>
         </object>
-        <object name="help">
-          <sprite>
-            <text>
-              <content>find the four treasures before time runs out</content>
-              <size>26</size>
-              <color>color.white</color>
-            </text>
-          </sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
-        </object>
-        <object name="keys">
-          <sprite>
-            <text>
-              <content>a and d run, space jumps, w and s climb</content>
-              <size>22</size>
-              <color>color.lightgrey</color>
-            </text>
-          </sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 10</centered></y></position>
-        </object>
+        <group name="help">
+          <rows>2</rows>
+          <padding><y>50</y></padding>
+          <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
+          <row number="1"><sprite><text><content>find the four treasures before time runs out</content><size>26</size><color>color.white</color></text></sprite></row>
+          <row number="2"><sprite><text><content>a and d run, space jumps, w and s climb</content><size>22</size><color>color.lightgrey</color></text></sprite></row>
+        </group>
         <object name="start">
-          <sprite>
-            <text style="prompt">
-              <content>spacebar to start</content>
-            </text>
-          </sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 110</centered></y></position>
+          <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
+          <position><x><centered /></x><y><centered><offset>110</offset></centered></y></position>
         </object>
       </objects>
       <shows>
@@ -493,6 +348,8 @@
           <variables>
             <variable name="score">2000</variable>
             <variable name="lives">3</variable>
+            <!-- caught: the state caught comes next -->
+            <variable name="caught">0</variable>
             <variable name="time">180</variable>
             <variable name="found">0</variable>
           </variables>
@@ -504,19 +361,7 @@
           <columns>20</columns>
           <rows>3</rows>
           <sprite>
-            <bitmap>
-              <row>.gGgg.gG</row>
-              <row>gggGgggg</row>
-              <row>gGgggGgg</row>
-              <row>ggggggGg</row>
-              <row>GgggGggg</row>
-              <row>ggGggggG</row>
-              <row>gggggGgg</row>
-              <row>.ggGggg.</row>
-              <scale>4</scale>
-              <color char="g">color.forestgreen</color>
-              <color char="G">color.green</color>
-            </bitmap>
+            <bitmap from="canopy" />
           </sprite>
           <position><x>0</x><y>44</y></position>
         </group>
@@ -524,7 +369,7 @@
           <sprite>
             <rectangle>
               <width>14</width>
-              <height>surface - 140</height>
+              <height><subtract><value>surface</value><value>140</value></subtract></height>
               <color>color.brown</color>
             </rectangle>
           </sprite>
@@ -542,17 +387,17 @@
               <color>color.brown</color>
             </rectangle>
           </sprite>
-          <position><x>0</x><y>surface + thick</y></position>
+          <position><x>0</x><y><add><value>surface</value><value>thick</value></add></y></position>
         </object>
         <object name="bedrock">
           <sprite>
             <rectangle>
               <width>window.right</width>
-              <height>window.bottom - tunnel - thick</height>
+              <height><subtract><value>window.bottom</value><value>tunnel</value><value>thick</value></subtract></height>
               <color>color.brown</color>
             </rectangle>
           </sprite>
-          <position><x>0</x><y>tunnel + thick</y></position>
+          <position><x>0</x><y><add><value>tunnel</value><value>thick</value></add></y></position>
         </object>
         <object name="tunnelfloor" class="ground">
           <sprite>
@@ -569,40 +414,29 @@
         <!-- Pitfall Harry -->
         <object name="harry">
           <sprite>
-            <bitmap>
-              <row>...hhh..</row>
-              <row>..hssss.</row>
-              <row>...sss..</row>
-              <row>...ss...</row>
-              <row>.gggggg.</row>
-              <row>s.gggg.s</row>
-              <row>s.gggg.s</row>
-              <row>s.gggg.s</row>
-              <row>..gggg..</row>
-              <row>..wwww..</row>
-              <row>..w..w..</row>
-              <row>..w..w..</row>
-              <row>..w..w..</row>
-              <row>..w..w..</row>
-              <row>..w..w..</row>
-              <row>.kk..kk.</row>
-              <scale>2</scale>
-              <color char="h">color.brown</color>
-              <color char="s">color.orange</color>
-              <color char="g">color.green</color>
-              <color char="w">color.white</color>
-              <color char="k">color.darkgrey</color>
-            </bitmap>
+            <bitmap from="harry" />
           </sprite>
-          <position><x>24</x><y>surface - harry.height</y></position>
+          <position><x>24</x><y><subtract><value>surface</value><value>harry.height</value></subtract></y></position>
           <acceleration><x>0</x><y>pull</y></acceleration>
           <collisions>
+            <!-- touched by its body, not his arms and hair; his feet still meet the tar -->
+            <hitbox><horizontal>2</horizontal><top>2</top></hitbox>
             <!-- through a side of a screen: in at the other side of the next -->
             <collision class="eastside">
-              <move direction="left">window.right - 2 * harry.width</move>
+              <move direction="left">
+                <subtract>
+                  <value>window.right</value>
+                  <value><multiply><value>2</value><value>harry.width</value></multiply></value>
+                </subtract>
+              </move>
             </collision>
             <collision class="westside">
-              <move direction="right">window.right - 2 * harry.width</move>
+              <move direction="right">
+                <subtract>
+                  <value>window.right</value>
+                  <value><multiply><value>2</value><value>harry.width</value></multiply></value>
+                </subtract>
+              </move>
             </collision>
             <collision class="ground">
               <land />
@@ -610,7 +444,7 @@
             <collision class="croc">
               <land />
             </collision>
-            <!-- a log knocks Harry back the way it rolls; only a leap gets
+            <!-- a log knocks Harry back the way it rolls; only a jump gets
                  him over it -->
             <collision class="log">
               <dec variable="status.score">bump</dec>
@@ -621,10 +455,11 @@
             <collision class="water"><trigger action="lose" /></collision>
           </collisions>
           <actions>
+            <!-- out of play while he flickers (the state caught) -->
             <action name="lose">
-              <dec variable="status.lives" />
+              <die />
               <play sound="die" />
-              <reset />
+              <set variable="status.caught">1</set>
             </action>
             <action name="left">
               <move direction="left">run</move>
@@ -639,7 +474,7 @@
               <climb direction="down" class="ladder">climbstep</climb>
             </action>
             <action name="jump">
-              <leap>leapheight</leap>
+              <jump>jumpheight</jump>
               <play sound="jump" />
             </action>
           </actions>
@@ -647,30 +482,16 @@
 
         <!-- what the player sees of status -->
         <object name="score">
-          <sprite>
-            <text style="hud">
-              <number>status.score</number>
-            </text>
-          </sprite>
+          <sprite><text style="hud"><number>status.score</number></text></sprite>
           <position><x>margin</x><y>margin</y></position>
         </object>
         <object name="clock">
-          <sprite>
-            <text style="hud">
-              <number>status.time</number>
-              <color>color.yellow</color>
-            </text>
-          </sprite>
+          <sprite><text style="hud"><number>status.time</number><color>color.yellow</color></text></sprite>
           <position><x><centered /></x><y>margin</y></position>
         </object>
         <object name="lives">
-          <sprite>
-            <text style="hud">
-              <number>status.lives</number>
-              <color>color.red</color>
-            </text>
-          </sprite>
-          <position><x>window.right - lives.width - margin</x><y>margin</y></position>
+          <sprite><text style="hud"><number>status.lives</number><color>color.red</color></text></sprite>
+          <position><x><right><offset>margin</offset></right></x><y>margin</y></position>
         </object>
       </objects>
       <scenes>
@@ -708,15 +529,7 @@
             <object name="scorpion" />
             <object name="treasure">
               <sprite>
-                <bitmap>
-                  <row>..********</row>
-                  <row>.********.</row>
-                  <row>**********</row>
-                  <row>*********.</row>
-                  <row>********..</row>
-                  <scale>2</scale>
-                  <color>color.white</color>
-                </bitmap>
+                <bitmap from="treasure2" />
               </sprite>
               <position><x>570</x></position>
             </object>
@@ -740,15 +553,7 @@
             <group name="crocs" />
             <object name="treasure">
               <sprite>
-                <bitmap>
-                  <row>..********</row>
-                  <row>.********.</row>
-                  <row>**********</row>
-                  <row>*********.</row>
-                  <row>********..</row>
-                  <scale>2</scale>
-                  <color>color.yellow</color>
-                </bitmap>
+                <bitmap from="treasure3" />
               </sprite>
             </object>
             <object name="east" />
@@ -772,21 +577,9 @@
             <object name="fire" />
             <object name="treasure">
               <sprite>
-                <bitmap>
-                  <row>...**...</row>
-                  <row>..****..</row>
-                  <row>...**...</row>
-                  <row>.yy..yy.</row>
-                  <row>y......y</row>
-                  <row>y......y</row>
-                  <row>.yy..yy.</row>
-                  <row>...yy...</row>
-                  <scale>2</scale>
-                  <color>color.cyan</color>
-                  <color char="y">color.yellow</color>
-                </bitmap>
+                <bitmap from="treasure4" />
               </sprite>
-              <position><y>tunnel - treasure.height</y></position>
+              <position><y><subtract><value>tunnel</value><value>treasure.height</value></subtract></y></position>
             </object>
             <object name="scorpion">
               <position><x>400</x></position>
@@ -805,21 +598,28 @@
         <input><button>w</button><button>up</button><trigger object="harry" action="up" /></input>
         <input><button>s</button><button>down</button><trigger object="harry" action="down" /></input>
         <input button="space"><trigger object="harry" action="jump" /></input>
-        <input><button>p</button><button>escape</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <!-- how a game ends: out of lives or time, or every treasure found -->
       <conditions>
+        <condition object="status" variable="caught"><atleast>1</atleast>
+          <set variable="status.caught">0</set>
+          <push state="caught" />
+        </condition>
         <condition object="status" variable="lives">
           <atmost>0</atmost>
-          <push state="gameover" />
+          <become object="over.message" sprite="lost" />
+          <push state="over" />
         </condition>
         <condition object="status" variable="time">
           <atmost>0</atmost>
-          <push state="gameover" />
+          <become object="over.message" sprite="lost" />
+          <push state="over" />
         </condition>
         <condition object="status" variable="found">
           <atleast>4</atleast>
-          <push state="youwin" />
+          <become object="over.message" sprite="won" />
+          <push state="over" />
         </condition>
         <condition object="status" variable="score">
           <above>best.score</above>
@@ -834,15 +634,51 @@
       </timers>
     </state>
 
+    <!-- caught: Harry flickers, the jungle standing still -->
+    <state name="caught">
+      <objects>
+        <object name="flicker">
+          <sprite name="seen"><bitmap from="harry" /></sprite>
+          <sprite name="blank"><bitmap from="harry-gone" /></sprite>
+          <animation>
+            <seconds>0.12</seconds>
+            <once />
+            <frame sprite="seen" />
+            <frame sprite="blank" />
+            <frame sprite="seen" />
+            <frame sprite="blank" />
+            <frame sprite="seen" />
+            <frame sprite="blank" />
+            <frame sprite="seen" />
+            <frame sprite="blank" />
+            <frame sprite="seen" />
+            <frame sprite="blank" />
+            <frame sprite="seen" />
+            <frame sprite="blank" />
+          </animation>
+          <position><x update="live">harry.x</x><y update="live">harry.y</y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
+      </inputs>
+      <timers>
+        <timer>
+          <after>1.5</after>
+          <dec variable="status.lives" />
+          <reset object="harry" />
+          <reset object="flicker" />
+          <pop />
+        </timer>
+      </timers>
+    </state>
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite>
-            <text style="banner">
-              <content>PAUSED</content>
-              <color>color.white</color>
-            </text>
-          </sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -850,19 +686,15 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
-    <state name="youwin">
+    <state name="over">
       <objects>
         <object name="message">
-          <sprite>
-            <text style="banner">
-              <content>YOU WIN</content>
-              <color>color.green</color>
-            </text>
-          </sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
+          <sprite name="won"><text style="banner"><content>YOU WIN</content><color>color.green</color></text></sprite>
+          <sprite name="lost"><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>
+          <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
         </object>
       </objects>
       <shows>
@@ -873,17 +705,221 @@
         <input button="space"><reset /></input>
       </inputs>
     </state>
-    <state name="gameover" from="youwin">
-      <objects>
-        <object name="message">
-          <sprite>
-            <text style="banner">
-              <content>GAME OVER</content>
-              <color>color.red</color>
-            </text>
-          </sprite>
-        </object>
-      </objects>
-    </state>
   </states>
+  <sounds>
+    <sound name="jump" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5" to="G5">0.1</note>
+    </sound>
+    <sound name="treasure" wave="square">
+      <volume>0.25</volume>
+      <note pitch="E5">0.08</note>
+      <note pitch="G5">0.08</note>
+      <note pitch="C6">0.08</note>
+      <note pitch="E6">0.2</note>
+    </sound>
+    <!-- caught: the 2600's falling tune -->
+    <sound name="die" wave="square">
+      <volume>0.25</volume>
+      <note pitch="G4">0.12</note>
+      <note pitch="E4">0.12</note>
+      <note pitch="C4">0.12</note>
+      <note pitch="G3">0.12</note>
+      <note pitch="E3">0.12</note>
+      <note pitch="C3">0.36</note>
+    </sound>
+    <sound name="thud" wave="noise">
+      <volume>0.3</volume>
+      <note pitch="400" to="80">0.12</note>
+    </sound>
+    <sound name="snap" wave="noise">
+      <volume>0.2</volume>
+      <note pitch="2000" to="600">0.1</note>
+    </sound>
+  </sounds>
+  <pictures>
+    <bitmap name="logs">
+      <row>...******...</row>
+      <row>.*******ooo.</row>
+      <row>**.***.*obbo</row>
+      <row>***.***obbbo</row>
+      <row>**.***.*obbo</row>
+      <row>.*******ooo.</row>
+      <row>...******...</row>
+      <scale>3</scale>
+      <color>color.brown</color>
+      <color char="o">color.orange</color>
+      <color char="b">color.yellow</color>
+    </bitmap>
+    <bitmap name="tar">
+      <row>...******************...</row>
+      <row>************************</row>
+      <row>.**********************.</row>
+      <row>....****************....</row>
+      <scale>2</scale>
+      <color>color.black</color>
+    </bitmap>
+    <bitmap name="crocs-shut">
+      <row>....g..g.......</row>
+      <row>.ggwkggwkgggggg</row>
+      <row>ggggggggggggggg</row>
+      <row>.ggggggggggggg.</row>
+      <scale>2</scale>
+      <color char="g">color.darkgreen</color>
+      <color char="w">color.white</color>
+      <color char="k">color.black</color>
+    </bitmap>
+    <bitmap name="crocs-open">
+      <row>....g..g...gggg</row>
+      <row>.ggwkggwkggrrrr</row>
+      <row>ggggggggggrrrrr</row>
+      <row>.ggggggggggwwww</row>
+      <scale>2</scale>
+      <color char="g">color.darkgreen</color>
+      <color char="w">color.white</color>
+      <color char="k">color.black</color>
+      <color char="r">color.red</color>
+    </bitmap>
+    <bitmap name="fire-high" style="fire">
+      <row>...r....</row>
+      <row>..rr..r.</row>
+      <row>..ror.r.</row>
+      <row>.roooor.</row>
+      <row>.rooyor.</row>
+      <row>rooyyoor</row>
+      <row>royyyyor</row>
+      <row>.kkkkkk.</row>
+    </bitmap>
+    <bitmap name="fire-low" style="fire">
+      <row>........</row>
+      <row>....r...</row>
+      <row>.r..rr..</row>
+      <row>.rr.ror.</row>
+      <row>.roooor.</row>
+      <row>rooyyoor</row>
+      <row>royyyyor</row>
+      <row>.kkkkkk.</row>
+    </bitmap>
+    <bitmap name="scorpion">
+      <row>.......**.</row>
+      <row>........*.</row>
+      <row>.**.....*.</row>
+      <row>*..******.</row>
+      <row>.********.</row>
+      <row>*.*.*.*.*.</row>
+      <scale>2</scale>
+      <color>color.white</color>
+    </bitmap>
+    <bitmap name="treasure">
+      <row>..k**k..</row>
+      <row>...kk...</row>
+      <row>.******.</row>
+      <row>***dd***</row>
+      <row>**d*****</row>
+      <row>***dd***</row>
+      <row>*****d**</row>
+      <row>.**dd**.</row>
+      <scale>2</scale>
+      <color>color.lightgrey</color>
+      <color char="k">color.brown</color>
+      <color char="d">color.darkgrey</color>
+    </bitmap>
+    <bitmap name="canopy">
+      <row>.gGgg.gG</row>
+      <row>gggGgggg</row>
+      <row>gGgggGgg</row>
+      <row>ggggggGg</row>
+      <row>GgggGggg</row>
+      <row>ggGggggG</row>
+      <row>gggggGgg</row>
+      <row>.ggGggg.</row>
+      <scale>4</scale>
+      <color char="g">color.forestgreen</color>
+      <color char="G">color.green</color>
+    </bitmap>
+    <bitmap name="harry-gone">
+      <row>........</row>
+      <row>........</row>
+      <row>........</row>
+      <row>........</row>
+      <row>........</row>
+      <row>........</row>
+      <row>........</row>
+      <row>........</row>
+      <row>........</row>
+      <row>........</row>
+      <row>........</row>
+      <row>........</row>
+      <row>........</row>
+      <row>........</row>
+      <row>........</row>
+      <row>........</row>
+      <scale>2</scale>
+      <color>color.black</color>
+    </bitmap>
+    <bitmap name="harry">
+      <row>...hhh..</row>
+      <row>..hssss.</row>
+      <row>...sss..</row>
+      <row>...ss...</row>
+      <row>.gggggg.</row>
+      <row>s.gggg.s</row>
+      <row>s.gggg.s</row>
+      <row>s.gggg.s</row>
+      <row>..gggg..</row>
+      <row>..wwww..</row>
+      <row>..w..w..</row>
+      <row>..w..w..</row>
+      <row>..w..w..</row>
+      <row>..w..w..</row>
+      <row>..w..w..</row>
+      <row>.kk..kk.</row>
+      <scale>2</scale>
+      <color char="h">color.brown</color>
+      <color char="s">color.orange</color>
+      <color char="g">color.green</color>
+      <color char="w">color.white</color>
+      <color char="k">color.darkgrey</color>
+    </bitmap>
+    <bitmap name="treasure2">
+      <row>..********</row>
+      <row>.********.</row>
+      <row>**********</row>
+      <row>*********.</row>
+      <row>********..</row>
+      <scale>2</scale>
+      <color>color.white</color>
+    </bitmap>
+    <bitmap name="treasure3">
+      <row>..********</row>
+      <row>.********.</row>
+      <row>**********</row>
+      <row>*********.</row>
+      <row>********..</row>
+      <scale>2</scale>
+      <color>color.yellow</color>
+    </bitmap>
+    <bitmap name="treasure4">
+      <row>...**...</row>
+      <row>..****..</row>
+      <row>...**...</row>
+      <row>.yy..yy.</row>
+      <row>y......y</row>
+      <row>y......y</row>
+      <row>.yy..yy.</row>
+      <row>...yy...</row>
+      <scale>2</scale>
+      <color>color.cyan</color>
+      <color char="y">color.yellow</color>
+    </bitmap>
+    <drawing name="ladder">
+      <line><from><x>0</x><y>0</y></from><to><x>0</x><y><subtract><value>tunnel</value><value>surface</value><value>2</value></subtract></y></to><color>color.lightgrey</color><thickness>2</thickness></line>
+      <line><from><x>18</x><y>0</y></from><to><x>18</x><y><subtract><value>tunnel</value><value>surface</value><value>2</value></subtract></y></to><color>color.lightgrey</color><thickness>2</thickness></line>
+      <line><from><x>0</x><y>20</y></from><to><x>18</x><y>20</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
+      <line><from><x>0</x><y>44</y></from><to><x>18</x><y>44</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
+      <line><from><x>0</x><y>68</y></from><to><x>18</x><y>68</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
+      <line><from><x>0</x><y>92</y></from><to><x>18</x><y>92</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
+      <line><from><x>0</x><y>116</y></from><to><x>18</x><y>116</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
+    </drawing>
+  </pictures>
 </game>

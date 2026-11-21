@@ -1,0 +1,246 @@
+// test_combat.cpp
+// XML Game Engine
+// author: beefviper
+// date: Oct 7, 2026
+//
+// Catch2 tests for games/descriptions/combat.xml, played through a real xge::Engine with
+// no window and the keys two players would press: driving and backing along
+// the heading (<thrust>), turning (<turn>) and stopping (<drag>), a shell
+// fired from the gun along the heading, a hit scoring and knocking the tank
+// back the way the shell flew, the walls, and the clock ending the game with
+// the most hits winning.
+//
+// Window::init() normally measures each object's size once a backend exists;
+// the helper gives every shape the size its sprite implies instead.
+
+#include "engine/engine.h"
+#include "game/game.h"
+#include "window/null.h"
+
+#include <catch2/catch_approx.hpp>
+#include <catch2/catch_test_macros.hpp>
+
+#include <cmath>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
+using namespace xge;
+using Catch::Approx;
+
+namespace
+{
+	struct Combat
+	{
+		Game game{ "descriptions/combat.xml" };
+		Engine engine{ game, std::make_unique<NullWindow>() };
+
+		Combat()
+		{
+			for (auto& object : game.getCurrentObjects())
+			{
+				object.size = measureShapeSize(object.drawn.picture);
+			}
+		}
+
+		void tap(KeyCode key)
+		{
+			engine.handleKeyPressed(key);
+			engine.handleKeyReleased(key);
+		}
+
+		void frames(int count)
+		{
+			for (int i = 0; i < count; ++i) { engine.input(); engine.update(xge::kSixtieth); }
+		}
+
+		void start()
+		{
+			tap(KeyCode::Space);
+			REQUIRE(state() == "playing");
+		}
+
+		void hold(KeyCode key, int count)
+		{
+			engine.handleKeyPressed(key);
+			frames(count);
+			engine.handleKeyReleased(key);
+		}
+
+		std::string state() { return game.getCurrentState().name; }
+		Object& tank1() { return game.object("tank1"); }
+		// Whether a copy of that name is in the game (a fired shell, shell1.1).
+		bool has(const std::string& name)
+		{
+			for (const auto& object : game.getCurrentObjects())
+			{
+				if (object.exists && object.isCopy() && object.name.size() >= name.size() && object.name.str().compare(object.name.size() - name.size(), name.size(), name) == 0) { return true; }
+			}
+			return false;
+		}
+		Object& tank2() { return game.object("tank2"); }
+	};
+}
+
+TEST_CASE("combat.xml loads with the tanks facing each other", "[combat]")
+{
+	Combat play;
+	CHECK(play.state() == "title");
+	play.start();
+	CHECK(play.tank1().heading == Approx(90.0f));
+	CHECK(play.tank2().heading == Approx(270.0f));
+	CHECK(play.tank1().position.x < play.tank2().position.x);
+}
+
+TEST_CASE("a tank drives the way it points, backs up, and stops when let go", "[combat]")
+{
+	Combat play;
+	play.start();
+	const Vector2f from = play.tank1().position;
+
+	play.hold(KeyCode::W, 30);
+	CHECK(play.tank1().position.x > from.x + 30.0f);
+	CHECK(play.tank1().position.y == Approx(from.y).margin(0.5f));
+	play.frames(60);
+	CHECK(std::hypot(play.tank1().velocity.x, play.tank1().velocity.y) < 0.05f);
+
+	const float forward = play.tank1().position.x;
+	play.hold(KeyCode::S, 30);
+	play.frames(60);
+	CHECK(play.tank1().position.x < forward - 10.0f);
+
+	// A quarter turn to the right points it down the field.
+	play.hold(KeyCode::D, 30);
+	CHECK(play.tank1().heading == Approx(180.0f));
+	const float y = play.tank1().position.y;
+	play.hold(KeyCode::W, 20);
+	CHECK(play.tank1().position.y > y + 15.0f);
+}
+
+TEST_CASE("a shell flies from the gun, one at a time, and a hit scores and knocks the tank back", "[combat]")
+{
+	Combat play;
+	play.start();
+	// The two tanks face each other along the middle, with the middle wall
+	// in between: take it away for this.
+	play.game.object("walls.1").isVisible = false;
+
+	play.tap(KeyCode::F);
+	play.frames(1);
+	Object& shell = play.game.object("shell1.1");
+	REQUIRE(shell.isVisible);
+	CHECK(shell.velocity.x == Approx(360.0f));
+	CHECK(shell.velocity.y == Approx(0.0f).margin(0.01f));
+	CHECK(shell.position.x > play.tank1().position.x + play.tank1().size.x / 2);
+
+	// A second press while it flies does not fire another.
+	const Vector2f flying = shell.position;
+	play.tap(KeyCode::F);
+	play.frames(1);
+	CHECK(shell.position.x > flying.x);
+
+	// Tank two drives toward it; the hit knocks it back the way the shell flew.
+	play.engine.handleKeyPressed(KeyCode::Up);
+	bool knocked = false;
+	for (int frame = 0; frame < 120 && !knocked; ++frame)
+	{
+		play.frames(1);
+		knocked = play.tank2().velocity.x > 0.0f;
+	}
+	play.engine.handleKeyReleased(KeyCode::Up);
+	CHECK(knocked);
+	CHECK(play.tank1().variable.at("hits") == 1);
+	CHECK_FALSE(play.has("shell1.1"));
+	CHECK(play.tank2().heading == Approx(270.0f)); // knocked, not turned
+}
+
+TEST_CASE("a shell stops at a wall, and a tank bounces off one", "[combat]")
+{
+	Combat play;
+	play.start();
+
+	play.tap(KeyCode::RShift);
+	play.frames(120);
+	CHECK_FALSE(play.has("shell2.1"));
+	CHECK(play.tank1().variable.at("hits") == 0);
+	CHECK(play.tank2().variable.at("hits") == 0);
+
+	// Straight at the middle wall.
+	const Object& wall = play.game.object("walls.1");
+	play.engine.handleKeyPressed(KeyCode::W);
+	play.frames(240);
+	play.engine.handleKeyReleased(KeyCode::W);
+	CHECK(play.tank1().position.x + play.tank1().size.x < wall.position.x + 10.0f);
+}
+
+TEST_CASE("after two minutes sixteen the most hits win, and space plays again", "[combat]")
+{
+	Combat play;
+	play.start();
+
+	play.tap(KeyCode::Pause);
+	CHECK(play.state() == "paused");
+	play.tap(KeyCode::Pause);
+	CHECK(play.state() == "playing");
+
+	play.tank2().variable.at("hits") = 3;
+	play.frames(135 * 60);
+	CHECK(play.state() == "playing");
+	play.frames(62);
+	REQUIRE(play.state() == "over");
+	CHECK(play.game.object("over.winner").lookName() == "blue");
+	play.tap(KeyCode::Space);
+	CHECK(play.state() == "title");
+	CHECK(play.tank2().variable.at("hits") == 0);
+	CHECK(play.game.object("over.winner").lookName() == "draw");
+}
+
+TEST_CASE("paused, the field is drawn still: a shell in flight stops where it is", "[combat]")
+{
+	Combat play;
+	play.start();
+	play.game.object("walls.1").isVisible = false;
+	play.tap(KeyCode::F);
+	play.frames(5);
+	Object& shell = play.game.object("shell1.1");
+	REQUIRE(shell.isVisible);
+	const Vector2f shellAt = shell.position;
+
+	play.tap(KeyCode::Pause);
+	REQUIRE(play.state() == "paused");
+	play.frames(30);
+	CHECK(shell.position == shellAt);
+	CHECK(play.game.isStill(shell));
+	CHECK(play.game.isStill(play.tank1()));
+	CHECK(play.game.isStill(play.game.object("walls.2")));
+	CHECK_FALSE(play.has("shell2.1")); // never fired
+	CHECK_FALSE(play.game.isShown(play.tank1()));
+	CHECK(play.game.isShown(play.game.object("paused")));
+
+	play.tap(KeyCode::Pause);
+	REQUIRE(play.state() == "playing");
+	play.frames(1);
+	CHECK(shell.position != shellAt);
+}
+
+TEST_CASE("each state owns what it draws, and a win draws the field still under its message", "[combat]")
+{
+	Combat play;
+	CHECK(play.tank1().ownerState == "playing");
+	CHECK(play.game.object("keys.1").ownerState == "title");
+	CHECK(play.game.object("again").ownerState == "over");
+	CHECK(play.game.isShown(play.game.object("title.title")));
+	CHECK_FALSE(play.game.isShown(play.tank1()));
+
+	play.start();
+	play.tank1().variable.at("hits") = 5;
+	play.game.pushState("over");
+	play.frames(1);
+	REQUIRE(play.state() == "over");
+	CHECK(play.game.isStill(play.tank2()));
+	CHECK(play.game.isStill(play.game.object("score1")));
+	CHECK(play.game.isShown(play.game.object("over.winner")));
+	CHECK(play.game.object("over.winner").lookName() == "yellow");
+	CHECK(play.game.isShown(play.game.object("again")));
+}

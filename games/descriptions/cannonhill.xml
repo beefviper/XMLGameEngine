@@ -12,7 +12,7 @@
   three points wins.
 
   W and S or Up and Down raise and lower the barrel, Space held then let go
-  fires, P or Escape pauses, Space starts and plays again.
+  fires, Pause pauses, Space starts and plays again.
 
   It is the game the second stage of tables and tracks was made for:
   * The hill is one <polygon>: its corners, filled. Its collisions are by
@@ -22,9 +22,14 @@
     barrel at the speed of the charge, with an <acceleration> the spawn
     gives it: the fall, and this shot's wind across.
   * The barrel is a bitmap turned about its middle, which sits on top of
-    the cannon. Its heading is worked out from its elevation, kept from 0
-    to 90 by a <clamp>, so the two cannons share one kit piece.
-  * Turns are a phase on the table: aiming, flying, landed, handing over.
+    the cannon. Its heading, and where its tip is, follow its elevation
+    (update="live"), kept from 0 to 90 by a <clamp>, so the two cannons
+    share one piece and aiming only changes the elevation.
+  * The barrels are a players group that takes <turns>: the one on its
+    turn shows ready, the other idle, and keys reach only the one ready.
+    <pass> hands the turn on once a shot is over.
+  * Where a turn is, is the table's look: aiming, flying, landed, done,
+    a point; each look's rules sit inside one condition on it.
     The blast that a landing leaves says whether a cannon was hit, by a
     distance= condition.
   * The three fields are scenes; each point won puts the next one back as
@@ -40,94 +45,117 @@
   <variables>
     <!-- how far the barrel's tip is from its middle, and how fast a full charge goes -->
     <variable name="tip">16</variable>
-    <!-- how fast the barrel turns and the charge builds, a frame: slow enough to stop on a number -->
-    <variable name="aimstep">1</variable>
-    <variable name="charge">0.75</variable>
+    <!-- how fast the barrel turns (degrees) and the charge builds, a second: slow enough to stop on a number -->
+    <variable name="aimstep">60</variable>
+    <variable name="charge">45</variable>
     <variable name="most">100</variable>
-    <variable name="speed">0.15</variable>
+    <variable name="speed">9</variable>
     <!-- the fall, and how much one step of wind pushes a shell across -->
-    <variable name="gravity">0.12</variable>
-    <variable name="windpush">0.004</variable>
+    <variable name="gravity">432</variable>
+    <variable name="windpush">14.4</variable>
     <!-- how near a blast must be to a cannon's middle to hit it -->
     <variable name="reach">28</variable>
     <variable name="crater">18</variable>
     <variable name="points">3</variable>
   </variables>
-  <sounds>
-    <sound name="fire" wave="noise"><volume>0.35</volume><note pitch="400" to="100">0.15</note></sound>
-    <sound name="boom" wave="noise"><volume>0.45</volume><note pitch="200" to="40">0.4</note></sound>
-    <sound name="aim"><volume>0.05</volume><note pitch="C6">0.01</note></sound>
-    <sound name="point" wave="triangle">
-      <volume>0.4</volume>
-      <note pitch="C5">0.1</note>
-      <note pitch="G5">0.1</note>
-      <note pitch="C6">0.2</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>90</size><color>color.yellow</color></style>
     <style name="prompt"><size>34</size></style>
     <style name="help"><size>24</size></style>
     <style name="hud"><size>22</size><color>color.lightgrey</color></style>
   </styles>
-  <kit>
+  <objects>
     <!-- A barrel: two pixels' worth of bars above its middle, clear below, so
          it turns about the middle, which sits on top of the cannon. Its
-         heading comes from its elevation: level + side * elevation, side 1
+         heading follows its elevation: level - side * elevation, side 1
          for a barrel facing right, -1 for one facing left. -->
     <object name="barrel" class="barrel">
-      <sprite name="idle">
-        <bitmap>
-          <row>**</row><row>**</row><row>**</row><row>**</row><row>**</row><row>**</row><row>**</row><row>**</row>
-          <row>..</row><row>..</row><row>..</row><row>..</row><row>..</row><row>..</row><row>..</row><row>..</row>
-          <scale>2</scale>
-          <color>color.grey</color>
-        </bitmap>
-      </sprite>
       <sprite name="ready">
-        <bitmap>
-          <row>**</row><row>**</row><row>**</row><row>**</row><row>**</row><row>**</row><row>**</row><row>**</row>
-          <row>..</row><row>..</row><row>..</row><row>..</row><row>..</row><row>..</row><row>..</row><row>..</row>
-          <scale>2</scale>
-          <color>color.yellow</color>
-        </bitmap>
+        <bitmap from="barrel-ready" />
+      </sprite>
+      <sprite name="idle">
+        <bitmap from="barrel-idle" />
       </sprite>
       <position><x>0</x><y>0</y></position>
-      <heading>45</heading>
+      <heading update="live">
+        <subtract>
+          <value>self.level</value>
+          <value>
+            <multiply>
+              <value>self.side</value>
+              <value>self.elevation</value>
+            </multiply>
+          </value>
+        </subtract>
+      </heading>
       <actions>
         <action name="raise">
-          <set variable="self.elevation"><formula><clamp><value><add><augend>self.elevation</augend><addend>aimstep</addend></add></value><atleast>0</atleast><atmost>90</atmost></clamp></formula></set>
-          <set variable="self.heading">self.level - self.side * self.elevation</set>
+          <inc variable="self.elevation">aimstep</inc>
+          <set variable="self.elevation">
+            <clamp>
+              <value>self.elevation</value>
+              <atleast>0</atleast>
+              <atmost>90</atmost>
+            </clamp>
+          </set>
         </action>
         <action name="lower">
-          <set variable="self.elevation"><formula><clamp><value><subtract><minuend>self.elevation</minuend><subtrahend>aimstep</subtrahend></subtract></value><atleast>0</atleast><atmost>90</atmost></clamp></formula></set>
-          <set variable="self.heading">self.level - self.side * self.elevation</set>
+          <dec variable="self.elevation">aimstep</dec>
+          <set variable="self.elevation">
+            <clamp>
+              <value>self.elevation</value>
+              <atleast>0</atleast>
+              <atmost>90</atmost>
+            </clamp>
+          </set>
         </action>
         <action name="charge">
           <inc variable="self.power">charge</inc>
-          <set variable="self.power"><formula><smallest><value>self.power</value><value>most</value></smallest></formula></set>
+          <set variable="self.power"><smallest><value>self.power</value><value>most</value></smallest></set>
         </action>
         <action name="fire">
-          <!-- where the tip is, from the middle -->
-          <set variable="self.tipx"><formula><multiply><multiplicand>tip</multiplicand><multiplier><sine><value>self.heading</value></sine></multiplier></multiply></formula></set>
-          <set variable="self.tipy"><formula><multiply><multiplicand>tip</multiplicand><multiplier>-1</multiplier><multiplier><cosine><value>self.heading</value></cosine></multiplier></multiply></formula></set>
           <spawn object="shell">
             <position>
-              <x><centered>self.x + self.width / 2 + self.tipx</centered></x>
-              <y><centered>self.y + self.height / 2 + self.tipy</centered></y>
+              <x><centered>
+                <add>
+                  <value>self.x</value>
+                  <value><divide><value>self.width</value><value>2</value></divide></value>
+                  <value>self.tipx</value>
+                </add>
+              </centered></x>
+              <y><centered>
+                <add>
+                  <value>self.y</value>
+                  <value><divide><value>self.height</value><value>2</value></divide></value>
+                  <value>self.tipy</value>
+                </add>
+              </centered></y>
             </position>
             <velocity>
-              <x><formula><multiply><multiplicand>self.power</multiplicand><multiplier>speed</multiplier><multiplier><sine><value>self.heading</value></sine></multiplier></multiply></formula></x>
-              <y><formula><multiply><multiplicand>self.power</multiplicand><multiplier>speed</multiplier><multiplier>-1</multiplier><multiplier><cosine><value>self.heading</value></cosine></multiplier></multiply></formula></y>
+              <x>
+                <multiply>
+                  <value>self.power</value>
+                  <value>speed</value>
+                  <value><sine><value>self.heading</value></sine></value>
+                </multiply>
+              </x>
+              <y>
+                <multiply>
+                  <value>self.power</value>
+                  <value>speed</value>
+                  <value>-1</value>
+                  <value><cosine><value>self.heading</value></cosine></value>
+                </multiply>
+              </y>
             </velocity>
             <acceleration>
-              <x>table.wind * windpush</x>
+              <x><multiply><value>table.wind</value><value>windpush</value></multiply></x>
               <y>gravity</y>
             </acceleration>
           </spawn>
           <set variable="self.last">self.power</set>
           <set variable="self.power">0</set>
-          <set variable="table.phase">1</set>
+          <become object="table" sprite="flying" />
           <become sprite="idle" />
           <play sound="fire" />
         </action>
@@ -138,8 +166,20 @@
         <variable name="side">1</variable>
         <variable name="power">0</variable>
         <variable name="last">0</variable>
-        <variable name="tipx">0</variable>
-        <variable name="tipy">0</variable>
+        <!-- where the tip is, from the middle -->
+        <variable name="tipx" update="live">
+          <multiply>
+            <value>tip</value>
+            <value><sine><value>self.heading</value></sine></value>
+          </multiply>
+        </variable>
+        <variable name="tipy" update="live">
+          <multiply>
+            <value>tip</value>
+            <value>-1</value>
+            <value><cosine><value>self.heading</value></cosine></value>
+          </multiply>
+        </variable>
       </variables>
     </object>
 
@@ -149,23 +189,23 @@
       <most>1</most>
       <collisions>
         <collision class="ground">
-          <spawn object="blast"><position><x><centered>self.x + self.width / 2</centered></x><y><centered>self.y + self.height / 2</centered></y></position></spawn>
-          <set variable="table.phase">2</set>
+          <spawn object="blast" />
+          <become object="table" sprite="landed" />
           <play sound="boom" />
           <despawn />
         </collision>
         <collision class="cannon">
-          <spawn object="blast"><position><x><centered>self.x + self.width / 2</centered></x><y><centered>self.y + self.height / 2</centered></y></position></spawn>
-          <set variable="table.phase">2</set>
+          <spawn object="blast" />
+          <become object="table" sprite="landed" />
           <play sound="boom" />
           <despawn />
         </collision>
         <collision edge="horizontal">
-          <set variable="table.phase">3</set>
+          <become object="table" sprite="done" />
           <despawn />
         </collision>
         <collision edge="bottom">
-          <set variable="table.phase">3</set>
+          <become object="table" sprite="done" />
           <despawn />
         </collision>
       </collisions>
@@ -182,42 +222,36 @@
     <!-- a cannon's body: a dome on the ground -->
     <object name="cannon" class="cannon">
       <sprite>
-        <bitmap>
-          <row>...****...</row>
-          <row>.********.</row>
-          <row>**********</row>
-          <row>**********</row>
-          <scale>2</scale>
-        </bitmap>
+        <bitmap from="cannon" />
       </sprite>
       <position><x>0</x><y>0</y></position>
       <collisions />
     </object>
-  </kit>
-  <objects>
-    <object name="again">
-      <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
-      <position><x><centered /></x><y><centered>window.height.center + 90</centered></y></position>
-    </object>
   </objects>
   <states>
+    <objects>
+      <object name="again">
+        <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
+        <position><x><centered /></x><y><centered><offset>90</offset></centered></y></position>
+      </object>
+    </objects>
     <state name="title">
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>CANNON HILL</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 140</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-140</offset></centered></y></position>
         </object>
-        <object name="help">
-          <sprite><text style="help"><content>two players take turns: land a shell by the other cannon, first to three</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
-        </object>
-        <object name="keys">
-          <sprite><text style="help"><content>w and s or up and down aim, hold spacebar and let go to fire; mind the wind</content><color>color.lightgrey</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 6</centered></y></position>
-        </object>
+        <group name="help">
+          <rows>2</rows>
+          <padding><y>46</y></padding>
+          <sprite><text style="help" /></sprite>
+          <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
+          <row number="1"><sprite><text><content>two players take turns: land a shell by the other cannon, first to three</content></text></sprite></row>
+          <row number="2"><sprite><text><content>w and s or up and down aim, hold spacebar and let go to fire; mind the wind</content><color>color.lightgrey</color></text></sprite></row>
+        </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 110</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>110</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
@@ -227,15 +261,18 @@
 
     <state name="playing">
       <objects>
-        <!-- The table: whose turn, the wind, the points, and the phase of
-             the turn: 0 aiming, 1 a shell flying, 2 landed, 3 missed or
-             done (the turn passes once the blast is gone), 4 a point won,
-             5 handing over. -->
+        <!-- The table: the wind, the points, and where the turn
+             is, its look: aiming, a shell flying, landed,
+             done (missed, or the turn passes once the blast is gone), a
+             point won. -->
         <object name="table">
+          <sprite name="aiming" />
+          <sprite name="flying" />
+          <sprite name="landed" />
+          <sprite name="done" />
+          <sprite name="point" />
           <variables>
-            <variable name="turn">1</variable>
-            <variable name="phase">5</variable>
-            <variable name="wind"><formula><round><value><random><min>-5</min><max>5</max></random></value></round></formula></variable>
+            <variable name="wind"><round><value><random><min>-5</min><max>5</max></random></value></round></variable>
             <variable name="score1">0</variable>
             <variable name="score2">0</variable>
             <variable name="placed">0</variable>
@@ -273,36 +310,25 @@
 
         <object name="cannon1" from="cannon">
           <sprite>
-            <bitmap>
-              <row>...****...</row>
-              <row>.********.</row>
-              <row>**********</row>
-              <row>**********</row>
-              <scale>2</scale>
-              <color>color.orange</color>
-            </bitmap>
+            <bitmap from="cannon1" />
           </sprite>
         </object>
         <object name="cannon2" from="cannon">
           <sprite>
-            <bitmap>
-              <row>...****...</row>
-              <row>.********.</row>
-              <row>**********</row>
-              <row>**********</row>
-              <scale>2</scale>
-              <color>color.cyan</color>
-            </bitmap>
+            <bitmap from="cannon2" />
           </sprite>
         </object>
-        <object name="barrel1" from="barrel" />
-        <object name="barrel2" from="barrel">
-          <heading>315</heading>
-          <variables>
-            <variable name="level">270</variable>
-            <variable name="side">-1</variable>
-          </variables>
-        </object>
+        <!-- the players are the barrels, taking turns: ready on its turn, idle off it -->
+        <group name="barrels" from="barrel">
+          <turns sprite="idle" />
+          <member name="barrel1" />
+          <member name="barrel2">
+            <variables>
+              <variable name="level">270</variable>
+              <variable name="side">-1</variable>
+            </variables>
+          </member>
+        </group>
       </objects>
       <scenes>
         <!-- 1: one hill between them -->
@@ -347,18 +373,48 @@
             <!-- just come in: the cannons on this field's ground, barrels at 45 -->
             <condition object="table" variable="placed">
               <equal>0</equal>
-              <set variable="cannon1.x">x1 - cannon1.width / 2</set>
-              <set variable="cannon1.y">y1 - cannon1.height</set>
-              <set variable="cannon2.x">x2 - cannon2.width / 2</set>
-              <set variable="cannon2.y">y2 - cannon2.height</set>
-              <set variable="barrel1.x">x1 - barrel1.width / 2</set>
-              <set variable="barrel1.y">y1 - cannon1.height - barrel1.height / 2</set>
-              <set variable="barrel2.x">x2 - barrel2.width / 2</set>
-              <set variable="barrel2.y">y2 - cannon2.height - barrel2.height / 2</set>
+              <set variable="cannon1.x">
+                <subtract>
+                  <value>x1</value>
+                  <value><divide><value>cannon1.width</value><value>2</value></divide></value>
+                </subtract>
+              </set>
+              <set variable="cannon1.y"><subtract><value>y1</value><value>cannon1.height</value></subtract></set>
+              <set variable="cannon2.x">
+                <subtract>
+                  <value>x2</value>
+                  <value><divide><value>cannon2.width</value><value>2</value></divide></value>
+                </subtract>
+              </set>
+              <set variable="cannon2.y"><subtract><value>y2</value><value>cannon2.height</value></subtract></set>
+              <set variable="barrel1.x">
+                <subtract>
+                  <value>x1</value>
+                  <value><divide><value>barrel1.width</value><value>2</value></divide></value>
+                </subtract>
+              </set>
+              <set variable="barrel1.y">
+                <subtract>
+                  <value>y1</value>
+                  <value>cannon1.height</value>
+                  <value><divide><value>barrel1.height</value><value>2</value></divide></value>
+                </subtract>
+              </set>
+              <set variable="barrel2.x">
+                <subtract>
+                  <value>x2</value>
+                  <value><divide><value>barrel2.width</value><value>2</value></divide></value>
+                </subtract>
+              </set>
+              <set variable="barrel2.y">
+                <subtract>
+                  <value>y2</value>
+                  <value>cannon2.height</value>
+                  <value><divide><value>barrel2.height</value><value>2</value></divide></value>
+                </subtract>
+              </set>
               <set variable="barrel1.elevation">45</set>
-              <set variable="barrel1.heading">45</set>
               <set variable="barrel2.elevation">45</set>
-              <set variable="barrel2.heading">315</set>
               <set variable="table.placed">1</set>
             </condition>
           </conditions>
@@ -434,43 +490,30 @@
         </scene>
       </scenes>
       <inputs>
-        <input on="hold"><button>w</button><button>up</button><trigger object="barrel1" action="raise" from="ready" /><trigger object="barrel2" action="raise" from="ready" /></input>
-        <input on="hold"><button>s</button><button>down</button><trigger object="barrel1" action="lower" from="ready" /><trigger object="barrel2" action="lower" from="ready" /></input>
-        <input button="space" on="hold"><trigger object="barrel1" action="charge" from="ready" /><trigger object="barrel2" action="charge" from="ready" /></input>
-        <input button="space" on="release"><trigger object="barrel1" action="fire" from="ready" /><trigger object="barrel2" action="fire" from="ready" /></input>
-        <input><button>p</button><button>escape</button><push state="paused" /></input>
+        <input on="hold"><button>w</button><button>up</button><trigger object="barrels" action="raise" from="ready" /></input>
+        <input on="hold"><button>s</button><button>down</button><trigger object="barrels" action="lower" from="ready" /></input>
+        <input button="space" on="hold"><trigger object="barrels" action="charge" from="ready" /></input>
+        <input button="space" on="release"><trigger object="barrels" action="fire" from="ready" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
-        <!-- landed by a cannon: the other player's point (a shell of your own counts too) -->
-        <condition>
-          <all>
-            <condition object="table" variable="phase"><equal>2</equal></condition>
-            <condition object="cannon1" distance="blast"><below>reach</below></condition>
-          </all>
-          <inc variable="table.score2" />
-          <set variable="table.phase">4</set>
-          <become object="pointshown" sprite="two" />
-          <play sound="point" />
-          <push state="point" />
-        </condition>
-        <condition>
-          <all>
-            <condition object="table" variable="phase"><equal>2</equal></condition>
-            <condition object="cannon2" distance="blast"><below>reach</below></condition>
-          </all>
-          <inc variable="table.score1" />
-          <set variable="table.phase">4</set>
-          <become object="pointshown" sprite="one" />
-          <play sound="point" />
-          <push state="point" />
-        </condition>
-        <!-- landed wide: once its blast is out, the turn is over -->
-        <condition>
-          <all>
-            <condition object="table" variable="phase"><equal>2</equal></condition>
-            <condition object="blast" total="count"><atleast>1</atleast></condition>
-          </all>
-          <set variable="table.phase">3</set>
+        <!-- landed by a cannon: the other player's point (a shell of your own counts too); wide, the turn is over once its blast is out -->
+        <condition object="table" sprite="landed">
+          <condition object="cannon1" distance="blast"><below>reach</below>
+            <inc variable="table.score2" />
+            <become object="table" sprite="point" />
+            <become object="pointshown" sprite="two" />
+            <play sound="point" />
+            <push state="point" />
+          </condition>
+          <condition object="cannon2" distance="blast"><below>reach</below>
+            <inc variable="table.score1" />
+            <become object="table" sprite="point" />
+            <become object="pointshown" sprite="one" />
+            <play sound="point" />
+            <push state="point" />
+          </condition>
+          <condition object="blast" total="count"><atleast>1</atleast><become object="table" sprite="done" /></condition>
         </condition>
         <!-- a point won and shown: the match is over, or on to the next field, whole -->
         <condition object="table" variable="score1">
@@ -483,38 +526,19 @@
           <become object="winner" sprite="two" />
           <push state="over" />
         </condition>
-        <condition object="table" variable="phase">
-          <equal>4</equal>
+        <condition object="table" sprite="point">
           <reset way="next" />
           <enter way="next" />
           <set variable="table.placed">0</set>
-          <set variable="table.phase">3</set>
+          <become object="table" sprite="done" />
         </condition>
         <!-- the turn is over and the blast gone: the other player, a new wind -->
-        <condition>
-          <all>
-            <condition object="table" variable="phase"><equal>3</equal></condition>
-            <condition object="blast"><remaining>0</remaining></condition>
-          </all>
-          <set variable="table.turn">3 - table.turn</set>
-          <set variable="table.wind"><formula><round><value><random><min>-5</min><max>5</max></random></value></round></formula></set>
-          <set variable="table.phase">5</set>
-        </condition>
-        <condition>
-          <all>
-            <condition object="table" variable="phase"><equal>5</equal></condition>
-            <condition object="table" variable="turn"><equal>1</equal></condition>
-          </all>
-          <become object="barrel1" sprite="ready" />
-          <set variable="table.phase">0</set>
-        </condition>
-        <condition>
-          <all>
-            <condition object="table" variable="phase"><equal>5</equal></condition>
-            <condition object="table" variable="turn"><equal>2</equal></condition>
-          </all>
-          <become object="barrel2" sprite="ready" />
-          <set variable="table.phase">0</set>
+        <condition object="table" sprite="done">
+          <condition object="blast"><remaining>0</remaining>
+            <set variable="table.wind"><round><value><random><min>-5</min><max>5</max></random></value></round></set>
+            <become object="table" sprite="aiming" />
+            <pass object="barrels" />
+          </condition>
         </condition>
       </conditions>
     </state>
@@ -525,14 +549,14 @@
         <object name="pointshown">
           <sprite name="one"><text style="banner"><content>POINT TO PLAYER 1</content><color>color.orange</color></text></sprite>
           <sprite name="two"><text style="banner"><content>POINT TO PLAYER 2</content><color>color.cyan</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 120</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-120</offset></centered></y></position>
         </object>
       </objects>
       <shows>
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>p</button><button>escape</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <timers>
         <timer><after>1.5</after><pop /></timer>
@@ -550,7 +574,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>p</button><button>escape</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
 
@@ -559,7 +583,7 @@
         <object name="winner">
           <sprite name="one"><text style="banner"><content>PLAYER 1 WINS</content><color>color.orange</color></text></sprite>
           <sprite name="two"><text style="banner"><content>PLAYER 2 WINS</content><color>color.cyan</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 90</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-90</offset></centered></y></position>
         </object>
       </objects>
       <shows>
@@ -571,4 +595,52 @@
       </inputs>
     </state>
   </states>
+  <sounds>
+    <sound name="fire" wave="noise"><volume>0.35</volume><note pitch="400" to="100">0.15</note></sound>
+    <sound name="boom" wave="noise"><volume>0.45</volume><note pitch="200" to="40">0.4</note></sound>
+    <sound name="aim"><volume>0.05</volume><note pitch="C6">0.01</note></sound>
+    <sound name="point" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="C5">0.1</note>
+      <note pitch="G5">0.1</note>
+      <note pitch="C6">0.2</note>
+    </sound>
+  </sounds>
+  <pictures>
+    <bitmap name="barrel-idle">
+      <row>**</row><row>**</row><row>**</row><row>**</row><row>**</row><row>**</row><row>**</row><row>**</row>
+      <row>..</row><row>..</row><row>..</row><row>..</row><row>..</row><row>..</row><row>..</row><row>..</row>
+      <scale>2</scale>
+      <color>color.grey</color>
+    </bitmap>
+    <bitmap name="barrel-ready">
+      <row>**</row><row>**</row><row>**</row><row>**</row><row>**</row><row>**</row><row>**</row><row>**</row>
+      <row>..</row><row>..</row><row>..</row><row>..</row><row>..</row><row>..</row><row>..</row><row>..</row>
+      <scale>2</scale>
+      <color>color.yellow</color>
+    </bitmap>
+    <bitmap name="cannon">
+      <row>...****...</row>
+      <row>.********.</row>
+      <row>**********</row>
+      <row>**********</row>
+      <scale>2</scale>
+    </bitmap>
+    <bitmap name="cannon1">
+      <row>...****...</row>
+      <row>.********.</row>
+      <row>**********</row>
+      <row>**********</row>
+      <scale>2</scale>
+      <color>color.orange</color>
+    </bitmap>
+    <bitmap name="cannon2">
+      <row>...****...</row>
+      <row>.********.</row>
+      <row>**********</row>
+      <row>**********</row>
+      <scale>2</scale>
+      <color>color.cyan</color>
+    </bitmap>
+  </pictures>
 </game>

@@ -104,3 +104,34 @@ target_include_directories(xgecli PRIVATE xge/cli/include)
 
 # --generate needs libxslt (dependencies.cmake); without it generate.cpp says so.
 xge_link_xslt(xgecli)
+
+# The hand-written Pongs (games/prototypes/), what the windows-cpp generator
+# writes: stand-alone games on SFML, none of the engine. pong_min first.
+if (XGE_WITH_SFML3)
+	add_executable(pong_min
+		"games/prototypes/pong_min/source/main.cpp"
+		"games/prototypes/pong_min/source/pong_min.cpp"
+		"games/prototypes/pong_min/source/pong_min.h"
+	)
+	target_compile_features(pong_min PRIVATE cxx_std_20)
+	target_link_libraries(pong_min PRIVATE SFML::Graphics)
+	xge_warnings(pong_min)
+	xge_place_program(pong_min FOLDER generated/prototypes)
+	# In an IDE, beside the generated games' tests (tests.cmake).
+	set_target_properties(pong_min PROPERTIES FOLDER XGETestGenerated/XGETestPrototypes)
+
+	# And pong.xml, its font copied beside it.
+	add_executable(pong
+		"games/prototypes/pong/source/main.cpp"
+		"games/prototypes/pong/source/pong.cpp"
+		"games/prototypes/pong/source/pong.h"
+	)
+	target_compile_features(pong PRIVATE cxx_std_20)
+	target_link_libraries(pong PRIVATE SFML::Graphics SFML::Audio)
+	xge_warnings(pong)
+	xge_place_program(pong FOLDER generated/prototypes)
+	set_target_properties(pong PROPERTIES FOLDER XGETestGenerated/XGETestPrototypes)
+	add_custom_command(TARGET pong POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/games/assets/tuffy.ttf" "$<TARGET_FILE_DIR:pong>/tuffy.ttf"
+		VERBATIM)
+endif()

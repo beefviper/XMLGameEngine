@@ -9,7 +9,7 @@
   there from blocks of ice he gets by jumping down onto the floes drifting
   below. Every row of ice he lands on while it is white turns blue and puts
   one more block on the igloo; once all four rows are blue they all turn
-  white again. Land in the water and he is lost; the temperature drops a
+  white again, and the row under him is his at once. Land in the water and he is lost; the temperature drops a
   degree every second, and at zero he freezes. Snow geese fly along two of
   the rows and push him along if they catch him, off the ice if he is not
   quick. A fish swims along the third row, a bonus if he catches it. When the
@@ -18,14 +18,14 @@
   three nights running to win.
 
   W or Up jumps up a row, S or Down jumps down one, A and D or Left and Right
-  walk. Space or P pauses.
+  walk. Pause pauses.
 
   How it is written:
-  * <jump>: a jump between rows takes a moment and passes over the water; he
-    only meets what he lands on. Water drowns him unless he is on a floe
+  * <hop> with <seconds>: a hop between rows takes a moment and passes over
+    the water; he only meets what he lands on. Water drowns him unless he is on a floe
     (unless="floe"), and he rides a floe (<ride />).
   * The nights are the <scenes> of the playing state. The ice, the igloo and
-    its door are the kit, taken by the first night; each later night is the
+    its door are pieces, taken by the first night; each later night is the
     one before (from=) with its own <variables>: how fast the ice drifts and
     what a floe is worth. Walking in through the door goes the way "next".
   * The ice is one <group> of four rows, each with two looks, white and blue,
@@ -35,8 +35,12 @@
     bottom course first, so <reveal> builds it from the ground up.
   * The cold is a state <timer> taking a degree a second off the
     thermometer; another brings the fish back from time to time.
-  * Paused, home and frozen draw the shore and the ice still underneath
-    (<show state="playing" />).
+  * In the water or out of warmth, Bailey goes out of play and the state
+    sinking or frozen stands everything still while a stand-in sinks or
+    shivers blue (a <once /> animation); its timer takes the life and
+    <reveal>s him on the shore, which keeps his variables.
+  * Paused, over, sinking and frozen draw the shore and the ice still
+    underneath (<show state="playing" />).
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
@@ -49,66 +53,26 @@
     <variable name="shore">125</variable>
     <variable name="row1">192</variable>
     <variable name="rowgap">90</variable>
-    <variable name="walk">2</variable>
-    <variable name="leap">0.35</variable>
+    <variable name="walk">120</variable>
+    <variable name="hoptime">0.35</variable>
     <variable name="igloox">520</variable>
     <variable name="iglooground">112</variable>
     <variable name="margin">10</variable>
   </variables>
-  <sounds>
-    <sound name="jump" wave="square">
-      <volume>0.15</volume>
-      <note pitch="C5" to="C6">0.08</note>
-    </sound>
-    <sound name="block" wave="triangle">
-      <volume>0.4</volume>
-      <note pitch="G5">0.05</note>
-      <note pitch="C6">0.08</note>
-    </sound>
-    <sound name="splash" wave="noise">
-      <volume>0.4</volume>
-      <note pitch="5000" to="300">0.5</note>
-    </sound>
-    <sound name="freeze" wave="sine">
-      <volume>0.4</volume>
-      <note pitch="E6" to="E4">0.8</note>
-    </sound>
-    <sound name="bonus" wave="square">
-      <volume>0.2</volume>
-      <note pitch="C6">0.05</note>
-      <note pitch="E6">0.05</note>
-      <note pitch="G6">0.1</note>
-    </sound>
-    <sound name="home" wave="square">
-      <volume>0.2</volume>
-      <note pitch="C5">0.1</note>
-      <note pitch="E5">0.1</note>
-      <note pitch="G5">0.1</note>
-      <note pitch="C6">0.1</note>
-      <note pitch="G5">0.1</note>
-      <note pitch="C6">0.3</note>
-    </sound>
-    <sound name="gameover" wave="triangle">
-      <volume>0.4</volume>
-      <note pitch="G4">0.25</note>
-      <note pitch="E4">0.25</note>
-      <note pitch="C4" to="C3">0.7</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>110</size><color>color.cyan</color></style>
     <style name="prompt"><size>40</size></style>
     <style name="help"><size>30</size></style>
     <style name="hud"><size>26</size><color>color.darkblue</color></style>
   </styles>
-  <kit>
+  <objects>
     <!-- the snowy shore along the top; below it all is water -->
     <object name="snow">
       <sprite><rectangle><width>window.right</width><height>shore</height><color>color.white</color></rectangle></sprite>
       <position><x>0</x><y>0</y></position>
     </object>
     <object name="water" class="water">
-      <sprite><rectangle><width>window.right</width><height>window.bottom - shore</height><color>color.darkblue</color></rectangle></sprite>
+      <sprite><rectangle><width>window.right</width><height><subtract><value>window.bottom</value><value>shore</value></subtract></height><color>color.darkblue</color></rectangle></sprite>
       <position><x>0</x><y>shore</y></position>
       <collisions />
     </object>
@@ -116,28 +80,22 @@
     <group name="ice" class="floe">
       <columns>3</columns>
       <rows>1</rows>
-      <padding><x>(window.right + 115) / 3 - 115</x></padding>
+      <padding><x>
+        <subtract>
+          <value>
+            <divide>
+              <value><add><value>window.right</value><value>115</value></add></value>
+              <value>3</value>
+            </divide>
+          </value>
+          <value>115</value>
+        </subtract>
+      </x></padding>
       <sprite name="white">
-        <bitmap>
-          <row>.******..******..*****.</row>
-          <row>*******.*******.*******</row>
-          <row>ccccccc.ccccccc.ccccccc</row>
-          <row>.ccccc...ccccc...ccccc.</row>
-          <scale>5</scale>
-          <color>color.white</color>
-          <color char="c">color.cyan</color>
-        </bitmap>
+        <bitmap from="ice-white" />
       </sprite>
       <sprite name="blue">
-        <bitmap>
-          <row>.******..******..*****.</row>
-          <row>*******.*******.*******</row>
-          <row>ccccccc.ccccccc.ccccccc</row>
-          <row>.ccccc...ccccc...ccccc.</row>
-          <scale>5</scale>
-          <color>color.blue</color>
-          <color char="c">color.darkblue</color>
-        </bitmap>
+        <bitmap from="ice-blue" />
       </sprite>
       <collisions>
         <collision edge="horizontal"><wrap /></collision>
@@ -153,28 +111,38 @@
       </actions>
       <group name="row1">
         <position><x>0</x><y>row1</y></position>
-        <velocity><x>1.2 * drift</x></velocity>
+        <velocity><x><multiply><value>72</value><value>drift</value></multiply></x></velocity>
         <collisions>
           <collision object="bailey" sprite="white"><become object="row1" sprite="blue" /><trigger action="block" /></collision>
         </collisions>
       </group>
       <group name="row2">
-        <position><x>60</x><y>row1 + rowgap</y></position>
-        <velocity><x>-1.6 * drift</x></velocity>
+        <position><x>60</x><y><add><value>row1</value><value>rowgap</value></add></y></position>
+        <velocity><x><multiply><value>-96</value><value>drift</value></multiply></x></velocity>
         <collisions>
           <collision object="bailey" sprite="white"><become object="row2" sprite="blue" /><trigger action="block" /></collision>
         </collisions>
       </group>
       <group name="row3">
-        <position><x>120</x><y>row1 + 2 * rowgap</y></position>
-        <velocity><x>2 * drift</x></velocity>
+        <position><x>120</x><y>
+          <add>
+            <value>row1</value>
+            <value><multiply><value>2</value><value>rowgap</value></multiply></value>
+          </add>
+        </y></position>
+        <velocity><x><multiply><value>120</value><value>drift</value></multiply></x></velocity>
         <collisions>
           <collision object="bailey" sprite="white"><become object="row3" sprite="blue" /><trigger action="block" /></collision>
         </collisions>
       </group>
       <group name="row4">
-        <position><x>30</x><y>row1 + 3 * rowgap</y></position>
-        <velocity><x>-1.4 * drift</x></velocity>
+        <position><x>30</x><y>
+          <add>
+            <value>row1</value>
+            <value><multiply><value>3</value><value>rowgap</value></multiply></value>
+          </add>
+        </y></position>
+        <velocity><x><multiply><value>-84</value><value>drift</value></multiply></x></velocity>
         <collisions>
           <collision object="bailey" sprite="white"><become object="row4" sprite="blue" /><trigger action="block" /></collision>
         </collisions>
@@ -186,35 +154,35 @@
       <rows>1</rows>
       <padding><x>2</x></padding>
       <sprite><rectangle><width>30</width><height>14</height><color>color.lightgrey</color></rectangle></sprite>
-      <active>false</active>
-      <group name="course1"><position><x>igloox</x><y>iglooground - 14</y></position></group>
-      <group name="course2"><position><x>igloox</x><y>iglooground - 30</y></position></group>
-      <group name="course3"><position><x>igloox</x><y>iglooground - 46</y></position></group>
-      <group name="dome"><columns>3</columns><position><x>igloox + 16</x><y>iglooground - 62</y></position></group>
+      <waiting />
+      <group name="course1"><position><x>igloox</x><y><subtract><value>iglooground</value><value>14</value></subtract></y></position></group>
+      <group name="course2"><position><x>igloox</x><y><subtract><value>iglooground</value><value>30</value></subtract></y></position></group>
+      <group name="course3"><position><x>igloox</x><y><subtract><value>iglooground</value><value>46</value></subtract></y></position></group>
+      <group name="dome"><columns>3</columns><position><x><add><value>igloox</value><value>16</value></add></x><y><subtract><value>iglooground</value><value>62</value></subtract></y></position></group>
     </group>
     <!-- the door, which appears once the igloo is finished -->
     <object name="door" class="door">
       <sprite><rectangle><width>24</width><height>30</height><color>color.black</color></rectangle></sprite>
-      <position><x>igloox + 51</x><y>iglooground - 30</y></position>
-      <active>false</active>
+      <position><x><add><value>igloox</value><value>51</value></add></x><y><subtract><value>iglooground</value><value>30</value></subtract></y></position>
+      <waiting />
       <collisions />
     </object>
-  </kit>
+  </objects>
   <states>
-    <state name="mainmenu">
+    <state name="title">
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>FROSTBITE</content></text></sprite>
           <position><x><centered /></x><y>170</y></position>
         </object>
-        <object name="help">
-          <sprite><text style="help"><content>land on white ice to build the igloo, then walk in</content></text></sprite>
+        <group name="help">
+          <rows>2</rows>
+          <padding><y>50</y></padding>
+          <sprite><text style="help" /></sprite>
           <position><x><centered /></x><y>320</y></position>
-        </object>
-        <object name="keys">
-          <sprite><text style="help"><content>w and s jump, a and d walk</content><color>color.lightgrey</color></text></sprite>
-          <position><x><centered /></x><y>370</y></position>
-        </object>
+          <row number="1"><sprite><text><content>land on white ice to build the igloo, then walk in</content></text></sprite></row>
+          <row number="2"><sprite><text><content>w and s jump, a and d walk</content><color>color.lightgrey</color></text></sprite></row>
+        </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
           <position><x><centered /></x><y>450</y></position>
@@ -229,19 +197,9 @@
         <!-- the thermometer, which holds the temperature -->
         <object name="thermometer">
           <sprite>
-            <bitmap>
-              <row>.ww.</row>
-              <row>.w*.</row>
-              <row>.w*.</row>
-              <row>.w*.</row>
-              <row>****</row>
-              <row>****</row>
-              <scale>4</scale>
-              <color>color.red</color>
-              <color char="w">color.lightgrey</color>
-            </bitmap>
+            <bitmap from="thermometer" />
           </sprite>
-          <position><x>window.right - 150</x><y>margin + 4</y></position>
+          <position><x><subtract><value>window.right</value><value>150</value></subtract></x><y><add><value>margin</value><value>4</value></add></y></position>
           <variables>
             <variable name="degrees">45</variable>
           </variables>
@@ -249,52 +207,54 @@
         <!-- snow geese: they push Bailey along with them if they catch him -->
         <group name="geese" class="goose">
           <sprite name="up">
-            <bitmap>
-              <row>*......*</row>
-              <row>.*....*.</row>
-              <row>..****o.</row>
-              <row>...**...</row>
-              <scale>4</scale>
-              <color>color.lightgrey</color>
-              <color char="o">color.orange</color>
-            </bitmap>
+            <bitmap from="geese-up" />
           </sprite>
           <sprite name="down">
-            <bitmap>
-              <row>........</row>
-              <row>..****o.</row>
-              <row>.*.**.*.</row>
-              <row>*......*</row>
-              <scale>4</scale>
-              <color>color.lightgrey</color>
-              <color char="o">color.orange</color>
-            </bitmap>
+            <bitmap from="geese-down" />
           </sprite>
           <animation>
-            <interval>0.2</interval>
+            <seconds>0.2</seconds>
             <frame sprite="up" />
             <frame sprite="down" />
           </animation>
           <collisions>
             <collision edge="horizontal"><wrap /></collision>
           </collisions>
-          <member><position><x>500</x><y>row1 + rowgap - 4</y></position><velocity><x>2.4</x></velocity></member>
-          <member><position><x>100</x><y>row1 + 3 * rowgap - 4</y></position><velocity><x>2.2</x></velocity></member>
+          <member><position><x>500</x><y>
+            <subtract>
+              <value><add><value>row1</value><value>rowgap</value></add></value>
+              <value>4</value>
+            </subtract>
+          </y></position><velocity><x>144</x></velocity></member>
+          <member><position><x>100</x><y>
+            <subtract>
+              <value>
+                <add>
+                  <value>row1</value>
+                  <value><multiply><value>3</value><value>rowgap</value></multiply></value>
+                </add>
+              </value>
+              <value>4</value>
+            </subtract>
+          </y></position><velocity><x>132</x></velocity></member>
         </group>
         <!-- a fish along the third row: a bonus, back every so often -->
         <object name="fish" class="fish">
           <sprite>
-            <bitmap>
-              <row>.***..*</row>
-              <row>*k*****</row>
-              <row>.***..*</row>
-              <scale>4</scale>
-              <color>color.green</color>
-              <color char="k">color.black</color>
-            </bitmap>
+            <bitmap from="fish" />
           </sprite>
-          <position><x>700</x><y>row1 + 2 * rowgap - 6</y></position>
-          <velocity><x>-1</x></velocity>
+          <position><x>700</x><y>
+            <subtract>
+              <value>
+                <add>
+                  <value>row1</value>
+                  <value><multiply><value>2</value><value>rowgap</value></multiply></value>
+                </add>
+              </value>
+              <value>6</value>
+            </subtract>
+          </y></position>
+          <velocity><x>-60</x></velocity>
           <collisions>
             <collision edge="horizontal"><wrap /></collision>
             <collision object="bailey"><die /></collision>
@@ -303,33 +263,18 @@
         <!-- Frostbite Bailey, in his fur hat and parka -->
         <object name="bailey" class="player">
           <sprite>
-            <bitmap>
-              <row>..bb..</row>
-              <row>.bbbb.</row>
-              <row>.ffff.</row>
-              <row>..ff..</row>
-              <row>.****.</row>
-              <row>******</row>
-              <row>f.**.f</row>
-              <row>.****.</row>
-              <row>.b..b.</row>
-              <row>bb..bb</row>
-              <scale>4</scale>
-              <color>color.orange</color>
-              <color char="b">color.brown</color>
-              <color char="f">color.yellow</color>
-            </bitmap>
+            <bitmap from="bailey" />
           </sprite>
-          <position><x>110</x><y>shore - 40 - 5</y></position>
+          <position><x>110</x><y><subtract><value>shore</value><value>40</value><value>5</value></subtract></y></position>
           <collisions>
             <collision edge="horizontal"><stick /></collision>
             <collision class="floe"><ride /></collision>
             <collision class="goose"><ride /></collision>
+            <!-- out of play while he sinks (the state sinking) -->
             <collision class="water" unless="floe">
-              <dec variable="bailey.lives" />
-              <reset object="thermometer" />
+              <die />
               <play sound="splash" />
-              <reset />
+              <set variable="bailey.sank">1</set>
             </collision>
             <collision class="fish">
               <inc variable="bailey.score">200</inc>
@@ -337,7 +282,7 @@
             </collision>
             <!-- in at the door: the warmth left is a bonus, and the next night -->
             <collision class="door">
-              <inc variable="bailey.score">thermometer.degrees * 10</inc>
+              <inc variable="bailey.score"><multiply><value>thermometer.degrees</value><value>10</value></multiply></inc>
               <inc variable="bailey.nights" />
               <set variable="bailey.blocks">0</set>
               <set variable="bailey.blue">0</set>
@@ -352,18 +297,20 @@
             <action name="left"><move direction="left">walk</move></action>
             <action name="right"><move direction="right">walk</move></action>
             <action name="up">
-              <jump direction="up">rowgap<seconds>leap</seconds></jump>
+              <hop direction="up">rowgap<seconds>hoptime</seconds></hop>
               <play sound="jump" />
             </action>
             <action name="down">
-              <jump direction="down">rowgap<seconds>leap</seconds></jump>
+              <hop direction="down">rowgap<seconds>hoptime</seconds></hop>
               <play sound="jump" />
             </action>
-            <action name="home"><reset /></action>
+            <action name="freeze"><die /></action>
           </actions>
           <variables>
             <variable name="score">0</variable>
             <variable name="lives">4</variable>
+            <!-- in the water: the state sinking comes next -->
+            <variable name="sank">0</variable>
             <variable name="blocks">0</variable>
             <variable name="blue">0</variable>
             <variable name="nights">0</variable>
@@ -380,7 +327,7 @@
         </object>
         <object name="degrees">
           <sprite><text style="hud"><number>thermometer.degrees</number><color>color.red</color></text></sprite>
-          <position><x>window.right - 120</x><y>margin</y></position>
+          <position><x><subtract><value>window.right</value><value>120</value></subtract></x><y>margin</y></position>
         </object>
       </objects>
       <scenes>
@@ -424,24 +371,30 @@
         <input><button>d</button><button>right</button><trigger object="bailey" action="right" /></input>
         <input><button>w</button><button>up</button><trigger object="bailey" action="up" /></input>
         <input><button>s</button><button>down</button><trigger object="bailey" action="down" /></input>
-        <input><button>space</button><button>p</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <condition object="bailey" variable="lives">
           <atmost>0</atmost>
-          <push state="gameover" />
+          <become object="over.message" sprite="lost" />
+          <push state="over" />
           <play sound="gameover" />
         </condition>
         <condition object="bailey" variable="nights">
           <atleast>3</atleast>
-          <push state="youwin" />
+          <become object="over.message" sprite="won" />
+          <push state="over" />
         </condition>
+        <!-- out of warmth: out of play while he freezes (the state frozen) -->
         <condition object="thermometer" variable="degrees">
           <atmost>0</atmost>
-          <dec variable="bailey.lives" />
-          <reset object="thermometer" />
-          <trigger object="bailey" action="home" />
+          <trigger object="bailey" action="freeze" />
           <play sound="freeze" />
+          <push state="frozen" />
+        </condition>
+        <condition object="bailey" variable="sank"><atleast>1</atleast>
+          <set variable="bailey.sank">0</set>
+          <push state="sinking" />
         </condition>
         <condition object="bailey" variable="blue">
           <atleast>4</atleast>
@@ -464,6 +417,87 @@
         </timer>
       </timers>
     </state>
+    <!-- in the water: Bailey sinks, everything standing still -->
+    <state name="sinking">
+      <objects>
+        <object name="sinker">
+          <sprite name="a"><bitmap from="bailey" /></sprite>
+          <sprite name="b"><bitmap from="sink-1" /></sprite>
+          <sprite name="c"><bitmap from="sink-2" /></sprite>
+          <sprite name="d"><bitmap from="sink-3" /></sprite>
+          <sprite name="e"><bitmap from="sink-4" /></sprite>
+          <animation>
+            <seconds>0.15</seconds>
+            <once />
+            <frame sprite="a" />
+            <frame sprite="b" />
+            <frame sprite="c" />
+            <frame sprite="d" />
+            <frame sprite="e"><seconds>0.6</seconds></frame>
+          </animation>
+          <position><x update="live">bailey.x</x><y update="live">bailey.y</y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
+      </inputs>
+      <timers>
+        <timer>
+          <after>1.3</after>
+          <dec variable="bailey.lives" />
+          <reset object="thermometer" />
+          <reveal object="bailey" />
+          <reset object="sinker" />
+          <pop />
+        </timer>
+      </timers>
+    </state>
+    <!-- out of warmth: Bailey freezes blue and shivers, everything standing still -->
+    <state name="frozen">
+      <objects>
+        <object name="shiver">
+          <sprite name="a"><bitmap from="frozen-a" /></sprite>
+          <sprite name="b"><bitmap from="frozen-b" /></sprite>
+          <animation>
+            <seconds>0.08</seconds>
+            <once />
+            <frame sprite="a" />
+            <frame sprite="b" />
+            <frame sprite="a" />
+            <frame sprite="b" />
+            <frame sprite="a" />
+            <frame sprite="b" />
+            <frame sprite="a" />
+            <frame sprite="b" />
+            <frame sprite="a" />
+            <frame sprite="b" />
+            <frame sprite="a" />
+            <frame sprite="b" />
+            <frame sprite="a"><seconds>0.4</seconds></frame>
+          </animation>
+          <position><x update="live">bailey.x</x><y update="live">bailey.y</y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
+      </inputs>
+      <timers>
+        <timer>
+          <after>1.5</after>
+          <dec variable="bailey.lives" />
+          <reset object="thermometer" />
+          <reveal object="bailey" />
+          <reset object="shiver" />
+          <pop />
+        </timer>
+      </timers>
+    </state>
     <state name="paused">
       <objects>
         <object name="paused">
@@ -475,13 +509,14 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
-    <state name="youwin">
+    <state name="over">
       <objects>
         <object name="message">
-          <sprite><text style="banner"><content>HOME AND WARM</content><size>90</size><color>color.yellow</color></text></sprite>
+          <sprite name="won"><text style="banner"><content>HOME AND WARM</content><size>90</size><color>color.yellow</color></text></sprite>
+          <sprite name="lost"><text style="banner"><content>FROZEN SOLID</content><size>90</size></text></sprite>
           <position><x><centered /></x><y>230</y></position>
         </object>
         <object name="again">
@@ -496,12 +531,214 @@
         <input button="space"><reset /></input>
       </inputs>
     </state>
-    <state name="gameover" from="youwin">
-      <objects>
-        <object name="message">
-          <sprite><text style="banner"><content>FROZEN SOLID</content><size>90</size></text></sprite>
-        </object>
-      </objects>
-    </state>
   </states>
+  <sounds>
+    <sound name="jump" wave="square">
+      <volume>0.15</volume>
+      <note pitch="C5" to="C6">0.08</note>
+    </sound>
+    <sound name="block" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="G5">0.05</note>
+      <note pitch="C6">0.08</note>
+    </sound>
+    <sound name="splash" wave="noise">
+      <volume>0.4</volume>
+      <note pitch="5000" to="300">0.5</note>
+    </sound>
+    <sound name="freeze" wave="sine">
+      <volume>0.4</volume>
+      <note pitch="E6" to="E4">0.8</note>
+    </sound>
+    <sound name="bonus" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C6">0.05</note>
+      <note pitch="E6">0.05</note>
+      <note pitch="G6">0.1</note>
+    </sound>
+    <sound name="home" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5">0.1</note>
+      <note pitch="E5">0.1</note>
+      <note pitch="G5">0.1</note>
+      <note pitch="C6">0.1</note>
+      <note pitch="G5">0.1</note>
+      <note pitch="C6">0.3</note>
+    </sound>
+    <sound name="gameover" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="G4">0.25</note>
+      <note pitch="E4">0.25</note>
+      <note pitch="C4" to="C3">0.7</note>
+    </sound>
+  </sounds>
+  <pictures>
+    <bitmap name="sink-1">
+      <row>......</row>
+      <row>......</row>
+      <row>......</row>
+      <row>..bb..</row>
+      <row>.bbbb.</row>
+      <row>.ffff.</row>
+      <row>..ff..</row>
+      <row>.****.</row>
+      <row>******</row>
+      <row>f.**.f</row>
+      <scale>4</scale>
+      <color>color.orange</color>
+      <color char="b">color.brown</color>
+      <color char="f">color.yellow</color>
+    </bitmap>
+    <bitmap name="sink-2">
+      <row>......</row>
+      <row>......</row>
+      <row>......</row>
+      <row>......</row>
+      <row>......</row>
+      <row>......</row>
+      <row>..bb..</row>
+      <row>.bbbb.</row>
+      <row>.ffff.</row>
+      <row>..ff..</row>
+      <scale>4</scale>
+      <color>color.orange</color>
+      <color char="b">color.brown</color>
+      <color char="f">color.yellow</color>
+    </bitmap>
+    <bitmap name="sink-3">
+      <row>......</row>
+      <row>......</row>
+      <row>......</row>
+      <row>......</row>
+      <row>......</row>
+      <row>......</row>
+      <row>......</row>
+      <row>......</row>
+      <row>..bb..</row>
+      <row>.bbbb.</row>
+      <scale>4</scale>
+      <color>color.orange</color>
+      <color char="b">color.brown</color>
+      <color char="f">color.yellow</color>
+    </bitmap>
+    <bitmap name="sink-4">
+      <row>......</row>
+      <row>......</row>
+      <row>......</row>
+      <row>......</row>
+      <row>......</row>
+      <row>......</row>
+      <row>......</row>
+      <row>......</row>
+      <row>......</row>
+      <row>......</row>
+      <scale>4</scale>
+      <color>color.orange</color>
+      <color char="b">color.brown</color>
+      <color char="f">color.yellow</color>
+    </bitmap>
+    <bitmap name="frozen-a">
+      <row>..bb...</row>
+      <row>.bbbb..</row>
+      <row>.ffff..</row>
+      <row>..ff...</row>
+      <row>.****..</row>
+      <row>******.</row>
+      <row>f.**.f.</row>
+      <row>.****..</row>
+      <row>.b..b..</row>
+      <row>bb..bb.</row>
+      <scale>4</scale>
+      <color>color.cyan</color>
+      <color char="b">color.blue</color>
+      <color char="f">color.white</color>
+    </bitmap>
+    <bitmap name="frozen-b">
+      <row>...bb..</row>
+      <row>..bbbb.</row>
+      <row>..ffff.</row>
+      <row>...ff..</row>
+      <row>..****.</row>
+      <row>.******</row>
+      <row>.f.**.f</row>
+      <row>..****.</row>
+      <row>..b..b.</row>
+      <row>.bb..bb</row>
+      <scale>4</scale>
+      <color>color.cyan</color>
+      <color char="b">color.blue</color>
+      <color char="f">color.white</color>
+    </bitmap>
+    <bitmap name="ice-white">
+      <row>.******..******..*****.</row>
+      <row>*******.*******.*******</row>
+      <row>ccccccc.ccccccc.ccccccc</row>
+      <row>.ccccc...ccccc...ccccc.</row>
+      <scale>5</scale>
+      <color>color.white</color>
+      <color char="c">color.cyan</color>
+    </bitmap>
+    <bitmap name="ice-blue">
+      <row>.******..******..*****.</row>
+      <row>*******.*******.*******</row>
+      <row>ccccccc.ccccccc.ccccccc</row>
+      <row>.ccccc...ccccc...ccccc.</row>
+      <scale>5</scale>
+      <color>color.blue</color>
+      <color char="c">color.darkblue</color>
+    </bitmap>
+    <bitmap name="thermometer">
+      <row>.ww.</row>
+      <row>.w*.</row>
+      <row>.w*.</row>
+      <row>.w*.</row>
+      <row>****</row>
+      <row>****</row>
+      <scale>4</scale>
+      <color>color.red</color>
+      <color char="w">color.lightgrey</color>
+    </bitmap>
+    <bitmap name="geese-up">
+      <row>*......*</row>
+      <row>.*....*.</row>
+      <row>..****o.</row>
+      <row>...**...</row>
+      <scale>4</scale>
+      <color>color.lightgrey</color>
+      <color char="o">color.orange</color>
+    </bitmap>
+    <bitmap name="geese-down">
+      <row>........</row>
+      <row>..****o.</row>
+      <row>.*.**.*.</row>
+      <row>*......*</row>
+      <scale>4</scale>
+      <color>color.lightgrey</color>
+      <color char="o">color.orange</color>
+    </bitmap>
+    <bitmap name="fish">
+      <row>.***..*</row>
+      <row>*k*****</row>
+      <row>.***..*</row>
+      <scale>4</scale>
+      <color>color.green</color>
+      <color char="k">color.black</color>
+    </bitmap>
+    <bitmap name="bailey">
+      <row>..bb..</row>
+      <row>.bbbb.</row>
+      <row>.ffff.</row>
+      <row>..ff..</row>
+      <row>.****.</row>
+      <row>******</row>
+      <row>f.**.f</row>
+      <row>.****.</row>
+      <row>.b..b.</row>
+      <row>bb..bb</row>
+      <scale>4</scale>
+      <color>color.orange</color>
+      <color char="b">color.brown</color>
+      <color char="f">color.yellow</color>
+    </bitmap>
+  </pictures>
 </game>

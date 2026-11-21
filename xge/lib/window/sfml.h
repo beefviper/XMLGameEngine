@@ -16,14 +16,6 @@
 
 namespace xge
 {
-	// The SFML 3 Window backend. Nothing outside this file, window/sfml.cpp,
-	// and WindowFactory::create (the one place that constructs one) ever
-	// names an SFML type - see window/window.h.
-	//
-	// Absorbs what used to be the standalone game_sfml class: building each
-	// object's visual from its picture (circle/rectangle/text/image) is
-	// backend work, not Game's, so it lives here now as SFMLWindow's own
-	// per-object cache instead of being baked into Object itself.
 	class SFMLWindow : public Window
 	{
 	public:
@@ -42,44 +34,29 @@ namespace xge
 		void prepare(Object& object) override;
 		void draw(Object& object) override;
 		void display() override;
+		float fit() const override;
+		Bitmap capture() override;
 
 	private:
-		// What Object used to own directly (renderTexture + sprite) - now
-		// kept here instead, one per object name, so Object itself never
-		// has to know an sf::Sprite exists.
+		// What an object shows: a sprite over the texture of its picture,
+		// which objects showing the same picture share.
 		struct CachedVisual
 		{
-			sf::RenderTexture renderTexture;
 			std::unique_ptr<sf::Sprite> sprite;
+			float drawnAt{ 0.0f };   // the pictureScale it was drawn at
 		};
 
 		sf::RenderWindow window;
 		sf::View view;  // the game's own pixels, placed in the window by fitView
 
 		void fitView();
-		// Each font file opened, by its name; null for one that could not be
-		// loaded, whose text is then drawn from the engine's built-in font
-		// (see picture/font.h).
-		std::unordered_map<std::string, std::unique_ptr<sf::Font>> fonts;
-		std::unordered_map<std::string, CachedVisual> visuals;
+		float fitNow{ 1.0f };  // window pixels to a game pixel, as fitView left it
+		Textures<sf::Texture> textures{ *this };
+		std::unordered_map<std::string, CachedVisual> visuals;  // by object name
 
 		static KeyCode sfmlKeyToKeyCode(sf::Keyboard::Key key) noexcept;
-		const sf::Font* getFont(const std::string& file);
 
-		// Resizes/draws visual.renderTexture from object.picture alone -
-		// no position math, no sprite (re)creation. Shared by init() and
-		// draw()'s on-demand rebuild path.
-		void buildShapeOnly(Object& object, CachedVisual& visual);
-		void buildCircle(Object& object, CachedVisual& visual);
-		void buildRectangle(Object& object, CachedVisual& visual);
-		void buildText(Object& object, CachedVisual& visual);
-		void buildImage(Object& object, CachedVisual& visual);
-		void buildLines(Object& object, CachedVisual& visual);
-		void buildBitmap(Object& object, CachedVisual& visual, const Bitmap& bitmap);
-
-		// Finishes a visual after buildShapeOnly(): measures object.size, finalizes the
-		// render texture, (re)builds the sprite at object.position, and
-		// clears object.visualDirty.
-		void finalizeVisual(Object& object, CachedVisual& visual);
+		// Makes the object's picture again, at pictureScale().
+		void build(Object& object, CachedVisual& visual);
 	};
 }

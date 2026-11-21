@@ -7,7 +7,9 @@
 
 #include "picture/color.h"
 #include "engine/keys.h"
+#include "load/reading.h"
 #include "load/spelling.h"
+#include "verbs/verb.h"
 
 #include <algorithm>
 #include <cctype>
@@ -19,7 +21,7 @@ namespace xge
 {
 	// The object a command names: its exact name (aliens.3.2), the name
 	// from the file (aliens), or the name of its <group> - the same lookup
-	// Game::tryGetObject does while the game runs.
+	// Game::find does while the game runs.
 	const Object* findObject(const std::vector<Object>& objects, const std::string& name)
 	{
 		const auto exact = std::find_if(objects.begin(), objects.end(), [&](const Object& object) { return object.name == name; });
@@ -53,9 +55,23 @@ namespace xge
 		std::set<std::string> names;
 		for (const Object& object : objects)
 		{
-			names.insert(object.name);
-			if (!object.groupName.empty()) { names.insert(object.groupName); }
-			names.insert(object.outerGroups.begin(), object.outerGroups.end());
+			// Each also as written in its state or scene (log, for
+			// playing.log), the way a misspelt name was most likely meant.
+			const auto add = [&](const std::string& name)
+			{
+				names.insert(name);
+				for (const std::string* owner : { &object.ownerScene.str(), &object.ownerState.str() })
+				{
+					if (!owner->empty() && name.size() > owner->size() + 1 && name.compare(0, owner->size() + 1, *owner + ".") == 0)
+					{
+						names.insert(name.substr(owner->size() + 1));
+						break;
+					}
+				}
+			};
+			add(object.name);
+			if (!object.groupName.empty()) { add(object.groupName); }
+			for (const std::string& group : object.outerGroups) { add(group); }
 		}
 		return { names.begin(), names.end() };
 	}
@@ -85,140 +101,38 @@ namespace xge
 		// The tag a command was written as, for a message about it.
 		std::string tagOf(const Command& command)
 		{
-			return std::visit(overload{
-				[](const CmdBounce&) { return std::string("<bounce />"); },
-				[](const CmdStick&) { return std::string("<stick />"); },
-				[](const CmdReset&) { return std::string("<reset />"); },
-				[](const CmdDie&) { return std::string("<die />"); },
-				[](const CmdWrap&) { return std::string("<wrap />"); },
-				[](const CmdRide&) { return std::string("<ride />"); },
-				[](const CmdCarry&) { return std::string("<carry />"); },
-				[](const CmdDrop&) { return std::string("<drop />"); },
-				[](const CmdTrack&) { return std::string("<track />"); },
-				[](const CmdDeflect&) { return std::string("<deflect>"); },
-				[](const CmdKnock&) { return std::string("<knock>"); },
-				[](const CmdHole&) { return std::string("<hole>"); },
-				[](const CmdHold&) { return std::string("<hold>"); },
-				[](const CmdThink&) { return std::string("<think>"); },
-				[](const CmdReverse&) { return std::string("<reverse />"); },
-				[](const CmdMove&) { return std::string("<move>"); },
-				[](const CmdHop&) { return std::string("<hop>"); },
-				[](const CmdJump&) { return std::string("<jump>"); },
-				[](const CmdLand&) { return std::string("<land />"); },
-				[](const CmdLeap&) { return std::string("<leap>"); },
-				[](const CmdClimb&) { return std::string("<climb>"); },
-				[](const CmdChase&) { return std::string("<chase>"); },
-				[](const CmdGo&) { return std::string("<go>"); },
-				[](const CmdHunt&) { return std::string("<hunt>"); },
-				[](const CmdHuntHop&) { return std::string("<hunt> by <hop>"); },
-				[](const CmdWander&) { return std::string("<wander>"); },
-				[](const CmdAim&) { return std::string("<aim>"); },
-				[](const CmdAccelerate&) { return std::string("<accelerate>"); },
-				[](const CmdTurn&) { return std::string("<turn>"); },
-				[](const CmdThrust&) { return std::string("<thrust>"); },
-				[](const CmdSwing&) { return std::string("<swing>"); },
-				[](const CmdRelease&) { return std::string("<release>"); },
-				[](const CmdStop&) { return std::string("<stop />"); },
-				[](const CmdIncrement&) { return std::string("<inc>"); },
-				[](const CmdCopy&) { return std::string("<copy>"); },
-				[](const CmdRank&) { return std::string("<rank>"); },
-				[](const CmdTurns&) { return std::string("<turns>"); },
-				[](const CmdPass&) { return std::string("<pass />"); },
-				[](const CmdOut&) { return std::string("<out />"); },
-				[](const CmdDemo&) { return std::string("<demo />"); },
-				[](const CmdDecrement&) { return std::string("<dec>"); },
-				[](const CmdPushState&) { return std::string("<push>"); },
-				[](const CmdPopState&) { return std::string("<pop>"); },
-				[](const CmdFire&) { return std::string("<fire>"); },
-				[](const CmdTriggerAction&) { return std::string("<trigger>"); },
-				[](const CmdResetObject&) { return std::string("<reset object>"); },
-				[](const CmdPlay&) { return std::string("<play>"); },
-				[](const CmdSilence&) { return std::string("<silence>"); },
-				[](const CmdBecome&) { return std::string("<become>"); },
-				[](const CmdReveal&) { return std::string("<reveal>"); },
-				[](const CmdFollow&) { return std::string("<follow>"); },
-				[](const CmdShift&) { return std::string("<shift>"); },
-				[](const CmdEnterScene&) { return std::string("<enter>"); },
-				[](const CmdResetScene&) { return std::string("<reset scene>"); },
-				[](const CmdSet&) { return std::string("<set>"); },
-				[](const CmdSpawn&) { return std::string("<spawn>"); },
-				[](const CmdSend&) { return std::string("<send>"); },
-				[](const CmdDespawn& d) { return std::string(d.target.empty() ? "<despawn />" : "<despawn object>"); },
-				[](const CmdSettle&) { return std::string("<settle />"); },
-				[](const CmdSlide&) { return std::string("<slide>"); },
-				[](const CmdClear&) { return std::string("<clear />"); },
-				[](const CmdCollapse&) { return std::string("<collapse />"); },
-				[](const CmdFall& fall) { return fall.objClass.empty() ? std::string("<fall />") : "<fall class=\"" + fall.objClass + "\" />"; },
-				[](const CmdCycle&) { return std::string("<cycle />"); },
-				[](const CmdGrow&) { return std::string("<grow />"); },
-				[](const CmdSplit&) { return std::string("<split />"); },
-				[](const CmdThrough&) { return std::string("<through />"); },
-				[](const CmdPick&) { return std::string("<pick>"); },
-				[](const CmdPlace&) { return std::string("<place />"); },
-				[](const CmdTake&) { return std::string("<take />"); },
-				[](const CmdLay&) { return std::string("<lay />"); },
-				[](const CmdDeal&) { return std::string("<deal />"); },
-				[](const CmdCall&) { return std::string("<call />"); },
-				[](const CmdRevealCards&) { return std::string("<reveal pile>"); },
-				[](const CmdShuffle&) { return std::string("<shuffle>"); },
-				[](const CmdRedeal&) { return std::string("<redeal />"); },
-				[](const CmdCollect&) { return std::string("<collect>"); },
-				[](const CmdPut&) { return std::string("<put>"); },
-				[](const CmdCount&) { return std::string("<count>"); },
-				[](const CmdLive& live) { return tagOf(live.loaded->command); },
-			}, command);
+			if (std::holds_alternative<CmdWhen>(command)) { return "<condition>"; }
+			if (const auto* fall = std::get_if<CmdFall>(&shapeOf(command)); fall && !fall->objClass.empty()) { return "<fall class=\"" + fall->objClass + "\" />"; }
+			const Form* form = formOf(command);
+			return form ? form->tag : std::string();
 		}
 
-		// Where a list of commands runs, and what each place does something
-		// with. CommandExecutor::run (play/executor.cpp) does each verb as
-		// its Doer says, and does nothing with one that has no object, touch
-		// or action it needs; this is what keeps such a verb out of a place.
-		enum class Place { Edge, Touch, Input, Condition, StateTimer, ObjectTimer, Action, PathStep, Computer, Check };
-
-		struct PlaceRule
+		// What a place is called in a message. A command the schema lets
+		// through where the engine does nothing with it is kept out by the
+		// places its verb's forms name (verbs/verb.h).
+		const char* nameOf(Place place)
 		{
-			const char* what;
-			std::vector<std::string> tags;
-		};
-
-		// The commands in the groups the schema has them in (xgedef.xsd,
-		// changesCommands and the rest), and the groups each place takes.
-		std::vector<std::string> commandsOf(std::initializer_list<const std::vector<std::string>*> groups)
-		{
-			std::vector<std::string> tags;
-			for (const auto* group : groups) { tags.insert(tags.end(), group->begin(), group->end()); }
-			return tags;
-		}
-
-		const PlaceRule& ruleFor(Place place)
-		{
-			static const std::vector<std::string> changes{ "<inc>", "<dec>", "<set>", "<copy>", "<rank>", "<play>", "<silence>", "<become>", "<reveal>", "<follow>", "<shift>", "<enter>",
-				"<reset />", "<reset object>", "<reset scene>", "<spawn>", "<send>", "<despawn object>", "<trigger>", "<count>", "<reveal pile>", "<shuffle>", "<redeal />", "<collect>" };
-			static const std::vector<std::string> flow{ "<push>", "<pop>", "<turns>", "<pass />", "<out />", "<demo />" };
-			static const std::vector<std::string> self{ "<die />", "<drop />", "<hop>", "<move>", "<release>", "<reverse />", "<stop />", "<fire>", "<despawn />", "<settle />", "<slide>", "<cycle />", "<grow />", "<split />", "<pick>", "<place />", "<put>", "<take />", "<lay />", "<deal />", "<call />" };
-			static const std::vector<std::string> steering{ "<aim>", "<chase>", "<hunt>", "<hunt> by <hop>", "<wander>" };
-			static const std::vector<std::string> touch{ "<carry />", "<deflect>", "<hole>", "<knock>", "<land />", "<ride />", "<through />", "<stick />" };
-			static const std::vector<std::string> edge{ "<stick />", "<wrap />" };
-			static const std::vector<std::string> bounce{ "<bounce />" };
-			static const std::vector<std::string> controls{ "<accelerate>", "<climb>", "<go>", "<jump>", "<leap>", "<swing>", "<thrust>", "<turn>", "<track />" };
-			static const std::vector<std::string> press{ "<hold>", "<think>" };
-			static const std::vector<std::string> cells{ "<clear />", "<collapse />", "<fall />" };
-
-			static const std::vector<std::string> stateCommands = commandsOf({ &changes, &flow });
-			static const std::vector<std::string> objectTimeCommands = commandsOf({ &changes, &self, &steering });
-			static const PlaceRule rules[] = {
-				{ "a screen-edge <collision>", commandsOf({ &changes, &self, &edge, &bounce }) },
-				{ "a <collision> with another object", commandsOf({ &changes, &self, &steering, &touch, &bounce }) },
-				{ "an <input>", stateCommands },
-				{ "a <condition>", stateCommands },
-				{ "a state's <timer>", stateCommands },
-				{ "an object's <timer>", objectTimeCommands },
-				{ "an <action>", commandsOf({ &changes, &self, &steering, &controls }) },
-				{ "a path's <step>", objectTimeCommands },
-				{ "a <computer>'s <condition>", press },
-				{ "a map's check", commandsOf({ &changes, &cells }) },
+			static const char* const names[] = {
+				"a screen-edge <collision>", "a <collision> with another object", "an <input>", "a <condition>", "a state's <timer>",
+				"an object's <timer>", "an <action>", "a path's <step>", "a <computer>'s <condition>", "a map's check",
 			};
-			return rules[static_cast<std::size_t>(place)];
+			return names[static_cast<std::size_t>(place)];
+		}
+
+		// Every command that does something in a place, as a message lists them.
+		std::vector<std::string> tagsFor(Place place)
+		{
+			std::vector<std::string> tags;
+			for (const Verb* verb : allVerbs())
+			{
+				for (const Form& form : verb->forms)
+				{
+					if (form.tag && (form.places & in(place)) && std::find(tags.begin(), tags.end(), form.tag) == tags.end()) { tags.push_back(form.tag); }
+				}
+			}
+			// A condition among an action's commands.
+			if (place == Place::Action) { tags.push_back("<condition>"); }
+			return tags;
 		}
 
 		// An action that runs another (<trigger>) must not come round to
@@ -235,13 +149,24 @@ namespace xge
 			}
 			const Object* object = findObject(objects, objectName);
 			if (!object) { return; }
-			const auto found = object->action.find(actionName);
-			if (found == object->action.end()) { return; }
+			const auto found = object->kind->action.find(actionName);
+			if (found == object->kind->action.end()) { return; }
 
 			path.push_back(step);
 			for (const Command& command : found->second)
 			{
-				if (const auto* trigger = std::get_if<CmdTriggerAction>(&shapeOf(command)))
+				// One about the cells round it may come round: each piece runs
+				// at most once a press (Game::triggerAbout).
+				if (const auto* when = std::get_if<CmdWhen>(&command); when && when->body)
+				{
+					for (const Command& inner : when->body->commands)
+					{
+						const auto* nested = std::get_if<CmdTriggerAction>(&shapeOf(inner));
+						if (nested && !nested->place.any()) { checkTriggerLoop(objects, nested->object, nested->action, path, where); }
+					}
+				}
+				const auto* trigger = std::get_if<CmdTriggerAction>(&shapeOf(command));
+				if (trigger && !trigger->place.any())
 				{
 					checkTriggerLoop(objects, trigger->object, trigger->action, path, where);
 				}
@@ -254,385 +179,174 @@ namespace xge
 		// saying what can go there.
 		void checkPlace(const std::vector<Command>& commands, Place place, const std::string& where)
 		{
-			const PlaceRule& rule = ruleFor(place);
 			for (const Command& command : commands)
 			{
 				const std::string tag = tagOf(command);
-				if (std::find(rule.tags.begin(), rule.tags.end(), tag) != rule.tags.end())
+				// A condition's commands go where it is.
+				if (const auto* when = std::get_if<CmdWhen>(&command); when && place == Place::Action)
 				{
+					if (when->body) { checkPlace(when->body->commands, place, where + " > <condition>"); }
 					continue;
 				}
+				const Form* form = formOf(command);
+				if (form && (form->places & in(place))) { continue; }
 
 				std::string hint;
-				if (place == Place::Input && (tag == "<move>" || tag == "<fire>" || tag == "<hop>" || tag == "<jump>" || tag == "<leap>" || tag == "<climb>" || tag == "<accelerate>"))
+				if (place == Place::Input && (tag == "<move>" || tag == "<fire>" || tag == "<hop>" || tag == "<jump>" || tag == "<climb>"))
 				{
 					hint = " A key moves or fires an object through one of its <action>s: <trigger object=\"...\" action=\"...\" />.";
 				}
-				throw std::runtime_error(where + ": " + tag + " does nothing in " + rule.what + ", so it would be ignored." + hint
-					+ " What can go there: " + listOf(rule.tags));
+				throw std::runtime_error(where + ": " + tag + " does nothing in " + nameOf(place) + ", so it would be ignored." + hint
+					+ " What can go there: " + listOf(tagsFor(place)));
 			}
 		}
 
-		// Every state, object and action a command names has to exist. Found
-		// here, when the game loads, rather than the first time the command
-		// runs: pressing a key bound to <push state="pasued" /> would otherwise
-		// stop the game in the middle of play (and used to read past the end of
-		// the list of states).
-		// A map of cells a command names (a spawn's or a send's into=).
-		void checkCellMap(const std::vector<Object>& objects, const std::string& map, const std::string& tag, const std::string& where)
+	}
+
+	// `other` left in a list that is not a rule about another object.
+	static std::string otherOutOfPlace(const std::string& name)
+	{
+		return name == "other" ? "; other is the object a <collision> rule touched, so only a rule about another object (class=, object= or neither) names it" : std::string();
+	}
+
+	void checkObject(const Checking& checking, const std::string& name, const std::string& what, const char* kind)
+	{
+		if (!findObject(checking.objects, name))
 		{
-			const bool found = std::any_of(objects.begin(), objects.end(), [&](const Object& object) { return object.onCells && object.mapName == map; });
-			if (!found) { throw std::runtime_error(where + ": " + tag + " names no map with <cells />"); }
+			throw std::runtime_error(checking.where + ": " + what + " names '" + name + "', and there is no " + kind + " of that name" + didYouMean(name, objectNames(checking.objects)) + otherOutOfPlace(name));
 		}
+	}
 
-		// The variable a command names: owner.variable, the variable after the
-		// last dot (the owner may be a path).
-		void checkVariable(const VariableName& target, const std::string& tag, const std::vector<Object>& objects, const std::string& where)
+	void checkState(const Checking& checking, const std::string& name, const std::string& what)
+	{
+		const bool known = std::any_of(checking.states.begin(), checking.states.end(), [&](const State& state) { return state.name == name; });
+		if (!known)
 		{
-			if (target.variable.empty())
-			{
-				throw std::runtime_error(where + ": " + tag + ": '" + target.owner + "' is no variable; name one as owner.variable (player.score)"
-					+ ". A variable that changes belongs to an object; the game's own <variables> are fixed numbers");
-			}
-			const std::string& ownerName = target.owner;
-			const Object* owner = findObject(objects, ownerName);
-			if (!owner)
-			{
-				throw std::runtime_error(where + ": " + tag + ": there is no object named '" + ownerName + "'" + didYouMean(ownerName, objectNames(objects))
-					+ ". A variable that changes belongs to an object (paddle1.score is paddle1's <variable name=\"score\">); the game's own <variables> are fixed numbers");
-			}
-			const std::string& variableName = target.variable;
-			if (!owner->variable.count(variableName))
-			{
-				std::vector<std::string> names;
-				for (const auto& entry : owner->variable) { names.push_back(entry.first); }
-				throw std::runtime_error(where + ": " + tag + ": '" + ownerName + "' has no variable named '" + variableName + "'" + didYouMean(variableName, names)
-					+ (names.empty() ? std::string("; it has no <variables>") : "; its variables are: " + listOf(names)));
-			}
+			throw std::runtime_error(checking.where + ": " + what + " names no state of the game" + didYouMean(name, stateNames(checking.states)));
 		}
+	}
 
-		void wantPalette(WantedPalettes& wanted, const std::vector<RawStyle>& styles, const Object& object, const std::string& style, const std::string& where)
+	void checkSound(const Checking& checking, const char* verb, const std::string& name)
+	{
+		const bool known = std::any_of(checking.sounds.begin(), checking.sounds.end(), [&](const SoundDesc& sound) { return sound.name == name; });
+		if (!known)
 		{
-			if (std::none_of(styles.begin(), styles.end(), [&](const RawStyle& each) { return each.name == style; }))
-			{
-				std::vector<std::string> names;
-				for (const RawStyle& each : styles) { names.push_back(each.name); }
-				throw std::runtime_error(where + ": <become style=\"" + style + "\" /> names no <style> of the game's <styles>" + didYouMean(style, names));
-			}
-			std::vector<std::string>& list = wanted[object.name];
-			if (std::find(list.begin(), list.end(), style) == list.end()) { list.push_back(style); }
+			std::vector<std::string> names;
+			for (const SoundDesc& sound : checking.sounds) { names.push_back(sound.name); }
+			throw std::runtime_error(checking.where + ": <" + verb + " sound=\"" + name + "\" /> names no sound of the game" + didYouMean(name, names));
 		}
+	}
 
-		void checkCommand(const Command& command, const std::vector<State>& states, const std::vector<Object>& objects,
-			const std::vector<SoundDesc>& sounds, const std::map<std::string, Path>& paths, const std::vector<RawStyle>& styles,
-			WantedPalettes& wanted, const std::string& where)
+	void checkScene(const Checking& checking, const char* verb, const std::string& scene, const std::string& way)
+	{
+		std::vector<std::string> names;
+		std::vector<std::string> ways;
+		for (const State& state : checking.states)
 		{
-			if (std::holds_alternative<CmdEnterScene>(shapeOf(command)) || std::holds_alternative<CmdResetScene>(shapeOf(command)))
+			for (const Scene& each : state.scenes)
 			{
-				const bool enter = std::holds_alternative<CmdEnterScene>(shapeOf(command));
-				const std::string& scene = enter ? std::get<CmdEnterScene>(shapeOf(command)).scene : std::get<CmdResetScene>(shapeOf(command)).scene;
-				const std::string& way = enter ? std::get<CmdEnterScene>(shapeOf(command)).way : std::get<CmdResetScene>(shapeOf(command)).way;
-				std::vector<std::string> names;
-				std::vector<std::string> ways;
-				for (const State& state : states)
+				names.push_back(each.name);
+				for (const auto& entry : each.ways)
 				{
-					for (const Scene& each : state.scenes)
-					{
-						names.push_back(each.name);
-						for (const auto& entry : each.ways)
-						{
-							if (std::find(ways.begin(), ways.end(), entry.first) == ways.end()) { ways.push_back(entry.first); }
-						}
-					}
-				}
-				if (!way.empty())
-				{
-					// Which scene's way it is, is known only when it runs; one
-					// that no scene has can never lead anywhere.
-					if (std::find(ways.begin(), ways.end(), way) == ways.end())
-					{
-						throw std::runtime_error(where + ": <" + (enter ? "enter" : "reset") + " way=\"" + way + "\" /> names no way of any scene" + didYouMean(way, ways)
-							+ (ways.empty() ? std::string(" (no scene has <ways>)") : ". The ways are: " + listOf(ways)));
-					}
-				}
-				else if (std::find(names.begin(), names.end(), scene) == names.end())
-				{
-					throw std::runtime_error(where + ": <" + (enter ? "enter" : "reset") + " scene=\"" + scene + "\" /> names no scene of the game" + didYouMean(scene, names)
-						+ (names.empty() ? std::string(" (no state has <scenes>)") : ". The scenes are: " + listOf(names)));
-				}
-			}
-			else if (const auto* follow = std::get_if<CmdFollow>(&shapeOf(command)))
-			{
-				if (!paths.count(follow->path))
-				{
-					std::vector<std::string> names;
-					for (const auto& entry : paths) { names.push_back(entry.first); }
-					throw std::runtime_error(where + ": <follow path=\"" + follow->path + "\" /> names no path of the game" + didYouMean(follow->path, names));
-				}
-				if (!follow->target.empty() && !findObject(objects, follow->target))
-				{
-					throw std::runtime_error(where + ": <follow> names '" + follow->target + "', and there is no object of that name" + didYouMean(follow->target, objectNames(objects)));
-				}
-			}
-			else if (const auto* along = std::get_if<CmdTrack>(&shapeOf(command)); along && !along->path.empty())
-			{
-				const auto path = paths.find(along->path);
-				if (path == paths.end())
-				{
-					std::vector<std::string> names;
-					for (const auto& entry : paths) { names.push_back(entry.first); }
-					throw std::runtime_error(where + ": <track path=\"" + along->path + "\" /> names no path of the game" + didYouMean(along->path, names));
-				}
-				if (!path->second.hasStart)
-				{
-					throw std::runtime_error(where + ": <track path=\"" + along->path + "\" />: the path needs a <start>, where 0 is");
-				}
-			}
-			else if (const auto* become = std::get_if<CmdBecome>(&shapeOf(command)))
-			{
-				if (!become->target.empty())
-				{
-					bool any = false;
-					for (const Object& object : objects)
-					{
-						const bool named = object.named(become->target);
-						if (!named) { continue; }
-						any = true;
-						if (!become->style.empty()) { wantPalette(wanted, styles, object, become->style, where); }
-						if (!become->sprite.empty() && std::none_of(object.looks.begin(), object.looks.end(), [&](const Object::Look& look) { return look.name == become->sprite; }))
-						{
-							throw std::runtime_error(where + ": <become sprite=\"" + become->sprite + "\" object=\"" + become->target + "\" />: '" + object.name + "' has no look of that name");
-						}
-						if (!become->from.empty() && std::none_of(object.looks.begin(), object.looks.end(), [&](const Object::Look& look) { return look.name == become->from; }))
-						{
-							throw std::runtime_error(where + ": <become from=\"" + become->from + "\" object=\"" + become->target + "\" />: '" + object.name + "' has no look of that name");
-						}
-					}
-					if (!any)
-					{
-						throw std::runtime_error(where + ": <become> names '" + become->target + "', and there is no object of that name" + didYouMean(become->target, objectNames(objects)));
-					}
-				}
-			}
-			else if (const auto* hunt = std::get_if<CmdHunt>(&shapeOf(command)))
-			{
-				for (const auto& [name, what] : { std::pair<const std::string*, const char*>{ &hunt->target, "<hunt>" },
-					{ &hunt->partner, "<hunt> > <with>" }, { &hunt->retreatTo, "<hunt> > <retreat>" } })
-				{
-					if (!name->empty() && !findObject(objects, *name))
-					{
-						throw std::runtime_error(where + ": " + what + " names '" + *name + "', and there is no object of that name" + didYouMean(*name, objectNames(objects)));
-					}
-				}
-			}
-			else if (const auto* huntHop = std::get_if<CmdHuntHop>(&shapeOf(command)))
-			{
-				if (!findObject(objects, huntHop->target))
-				{
-					throw std::runtime_error(where + ": <hunt> names '" + huntHop->target + "', and there is no object of that name" + didYouMean(huntHop->target, objectNames(objects)));
-				}
-			}
-			else if (const auto* chase = std::get_if<CmdChase>(&shapeOf(command)))
-			{
-				if (!findObject(objects, chase->target))
-				{
-					throw std::runtime_error(where + ": <chase> names '" + chase->target + "', and there is no object of that name" + didYouMean(chase->target, objectNames(objects)));
-				}
-			}
-			else if (const auto* aim = std::get_if<CmdAim>(&shapeOf(command)))
-			{
-				if (!findObject(objects, aim->target))
-				{
-					throw std::runtime_error(where + ": <aim> names '" + aim->target + "', and there is no object of that name" + didYouMean(aim->target, objectNames(objects)));
-				}
-			}
-			else if (const auto* reveal = std::get_if<CmdReveal>(&shapeOf(command)))
-			{
-				if (!findObject(objects, reveal->target))
-				{
-					throw std::runtime_error(where + ": <reveal> names '" + reveal->target + "', and there is no object of that name" + didYouMean(reveal->target, objectNames(objects)));
-				}
-			}
-			else if (const auto* shift = std::get_if<CmdShift>(&shapeOf(command)))
-			{
-				if (!findObject(objects, shift->target))
-				{
-					throw std::runtime_error(where + ": <shift> names '" + shift->target + "', and there is no object of that name" + didYouMean(shift->target, objectNames(objects)));
-				}
-			}
-			else if (std::holds_alternative<CmdPlay>(shapeOf(command)) || std::holds_alternative<CmdSilence>(shapeOf(command)))
-			{
-				const auto* play = std::get_if<CmdPlay>(&shapeOf(command));
-				const std::string& name = play ? play->sound : std::get<CmdSilence>(shapeOf(command)).sound;
-				const bool known = std::any_of(sounds.begin(), sounds.end(), [&](const SoundDesc& sound) { return sound.name == name; });
-				if (!known)
-				{
-					std::vector<std::string> names;
-					for (const SoundDesc& sound : sounds) { names.push_back(sound.name); }
-					throw std::runtime_error(where + ": <" + (play ? "play" : "silence") + " sound=\"" + name + "\" /> names no sound of the game" + didYouMean(name, names));
-				}
-			}
-			else if (const auto* push = std::get_if<CmdPushState>(&shapeOf(command)))
-			{
-				const bool known = std::any_of(states.begin(), states.end(), [&](const State& state) { return state.name == push->name; });
-				if (!known)
-				{
-					throw std::runtime_error(where + ": <push state=\"" + push->name + "\" /> names no state of the game" + didYouMean(push->name, stateNames(states)));
-				}
-			}
-			else if (const auto* turns = std::get_if<CmdTurns>(&shapeOf(command)))
-			{
-				for (const std::string& player : turns->players)
-				{
-					const bool known = player.empty() || std::any_of(states.begin(), states.end(), [&](const State& state) { return state.name == player; });
-					if (!known)
-					{
-						throw std::runtime_error(where + ": <turns> > <player state=\"" + player + "\" /> names no state of the game" + didYouMean(player, stateNames(states)));
-					}
-				}
-			}
-			else if (const auto* pop = std::get_if<CmdPopState>(&shapeOf(command)); pop && !pop->name.empty())
-			{
-				const bool known = std::any_of(states.begin(), states.end(), [&](const State& state) { return state.name == pop->name; });
-				if (!known)
-				{
-					throw std::runtime_error(where + ": <pop state=\"" + pop->name + "\" /> names no state of the game" + didYouMean(pop->name, stateNames(states)));
-				}
-			}
-			else if (const auto* trigger = std::get_if<CmdTriggerAction>(&shapeOf(command)))
-			{
-				if (trigger->object.empty())
-				{
-					throw std::runtime_error(where + ": <trigger action=\"" + trigger->action + "\" /> needs object=\"...\" here; only an object's own rules, actions and timers can leave it out");
-				}
-				const Object* object = findObject(objects, trigger->object);
-				if (!object)
-				{
-					throw std::runtime_error(where + ": an action of '" + trigger->object + "' is asked for, and there is no object of that name" + didYouMean(trigger->object, objectNames(objects)));
-				}
-				if (!object->action.count(trigger->action))
-				{
-					std::vector<std::string> names;
-					for (const auto& entry : object->action) { names.push_back(entry.first); }
-					throw std::runtime_error(where + ": '" + trigger->object + "' has no action named '" + trigger->action + "'" + didYouMean(trigger->action, names)
-						+ (names.empty() ? std::string(" (it has no <actions>)") : "; its actions are: " + listOf(names)));
-				}
-			}
-			else if (const auto* fire = std::get_if<CmdFire>(&shapeOf(command)))
-			{
-				if (!findObject(objects, fire->projectileName))
-				{
-					throw std::runtime_error(where + ": <fire> names '" + fire->projectileName + "', and there is no object of that name" + didYouMean(fire->projectileName, objectNames(objects)));
-				}
-			}
-			else if (const auto* release = std::get_if<CmdRelease>(&shapeOf(command)))
-			{
-				if (!findObject(objects, release->target))
-				{
-					throw std::runtime_error(where + ": <release> names '" + release->target + "', and there is no object of that name" + didYouMean(release->target, objectNames(objects)));
-				}
-			}
-			else if (const auto* reset = std::get_if<CmdResetObject>(&shapeOf(command)))
-			{
-				if (!findObject(objects, reset->target))
-				{
-					throw std::runtime_error(where + ": <reset object=\"" + reset->target + "\" /> names no object of the game" + didYouMean(reset->target, objectNames(objects)));
-				}
-			}
-			else if (std::holds_alternative<CmdIncrement>(shapeOf(command)) || std::holds_alternative<CmdDecrement>(shapeOf(command)))
-			{
-				// A variable belongs to an object: paddle1.score is paddle1's
-				// <variable name="score">.
-				const bool inc = std::holds_alternative<CmdIncrement>(shapeOf(command));
-				const VariableName& target = inc ? std::get<CmdIncrement>(shapeOf(command)).target : std::get<CmdDecrement>(shapeOf(command)).target;
-				const std::string written = target.variable.empty() ? target.owner : target.written();
-				checkVariable(target, std::string(inc ? "<inc" : "<dec") + " variable=\"" + written + "\" />", objects, where);
-			}
-			else if (const auto* set = std::get_if<CmdSet>(&shapeOf(command)))
-			{
-				// A variable of an object's, or one of the numbers every
-				// object has (where it is, how it is going, its heading).
-				const std::string tag = "<set variable=\"" + (set->target.variable.empty() ? set->target.owner : set->target.written()) + "\">";
-				const std::string part = liveNumberPart(set->target.written());
-				const Object* holder = part.empty() ? nullptr : findObject(objects, set->target.owner);
-				if (part.empty() || (holder && holder->variable.count(part)))
-				{
-					checkVariable(set->target, tag, objects, where);
-				}
-				else
-				{
-					const std::string& owner = set->target.owner;
-					const Object* found = findObject(objects, owner);
-					if (!found)
-					{
-						throw std::runtime_error(where + ": " + tag + ": there is no object named '" + owner + "'" + didYouMean(owner, objectNames(objects)));
-					}
-					if (part == "heading" && !found->hasHeading)
-					{
-						throw std::runtime_error(where + ": " + tag + ": '" + owner + "' has no <heading> to set");
-					}
-					if ((part == "altitude" || part == "rise") && !found->hasAltitude)
-					{
-						throw std::runtime_error(where + ": " + tag + ": '" + owner + "' has no <altitude> to set");
-					}
-				}
-			}
-			else if (const auto* despawn = std::get_if<CmdDespawn>(&shapeOf(command)); despawn && !despawn->target.empty())
-			{
-				if (!findObject(objects, despawn->target))
-				{
-					throw std::runtime_error(where + ": <despawn> names '" + despawn->target + "', and there is no object or group of that name" + didYouMean(despawn->target, objectNames(objects)));
-				}
-			}
-			else if (const auto* spawn = std::get_if<CmdSpawn>(&shapeOf(command)))
-			{
-				if (!findObject(objects, spawn->target))
-				{
-					throw std::runtime_error(where + ": <spawn> names '" + spawn->target + "', and there is no object or group of that name" + didYouMean(spawn->target, objectNames(objects)));
-				}
-				if (!spawn->into.empty()) { checkCellMap(objects, spawn->into, "<spawn into=\"" + spawn->into + "\">", where); }
-			}
-			else if (const auto* send = std::get_if<CmdSend>(&shapeOf(command)))
-			{
-				if (!findObject(objects, send->target))
-				{
-					throw std::runtime_error(where + ": <send> names '" + send->target + "', and there is no object or group of that name" + didYouMean(send->target, objectNames(objects)));
-				}
-				checkCellMap(objects, send->from, "<send from=\"" + send->from + "\">", where);
-				checkCellMap(objects, send->into, "<send into=\"" + send->into + "\">", where);
-			}
-			else if (const auto* copy = std::get_if<CmdCopy>(&shapeOf(command)))
-			{
-				// Both are owner.variable: a copy reads one object's variable
-				// and writes another's.
-				const std::string tag = "<copy variable=\"" + copy->from.written() + "\" into=\"" + copy->into.written() + "\" />";
-				checkVariable(copy->from, tag, objects, where);
-				checkVariable(copy->into, tag, objects, where);
-			}
-			else if (const auto* rank = std::get_if<CmdRank>(&shapeOf(command)))
-			{
-				// The entry's variable, and a group whose every member has one
-				// of that name to be ordered by.
-				const std::string tag = "<rank variable=\"" + rank->entry.written() + "\" into=\"" + rank->table + "\" />";
-				checkVariable(rank->entry, tag, objects, where);
-				const std::string& variableName = rank->entry.variable;
-				bool any = false;
-				for (const Object& object : objects)
-				{
-					if (!object.inGroup(rank->table)) { continue; }
-					any = true;
-					if (!object.variable.count(variableName))
-					{
-						throw std::runtime_error(where + ": " + tag + ": '" + object.name + "' has no variable named '" + variableName + "' to be ranked by");
-					}
-				}
-				if (!any)
-				{
-					throw std::runtime_error(where + ": " + tag + ": into= names no <group> of the game" + didYouMean(rank->table, objectNames(objects)));
+					if (std::find(ways.begin(), ways.end(), entry.first) == ways.end()) { ways.push_back(entry.first); }
 				}
 			}
 		}
+		if (!way.empty())
+		{
+			// Which scene's way it is, is known only when it runs; one
+			// that no scene has can never lead anywhere.
+			if (std::find(ways.begin(), ways.end(), way) == ways.end())
+			{
+				throw std::runtime_error(checking.where + ": <" + verb + " way=\"" + way + "\" /> names no way of any scene" + didYouMean(way, ways)
+					+ (ways.empty() ? std::string(" (no scene has <ways>)") : ". The ways are: " + listOf(ways)));
+			}
+		}
+		else if (std::find(names.begin(), names.end(), scene) == names.end())
+		{
+			throw std::runtime_error(checking.where + ": <" + verb + " scene=\"" + scene + "\" /> names no scene of the game" + didYouMean(scene, names)
+				+ (names.empty() ? std::string(" (no state has <scenes>)") : ". The scenes are: " + listOf(names)));
+		}
+	}
 
+	void checkCellMap(const Checking& checking, const std::string& map, const std::string& tag)
+	{
+		const bool found = std::any_of(checking.objects.begin(), checking.objects.end(), [&](const Object& object) { return object.onCells && mapOf(checking.parts, object).name == map; });
+		if (!found) { throw std::runtime_error(checking.where + ": " + tag + " names no map with <cells />"); }
+	}
+
+	void refuseFollowed(const Checking& checking, const VariableName& target, const std::string& tag)
+	{
+		const Object* owner = target.variable.empty() ? nullptr : findObject(checking.objects, target.owner);
+		const Object::Follows* follows = owner ? checking.parts.follows.find(owner->id) : nullptr;
+		if (follows && follows->has(target.variable))
+		{
+			throw std::runtime_error(checking.where + ": " + tag + ": '" + target.written() + "' is update=\"live\", worked out every frame from what it reads;"
+				" no command can change it. Change what it reads, or leave out update=\"live\"");
+		}
+	}
+
+	void checkVariable(const Checking& checking, const VariableName& target, const std::string& tag)
+	{
+		const std::vector<Object>& objects = checking.objects;
+		const std::string& where = checking.where;
+		if (target.variable.empty())
+		{
+			throw std::runtime_error(where + ": " + tag + ": '" + target.owner + "' is no variable; name one as owner.variable (player.score)"
+				+ ". A variable that changes belongs to an object; the game's own <variables> are fixed numbers");
+		}
+		const std::string& ownerName = target.owner;
+		const Object* owner = findObject(objects, ownerName);
+		if (!owner)
+		{
+			throw std::runtime_error(where + ": " + tag + ": there is no object named '" + ownerName + "'" + didYouMean(ownerName, objectNames(objects)) + otherOutOfPlace(ownerName)
+				+ ". A variable that changes belongs to an object (paddle1.score is paddle1's <variable name=\"score\">); the game's own <variables> are fixed numbers");
+		}
+		const std::string& variableName = target.variable;
+		if (!owner->variable.countText(variableName))
+		{
+			std::vector<std::string> names;
+			for (const auto& entry : owner->variable) { names.push_back(entry.first); }
+			throw std::runtime_error(where + ": " + tag + ": '" + ownerName + "' has no variable named '" + variableName + "'" + didYouMean(variableName, names)
+				+ (names.empty() ? std::string("; it has no <variables>") : "; its variables are: " + listOf(names)));
+		}
+	}
+
+	void wantPalette(const Checking& checking, const Object& object, const std::string& style)
+	{
+		const std::vector<WrittenStyle>& styles = checking.styles;
+		if (std::none_of(styles.begin(), styles.end(), [&](const WrittenStyle& each) { return each.name == style; }))
+		{
+			std::vector<std::string> names;
+			for (const WrittenStyle& each : styles) { names.push_back(each.name); }
+			throw std::runtime_error(checking.where + ": <become style=\"" + style + "\" /> names no <style> of the game's <styles>" + didYouMean(style, names));
+		}
+		std::vector<std::string>& list = checking.wanted[object.name];
+		if (std::find(list.begin(), list.end(), style) == list.end()) { list.push_back(style); }
+	}
+
+	namespace
+	{
+		// Every state, object and action a command names has to exist: each
+		// verb checks its own (Verb::check). Found here, when the game loads,
+		// rather than the first time the command runs: pressing a key bound
+		// to <push state="pasued" /> would otherwise stop the game in the
+		// middle of play.
+		void checkCommand(const Command& command, const Checking& checking)
+		{
+			if (const auto* when = std::get_if<CmdWhen>(&command))
+			{
+				if (!when->body) { return; }
+				const std::string inside = checking.where + " > <condition>";
+				for (const Command& inner : when->body->commands)
+				{
+					checkCommand(inner, { checking.states, checking.objects, checking.sounds, checking.paths, checking.styles, checking.wanted, inside, checking.parts });
+				}
+				return;
+			}
+			const Verb* verb = verbOf(command);
+			if (verb && verb->check) { verb->check(shapeOf(command), checking); }
+		}
 	}
 
 	// Which objects can fly each path: those a <follow> anywhere sends
@@ -681,10 +395,17 @@ namespace xge
 		}
 		for (const Object& object : objects)
 		{
-			for (const Timer& timer : object.timers) { visit(timer.commands, &object); }
-			for (const auto& [name, commands] : object.action) { visit(commands, &object); }
-			for (const auto& rule : object.collisionData.others) { visit(rule.commands, &object); }
-			for (const auto& edgeRules : object.collisionData.edges)
+			for (const Timer& timer : object.kind->timers) { visit(timer.commands, &object); }
+			visit(object.animation.frames.shows().then, &object);
+			for (const auto& frame : object.animation.frames.shows().commands) { visit(frame, &object); }
+			for (const Object::Look& look : object.looks.all())
+			{
+				visit(look.frames.shows().then, &object);
+				for (const auto& frame : look.frames.shows().commands) { visit(frame, &object); }
+			}
+			for (const auto& [name, commands] : object.kind->action) { visit(commands, &object); }
+			for (const auto& rule : object.kind->collisionData.others) { visit(rule.commands, &object); }
+			for (const auto& edgeRules : object.kind->collisionData.edges)
 			{
 				visit(edgeRules.commands, &object);
 			}
@@ -715,191 +436,383 @@ namespace xge
 		return followers;
 	}
 
-	WantedPalettes checkReferences(const std::vector<State>& states, const std::vector<Object>& objects, const std::vector<SoundDesc>& sounds,
-		const std::map<std::string, Path>& paths, const std::vector<RawStyle>& styles)
+	namespace
 	{
-		WantedPalettes wanted;
-
 		// A <tether> joins two objects the game has, and a <pull> and a
 		// <seek> name ones it has.
-		for (const Object& object : objects)
+		void checkObjectNames(const Parts& parts, const std::vector<Object>& objects)
 		{
-			for (const auto& [name, strength] : object.pulls)
+			for (const Object& object : objects)
 			{
-				if (!findObject(objects, name))
+				onLine(object.line, [&]
 				{
-					throw std::runtime_error("object '" + object.name + "' > <pull>: there is no object named '" + name + "'" + didYouMean(name, objectNames(objects)));
-				}
-			}
-			if (!object.shadowOf.empty() && !findObject(objects, object.shadowOf))
-			{
-				throw std::runtime_error("object '" + object.name + "' > <shadow>: there is no object named '" + object.shadowOf + "'" + didYouMean(object.shadowOf, objectNames(objects)));
-			}
-			if (!object.seekTarget.empty() && !findObject(objects, object.seekTarget))
-			{
-				throw std::runtime_error("object '" + object.name + "' > <seek>: there is no object named '" + object.seekTarget + "'" + didYouMean(object.seekTarget, objectNames(objects)));
-			}
-			for (const std::string* end : { &object.tetherFrom, &object.tetherTo })
-			{
-				if (!end->empty() && !findObject(objects, *end))
-				{
-					throw std::runtime_error("object '" + object.name + "' > <tether>: there is no object named '" + *end + "'" + didYouMean(*end, objectNames(objects)));
-				}
+					const Object::Pull* pull = parts.pulls.find(object.id);
+					const Object::Aloft* aloft = parts.alofts.find(object.id);
+					for (const auto& [name, strength] : pull ? pull->toward : std::vector<std::pair<Name, float>>{})
+					{
+						if (!findObject(objects, name))
+						{
+							throw std::runtime_error("object '" + object.name + "' > <pull>: there is no object named '" + name + "'" + didYouMean(name, objectNames(objects)));
+						}
+					}
+					if (aloft && !aloft->shadowOf.empty() && !findObject(objects, aloft->shadowOf))
+					{
+						throw std::runtime_error("object '" + object.name + "' > <shadow>: there is no object named '" + aloft->shadowOf + "'" + didYouMean(aloft->shadowOf, objectNames(objects)));
+					}
+					if (pull && !pull->seek.empty() && !findObject(objects, pull->seek))
+					{
+						throw std::runtime_error("object '" + object.name + "' > <seek>: there is no object named '" + pull->seek + "'" + didYouMean(pull->seek, objectNames(objects)));
+					}
+					const Object::Tether* tether = parts.tethers.find(object.id);
+					for (const Name* end : { tether ? &tether->from : nullptr, tether ? &tether->to : nullptr })
+					{
+						if (!end) { continue; }
+						if (!end->empty() && !findObject(objects, *end))
+						{
+							throw std::runtime_error("object '" + object.name + "' > <tether>: there is no object named '" + *end + "'" + didYouMean(*end, objectNames(objects)));
+						}
+					}
+				});
 			}
 		}
 
-		// A state's <music> names one of the game's sounds.
-		for (const State& state : states)
+		// A collision rule's class=, unless= and through= name a class that
+		// some object has (a piece only ever spawned counts: it is among the
+		// objects, not yet in play), and its object= an object or a group.
+		// A misspelt one would never match and the rule would never run.
+		void checkRuleNames(const Parts& parts, const std::vector<Object>& objects)
 		{
-			if (!state.music.empty() && std::none_of(sounds.begin(), sounds.end(), [&](const SoundDesc& sound) { return sound.name == state.music; }))
+			std::set<std::string> classSet;
+			for (const Object& object : objects)
 			{
-				std::vector<std::string> names;
-				for (const SoundDesc& sound : sounds) { names.push_back(sound.name); }
-				throw std::runtime_error("state '" + state.name + "': <music sound=\"" + state.music + "\" /> names no sound of the game" + didYouMean(state.music, names));
+				if (!object.objClass.empty()) { classSet.insert(object.objClass); }
+			}
+			const std::vector<std::string> gameClasses(classSet.begin(), classSet.end());
+			const auto checkClass = [&](const Object& object, const char* tag, const char* attribute, const std::string& name)
+			{
+				if (name.empty() || classSet.count(name)) { return; }
+				throw std::runtime_error("object '" + object.name + "' > <" + tag + " " + attribute + "=\"" + name + "\">: no object has the class '" + name + "'"
+					+ didYouMean(name, gameClasses) + (gameClasses.empty() ? std::string("; no object has a class") : ". The classes are: " + listOf(gameClasses)));
+			};
+			// A rule's hitbox= names a hitbox of its own object, and its by= one
+			// that something has; a misspelt one never matched.
+			std::set<std::string> hitboxSet;
+			for (const Object& object : objects)
+			{
+				for (const std::string& name : object.hitboxNames()) { hitboxSet.insert(name); }
+			}
+			const std::vector<std::string> gameHitboxes(hitboxSet.begin(), hitboxSet.end());
+			const auto checkHitbox = [&](const Object& object, const char* attribute, const std::string& name, const std::vector<std::string>& known)
+			{
+				if (name.empty() || std::find(known.begin(), known.end(), name) != known.end()) { return; }
+				throw std::runtime_error("object '" + object.name + "' > <collision " + attribute + "=\"" + name + "\">: "
+					+ (attribute == std::string("hitbox") ? "it has no <hitbox name=\"" + name + "\">" : "no object has a <hitbox name=\"" + name + "\">")
+					+ didYouMean(name, known) + (known.empty() ? std::string("; no hitbox there has a name") : ". The names are: " + listOf(known)));
+			};
+			for (const Object& object : objects)
+			{
+				onLine(object.line, [&]
+				{
+					for (const CollisionRule& rule : object.kind->collisionData.others)
+					{
+						onLine(rule.line, [&]
+						{
+							checkHitbox(object, "hitbox", rule.hitbox, object.hitboxNames());
+							checkHitbox(object, "by", rule.by, gameHitboxes);
+							checkClass(object, "collision", "class", rule.filterClass);
+							checkClass(object, "collision", "unless", rule.unlessClass);
+							checkClass(object, "collision", "through", rule.throughClass);
+							if (!rule.filterObject.empty() && !findObject(objects, rule.filterObject))
+							{
+								throw std::runtime_error("object '" + object.name + "' > <collision object=\"" + rule.filterObject + "\">: there is no object or group named '" + rule.filterObject + "'"
+									+ didYouMean(rule.filterObject, objectNames(objects)));
+							}
+						});
+					}
+					for (const auto& edge : object.kind->collisionData.edges)
+					{
+						for (const EdgeGuard& guard : edge.guards) { checkClass(object, "collision", "unless", guard.unlessClass); }
+					}
+					if (const Object::LightPast* past = parts.lightPasts.find(object.id))
+					{
+						for (const std::string& each : past->classes) { checkClass(object, "light > <past", "class", each); }
+					}
+				});
 			}
 		}
 
-		const auto checkAll = [&](const std::vector<Command>& commands, const std::string& where)
+		// The variables a holder, a pattern or a cell check go by are ones
+		// some object has (a card's rank, a jewel's hue), or a number the
+		// engine keeps; a misspelt one read nothing, and nothing ever matched.
+		void checkHeldVariables(const Parts& parts, const std::vector<Object>& objects)
 		{
-			for (const auto& command : commands)
+			std::set<std::string> variableSet(livePartNames().begin(), livePartNames().end());
+			for (const Object& object : objects)
 			{
-				checkCommand(command, states, objects, sounds, paths, styles, wanted, where);
+				for (const auto& [name, value] : object.variable) { variableSet.insert(name); }
 			}
-		};
-
-		// A <follow> with no object= is about the object running it, which a
-		// state's commands do not have.
-		const auto checkOwnFollow = [&](const std::vector<Command>& commands, const std::string& where)
-		{
-			for (const auto& command : commands)
+			const std::vector<std::string> gameVariables(variableSet.begin(), variableSet.end());
+			const auto checkVariable = [&](const Object& object, const std::string& tag, const std::string& name)
 			{
-				const auto* follow = std::get_if<CmdFollow>(&shapeOf(command));
-				if (follow && follow->target.empty())
+				if (name.empty() || variableSet.count(name)) { return; }
+				throw std::runtime_error("object '" + object.name + "' > <" + tag + " variable=\"" + name + "\">: no object has a variable or number of that name" + didYouMean(name, gameVariables));
+			};
+			for (const Object& object : objects)
+			{
+				onLine(object.line, [&]
 				{
-					throw std::runtime_error(where + ": <follow path=\"" + follow->path + "\" /> needs object=\"...\" here; only an object's own rules, actions and timers can leave it out");
+					if (const Object::Cells* cells = parts.cells.find(object.id)) { for (const auto& check : cells->checks) { checkVariable(object, "alike", check.alike); } }
+					const Holder* holder = parts.holders.find(object.id);
+					if (!holder) { return; }
+					for (const std::string& by : holder->orderBy) { checkVariable(object, "by", by); }
+					// The looks a holder's words name are ones what it holds has.
+					const Holder& holds = *holder;
+					if (!holds.holdsClass.empty())
+					{
+						const std::string where = "object '" + object.name + "' > <holds class=\"" + holds.holdsClass + "\">";
+						const auto member = std::find_if(objects.begin(), objects.end(), [&](const Object& other) { return parts.items.has(other.id) && other.objClass == holds.holdsClass; });
+						if (member == objects.end()) { throw std::runtime_error(where + ": nothing is of class " + holds.holdsClass); }
+						std::vector<std::string> looks;
+						for (const Object::Look& look : member->looks.all()) { looks.push_back(look.name); }
+						for (const auto& [look, part] : { std::pair{ &holds.holdsSprite, "its" }, std::pair{ &holds.topSprite, "<top>" }, std::pair{ &holds.spreadSprite, "<spread>" } })
+						{
+							if (look->empty() || std::find(looks.begin(), looks.end(), *look) != looks.end()) { continue; }
+							throw std::runtime_error(where + ": " + part + " sprite=\"" + *look + "\", a look the members of class " + holds.holdsClass + " have not" + didYouMean(*look, looks));
+						}
+					}
+					// A holder that counts gets a variable of that name itself
+					// (load/expr.cpp), so what it adds up is another's: a member's.
+					const std::string& counts = holds.counts;
+					if (!counts.empty() && std::none_of(objects.begin(), objects.end(), [&](const Object& other)
+						{
+							const Holder* its = parts.holders.find(other.id);
+							return (its ? its->counts : Name{}) != counts && numberOf(parts, other, counts);
+						}))
+					{
+						throw std::runtime_error("object '" + object.name + "' > <counts variable=\"" + counts + "\">: no object has a variable or number of that name" + didYouMean(counts, gameVariables));
+					}
+					const HolderRule& takes = holds.takes;
+					checkVariable(object, "wild", takes.wildVariable);
+					checkVariable(object, "trick", takes.trickBy);
+					for (const auto* rules : { &takes.rules, &takes.emptyRules, &takes.anyRules, &takes.wildRules })
+					{
+						for (const HolderRule::VarRule& rule : *rules)
+						{
+							checkVariable(object, "condition", rule.variable);
+							checkVariable(object, "condition", rule.topVariable);
+						}
+					}
+				});
+			}
+		}
+
+		// What a state's <shows> name is something the game has: a misspelt
+		// one was never drawn; and its <music> names one of the game's sounds.
+		void checkStateNames(const std::vector<State>& states, const std::vector<Object>& objects, const std::vector<SoundDesc>& sounds)
+		{
+			for (const State& state : states)
+			{
+				onLine(state.line, [&]
+				{
+					for (const std::string& shown : state.show)
+					{
+						if (!findObject(objects, shown))
+						{
+							throw std::runtime_error("state '" + state.name + "' > <show object=\"" + shown + "\" />: there is no object or group of that name" + didYouMean(shown, objectNames(objects)));
+						}
+					}
+				});
+			}
+
+			for (const State& state : states)
+			{
+				onLine(state.line, [&]
+				{
+					if (!state.music.empty() && std::none_of(sounds.begin(), sounds.end(), [&](const SoundDesc& sound) { return sound.name == state.music; }))
+					{
+						std::vector<std::string> names;
+						for (const SoundDesc& sound : sounds) { names.push_back(sound.name); }
+						throw std::runtime_error("state '" + state.name + "': <music sound=\"" + state.music + "\" /> names no sound of the game" + didYouMean(state.music, names));
+					}
+				});
+			}
+		}
+
+		// The checks of the commands of rules, actions, timers and the rest.
+		struct CommandChecks
+		{
+			const std::vector<State>& states;
+			const std::vector<Object>& objects;
+			const std::vector<SoundDesc>& sounds;
+			const std::map<std::string, Path>& paths;
+			const std::vector<WrittenStyle>& styles;
+			WantedPalettes& wanted;
+			const Parts& parts;
+
+			void all(const std::vector<Command>& commands, const std::string& where) const
+			{
+				for (const auto& command : commands)
+				{
+					checkCommand(command, { states, objects, sounds, paths, styles, wanted, where, parts });
 				}
+			}
+
+			// A <follow> with no object= is about the object running it, which a
+			// state's commands do not have.
+			void ownFollow(const std::vector<Command>& commands, const std::string& where) const
+			{
+				for (const auto& command : commands)
+				{
+					const auto* follow = std::get_if<CmdFollow>(&shapeOf(command));
+					if (follow && follow->target.empty())
+					{
+						throw std::runtime_error(where + ": <follow path=\"" + follow->path + "\" /> needs object=\"...\" here; only an object's own rules, actions and timers can leave it out");
+					}
+				}
+			}
+
+			// A <become> with no object= is about the object running it, which
+			// a state's commands do not have, and which must have that look.
+			void ownLooks(const std::vector<Command>& commands, const Object* self, const std::string& where) const
+			{
+				for (const auto& command : commands)
+				{
+					const auto* become = std::get_if<CmdBecome>(&shapeOf(command));
+					if (!become || !become->target.empty()) { continue; }
+					if (!self)
+					{
+						throw std::runtime_error(where + ": <become> needs object=\"...\" here; only an object's own rules, actions and timers can leave it out");
+					}
+					if (!become->style.empty()) { wantPalette({ states, objects, sounds, paths, styles, wanted, where, parts }, *self, become->style); }
+					if (!become->sprite.empty() && std::none_of(self->looks.all().begin(), self->looks.all().end(), [&](const Object::Look& look) { return look.name == become->sprite; }))
+					{
+						throw std::runtime_error(where + ": <become sprite=\"" + become->sprite + "\" />: it has no look of that name (a look is one of several named <sprite>s)");
+					}
+				}
+			}
+
+			// Commands a state runs, with no object of their own.
+			void stateCommands(const std::vector<Command>& commands, Place place, const std::string& here) const
+			{
+				all(commands, here); ownLooks(commands, nullptr, here); ownFollow(commands, here); checkPlace(commands, place, here);
 			}
 		};
 
 		// A path's commands are run by whichever object is flying it, as on
 		// one of its own timers.
-		for (const auto& [name, path] : paths)
+		void checkPathCommands(const CommandChecks& checks)
 		{
-			for (const auto& step : path.steps)
+			const std::map<std::string, Path>& paths = checks.paths;
+			for (const auto& [name, path] : paths)
 			{
-				checkAll(step.commands, "path '" + name + "' > <step>");
-				checkPlace(step.commands, Place::PathStep, "path '" + name + "' > <step>");
-				for (const auto& [follower, own] : step.ownBy)
+				for (const auto& step : path.steps)
 				{
-					const std::string here = "path '" + name + "' > <step>, flown by '" + follower + "'";
-					checkAll(own, here);
-					checkPlace(own, Place::PathStep, here);
-				}
-				for (const auto& command : step.commands)
-				{
-					const auto* become = std::get_if<CmdBecome>(&shapeOf(command));
-					if (become && become->target.empty() && !become->style.empty())
+					checks.all(step.commands, "path '" + name + "' > <step>");
+					checkPlace(step.commands, Place::PathStep, "path '" + name + "' > <step>");
+					for (const auto& [follower, own] : step.ownBy)
 					{
-						throw std::runtime_error("path '" + name + "' > <step>: <become style=\"" + become->style + "\" /> needs object=\"...\" here; which palettes a path's flier has is not known");
+						const std::string here = "path '" + name + "' > <step>, flown by '" + follower + "'";
+						checks.all(own, here);
+						checkPlace(own, Place::PathStep, here);
+					}
+					for (const auto& command : step.commands)
+					{
+						const auto* become = std::get_if<CmdBecome>(&shapeOf(command));
+						if (become && become->target.empty() && !become->style.empty())
+						{
+							throw std::runtime_error("path '" + name + "' > <step>: <become style=\"" + become->style + "\" /> needs object=\"...\" here; which palettes a path's flier has is not known");
+						}
 					}
 				}
 			}
 		}
 
-		// A <become> with no object= is about the object running it, which
-		// a state's commands do not have, and which must have that look.
-		const auto checkOwnLooks = [&](const std::vector<Command>& commands, const Object* self, const std::string& where)
+		void checkStateCommands(const CommandChecks& checks)
 		{
-			for (const auto& command : commands)
+			const std::vector<State>& states = checks.states;
+			for (const auto& state : states)
 			{
-				const auto* become = std::get_if<CmdBecome>(&shapeOf(command));
-				if (!become || !become->target.empty()) { continue; }
-				if (!self)
+				onLine(state.line, [&]
 				{
-					throw std::runtime_error(where + ": <become> needs object=\"...\" here; only an object's own rules, actions and timers can leave it out");
-				}
-				if (!become->style.empty()) { wantPalette(wanted, styles, *self, become->style, where); }
-				if (!become->sprite.empty() && std::none_of(self->looks.begin(), self->looks.end(), [&](const Object::Look& look) { return look.name == become->sprite; }))
-				{
-					throw std::runtime_error(where + ": <become sprite=\"" + become->sprite + "\" />: it has no look of that name (a look is one of several named <sprite>s)");
-				}
-			}
-		};
-
-		for (const auto& state : states)
-		{
-			const std::string where = "state '" + state.name + "'";
-			for (std::size_t moment = 0; moment < keyMoments.size(); ++moment)
-			{
-				for (const auto& [key, commands] : *state.keyMaps()[moment])
-				{
-					const std::string here = where + " > <input button=\"" + keyCodeToString(key) + "\"" + (moment == 0 ? std::string() : std::string(" on=\"") + keyMoments[moment] + "\"") + ">";
-					checkAll(commands, here); checkOwnLooks(commands, nullptr, here); checkOwnFollow(commands, here); checkPlace(commands, Place::Input, here);
-				}
-			}
-			for (const auto& [axis, commands] : state.axes)
-			{
-				const std::string here = where + " > <input axis=\"" + axisToString(axis) + "\">";
-				checkAll(commands, here);
-				for (const Command& command : commands)
-				{
-					if (!std::holds_alternative<CmdTriggerAction>(shapeOf(command)))
+					const std::string where = "state '" + state.name + "'";
+					for (std::size_t moment = 0; moment < keyMoments.size(); ++moment)
 					{
-						throw std::runtime_error(here + ": " + tagOf(command) + " does nothing on a control that points; it runs an object's <action> with <trigger object=\"...\" action=\"...\" />, and a <track /> there follows it");
+						for (const auto& [key, commands] : *state.keyMaps()[moment])
+						{
+							const std::string here = where + " > <input button=\"" + keyCodeToString(key) + "\"" + (moment == 0 ? std::string() : std::string(" on=\"") + keyMoments[moment] + "\"") + ">";
+							checks.stateCommands(commands, Place::Input, here);
+						}
 					}
-				}
-			}
-			for (const auto& condition : state.conditions)
-			{
-				const std::string here = where + " > <condition>";
-				checkAll(condition.commands, here); checkOwnLooks(condition.commands, nullptr, here); checkOwnFollow(condition.commands, here); checkPlace(condition.commands, Place::Condition, here);
-			}
-			for (const auto& condition : state.computer)
-			{
-				checkPlace(condition.commands, Place::Computer, where + " > <computer> > <condition>");
-			}
-			for (const auto& timer : state.timers)
-			{
-				const std::string here = where + " > <timer>";
-				checkAll(timer.commands, here); checkOwnLooks(timer.commands, nullptr, here); checkOwnFollow(timer.commands, here); checkPlace(timer.commands, Place::StateTimer, here);
-			}
-			for (const auto& scene : state.scenes)
-			{
-				const std::string sceneWhere = "scene '" + scene.name + "'";
-				for (const auto& condition : scene.conditions)
-				{
-					const std::string here = sceneWhere + " > <condition>";
-					checkAll(condition.commands, here); checkOwnLooks(condition.commands, nullptr, here); checkOwnFollow(condition.commands, here); checkPlace(condition.commands, Place::Condition, here);
-				}
-				for (const auto& timer : scene.timers)
-				{
-					const std::string here = sceneWhere + " > <timer>";
-					checkAll(timer.commands, here); checkOwnLooks(timer.commands, nullptr, here); checkOwnFollow(timer.commands, here); checkPlace(timer.commands, Place::StateTimer, here);
-				}
-			}
-			for (const auto& still : state.showStates)
-			{
-				if (std::none_of(states.begin(), states.end(), [&](const State& other) { return other.name == still; }))
-				{
-					throw std::runtime_error(where + " > <show state=\"" + still + "\" />: there is no state of that name" + didYouMean(still, stateNames(states)));
-				}
+					for (const auto& [axis, commands] : state.axes)
+					{
+						const std::string here = where + " > <input axis=\"" + axisToString(axis) + "\">";
+						checks.all(commands, here);
+						for (const Command& command : commands)
+						{
+							if (!std::holds_alternative<CmdTriggerAction>(shapeOf(command)))
+							{
+								throw std::runtime_error(here + ": " + tagOf(command) + " does nothing on a control that points; it runs an object's <action> with <trigger object=\"...\" action=\"...\" />, and a <track /> there follows it");
+							}
+						}
+					}
+					for (const auto& condition : state.conditions)
+					{
+						onLine(condition.line, [&]
+						{
+							const std::string here = where + " > <condition>";
+							checks.stateCommands(condition.commands, Place::Condition, here);
+						});
+					}
+					for (const auto& condition : state.computer)
+					{
+						checkPlace(condition.commands, Place::Computer, where + " > <computer> > <condition>");
+					}
+					for (const auto& timer : state.timers)
+					{
+						const std::string here = where + " > <timer>";
+						checks.stateCommands(timer.commands, Place::StateTimer, here);
+					}
+					for (const auto& scene : state.scenes)
+					{
+						const std::string sceneWhere = "scene '" + scene.name + "'";
+						for (const auto& condition : scene.conditions)
+						{
+							onLine(condition.line, [&]
+							{
+								const std::string here = sceneWhere + " > <condition>";
+								checks.stateCommands(condition.commands, Place::Condition, here);
+							});
+						}
+						for (const auto& timer : scene.timers)
+						{
+							const std::string here = sceneWhere + " > <timer>";
+							checks.stateCommands(timer.commands, Place::StateTimer, here);
+						}
+					}
+					for (const auto& still : state.showStates)
+					{
+						if (std::none_of(states.begin(), states.end(), [&](const State& other) { return other.name == still; }))
+						{
+							throw std::runtime_error(where + " > <show state=\"" + still + "\" />: there is no state of that name" + didYouMean(still, stateNames(states)));
+						}
+					}
+				});
 			}
 		}
 
-		for (const auto& object : objects)
+		// A walker walks a map the game has; only a walker goes, hunts or
+		// wanders. A hole is cut in a picture that stays as it is.
+		void checkWalksAndHoles(const Object& object, const std::vector<Object>& objects, const Parts& parts, const std::string& where)
 		{
-			const std::string where = "object '" + object.name + "'";
-
-			// A walker walks a map the game has; only a walker goes,
-			// hunts or wanders.
-			if (object.walksMaze() && std::none_of(objects.begin(), objects.end(), [&](const Object& other) { return other.mapName == object.mazeMap; }))
+			const Maze* maze = parts.mazes.find(object.id);
+			if (maze && std::none_of(objects.begin(), objects.end(), [&](const Object& other) { return mapOf(parts, other).name == maze->map; }))
 			{
 				std::vector<std::string> maps;
 				for (const Object& other : objects)
 				{
-					if (!other.mapName.empty() && std::find(maps.begin(), maps.end(), other.mapName) == maps.end()) { maps.push_back(other.mapName); }
+					if (!mapOf(parts, other).name.empty() && std::find(maps.begin(), maps.end(), mapOf(parts, other).name) == maps.end()) { maps.push_back(mapOf(parts, other).name); }
 				}
-				throw std::runtime_error(where + " > <maze map=\"" + object.mazeMap + "\">: the game has no <map> of that name" + didYouMean(object.mazeMap, maps)
+				throw std::runtime_error(where + " > <maze map=\"" + maze->map + "\">: the game has no <map> of that name" + didYouMean(maze->map, maps)
 					+ (maps.empty() ? std::string(" (it has no <map>s)") : ". Its maps are: " + listOf(maps)));
 			}
 			const auto checkWalks = [&](const std::vector<Command>& commands, const std::string& here)
@@ -908,101 +821,162 @@ namespace xge
 				{
 					// On a map of cells a <go> goes a cell at a time, with no maze.
 					if (std::holds_alternative<CmdGo>(shapeOf(command)) && object.onCells) { continue; }
-					if ((std::holds_alternative<CmdGo>(shapeOf(command)) || std::holds_alternative<CmdHunt>(shapeOf(command)) || std::holds_alternative<CmdWander>(shapeOf(command))) && !object.walksMaze())
+					if ((std::holds_alternative<CmdGo>(shapeOf(command)) || std::holds_alternative<CmdHunt>(shapeOf(command)) || std::holds_alternative<CmdWander>(shapeOf(command))) && !maze)
 					{
 						throw std::runtime_error(here + ": " + tagOf(command) + " steers an object through a maze, and this one walks none: give it a <maze map=\"...\">");
 					}
 				}
 			};
-			for (const auto& timer : object.timers) { checkWalks(timer.commands, where + " > <timer>"); }
-			for (const auto& [name, commands] : object.action) { checkWalks(commands, where + " > <action name=\"" + name + "\">"); }
-			for (const auto& rule : object.collisionData.others) { checkWalks(rule.commands, where + " > <collision>"); }
+			for (const auto& timer : object.kind->timers) { checkWalks(timer.commands, where + " > <timer>"); }
+			checkWalks(object.animation.frames.shows().then, where + " > <animation> > <then>");
+			for (const auto& frame : object.animation.frames.shows().commands) { checkWalks(frame, where + " > <animation> > <frame>"); }
+			for (const auto& look : object.looks.all())
+			{
+				checkWalks(look.frames.shows().then, where + " > <animation name=\"" + look.name + "\"> > <then>");
+				for (const auto& frame : look.frames.shows().commands) { checkWalks(frame, where + " > <animation name=\"" + look.name + "\"> > <frame>"); }
+			}
+			for (const auto& [name, commands] : object.kind->action) { checkWalks(commands, where + " > <action name=\"" + name + "\">"); }
+			for (const auto& rule : object.kind->collisionData.others) { onLine(rule.line, [&] { checkWalks(rule.commands, where + " > <collision>"); }); }
 
 			// A hole is cut in a picture that stays as it is: one of
 			// <line>s or a <bitmap>, not turned, animated or swapped.
-			for (const auto& rule : object.collisionData.others)
+			for (const auto& rule : object.kind->collisionData.others)
 			{
-				for (const Command& command : rule.commands)
+				onLine(rule.line, [&]
 				{
-					if (!std::holds_alternative<CmdHole>(shapeOf(command))) { continue; }
-					if (!object.bitmap || object.hasHeading || !object.animationBitmaps.empty() || !object.looks.empty() || object.mirrors)
+					for (const Command& command : rule.commands)
 					{
-						throw std::runtime_error(where + " > <collision>: <hole> cuts a picture that stays as it is - a sprite of <line>s or <polygon>s, or a <bitmap>, with no <heading>, <animation>, <mirror> or second <sprite>");
+						if (!std::holds_alternative<CmdHole>(shapeOf(command))) { continue; }
+						if (!object.drawn.bitmap || object.turning.hasHeading || !object.animation.frames.shows().bitmaps.empty() || !object.looks.all().empty() || object.mirror.on)
+						{
+							throw std::runtime_error(where + " > <collision>: <hole> cuts a picture that stays as it is - a sprite of <line>s or <polygon>s, or a <bitmap>, with no <heading>, <animation>, <mirror> or second <sprite>");
+						}
 					}
-				}
+				});
 			}
-			for (const auto& edgeRules : object.collisionData.edges)
+			for (const auto& edgeRules : object.kind->collisionData.edges)
 			{
 				checkWalks(edgeRules.commands, where + " > <collision edge>");
 			}
+		}
 
-			for (const auto& timer : object.timers)
+		// Turning and thrust along the heading, jumps and climbs need what
+		// they move by.
+		void checkActionMoves(const Object& object, const std::vector<Object>& objects, const Parts& parts, const std::string& name, const std::vector<Command>& commands, const std::string& where)
+		{
+			for (const auto& command : commands)
 			{
-				checkAll(timer.commands, where + " > <timer>"); checkOwnLooks(timer.commands, &object, where + " > <timer>");
-				checkPlace(timer.commands, Place::ObjectTimer, where + " > <timer>");
-			}
-			for (const auto& [name, commands] : object.action) { checkOwnLooks(commands, &object, where); }
-			for (const auto& rule : object.collisionData.others) { checkOwnLooks(rule.commands, &object, where); }
-			for (const auto& edgeRules : object.collisionData.edges)
-			{
-				checkOwnLooks(edgeRules.commands, &object, where);
-			}
-			for (const auto& [name, commands] : object.action)
-			{
-				checkAll(commands, where);
-				checkPlace(commands, Place::Action, where + " > <action name=\"" + name + "\">");
-				std::vector<std::string> path;
-				checkTriggerLoop(objects, object.name, name, path, where + " > <action name=\"" + name + "\">");
-
-				// Turning and thrust along the heading mean nothing to an object
-				// that does not face any way.
-				for (const auto& command : commands)
+				const Object::Cells* cells = parts.cells.find(object.id);
+				if (std::holds_alternative<CmdTurn>(shapeOf(command)) && cells && cells->shapeSize > 0) { continue; }
+				if ((std::holds_alternative<CmdTurn>(shapeOf(command)) || std::holds_alternative<CmdThrust>(shapeOf(command)) || std::holds_alternative<CmdSwing>(shapeOf(command))) && !object.turning.hasHeading)
 				{
-					if (std::holds_alternative<CmdTurn>(shapeOf(command)) && object.isShape()) { continue; }
-					if ((std::holds_alternative<CmdTurn>(shapeOf(command)) || std::holds_alternative<CmdThrust>(shapeOf(command)) || std::holds_alternative<CmdSwing>(shapeOf(command))) && !object.hasHeading)
-					{
-						throw std::runtime_error(where + ": action '" + name + "' turns it or thrusts along its heading, and it has no <heading>");
-					}
+					throw std::runtime_error(where + ": action '" + name + "' turns it or thrusts along its heading, and it has no <heading>");
+				}
 
-					// A leap rises against the object's own pull, and only
-					// from the ground, which a <land /> rule gives it.
-					if (std::holds_alternative<CmdLeap>(shapeOf(command)) && !(object.acceleration.y > 0.0f))
+				// A jump rises against the object's own pull, and only
+				// from the ground, which a <land /> rule gives it.
+				if (std::holds_alternative<CmdJump>(shapeOf(command)) && !(object.acceleration.y > 0.0f))
+				{
+					throw std::runtime_error(where + ": action '" + name + "' has a <jump>, and nothing pulls the object down to come back:"
+						" give it an <acceleration> with a <y> above 0, and a <collision> with <land /> to stand on");
+				}
+				if (std::holds_alternative<CmdJump>(shapeOf(command)) && std::none_of(object.kind->collisionData.others.begin(), object.kind->collisionData.others.end(),
+					[](const CollisionRule& rule) { return std::any_of(rule.commands.begin(), rule.commands.end(), [](const Command& c) { return std::holds_alternative<CmdLand>(shapeOf(c)); }); }))
+				{
+					throw std::runtime_error(where + ": action '" + name + "' has a <jump>, and the object never stands on anything to jump from:"
+						" give it a <collision> with <land /> (<collision class=\"girder\"><land /></collision>)");
+				}
+				if (const auto* climb = std::get_if<CmdClimb>(&shapeOf(command)))
+				{
+					std::vector<std::string> classes;
+					for (const Object& other : objects)
 					{
-						throw std::runtime_error(where + ": action '" + name + "' has a <leap>, and nothing pulls the object down to come back:"
-							" give it an <acceleration> with a <y> above 0, and a <collision> with <land /> to stand on");
+						if (!other.objClass.empty() && std::find(classes.begin(), classes.end(), other.objClass) == classes.end()) { classes.push_back(other.objClass); }
 					}
-					if (std::holds_alternative<CmdLeap>(shapeOf(command)) && std::none_of(object.collisionData.others.begin(), object.collisionData.others.end(),
-						[](const CollisionRule& rule) { return std::any_of(rule.commands.begin(), rule.commands.end(), [](const Command& c) { return std::holds_alternative<CmdLand>(shapeOf(c)); }); }))
+					if (std::find(classes.begin(), classes.end(), climb->ladderClass) == classes.end())
 					{
-						throw std::runtime_error(where + ": action '" + name + "' has a <leap>, and the object never stands on anything to leap from:"
-							" give it a <collision> with <land /> (<collision class=\"girder\"><land /></collision>)");
-					}
-					if (const auto* climb = std::get_if<CmdClimb>(&shapeOf(command)))
-					{
-						std::vector<std::string> classes;
-						for (const Object& other : objects)
-						{
-							if (!other.objClass.empty() && std::find(classes.begin(), classes.end(), other.objClass) == classes.end()) { classes.push_back(other.objClass); }
-						}
-						if (std::find(classes.begin(), classes.end(), climb->ladderClass) == classes.end())
-						{
-							throw std::runtime_error(where + ": action '" + name + "' climbs class=\"" + climb->ladderClass + "\", and no object has that class"
-								+ didYouMean(climb->ladderClass, classes) + (classes.empty() ? std::string{} : ". The classes are: " + listOf(classes)));
-						}
+						throw std::runtime_error(where + ": action '" + name + "' climbs class=\"" + climb->ladderClass + "\", and no object has that class"
+							+ didYouMean(climb->ladderClass, classes) + (classes.empty() ? std::string{} : ". The classes are: " + listOf(classes)));
 					}
 				}
 			}
-			for (const auto& rule : object.collisionData.others)
+		}
+
+		void checkObjectCommands(const CommandChecks& checks)
+		{
+			const std::vector<Object>& objects = checks.objects;
+			for (const auto& object : objects)
 			{
-				checkAll(rule.commands, where);
-				checkPlace(rule.commands, Place::Touch, where + " > <collision>");
-			}
-			for (const auto& edgeRules : object.collisionData.edges)
-			{
-				checkAll(edgeRules.commands, where);
-				checkPlace(edgeRules.commands, Place::Edge, where + " > <collision edge>");
+				onLine(object.line, [&]
+				{
+					const std::string where = "object '" + object.name + "'";
+
+					checkWalksAndHoles(object, objects, checks.parts, where);
+
+					for (const auto& timer : object.kind->timers)
+					{
+						checks.all(timer.commands, where + " > <timer>"); checks.ownLooks(timer.commands, &object, where + " > <timer>");
+						checkPlace(timer.commands, Place::ObjectTimer, where + " > <timer>");
+					}
+					// An animation's <then> runs as an object's timer does.
+					const auto checkThen = [&](const std::vector<Command>& commands, const std::string& here)
+					{
+						checks.all(commands, here); checks.ownLooks(commands, &object, here);
+						checkPlace(commands, Place::ObjectTimer, here);
+					};
+					checkThen(object.animation.frames.shows().then, where + " > <animation> > <then>");
+					for (const auto& frame : object.animation.frames.shows().commands) { checkThen(frame, where + " > <animation> > <frame>"); }
+					for (const auto& look : object.looks.all())
+					{
+						checkThen(look.frames.shows().then, where + " > <animation name=\"" + look.name + "\"> > <then>");
+						for (const auto& frame : look.frames.shows().commands) { checkThen(frame, where + " > <animation name=\"" + look.name + "\"> > <frame>"); }
+					}
+					for (const auto& [name, commands] : object.kind->action) { checks.ownLooks(commands, &object, where); }
+					for (const auto& rule : object.kind->collisionData.others) { onLine(rule.line, [&] { checks.ownLooks(rule.commands, &object, where); }); }
+					for (const auto& edgeRules : object.kind->collisionData.edges)
+					{
+						checks.ownLooks(edgeRules.commands, &object, where);
+					}
+					for (const auto& [name, commands] : object.kind->action)
+					{
+						checks.all(commands, where);
+						checkPlace(commands, Place::Action, where + " > <action name=\"" + name + "\">");
+						std::vector<std::string> path;
+						checkTriggerLoop(objects, object.name, name, path, where + " > <action name=\"" + name + "\">");
+
+						checkActionMoves(object, objects, checks.parts, name, commands, where);
+					}
+					for (const auto& rule : object.kind->collisionData.others)
+					{
+						onLine(rule.line, [&]
+						{
+							checks.all(rule.commands, where);
+							for (const std::vector<Command>& made : rule.loadChecks) { checks.all(made, where); }
+							checkPlace(rule.commands, Place::Touch, where + " > <collision>");
+						});
+					}
+					for (const auto& edgeRules : object.kind->collisionData.edges)
+					{
+						checks.all(edgeRules.commands, where);
+						checkPlace(edgeRules.commands, Place::Edge, where + " > <collision edge>");
+					}
+				});
 			}
 		}
+	}
+
+	WantedPalettes checkReferences(const Parts& parts, const std::vector<State>& states, const std::vector<Object>& objects, const std::vector<SoundDesc>& sounds,
+		const std::map<std::string, Path>& paths, const std::vector<WrittenStyle>& styles)
+	{
+		WantedPalettes wanted;
+		checkObjectNames(parts, objects);
+		checkRuleNames(parts, objects);
+		checkHeldVariables(parts, objects);
+		checkStateNames(states, objects, sounds);
+		const CommandChecks checks{ states, objects, sounds, paths, styles, wanted, parts };
+		checkPathCommands(checks);
+		checkStateCommands(checks);
+		checkObjectCommands(checks);
 		return wanted;
 	}
 }

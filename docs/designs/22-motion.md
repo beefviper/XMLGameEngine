@@ -14,12 +14,12 @@
 |---|---|
 | `bounce`, `stick`, `die`, `reset`, `inc` | Pong, Breakout, Invaders |
 | `dec`, `atmost`, `hop`, `wrap`, `ride`, `unless` | Frogger |
-| `<line>`, `pixel`, `<acceleration>`, `<accelerate burn>`, `<stop />`, `slower`/`faster` | Lunar Lander |
-| `<heading>`, `<turn>`, `<thrust>`, `<drag>`, `<release>`, amounts on `inc`/`dec` | Asteroids |
+| `<line>`, `pixel`, `<acceleration>`, `<accelerate burn>`, `<stop />`, a condition on `speed` | Lunar Lander |
+| `<heading>`, `<turn>`, `<thrust>`, `<drag>`, `<spawn>` with a `<count>`, amounts on `inc`/`dec` | Asteroids |
 | `<knock>`, `<mass>` | Trick Shot, Mario Bros. |
-| timers, `<facing>`, `<jump>`, `<reverse />`, looks, `<reveal>` | a read of every game for workarounds |
+| timers, `<facing>`, timed `<hop>`, `<reverse />`, looks, `<reveal>` | a read of every game for workarounds |
 | `<paths>`, `<follow>` | Galaxian |
-| `<land />`, `<leap>`, `<climb>` | Donkey Kong |
+| `<land />`, `<jump>`, `<climb>` | Donkey Kong |
 | `<chase>`, `<aim>` | Berserk |
 | `<pull>`, `<seek>`, diagonal hops, `<track path>` | Yars' Revenge, Q*bert |
 | nothing new | Space Race, Freeway, Depth Charge, Astrosmash |
@@ -27,19 +27,18 @@
 ## Gravity and thrust
 
 - **Gravity is a property of the object** (`<acceleration>`), not a world setting: most games want some things to float.
-- **Thrust is a held verb that burns a variable:** `<accelerate burn="fuel">` adds every frame while held and stops at 0. Rejected: a plain rule on the key (needs "while held" and "until empty" spelled out).
+- **Thrust is a held verb that burns a variable:** `<thrust burn="fuel">` adds every frame while held and stops at 0; along the heading, or with `direction=` one way across the screen (once `<accelerate>`, a second word for the same push). Rejected: a plain rule on the key (needs "while held" and "until empty" spelled out).
 - `<stop />` clears velocity, acceleration and held thrust, so a landed lander stays landed.
 
 ## Headings
 
-- **Heading** is degrees clockwise from up. `<turn>` and `<thrust>` are held and need a heading. `<drag>` is the share of speed lost each frame, so thrust has a top speed.
+- **Heading** is degrees clockwise from up. `<turn>` and `<thrust>` are held and need a heading. `<drag>` is the half-life of its speed, so thrust has a top speed ([time](29-time.md#units)).
 - **Pictures are turned by the engine**, not backends: four backends would change, and the pixel test needs the turned picture anyway ([pictures](30-pictures.md)).
 
 ## Steps and jumps
 
 - **`<hop>`** is one instant step per press, judged where it lands; never repeated while held.
-- **`<jump>`** is a straight timed move that touches nothing in the air; refused if it would land off screen. `<arc>` lifts it on the way. No air control.
-- **`<seconds>` in a `<hop>`** makes it fly as a jump does (Q*bert), sharing `startFlight`.
+- **`<seconds>` in a `<hop>`** makes it a straight timed move that touches nothing in the air (Q*bert, Frostbite); refused if it would land off screen. `<arc>` lifts it on the way. No air control. A separate `<jump>` for this was merged into `<hop>`: it differed only in a default time; `<jump>` is now the platform jump ([platforming](23-platforming.md)).
 - **`<facing>`** follows the last move; `<fire>` leaves the middle of that side. Chosen over a heading in 90-degree steps, which would turn the picture.
 - **Diagonal hops are direction words** (`up-left`), with one distance or `<x>` and `<y>`.
 - **`<hunt>` with a `<hop>` inside** takes the hop landing nearest the target, run by a timer at the hunter's own pace. Rejected: a new `<pursue>` verb, `<chase>` with steps (chase is a velocity).

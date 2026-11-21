@@ -5,62 +5,26 @@
 
 #include "window/opengl.h"
 
-#include "picture/font.h"
 #include "picture/color.h"
+#include "window/glfw.h"
 
 // GLFW's own header brings in OpenGL 1.1: what the system's OpenGL library
-// exports as it is. It has to come before SDL's, which only want their own.
+// exports as it is.
 #include <algorithm>
 #include <GLFW/glfw3.h>
-
-#include <SDL.h>
-#include <SDL_image.h>
-#include <SDL_ttf.h>
 
 #include <cmath>
 #include <cstdint>
 #include <cstring>
+#include <memory>
 #include <iostream>
 #include <stdexcept>
-#include <thread>
+#include <vector>
 
 namespace xge
 {
 	namespace
 	{
-		bool imageSizeMatches(const SDL_Surface& surface) noexcept
-		{
-			return surface.w > 0 && surface.h > 0 && surface.pixels != nullptr;
-		}
-
-		// Copies an SDL surface into a Bitmap, whatever format the surface is in.
-		Bitmap bitmapFromSurface(SDL_Surface* surface)
-		{
-			Bitmap bitmap;
-
-			SDL_Surface* rgba = SDL_ConvertSurfaceFormat(surface, SDL_PIXELFORMAT_RGBA32, 0);
-			if (!rgba || !imageSizeMatches(*rgba))
-			{
-				if (rgba) { SDL_FreeSurface(rgba); }
-				return bitmap;
-			}
-
-			bitmap.width = rgba->w;
-			bitmap.height = rgba->h;
-			bitmap.rgba.resize(static_cast<std::size_t>(rgba->w) * static_cast<std::size_t>(rgba->h) * 4);
-
-			const auto* source = static_cast<const std::uint8_t*>(rgba->pixels);
-			for (int row = 0; row < rgba->h; ++row)
-			{
-				std::memcpy(bitmap.rgba.data() + static_cast<std::size_t>(row) * static_cast<std::size_t>(rgba->w) * 4,
-					source + static_cast<std::size_t>(row) * static_cast<std::size_t>(rgba->pitch),
-					static_cast<std::size_t>(rgba->w) * 4);
-			}
-
-			SDL_FreeSurface(rgba);
-			return bitmap;
-		}
-
 		Bitmap filledBitmap(int width, int height)
 		{
 			Bitmap bitmap;
@@ -68,28 +32,6 @@ namespace xge
 			bitmap.height = height > 0 ? height : 1;
 			bitmap.rgba.assign(static_cast<std::size_t>(bitmap.width) * static_cast<std::size_t>(bitmap.height) * 4, 0);
 			return bitmap;
-		}
-
-		void setPixel(Bitmap& bitmap, int x, int y, const Color& color) noexcept
-		{
-			if (x < 0 || y < 0 || x >= bitmap.width || y >= bitmap.height)
-			{
-				return;
-			}
-
-			std::uint8_t* pixel = bitmap.rgba.data() + (static_cast<std::size_t>(y) * static_cast<std::size_t>(bitmap.width) + static_cast<std::size_t>(x)) * 4;
-			pixel[0] = color.r;
-			pixel[1] = color.g;
-			pixel[2] = color.b;
-			pixel[3] = color.a;
-		}
-	}
-
-	OpenGLWindow::CachedVisual::~CachedVisual()
-	{
-		if (texture)
-		{
-			glDeleteTextures(1, &texture);
 		}
 	}
 
@@ -117,26 +59,16 @@ namespace xge
 
 		glfwMakeContextCurrent(window);
 
-		// The window waits out the frame time itself (display()); waiting for
-		// the display's refresh as well would make a 60 frame a second game
-		// run at whatever the refresh divides into.
-		glfwSwapInterval(0);
+		// The engine sets the game's speed (Engine::loop); the window only waits
+		// for the screen's refresh, so a picture is never torn.
+		glfwSwapInterval(1);
 
+		setPictureScale(static_cast<float>(scale));
 		glfwSetWindowUserPointer(window, this);
 		glfwSetKeyCallback(window, &OpenGLWindow::keyCallback);
 
-		ttfInitialized = (TTF_Init() == 0);
-		if (!ttfInitialized)
-		{
-			std::cout << "error: failed to initialize SDL2_ttf: " << TTF_GetError() << std::endl;
-		}
-
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-		framePeriod = std::chrono::duration_cast<std::chrono::steady_clock::duration>(
-			std::chrono::duration<double>(windowDesc.framerate > 0 ? 1.0 / windowDesc.framerate : 0.0));
-		lastFrame = std::chrono::steady_clock::now();
 	}
 
 	OpenGLWindow::~OpenGLWindow()
@@ -149,15 +81,9 @@ namespace xge
 		// Everything OpenGL made goes while its context is current.
 		glfwMakeContextCurrent(window);
 		visuals.clear();
+		textures.forEach([](unsigned int& texture) { if (texture) { glDeleteTextures(1, &texture); } });
+		textures.clear();
 
-		for (auto& [key, loadedFont] : fontsBySize)
-		{
-			if (loadedFont) { TTF_CloseFont(loadedFont); }
-		}
-		fontsBySize.clear();
-
-		if (imgInitialized) { IMG_Quit(); }
-		if (ttfInitialized) { TTF_Quit(); }
 
 		glfwDestroyWindow(window);
 		window = nullptr;
@@ -199,14 +125,9 @@ namespace xge
 
 	void OpenGLWindow::init(std::vector<Object>& objects)
 	{
-		// Object::position is already final by now - see the identical
-		// comment in SFMLWindow::init() (window/sfml.cpp).
 		for (auto& object : objects)
 		{
-			CachedVisual& visual = visuals[object.name];
-
-			buildShapeOnly(object, visual);
-			finalizeVisual(object, visual);
+			build(object, visuals[object.name]);
 		}
 	}
 
@@ -231,26 +152,7 @@ namespace xge
 		controls.mouse = { glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS, glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS,
 			glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS };
 
-		constexpr int buttons[padButtonCount] = {
-			GLFW_GAMEPAD_BUTTON_A, GLFW_GAMEPAD_BUTTON_B, GLFW_GAMEPAD_BUTTON_X, GLFW_GAMEPAD_BUTTON_Y,
-			GLFW_GAMEPAD_BUTTON_LEFT_BUMPER, GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER, GLFW_GAMEPAD_BUTTON_BACK, GLFW_GAMEPAD_BUTTON_START,
-			GLFW_GAMEPAD_BUTTON_DPAD_UP, GLFW_GAMEPAD_BUTTON_DPAD_DOWN, GLFW_GAMEPAD_BUTTON_DPAD_LEFT, GLFW_GAMEPAD_BUTTON_DPAD_RIGHT,
-		};
-		std::size_t pad = 0;
-		for (int joystick = GLFW_JOYSTICK_1; joystick <= GLFW_JOYSTICK_LAST && pad < padCount; ++joystick)
-		{
-			GLFWgamepadstate state;
-			if (!glfwJoystickIsGamepad(joystick) || !glfwGetGamepadState(joystick, &state)) { continue; }
-			Pad& now = controls.pads[pad++];
-			now.connected = true;
-			for (std::size_t button = 0; button < padButtonCount; ++button)
-			{
-				now.buttons[button] = state.buttons[buttons[button]] == GLFW_PRESS;
-			}
-			now.x = state.axes[GLFW_GAMEPAD_AXIS_LEFT_X];
-			now.y = state.axes[GLFW_GAMEPAD_AXIS_LEFT_Y];
-		}
-
+		readGlfwPads(controls);
 		return controls;
 	}
 
@@ -292,12 +194,9 @@ namespace xge
 	{
 		CachedVisual& visual = visuals[object.name];
 
-		if (object.visualDirty || !visual.texture)
+		if (object.drawn.visualDirty || !visual.texture || (object.drawnAtScale() && visual.drawnAt != pictureScale()))
 		{
-			// Only redraws; the position is final - see the matching comment in
-			// SFMLWindow::draw() (window/sfml.cpp).
-			buildShapeOnly(object, visual);
-			finalizeVisual(object, visual);
+			build(object, visual);
 		}
 	}
 
@@ -311,54 +210,32 @@ namespace xge
 			return;
 		}
 
-		// Whole pixels, as the SDL2 backend draws them: a texture sampled
-		// halfway between two pixels is smeared.
-		const float x0 = static_cast<float>(static_cast<int>(object.position.x));
-		const float y0 = static_cast<float>(static_cast<int>(object.position.y));
-		const float x1 = x0 + static_cast<float>(visual.width);
-		const float y1 = y0 + static_cast<float>(visual.height);
-
-		const float u0 = visual.flipHorizontal ? 1.0f : 0.0f;
-		const float u1 = visual.flipHorizontal ? 0.0f : 1.0f;
-		const float v0 = visual.flipVertical ? 1.0f : 0.0f;
-		const float v1 = visual.flipVertical ? 0.0f : 1.0f;
+		// Whole game pixels, as the SDL2 backend draws them: a texture
+		// sampled halfway between two pixels is smeared. Stretched over the
+		// object's size in the game's pixels.
+		const Vector2f size = object.pictureSize();
+		const float x0 = std::floor(object.position.x);
+		const float y0 = std::floor(object.position.y);
+		const float x1 = x0 + size.x;
+		const float y1 = y0 + size.y;
 
 		glBindTexture(GL_TEXTURE_2D, visual.texture);
 		glBegin(GL_QUADS);
-		glTexCoord2f(u0, v0); glVertex2f(x0, y0);
-		glTexCoord2f(u1, v0); glVertex2f(x1, y0);
-		glTexCoord2f(u1, v1); glVertex2f(x1, y1);
-		glTexCoord2f(u0, v1); glVertex2f(x0, y1);
+		glTexCoord2f(0.0f, 0.0f); glVertex2f(x0, y0);
+		glTexCoord2f(1.0f, 0.0f); glVertex2f(x1, y0);
+		glTexCoord2f(1.0f, 1.0f); glVertex2f(x1, y1);
+		glTexCoord2f(0.0f, 1.0f); glVertex2f(x0, y1);
 		glEnd();
+	}
+
+	float OpenGLWindow::fit() const
+	{
+		return static_cast<float>(scale);
 	}
 
 	void OpenGLWindow::display()
 	{
 		glfwSwapBuffers(window);
-
-		// Wait out what is left of the frame time. Sleeping is only good to
-		// a few milliseconds, so the last of it is spent yielding.
-		const auto target = lastFrame + framePeriod;
-		for (;;)
-		{
-			const auto now = std::chrono::steady_clock::now();
-			if (now >= target)
-			{
-				break;
-			}
-
-			const auto remaining = target - now;
-			if (remaining > std::chrono::milliseconds(2))
-			{
-				std::this_thread::sleep_for(remaining - std::chrono::milliseconds(2));
-			}
-			else
-			{
-				std::this_thread::yield();
-			}
-		}
-
-		lastFrame = std::chrono::steady_clock::now();
 	}
 
 	void OpenGLWindow::keyCallback(GLFWwindow* window, int key, int, int action, int)
@@ -370,7 +247,7 @@ namespace xge
 		}
 
 		auto* self = static_cast<OpenGLWindow*>(glfwGetWindowUserPointer(window));
-		const KeyCode code = glfwKeyToKeyCode(key);
+		const KeyCode code = keyFromGlfw(key);
 
 		if (self && code != KeyCode::Unknown)
 		{
@@ -378,264 +255,48 @@ namespace xge
 		}
 	}
 
-	KeyCode OpenGLWindow::glfwKeyToKeyCode(int key) noexcept
+	Bitmap OpenGLWindow::capture()
 	{
-		if (key >= GLFW_KEY_A && key <= GLFW_KEY_Z)
-		{
-			return static_cast<KeyCode>(static_cast<int>(KeyCode::A) + (key - GLFW_KEY_A));
-		}
-
-		if (key >= GLFW_KEY_0 && key <= GLFW_KEY_9)
-		{
-			return static_cast<KeyCode>(static_cast<int>(KeyCode::Num0) + (key - GLFW_KEY_0));
-		}
-
-		if (key >= GLFW_KEY_KP_0 && key <= GLFW_KEY_KP_9)
-		{
-			return static_cast<KeyCode>(static_cast<int>(KeyCode::Numpad0) + (key - GLFW_KEY_KP_0));
-		}
-
-		if (key >= GLFW_KEY_F1 && key <= GLFW_KEY_F15)
-		{
-			return static_cast<KeyCode>(static_cast<int>(KeyCode::F1) + (key - GLFW_KEY_F1));
-		}
-
-		switch (key)
-		{
-		case GLFW_KEY_ESCAPE: return KeyCode::Escape;
-		case GLFW_KEY_LEFT_CONTROL: return KeyCode::LControl;
-		case GLFW_KEY_LEFT_SHIFT: return KeyCode::LShift;
-		case GLFW_KEY_LEFT_ALT: return KeyCode::LAlt;
-		case GLFW_KEY_LEFT_SUPER: return KeyCode::LSystem;
-		case GLFW_KEY_RIGHT_CONTROL: return KeyCode::RControl;
-		case GLFW_KEY_RIGHT_SHIFT: return KeyCode::RShift;
-		case GLFW_KEY_RIGHT_ALT: return KeyCode::RAlt;
-		case GLFW_KEY_RIGHT_SUPER: return KeyCode::RSystem;
-		case GLFW_KEY_MENU: return KeyCode::Menu;
-		case GLFW_KEY_LEFT_BRACKET: return KeyCode::LBracket;
-		case GLFW_KEY_RIGHT_BRACKET: return KeyCode::RBracket;
-		case GLFW_KEY_SEMICOLON: return KeyCode::Semicolon;
-		case GLFW_KEY_COMMA: return KeyCode::Comma;
-		case GLFW_KEY_PERIOD: return KeyCode::Period;
-		case GLFW_KEY_APOSTROPHE: return KeyCode::Apostrophe;
-		case GLFW_KEY_SLASH: return KeyCode::Slash;
-		case GLFW_KEY_BACKSLASH: return KeyCode::Backslash;
-		case GLFW_KEY_GRAVE_ACCENT: return KeyCode::Grave;
-		case GLFW_KEY_EQUAL: return KeyCode::Equal;
-		case GLFW_KEY_MINUS: return KeyCode::Hyphen;
-		case GLFW_KEY_SPACE: return KeyCode::Space;
-		case GLFW_KEY_ENTER:
-		case GLFW_KEY_KP_ENTER: return KeyCode::Enter;
-		case GLFW_KEY_BACKSPACE: return KeyCode::Backspace;
-		case GLFW_KEY_TAB: return KeyCode::Tab;
-		case GLFW_KEY_PAGE_UP: return KeyCode::PageUp;
-		case GLFW_KEY_PAGE_DOWN: return KeyCode::PageDown;
-		case GLFW_KEY_END: return KeyCode::End;
-		case GLFW_KEY_HOME: return KeyCode::Home;
-		case GLFW_KEY_INSERT: return KeyCode::Insert;
-		case GLFW_KEY_DELETE: return KeyCode::Delete;
-		case GLFW_KEY_KP_ADD: return KeyCode::Add;
-		case GLFW_KEY_KP_SUBTRACT: return KeyCode::Subtract;
-		case GLFW_KEY_KP_MULTIPLY: return KeyCode::Multiply;
-		case GLFW_KEY_KP_DIVIDE: return KeyCode::Divide;
-		case GLFW_KEY_LEFT: return KeyCode::Left;
-		case GLFW_KEY_RIGHT: return KeyCode::Right;
-		case GLFW_KEY_UP: return KeyCode::Up;
-		case GLFW_KEY_DOWN: return KeyCode::Down;
-		case GLFW_KEY_PAUSE: return KeyCode::Pause;
-		default: return KeyCode::Unknown;
-		}
-	}
-
-	bool OpenGLWindow::ensureImages()
-	{
-		if (imgTried)
-		{
-			return imgInitialized;
-		}
-		imgTried = true;
-
-		// PNG is needed; JPEG is a bonus (a vcpkg SDL2_image built without
-		// libjpeg-turbo has none), so a missing JPEG is reported but does not
-		// stop the images that can be read.
-		const int imgLoaded = IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG);
-		imgInitialized = (imgLoaded & IMG_INIT_PNG) != 0;
-		if (!imgInitialized)
-		{
-			std::cout << "error: failed to initialize SDL2_image: " << IMG_GetError() << std::endl;
-		}
-		else if ((imgLoaded & IMG_INIT_JPG) == 0)
-		{
-			std::cout << "warning: this SDL2_image has no JPEG support, so JPEG images will not load" << std::endl;
-		}
-
-		return imgInitialized;
-	}
-
-	TTF_Font* OpenGLWindow::getFont(const std::string& file, int pointSize)
-	{
-		const std::string key = file + "@" + std::to_string(pointSize);
-		auto it = fontsBySize.find(key);
-		if (it != fontsBySize.end())
-		{
-			return it->second;
-		}
-
-		TTF_Font* loaded = ttfInitialized ? TTF_OpenFont(file.c_str(), pointSize) : nullptr;
-		if (!loaded)
-		{
-			// Said once, not once for every size asked for.
-			if (fontsMissing.insert(file).second)
-			{
-				std::cout << "error: failed to load font: " << file << " - drawing text with the built-in 8x8 font instead" << std::endl;
-			}
-		}
-
-		fontsBySize.emplace(key, loaded);
-		return loaded;
-	}
-
-	void OpenGLWindow::upload(CachedVisual& visual, const Bitmap& bitmap)
-	{
-		const Bitmap blank = bitmap.rgba.empty() ? filledBitmap(1, 1) : Bitmap{};
-		const Bitmap& source = bitmap.rgba.empty() ? blank : bitmap;
-
-		if (!visual.texture)
-		{
-			glGenTextures(1, &visual.texture);
-		}
-
-		glBindTexture(GL_TEXTURE_2D, visual.texture);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, source.width, source.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, source.rgba.data());
-
-		visual.width = source.width;
-		visual.height = source.height;
-	}
-
-	void OpenGLWindow::buildShapeOnly(Object& object, CachedVisual& visual)
-	{
-		visual.flipHorizontal = false;
-		visual.flipVertical = false;
-
-		switch (object.picture.kind)
-		{
-		case ShapeKind::Circle:    buildCircle(object, visual); break;
-		case ShapeKind::Rectangle: buildRectangle(object, visual); break;
-		case ShapeKind::Text:      buildText(object, visual); break;
-		case ShapeKind::Image:     buildImage(object, visual); break;
-		// A sprite of lines was already drawn, pixel by pixel, when the game
-		// loaded (see Bitmap); all that is left is to show that picture.
-		case ShapeKind::Line:      upload(visual, *object.bitmap); break;
-		case ShapeKind::Unknown:   upload(visual, Bitmap{}); break;
-		}
-	}
-
-	void OpenGLWindow::buildCircle(Object& object, CachedVisual& visual)
-	{
-		const float radiusF = object.picture.radius;
-		const int radius = static_cast<int>(radiusF);
-		const int diameter = static_cast<int>(std::ceil(radiusF * 2.0f));
-
-		Bitmap bitmap = filledBitmap(diameter, diameter);
-		const Color c = colorFromName(object.picture.color);
-
-		for (int y = -radius; y <= radius; ++y)
-		{
-			for (int x = -radius; x <= radius; ++x)
-			{
-				if (x * x + y * y <= radius * radius)
-				{
-					setPixel(bitmap, radius + x, radius + y, c);
-				}
-			}
-		}
-
-		upload(visual, bitmap);
-	}
-
-	void OpenGLWindow::buildRectangle(Object& object, CachedVisual& visual)
-	{
-		const int w = static_cast<int>(std::ceil(object.picture.size.x));
-		const int h = static_cast<int>(std::ceil(object.picture.size.y));
-
-		Bitmap bitmap = filledBitmap(w, h);
-		const Color c = colorFromName(object.picture.color);
-
+		Bitmap bitmap;
+		glfwGetFramebufferSize(window, &bitmap.width, &bitmap.height);
+		if (bitmap.width <= 0 || bitmap.height <= 0) { return {}; }
+		const std::size_t row = static_cast<std::size_t>(bitmap.width) * 4;
+		std::vector<std::uint8_t> upsideDown(row * static_cast<std::size_t>(bitmap.height));
+		glPixelStorei(GL_PACK_ALIGNMENT, 1);
+		glReadPixels(0, 0, bitmap.width, bitmap.height, GL_RGBA, GL_UNSIGNED_BYTE, upsideDown.data());
+		// OpenGL reads from the bottom row up.
+		bitmap.rgba.resize(upsideDown.size());
 		for (int y = 0; y < bitmap.height; ++y)
 		{
-			for (int x = 0; x < bitmap.width; ++x)
-			{
-				setPixel(bitmap, x, y, c);
-			}
+			std::copy_n(upsideDown.begin() + static_cast<std::ptrdiff_t>(row * static_cast<std::size_t>(bitmap.height - 1 - y)), row,
+				bitmap.rgba.begin() + static_cast<std::ptrdiff_t>(row * static_cast<std::size_t>(y)));
 		}
-
-		upload(visual, bitmap);
+		return bitmap;
 	}
 
-	void OpenGLWindow::buildText(Object& object, CachedVisual& visual)
+	// The engine's picture of the object, at pictureScale().
+	void OpenGLWindow::build(Object& object, CachedVisual& visual)
 	{
-		const std::string& text = object.picture.text;
-		const int requestedSize = object.picture.textSize;
-		const Color c = colorFromName(object.picture.color);
-
-		TTF_Font* font = getFont(textFontFile(object.picture.font), requestedSize);
-		if (!font)
+		object.drawn.visualDirty = false;
+		visual.drawnAt = pictureScale();
+		const GLint filter = object.drawnAtScale() ? GL_LINEAR : GL_NEAREST;
+		visual.texture = textures.of(pictureOf(object), [&](const Bitmap& picture, unsigned int& made)
 		{
-			upload(visual, rasterizeText(text, requestedSize, c));
-			return;
-		}
+			const Bitmap blank = picture.rgba.empty() ? filledBitmap(1, 1) : Bitmap{};
+			const Bitmap& source = picture.rgba.empty() ? blank : picture;
 
-		const SDL_Color sdlColor{ c.r, c.g, c.b, c.a };
-		SDL_Surface* surface = TTF_RenderUTF8_Blended(font, text.c_str(), sdlColor);
-		if (!surface)
-		{
-			// Nothing to draw for an empty text.
-			if (!text.empty())
+			if (!made)
 			{
-				std::cout << "error: SDL2_ttf: failed to render text: " << TTF_GetError() << std::endl;
+				glGenTextures(1, &made);
 			}
 
-			upload(visual, Bitmap{});
-			return;
-		}
-
-		upload(visual, bitmapFromSurface(surface));
-		SDL_FreeSurface(surface);
-	}
-
-	void OpenGLWindow::buildImage(Object& object, CachedVisual& visual)
-	{
-		const std::string& imageFile = object.picture.file;
-		ensureImages();
-		SDL_Surface* surface = IMG_Load(imageFile.c_str());
-		if (!surface)
-		{
-			throw std::runtime_error("failed to load " + imageFile + ": " + IMG_GetError());
-		}
-
-		upload(visual, bitmapFromSurface(surface));
-		SDL_FreeSurface(surface);
-
-		if (object.picture.flipHorizontal)
-		{
-			visual.flipHorizontal = true;
-		}
-		else if (object.picture.flipVertical)
-		{
-			visual.flipVertical = true;
-		}
-	}
-
-	void OpenGLWindow::finalizeVisual(Object& object, CachedVisual& visual)
-	{
-		object.size.x = static_cast<float>(visual.width);
-		object.size.y = static_cast<float>(visual.height);
-		object.sizeKnown = true;
-		object.visualDirty = false;
+			glBindTexture(GL_TEXTURE_2D, made);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+			glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, source.width, source.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, source.rgba.data());
+		});
 	}
 }

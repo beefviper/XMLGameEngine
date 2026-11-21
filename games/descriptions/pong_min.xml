@@ -5,7 +5,7 @@
 
 <!-- Pong with nothing but the game: two paddles and a square ball. No title,
      score, pause, text or sound; a point puts the ball back in the middle and
-     play goes on. The smallest game the windows-cpp generator is tried on. Its
+     play goes on. The smallest game the engine-cpp generator is tried on. Its
      one state owns everything, so the game has no objects of its own; the
      paddles are one group, each saying only where it is. -->
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
@@ -18,7 +18,7 @@
     <variable name="size">16</variable>
     <variable name="width">20</variable>
     <variable name="height">120</variable>
-    <variable name="step">5</variable>
+    <variable name="step">300</variable>
   </variables>
   <states>
     <state name="playing">
@@ -30,21 +30,17 @@
                to either side; the randoms are drawn again for every serve -->
           <velocity>
             <x>
-              <formula>
-                <multiply>
-                  <multiplicand><sign><value>ball.side</value></sign></multiplicand>
-                  <multiplier>ball.speed</multiplier>
-                  <multiplier><cosine><value>ball.angle</value></cosine></multiplier>
-                </multiply>
-              </formula>
+              <multiply>
+                <value><sign><value>ball.side</value></sign></value>
+                <value>ball.speed</value>
+                <value><cosine><value>ball.angle</value></cosine></value>
+              </multiply>
             </x>
             <y>
-              <formula>
-                <multiply>
-                  <multiplicand>ball.speed</multiplicand>
-                  <multiplier><sine><value>ball.angle</value></sine></multiplier>
-                </multiply>
-              </formula>
+              <multiply>
+                <value>ball.speed</value>
+                <value><sine><value>ball.angle</value></sine></value>
+              </multiply>
             </y>
           </velocity>
           <collisions>
@@ -53,7 +49,7 @@
             <collision><deflect>45</deflect></collision>
           </collisions>
           <variables>
-            <variable name="speed">6</variable>
+            <variable name="speed">360</variable>
             <variable name="angle"><random><min>-30</min><max>30</max></random></variable>
             <variable name="side"><random><min>-1</min><max>1</max></random></variable>
           </variables>
@@ -68,7 +64,7 @@
             <action name="down"><move direction="down">step</move></action>
           </actions>
           <member name="paddle1"><position><x>margin</x><y><centered /></y></position></member>
-          <member name="paddle2"><position><x>window.right - margin - width</x><y><centered /></y></position></member>
+          <member name="paddle2"><position><x><subtract><value>window.right</value><value>margin</value><value>width</value></subtract></x><y><centered /></y></position></member>
         </group>
       </objects>
       <inputs>

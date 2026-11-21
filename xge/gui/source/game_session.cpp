@@ -8,10 +8,12 @@
 #include "engine/folder.h"
 #include "game_stage.h"
 #include "load/xml.h"
+#include "play/frame.h"
 #include "qt_window.h"
 
 #include <QPoint>
 
+#include <algorithm>
 #include <cmath>
 #include <exception>
 #include <functional>
@@ -46,6 +48,11 @@ namespace xge
 			case VideoBackend::SDL2:   return QStringLiteral("SDL2");
 			case VideoBackend::Raylib: return QStringLiteral("raylib");
 			case VideoBackend::OpenGL: return QStringLiteral("OpenGL");
+			case VideoBackend::Vulkan: return QStringLiteral("Vulkan");
+			case VideoBackend::Direct3D9: return QStringLiteral("Direct3D 9");
+			case VideoBackend::Direct3D10: return QStringLiteral("Direct3D 10");
+			case VideoBackend::Direct3D11: return QStringLiteral("Direct3D 11");
+			case VideoBackend::Direct3D12: return QStringLiteral("Direct3D 12");
 			}
 
 			return QString();
@@ -105,8 +112,7 @@ namespace xge
 			// A computer thinks beside the game, which goes on being drawn.
 			game->thinkInBackground(true);
 
-			// The frame pace: the game moves a fixed amount a frame, so this is
-			// also its speed.
+			// The shortest time between frames: the most frames a second.
 			framePeriodNs = 1'000'000'000 / (desc.framerate > 0 ? desc.framerate : 60);
 
 			engine->render();
@@ -307,7 +313,7 @@ namespace xge
 		lastNs = clock.nsecsElapsed();
 		fpsStartNs = lastNs;
 		fpsFrames = 0;
-		owedNs = 0;
+		dueNs = lastNs + framePeriodNs;
 		updateTimer();
 		updateTitle();
 		emit playingChanged(true);
@@ -340,7 +346,7 @@ namespace xge
 		if (needed && !timer.isActive())
 		{
 			lastNs = clock.nsecsElapsed();
-			owedNs = 0;
+			dueNs = lastNs + framePeriodNs;
 			timer.start();
 		}
 		else if (!needed)
@@ -425,42 +431,38 @@ namespace xge
 		// window it can't be.
 		rememberPosition();
 
+		// One step a frame, of the time that passed since the last (no
+		// longer than kLongestStep: after the window was dragged, say, the
+		// game goes on from now). The <framerate> is the most frames a second.
+		// Frames are due on a beat of that length, not a frame's length after
+		// the last: the timer wakes on its own grid (about 16 ms on Windows),
+		// and waiting a whole frame from a late wake-up lost most of a frame
+		// each time, a 60 a second game drawing at 25 to 30.
 		const qint64 now = clock.nsecsElapsed();
-		owedNs += now - lastNs;
-		lastNs = now;
-
-		// A late wake-up (the window was being dragged, say) is caught up a
-		// few frames at most; the rest is let go rather than raced through.
-		const qint64 limit = framePeriodNs * 4;
-		if (owedNs > limit)
-		{
-			owedNs = limit;
-		}
-
-		if (owedNs < framePeriodNs)
+		if (now < dueNs)
 		{
 			return;
+		}
+		const qint64 sinceLast = now - lastNs;
+		lastNs = now;
+		dueNs += framePeriodNs;
+		if (dueNs < now - framePeriodNs)
+		{
+			dueNs = now;   // far behind (a stall): the beat starts again from now
 		}
 
 		try
 		{
-			while (owedNs >= framePeriodNs)
+			if (playing)
 			{
-				if (playing)
-				{
-					engine->step();
-					++frameCount;
-					++fpsFrames;
-				}
-				else
-				{
-					engine->pump();
-				}
-
-				owedNs -= framePeriodNs;
+				engine->input(); engine->update(std::min(static_cast<float>(sinceLast) / 1e9f, xge::kLongestStep));
+				++frameCount;
+				++fpsFrames;
 			}
-
-			// Only the last of them is ever on the screen: drawn once.
+			else
+			{
+				engine->pump();
+			}
 			engine->render();
 		}
 		catch (const std::exception& e)
@@ -502,7 +504,7 @@ namespace xge
 
 		try
 		{
-			engine->step();
+			engine->input(); engine->update(static_cast<float>(framePeriodNs) / 1e9f);
 			engine->render();
 			++frameCount;
 		}

@@ -14,13 +14,14 @@
   life, and a life is won at 10,000 points; with none left it is game over.
   The high score is kept.
 
-  W A S D or the arrows steer; Space starts, pauses and plays again.
+  W A S D or the arrows steer; Space starts and plays again, Pause pauses.
 
   How it is written:
   * The maze is a <map>: each <row> is a row of tiles, a character a tile, so
     the file shows the maze as it looks. Every group and object on the map
     picks a character with char=: a group has a member on each tile of it
-    (the dots, a wall piece), an object starts on its one tile. The walls are
+    (the dots, a wall piece), an object starts on its one tile, or between
+    two side by side (Pac-Man's @@, as in the arcade). The walls are
     drawn as the arcade draws them, a line round each block through the
     middle of its edge tiles: one group, class wall, whose pieces each give
     only their rows, across (-), down (|), the round corners (r 7 L J), the
@@ -39,7 +40,9 @@
     Clyde for Pac-Man until he is within eight tiles, then his corner.
   * Which of the two is the mode object's look: scatter 7, chase 20,
     scatter 7, chase 20, scatter 5, chase 20, scatter 5, then chase for
-    good, as the arcade's first level. Each switch turns the normal ghosts
+    good, as the arcade's first level. The lengths are a schedule: a
+    holder of waves in order, each timer lasting schedule.top.seconds and
+    taking the top off as it ends; once none is left chase stays. Each switch turns the normal ghosts
     round and sends them the new mode (<trigger from="normal">); a ghost
     normal again asks the mode which it is (<trigger from="scatter">).
   * Blinky starts out; Pinky comes out at once, Inky after 30 dots and
@@ -53,11 +56,15 @@
   * A ghost's worth is status.worth, which a pellet sets to 200 and each
     ghost eaten doubles (<set>), read as the ghost is eaten.
   * The cherry is an object with two looks, none and cherry; a condition on
-    how many dots are left gives it the cherry look, and a timer of that
-    look takes it away.
+    how many dots are left gives it the cherry look, which plays <once />
+    and <then> goes back to none.
+  * Caught, Pac-Man goes out of play and the state dying stands the maze
+    still while a picture of him, kept where he was by a live <position>,
+    plays its shrivelling <once />; then a life is gone.
   * A round starts with READY! over the maze standing still: the state ready
     (with the start tune) when a game begins, and caught, a copy of it,
-    after a life is lost.
+    after a life is lost. As it ends Pac-Man sets off left, or the way a key
+    held through it asks.
   * The tunnel at the sides runs off the map: a walker goes straight on, and
     <wrap />s at the window's edge.
 -->
@@ -69,14 +76,830 @@
   </window>
   <variables>
     <variable name="tile">16</variable>
-    <variable name="top">3 * tile</variable>
-    <variable name="pacspeed">2</variable>
-    <variable name="frightspeed">1</variable>
-    <variable name="eyesspeed">4</variable>
-    <variable name="pathspeed">1</variable>
+    <variable name="top"><multiply><value>3</value><value>tile</value></multiply></variable>
+    <variable name="pacspeed">120</variable>
+    <variable name="frightspeed">60</variable>
+    <variable name="eyesspeed">240</variable>
+    <variable name="pathspeed">60</variable>
     <!-- where the ghost house's way out ends, above the door -->
-    <variable name="out">3 * tile</variable>
+    <variable name="out"><multiply><value>3</value><value>tile</value></multiply></variable>
   </variables>
+  <paths>
+    <!-- out of the ghost house, each ghost from its own place: back to it,
+         over to the door and up through it to the tile above -->
+    <path name="blinkyout">
+      <speed>pathspeed</speed>
+      <home />
+    </path>
+    <path name="pinkyout">
+      <speed>pathspeed</speed>
+      <home />
+      <step><x>0</x><y><negate><value>out</value></negate></y></step>
+    </path>
+    <path name="inkyout">
+      <speed>pathspeed</speed>
+      <home />
+      <step><x><multiply><value>2</value><value>tile</value></multiply></x><y>0</y></step>
+      <step><x>0</x><y><negate><value>out</value></negate></y></step>
+    </path>
+    <path name="clydeout">
+      <speed>pathspeed</speed>
+      <home />
+      <step><x><multiply><value>-2</value><value>tile</value></multiply></x><y>0</y></step>
+      <step><x>0</x><y><negate><value>out</value></negate></y></step>
+    </path>
+  </paths>
+  <styles>
+    <style name="banner"><size>32</size><color>color.yellow</color><font>assets/pressstart2p.ttf</font></style>
+    <style name="prompt"><size>16</size><font>assets/pressstart2p.ttf</font></style>
+    <style name="hud"><size>16</size><font>assets/pressstart2p.ttf</font></style>
+  </styles>
+  <keeps>
+    <keep object="best" />
+  </keeps>
+  <states>
+    <objects>
+      <!-- the best score, kept from game to game -->
+      <object name="best">
+        <sprite>
+          <text style="hud">
+            <number>best.score</number>
+          </text>
+        </sprite>
+        <position><x><centered /></x><y>22</y></position>
+        <variables>
+          <variable name="score">0</variable>
+        </variables>
+      </object>
+      <object name="highlabel">
+        <sprite>
+          <text style="hud">
+            <content>HIGH SCORE</content>
+          </text>
+        </sprite>
+        <position><x><centered /></x><y>2</y></position>
+      </object>
+    </objects>
+    <state name="title">
+      <objects>
+        <object name="title">
+          <sprite>
+            <text style="banner">
+              <content>PAC-MAN</content>
+            </text>
+          </sprite>
+          <position><x><centered /></x><y>90</y></position>
+        </object>
+        <!-- the four ghosts, each in its own color -->
+        <group name="cast">
+          <sprite>
+            <text style="prompt">
+              <content>BLINKY</content>
+              <color>color.red</color>
+            </text>
+          </sprite>
+          <position><x><centered /></x></position>
+          <member><position><y>200</y></position></member>
+          <member><sprite><text><content>PINKY</content><color>color.magenta</color></text></sprite><position><y>235</y></position></member>
+          <member><sprite><text><content>INKY</content><color>color.cyan</color></text></sprite><position><y>270</y></position></member>
+          <member><sprite><text><content>CLYDE</content><color>color.orange</color></text></sprite><position><y>305</y></position></member>
+        </group>
+        <object name="points">
+          <sprite>
+            <text style="hud">
+              <content>dot 10   power pellet 50</content>
+            </text>
+          </sprite>
+          <position><x><centered /></x><y>365</y></position>
+        </object>
+        <object name="start">
+          <sprite>
+            <text style="prompt">
+              <content>spacebar to start</content>
+            </text>
+          </sprite>
+          <position><x><centered /></x><y>440</y></position>
+        </object>
+      </objects>
+      <shows>
+        <show object="best" />
+        <show object="highlabel" />
+      </shows>
+      <inputs>
+        <input><button>space</button><button>pad1.start</button>
+          <push state="playing" />
+          <push state="ready" />
+        </input>
+      </inputs>
+    </state>
+
+    <state name="playing">
+      <objects>
+        <!-- the score, the lives and how the round goes, on an object of
+             their own so that putting Pac-Man back keeps them -->
+        <object name="status">
+          <variables>
+            <variable name="score">0</variable>
+            <variable name="lives">3</variable>
+            <variable name="caught">0</variable>
+            <variable name="dying">0</variable>
+            <variable name="bonus">0</variable>
+            <variable name="worth">200</variable>
+            <variable name="fruits">0</variable>
+            <variable name="pace">112.5</variable>
+            <variable name="fright">6</variable>
+            <!-- dots eaten since the round began or a life was lost, and how
+                 many of Pinky, Inky and Clyde they have let out -->
+            <variable name="eaten">0</variable>
+            <variable name="released">1</variable>
+          </variables>
+        </object>
+        <!-- scatter or chase: the arcade's first-level schedule, scatter for
+             7, 7, 5 and 5 seconds with 20 of chase between, then chase for
+             good. Its look is the mode; each switch turns the ghosts round
+             and sends the new one to every normal ghost -->
+        <object name="mode">
+          <sprite name="scatter" />
+          <sprite name="chase" />
+          <actions>
+            <action name="scatter"><trigger object="ghosts" action="scatter" from="normal" /></action>
+            <action name="chase"><trigger object="ghosts" action="chase" from="normal" /></action>
+          </actions>
+          <timers>
+            <!-- each lasts as long as the wave on top of the schedule says,
+                 and ends by taking it off -->
+            <timer sprite="scatter">
+              <after>schedule.top.seconds</after>
+              <send from="schedule" into="done">1</send>
+              <become sprite="chase" />
+              <trigger object="ghosts" action="turn" from="normal" />
+              <trigger action="chase" />
+            </timer>
+            <!-- with no wave left the send is refused: chase for good -->
+            <timer sprite="chase">
+              <after>schedule.top.seconds</after>
+              <send from="schedule" into="done">1</send>
+              <become sprite="scatter" />
+              <trigger object="ghosts" action="turn" from="normal" />
+              <trigger action="scatter" />
+            </timer>
+          </timers>
+        </object>
+        <!-- the waves in order, the first on top: scatter, chase, scatter, ... -->
+        <group name="waves" class="wave">
+          <columns>7</columns>
+          <rows>1</rows>
+          <sprite />
+          <position><x>0</x><y>0</y></position>
+          <variables><variable name="seconds">20</variable></variables>
+          <column><number>1</number><number>3</number><variables><variable name="seconds">7</variable></variables></column>
+          <column><number>5</number><number>7</number><variables><variable name="seconds">5</variable></variables></column>
+        </group>
+        <object name="schedule">
+          <sprite />
+          <position><x>0</x><y>0</y></position>
+          <holds class="wave" />
+        </object>
+        <object name="done">
+          <sprite />
+          <position><x>0</x><y>0</y></position>
+          <holds class="wave" />
+        </object>
+        <!-- four seconds with no dot eaten counts as thirty, so a ghost
+             still comes out (each dot puts it back to the start) -->
+        <object name="nudge">
+          <timers>
+            <timer>
+              <every>4</every>
+              <set variable="status.eaten"><add><value>status.eaten</value><value>30</value></add></set>
+            </timer>
+          </timers>
+        </object>
+        <!-- the corners the ghosts scatter to, off the maze -->
+        <group name="corners">
+          <sprite><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
+          <hidden />
+          <member name="topright"><position><x><multiply><value>25</value><value>tile</value></multiply></x><y>0</y></position></member>
+          <member name="topleft"><position><x><multiply><value>2</value><value>tile</value></multiply></x><y>0</y></position></member>
+          <member name="bottomright"><position><x><multiply><value>27</value><value>tile</value></multiply></x><y><subtract><value>window.bottom</value><value>1</value></subtract></y></position></member>
+          <member name="bottomleft"><position><x>0</x><y><subtract><value>window.bottom</value><value>1</value></subtract></y></position></member>
+        </group>
+        <map name="maze">
+          <tile>
+            <width>tile</width>
+            <height>tile</height>
+          </tile>
+          <position><x>0</x><y>top</y></position>
+          <row>r------------TT------------7</row>
+          <row>|............||............|</row>
+          <row>|.r--7.r---7.||.r---7.r--7.|</row>
+          <row>|o|  |.|   |.||.|   |.|  |o|</row>
+          <row>|.L--J.L---J.LJ.L---J.L--J.|</row>
+          <row>|..........................|</row>
+          <row>|.r--7.r7.r------7.r7.r--7.|</row>
+          <row>|.L--J.||.L--7r--J.||.L--J.|</row>
+          <row>|......||....||....||......|</row>
+          <row>L----7.|L--7 || r--J|.r----J</row>
+          <row>,,,,,|.|r--J LJ L--7|.|,,,,,</row>
+          <row>,,,,,|.||     B    ||.|,,,,,</row>
+          <row>,,,,,|.|| r-]==[-7 ||.|,,,,,</row>
+          <row>-----J.LJ |   h  | LJ.L-----</row>
+          <row>tttttt.   | I P C|   .tttttt</row>
+          <row>-----7.r7 |      | r7.r-----</row>
+          <row>,,,,,|.|| L------J ||.|,,,,,</row>
+          <row>,,,,,|.||     f    ||.|,,,,,</row>
+          <row>,,,,,|.|| r------7 ||.|,,,,,</row>
+          <row>r----J.LJ L--7r--J LJ.L----7</row>
+          <row>|............||............|</row>
+          <row>|.r--7.r---7.||.r---7.r--7.|</row>
+          <row>|.L-7|.L---J.LJ.L---J.|r-J.|</row>
+          <row>|o..||.......@@.......||..o|</row>
+          <row>E-7.||.r7.r------7.r7.||.r-3</row>
+          <row>E-J.LJ.||.L--7r--J.||.LJ.L-3</row>
+          <row>|......||....||....||......|</row>
+          <row>|.r----JL--7.||.r--JL----7.|</row>
+          <row>|.L--------J.LJ.L--------J.|</row>
+          <row>|..........................|</row>
+          <row>L--------------------------J</row>
+          <!-- the walls: blue lines through the middle of the tiles, each piece
+               giving only its rows -->
+          <group name="walls" class="wall">
+            <sprite>
+              <bitmap from="walls" />
+            </sprite>
+            <group name="across" char="-" />
+            <group name="down" char="|">
+              <sprite><bitmap from="down" /></sprite>
+            </group>
+            <group name="topleft" char="r">
+              <sprite><bitmap from="topleft" /></sprite>
+            </group>
+            <group name="topright" char="7">
+              <sprite><bitmap from="topright" /></sprite>
+            </group>
+            <group name="bottomleft" char="L">
+              <sprite><bitmap from="bottomleft" /></sprite>
+            </group>
+            <group name="bottomright" char="J">
+              <sprite><bitmap from="bottomright" /></sprite>
+            </group>
+            <group name="teedown" char="T">
+              <sprite><bitmap from="teedown" /></sprite>
+            </group>
+            <group name="teeright" char="E">
+              <sprite><bitmap from="teeright" /></sprite>
+            </group>
+            <group name="teeleft" char="3">
+              <sprite><bitmap from="teeleft" /></sprite>
+            </group>
+            <group name="endleft" char="[">
+              <sprite><bitmap from="endleft" /></sprite>
+            </group>
+            <group name="endright" char="]">
+              <sprite><bitmap from="endright" /></sprite>
+            </group>
+            <!-- the door of the ghost house: a wall piece of its own class, in pink -->
+            <group name="door" char="=" class="door">
+              <sprite><bitmap><color>color.magenta</color></bitmap></sprite>
+            </group>
+          </group>
+          <!-- the dots, and the power pellets, which flash -->
+          <group name="food" class="food">
+            <group name="dots" char=".">
+              <sprite>
+                <rectangle>
+                  <width>4</width>
+                  <height>4</height>
+                  <color>color.orange</color>
+                </rectangle>
+              </sprite>
+              <collisions>
+                <collision object="pacman">
+                  <inc variable="status.score">10</inc>
+                  <inc variable="status.eaten" />
+                  <reset object="nudge" />
+                  <play sound="chomp" />
+                  <die />
+                </collision>
+              </collisions>
+            </group>
+            <group name="pellets" char="o">
+              <sprite name="lit">
+                <bitmap from="pellets-lit" />
+              </sprite>
+              <sprite name="dim">
+                <bitmap from="pellets-dim" />
+              </sprite>
+              <animation>
+                <seconds>0.17</seconds>
+                <frame sprite="lit" />
+                <frame sprite="dim" />
+              </animation>
+              <collisions>
+                <collision object="pacman">
+                  <inc variable="status.score">50</inc>
+                  <inc variable="status.eaten" />
+                  <reset object="nudge" />
+                  <set variable="status.worth">200</set>
+                  <play sound="power" />
+                  <!-- the blue ones first, so the ones turning blue now turn round once -->
+                  <become object="ghosts" sprite="blue" from="blue" />
+                  <become object="ghosts" sprite="blue" from="normal" />
+                  <die />
+                </collision>
+              </collisions>
+            </group>
+          </group>
+          <!-- the tunnel at the sides, where a ghost goes at half speed -->
+          <group name="tunnel" char="t" class="tunnel">
+            <sprite><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
+            <hidden />
+          </group>
+          <!-- what the eyes of an eaten ghost make for, inside the ghost house -->
+          <object name="pen" char="h">
+            <sprite><rectangle><width>4</width><height>4</height><color>color.black</color></rectangle></sprite>
+            <hidden />
+            <collisions />
+          </object>
+          <!-- the cherry: none until enough dots are eaten, then for a while -->
+          <object name="fruit" char="f">
+            <sprite name="none" />
+            <sprite name="fruit">
+              <bitmap from="fruit-cherry" />
+            </sprite>
+            <animation name="cherry">
+              <seconds>9.5</seconds>
+              <once />
+              <frame sprite="fruit" />
+              <then sprite="none" />
+            </animation>
+            <collisions>
+              <collision object="pacman" sprite="cherry">
+                <inc variable="status.score">100</inc>
+                <play sound="fruit" />
+                <become sprite="none" />
+              </collision>
+            </collisions>
+          </object>
+          <object name="pacman" char="@">
+            <sprite name="closed">
+              <bitmap from="pacman-closed" />
+            </sprite>
+            <sprite name="half">
+              <bitmap from="pacman-half" />
+            </sprite>
+            <sprite name="open">
+              <bitmap from="pacman-open" />
+            </sprite>
+            <animation>
+              <seconds>0.05</seconds>
+              <frame sprite="closed" />
+              <frame sprite="half" />
+              <frame sprite="open" />
+              <frame sprite="half" />
+            </animation>
+            <!-- drawn facing up, turned to where he goes -->
+            <heading>270</heading>
+            <facing>left</facing>
+            <maze map="maze">
+              <wall class="wall" />
+              <wall class="door" />
+            </maze>
+            <collisions>
+              <!-- touches with his middle, as the arcade's tiles do -->
+              <hitbox>
+                <rectangle><width>13</width><height>13</height></rectangle>
+                <position><x>12</x><y>12</y></position>
+              </hitbox>
+              <collision edge="horizontal">
+                <wrap />
+              </collision>
+            </collisions>
+            <actions>
+              <action name="left">
+                <go direction="left">pacspeed</go>
+              </action>
+              <action name="right">
+                <go direction="right">pacspeed</go>
+              </action>
+              <action name="up">
+                <go direction="up">pacspeed</go>
+              </action>
+              <action name="down">
+                <go direction="down">pacspeed</go>
+              </action>
+              <!-- out of play while he shrivels (the state dying) -->
+              <action name="caught">
+                <die />
+              </action>
+            </actions>
+          </object>
+          <!-- the ghosts: what they share, then each one's color, corner, chase
+               and way out -->
+          <group name="ghosts" class="ghost">
+            <sprite name="normal">
+              <bitmap from="ghosts-normal" />
+            </sprite>
+            <sprite name="blue">
+              <bitmap from="ghosts-blue" />
+            </sprite>
+            <sprite name="eyes">
+              <bitmap from="ghosts-eyes" />
+            </sprite>
+            <maze map="maze">
+              <wall class="wall" />
+              <wall class="door" sprite="normal" />
+              <wall class="door" sprite="blue" />
+              <slow class="tunnel">0.5</slow>
+            </maze>
+            <collisions>
+              <hitbox>
+                <rectangle><width>12</width><height>12</height></rectangle>
+                <position><x>8</x><y>8</y></position>
+              </hitbox>
+              <collision edge="horizontal">
+                <wrap />
+              </collision>
+              <collision object="pacman">
+                <collision sprite="normal">
+                  <trigger object="pacman" action="caught" />
+                  <inc variable="status.dying" />
+                  <play sound="caught" />
+                </collision>
+                <collision sprite="blue">
+                  <inc variable="status.score">status.worth</inc>
+                  <set variable="status.worth"><multiply><value>status.worth</value><value>2</value></multiply></set>
+                  <play sound="eatghost" />
+                  <become sprite="eyes" />
+                </collision>
+              </collision>
+              <collision object="pen" sprite="eyes">
+                <become sprite="normal" />
+                <trigger action="out" />
+              </collision>
+            </collisions>
+            <actions>
+              <action name="turn"><reverse /></action>
+            </actions>
+            <timers>
+              <!-- normal again (or at the start): back to what the mode says -->
+              <timer sprite="normal">
+                <after>0</after>
+                <trigger object="mode" action="scatter" from="scatter" />
+                <trigger object="mode" action="chase" from="chase" />
+              </timer>
+              <!-- blue: it turns round and wanders, and in time is normal again -->
+              <timer sprite="blue">
+                <after>0</after>
+                <reverse />
+                <wander>
+                  frightspeed
+                </wander>
+              </timer>
+              <timer sprite="blue">
+                <after>status.fright</after>
+                <become sprite="normal" />
+              </timer>
+              <!-- eaten: the eyes go home -->
+              <timer sprite="eyes">
+                <after>0</after>
+                <hunt object="pen">
+                  eyesspeed
+                </hunt>
+              </timer>
+            </timers>
+            <!-- Blinky goes straight for Pac-Man -->
+            <group name="blinky" char="B">
+              <actions>
+                <action name="out"><follow path="blinkyout" /></action>
+                <action name="scatter"><hunt object="topright">status.pace</hunt></action>
+                <action name="chase"><hunt object="pacman">status.pace</hunt></action>
+              </actions>
+            </group>
+            <!-- Pinky makes for four tiles in front of him -->
+            <group name="pinky" char="P">
+              <sprite name="normal"><bitmap><color>color.magenta</color></bitmap></sprite>
+              <actions>
+                <action name="out"><follow path="pinkyout" /></action>
+                <action name="scatter"><hunt object="topleft">status.pace</hunt></action>
+                <action name="chase"><hunt object="pacman">status.pace<ahead>4</ahead></hunt></action>
+              </actions>
+              <timers>
+                <timer>
+                  <after>1</after>
+                  <trigger action="out" />
+                </timer>
+              </timers>
+            </group>
+            <!-- Inky closes in from the other side to Blinky -->
+            <group name="inky" char="I">
+              <sprite name="normal"><bitmap><color>color.cyan</color></bitmap></sprite>
+              <actions>
+                <action name="out"><follow path="inkyout" /></action>
+                <action name="scatter"><hunt object="bottomright">status.pace</hunt></action>
+                <action name="chase"><hunt object="pacman">status.pace<ahead>2</ahead><with object="blinky" /></hunt></action>
+              </actions>
+            </group>
+            <!-- Clyde backs off to his corner when he gets near -->
+            <group name="clyde" char="C">
+              <sprite name="normal"><bitmap><color>color.orange</color></bitmap></sprite>
+              <actions>
+                <action name="out"><follow path="clydeout" /></action>
+                <action name="scatter"><hunt object="bottomleft">status.pace</hunt></action>
+                <action name="chase"><hunt object="pacman">status.pace<retreat object="bottomleft">8</retreat></hunt></action>
+              </actions>
+            </group>
+          </group>
+        </map>
+        <object name="uplabel">
+          <sprite>
+            <text style="hud">
+              <content>1UP</content>
+            </text>
+          </sprite>
+          <position><x><multiply><value>3</value><value>tile</value></multiply></x><y>2</y></position>
+        </object>
+        <object name="scorevalue">
+          <sprite>
+            <text style="hud">
+              <number>status.score</number>
+            </text>
+          </sprite>
+          <position><x><multiply><value>3</value><value>tile</value></multiply></x><y>22</y></position>
+        </object>
+        <object name="livesvalue">
+          <sprite>
+            <text style="hud">
+              <content>LIVES</content>
+              <number>status.lives</number>
+              <color>color.yellow</color>
+            </text>
+          </sprite>
+          <position><x><multiply><value>2</value><value>tile</value></multiply></x><y><subtract><value>window.bottom</value><value>24</value></subtract></y></position>
+        </object>
+      </objects>
+      <!-- the schedule, in order -->
+      <starts><send from="waves" into="schedule"><all /></send></starts>
+      <shows>
+        <show object="best" />
+        <show object="highlabel" />
+      </shows>
+      <music sound="siren" />
+      <inputs>
+        <input><button>a</button><button>left</button><button>pad1.left</button>
+          <trigger object="pacman" action="left" />
+        </input>
+        <input><button>d</button><button>right</button><button>pad1.right</button>
+          <trigger object="pacman" action="right" />
+        </input>
+        <input><button>w</button><button>up</button><button>pad1.up</button>
+          <trigger object="pacman" action="up" />
+        </input>
+        <input><button>s</button><button>down</button><button>pad1.down</button>
+          <trigger object="pacman" action="down" />
+        </input>
+        <input><button>pause</button><button>pad1.start</button>
+          <push state="paused" />
+        </input>
+      </inputs>
+      <conditions>
+        <condition object="status" variable="lives">
+          <atmost>0</atmost>
+          <push state="over" />
+        </condition>
+        <!-- caught: everything stops while Pac-Man shrivels -->
+        <condition object="status" variable="dying">
+          <atleast>1</atleast>
+          <dec variable="status.dying" />
+          <push state="dying" />
+        </condition>
+        <!-- caught: READY! again, everyone back in place -->
+        <condition object="status" variable="caught">
+          <atleast>1</atleast>
+          <dec variable="status.caught" />
+          <push state="caught" />
+        </condition>
+        <!-- the maze cleared: a new round, the ghosts faster and blue for less -->
+        <condition class="food">
+          <remaining>0</remaining>
+          <reset object="food" />
+          <reset object="pacman" />
+          <reset object="ghosts" />
+          <become object="fruit" sprite="none" />
+          <set variable="status.eaten">0</set>
+          <set variable="status.released">1</set>
+          <reset object="mode" />
+          <set variable="status.fruits">0</set>
+          <set variable="status.pace">
+            <smallest>
+              <value>127.5</value>
+              <value><add><value>status.pace</value><value>3.75</value></add></value>
+            </smallest>
+          </set>
+          <set variable="status.fright">
+            <largest>
+              <value>1</value>
+              <value><subtract><value>status.fright</value><value>1</value></subtract></value>
+            </largest>
+          </set>
+          <push state="caught" />
+        </condition>
+        <!-- Inky comes out after thirty dots, Clyde after sixty more -->
+        <condition object="status" variable="eaten"><atleast>30</atleast>
+          <condition object="status" variable="released"><equal>1</equal>
+            <inc variable="status.released" />
+            <trigger object="inky" action="out" />
+          </condition>
+        </condition>
+        <condition object="status" variable="eaten"><atleast>90</atleast>
+          <condition object="status" variable="released"><equal>2</equal>
+            <inc variable="status.released" />
+            <trigger object="clyde" action="out" />
+          </condition>
+        </condition>
+        <!-- the cherry, after 70 dots and after 170 -->
+        <condition class="food" total="count"><atmost>174</atmost>
+          <condition object="status" variable="fruits"><equal>0</equal>
+            <inc variable="status.fruits" />
+            <become object="fruit" sprite="cherry" />
+          </condition>
+        </condition>
+        <condition class="food" total="count"><atmost>74</atmost>
+          <condition object="status" variable="fruits"><equal>1</equal>
+            <inc variable="status.fruits" />
+            <become object="fruit" sprite="cherry" />
+          </condition>
+        </condition>
+        <!-- a life at 10,000 points -->
+        <condition object="status" variable="score"><atleast>10000</atleast>
+          <condition object="status" variable="bonus"><equal>0</equal>
+            <inc variable="status.bonus" />
+            <inc variable="status.lives" />
+            <play sound="extra" />
+          </condition>
+        </condition>
+        <condition object="status" variable="score">
+          <above>best.score</above>
+          <copy variable="status.score" into="best.score" />
+        </condition>
+      </conditions>
+    </state>
+
+    <!-- caught: the maze stands still while Pac-Man shrivels where he was;
+         then a life is gone and everyone goes back in place -->
+    <state name="dying">
+      <objects>
+        <object name="shrivel">
+          <sprite name="a"><bitmap from="pacman-open" /></sprite>
+          <sprite name="b"><bitmap from="dying-1" /></sprite>
+          <sprite name="c"><bitmap from="dying-2" /></sprite>
+          <sprite name="d"><bitmap from="dying-3" /></sprite>
+          <sprite name="e"><bitmap from="dying-4" /></sprite>
+          <sprite name="f"><bitmap from="dying-5" /></sprite>
+          <sprite name="g"><bitmap from="dying-pop" /></sprite>
+          <animation>
+            <seconds>0.18</seconds>
+            <once />
+            <frame sprite="a"><seconds>0.5</seconds></frame>
+            <frame sprite="b" />
+            <frame sprite="c" />
+            <frame sprite="d" />
+            <frame sprite="e" />
+            <frame sprite="f" />
+            <frame sprite="g"><seconds>0.3</seconds></frame>
+          </animation>
+          <position><x update="live">pacman.x</x><y update="live">pacman.y</y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input><button>pause</button><button>pad1.start</button>
+          <push state="paused" />
+        </input>
+      </inputs>
+      <timers>
+        <timer>
+          <after>1.8</after>
+          <dec variable="status.lives" />
+          <inc variable="status.caught" />
+          <reset object="pacman" />
+          <reset object="ghosts" />
+          <become object="fruit" sprite="none" />
+          <set variable="status.eaten">0</set>
+          <set variable="status.released">1</set>
+          <reset object="mode" />
+          <reset object="shrivel" />
+          <pop />
+        </timer>
+      </timers>
+    </state>
+
+    <!-- READY! over the maze standing still, after a life is lost or a
+         round is cleared; and, with the opening tune, as a game begins -->
+    <state name="caught">
+      <objects>
+        <object name="ready">
+          <sprite>
+            <text style="prompt">
+              <content>READY!</content>
+              <color>color.yellow</color>
+            </text>
+          </sprite>
+          <position><x><centered /></x><y><centered>
+            <add>
+              <value>top</value>
+              <value><multiply><value>17.5</value><value>tile</value></multiply></value>
+            </add>
+          </centered></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input><button>pause</button><button>pad1.start</button>
+          <push state="paused" />
+        </input>
+      </inputs>
+      <!-- a push starts the state's timers over, so it waits each time -->
+      <timers>
+        <timer name="wait">
+          <after>2</after>
+          <trigger object="pacman" action="left" />
+          <pop />
+        </timer>
+      </timers>
+    </state>
+    <state name="ready" from="caught">
+      <music sound="start" />
+      <timers>
+        <timer name="wait">
+          <after>4.3</after>
+          <trigger object="pacman" action="left" />
+          <pop />
+        </timer>
+      </timers>
+    </state>
+
+    <state name="paused">
+      <objects>
+        <object name="paused">
+          <sprite>
+            <text style="banner">
+              <content>PAUSED</content>
+              <color>color.white</color>
+            </text>
+          </sprite>
+          <position><x><centered /></x><y><centered /></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input><button>pause</button><button>pad1.start</button>
+          <pop />
+        </input>
+      </inputs>
+    </state>
+    <state name="over">
+      <objects>
+        <object name="gameover">
+          <sprite>
+            <text style="prompt">
+              <content>GAME  OVER</content>
+              <color>color.red</color>
+            </text>
+          </sprite>
+          <position><x><centered /></x><y><centered>
+            <add>
+              <value>top</value>
+              <value><multiply><value>17.5</value><value>tile</value></multiply></value>
+            </add>
+          </centered></y></position>
+        </object>
+        <object name="again">
+          <sprite>
+            <text style="hud">
+              <content>spacebar to play again</content>
+            </text>
+          </sprite>
+          <position><x><centered /></x><y><centered /></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <music sound="lose" />
+      <inputs>
+        <input><button>space</button><button>pad1.start</button>
+          <reset />
+        </input>
+      </inputs>
+    </state>
+  </states>
   <sounds>
     <!-- a dot eaten: the wakka -->
     <sound name="chomp" wave="square">
@@ -191,1016 +1014,372 @@
       <note pitch="E4" to="C4">0.6</note>
     </sound>
   </sounds>
-  <paths>
-    <!-- out of the ghost house, each ghost from its own place: back to it,
-         over to the door and up through it to the tile above -->
-    <path name="blinkyout">
-      <speed>pathspeed</speed>
-      <home />
-    </path>
-    <path name="pinkyout">
-      <speed>pathspeed</speed>
-      <home />
-      <step><x>0</x><y>-out</y></step>
-    </path>
-    <path name="inkyout">
-      <speed>pathspeed</speed>
-      <home />
-      <step><x>2 * tile</x><y>0</y></step>
-      <step><x>0</x><y>-out</y></step>
-    </path>
-    <path name="clydeout">
-      <speed>pathspeed</speed>
-      <home />
-      <step><x>-2 * tile</x><y>0</y></step>
-      <step><x>0</x><y>-out</y></step>
-    </path>
-  </paths>
-  <styles>
-    <style name="banner"><size>32</size><color>color.yellow</color><font>assets/pressstart2p.ttf</font></style>
-    <style name="prompt"><size>16</size><font>assets/pressstart2p.ttf</font></style>
-    <style name="hud"><size>16</size><font>assets/pressstart2p.ttf</font></style>
-  </styles>
-  <objects>
-    <!-- the best score, kept from game to game -->
-    <object name="best">
-      <sprite>
-        <text style="hud">
-          <number>best.score</number>
-        </text>
-      </sprite>
-      <position><x><centered /></x><y>22</y></position>
-      <variables>
-        <variable name="score">0</variable>
-      </variables>
-    </object>
-    <object name="highlabel">
-      <sprite>
-        <text style="hud">
-          <content>HIGH SCORE</content>
-        </text>
-      </sprite>
-      <position><x><centered /></x><y>2</y></position>
-    </object>
-  </objects>
-  <keeps>
-    <keep object="best" />
-  </keeps>
-  <states>
-    <state name="mainmenu">
-      <objects>
-        <object name="title">
-          <sprite>
-            <text style="banner">
-              <content>PAC-MAN</content>
-            </text>
-          </sprite>
-          <position><x><centered /></x><y>90</y></position>
-        </object>
-        <!-- the four ghosts, each in its own color -->
-        <group name="cast">
-          <sprite>
-            <text style="prompt">
-              <content>BLINKY</content>
-              <color>color.red</color>
-            </text>
-          </sprite>
-          <position><x><centered /></x></position>
-          <member><position><y>200</y></position></member>
-          <member><sprite><text><content>PINKY</content><color>color.magenta</color></text></sprite><position><y>235</y></position></member>
-          <member><sprite><text><content>INKY</content><color>color.cyan</color></text></sprite><position><y>270</y></position></member>
-          <member><sprite><text><content>CLYDE</content><color>color.orange</color></text></sprite><position><y>305</y></position></member>
-        </group>
-        <object name="points">
-          <sprite>
-            <text style="hud">
-              <content>dot 10   power pellet 50</content>
-            </text>
-          </sprite>
-          <position><x><centered /></x><y>365</y></position>
-        </object>
-        <object name="start">
-          <sprite>
-            <text style="prompt">
-              <content>spacebar to start</content>
-            </text>
-          </sprite>
-          <position><x><centered /></x><y>440</y></position>
-        </object>
-      </objects>
-      <shows>
-        <show object="best" />
-        <show object="highlabel" />
-      </shows>
-      <inputs>
-        <input><button>space</button><button>pad1.start</button>
-          <push state="playing" />
-          <push state="ready" />
-        </input>
-      </inputs>
-    </state>
-
-    <state name="playing">
-      <objects>
-        <!-- the score, the lives and how the round goes, on an object of
-             their own so that putting Pac-Man back keeps them -->
-        <object name="status">
-          <variables>
-            <variable name="score">0</variable>
-            <variable name="lives">3</variable>
-            <variable name="caught">0</variable>
-            <variable name="bonus">0</variable>
-            <variable name="worth">200</variable>
-            <variable name="fruits">0</variable>
-            <variable name="pace">1.875</variable>
-            <variable name="fright">6</variable>
-            <!-- dots eaten since the round began or a life was lost, and how
-                 many of Pinky, Inky and Clyde they have let out -->
-            <variable name="eaten">0</variable>
-            <variable name="released">1</variable>
-          </variables>
-        </object>
-        <!-- scatter or chase: the arcade's first-level schedule, scatter for
-             7, 7, 5 and 5 seconds with 20 of chase between, then chase for
-             good. Its look is the mode; each switch turns the ghosts round
-             and sends the new one to every normal ghost -->
-        <object name="mode">
-          <sprite name="scatter"><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
-          <sprite name="chase"><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
-          <position><x>0</x><y>0</y></position>
-          <drawn>false</drawn>
-          <actions>
-            <action name="scatter"><trigger object="ghosts" action="scatter" from="normal" /></action>
-            <action name="chase"><trigger object="ghosts" action="chase" from="normal" /></action>
-          </actions>
-          <variables>
-            <variable name="waves">0</variable>
-            <variable name="scatterfor">7</variable>
-            <variable name="chasefor">20</variable>
-          </variables>
-          <timers>
-            <timer sprite="scatter">
-              <after>mode.scatterfor</after>
-              <inc variable="mode.waves" />
-              <!-- 20 seconds, and for ever from the fourth wave -->
-              <set variable="mode.chasefor">
-                <formula>
-                  <add>
-                    <augend>20</augend>
-                    <addend>
-                      <multiply>
-                        <multiplicand>100000</multiplicand>
-                        <multiplier><compare><value>mode.waves</value><atleast>4</atleast></compare></multiplier>
-                      </multiply>
-                    </addend>
-                  </add>
-                </formula>
-              </set>
-              <become sprite="chase" />
-              <trigger object="ghosts" action="turn" from="normal" />
-              <trigger action="chase" />
-            </timer>
-            <timer sprite="chase">
-              <after>mode.chasefor</after>
-              <!-- 7 seconds, and 5 from the second wave -->
-              <set variable="mode.scatterfor">
-                <formula>
-                  <subtract>
-                    <minuend>7</minuend>
-                    <subtrahend>
-                      <multiply>
-                        <multiplicand>2</multiplicand>
-                        <multiplier><compare><value>mode.waves</value><atleast>2</atleast></compare></multiplier>
-                      </multiply>
-                    </subtrahend>
-                  </subtract>
-                </formula>
-              </set>
-              <become sprite="scatter" />
-              <trigger object="ghosts" action="turn" from="normal" />
-              <trigger action="scatter" />
-            </timer>
-          </timers>
-        </object>
-        <!-- four seconds with no dot eaten counts as thirty, so a ghost
-             still comes out (each dot puts it back to the start) -->
-        <object name="nudge">
-          <timers>
-            <timer>
-              <every>4</every>
-              <set variable="status.eaten">status.eaten + 30</set>
-            </timer>
-          </timers>
-        </object>
-        <!-- the corners the ghosts scatter to, off the maze -->
-        <group name="corners">
-          <sprite><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
-          <drawn>false</drawn>
-          <member name="topright"><position><x>25 * tile</x><y>0</y></position></member>
-          <member name="topleft"><position><x>2 * tile</x><y>0</y></position></member>
-          <member name="bottomright"><position><x>27 * tile</x><y>window.bottom - 1</y></position></member>
-          <member name="bottomleft"><position><x>0</x><y>window.bottom - 1</y></position></member>
-        </group>
-        <map name="maze">
-          <tile>
-            <width>tile</width>
-            <height>tile</height>
-          </tile>
-          <position><x>0</x><y>top</y></position>
-          <row>r------------TT------------7</row>
-          <row>|............||............|</row>
-          <row>|.r--7.r---7.||.r---7.r--7.|</row>
-          <row>|o|  |.|   |.||.|   |.|  |o|</row>
-          <row>|.L--J.L---J.LJ.L---J.L--J.|</row>
-          <row>|..........................|</row>
-          <row>|.r--7.r7.r------7.r7.r--7.|</row>
-          <row>|.L--J.||.L--7r--J.||.L--J.|</row>
-          <row>|......||....||....||......|</row>
-          <row>L----7.|L--7 || r--J|.r----J</row>
-          <row>,,,,,|.|r--J LJ L--7|.|,,,,,</row>
-          <row>,,,,,|.||     B    ||.|,,,,,</row>
-          <row>,,,,,|.|| r-]==[-7 ||.|,,,,,</row>
-          <row>-----J.LJ |   h  | LJ.L-----</row>
-          <row>tttttt.   | I P C|   .tttttt</row>
-          <row>-----7.r7 |      | r7.r-----</row>
-          <row>,,,,,|.|| L------J ||.|,,,,,</row>
-          <row>,,,,,|.||     f    ||.|,,,,,</row>
-          <row>,,,,,|.|| r------7 ||.|,,,,,</row>
-          <row>r----J.LJ L--7r--J LJ.L----7</row>
-          <row>|............||............|</row>
-          <row>|.r--7.r---7.||.r---7.r--7.|</row>
-          <row>|.L-7|.L---J.LJ.L---J.|r-J.|</row>
-          <row>|o..||....... @.......||..o|</row>
-          <row>E-7.||.r7.r------7.r7.||.r-3</row>
-          <row>E-J.LJ.||.L--7r--J.||.LJ.L-3</row>
-          <row>|......||....||....||......|</row>
-          <row>|.r----JL--7.||.r--JL----7.|</row>
-          <row>|.L--------J.LJ.L--------J.|</row>
-          <row>|..........................|</row>
-          <row>L--------------------------J</row>
-          <!-- the walls: blue lines through the middle of the tiles, each piece
-               giving only its rows -->
-          <group name="walls" class="wall">
-            <sprite>
-              <bitmap>
-                <row>........</row>
-                <row>........</row>
-                <row>........</row>
-                <row>********</row>
-                <row>********</row>
-                <row>........</row>
-                <row>........</row>
-                <row>........</row>
-                <scale>2</scale>
-                <color>color.blue</color>
-              </bitmap>
-            </sprite>
-            <group name="across" char="-" />
-            <group name="down" char="|">
-              <sprite><bitmap>
-                <row>...**...</row>
-                <row>...**...</row>
-                <row>...**...</row>
-                <row>...**...</row>
-                <row>...**...</row>
-                <row>...**...</row>
-                <row>...**...</row>
-                <row>...**...</row>
-              </bitmap></sprite>
-            </group>
-            <group name="topleft" char="r">
-              <sprite><bitmap>
-                <row>........</row>
-                <row>........</row>
-                <row>........</row>
-                <row>.....***</row>
-                <row>....****</row>
-                <row>...**...</row>
-                <row>...**...</row>
-                <row>...**...</row>
-              </bitmap></sprite>
-            </group>
-            <group name="topright" char="7">
-              <sprite><bitmap>
-                <row>........</row>
-                <row>........</row>
-                <row>........</row>
-                <row>***.....</row>
-                <row>****....</row>
-                <row>...**...</row>
-                <row>...**...</row>
-                <row>...**...</row>
-              </bitmap></sprite>
-            </group>
-            <group name="bottomleft" char="L">
-              <sprite><bitmap>
-                <row>...**...</row>
-                <row>...**...</row>
-                <row>...**...</row>
-                <row>....****</row>
-                <row>.....***</row>
-                <row>........</row>
-                <row>........</row>
-                <row>........</row>
-              </bitmap></sprite>
-            </group>
-            <group name="bottomright" char="J">
-              <sprite><bitmap>
-                <row>...**...</row>
-                <row>...**...</row>
-                <row>...**...</row>
-                <row>****....</row>
-                <row>***.....</row>
-                <row>........</row>
-                <row>........</row>
-                <row>........</row>
-              </bitmap></sprite>
-            </group>
-            <group name="teedown" char="T">
-              <sprite><bitmap>
-                <row>........</row>
-                <row>........</row>
-                <row>........</row>
-                <row>********</row>
-                <row>********</row>
-                <row>...**...</row>
-                <row>...**...</row>
-                <row>...**...</row>
-              </bitmap></sprite>
-            </group>
-            <group name="teeright" char="E">
-              <sprite><bitmap>
-                <row>...**...</row>
-                <row>...**...</row>
-                <row>...**...</row>
-                <row>...*****</row>
-                <row>...*****</row>
-                <row>...**...</row>
-                <row>...**...</row>
-                <row>...**...</row>
-              </bitmap></sprite>
-            </group>
-            <group name="teeleft" char="3">
-              <sprite><bitmap>
-                <row>...**...</row>
-                <row>...**...</row>
-                <row>...**...</row>
-                <row>*****...</row>
-                <row>*****...</row>
-                <row>...**...</row>
-                <row>...**...</row>
-                <row>...**...</row>
-              </bitmap></sprite>
-            </group>
-            <group name="endleft" char="[">
-              <sprite><bitmap>
-                <row>........</row>
-                <row>........</row>
-                <row>........</row>
-                <row>...*****</row>
-                <row>...*****</row>
-                <row>........</row>
-                <row>........</row>
-                <row>........</row>
-              </bitmap></sprite>
-            </group>
-            <group name="endright" char="]">
-              <sprite><bitmap>
-                <row>........</row>
-                <row>........</row>
-                <row>........</row>
-                <row>*****...</row>
-                <row>*****...</row>
-                <row>........</row>
-                <row>........</row>
-                <row>........</row>
-              </bitmap></sprite>
-            </group>
-            <!-- the door of the ghost house: a wall piece of its own class, in pink -->
-            <group name="door" char="=" class="door">
-              <sprite><bitmap><color>color.magenta</color></bitmap></sprite>
-            </group>
-          </group>
-          <!-- the dots, and the power pellets, which flash -->
-          <group name="food" class="food">
-            <group name="dots" char=".">
-              <sprite>
-                <rectangle>
-                  <width>4</width>
-                  <height>4</height>
-                  <color>color.orange</color>
-                </rectangle>
-              </sprite>
-              <collisions>
-                <collision object="pacman">
-                  <inc variable="status.score">10</inc>
-                  <inc variable="status.eaten" />
-                  <reset object="nudge" />
-                  <play sound="chomp" />
-                  <die />
-                </collision>
-              </collisions>
-            </group>
-            <group name="pellets" char="o">
-              <sprite name="lit">
-                <bitmap>
-                  <row>..****..</row>
-                  <row>.******.</row>
-                  <row>********</row>
-                  <row>********</row>
-                  <row>********</row>
-                  <row>********</row>
-                  <row>.******.</row>
-                  <row>..****..</row>
-                  <scale>2</scale>
-                  <color>color.orange</color>
-                </bitmap>
-              </sprite>
-              <sprite name="dim">
-                <bitmap>
-                  <row>........</row>
-                  <row>........</row>
-                  <row>........</row>
-                  <row>........</row>
-                  <row>........</row>
-                  <row>........</row>
-                  <row>........</row>
-                  <row>........</row>
-                  <scale>2</scale>
-                </bitmap>
-              </sprite>
-              <animation>
-                <interval>0.17</interval>
-                <frame sprite="lit" />
-                <frame sprite="dim" />
-              </animation>
-              <collisions>
-                <collision object="pacman">
-                  <inc variable="status.score">50</inc>
-                  <inc variable="status.eaten" />
-                  <reset object="nudge" />
-                  <set variable="status.worth">200</set>
-                  <play sound="power" />
-                  <!-- the blue ones first, so the ones turning blue now turn round once -->
-                  <become object="ghosts" sprite="blue" from="blue" />
-                  <become object="ghosts" sprite="blue" from="normal" />
-                  <die />
-                </collision>
-              </collisions>
-            </group>
-          </group>
-          <!-- the tunnel at the sides, where a ghost goes at half speed -->
-          <group name="tunnel" char="t" class="tunnel">
-            <sprite><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
-            <drawn>false</drawn>
-          </group>
-          <!-- what the eyes of an eaten ghost make for, inside the ghost house -->
-          <object name="pen" char="h">
-            <sprite><rectangle><width>4</width><height>4</height><color>color.black</color></rectangle></sprite>
-            <drawn>false</drawn>
-            <collisions />
-          </object>
-          <!-- the cherry: none until enough dots are eaten, then for a while -->
-          <object name="fruit" char="f">
-            <sprite name="none"><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
-            <sprite name="cherry">
-              <bitmap>
-                <row>..........g.</row>
-                <row>.........g..</row>
-                <row>.......gg...</row>
-                <row>.....gg.g...</row>
-                <row>....g....g..</row>
-                <row>..**g....g..</row>
-                <row>.****...***.</row>
-                <row>******.*****</row>
-                <row>*w****.*w***</row>
-                <row>******.*****</row>
-                <row>.****..*****</row>
-                <row>..**....***.</row>
-                <scale>2</scale>
-                <color>color.red</color>
-                <color char="w">color.white</color>
-                <color char="g">color.brown</color>
-              </bitmap>
-            </sprite>
-            <collisions>
-              <collision object="pacman" sprite="cherry">
-                <inc variable="status.score">100</inc>
-                <play sound="fruit" />
-                <become sprite="none" />
-              </collision>
-            </collisions>
-            <timers>
-              <timer sprite="cherry">
-                <after>9.5</after>
-                <become sprite="none" />
-              </timer>
-            </timers>
-          </object>
-          <object name="pacman" char="@">
-            <sprite name="closed">
-              <bitmap>
-                <row>....*****....</row>
-                <row>..*********..</row>
-                <row>.***********.</row>
-                <row>.***********.</row>
-                <row>*************</row>
-                <row>*************</row>
-                <row>*************</row>
-                <row>*************</row>
-                <row>*************</row>
-                <row>.***********.</row>
-                <row>.***********.</row>
-                <row>..*********..</row>
-                <row>....*****....</row>
-                <scale>2</scale>
-                <color>color.yellow</color>
-              </bitmap>
-            </sprite>
-            <sprite name="half">
-              <bitmap>
-                <row>.............</row>
-                <row>..**.....**..</row>
-                <row>.***.....***.</row>
-                <row>.****...****.</row>
-                <row>*****...*****</row>
-                <row>******.******</row>
-                <row>*************</row>
-                <row>*************</row>
-                <row>*************</row>
-                <row>.***********.</row>
-                <row>.***********.</row>
-                <row>..*********..</row>
-                <row>....*****....</row>
-                <scale>2</scale>
-                <color>color.yellow</color>
-              </bitmap>
-            </sprite>
-            <sprite name="open">
-              <bitmap>
-                <row>.............</row>
-                <row>.............</row>
-                <row>.............</row>
-                <row>.**.......**.</row>
-                <row>****.....****</row>
-                <row>*****...*****</row>
-                <row>*************</row>
-                <row>*************</row>
-                <row>*************</row>
-                <row>.***********.</row>
-                <row>.***********.</row>
-                <row>..*********..</row>
-                <row>....*****....</row>
-                <scale>2</scale>
-                <color>color.yellow</color>
-              </bitmap>
-            </sprite>
-            <animation>
-              <interval>0.05</interval>
-              <frame sprite="closed" />
-              <frame sprite="half" />
-              <frame sprite="open" />
-              <frame sprite="half" />
-            </animation>
-            <!-- drawn facing up, turned to where he goes -->
-            <heading>270</heading>
-            <facing>left</facing>
-            <maze map="maze">
-              <wall class="wall" />
-              <wall class="door" />
-            </maze>
-            <collisions>
-              <!-- touches with his middle, as the arcade's tiles do -->
-              <hitbox>
-                <rectangle><width>13</width><height>13</height></rectangle>
-                <position><x>12</x><y>12</y></position>
-              </hitbox>
-              <collision edge="horizontal">
-                <wrap />
-              </collision>
-            </collisions>
-            <actions>
-              <action name="left">
-                <go direction="left">pacspeed</go>
-              </action>
-              <action name="right">
-                <go direction="right">pacspeed</go>
-              </action>
-              <action name="up">
-                <go direction="up">pacspeed</go>
-              </action>
-              <action name="down">
-                <go direction="down">pacspeed</go>
-              </action>
-            </actions>
-          </object>
-          <!-- the ghosts: what they share, then each one's color, corner, chase
-               and way out -->
-          <group name="ghosts" class="ghost">
-            <sprite name="normal">
-              <bitmap>
-                <row>.....****.....</row>
-                <row>...********...</row>
-                <row>..**********..</row>
-                <row>.*wwww**wwww*.</row>
-                <row>.*wwww**wwww*.</row>
-                <row>**wbbw**wbbw**</row>
-                <row>**wbbw**wbbw**</row>
-                <row>***ww****ww***</row>
-                <row>**************</row>
-                <row>**************</row>
-                <row>**************</row>
-                <row>**************</row>
-                <row>**.***..***.**</row>
-                <row>*...**..**...*</row>
-                <scale>2</scale>
-                <color>color.red</color>
-                <color char="w">color.white</color>
-                <color char="b">color.darkblue</color>
-              </bitmap>
-            </sprite>
-            <sprite name="blue">
-              <bitmap>
-                <row>.....****.....</row>
-                <row>...********...</row>
-                <row>..**********..</row>
-                <row>.************.</row>
-                <row>.************.</row>
-                <row>****ww**ww****</row>
-                <row>****ww**ww****</row>
-                <row>**************</row>
-                <row>**************</row>
-                <row>*w**ww**ww**w*</row>
-                <row>**ww**ww**ww**</row>
-                <row>**************</row>
-                <row>**.***..***.**</row>
-                <row>*...**..**...*</row>
-                <scale>2</scale>
-                <color>color.blue</color>
-                <color char="w">color.white</color>
-              </bitmap>
-            </sprite>
-            <sprite name="eyes">
-              <bitmap>
-                <row>..............</row>
-                <row>..............</row>
-                <row>..............</row>
-                <row>..wwww..wwww..</row>
-                <row>..wwww..wwww..</row>
-                <row>..wbbw..wbbw..</row>
-                <row>..wbbw..wbbw..</row>
-                <row>...ww....ww...</row>
-                <row>..............</row>
-                <row>..............</row>
-                <row>..............</row>
-                <row>..............</row>
-                <row>..............</row>
-                <row>..............</row>
-                <scale>2</scale>
-                <color>color.white</color>
-                <color char="w">color.white</color>
-                <color char="b">color.darkblue</color>
-              </bitmap>
-            </sprite>
-            <maze map="maze">
-              <wall class="wall" />
-              <wall class="door" sprite="normal" />
-              <wall class="door" sprite="blue" />
-              <slow class="tunnel">0.5</slow>
-            </maze>
-            <collisions>
-              <hitbox>
-                <rectangle><width>12</width><height>12</height></rectangle>
-                <position><x>8</x><y>8</y></position>
-              </hitbox>
-              <collision edge="horizontal">
-                <wrap />
-              </collision>
-              <collision object="pacman" sprite="normal">
-                <dec variable="status.lives" />
-                <inc variable="status.caught" />
-                <play sound="caught" />
-                <reset object="pacman" />
-                <reset object="ghosts" />
-                <become object="fruit" sprite="none" />
-                <set variable="status.eaten">0</set>
-                <set variable="status.released">1</set>
-                <reset object="mode" />
-              </collision>
-              <collision object="pacman" sprite="blue">
-                <inc variable="status.score">status.worth</inc>
-                <set variable="status.worth">status.worth * 2</set>
-                <play sound="eatghost" />
-                <become sprite="eyes" />
-              </collision>
-              <collision object="pen" sprite="eyes">
-                <become sprite="normal" />
-                <trigger action="out" />
-              </collision>
-            </collisions>
-            <actions>
-              <action name="turn"><reverse /></action>
-            </actions>
-            <timers>
-              <!-- normal again (or at the start): back to what the mode says -->
-              <timer sprite="normal">
-                <after>0</after>
-                <trigger object="mode" action="scatter" from="scatter" />
-                <trigger object="mode" action="chase" from="chase" />
-              </timer>
-              <!-- blue: it turns round and wanders, and in time is normal again -->
-              <timer sprite="blue">
-                <after>0</after>
-                <reverse />
-                <wander>
-                  frightspeed
-                </wander>
-              </timer>
-              <timer sprite="blue">
-                <after>status.fright</after>
-                <become sprite="normal" />
-              </timer>
-              <!-- eaten: the eyes go home -->
-              <timer sprite="eyes">
-                <after>0</after>
-                <hunt object="pen">
-                  eyesspeed
-                </hunt>
-              </timer>
-            </timers>
-            <!-- Blinky goes straight for Pac-Man -->
-            <group name="blinky" char="B">
-              <actions>
-                <action name="out"><follow path="blinkyout" /></action>
-                <action name="scatter"><hunt object="topright">status.pace</hunt></action>
-                <action name="chase"><hunt object="pacman">status.pace</hunt></action>
-              </actions>
-            </group>
-            <!-- Pinky makes for four tiles in front of him -->
-            <group name="pinky" char="P">
-              <sprite name="normal"><bitmap><color>color.magenta</color></bitmap></sprite>
-              <actions>
-                <action name="out"><follow path="pinkyout" /></action>
-                <action name="scatter"><hunt object="topleft">status.pace</hunt></action>
-                <action name="chase"><hunt object="pacman">status.pace<ahead>4</ahead></hunt></action>
-              </actions>
-              <timers>
-                <timer>
-                  <after>1</after>
-                  <trigger action="out" />
-                </timer>
-              </timers>
-            </group>
-            <!-- Inky closes in from the other side to Blinky -->
-            <group name="inky" char="I">
-              <sprite name="normal"><bitmap><color>color.cyan</color></bitmap></sprite>
-              <actions>
-                <action name="out"><follow path="inkyout" /></action>
-                <action name="scatter"><hunt object="bottomright">status.pace</hunt></action>
-                <action name="chase"><hunt object="pacman">status.pace<ahead>2</ahead><with object="blinky" /></hunt></action>
-              </actions>
-            </group>
-            <!-- Clyde backs off to his corner when he gets near -->
-            <group name="clyde" char="C">
-              <sprite name="normal"><bitmap><color>color.orange</color></bitmap></sprite>
-              <actions>
-                <action name="out"><follow path="clydeout" /></action>
-                <action name="scatter"><hunt object="bottomleft">status.pace</hunt></action>
-                <action name="chase"><hunt object="pacman">status.pace<retreat object="bottomleft">8</retreat></hunt></action>
-              </actions>
-            </group>
-          </group>
-        </map>
-        <object name="uplabel">
-          <sprite>
-            <text style="hud">
-              <content>1UP</content>
-            </text>
-          </sprite>
-          <position><x>3 * tile</x><y>2</y></position>
-        </object>
-        <object name="scorevalue">
-          <sprite>
-            <text style="hud">
-              <number>status.score</number>
-            </text>
-          </sprite>
-          <position><x>3 * tile</x><y>22</y></position>
-        </object>
-        <object name="livesvalue">
-          <sprite>
-            <text style="hud">
-              <content>LIVES</content>
-              <number>status.lives</number>
-              <color>color.yellow</color>
-            </text>
-          </sprite>
-          <position><x>2 * tile</x><y>window.bottom - 24</y></position>
-        </object>
-      </objects>
-      <shows>
-        <show object="best" />
-        <show object="highlabel" />
-      </shows>
-      <music sound="siren" />
-      <inputs>
-        <input><button>a</button><button>left</button><button>pad1.left</button>
-          <trigger object="pacman" action="left" />
-        </input>
-        <input><button>d</button><button>right</button><button>pad1.right</button>
-          <trigger object="pacman" action="right" />
-        </input>
-        <input><button>w</button><button>up</button><button>pad1.up</button>
-          <trigger object="pacman" action="up" />
-        </input>
-        <input><button>s</button><button>down</button><button>pad1.down</button>
-          <trigger object="pacman" action="down" />
-        </input>
-        <input><button>space</button><button>p</button><button>escape</button><button>pad1.start</button>
-          <push state="paused" />
-        </input>
-      </inputs>
-      <conditions>
-        <condition object="status" variable="lives">
-          <atmost>0</atmost>
-          <push state="gameover" />
-        </condition>
-        <!-- caught: READY! again, everyone back in place -->
-        <condition object="status" variable="caught">
-          <atleast>1</atleast>
-          <dec variable="status.caught" />
-          <push state="caught" />
-        </condition>
-        <!-- the maze cleared: a new round, the ghosts faster and blue for less -->
-        <condition class="food">
-          <remaining>0</remaining>
-          <reset object="food" />
-          <reset object="pacman" />
-          <reset object="ghosts" />
-          <become object="fruit" sprite="none" />
-          <set variable="status.eaten">0</set>
-          <set variable="status.released">1</set>
-          <reset object="mode" />
-          <set variable="status.fruits">0</set>
-          <set variable="status.pace">
-            <formula>
-              <smallest>
-                <value>2.125</value>
-                <value><add><augend>status.pace</augend><addend>0.0625</addend></add></value>
-              </smallest>
-            </formula>
-          </set>
-          <set variable="status.fright">
-            <formula>
-              <largest>
-                <value>1</value>
-                <value><subtract><minuend>status.fright</minuend><subtrahend>1</subtrahend></subtract></value>
-              </largest>
-            </formula>
-          </set>
-          <push state="caught" />
-        </condition>
-        <!-- Inky comes out after thirty dots, Clyde after sixty more -->
-        <condition>
-          <all>
-            <condition object="status" variable="eaten"><atleast>30</atleast></condition>
-            <condition object="status" variable="released"><equal>1</equal></condition>
-          </all>
-          <inc variable="status.released" />
-          <trigger object="inky" action="out" />
-        </condition>
-        <condition>
-          <all>
-            <condition object="status" variable="eaten"><atleast>90</atleast></condition>
-            <condition object="status" variable="released"><equal>2</equal></condition>
-          </all>
-          <inc variable="status.released" />
-          <trigger object="clyde" action="out" />
-        </condition>
-        <!-- the cherry, after 70 dots and after 170 -->
-        <condition>
-          <all>
-            <condition class="food" total="count"><atmost>174</atmost></condition>
-            <condition object="status" variable="fruits"><equal>0</equal></condition>
-          </all>
-          <inc variable="status.fruits" />
-          <become object="fruit" sprite="cherry" />
-        </condition>
-        <condition>
-          <all>
-            <condition class="food" total="count"><atmost>74</atmost></condition>
-            <condition object="status" variable="fruits"><equal>1</equal></condition>
-          </all>
-          <inc variable="status.fruits" />
-          <become object="fruit" sprite="cherry" />
-        </condition>
-        <!-- a life at 10,000 points -->
-        <condition>
-          <all>
-            <condition object="status" variable="score"><atleast>10000</atleast></condition>
-            <condition object="status" variable="bonus"><equal>0</equal></condition>
-          </all>
-          <inc variable="status.bonus" />
-          <inc variable="status.lives" />
-          <play sound="extra" />
-        </condition>
-        <condition object="status" variable="score">
-          <above>best.score</above>
-          <copy variable="status.score" into="best.score" />
-        </condition>
-      </conditions>
-    </state>
-
-    <!-- READY! over the maze standing still, after a life is lost or a
-         round is cleared; and, with the opening tune, as a game begins -->
-    <state name="caught">
-      <objects>
-        <object name="ready">
-          <sprite>
-            <text style="prompt">
-              <content>READY!</content>
-              <color>color.yellow</color>
-            </text>
-          </sprite>
-          <position><x><centered /></x><y><centered>top + 17.5 * tile</centered></y></position>
-        </object>
-      </objects>
-      <shows>
-        <show state="playing" />
-      </shows>
-      <inputs>
-        <input><button>p</button><button>escape</button>
-          <push state="paused" />
-        </input>
-      </inputs>
-      <!-- a push starts the state's timers over, so it waits each time -->
-      <timers>
-        <timer name="wait">
-          <after>2</after>
-          <pop />
-        </timer>
-      </timers>
-    </state>
-    <state name="ready" from="caught">
-      <music sound="start" />
-      <timers>
-        <timer name="wait">
-          <after>4.3</after>
-          <pop />
-        </timer>
-      </timers>
-    </state>
-
-    <state name="paused">
-      <objects>
-        <object name="paused">
-          <sprite>
-            <text style="banner">
-              <content>PAUSED</content>
-              <color>color.white</color>
-            </text>
-          </sprite>
-          <position><x><centered /></x><y><centered /></y></position>
-        </object>
-      </objects>
-      <shows>
-        <show state="playing" />
-      </shows>
-      <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><button>pad1.start</button>
-          <pop />
-        </input>
-      </inputs>
-    </state>
-    <state name="gameover">
-      <objects>
-        <object name="gameover">
-          <sprite>
-            <text style="prompt">
-              <content>GAME  OVER</content>
-              <color>color.red</color>
-            </text>
-          </sprite>
-          <position><x><centered /></x><y><centered>top + 17.5 * tile</centered></y></position>
-        </object>
-        <object name="again">
-          <sprite>
-            <text style="hud">
-              <content>spacebar to play again</content>
-            </text>
-          </sprite>
-          <position><x><centered /></x><y><centered>window.height.center</centered></y></position>
-        </object>
-      </objects>
-      <shows>
-        <show state="playing" />
-      </shows>
-      <music sound="lose" />
-      <inputs>
-        <input><button>space</button><button>pad1.start</button>
-          <reset />
-        </input>
-      </inputs>
-    </state>
-  </states>
+  <pictures>
+    <!-- Pac-Man caught: his mouth opens until there is nothing left, then a pop -->
+    <bitmap name="dying-1">
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>**.........**</row>
+      <row>****.....****</row>
+      <row>******.******</row>
+      <row>*************</row>
+      <row>*************</row>
+      <row>*************</row>
+      <row>.***********.</row>
+      <row>..*********..</row>
+      <row>...*******...</row>
+      <scale>2</scale>
+      <color>color.yellow</color>
+    </bitmap>
+    <bitmap name="dying-2">
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>*************</row>
+      <row>*************</row>
+      <row>*************</row>
+      <row>.***********.</row>
+      <row>..*********..</row>
+      <row>...*******...</row>
+      <scale>2</scale>
+      <color>color.yellow</color>
+    </bitmap>
+    <bitmap name="dying-3">
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>......*......</row>
+      <row>....*****....</row>
+      <row>..*********..</row>
+      <row>.***********.</row>
+      <row>..*********..</row>
+      <row>...*******...</row>
+      <scale>2</scale>
+      <color>color.yellow</color>
+    </bitmap>
+    <bitmap name="dying-4">
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>......*......</row>
+      <row>......*......</row>
+      <row>.....***.....</row>
+      <row>....*****....</row>
+      <row>....*****....</row>
+      <row>...*******...</row>
+      <scale>2</scale>
+      <color>color.yellow</color>
+    </bitmap>
+    <bitmap name="dying-5">
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>......*......</row>
+      <row>......*......</row>
+      <row>......*......</row>
+      <row>......*......</row>
+      <row>......*......</row>
+      <row>......*......</row>
+      <scale>2</scale>
+      <color>color.yellow</color>
+    </bitmap>
+    <bitmap name="dying-pop">
+      <row>.............</row>
+      <row>......*......</row>
+      <row>..*...*...*..</row>
+      <row>...*.....*...</row>
+      <row>.............</row>
+      <row>.**.......**.</row>
+      <row>.............</row>
+      <row>...*.....*...</row>
+      <row>..*...*...*..</row>
+      <row>......*......</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <scale>2</scale>
+      <color>color.yellow</color>
+    </bitmap>
+    <bitmap name="walls">
+      <row>........</row>
+      <row>........</row>
+      <row>........</row>
+      <row>********</row>
+      <row>********</row>
+      <row>........</row>
+      <row>........</row>
+      <row>........</row>
+      <scale>2</scale>
+      <color>color.blue</color>
+    </bitmap>
+    <bitmap name="down">
+    <row>...**...</row>
+    <row>...**...</row>
+    <row>...**...</row>
+    <row>...**...</row>
+    <row>...**...</row>
+    <row>...**...</row>
+    <row>...**...</row>
+    <row>...**...</row>
+    </bitmap>
+    <bitmap name="topleft">
+    <row>........</row>
+    <row>........</row>
+    <row>........</row>
+    <row>.....***</row>
+    <row>....****</row>
+    <row>...**...</row>
+    <row>...**...</row>
+    <row>...**...</row>
+    </bitmap>
+    <bitmap name="topright">
+    <row>........</row>
+    <row>........</row>
+    <row>........</row>
+    <row>***.....</row>
+    <row>****....</row>
+    <row>...**...</row>
+    <row>...**...</row>
+    <row>...**...</row>
+    </bitmap>
+    <bitmap name="bottomleft">
+    <row>...**...</row>
+    <row>...**...</row>
+    <row>...**...</row>
+    <row>....****</row>
+    <row>.....***</row>
+    <row>........</row>
+    <row>........</row>
+    <row>........</row>
+    </bitmap>
+    <bitmap name="bottomright">
+    <row>...**...</row>
+    <row>...**...</row>
+    <row>...**...</row>
+    <row>****....</row>
+    <row>***.....</row>
+    <row>........</row>
+    <row>........</row>
+    <row>........</row>
+    </bitmap>
+    <bitmap name="teedown">
+    <row>........</row>
+    <row>........</row>
+    <row>........</row>
+    <row>********</row>
+    <row>********</row>
+    <row>...**...</row>
+    <row>...**...</row>
+    <row>...**...</row>
+    </bitmap>
+    <bitmap name="teeright">
+    <row>...**...</row>
+    <row>...**...</row>
+    <row>...**...</row>
+    <row>...*****</row>
+    <row>...*****</row>
+    <row>...**...</row>
+    <row>...**...</row>
+    <row>...**...</row>
+    </bitmap>
+    <bitmap name="teeleft">
+    <row>...**...</row>
+    <row>...**...</row>
+    <row>...**...</row>
+    <row>*****...</row>
+    <row>*****...</row>
+    <row>...**...</row>
+    <row>...**...</row>
+    <row>...**...</row>
+    </bitmap>
+    <bitmap name="endleft">
+    <row>........</row>
+    <row>........</row>
+    <row>........</row>
+    <row>...*****</row>
+    <row>...*****</row>
+    <row>........</row>
+    <row>........</row>
+    <row>........</row>
+    </bitmap>
+    <bitmap name="endright">
+    <row>........</row>
+    <row>........</row>
+    <row>........</row>
+    <row>*****...</row>
+    <row>*****...</row>
+    <row>........</row>
+    <row>........</row>
+    <row>........</row>
+    </bitmap>
+    <bitmap name="pellets-lit">
+      <row>..****..</row>
+      <row>.******.</row>
+      <row>********</row>
+      <row>********</row>
+      <row>********</row>
+      <row>********</row>
+      <row>.******.</row>
+      <row>..****..</row>
+      <scale>2</scale>
+      <color>color.orange</color>
+    </bitmap>
+    <bitmap name="pellets-dim">
+      <row>........</row>
+      <row>........</row>
+      <row>........</row>
+      <row>........</row>
+      <row>........</row>
+      <row>........</row>
+      <row>........</row>
+      <row>........</row>
+      <scale>2</scale>
+    </bitmap>
+    <bitmap name="fruit-cherry">
+      <row>..........g.</row>
+      <row>.........g..</row>
+      <row>.......gg...</row>
+      <row>.....gg.g...</row>
+      <row>....g....g..</row>
+      <row>..**g....g..</row>
+      <row>.****...***.</row>
+      <row>******.*****</row>
+      <row>*w****.*w***</row>
+      <row>******.*****</row>
+      <row>.****..*****</row>
+      <row>..**....***.</row>
+      <scale>2</scale>
+      <color>color.red</color>
+      <color char="w">color.white</color>
+      <color char="g">color.brown</color>
+    </bitmap>
+    <bitmap name="pacman-closed">
+      <row>....*****....</row>
+      <row>..*********..</row>
+      <row>.***********.</row>
+      <row>.***********.</row>
+      <row>*************</row>
+      <row>*************</row>
+      <row>*************</row>
+      <row>*************</row>
+      <row>*************</row>
+      <row>.***********.</row>
+      <row>.***********.</row>
+      <row>..*********..</row>
+      <row>....*****....</row>
+      <scale>2</scale>
+      <color>color.yellow</color>
+    </bitmap>
+    <bitmap name="pacman-half">
+      <row>.............</row>
+      <row>..**.....**..</row>
+      <row>.***.....***.</row>
+      <row>.****...****.</row>
+      <row>*****...*****</row>
+      <row>******.******</row>
+      <row>*************</row>
+      <row>*************</row>
+      <row>*************</row>
+      <row>.***********.</row>
+      <row>.***********.</row>
+      <row>..*********..</row>
+      <row>....*****....</row>
+      <scale>2</scale>
+      <color>color.yellow</color>
+    </bitmap>
+    <bitmap name="pacman-open">
+      <row>.............</row>
+      <row>.............</row>
+      <row>.............</row>
+      <row>.**.......**.</row>
+      <row>****.....****</row>
+      <row>*****...*****</row>
+      <row>*************</row>
+      <row>*************</row>
+      <row>*************</row>
+      <row>.***********.</row>
+      <row>.***********.</row>
+      <row>..*********..</row>
+      <row>....*****....</row>
+      <scale>2</scale>
+      <color>color.yellow</color>
+    </bitmap>
+    <bitmap name="ghosts-normal">
+      <row>.....****.....</row>
+      <row>...********...</row>
+      <row>..**********..</row>
+      <row>.*wwww**wwww*.</row>
+      <row>.*wwww**wwww*.</row>
+      <row>**wbbw**wbbw**</row>
+      <row>**wbbw**wbbw**</row>
+      <row>***ww****ww***</row>
+      <row>**************</row>
+      <row>**************</row>
+      <row>**************</row>
+      <row>**************</row>
+      <row>**.***..***.**</row>
+      <row>*...**..**...*</row>
+      <scale>2</scale>
+      <color>color.red</color>
+      <color char="w">color.white</color>
+      <color char="b">color.darkblue</color>
+    </bitmap>
+    <bitmap name="ghosts-blue">
+      <row>.....****.....</row>
+      <row>...********...</row>
+      <row>..**********..</row>
+      <row>.************.</row>
+      <row>.************.</row>
+      <row>****ww**ww****</row>
+      <row>****ww**ww****</row>
+      <row>**************</row>
+      <row>**************</row>
+      <row>*w**ww**ww**w*</row>
+      <row>**ww**ww**ww**</row>
+      <row>**************</row>
+      <row>**.***..***.**</row>
+      <row>*...**..**...*</row>
+      <scale>2</scale>
+      <color>color.blue</color>
+      <color char="w">color.white</color>
+    </bitmap>
+    <bitmap name="ghosts-eyes">
+      <row>..............</row>
+      <row>..............</row>
+      <row>..............</row>
+      <row>..wwww..wwww..</row>
+      <row>..wwww..wwww..</row>
+      <row>..wbbw..wbbw..</row>
+      <row>..wbbw..wbbw..</row>
+      <row>...ww....ww...</row>
+      <row>..............</row>
+      <row>..............</row>
+      <row>..............</row>
+      <row>..............</row>
+      <row>..............</row>
+      <row>..............</row>
+      <scale>2</scale>
+      <color>color.white</color>
+      <color char="w">color.white</color>
+      <color char="b">color.darkblue</color>
+    </bitmap>
+  </pictures>
 </game>

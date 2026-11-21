@@ -16,6 +16,8 @@
 
 namespace xge
 {
+	class Resources;
+
 	// A picture the engine draws itself, pixel by pixel, with no window or
 	// graphics library involved: what a sprite made of <line>s is turned into
 	// when the game loads. The backends upload `rgba` as a texture, and a
@@ -51,6 +53,44 @@ namespace xge
 		}
 	};
 
+	// A picture held by a game's Resources (engine/resources.h), as an object
+	// holds it: one pointer to where the Resources keep it, read as the
+	// Bitmap itself (`*id`, `id->width`), the same id for every object that
+	// shows that picture. The default is none. An id is never given to
+	// another picture while the game is loaded; one object's own picture (a
+	// holed one, a tether's line) reads as empty once it is released.
+	class PictureId
+	{
+	public:
+		PictureId() = default;
+
+		explicit operator bool() const noexcept { return held != nullptr; }
+		const Bitmap* get() const noexcept { return held ? held->bitmap.get() : nullptr; }
+		const Bitmap& operator*() const noexcept { return *get(); }
+		const Bitmap* operator->() const noexcept { return get(); }
+		// Its number in the Resources (1 up; 0 for none), what a window
+		// keeps a texture by.
+		std::uint32_t index() const noexcept { return held ? held->index : 0; }
+		// How many times one object's own picture has been drawn again in
+		// place (Resources::replace): a window's texture of it made at
+		// another is stale. Always 0 for a shared picture.
+		std::uint32_t version() const noexcept { return held ? held->version : 0; }
+
+		friend bool operator==(PictureId a, PictureId b) noexcept { return a.held == b.held; }
+		friend bool operator<(PictureId a, PictureId b) noexcept { return a.index() < b.index(); }
+
+	private:
+		friend class Resources;
+		struct Held
+		{
+			std::shared_ptr<const Bitmap> bitmap;
+			std::uint32_t index{};
+			std::uint32_t version{};
+		};
+		explicit PictureId(const Held* kept) noexcept : held(kept) {}
+		const Held* held{ nullptr };
+	};
+
 	// One straight line to draw, in pixels from the top left of the sprite.
 	struct LineSegment
 	{
@@ -66,6 +106,12 @@ namespace xge
 		// pixels of another at a slant, which matters to a pixel collision).
 		int thickness{ 1 };
 	};
+
+	// The largest side of any picture the engine makes, far beyond any screen.
+	// refusePictureSize throws std::invalid_argument for a larger one, before
+	// anything is allocated: a damaged size of 1e9 would ask for gigabytes.
+	constexpr int kLargestPictureSide = 4096;
+	void refusePictureSize(double width, double height, const std::string& what);
 
 	// Draws the lines, in the order given (a later one covers an earlier one
 	// where they meet), onto a transparent bitmap just large enough to hold
@@ -150,20 +196,21 @@ namespace xge
 	struct Turnable
 	{
 		std::vector<LineSegment> lines;
-		std::shared_ptr<const Bitmap> picture;
+		PictureId picture;
 
-		// The drawing at each whole degree a sweep through a turn has asked
-		// for, kept (turnedTo): a swing goes through the same few each time.
-		mutable std::map<int, std::shared_ptr<const Bitmap>> kept;
+		// Where its turned drawings are kept, and the key of the drawing
+		// they are turned from (everything that decides its pixels).
+		Resources* resources{ nullptr };
+		std::string key;
+		// Which of them it has asked for, so a turn does not spell the key
+		// again.
+		mutable std::map<int, PictureId> asked;
 
-		// The drawing at a whole number of degrees, as at() draws it, made
-		// once and kept.
-		const Bitmap& turnedTo(int degrees) const
-		{
-			std::shared_ptr<const Bitmap>& turned = kept[degrees];
-			if (!turned) { turned = std::make_shared<const Bitmap>(at(static_cast<float>(degrees))); }
-			return *turned;
-		}
+		// The drawing at a whole number of degrees, as at() draws it: made
+		// once by the game's Resources for every object that turns this
+		// drawing (engine/resources.cpp), so a swing or a block of turning
+		// ships goes through the same few.
+		PictureId turned(int degrees) const;
 
 		// The drawing at the heading: the lines turned if there are lines,
 		// otherwise the picture turned.

@@ -26,14 +26,8 @@ namespace xge
 	class Engine
 	{
 	public:
-		// backend picks which Window implementation actually opens (SFML3,
-		// Raylib, SDL2 or OpenGL - see window/window.h), and audioBackend which Audio
-		// plays the game's sounds (SFML3, Raylib, SDL2 or None - see audio/audio.h);
-		// both default to SFML3, or the first one built when SFML 3 is not (see
-		// WindowFactory::defaultBackend), so existing callers don't have to name one. A
-		// window that cannot be made throws; sound that cannot start is not
-		// worth stopping a game for, so it prints a warning and the game plays
-		// silently (NullAudio).
+		// A window that cannot be made throws; sound that cannot start is
+		// warned of, and the game plays silent.
 		explicit Engine(Game& game, WindowBackend backend = WindowFactory::defaultBackend(), AudioBackend audioBackend = AudioFactory::defaultBackend());
 
 		// Same, but with an already-built Window (and Audio) - what lets a test
@@ -47,7 +41,15 @@ namespace xge
 		Engine(const Engine&) = delete;
 		Engine& operator=(const Engine&) = delete;
 
-		void loop(void);
+		// Plays the game until the window closes: each frame input(), then
+		// update() by the time that passed (at most kLongestStep), then
+		// render() (the window waits for the screen's refresh). At most
+		// <framerate> frames a second, or what setFramerate gave.
+		void run(void);
+
+		// The most frames a second run() plays, in place of the game's
+		// <framerate> (xgecli --framerate).
+		void setFramerate(int framesASecond) noexcept { mostFrames = framesASecond; }
 
 		// Records the game being played, for its attract mode: a new game
 		// starts now, with random numbers drawn from a seed picked here, and
@@ -55,7 +57,15 @@ namespace xge
 		// happened in. recorded() is what was played so far, as a <demo>
 		// (xgecli --record writes it into the game file when it closes).
 		void record(void);
-		RawDemo recorded(void) const;
+		WrittenDemo recorded(void) const;
+
+		// Plays a recording's keys back (xgecli --keys): a new game starts
+		// now from the recording's seed, as record() started the one it was
+		// made from, and every frame from here presses and lets go each of
+		// its keys in the frame it was recorded in, beside any the window
+		// reports. Frames the game's own demo plays in are not counted, as
+		// they were not while recording.
+		void replay(const WrittenDemo& demo);
 
 		// Whether the game's <demo> is playing (a <demo /> asked for it):
 		// a new game started from the demo's seed, played by its recorded
@@ -82,48 +92,44 @@ namespace xge
 		// Never null: NullAudio when there is no sound.
 		Audio* currentAudio(void) noexcept { return audio.get(); }
 
-		// Swaps the Audio for another while the game is running, as
-		// replaceWindow() does the Window: the old one is destroyed first, then
-		// `create` is called and the game's sounds are loaded into the new one.
-		// If `create` throws (or gives nullptr), the game carries on silently
-		// with NullAudio, and the exception is passed on so the caller can say
-		// so.
+		// The old one goes first. If `create` throws or gives null, the game
+		// plays silent and the exception is passed on.
 		void replaceAudio(const std::function<std::unique_ptr<Audio>()>& create);
 
 		// Stops every sound that is playing: for a front end pausing the game.
 		void silence(void);
 
-		// Swaps the Window for another while the game is running: the old one
-		// is destroyed first (some libraries can only have one window at a
-		// time), then `create` is called for the new one, and every object's
-		// picture is built again for it. Nothing about the game changes - not
-		// the objects, the values, or the state the game is in - and the keys
-		// held stay held. If `create` throws, the engine has no window and can
-		// only be given one by calling this again (or destroyed); step() and
-		// render() throw std::logic_error until then.
+		// The old one goes first (some libraries allow one window at a time);
+		// the game and the keys held are untouched. If `create` throws, there
+		// is no window, and input(), update() and render() throw
+		// std::logic_error until another is given.
 		void replaceWindow(const std::function<std::unique_ptr<Window>()>& create);
 
-		// What loop() does each frame, split in two so a front end that owns
-		// the event loop (the Qt application, xgegui) can run the engine from
-		// its own timer instead of handing control to loop(). step() is the
-		// simulation: it reads the keys, moves everything, checks the
-		// conditions, and plays the sounds the frame asked for. render() draws the current picture without moving
+		// What run() does each frame, for a front end that owns the event
+		// loop (the Qt application, xgegui) and runs the engine from its own
+		// timer, and for the tests. input() takes what came from outside: the
+		// window's keys, the mouse and pads, a demo's or a replay's keys.
+		// update() is the game's step of `seconds`: the computer's presses and
+		// held keys, everything moved and checked, the sounds it asked for,
+		// what it keeps. render() draws the current picture without moving
 		// anything, so a paused game can be redrawn after its values are edited.
-		void step(void);
+		void input(void);
+		void update(float seconds);
 		void render(void);
 
 		// Lets the window deal with its own events (move, resize, close)
 		// without playing a frame: for a front end that has paused the game
 		// but keeps its window alive. The keys it reports are held back and
-		// handled by the next step(), so none is lost or reaches the game
+		// handled by the next input(), so none is lost or reaches the game
 		// while it is not running.
 		void pump(void);
 
-		// TODO: make handleKeyPressed and handleKeyReleased private
+		// A key going down or up, as the window reports it; public so the
+		// tests can press keys the same way.
 		void handleKeyPressed(KeyCode key);
 		void handleKeyReleased(KeyCode key);
 
-		// The mouse and the pads as the window sees them now (step() asks it
+		// The mouse and the pads as the window sees them now (input() asks it
 		// every frame): a button that went down or up is pressed or released
 		// as a key is (KeyCode::MouseLeft, Pad1A...; a pad's direction is its
 		// d-pad or its stick past halfway), and a control that moved runs the
@@ -138,7 +144,10 @@ namespace xge
 		std::unique_ptr<Window> window;
 		std::unique_ptr<Audio> audio;
 
-		// Key changes pump() took from the window that step() has not handled yet.
+		// When the window's pictures are drawn again at its size (render).
+		SettledFit settledFit;
+
+		// Key changes pump() took from the window that input() has not handled yet.
 		std::vector<std::pair<KeyCode, bool>> pumpedKeys;
 
 		// Which keys are down; a repeated press of a held key is not a new one.
@@ -174,6 +183,8 @@ namespace xge
 		// Runs commands as one press each, as a key's press runs its own,
 		// stopping at a refused one or a turn's end.
 		void runAsPress(const std::vector<Command>& commands);
+		// runAsPress's commands, between CellMaps::pressBegins and pressEnds.
+		void runPress(const std::vector<Command>& commands);
 
 		// Sends the release to everything the held keys are driving, and
 		// forgets it; the keys stay down.
@@ -182,39 +193,45 @@ namespace xge
 		// Game::stateChangeCount() as of the last syncHeldKeysToState().
 		unsigned long syncedStateChanges = 0;
 
-		// The current state decides what a held key means: when the state has
-		// changed, releases what the held keys were driving in the old one and
-		// resumes the new state's continuous bindings (an action's move.*) for
-		// the keys still down - so a paddle stops while a state that does not
-		// bind its key is up and moves again on return, with no re-press. A
-		// key's state-changing or one-shot commands are never resumed, only
-		// run on a real press (otherwise holding Space through a menu would
-		// pause the game the moment it started).
+		// After a state change: what held keys drove in the old state is let
+		// go, and the new state's continuous bindings (moves) for keys still
+		// down resume, so a paddle moves again on return with no new press.
+		// One-shot commands only ever run on a real press, or Space held
+		// through a menu would pause the game as it began.
 		void syncHeldKeysToState();
 
 		// Throws std::logic_error when there is no window (see replaceWindow).
 		void requireWindow(void) const;
 
-		// Plays what the game asked for this frame (Game::requestSound), stops
+		// Plays what the game asked for this frame (Sounds::request), stops
 		// what it silenced, and keeps its looping sounds playing.
 		void playRequestedSounds(void);
 
 		// Recording (record()): its seed, the frames played since, and the keys.
 		bool recording = false;
-		RawDemo recordedSoFar;
+		WrittenDemo recordedSoFar;
 
 		// Playing the demo: the frame of it reached, the next key of it to
 		// press or let go, and what the game kept before it started.
 		bool demoPlaying = false;
+		// setFramerate's, or 0 for the game's own.
+		int mostFrames = 0;
 		unsigned int demoFrame = 0;
 
 		// The buttons the state's <computer> is holding down, which it presses
 		// and lets go as a player would, and is not recorded doing.
 		std::set<KeyCode> computerHeld;
 		bool computerPressing = false;
-		void playComputer(void);
+		void playComputer(float seconds);
 		std::size_t demoNext = 0;
 		std::string keptBeforeDemo;
+
+		// Playing a recording back (replay()): its keys, the frame of it
+		// reached, and the next key to press or let go.
+		bool replaying = false;
+		WrittenDemo replayed;
+		unsigned int replayFrame = 0;
+		std::size_t replayNext = 0;
 		void startDemo(void);
 		void stopDemo(void);
 		void releaseHeldKeys(void);

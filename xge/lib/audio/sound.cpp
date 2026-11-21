@@ -5,8 +5,12 @@
 
 #include "audio/sound.h"
 
+#include "audio/wave.h"
+
 #include <algorithm>
 #include <cctype>
+#include <charconv>
+#include <iterator>
 #include <cmath>
 #include <cstdlib>
 
@@ -204,6 +208,7 @@ namespace xge
 				double envelope = 1.0;
 				if (fade > 0 && i < fade) { envelope = static_cast<double>(i) / static_cast<double>(fade); }
 				else if (fade > 0 && i >= count - fade) { envelope = static_cast<double>(count - 1 - i) / static_cast<double>(fade); }
+				if (note.decay > 0.0f) { envelope *= std::max(0.0, 1.0 - static_cast<double>(i) / (static_cast<double>(note.decay) * sampleRate)); }
 
 				mix[at + i] += value * envelope * volume;
 			}
@@ -219,9 +224,46 @@ namespace xge
 		return samples;
 	}
 
+	std::vector<std::int16_t> samplesOf(const SoundDesc& sound)
+	{
+		if (sound.path.empty()) { return synthesize(sound); }
+
+		std::vector<std::int16_t> samples = readWave(sound.path);
+		const double volume = std::clamp(static_cast<double>(sound.volume), 0.0, 1.0);
+		for (std::int16_t& sample : samples)
+		{
+			sample = static_cast<std::int16_t>(std::lround(sample * volume));
+		}
+		return samples;
+	}
+
+	namespace
+	{
+		std::string exactly(float value)
+		{
+			char text[32];
+			const auto written = std::to_chars(std::begin(text), std::end(text), value);
+			return std::string(text, written.ptr);
+		}
+	}
+
+	std::string soundKey(const SoundDesc& sound)
+	{
+		std::string key = exactly(sound.volume);
+		if (!sound.path.empty()) { return key + "|file|" + sound.path; }
+		for (const SoundNote& note : sound.notes)
+		{
+			key += note.rest ? "|rest " : "|" + waveformName(note.wave) + " " + exactly(note.startHz) + " " + exactly(note.endHz) + " " + exactly(note.decay) + " ";
+			key += exactly(note.seconds) + " part " + std::to_string(note.part);
+		}
+		return key;
+	}
+
 	std::ostream& operator<<(std::ostream& o, const SoundDesc& sound)
 	{
-		o << "sound: name=" << sound.name << (sound.loop ? ", loop" : "") << ", volume=" << sound.volume << ", notes=";
+		o << "sound: name=" << sound.name << (sound.loop ? ", loop" : "") << ", volume=" << sound.volume;
+		if (!sound.path.empty()) { return o << ", path=" << sound.path; }
+		o << ", notes=";
 
 		for (std::size_t i = 0; i < sound.notes.size(); ++i)
 		{
@@ -237,7 +279,9 @@ namespace xge
 
 			o << waveformName(note.wave) << "(" << note.startHz;
 			if (note.endHz != note.startHz) { o << "->" << note.endHz; }
-			o << "Hz, " << note.seconds << ")";
+			o << "Hz, " << note.seconds;
+			if (note.decay > 0.0f) { o << ", decay " << note.decay; }
+			o << ")";
 		}
 
 		return o;

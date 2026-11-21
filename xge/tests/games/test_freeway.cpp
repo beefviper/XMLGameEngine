@@ -1,0 +1,427 @@
+// test_freeway.cpp
+// XML Game Engine
+// author: beefviper
+// date: Sept 30, 2026
+//
+// Catch2 tests for games/descriptions/freeway.xml, played frame by frame by a real
+// xge::Game with no window. Freeway is written with verbs the language already
+// had (hop, wrap, reset, inc, an atleast condition), so these tests are about
+// the game those make up: two chickens crossing ten lanes of traffic as often
+// as they can before the clock runs out; a chicken hit is knocked back a lane.
+//
+// Window::init() normally measures each object's size once a backend exists;
+// measure() gives every shape the size its sprite implies instead.
+
+#include "play/executor.h"
+#include "engine/engine.h"
+#include "game/game.h"
+#include "window/null.h"
+
+#include <catch2/catch_test_macros.hpp>
+
+#include <memory>
+#include <string>
+#include <vector>
+
+using namespace xge;
+
+namespace
+{
+	constexpr float kCell = 50.0f;
+	constexpr float kInset = 9.0f;
+	constexpr float kWindowWidth = 800.0f;
+
+	void measure(Game& game)
+	{
+		for (auto& object : game.getCurrentObjects())
+		{
+			object.size = measureShapeSize(object.drawn.picture);
+		}
+	}
+
+	// The top of a chicken standing in a row.
+	float rowY(int row) { return static_cast<float>(row) * kCell + kInset; }
+	// The top of the cars in a lane.
+	float laneY(int row) { return static_cast<float>(row) * kCell + 11.0f; }
+
+	struct Table
+	{
+		Game game{ "descriptions/freeway.xml" };
+		CommandExecutor executor{ game };
+
+		Table()
+		{
+			measure(game);
+			game.setCurrentState("playing");
+		}
+
+		Object& chicken(int player) { return game.object("chicken" + std::to_string(player)); }
+		float score(int player) { return chicken(player).variable.at("score"); }
+
+		void hop(int player, const char* direction)
+		{
+			const std::string name = "chicken" + std::to_string(player);
+			executor.executeInput(Command{ CmdTriggerAction{ name, direction } }, true);
+			executor.executeInput(Command{ CmdTriggerAction{ name, direction } }, false);
+		}
+
+		void timeUp(float one, float two)
+		{
+			chicken(1).variable.at("score") = one;
+			chicken(2).variable.at("score") = two;
+			game.object("clock").variable.at("seconds") = 0.0f;
+			frames(2);
+		}
+
+		void frames(int count)
+		{
+			for (int i = 0; i < count; ++i) { game.updateObjects(xge::kSixtieth); }
+		}
+
+		// Every car and truck parked far off to the left, so a test about the
+		// chickens is not about the traffic.
+		void clearTraffic()
+		{
+			for (auto& object : game.getCurrentObjects())
+			{
+				if (object.objClass == "traffic")
+				{
+					object.position.x = -5000.0f;
+					object.velocity = { 0.0f, 0.0f };
+				}
+			}
+		}
+
+		bool atStart(int player)
+		{
+			return chicken(player).position.x == game.startOf(chicken(player)).position.x
+				&& chicken(player).position.y == game.startOf(chicken(player)).position.y;
+		}
+	};
+
+}
+
+TEST_CASE("freeway.xml loads two chickens at the bottom and ten lanes of traffic", "[freeway]")
+{
+	Table table;
+
+	CHECK(table.score(1) == 0.0f);
+	CHECK(table.score(2) == 0.0f);
+	CHECK(table.chicken(1).position.y == rowY(11));
+	CHECK(table.chicken(2).position.y == rowY(11));
+	// Each in its own half of the road.
+	CHECK(table.chicken(1).position.x + table.chicken(1).size.x / 2.0f == kWindowWidth / 4.0f);
+	CHECK(table.chicken(2).position.x + table.chicken(2).size.x / 2.0f == kWindowWidth * 3.0f / 4.0f);
+
+	int traffic = 0;
+	for (const auto& object : table.game.getCurrentObjects())
+	{
+		if (object.objClass == "traffic") { ++traffic; }
+	}
+	CHECK(traffic == 2 * 2 + 8 * 3); // two lanes of two trucks, eight of three cars
+}
+
+TEST_CASE("each lane sits in its own row, the top five driving left and the bottom five right", "[freeway]")
+{
+	Table table;
+
+	for (int row = 1; row <= 10; ++row)
+	{
+		const std::string lane = "lane" + std::to_string(row);
+		const Object& first = table.game.object(lane + ".1.1");
+		INFO(lane);
+		CHECK(first.position.y == laneY(row));
+		CHECK(first.velocity.y == 0.0f);
+		CHECK((first.velocity.x < 0.0f) == (row <= 5));
+
+		// Everything in a lane shares its row and speed.
+		for (int member = 2; member <= 3; ++member)
+		{
+			const std::string name = lane + "." + std::to_string(member) + ".1";
+			bool found = false;
+			for (const auto& object : table.game.getCurrentObjects())
+			{
+				if (object.name == "playing." + name) { found = true; } // the playing state's own
+			}
+			if (!found) { continue; }
+			const Object& other = table.game.object(name);
+			CHECK(other.position.y == first.position.y);
+			CHECK(other.velocity.x == first.velocity.x);
+		}
+	}
+}
+
+TEST_CASE("traffic loops: a car that has left one side comes in from the other", "[freeway][wrap]")
+{
+	Table table;
+
+	// Lane 7 heads right, lane 1 heads left.
+	Object& rightward = table.game.object("lane7.1.1");
+	rightward.position.x = kWindowWidth + 1.0f; // completely off the right side
+	Object& leftward = table.game.object("lane1.1.1");
+	leftward.position.x = -leftward.size.x - 1.0f; // completely off the left side
+	table.frames(1);
+
+	CHECK(rightward.position.x < 0.0f);
+	CHECK(leftward.position.x > kWindowWidth - leftward.size.x - 10.0f);
+}
+
+TEST_CASE("a hop is one lane, once, and the bottom edge refuses it", "[freeway][hop]")
+{
+	Table table;
+	table.clearTraffic();
+
+	table.hop(1, "up");
+	table.frames(1);
+	CHECK(table.chicken(1).position.y == rowY(10));
+	table.frames(10);
+	CHECK(table.chicken(1).position.y == rowY(10)); // nothing keeps it going
+
+	table.hop(1, "down");
+	table.frames(1);
+	CHECK(table.chicken(1).position.y == rowY(11));
+
+	table.hop(1, "down"); // nothing below the start
+	table.frames(1);
+	CHECK(table.chicken(1).position.y == rowY(11));
+}
+
+TEST_CASE("the chickens are driven separately", "[freeway][hop]")
+{
+	Table table;
+	table.clearTraffic();
+
+	table.hop(2, "up");
+	table.frames(1);
+	CHECK(table.chicken(2).position.y == rowY(10));
+	CHECK(table.chicken(1).position.y == rowY(11));
+
+	table.hop(1, "up");
+	table.hop(1, "up");
+	table.frames(1); // two hops in one frame keep the later one
+	CHECK(table.chicken(1).position.y == rowY(10));
+	CHECK(table.chicken(2).position.y == rowY(10));
+}
+
+TEST_CASE("crossing scores a point and sends the chicken back to the start", "[freeway]")
+{
+	Table table;
+	table.clearTraffic();
+
+	table.chicken(1).position.y = rowY(1);
+	table.hop(1, "up");
+	table.frames(1);
+
+	CHECK(table.score(1) == 1.0f);
+	CHECK(table.score(2) == 0.0f);
+	CHECK(table.atStart(1));
+	CHECK(table.game.object("score1").drawn.picture->text == "1");
+	CHECK(table.game.object("score2").drawn.picture->text == "0");
+	CHECK(table.game.getCurrentState().name == "playing");
+}
+
+TEST_CASE("being hit knocks the chicken back a lane and costs nothing else", "[freeway]")
+{
+	Table table;
+	table.clearTraffic();
+	table.chicken(2).variable.at("score") = 3.0f;
+
+	// Halfway across, with a car of lane 5 on top of it.
+	table.chicken(2).position.y = rowY(5);
+	// (A pair in which nothing moves is not looked at, so the car keeps its lane's speed.)
+	Object& car = table.game.object("lane5.1.1");
+	car.position.x = table.chicken(2).position.x;
+	car.velocity.x = -180.0f;
+	table.frames(1);
+
+	CHECK(table.chicken(2).position.y == rowY(6));
+	CHECK(table.score(2) == 3.0f);
+	CHECK(table.score(1) == 0.0f);
+	CHECK(table.game.getCurrentState().name == "playing");
+}
+
+TEST_CASE("a hop onto a lane where a car is waiting is a hit", "[freeway][hop]")
+{
+	Table table;
+	table.clearTraffic();
+
+	Object& car = table.game.object("lane10.1.1");
+	car.position.x = table.chicken(1).position.x - 5.0f; // over the chicken's column
+	car.velocity = { 0.0f, 0.0f };
+	table.hop(1, "up");
+	table.frames(1);
+
+	CHECK(table.atStart(1)); // it landed in the car's lane and was knocked straight back
+}
+
+TEST_CASE("the two chickens do not get in each other's way", "[freeway]")
+{
+	Table table;
+	table.clearTraffic();
+
+	table.chicken(2).position = table.chicken(1).position;
+	table.frames(5);
+
+	CHECK(table.chicken(1).position.y == rowY(11));
+	CHECK(table.chicken(2).position.y == rowY(11));
+	CHECK(table.score(1) == 0.0f);
+	CHECK(table.score(2) == 0.0f);
+}
+
+TEST_CASE("the clock counts down from 136, and the one with more crossings wins when it runs out", "[freeway]")
+{
+	{
+		Table table;
+		table.clearTraffic();
+		CHECK(table.game.object("clock").variable.at("seconds") == 136.0f);
+		table.frames(60);
+		CHECK(table.game.object("clock").variable.at("seconds") == 135.0f);
+		CHECK(table.game.getCurrentState().name == "playing");
+	}
+	{
+		Table table;
+		table.clearTraffic();
+		table.timeUp(4.0f, 2.0f);
+		CHECK(table.game.getCurrentState().name == "over");
+		CHECK(table.game.object("over.winner").lookName() == "player1");
+	}
+	{
+		Table table;
+		table.clearTraffic();
+		table.timeUp(1.0f, 3.0f);
+		CHECK(table.game.getCurrentState().name == "over");
+		CHECK(table.game.object("over.winner").lookName() == "player2");
+	}
+	{
+		Table table;
+		table.clearTraffic();
+		table.timeUp(2.0f, 2.0f);
+		CHECK(table.game.getCurrentState().name == "over");
+		CHECK(table.game.object("over.winner").lookName() == "draw");
+	}
+}
+
+TEST_CASE("space starts a new game from the end screen, with both scores and the clock back", "[freeway]")
+{
+	Table table;
+	table.clearTraffic();
+	table.timeUp(2.0f, 4.0f);
+	REQUIRE(table.game.getCurrentState().name == "over");
+
+	table.executor.executeInput(Command{ CmdReset{} }, true);
+
+	CHECK(table.game.getCurrentState().name == "title");
+	CHECK(table.score(1) == 0.0f);
+	CHECK(table.score(2) == 0.0f);
+	CHECK(table.game.object("score1").drawn.picture->text == "0");
+	CHECK(table.game.object("score2").drawn.picture->text == "0");
+	CHECK(table.game.object("clock").variable.at("seconds") == 136.0f);
+	CHECK(table.game.object("over.winner").lookName() == "draw");
+}
+
+TEST_CASE("the keys drive the right chicken through the whole game", "[freeway][engine_input]")
+{
+	Game game{ "descriptions/freeway.xml" };
+	measure(game);
+	Engine engine(game, std::make_unique<NullWindow>());
+
+	engine.handleKeyPressed(KeyCode::Space); // title -> playing
+	REQUIRE(game.getCurrentState().name == "playing");
+	for (auto& object : game.getCurrentObjects())
+	{
+		if (object.objClass == "traffic") { object.position.x = -5000.0f; object.velocity = { 0.0f, 0.0f }; }
+	}
+
+	Object& one = game.object("chicken1");
+	Object& two = game.object("chicken2");
+
+	engine.handleKeyPressed(KeyCode::W);
+	engine.handleKeyReleased(KeyCode::W);
+	game.updateObjects(xge::kSixtieth);
+	CHECK(one.position.y == rowY(10));
+	CHECK(two.position.y == rowY(11));
+
+	engine.handleKeyPressed(KeyCode::Up);
+	engine.handleKeyReleased(KeyCode::Up);
+	game.updateObjects(xge::kSixtieth);
+	CHECK(two.position.y == rowY(10));
+	CHECK(one.position.y == rowY(10));
+
+	engine.handleKeyPressed(KeyCode::S);
+	engine.handleKeyReleased(KeyCode::S);
+	engine.handleKeyPressed(KeyCode::Down);
+	engine.handleKeyReleased(KeyCode::Down);
+	game.updateObjects(xge::kSixtieth);
+	CHECK(one.position.y == rowY(11));
+	CHECK(two.position.y == rowY(11));
+
+	engine.handleKeyPressed(KeyCode::Pause);
+	engine.handleKeyReleased(KeyCode::Pause);
+	CHECK(game.getCurrentState().name == "paused");
+	engine.handleKeyPressed(KeyCode::Pause);
+	engine.handleKeyReleased(KeyCode::Pause);
+	CHECK(game.getCurrentState().name == "playing");
+}
+
+TEST_CASE("a chicken that just keeps hopping up is hit by the traffic", "[freeway][play]")
+{
+	// Not a skilled player: hop up five times a second for a minute. Nothing
+	// waits for a gap, so the traffic must knock it back at least once, or the
+	// lanes are empty.
+	Table table;
+	int hits = 0;
+	int crossings = 0;
+	for (int frame = 0; frame < 60 * 60; ++frame)
+	{
+		const float previousY = table.chicken(1).position.y;
+		const float previousScore = table.score(1);
+		if (frame % 12 == 0) { table.hop(1, "up"); }
+		table.frames(1);
+		if (table.score(1) > previousScore) { ++crossings; }
+		else if (table.chicken(1).position.y > previousY) { ++hits; } // knocked back
+		if (table.game.getCurrentState().name != "playing") { break; }
+	}
+
+	CHECK(hits > 0);
+	CHECK(hits + crossings > 0);
+}
+
+TEST_CASE("each state has its own objects: the title, the road, the signs", "[freeway][states]")
+{
+	Game game{ "descriptions/freeway.xml" };
+	game.setCurrentState("title");
+	CHECK(game.isShown(game.object("help.2")));
+	CHECK_FALSE(game.isShown(game.object("chicken1")));
+
+	game.pushState("playing");
+	CHECK(game.object("chicken1").name == "playing.chicken1");
+	CHECK(game.object("lane5.1.1").name == "playing.lane5.1.1");
+	CHECK(game.isShown(game.object("lane5.1.1")));
+	CHECK(game.isShown(game.object("score1")));
+	CHECK_FALSE(game.isShown(game.object("help.2")));
+}
+
+TEST_CASE("paused and the endings draw the road still underneath, scores and all", "[freeway][states]")
+{
+	Table table;
+	Object& car = table.game.object("lane2.1.1"); // a truck, -1.5 a frame
+	const float x = car.position.x;
+
+	table.game.pushState("paused");
+	table.frames(30);
+	CHECK(car.position.x == x);
+	CHECK(table.game.isStill(car));
+	CHECK(table.game.isStill(table.chicken(1)));
+	CHECK(table.game.isShown(table.game.object("paused.paused")));
+	table.game.popState();
+	CHECK(table.game.isShown(car));
+
+	table.timeUp(5.0f, 0.0f);
+	REQUIRE(table.game.getCurrentState().name == "over");
+	CHECK(table.game.isStill(table.game.object("score1")));
+	CHECK(table.game.isStill(table.game.object("score2")));
+	CHECK(table.game.isStill(car));
+	CHECK(table.game.isShown(table.game.object("over.winner")));
+	CHECK(table.game.object("over.winner").lookName() == "player1");
+	CHECK(table.game.isShown(table.game.object("over.again")));
+}

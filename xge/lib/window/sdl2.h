@@ -8,22 +8,12 @@
 #include "window/window.h"
 
 #include <SDL.h>
-#include <SDL_image.h>
-#include <SDL_ttf.h>
 
 #include <array>
 #include <unordered_map>
-#include <unordered_set>
 
 namespace xge
 {
-	// The SDL2 Window backend (+ SDL2_ttf for text, SDL2_image for image
-	// loading - plain SDL2 has neither). Nothing outside this file,
-	// window/sdl2.cpp, and WindowFactory::create (the one place that
-	// constructs one) ever names an SDL type - see window/window.h. Same
-	// bake-once-then-rebuild-on-visualDirty architecture as SFMLWindow and
-	// RaylibWindow, built on SDL_Texture render targets instead of
-	// sf::RenderTexture/RenderTexture2D.
 	class SDL2Window : public Window
 	{
 	public:
@@ -43,24 +33,17 @@ namespace xge
 		void prepare(Object& object) override;
 		void draw(Object& object) override;
 		void display() override;
+		float fit() const override;
+		Bitmap capture() override;
 
 	private:
-		// Circle/rectangle are drawn straight into this texture (as an
-		// SDL_TEXTUREACCESS_TARGET); text/image instead replace it outright
-		// with a texture built from an SDL_ttf/SDL2_image surface - either
-		// way, draw() only ever needs the finished texture (+ how to flip it
-		// for an image asked to mirror).
+		// What an object shows: the texture of its picture, which objects
+		// showing the same picture share (none for an empty picture).
 		struct CachedVisual
 		{
 			SDL_Texture* texture{ nullptr };
-			SDL_RendererFlip flip{ SDL_FLIP_NONE };
-
-			CachedVisual() = default;
-			~CachedVisual() { if (texture) { SDL_DestroyTexture(texture); } }
-			CachedVisual(const CachedVisual&) = delete;
-			CachedVisual& operator=(const CachedVisual&) = delete;
-			CachedVisual(CachedVisual&&) = delete;
-			CachedVisual& operator=(CachedVisual&&) = delete;
+			float drawnAt{ 0.0f };   // the pictureScale it was drawn at
+			bool built{ false };
 		};
 
 		SDL_Window* window{ nullptr };
@@ -77,35 +60,13 @@ namespace xge
 		// nothing is torn down until close() (the destructor), because the
 		// frame that read the event is still going to clear and draw.
 		bool closeRequested{ false };
-		bool ttfInitialized{ false };
-		bool imgInitialized{ false };
-		bool imgTried{ false };
 
-		// TTF_Font is opened at a fixed point size (unlike SFML's sf::Font or
-		// raylib's Font, either of which can be measured/drawn at any size
-		// from one loaded font) - cached per size actually used, opened once
-		// on first use rather than reopened on every buildText() call.
-		std::unordered_map<std::string, TTF_Font*> fontsBySize;   // by file@size
-		// The font files that could not be loaded, said once each.
-		std::unordered_set<std::string> fontsMissing;
-
-		std::unordered_map<std::string, CachedVisual> visuals;
+		Textures<SDL_Texture*> textures{ *this };
+		std::unordered_map<std::string, CachedVisual> visuals;  // by object name
 
 		static KeyCode sdlKeyToKeyCode(SDL_Keycode key) noexcept;
-		TTF_Font* getFont(const std::string& file, int pointSize);
 
-		// Starts SDL2_image on first use; false if it cannot read PNG.
-		bool ensureImages();
-		void reloadTargetTexture(CachedVisual& visual, int width, int height);
-
-		void buildShapeOnly(Object& object, CachedVisual& visual);
-		void buildCircle(Object& object, CachedVisual& visual);
-		void buildRectangle(Object& object, CachedVisual& visual);
-		void buildText(Object& object, CachedVisual& visual);
-		void buildImage(Object& object, CachedVisual& visual);
-		void buildLines(Object& object, CachedVisual& visual);
-		void buildBitmap(Object& object, CachedVisual& visual, const Bitmap& bitmap);
-
-		void finalizeVisual(Object& object, CachedVisual& visual);
+		// Makes the object's picture again, at pictureScale().
+		void build(Object& object, CachedVisual& visual);
 	};
 }

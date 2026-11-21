@@ -4,6 +4,8 @@
 // date: Sept 18, 2020
 
 #include "game/game.h"
+#include "game/words.h"
+#include "game/players.h"
 
 #include "play/executor.h"
 #include "play/geometry.h"
@@ -12,7 +14,9 @@
 #include "load/spelling.h"
 #include "play/verbs.h"
 
+
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <iomanip>
@@ -32,132 +36,206 @@ namespace xge
 		// among the game's objects and named in full.
 		takeStates(data.states);
 		layOutScenes(data);
+		settlePlayers(data);
 		// Then, with every object's name final, its styles, what it
 		// leaves to mean itself, and its centering.
 		applyStyles(data.objects, data.styles);
 		markSolid(data.objects);
 		nameSelf(data.objects);
+		nameOther(data.objects);
 		centerOnOwnSize(data.objects);
 		windowDesc = std::move(data.window);
 		validation = std::move(data.validation);
-		rawVariables = std::move(data.variables);
-		rawStates = std::move(data.states);
-		rawObjects = std::move(data.objects);
-		rawSounds = std::move(data.sounds);
-		rawPaths = std::move(data.paths);
-		patterns = std::move(data.patterns);
-		const std::vector<std::string> keeps = std::move(data.keeps);
+		writtenVariables = std::move(data.variables);
+		writtenStates = std::move(data.states);
+		writtenObjects = std::move(data.objects);
+		writtenSounds = std::move(data.sounds);
+		writtenPaths = std::move(data.paths);
+		for (const WrittenPatterns& written : data.patterns)
+		{
+			Patterns& set = patterns.emplace_back();
+			set.name = Name::of(written.name);
+			for (const WrittenPatterns::Pattern& writtenPattern : written.patterns)
+			{
+				set.patterns.push_back({ Name::of(writtenPattern.name), writtenPattern.parts, NameStore::program().of(writtenPattern.by) });
+			}
+		}
+		const std::vector<Name> keeps = NameStore::program().of(data.keeps);
 		demo = std::move(data.demo);
 
 		// Room for what is spawned, so that the file's objects stay where
 		// they are (and a reference to one good) as copies join.
-		objects.reserve(rawObjects.size() * 2 + 256);
+		objects.reserve(writtenObjects.size() * 2 + 256);
+		expr.parts = &objectParts;
 		expr.styles = data.styles;
-		expr.init(windowDesc, rawVariables, variables, rawStates, states, rawObjects, objects, rawSounds, sounds, rawPaths, paths);
+		expr.sheets = data.sheets;
+		expr.init(windowDesc, writtenVariables, variables, writtenStates, states, writtenObjects, objects, writtenSounds, soundDescs, writtenPaths, paths);
 		expr.finishLoading();
+		for (std::size_t i = 0; i < objects.size(); ++i) { objectParts.placeAt(objects[i].id, i); }
+		expr.whenLiveRead = [this] { refreshLive(); };
 		keep(keeps);
-		refreshAllBoundTexts();
+		relabelAll();
+		// Every picture's size is known now, with no window: the engine draws
+		// text and reads image files itself.
+		for (Object& object : objects)
+		{
+			object.size = object.pictureSize();
+		}
 		checkDemo();
 
 		for (const auto& state : states)
 		{
 			stateTimers[state.name] = state.timers;
+			// An <undo /> on a key: each press that moves a piece is kept.
+			for (const auto* keys : state.keyMaps())
+			{
+				for (const auto& [key, commands] : *keys)
+				{
+					for (const Command& command : commands) { if (std::holds_alternative<CmdUndo>(shapeOf(command))) { cellMapping.keepUndo(); } }
+				}
+			}
 		}
 		startScenes();
-		// The cards shuffled and dealt, piles scored by patterns there are.
-		for (const Object& object : objects)
+		// What a pattern compares is a variable of what is held.
+		for (const Patterns& set : patterns)
 		{
-			if (!object.pile.score.empty() && std::none_of(patterns.begin(), patterns.end(), [&](const RawPatterns& each) { return each.name == object.pile.score; }))
+			for (const Patterns::Pattern& pattern : set.patterns)
 			{
-				throw std::runtime_error("<object name=\"" + object.name + "\"> > <pile> > <score patterns=\"" + object.pile.score + "\">: names no <patterns>");
-			}
-			if (!object.pile.melds.empty() && std::none_of(patterns.begin(), patterns.end(), [&](const RawPatterns& each) { return each.name == object.pile.melds; }))
-			{
-				throw std::runtime_error("<object name=\"" + object.name + "\"> > <pile> > <score patterns=\"" + object.pile.melds + "\"> with <melds />: names no <patterns>");
+				for (const Name by : pattern.by)
+				{
+					if (by == words::worth || std::any_of(objects.begin(), objects.end(), [&](const Object& object) { return itemOf(object).is && object.variable.count(by); })) { continue; }
+					throw std::runtime_error("<patterns name=\"" + set.name + "\"> > <pattern name=\"" + pattern.name + "\">: variable=\"" + by + "\"; nothing held has a variable of that name");
+				}
 			}
 		}
-		dealDecks();
-		scoreDuePiles();
+		// The cards shuffled and dealt, holders scored by patterns there are.
+		for (const Object& object : objects)
+		{
+			if (!isHolder(object)) { continue; }
+			if (!holderOf(object).score.empty() && std::none_of(patterns.begin(), patterns.end(), [&](const Patterns& each) { return each.name == holderOf(object).score; }))
+			{
+				throw std::runtime_error("<object name=\"" + object.name + "\"> > <holds> > <score patterns=\"" + holderOf(object).score + "\">: names no <patterns>");
+			}
+			for (const Patterns& set : patterns)
+			{
+				if (set.name != holderOf(object).score) { continue; }
+				std::set<std::string> alike;
+				for (const Patterns::Pattern& pattern : set.patterns)
+				{
+					const std::string where = "<patterns name=\"" + set.name + "\"> > <pattern name=\"" + pattern.name + "\">";
+					for (std::size_t i = 0; i < pattern.parts.size(); ++i)
+					{
+						if (pattern.parts[i].first == Patterns::Part::Alike) { alike.insert(pattern.by[i]); }
+						else if (pattern.by[i] != "worth") { throw std::runtime_error(where + ": scores a hand of " + object.name + "; for now such a run is of worth (runs of another variable are for <melds />)"); }
+					}
+					if (alike.size() > 4) { throw std::runtime_error(where + ": scores a hand of " + object.name + "; for now a set scoring a hand compares at most four variables"); }
+				}
+			}
+			if (!holderOf(object).melds.empty() && std::none_of(patterns.begin(), patterns.end(), [&](const Patterns& each) { return each.name == holderOf(object).melds; }))
+			{
+				throw std::runtime_error("<object name=\"" + object.name + "\"> > <holds> > <score patterns=\"" + holderOf(object).melds + "\"> with <melds />: names no <patterns>");
+			}
+		}
+		itemHolders.markOddsRead();
+		itemHolders.sendStarts();
+		itemHolders.scoreDueHolders();
+		// The players: the first one's turn; those the computer plays.
+		for (const WrittenObject& written : writtenObjects)
+		{
+			if (written.think.empty()) { continue; }
+			const Command made = makeCommand(written.think.front(), [&](const WrittenValue& value) { return expr.evaluate(value, "object '" + written.name + "' > <think>"); });
+			if (const auto* plays = std::get_if<CmdThink>(&shapeOf(made))) { playerGroups.memberThinks.emplace(Name::of(written.name), *plays); }
+		}
+		playerGroups.startPlayers();
 		loadedCount = objects.size();
 		runsInTop.assign(objects.size(), 0);
 		runsInTopStage.assign(objects.size(), 0);
 		// Which objects' rules answer which others, found while loading
 		// rather than in the first frame.
 		partners(objects);
-		// Every object's own visual is built later, by Engine, once a real
-		// Window (and therefore a real backend to build against) exists -
-		// see Window::init() in window/window.h.
+		// What follows something, from where everything starts.
+		follow();
+		// Positions made from a text's size, from the text it shows now.
+		resolveSizeDependentPositions();
 	}
 
 	void Game::resolveSizeDependentPositions(void)
 	{
-		// What every backend-measured object now measures, in the expressions'
-		// own name.width / name.height variables.
+		// What every text measures now, in the expressions' own name.width /
+		// name.height variables.
 		for (const auto& object : objects)
 		{
-			if (object.sizeKnown && game_expr::sizeNeedsBackend(object.picture.kind))
-			{
-				expr.setObjectSize(object.name, object.size);
-			}
+			if (object.drawn.picture->kind == ShapeKind::Text) { expr.setObjectSize(object.name, object.size); }
 		}
 
-		for (auto& object : objects)
+		// Only the objects whose position uses a size (most games: none).
+		objectParts.sizeUses.each([&](ObjectId id, Object::SizeUse& use)
 		{
-			if (!object.positionUsesSize)
-			{
-				continue;
-			}
+			const std::size_t at = objectParts.at(id);
+			if (at >= objects.size()) { return; }
+			Object& object = objects[at];
 
-			// Every object this position uses needs a measured size before it
-			// can be worked out, and only needs doing again if one has changed.
+			// Worked out again only when a size it uses has changed.
 			std::vector<Vector2f> sizes;
-			bool allMeasured = true;
-			for (const auto& dependency : object.sizeDependencies)
+			bool allThere = true;
+			for (const auto& dependency : use.sizesOf)
 			{
-				const Object* measured = tryGetObject(dependency);
-				if (!measured || measured->name != dependency || !measured->sizeKnown)
+				const Object* measured = find(dependency);
+				if (!measured || measured->name != dependency)
 				{
-					allMeasured = false;
+					allThere = false;
 					break;
 				}
 				sizes.push_back(measured->size);
 			}
 
-			if (!allMeasured || (object.positionResolved && sizes == object.positionSizesUsed))
+			if (!allThere || sizes == use.sizesUsed)
 			{
-				continue;
+				return;
 			}
 
-			const auto rawObject = std::find_if(rawObjects.begin(), rawObjects.end(),
-				[&](const RawObject& raw) { return raw.name == object.name; });
-			if (rawObject == rawObjects.end())
+			const auto writtenObject = std::find_if(writtenObjects.begin(), writtenObjects.end(),
+				[&](const WrittenObject& written) { return written.name == object.name; });
+			if (writtenObject == writtenObjects.end())
 			{
-				continue;
+				return;
 			}
 
-			const std::string where = "object '" + rawObject->name + "'";
-			object.start.position.x = expr.evaluate(rawObject->rawPosition.x, where);
-			object.start.position.y = expr.evaluate(rawObject->rawPosition.y, where);
-			object.start.position = object.start.position + object.cellOffset;
-			object.position = object.start.position;
-			object.positionSizesUsed = sizes;
-			object.positionResolved = true;
-		}
+			const std::string where = "object '" + writtenObject->name + "'";
+			startFor(object).position.x = expr.evaluate(writtenObject->writtenPosition.x, where);
+			startFor(object).position.y = expr.evaluate(writtenObject->writtenPosition.y, where);
+			startFor(object).position = startOf(object).position + object.layout.cellOffset;
+			object.position = startOf(object).position;
+			use.sizesUsed = sizes;
+		});
 	}
 
-	void Game::updateObjects(void)
+	void Game::updateObjects(float seconds)
 	{
+		beginStep(seconds);
 		// Anything changed from outside since (a test moving an object to
 		// another scene) is seen, and so is anything this frame changes.
-		settleSpawns();
-		stageChanged();
-		playOneFrame(getCurrentObjects(), windowDesc, *this);
-		settleSpawns();
-		stageChanged();
-		showJoins();
+		settle();
+		playOneFrame(getCurrentObjects(), windowDesc, *this, seconds);
+		settle();
+		cellMapping.showJoins();
+		placeByResizedTexts();
 	}
 
-	bool Game::isDescription(const std::string& name)
+	void Game::settle()
+	{
+		settleSpawns();
+		stageChanged();
+	}
+
+	void Game::placeByResizedTexts()
+	{
+		if (!textsResized) { return; }
+		textsResized = false;
+		resolveSizeDependentPositions();
+	}
+
+	bool Game::isDescription(Name name)
 	{
 		const auto known = descriptions.find(name);
 		if (known != descriptions.end()) { return known->second; }
@@ -168,12 +246,12 @@ namespace xge
 		{
 			if (!objects[i].named(name)) { continue; }
 			any = true;
-			all = all && !objects[i].start.exists;
+			all = all && !startOf(objects[i]).exists;
 		}
 		return descriptions[name] = any && all;
 	}
 
-	Object* Game::spawn(const std::string& target, bool random)
+	Object* Game::spawn(Name target, bool random, std::optional<int> member)
 	{
 		// What it is a copy of: the object of that name, or the group's
 		// members in turn; never a copy (only the file's objects are
@@ -185,12 +263,13 @@ namespace xge
 		}
 		if (from.empty())
 		{
-			const std::string full = fullName(target);
-			if (full != target) { return spawn(full, random); }
+			const Name full = fullName(target);
+			if (full != target) { return spawn(full, random, member); }
 			return nullptr;
 		}
-		// One of them at random, or each in turn.
-		const std::size_t pick = random ? std::min(from.size() - 1, static_cast<std::size_t>(randomBetween(0.0f, static_cast<float>(from.size()))))
+		// The one of that number, one of them at random, or each in turn.
+		if (member && (*member < 1 || static_cast<std::size_t>(*member) > from.size())) { return nullptr; }
+		const std::size_t pick = member ? static_cast<std::size_t>(*member - 1) : random ? std::min(from.size() - 1, static_cast<std::size_t>(randomBetween(0.0f, static_cast<float>(from.size()))))
 			: spawnTurns[target]++ % from.size();
 		const Object& original = objects[from[pick]];
 
@@ -202,71 +281,87 @@ namespace xge
 		}
 
 		// The first of its numbers that no object has now.
-		std::string name;
+		Name name;
 		for (std::size_t number = 1; name.empty(); ++number)
 		{
-			const std::string candidate = original.name + "." + std::to_string(number);
+			const Name candidate = Name::of(original.name + "." + std::to_string(number));
 			const auto taken = [&](const Object& each) { return each.name == candidate; };
 			if (std::none_of(objects.begin(), objects.end(), taken) && std::none_of(spawned.begin(), spawned.end(), taken)) { name = candidate; }
 		}
 
-		const auto raw = std::find_if(rawObjects.begin(), rawObjects.end(), [&](const RawObject& each) { return each.name == original.name; });
-		if (raw == rawObjects.end()) { return nullptr; }
-		RawObject copy = *raw;
-		renameOwn(copy, original.name, name);
-		copy.outerGroups = original.outerGroups;
+		const auto written = std::find_if(writtenObjects.begin(), writtenObjects.end(), [&](const WrittenObject& each) { return each.name == original.name; });
+		if (written == writtenObjects.end()) { return nullptr; }
+		WrittenObject copy = *written;
+		const Renamed renamed = renameOwn(copy, original.name, name);
+		const bool namedIt = renamed.kind;
+		copy.outerGroups = textsOf(original.outerGroups);
 		if (!original.groupName.empty()) { copy.outerGroups.push_back(original.groupName); }
 		copy.groupName = original.name;
 		copy.exists = true;
 		copy.isVisible = true;
 
-		Object made = expr.spawnObject(copy, original, windowDesc);
+		Object made = expr.spawnObject(copy, original);
 
-		// Its rules' tests, made at load for the object it is copied from,
-		// about the copy instead.
-		const std::function<void(Condition&)> retarget = [&](Condition& check)
+		// Of its kind, unless its rules named the one it is copied from:
+		// then their tests, made at load for that one, about the copy.
+		if (!namedIt) { made.kind = original.kind; }
+		// Its looks too, while the one copied from shows them as loaded.
+		if (!renamed.looks && !original.looks.set->changed) { made.looks.set = original.looks.set; }
+		const auto retarget = [&](Condition& check) { retargetCheck(check, original.name, name); };
+		for (std::size_t i = 0; namedIt && i < made.kind->collisionData.others.size() && i < original.kind->collisionData.others.size(); ++i)
 		{
-			for (Condition& part : check.parts) { retarget(part); }
-			if (check.filterObject == original.name) { check.filterObject = name; }
-			if (check.distanceTo == original.name) { check.distanceTo = name; }
-			if (check.live)
+			if (!original.kind->collisionData.others[i].check) { continue; }
+			Condition check = *original.kind->collisionData.others[i].check;
+			retarget(check);
+			made.kind->collisionData.others[i].check = std::move(check);
+		}
+		for (std::size_t edge = 0; namedIt && edge < made.kind->collisionData.edges.size(); ++edge)
+		{
+			const std::vector<EdgeGuard>& was = original.kind->collisionData.edges[edge].guards;
+			std::vector<EdgeGuard>& guards = made.kind->collisionData.edges[edge].guards;
+			for (std::size_t g = 0; g < guards.size() && g < was.size(); ++g)
 			{
-				RawValue renamed = *check.live;
-				renamed.text = renameStart(renamed.text, original.name, name);
-				check.live = std::make_shared<const RawValue>(std::move(renamed));
+				if (!was[g].check) { continue; }
+				Condition check = *was[g].check;
+				retarget(check);
+				guards[g].check = std::move(check);
 			}
-			for (Condition::Read& read : check.reads)
+		}
+		// Its actions' conditions, the same way.
+		const std::function<void(const std::vector<Command>&, std::vector<Command>&)> whens = [&](const std::vector<Command>& theirs, std::vector<Command>& copied)
+		{
+			for (std::size_t i = 0; i < theirs.size() && i < copied.size(); ++i)
 			{
-				if (read.owner != original.name) { continue; }
-				read.owner = name;
-				read.slot = &expr.objectVariables[name + "." + read.variable];
+				const auto* was = std::get_if<CmdWhen>(&theirs[i]);
+				auto* now = std::get_if<CmdWhen>(&copied[i]);
+				if (!was || !now || !was->body || !now->body || !was->body->test) { continue; }
+				Condition check = *was->body->test;
+				retarget(check);
+				now->body->test = std::move(check);
+				whens(was->body->commands, now->body->commands);
 			}
 		};
-		for (std::size_t i = 0; i < made.collisionData.others.size() && i < original.collisionData.others.size(); ++i)
+		for (auto& [actionName, list] : made.kind->action)
 		{
-			if (!original.collisionData.others[i].check) { continue; }
-			Condition check = *original.collisionData.others[i].check;
-			retarget(check);
-			made.collisionData.others[i].check = std::move(check);
+			if (!namedIt) { break; }
+			if (const auto found = original.kind->action.find(actionName); found != original.kind->action.end()) { whens(found->second, list); }
 		}
 
 		made.copyOf = original.name;
-		made.groupName = copy.groupName;
-		made.outerGroups = copy.outerGroups;
+		made.groupName = Name::of(copy.groupName);
+		made.outerGroups = NameStore::program().listOf(copy.outerGroups);
 		made.ownerState = original.ownerState;
 		made.ownerScene = original.ownerScene;
-		made.start.ownerScene = original.ownerScene;
+		startFor(made).ownerScene = original.ownerScene;
 		made.exists = true;
-		made.start.exists = true;
+		startFor(made).exists = true;
 		made.isVisible = true;
-		made.start.isVisible = true;
-		// Its picture is the one it is copied from, and so its size, until
-		// a window measures it again.
+		startFor(made).isVisible = true;
+		// Its picture is the one it is copied from, and so its size.
 		made.size = original.size;
-		made.sizeKnown = original.sizeKnown;
-		copyRaws[name] = std::move(copy);
+		writtenCopies[name] = std::move(copy);
 		spawned.push_back(std::move(made));
-		if (!spawned.back().textPieces.empty()) { relabel(spawned.back()); }
+		if (objectParts.boundTexts.has(spawned.back().id)) { relabel(spawned.back()); }
 		return &spawned.back();
 	}
 
@@ -275,19 +370,16 @@ namespace xge
 		object.exists = false;
 		object.isVisible = false;
 		object.collisionsOn = false;
-		object.followPath.clear();
-		object.carrying.clear();
-		for (auto& carrier : objects)
-		{
-			if (carrier.carrying == object.name) { carrier.carrying.clear(); }
-		}
+		objectParts.onPaths.remove(object.id);
+		objectParts.carries.each([&](ObjectId, Object::Carry& carry) { if (carry.what == object.name) { carry.what.clear(); } });
+		if (Object::Carry* carry = objectParts.carries.find(object.id)) { carry->what.clear(); }
 		stageChanged();
 	}
 
-	void Game::despawn(const std::string& target)
+	void Game::despawn(Name target)
 	{
 		// The name as written, or the end of a path (bomb for playing.bomb).
-		const std::string name = fullName(target);
+		const Name name = fullName(target);
 		for (auto& object : objects)
 		{
 			if (object.exists && (object.named(name))) { despawn(object); }
@@ -298,12 +390,28 @@ namespace xge
 		}
 	}
 
+	// A copy that leaves lets go of the pictures that were its own: one
+	// with holes cut in it, a tether's line.
+	void Game::letGoOwnPictures(const Object& object)
+	{
+		if (objectParts.unholed.has(object.id)) { expr.resources.release(object.drawn.bitmap); }
+		if (const Object::Tether* tether = objectParts.tethers.find(object.id)) { expr.resources.release(tether->drawn); }
+	}
+
 	void Game::settleSpawns(void)
 	{
 		bool changed = false;
 		const auto gone = [](const Object& object) { return object.isCopy() && !object.exists; };
 		if (std::any_of(objects.begin(), objects.end(), gone))
 		{
+			for (const Object& object : objects)
+			{
+				if (gone(object))
+				{
+					letGoOwnPictures(object);
+					objectParts.freeId(object.id);
+				}
+			}
 			objects.erase(std::remove_if(objects.begin(), objects.end(), gone), objects.end());
 			changed = true;
 		}
@@ -312,6 +420,11 @@ namespace xge
 			for (Object& object : spawned)
 			{
 				if (object.exists) { objects.push_back(std::move(object)); }
+				else
+				{
+					letGoOwnPictures(object);
+					objectParts.freeId(object.id);
+				}
 			}
 			spawned.clear();
 			changed = true;
@@ -319,9 +432,24 @@ namespace xge
 		if (changed) { rosterChanged(); }
 	}
 
+	Object* Game::find(ObjectId id) noexcept
+	{
+		if (!objectParts.current(id)) { return nullptr; }
+		const std::size_t at = objectParts.at(id);
+		if (at < objects.size() && objects[at].id == id) { return &objects[at]; }
+		for (Object& waiting : spawned)
+		{
+			if (waiting.id == id) { return &waiting; }
+		}
+		return nullptr;
+	}
+
 	void Game::rosterChanged(void)
 	{
+		objectParts.placeNowhere();
+		for (std::size_t i = 0; i < objects.size(); ++i) { objectParts.placeAt(objects[i].id, i); }
 		foundObjects.clear();
+		fullNames.clear();
 		filtered.clear();
 		liveLinked = false;
 		liveLinks.clear();
@@ -343,9 +471,9 @@ namespace xge
 		}
 		std::cout << '\n';
 
-		for (auto& rawObject : rawObjects)
+		for (auto& writtenObject : writtenObjects)
 		{
-			std::cout << rawObject << '\n';
+			std::cout << writtenObject << '\n';
 		}
 
 		for (auto& object : objects)
@@ -358,7 +486,7 @@ namespace xge
 			std::cout << state << '\n';
 		}
 
-		for (const auto& sound : sounds)
+		for (const auto& sound : soundDescs)
 		{
 			std::cout << sound << '\n';
 		}
@@ -366,64 +494,7 @@ namespace xge
 
 	const std::vector<SoundDesc>& Game::getSounds(void) const noexcept
 	{
-		return sounds;
-	}
-
-	void Game::requestSound(const std::string& name)
-	{
-		// Within a frame the last word wins: a loop silenced and asked for
-		// again (one of two keys let go, the other still down) plays on.
-		if (soundLoops(name))
-		{
-			loops.insert(name);
-			silenceRequests.erase(std::remove(silenceRequests.begin(), silenceRequests.end(), name), silenceRequests.end());
-			return;
-		}
-
-		if (std::find(soundRequests.begin(), soundRequests.end(), name) == soundRequests.end())
-		{
-			soundRequests.push_back(name);
-		}
-	}
-
-	std::vector<std::string> Game::takeSoundRequests(void)
-	{
-		return std::exchange(soundRequests, {});
-	}
-
-	const std::set<std::string>& Game::loopingSounds(void) const noexcept
-	{
-		return loops;
-	}
-
-	std::set<std::string> Game::soundsOn(void) const
-	{
-		std::set<std::string> on = loops;
-		if (!currentState.empty() && !currentState.top().music.empty() && soundLoops(currentState.top().music))
-		{
-			on.insert(currentState.top().music);
-		}
-		return on;
-	}
-
-	void Game::silenceSound(const std::string& name)
-	{
-		loops.erase(name);
-		soundRequests.erase(std::remove(soundRequests.begin(), soundRequests.end(), name), soundRequests.end());
-		if (std::find(silenceRequests.begin(), silenceRequests.end(), name) == silenceRequests.end())
-		{
-			silenceRequests.push_back(name);
-		}
-	}
-
-	std::vector<std::string> Game::takeSilenceRequests(void)
-	{
-		return std::exchange(silenceRequests, {});
-	}
-
-	bool Game::soundLoops(const std::string& name) const noexcept
-	{
-		return std::any_of(sounds.begin(), sounds.end(), [&](const SoundDesc& sound) { return sound.loop && sound.name == name; });
+		return soundDescs;
 	}
 
 	WindowDesc& Game::getWindowDesc(void) noexcept
@@ -431,7 +502,7 @@ namespace xge
 		return windowDesc;
 	}
 
-	const Object* Game::nearestInPlay(const Object& from, const std::string& name)
+	const Object* Game::nearestInPlay(const Object& from, Name name)
 	{
 		return xge::nearestInPlay(objects, from, name, [this](const Object& other) { return isShown(other); });
 	}
@@ -466,7 +537,7 @@ namespace xge
 			if (current != currentScenes.end() && current->second == object.ownerScene) { return true; }
 		}
 
-		return std::any_of(state.show.begin(), state.show.end(), [&](const std::string& shown) { return object.named(shown); });
+		return std::any_of(state.show.begin(), state.show.end(), [&](Name shown) { return object.named(shown); });
 	}
 
 	bool Game::isStill(const Object& object) noexcept
@@ -475,7 +546,7 @@ namespace xge
 		const State& top = currentState.top();
 		if (top.showStates.empty() || !object.isVisible || !object.exists || runsIn(object, top)) { return false; }
 
-		for (const std::string& name : top.showStates)
+		for (const Name name : top.showStates)
 		{
 			const auto state = std::find_if(states.begin(), states.end(), [&](const State& candidate) { return candidate.name == name; });
 			if (state != states.end() && runsIn(object, *state)) { return true; }
@@ -499,10 +570,10 @@ namespace xge
 		return current == currentScenes.end() || current->second != object.ownerScene;
 	}
 
-	std::string Game::currentScene(const std::string& state) const
+	Name Game::currentScene(Name state) const
 	{
 		const auto current = currentScenes.find(state);
-		return current == currentScenes.end() ? std::string{} : current->second;
+		return current == currentScenes.end() ? Name{} : current->second;
 	}
 
 	void Game::startScenes(void)
@@ -517,16 +588,16 @@ namespace xge
 		}
 	}
 
-	void Game::enterScene(const std::string& scene)
+	void Game::enterScene(Name scene)
 	{
-		const std::string state = scene.substr(0, scene.find('.'));
+		const Name state = Name::of(scene.str().substr(0, scene.str().find('.')));
 		if (!sceneTimers.count(scene))
 		{
 			// The file is checked for this when it loads; this is for a caller in C++.
 			throw std::out_of_range("no scene named '" + scene + "'");
 		}
 
-		std::string& current = currentScenes[state];
+		Name& current = currentScenes[state];
 		if (current == scene) { return; }
 		current = scene;
 		++sceneChanges;
@@ -536,16 +607,25 @@ namespace xge
 		// own, or the game's) belongs to the scene it is carried into.
 		for (const Object& carrier : objects)
 		{
-			if (carrier.carrying.empty() || !carrier.ownerScene.empty()) { continue; }
-			Object* carried = tryGetObject(carrier.carrying);
+			const Name what = carrying(carrier);
+			if (what.empty() || !carrier.ownerScene.empty()) { continue; }
+			Object* carried = find(what);
 			if (carried && carried->ownerState == state && !carried->ownerScene.empty()) { carried->ownerScene = scene; }
 		}
 		stageChanged();
 	}
 
-	std::string Game::fullName(const std::string& name) const
+	Name Game::fullName(Name name) const
 	{
-		const auto calls = [&](const Object& object, const std::string& wanted) { return object.named(wanted); };
+		if (const auto known = fullNames.find(name); known != fullNames.end()) { return known->second; }
+		const Name full = findFullName(name);
+		fullNames.emplace(name, full);
+		return full;
+	}
+
+	Name Game::findFullName(Name name) const
+	{
+		const auto calls = [&](const Object& object, Name wanted) { return object.named(wanted); };
 		if (std::any_of(objects.begin(), objects.end(), [&](const Object& object) { return calls(object, name); })) { return name; }
 
 		const std::string end = "." + name;
@@ -567,12 +647,12 @@ namespace xge
 				else if (dots(calling) == dots(found)) { tied = true; }
 			}
 		}
-		return found.empty() || tied ? name : found;
+		return found.empty() || tied ? name : Name(found);
 	}
 
-	Object& Game::getObject(const std::string& name)
+	Object& Game::object(Name name)
 	{
-		Object* object = tryGetObject(name);
+		Object* object = find(name);
 		if (!object)
 		{
 			throw std::out_of_range("no object named '" + name + "'");
@@ -582,19 +662,19 @@ namespace xge
 
 	// An object's own name (aliens.3.2) finds that object; the name of a
 	// <group> (aliens) finds its first member.
-	Object* Game::tryGetObject(const std::string& name) noexcept
+	Object* Game::find(Name name) noexcept
 	{
 		if (const auto found = foundObjects.find(name); found != foundObjects.end())
 		{
 			return found->second;
 		}
 
-		Object* object = findObject(name);
+		Object* object = search(name);
 		foundObjects.emplace(name, object);
 		return object;
 	}
 
-	Object* Game::findObject(const std::string& name) noexcept
+	Object* Game::search(Name name) noexcept
 	{
 		const auto exact = std::find_if(std::begin(objects), std::end(objects), [&](const Object& obj) { return obj.name == name; });
 		if (exact != std::end(objects))
@@ -609,11 +689,11 @@ namespace xge
 		}
 
 		// The end of one path: robots for playing.room1.robots.
-		const std::string full = fullName(name);
-		return full == name ? nullptr : findObject(full);
+		const Name full = fullName(name);
+		return full == name ? nullptr : search(full);
 	}
 
-	float Game::getVariable(const std::string& name)
+	float Game::getVariable(Name name)
 	{
 		const auto result = variables.find(name);
 
@@ -632,11 +712,6 @@ namespace xge
 		return currentState.top();
 	}
 
-	std::vector<Object>& Game::getCurrentObjects(void) noexcept
-	{
-		return objects;
-	}
-
 	void Game::setCurrentState(const int& index)
 	{
 		currentState.push(states.at(static_cast<std::size_t>(index)));
@@ -645,12 +720,12 @@ namespace xge
 		beginMusic();
 	}
 
-	void Game::setCurrentState(const std::string& name)
+	void Game::setCurrentState(Name name)
 	{
 		pushState(name);
 	}
 
-	void Game::pushState(const std::string& name)
+	void Game::pushState(Name name)
 	{
 		auto result = std::find_if(std::begin(states), std::end(states), [&](State& state) { return state.name == name; });
 		if (result == std::end(states))
@@ -671,10 +746,10 @@ namespace xge
 
 	void Game::beginMusic(void)
 	{
-		const std::string& music = currentState.top().music;
-		if (!music.empty() && !soundLoops(music))
+		const Name music = currentState.top().music;
+		if (!music.empty() && !soundBoard.loops(music))
 		{
-			requestSound(music);
+			soundBoard.request(music);
 		}
 	}
 
@@ -699,44 +774,40 @@ namespace xge
 			return;
 		}
 
-		const RawObject* raw = nullptr;
-		if (const auto copy = copyRaws.find(object.name); object.isCopy() && copy != copyRaws.end())
+		const WrittenObject* written = nullptr;
+		if (const auto copy = writtenCopies.find(object.name); object.isCopy() && copy != writtenCopies.end())
 		{
-			raw = &copy->second;
+			written = &copy->second;
 		}
-		else if (const auto written = std::find_if(rawObjects.begin(), rawObjects.end(), [&](const RawObject& candidate) { return candidate.name == object.name; }); written != rawObjects.end())
+		else if (const auto found = std::find_if(writtenObjects.begin(), writtenObjects.end(), [&](const WrittenObject& candidate) { return candidate.name == object.name; }); found != writtenObjects.end())
 		{
-			raw = &*written;
+			written = &*found;
 		}
-		if (!raw)
+		if (!written)
 		{
 			return;
 		}
 
-		const std::string where = "object '" + raw->name + "'";
-		for (const auto& [name, value] : raw->variable)
+		const std::string where = "object '" + written->name + "'";
+		for (const auto& [name, value] : written->variable)
 		{
 			if (!value.drawsRandom()) { continue; }
 			const float drawn = expr.evaluate(value, where);
-			object.variable[name] = drawn;
-			object.start.variable[name] = drawn;
-			refreshBoundTexts(object.name, name, drawn);
+			object.variable[Name::of(name)] = drawn;
+			startFor(object).variable[Name::of(name)] = drawn;
+			variableChanged(object.name, Name::of(name), drawn);
 		}
 
 		// The position, then the velocity, the order they are drawn in when the
 		// game loads (load/expr::init), so a start drawn again takes the same
 		// numbers as the first did, and a generated program, which draws them
-		// in that order, draws the same ones. A position waiting on a size not
-		// measured yet is worked out when it is.
-		if (object.positionResolved)
-		{
-			object.start.position = Vector2f{ expr.evaluate(raw->rawPosition.x, where), expr.evaluate(raw->rawPosition.y, where) } + object.cellOffset;
-		}
+		// in that order, draws the same ones.
+		startFor(object).position = Vector2f{ expr.evaluate(written->writtenPosition.x, where), expr.evaluate(written->writtenPosition.y, where) } + object.layout.cellOffset;
 
-		object.start.velocity = { expr.evaluate(raw->rawVelocity.x, where), expr.evaluate(raw->rawVelocity.y, where) };
+		startFor(object).velocity = { expr.evaluate(written->writtenVelocity.x, where), expr.evaluate(written->writtenVelocity.y, where) };
 	}
 
-	void Game::popState(const std::string& name)
+	void Game::popState(Name name)
 	{
 		if (name.empty())
 		{
@@ -764,6 +835,12 @@ namespace xge
 	unsigned long Game::stateChangeCount(void) const noexcept
 	{
 		return stateChanges;
+	}
+
+	const Patterns* Game::patternsNamed(Name name) const noexcept
+	{
+		const auto set = std::find_if(patterns.begin(), patterns.end(), [&](const Patterns& each) { return each.name == name; });
+		return set == patterns.end() ? nullptr : &*set;
 	}
 
 	const std::vector<State>& Game::getStates(void) const noexcept
@@ -796,7 +873,7 @@ namespace xge
 
 	float* Game::variableOf(const VariableName& name) noexcept
 	{
-		Object* owner = tryGetObject(name.owner);
+		Object* owner = find(playerGroups.turnOwner(name.owner));
 		if (!owner) { return nullptr; }
 		const auto found = owner->variable.find(name.variable);
 		return found == owner->variable.end() ? nullptr : &found->second;
@@ -837,13 +914,13 @@ namespace xge
 
 	void Game::startTurns(const std::vector<std::string>& playerStates)
 	{
-		turnsState = currentState.empty() ? std::string{} : currentState.top().name;
+		turnsState = currentState.empty() ? Name{} : currentState.top().name;
 		Turn start;
 		putTurnAway(start);
 		turns.assign(playerStates.size(), start);
 		for (std::size_t i = 0; i < playerStates.size(); ++i)
 		{
-			turns[i].state = playerStates[i];
+			turns[i].state = Name::of(playerStates[i]);
 		}
 		turn = 0;
 		beginTurn();
@@ -897,6 +974,7 @@ namespace xge
 	void Game::putTurnAway(Turn& into) const
 	{
 		into.objects = objects;
+		into.parts = objectParts;
 		into.stateTimers = stateTimers;
 		into.currentScenes = currentScenes;
 		into.sceneTimers = sceneTimers;
@@ -906,18 +984,22 @@ namespace xge
 	{
 		// The file's objects as the player left them, then the copies
 		// spawned in their game.
+		for (const Object& waiting : spawned) { objectParts.removeParts(waiting.id); }
 		spawned.clear();
+		for (std::size_t i = loadedCount; i < objects.size(); ++i) { objectParts.removeParts(objects[i].id); }
 		objects.resize(std::min(objects.size(), loadedCount));
 		for (std::size_t i = 0; i < objects.size() && i < from.objects.size(); ++i)
 		{
 			if (objects[i].kept) { continue; }
 			objects[i] = from.objects[i];
-			objects[i].visualDirty = true;
+			objectParts.copyPartsFrom(from.parts, objects[i].id);
+			objects[i].drawn.visualDirty = true;
 		}
 		for (std::size_t i = loadedCount; i < from.objects.size(); ++i)
 		{
 			objects.push_back(from.objects[i]);
-			objects.back().visualDirty = true;
+			objectParts.copyPartsFrom(from.parts, objects.back().id);
+			objects.back().drawn.visualDirty = true;
 		}
 		rosterChanged();
 		stateTimers = from.stateTimers;
@@ -931,19 +1013,19 @@ namespace xge
 	{
 		// What was playing stops; the turn is played in the state the turns
 		// started in, with the player's own state over it.
-		loops.clear();
+		soundBoard.stopLoops();
 		while (currentState.size() > 1 && currentState.top().name != turnsState)
 		{
 			currentState.pop();
 		}
 		stageChanged();
-		const std::string& state = turns[turn].state;
+		const Name state = turns[turn].state;
 		if (!state.empty())
 		{
 			pushState(state);
 		}
 		++stateChanges;
-		refreshAllBoundTexts();
+		relabelAll();
 	}
 
 	bool Game::keepsAnything(void) const noexcept
@@ -973,6 +1055,72 @@ namespace xge
 		out << "</kept>\n";
 	}
 
+	namespace
+	{
+		// Text as it may stand in an XML attribute.
+		std::string xmlEscaped(const std::string& text)
+		{
+			std::string escaped;
+			for (const char c : text)
+			{
+				switch (c)
+				{
+				case '&': escaped += "&amp;"; break;
+				case '<': escaped += "&lt;"; break;
+				case '>': escaped += "&gt;"; break;
+				case '"': escaped += "&quot;"; break;
+				default: escaped += c; break;
+				}
+			}
+			return escaped;
+		}
+	}
+
+	void Game::describe(std::ostream& out, unsigned long frame, double seconds, const std::string& indent)
+	{
+		const auto pair = [&](const char* tag, Vector2f value, const std::string& in)
+		{
+			out << in << '<' << tag << "><x>" << value.x << "</x><y>" << value.y << "</y></" << tag << ">\n";
+		};
+		const auto numbers = [&](const auto& values, const std::string& in)
+		{
+			if (values.empty()) { return; }
+			out << in << "<variables>\n";
+			for (const auto& [name, value] : values)
+			{
+				out << in << "  <variable name=\"" << xmlEscaped(name) << "\">" << value << "</variable>\n";
+			}
+			out << in << "</variables>\n";
+		};
+
+		out << indent << "<moment>\n"
+			<< indent << "  <frame>" << frame << "</frame>\n"
+			<< indent << "  <seconds>" << seconds << "</seconds>\n";
+		if (!currentState.empty())
+		{
+			const Name state = currentState.top().name;
+			const Name scene = currentScene(state);
+			out << indent << "  <state name=\"" << xmlEscaped(state) << '"';
+			if (!scene.empty()) { out << " scene=\"" << xmlEscaped(scene) << '"'; }
+			out << " />\n";
+		}
+		numbers(variables, indent + "  ");
+		for (const Object& object : objects)
+		{
+			if (!isShown(object)) { continue; }
+			out << indent << "  <object name=\"" << xmlEscaped(object.name) << '"';
+			if (!object.objClass.empty()) { out << " class=\"" << xmlEscaped(object.objClass) << '"'; }
+			if (!object.groupName.empty()) { out << " group=\"" << xmlEscaped(object.groupName) << '"'; }
+			if (!object.lookName().empty()) { out << " sprite=\"" << xmlEscaped(object.lookName()) << '"'; }
+			out << ">\n";
+			pair("position", object.position, indent + "    ");
+			pair("velocity", object.velocity, indent + "    ");
+			numbers(object.variable, indent + "    ");
+			out << indent << "  </object>\n";
+		}
+		out << indent << "</moment>\n";
+	}
+
 	void Game::loadKept(std::istream& in)
 	{
 		// The file is the engine's own, written by saveKept, one tag a line,
@@ -988,18 +1136,18 @@ namespace xge
 			std::smatch match;
 			if (std::regex_match(line, match, objectLine))
 			{
-				object = tryGetObject(match[1].str());
+				object = find(Name(match[1].str()));
 				if (object && !object->kept) { object = nullptr; }
 				if (object && match[2].matched)
 				{
-					const auto look = std::find_if(object->looks.begin(), object->looks.end(),
+					const auto look = std::find_if(object->looks.all().begin(), object->looks.all().end(),
 						[&](const Object::Look& each) { return each.name == match[2].str(); });
-					if (look != object->looks.end()) { object->showLook(static_cast<std::size_t>(look - object->looks.begin())); }
+					if (look != object->looks.all().end()) { object->showLook(static_cast<std::size_t>(look - object->looks.all().begin())); }
 				}
 			}
 			else if (object && std::regex_match(line, match, variableLine))
 			{
-				const auto variable = object->variable.find(match[1].str());
+				const auto variable = object->variable.findText(match[1].str());
 				if (variable == object->variable.end()) { continue; }
 				try
 				{
@@ -1011,21 +1159,21 @@ namespace xge
 				}
 			}
 		}
-		refreshAllBoundTexts();
+		relabelAll();
 	}
 
-	void Game::rank(const VariableName& entry, const std::string& table)
+	void Game::rank(const VariableName& entry, Name table)
 	{
-		Object* from = tryGetObject(entry.owner);
+		Object* from = find(entry.owner);
 		const std::string& by = entry.variable;
-		if (!from || !from->variable.count(by))
+		if (!from || !from->variable.countText(by))
 		{
 			std::cout << "warning: <rank variable=\"" << entry.written() << "\" into=\"" << table << "\" />: no such variable\n";
 			return;
 		}
 
 		// The places, the best first, in the order the group's members are written.
-		const std::string group = fullName(table);
+		const Name group = fullName(table);
 		std::vector<Object*> places;
 		for (auto& object : objects)
 		{
@@ -1035,7 +1183,7 @@ namespace xge
 		// Its place is the first one it beats; an equal score stays above it.
 		const float score = from->variable.at(by);
 		const auto place = std::find_if(places.begin(), places.end(),
-			[&](const Object* each) { return each->variable.count(by) && each->variable.at(by) < score; });
+			[&](const Object* each) { return each->variable.countText(by) && each->variable.at(by) < score; });
 		if (place == places.end())
 		{
 			return;
@@ -1057,18 +1205,18 @@ namespace xge
 		{
 			for (const auto& [name, value] : each->variable)
 			{
-				refreshBoundTexts(each->name, name, value);
+				variableChanged(each->name, name, value);
 			}
 		}
 	}
 
-	void Game::keep(const std::vector<std::string>& names)
+	void Game::keep(const std::vector<Name>& names)
 	{
 		// A name is an object or a group (every member of it), written out in
 		// full the way a command's are.
-		for (const std::string& given : names)
+		for (const Name given : names)
 		{
-			const std::string name = fullName(given);
+			const Name name = fullName(given);
 			bool found = false;
 			for (auto& object : objects)
 			{
@@ -1087,50 +1235,77 @@ namespace xge
 		}
 	}
 
-	int Game::framesFor(float seconds) const noexcept
+	bool Game::tickTimer(const Timer& timer, Timer::Clock& clock, const TimerOwner& owner, float& owed)
 	{
-		const int framerate = windowDesc.framerate > 0 ? windowDesc.framerate : 60;
-		return std::max(1, static_cast<int>(std::lround(seconds * static_cast<float>(framerate))));
-	}
-
-	bool Game::tickTimer(Timer& timer, const std::string& where)
-	{
-		if (timer.done)
+		if (clock.done)
 		{
+			owed = 0.0f;
 			return false;
 		}
 
-		if (timer.framesLeft < 0)
+		if (!clock.counting)
 		{
-			timer.framesLeft = framesFor(evaluateNow(timer.interval, where));
+			clock.secondsLeft = static_cast<double>(evaluateNow(timer.interval, std::string(owner.kind) + " '" + owner.name + "' > <timer>"));
+			clock.counting = true;
+			// None at all: it goes off once a step.
+			if (!(clock.secondsLeft > 0.0)) { clock.secondsLeft = static_cast<double>(owed); }
 		}
 
-		if (--timer.framesLeft > 0)
+		clock.secondsLeft -= static_cast<double>(owed);
+		if (clock.secondsLeft > static_cast<double>(kTimeSlack))
 		{
+			owed = 0.0f;
 			return false;
 		}
 
-		// Gone off: a repeating timer starts over, with its interval worked out
-		// again on the next frame, after its commands have run (so they can
-		// change it, and a <random> waits a new time); a once-only one is
-		// finished.
-		if (timer.repeat) { timer.framesLeft = -1; }
-		else { timer.done = true; }
+		// Gone off: what the step had beyond it is still owed. A repeating
+		// timer starts over, with its interval worked out again after its
+		// commands have run (so they can change it, and a <random> waits a
+		// new time); a once-only one is finished.
+		owed = static_cast<float>(std::max(0.0, -clock.secondsLeft));
+		if (timer.repeat) { clock.counting = false; }
+		else { clock.done = true; }
 		return true;
 	}
 
-	void Game::showTimeLeft(Object& object, const Timer& timer)
+	void Game::showTimeLeft(Object& object, const Timer& timer, const Timer::Clock& clock)
 	{
-		const int framerate = windowDesc.framerate > 0 ? windowDesc.framerate : 60;
-		const float left = timer.done || timer.framesLeft < 0 ? 0.0f
-			: std::ceil(static_cast<float>(timer.framesLeft) / static_cast<float>(framerate));
+		const float left = clock.done || !clock.counting ? 0.0f : static_cast<float>(std::ceil(std::max(0.0, clock.secondsLeft - static_cast<double>(kTimeSlack))));
 		const auto found = object.variable.find(timer.name);
 		if (found == object.variable.end() || found->second == left) { return; }
 		found->second = left;
-		refreshBoundTexts(object.name, timer.name, left);
+		variableChanged(object.name, timer.name, left);
 	}
 
-	void Game::updateTimers(void)
+	void Game::animationEnded(std::size_t index, std::size_t look)
+	{
+		if (index >= objects.size()) { return; }
+		Object& object = objects[index];
+		// A copy: a command may reset the object, or spawn and move it.
+		const std::vector<Command> commands = object.looks.all().empty() ? object.animation.frames.shows().then
+			: look < object.looks.all().size() ? object.looks.all()[look].frames.shows().then : std::vector<Command>{};
+		CommandExecutor executor(*this);
+		for (const Command& command : commands)
+		{
+			if (!executor.run(command, Doer::of(&objects[index]))) { break; }
+		}
+	}
+
+	void Game::frameCameUp(std::size_t index, std::size_t look, std::size_t picture)
+	{
+		if (index >= objects.size()) { return; }
+		Object& object = objects[index];
+		if (!object.hasFrameCommands(look, picture)) { return; }
+		// A copy, as for <then>.
+		const std::vector<Command> commands = object.looks.all().empty() ? object.animation.frames.shows().commands[picture] : object.looks.all()[look].frames.shows().commands[picture];
+		CommandExecutor executor(*this);
+		for (const Command& command : commands)
+		{
+			if (!executor.run(command, Doer::of(&objects[index]))) { break; }
+		}
+	}
+
+	void Game::updateTimers(float seconds)
 	{
 		CommandExecutor executor(*this);
 
@@ -1139,38 +1314,44 @@ namespace xge
 		// but never how many there are.
 		for (std::size_t i = 0; i < objects.size(); ++i)
 		{
-			for (std::size_t t = 0; t < objects[i].timers.size(); ++t)
+			const std::vector<Timer>& timers = objects[i].kind->timers;
+			// Found again each time: a command can give another object its
+			// clocks, which moves the store's entries.
+			const auto clocks = [&]() { return objectParts.clocks.find(objects[i].id); };
+			const auto count = [&]() { const std::vector<Timer::Clock>* each = clocks(); return each ? each->size() : 0; };
+			for (std::size_t t = 0; t < count() && t < timers.size(); ++t)
 			{
 				// Not shown, or sent away from its own map (a next-piece box).
-				if (!isShown(objects[i]) || objects[i].awayFromHome())
+				if (!isShown(objects[i]) || awayFromHome(objects[i]))
 				{
 					break;
 				}
 
 				// One that follows a look counts only while the object shows it.
-				const std::string& sprite = objects[i].timers[t].sprite;
+				const Name sprite = timers[t].sprite;
 				if (!sprite.empty() && objects[i].lookName() != sprite)
 				{
 					continue;
 				}
 
-				const bool goesOff = tickTimer(objects[i].timers[t], "object '" + objects[i].name + "' > <timer>");
-				if (!objects[i].timers[t].name.empty()) { showTimeLeft(objects[i], objects[i].timers[t]); }
-				if (goesOff)
+				// As often as the step owes it, its commands each time.
+				for (float owed = seconds; owed > kTimeSlack && t < count() && tickTimer(timers[t], (*clocks())[t], { "object", objects[i].name }, owed);)
 				{
-					// A copy: a command may reset the object, and its timers with it.
-					const std::vector<Command> commands = objects[i].timers[t].commands;
-					for (const auto& command : commands)
+					// Its kind's: a command that resets the object leaves them be.
+					for (const auto& command : timers[t].commands)
 					{
-						if (!executor.executeTimer(command, &objects[i])) { break; }
+						if (!executor.run(command, Doer::of(&objects[i]))) { break; }
 					}
+					// Hidden, or out of the look it follows, it stops counting.
+					if (!isShown(objects[i]) || (!sprite.empty() && objects[i].lookName() != sprite)) { break; }
 				}
+				if (!timers[t].name.empty() && t < count()) { showTimeLeft(objects[i], timers[t], (*clocks())[t]); }
 			}
 		}
 
 		// The current state's timers. A command can change the state, which
 		// ends this state's turn for the frame.
-		const std::string stateName = currentState.top().name;
+		const Name stateName = currentState.top().name;
 		auto found = stateTimers.find(stateName);
 		if (found == stateTimers.end())
 		{
@@ -1180,64 +1361,76 @@ namespace xge
 		const unsigned long changes = stateChanges;
 		const unsigned long scenes = sceneChanges;
 		const auto unchanged = [&] { return stateChanges == changes && sceneChanges == scenes; };
-		const auto count = [&](std::vector<Timer>& timers, const std::string& where)
+		const auto count = [&](std::vector<Timer>& timers, const TimerOwner& where)
 		{
 			for (std::size_t t = 0; t < timers.size() && unchanged(); ++t)
 			{
-				if (tickTimer(timers[t], where))
+				for (float owed = seconds; owed > kTimeSlack && unchanged() && tickTimer(timers[t], timers[t].clock, where, owed);)
 				{
 					const std::vector<Command> commands = timers[t].commands;
 					takeTurnStop();
 					for (const auto& command : commands)
 					{
-						executor.executeTimer(command, nullptr);
+						executor.run(command, Doer{});
 						if (takeTurnStop() || !unchanged()) { break; }
 					}
 				}
 			}
 		};
-		count(found->second, "state '" + stateName + "' > <timer>");
+		count(found->second, { "state", stateName });
 
 		// Then its current scene's.
-		const std::string scene = currentScene(stateName);
+		const Name scene = currentScene(stateName);
 		const auto sceneFound = sceneTimers.find(scene);
 		if (unchanged() && sceneFound != sceneTimers.end())
 		{
-			count(sceneFound->second, "scene '" + scene + "' > <timer>");
+			count(sceneFound->second, { "scene", scene });
 		}
 	}
 
-	void Game::holdVariablesForExpressions(const Object& object)
+	void Game::shareVariables(const Object& object)
 	{
 		for (const auto& [variableName, value] : object.variable)
 		{
-			const auto held = expr.objectVariables.find(object.name + "." + variableName);
-			if (held != expr.objectVariables.end()) { held->second = value; }
+			if (float* held = expressionSlot(object.name, variableName)) { *held = value; }
 		}
 	}
 
-	void Game::refreshBoundTexts(const std::string& ownerName, const std::string& variableName, float value)
+	float* Game::expressionSlot(Name owner, Name variable)
+	{
+		// A copy spawned under a new name adds its own.
+		if (expressionSlotsOf != expr.objectVariables.size())
+		{
+			expressionSlots.clear();
+			expressionSlotsOf = expr.objectVariables.size();
+		}
+		const auto [at, added] = expressionSlots.try_emplace({ owner, variable }, nullptr);
+		if (added)
+		{
+			const auto found = expr.objectVariables.find(owner + "." + variable);
+			if (found != expr.objectVariables.end()) { at->second = &found->second; }
+		}
+		return at->second;
+	}
+
+	void Game::variableChanged(Name ownerName, Name variableName, float value)
 	{
 		// Expressions read the variable too (a timer's <every>, worked out again
 		// each round), so they see the new value.
-		const auto expressionVariable = expr.objectVariables.find(ownerName + "." + variableName);
-		if (expressionVariable != expr.objectVariables.end())
-		{
-			expressionVariable->second = value;
-		}
+		if (float* held = expressionSlot(ownerName, variableName)) { *held = value; }
 
 		for (auto& object : objects)
 		{
-			if (object.showsVariable(ownerName, variableName))
+			if (showsVariable(object, ownerName, variableName))
 			{
 				relabel(object);
 			}
 		}
 	}
 
-	bool Game::setVariable(const std::string& objectName, const std::string& variableName, float value)
+	bool Game::setVariable(Name objectName, Name variableName, float value)
 	{
-		Object* owner = tryGetObject(objectName);
+		Object* owner = find(playerGroups.turnOwner(objectName));
 		if (!owner)
 		{
 			return false;
@@ -1250,7 +1443,7 @@ namespace xge
 		}
 
 		variableIt->second = value;
-		refreshBoundTexts(owner->name, variableName, value);
+		variableChanged(owner->name, variableName, value);
 		return true;
 	}
 
@@ -1262,90 +1455,82 @@ namespace xge
 		// is put away, an alien is back), and nothing it was in the middle
 		// of still going. Doesn't touch bound text displays - callers do
 		// that afterward, once they know which objects actually changed.
-		void resetObjectState(Object& object)
+		void resetObjectState(Object& object, Parts& parts, Resources& resources)
 		{
-			object.backToStart();
+			static_cast<Moment&>(object) = startOf(parts, object);
+			object.placed = true;
 
-			// Also drop any directions CommandExecutor::applyActionVelocity
-			// currently has recorded as held: velocity above is reset to rest,
-			// so a stale held direction (a key never released across this
-			// reset) shouldn't be able to resurrect part of the old velocity
-			// the next time some other direction's key event recomputes it.
-			object.activeMoveStep = {};
-
-			// The same goes for thrust still recorded as held, and a <stop />
+			// What its keys drive is dropped too, so a key held across the
+			// reset cannot bring back part of the old velocity. A <stop />
 			// that took the acceleration away is given back above.
-			object.activeThrust = {};
-			object.activeThrustBurn = {};
-
-			// No turn or thrust along its heading still held.
-			object.activeTurn = {};
-			object.activeThrustAheadBy.clear();
-			object.swingHeld = false;
-			object.swingDone = 0.0f;
-			object.picked.clear();
-			object.pickChain = false;
-			object.moveFromColumn = 0;
-			object.moveFromRow = 0;
-			object.moveToColumn = 0;
-			object.moveToRow = 0;
-			object.marked.clear();
-			object.markCopies.clear();
-			object.resting = false;
-			object.settledAge = 1000;
-			object.spin = 0.0f;
+			parts.drives.remove(object.id);
+			if (Object::Swing* swing = parts.swings.find(object.id)) { swing->held = false; swing->done = 0.0f; }
+			if (Object::Picker* picker = parts.pickers.find(object.id))
+			{
+				picker->picked.clear();
+				picker->inChain = false;
+				picker->fromColumn = 0;
+				picker->fromRow = 0;
+				picker->toColumn = 0;
+				picker->toRow = 0;
+				picker->marks.marked.clear();
+				picker->marks.copies.clear();
+			}
+			if (Object::Rest* rest = parts.rests.find(object.id)) { *rest = {}; }
+			if (Object::Cells* cells = parts.cells.find(object.id)) { cells->place = cells->start; }
+			object.turning.spin = 0.0f;
 			object.showHeading();
 
 			// An animation starts again from its first picture, and a
 			// picture with holes in it is whole again.
 			object.restartAnimation();
 			// Nothing of it seen yet.
-			object.seen = false;
-			object.inDark = object.dark != Object::Darkness::None;
+			object.dark.seen = false;
+			object.dark.hidden = object.dark.kind != Object::Darkness::None;
 
-			if (object.unholed)
+			if (Object::Unholed* unholed = parts.unholed.find(object.id))
 			{
-				object.bitmap = std::move(object.unholed);
-				object.unholed.reset();
-				object.visualDirty = true;
+				resources.release(object.drawn.bitmap);
+				object.drawn.bitmap = unholed->bitmap;
+				parts.unholed.remove(object.id);
+				object.drawn.visualDirty = true;
 			}
 
 			// Nor should a reset object go on riding, or jump; it
 			// faces the way it started, and its timers start over.
 			object.riding = {};
-			object.carrying.clear();
-			object.dropped.clear();
+			parts.carries.remove(object.id);
 			object.hopPending = {};
-			object.jumpStep = {};
-			object.jumpFramesLeft = 0;
-			object.jumpFrames = 0;
-			object.jumpArc = 0.0f;
-			object.grounded = false;
-			object.leaping = false;
-			object.climbing = false;
-			object.climbOnce = false;
+			parts.flights.remove(object.id);
+			object.airborne = false;
+			object.footing.grounded = false;
+			object.footing.jumping = false;
+			object.footing.climbing = false;
+			if (Object::Climb* climb = parts.climbs.find(object.id))
+			{
+				climb->climbOnce = false;
+				climb->activeClimb = {};
+			}
 			object.shifted = {};
-			object.activeClimb = {};
-			object.hasAim = false;
-			object.followPath.clear();
-			object.walk = {};
+			object.aim.reset();
+			parts.onPaths.remove(object.id);
+			if (Maze* maze = parts.mazes.find(object.id)) { maze->walk = {}; }
 			object.blink = 0.0f;
-			object.goingLeft = object.start.facing == Direction::Left;
+			object.mirror.goingLeft = startOf(parts, object).facing == Direction::Left;
 			object.faceMirror();
 			object.wearPalette(0);
-			if (!object.looks.empty()) { object.showLook(object.firstLook); }
-			for (auto& timer : object.timers)
+			if (!object.looks.all().empty()) { object.showLook(object.looks.set->first); }
+			if (std::vector<Timer::Clock>* clocks = parts.clocks.find(object.id))
 			{
-				timer.framesLeft = -1;
-				timer.done = false;
+				for (Timer::Clock& clock : *clocks) { clock = {}; }
 			}
 		}
 	}
 
-	void Game::resetObject(const std::string& given)
+	void Game::resetObject(Name given)
 	{
-		const std::string name = fullName(given);
-		Object* object = tryGetObject(name);
+		const Name name = fullName(given);
+		Object* object = find(name);
 		if (!object)
 		{
 			std::cout << "warning: <reset object=\"" << name << "\" />: no such object\n";
@@ -1361,21 +1546,21 @@ namespace xge
 				// A copy did not exist when the game started.
 				if (candidate.isCopy()) { despawn(candidate); continue; }
 				drawStartAgain(candidate);
-				resetObjectState(candidate);
-				holdVariablesForExpressions(candidate);
+				resetObjectState(candidate, objectParts, expr.resources);
+				shareVariables(candidate);
 				stageChanged();
 			}
 		}
 
 		// Back where it started, it is no longer carried.
-		for (auto& carrier : objects)
+		objectParts.carries.each([&](ObjectId, Object::Carry& carry)
 		{
-			const Object* carried = carrier.carrying.empty() ? nullptr : tryGetObject(carrier.carrying);
+			const Object* carried = carry.what.empty() ? nullptr : find(carry.what);
 			if (carried && (carried->named(name)))
 			{
-				carrier.carrying.clear();
+				carry.what.clear();
 			}
-		}
+		});
 
 		// Refresh every text display bound to one of this object's variables
 		// (same notify pattern as setVariable), so e.g. a HUD showing
@@ -1383,31 +1568,42 @@ namespace xge
 		const std::string owner = object->name;
 		for (auto& other : objects)
 		{
-			if (std::any_of(other.textPieces.begin(), other.textPieces.end(), [&](const TextPiece& piece) { return piece.owner == owner; }))
+			const std::vector<TextPiece>& pieces = textPiecesOf(other);
+			if (std::any_of(pieces.begin(), pieces.end(), [&](const TextPiece& piece) { return piece.owner == owner; }))
 			{
 				relabel(other);
 			}
 		}
 	}
 
-	void Game::become(const std::string& target, const std::string& sprite, const std::string& from, const std::string& style)
+	void Game::become(Name target, Name sprite, Name from, Name style)
 	{
 		bool handChanged = false;
 		for (auto& object : objects)
 		{
-			if ((object.named(target)) && (from.empty() || object.lookName() == from))
+			// A group of players taking turns: the one on its turn.
+			const bool offTurn = turnsOf(object).takes && object.inGroup(target) && object.variable[words::turn] == 0.0f;
+			if (object.named(target) && !offTurn && (from.empty() || object.lookName() == from))
 			{
-				const std::string before = object.hand.is ? object.lookName() : std::string();
-				if (!sprite.empty()) { showLookNamed(object, sprite); }
+				const Name before = isHand(object) ? object.lookName() : Name();
+				// A holder given a look of what it holds, not its own: what
+				// it holds turned to it (a dealer's hidden card shown).
+				const bool own = std::any_of(object.looks.all().begin(), object.looks.all().end(), [&](const Object::Look& look) { return look.name == sprite; });
+				if (!sprite.empty() && isHolder(object) && !own)
+				{
+					itemHolders.turnHeld(object, sprite);
+					continue;
+				}
+				if (!sprite.empty()) { showLook(object, sprite); }
 				if (!style.empty()) { wearPaletteNamed(object, style); }
-				handChanged = handChanged || (object.hand.is && object.lookName() != before);
+				handChanged = handChanged || (isHand(object) && object.lookName() != before);
 			}
 		}
 		// A hand sits centred on what it points at, by the size of its look.
-		if (handChanged) { layOutCards(); }
+		if (handChanged) { itemHolders.layOutItems(); }
 	}
 
-	void Game::reveal(const std::string& target, int count)
+	void Game::reveal(Name target, int count)
 	{
 		for (auto& object : objects)
 		{
@@ -1419,12 +1615,16 @@ namespace xge
 			// Back in play is a new start: a <random> in it is drawn again,
 			// and its timers and animation start over.
 			drawStartAgain(object);
-			object.startOver();
-			object.position = object.start.position;
-			object.velocity = object.start.velocity;
+			object.restartAnimation();
+			if (std::vector<Timer::Clock>* clocks = clocksOf(object))
+			{
+				for (Timer::Clock& clock : *clocks) { clock = {}; }
+			}
+			object.position = startOf(object).position;
+			object.velocity = startOf(object).velocity;
 			object.isVisible = true;
-			object.collisionsOn = object.start.collisionsOn;
-			object.followPath.clear();
+			object.collisionsOn = startOf(object).collisionsOn;
+			objectParts.onPaths.remove(object.id);
 			--count;
 		}
 	}
@@ -1434,34 +1634,29 @@ namespace xge
 		return paths;
 	}
 
-	void Game::follow(Object& object, const std::string& path, int wait)
+	void Game::follow(Object& object, Name path, float wait)
 	{
 		const Path& chosen = paths.at(path);
-		if (object.isFollowing())
+		if (isFollowing(object))
 		{
 			return;
 		}
 
-		object.followPath = path;
-		object.followLeg = 0;
-		object.followLeft = {};
-		object.followLegStarted = false;
-		object.followWait = std::max(0, wait);
+		objectParts.onPaths.add(object.id, objectParts.orderOf(object.id), Object::OnPath{ path, 0, {}, false, std::max(0.0f, wait) });
 		object.velocity = {};
-		if (chosen.hasStart)
+		if (chosen.start)
 		{
-			object.position = chosen.start;
+			object.position = *chosen.start;
 		}
 	}
 
-	void Game::follow(const std::string& target, const std::string& path, float stagger, int nearest, const Object* from)
+	void Game::follow(Name target, Name path, float stagger, int nearest, const Object* from)
 	{
-		const int framerate = windowDesc.framerate > 0 ? windowDesc.framerate : 60;
 		std::vector<Object*> going;
 		for (auto& object : objects)
 		{
 			const bool named = object.named(target);
-			if (!named || !object.isVisible || object.isFollowing() || isAway(object) || &object == from) { continue; }
+			if (!named || !object.isVisible || isFollowing(object) || isAway(object) || &object == from) { continue; }
 			going.push_back(&object);
 		}
 
@@ -1472,7 +1667,7 @@ namespace xge
 			const auto apart = [&](const Object* object)
 			{
 				const Vector2f d = object->position + object->size * 0.5f - middle;
-				return d.x * d.x + d.y * d.y;
+				return dotOf(d, d);
 			};
 			std::stable_sort(going.begin(), going.end(), [&](const Object* a, const Object* b) { return apart(a) < apart(b); });
 			if (going.size() > static_cast<std::size_t>(nearest)) { going.resize(static_cast<std::size_t>(nearest)); }
@@ -1481,57 +1676,62 @@ namespace xge
 		int setOff = 0;
 		for (Object* object : going)
 		{
-			follow(*object, path, static_cast<int>(std::lround(static_cast<float>(setOff) * stagger * static_cast<float>(framerate))));
+			follow(*object, path, static_cast<float>(setOff) * stagger);
 			++setOff;
 		}
 	}
 
-	void Game::shift(const std::string& target, Vector2f by)
+	void Game::shift(Name target, Vector2f by)
 	{
-		const std::string name = fullName(target);
+		const Name name = fullName(target);
 		for (auto& object : objects)
 		{
 			if (!object.named(name)) { continue; }
 			object.shifted += by;
-			if (!object.isFollowing()) { object.position += by; }
+			if (!isFollowing(object)) { object.position += by; }
 		}
 	}
 
-	void Game::applyPaths(void)
+	void Game::applyPaths(float seconds)
 	{
 		CommandExecutor executor(*this);
 
 		for (auto& object : objects)
 		{
-			if (!object.isFollowing() || !isShown(object))
+			Object::OnPath* onPath = objectParts.onPaths.find(object.id);
+			if (!onPath || !isShown(object))
 			{
 				continue;
 			}
 
-			if (object.followWait > 0)
+			if (onPath->wait > kTimeSlack)
 			{
-				--object.followWait;
+				onPath->wait -= seconds;
 				object.velocity = {};
 				continue;
 			}
 
-			Path& path = paths.at(object.followPath);
+			Path& path = paths.at(onPath->name);
 			bool moving = false;
-			while (object.isFollowing() && object.followLeg < path.steps.size())
+			// How far it goes this step: a corner reached on the way is passed
+			// (the object put on it) and the rest goes on along the next leg.
+			const float t = seconds;
+			float budget = path.speed * t;
+			while (onPath && onPath->leg < path.steps.size())
 			{
-				PathStep& leg = path.steps[object.followLeg];
-				if (!object.followLegStarted)
+				PathStep& leg = path.steps[onPath->leg];
+				if (!onPath->legStarted)
 				{
-					object.followLegStarted = true;
-					object.followLeft = leg.by;
-					if (leg.liveX) { object.followLeft.x = stepHalf(*leg.liveX, object); }
-					if (leg.liveY) { object.followLeft.y = stepHalf(*leg.liveY, object); }
+					onPath->legStarted = true;
+					onPath->left = leg.by;
+					if (leg.liveX) { onPath->left.x = stepHalf(*leg.liveX, object); }
+					if (leg.liveY) { onPath->left.y = stepHalf(*leg.liveY, object); }
 
 					// A copy: a command may reset the object, which ends the
 					// path. Its own commands too, made for it when the game
 					// loaded, or, a copy made since, now, once.
 					std::vector<Command> commands = leg.commands;
-					if (leg.ownRaw)
+					if (leg.ownWritten)
 					{
 						auto own = leg.ownBy.find(object.name);
 						if (own == leg.ownBy.end())
@@ -1543,37 +1743,45 @@ namespace xge
 					}
 					for (const auto& command : commands)
 					{
-						if (!executor.executeTimer(command, &object)) { break; }
+						if (!executor.run(command, Doer::of(&object))) { break; }
 					}
-					if (!object.isFollowing()) { break; }
+					// The commands may have ended the path, or moved the parts.
+					onPath = objectParts.onPaths.find(object.id);
+					if (!onPath) { break; }
 				}
 
 				// What is left of this leg: the rest of a step, or the way home
 				// from wherever it has got to.
-				const Vector2f left = leg.home ? object.start.position + object.shifted - object.position : object.followLeft;
-				const std::optional<Vector2f> step = pathStep(left, path.speed);
+				const Vector2f left = leg.home ? startOf(object).position + object.shifted - object.position : onPath->left;
+				const std::optional<Vector2f> step = pathStep(left, budget);
+				const bool last = onPath->leg + 1 == path.steps.size();
+				const float distance = lengthOf(left);
+				if (!step)
+				{
+					++onPath->leg;
+					onPath->legStarted = false;
+					continue;
+				}
 
-				// Within a frame of home, it is put there: a place a <shift>
-				// keeps moving would otherwise stay a step ahead of it.
-				if (leg.home && step && left.x * left.x + left.y * left.y <= path.speed * path.speed)
+				// Home within this step: it is put there (a place a <shift>
+				// keeps moving would otherwise stay a step ahead of it). A
+				// corner reached with more legs to come: put on it, the rest
+				// of the step for the next leg.
+				if (distance <= budget && (leg.home || !last))
 				{
 					object.position += left;
 					object.velocity = {};
-					++object.followLeg;
-					object.followLegStarted = false;
-					continue;
-				}
-				if (!step)
-				{
-					++object.followLeg;
-					object.followLegStarted = false;
+					if (!leg.home) { onPath->left = {}; }
+					budget -= distance;
+					++onPath->leg;
+					onPath->legStarted = false;
 					continue;
 				}
 
-				object.velocity = *step;
-				if (!leg.home) { object.followLeft -= *step; }
+				object.velocity = t > 0.0f ? *step * (1.0f / t) : Vector2f{};
+				if (!leg.home) { onPath->left -= *step; }
 				// One that faces somewhere faces the way it flies.
-				if (object.hasHeading)
+				if (object.turning.hasHeading)
 				{
 					object.heading = headingOf(*step);
 					object.showHeading();
@@ -1583,10 +1791,10 @@ namespace xge
 			}
 
 			// The end of the path: it comes to rest where it is.
-			if (object.isFollowing() && !moving)
+			if (onPath && !moving)
 			{
 				object.velocity = {};
-				object.followPath.clear();
+				objectParts.onPaths.remove(object.id);
 			}
 		}
 	}
@@ -1595,7 +1803,7 @@ namespace xge
 	{
 		// A new game starts quiet: whatever loop the last one left on (music,
 		// a thrust held into the game over) stops.
-		loops.clear();
+		soundBoard.stopLoops();
 		++resets;
 		turns.clear();
 		turnHandedOver = false;
@@ -1613,8 +1821,8 @@ namespace xge
 		{
 			if (object.kept) { continue; }
 			drawStartAgain(object);
-			resetObjectState(object);
-			holdVariablesForExpressions(object);
+			resetObjectState(object, objectParts, expr.resources);
+			shareVariables(object);
 			stageChanged();
 		}
 
@@ -1628,10 +1836,10 @@ namespace xge
 		// that all of them are back to their starting values (same notify
 		// pattern as resetObject/setVariable, just over every bound
 		// display instead of one object's worth).
-		refreshAllBoundTexts();
+		relabelAll();
 
-		// Collapse the whole state stack. mainmenu -> playing -> gameover ->
-		// mainmenu -> ... is push-only (see pushState/setCurrentState) - only
+		// Collapse the whole state stack. title -> playing -> over ->
+		// title -> ... is push-only (see pushState/setCurrentState) - only
 		// settings and paused ever pop back off - so left alone it grows for as
 		// long as the game keeps getting played. Clear it and start fresh from
 		// the very first state, exactly like Engine's constructor does once at
@@ -1642,15 +1850,16 @@ namespace xge
 		}
 		setCurrentState(0);
 
-		// A new game: the cards shuffled and dealt again.
-		dealDecks();
+		// A new game: the cards shuffled and dealt again, the first player's turn.
+		itemHolders.sendStarts();
+		playerGroups.startPlayers();
 	}
 
-	void Game::refreshAllBoundTexts(void)
+	void Game::relabelAll(void)
 	{
 		for (auto& object : objects)
 		{
-			if (!object.textPieces.empty())
+			if (objectParts.boundTexts.has(object.id))
 			{
 				relabel(object);
 			}
@@ -1659,18 +1868,21 @@ namespace xge
 
 	void Game::relabel(Object& object)
 	{
-		if (object.picture.kind != ShapeKind::Text)
+		Object::BoundText* bound = objectParts.boundTexts.find(object.id);
+		if (object.drawn.picture->kind != ShapeKind::Text || !bound)
 		{
 			return;
 		}
 
-		for (TextPiece& piece : object.textPieces)
+		for (TextPiece& piece : bound->pieces)
 		{
 			if (piece.owner.empty())
 			{
 				continue;
 			}
-			const Object* owner = tryGetObject(piece.owner);
+			// Its own numbers (self.value) read from itself: a copy just
+			// spawned is not yet among the objects a name finds.
+			const Object* owner = piece.owner == object.name ? &object : find(piece.owner);
 			if (!owner)
 			{
 				continue;
@@ -1680,21 +1892,26 @@ namespace xge
 			{
 				piece.shown = showPiece(piece.kind, value->second, piece.choices);
 			}
-			else if (const auto live = numberOf(*owner, piece.variable))
+			else if (const auto live = numberOf(objectParts, *owner, piece.variable))
 			{
 				piece.shown = showPiece(piece.kind, *live, piece.choices);
 			}
 		}
 
-		const std::string text = joinText(object.textPieces);
-		if (object.picture.text != text)
+		const std::string text = joinText(bound->pieces);
+		if (object.drawn.picture->text != text)
 		{
-			object.picture.text = text;
-			object.visualDirty = true;
+			object.drawn.picture.edit().text = text;
+			object.drawn.visualDirty = true;
+			// The size of its new words, now: what this frame's edges, touches
+			// and the positions made from it look at.
+			const Vector2f before = object.size;
+			object.size = object.pictureSize();
+			textsResized = textsResized || object.size != before;
 		}
 	}
 
-	std::string Game::wayLeadsTo(const std::string& way) const
+	Name Game::wayLeadsTo(Name way) const
 	{
 		if (!currentState.empty())
 		{
@@ -1713,17 +1930,19 @@ namespace xge
 
 	void Game::enter(const CmdEnterScene& command)
 	{
-		const std::string scene = command.way.empty() ? command.scene : wayLeadsTo(command.way);
+		const Name scene = command.way.empty() ? command.scene : wayLeadsTo(command.way);
 		if (!scene.empty()) { enterScene(scene); }
+		// A new level: nothing to undo into the last.
+		cellMapping.forgetUndo();
 	}
 
 	void Game::reset(const CmdResetScene& command)
 	{
-		const std::string scene = command.way.empty() ? command.scene : wayLeadsTo(command.way);
+		const Name scene = command.way.empty() ? command.scene : wayLeadsTo(command.way);
 		if (!scene.empty()) { resetScene(scene); }
 	}
 
-	void Game::resetScene(const std::string& scene)
+	void Game::resetScene(Name scene)
 	{
 		const auto owner = std::find_if(states.begin(), states.end(), [&](const State& state)
 			{
@@ -1736,41 +1955,37 @@ namespace xge
 
 		for (auto& object : objects)
 		{
-			if (object.start.ownerScene != scene) { continue; }
+			if (startOf(object).ownerScene != scene) { continue; }
 			if (object.isCopy()) { despawn(object); continue; }
 			drawStartAgain(object);
-			resetObjectState(object);
-			holdVariablesForExpressions(object);
+			resetObjectState(object, objectParts, expr.resources);
+			shareVariables(object);
 			stageChanged();
 
 			// Back where it started, it is no longer carried.
-			for (auto& carrier : objects)
-			{
-				if (carrier.carrying == object.name) { carrier.carrying.clear(); }
-			}
+			objectParts.carries.each([&](ObjectId, Object::Carry& carry) { if (carry.what == object.name) { carry.what.clear(); } });
 		}
 
 		for (const Scene& each : owner->scenes)
 		{
 			if (each.name == scene) { sceneTimers[scene] = each.timers; }
 		}
-		refreshAllBoundTexts();
+		relabelAll();
 	}
 
 	void Game::updateLockstepObjects(const Object& object) noexcept
 	{
-		const int lockstepNum = object.collisionData.lockstep;
+		const int lockstepNum = object.kind->collisionData.lockstep;
 
-		// Every member gets exactly the same treatment. This used to shift the
-		// members stored before the touching one by three steps and the rest
-		// by one (and repeated that on every right-hand bounce), which pushed
-		// the last column of a block further from the others each time.
+		// Every member gets the same treatment. A stepped one is taken back by its whole last step, so the rest of
+		// the column that met the edge with it are inside again; the others
+		// turn at the moment the edge is met (in the sweep), where they are.
 		for (auto& obj : objects)
 		{
-			if (obj.collisionData.lockstep == lockstepNum)
+			if (obj.kind->collisionData.lockstep == lockstepNum)
 			{
 				obj.velocity.x *= -1;
-				obj.position.x += obj.velocity.x;
+				if (obj.animation.frames.shows().stepped) { obj.position.x += obj.velocity.x * obj.animation.shareBefore; }
 			}
 		}
 	}
@@ -1780,7 +1995,7 @@ namespace xge
 		// Shared by a collision rule's class/object filter and a state
 		// condition's: empty filterClass/filterObject match anything; either or
 		// both narrow it to a specific class and/or one specific named object.
-		bool matchesClassOrObjectFilter(const std::string& filterClass, const std::string& filterObject, const Object& candidate)
+		bool matchesClassOrObjectFilter(const Name filterClass, const Name filterObject, const Object& candidate)
 		{
 			if (!filterClass.empty() && filterClass != candidate.objClass) { return false; }
 			if (!filterObject.empty() && !candidate.named(filterObject)) { return false; }
@@ -1790,11 +2005,11 @@ namespace xge
 		// The name is the object's, or one of its groups', under the path of
 		// the scene or state it belongs to: not the name its state gives that
 		// piece in every scene.
-		bool namedByPath(const Object& object, const std::string& name)
+		bool namedByPath(const Object& object, const Name name)
 		{
-			const std::string& owner = object.ownerScene.empty() ? object.ownerState : object.ownerScene;
+			const Name owner = object.ownerScene.empty() ? object.ownerState : object.ownerScene;
 			return !name.empty() && !owner.empty() && object.named(name)
-				&& name.compare(0, owner.size() + 1, owner + ".") == 0;
+				&& name.str().compare(0, owner.size() + 1, owner + ".") == 0;
 		}
 
 		bool collisionRuleMatches(const CollisionRule& rule, const Object& other)
@@ -1808,11 +2023,11 @@ namespace xge
 	void Game::atEdge(Object& object, Edge edge)
 	{
 		CommandExecutor executor(*this);
-		const std::vector<Command>& commands = object.collisionData.edges[edgeIndex(edge)].commands;
-		const std::vector<EdgeGuard>& guards = object.collisionData.edges[edgeIndex(edge)].guards;
+		const std::vector<Command>& commands = object.kind->collisionData.edges[edgeIndex(edge)].commands;
+		const std::vector<EdgeGuard>& guards = object.kind->collisionData.edges[edgeIndex(edge)].guards;
 		// sprite= asks for the look it had as it met the edge, not one an
 		// earlier rule changed (or the next would answer a turn again).
-		const std::string look = object.lookName();
+		const Name look = object.lookName();
 		for (std::size_t i = 0; i < commands.size();)
 		{
 			// unless= is looked at as it comes, after the rules before it
@@ -1824,15 +2039,16 @@ namespace xge
 			}
 			// A verb refused ends its rule there; the next rule still runs.
 			const std::size_t end = guard != guards.end() ? guard->first + guard->count : i + 1;
-			while (i < end && executor.executeScreenEdgeCollision(commands[i], object, edge)) { ++i; }
+			while (i < end && executor.run(commands[i], Doer::atEdgeOf(object, edge))) { ++i; }
 			i = end;
 		}
 	}
 
-	bool Game::isEdgeRulePassedOver(const Object& object, const std::string& look, const EdgeGuard& guard)
+	bool Game::isEdgeRulePassedOver(const Object& object, Name look, const EdgeGuard& guard)
 	{
 		return (!guard.sprite.empty() && look != guard.sprite)
-			|| (!guard.unlessClass.empty() && isTouchingClass(object, object, guard.unlessClass));
+			|| (!guard.unlessClass.empty() && isTouchingClass(object, object, guard.unlessClass))
+			|| (guard.check && !holdsFor(*guard.check, &object));
 	}
 
 	// Whether the edge has a stick() rule that holds right now (one in a rule
@@ -1842,8 +2058,8 @@ namespace xge
 	// before the move.
 	bool Game::sticksAt(const Object& object, Edge edge)
 	{
-		const auto& commands = object.collisionData.edges[edgeIndex(edge)].commands;
-		const auto& guards = object.collisionData.edges[edgeIndex(edge)].guards;
+		const auto& commands = object.kind->collisionData.edges[edgeIndex(edge)].commands;
+		const auto& guards = object.kind->collisionData.edges[edgeIndex(edge)].guards;
 		for (std::size_t i = 0; i < commands.size(); ++i)
 		{
 			const bool passedOver = std::any_of(guards.begin(), guards.end(), [&](const EdgeGuard& guard)
@@ -1862,31 +2078,91 @@ namespace xge
 	{
 		// Pieces of cell maps meet each other by their moves, and a shape
 		// touches nothing but by them.
-		if ((a.onCells && b.onCells) || a.isShape() || b.isShape()) { return false; }
+		if ((a.onCells && b.onCells) || (a.onCells && isShape(a)) || (b.onCells && isShape(b))) { return false; }
 
 		const auto answers = [](const Object& self, const Object& other)
 		{
-			return std::any_of(self.collisionData.others.begin(), self.collisionData.others.end(),
+			return std::any_of(self.kind->collisionData.others.begin(), self.kind->collisionData.others.end(),
 				[&](const CollisionRule& rule) { return collisionRuleMatches(rule, other); });
 		};
 
 		return answers(a, b) || answers(b, a);
 	}
 
-	// A thruster burns one unit of the object's own `variable`, if it has any
-	// left.
-	bool Game::burn(Object& object, const std::string& variable)
+	std::vector<std::size_t> Game::answerGroups(const std::vector<Object>& among)
+	{
+		// The names rules pick by (not only a class): what bears one of them
+		// is answered for alone, and so is what has such a rule.
+		std::set<std::string, std::less<>> picked;
+		for (const Object& object : among)
+		{
+			for (const CollisionRule& rule : object.kind->collisionData.others)
+			{
+				if (!rule.filterObject.empty()) { picked.insert(rule.filterObject); }
+			}
+		}
+		const auto alone = [&](const Object& object)
+		{
+			const auto& rules = object.kind->collisionData.others;
+			if (std::any_of(rules.begin(), rules.end(), [](const CollisionRule& rule) { return !rule.filterObject.empty(); })) { return true; }
+			return std::any_of(picked.begin(), picked.end(), [&](Name name) { return object.named(name); });
+		};
+
+		// The rest by what canCollide reads of them: kind (its rules), class,
+		// and whether it is a piece or a shape on cells.
+		std::map<std::tuple<const void*, const void*, int>, std::size_t> groups;
+		std::vector<std::size_t> numbers(among.size());
+		for (std::size_t i = 0; i < among.size(); ++i)
+		{
+			const Object& object = among[i];
+			if (alone(object)) { numbers[i] = i; continue; }
+			const int cells = (object.onCells ? 1 : 0) + (isShape(object) ? 2 : 0);
+			const auto key = std::make_tuple(static_cast<const void*>(object.kind.get()), static_cast<const void*>(&object.objClass.str()), cells);
+			numbers[i] = groups.emplace(key, among.size() + groups.size()).first->second;
+		}
+		return numbers;
+	}
+
+	// A hitbox is for what hurts or is taken; what is stood on, stopped at,
+	// bounced off or ridden is met by the whole picture, so feet pulled in
+	// never sink into a floor.
+	bool Game::touchesByPicture(const Object& a, const Object& b)
+	{
+		const auto has = [](const Object& object) { return !object.hitboxes().empty() || !object.animation.frames.shows().hitboxes.empty()
+			|| std::any_of(object.looks.all().begin(), object.looks.all().end(), [](const Object::Look& look) { return !look.frames.shows().hitboxes.empty(); }); };
+		if (!has(a) && !has(b)) { return false; }
+
+		const auto solid = [](const Command& command)
+		{
+			const Command& shape = shapeOf(command);
+			return std::holds_alternative<CmdLand>(shape) || std::holds_alternative<CmdStick>(shape) || std::holds_alternative<CmdStop>(shape)
+				|| std::holds_alternative<CmdBounce>(shape) || std::holds_alternative<CmdRide>(shape) || std::holds_alternative<CmdKnock>(shape)
+				|| std::holds_alternative<CmdDeflect>(shape) || std::holds_alternative<CmdShove>(shape);
+		};
+		const auto standsOn = [&](const Object& self, const Object& other)
+		{
+			return std::any_of(self.kind->collisionData.others.begin(), self.kind->collisionData.others.end(), [&](const CollisionRule& rule)
+				{
+					return collisionRuleMatches(rule, other) && std::any_of(rule.commands.begin(), rule.commands.end(), solid);
+				});
+		};
+		return standsOn(a, b) || standsOn(b, a);
+	}
+
+	// A thruster burns 60 units a second of the object's own `variable`,
+	// if it has any left (one a frame at 60, as it always did).
+	bool Game::burn(Object& object, Name variable)
 	{
 		const auto fuel = object.variable.find(variable);
 		if (fuel == object.variable.end() || fuel->second <= 0.0f) { return false; }
-		setVariable(object.name, variable, fuel->second - 1.0f);
+		setVariable(object.name, variable, std::max(0.0f, fuel->second - stepSeconds * 60.0f));
 		return true;
 	}
 
 	// Whether `object` is touching, right now, any other object in play that is
 	// of class `objClass` - `excluding` (the one it is in the middle of a
 	// collision with) is left out, and so is `object` itself.
-	bool Game::isTouchingClass(const Object& object, const Object& excluding, const std::string& objClass)
+	bool Game::isTouchingClass(const Object& object, const Object& excluding, Name objClass)
 	{
 		return std::any_of(objects.begin(), objects.end(), [&](const Object& other)
 			{
@@ -1898,94 +2174,201 @@ namespace xge
 			});
 	}
 
-	void Game::reactTo(Object& self, Object& other, const Touch& touch)
+	void Game::retargetCheck(Condition& check, Name from, Name to)
+	{
+		for (Condition& part : check.parts) { retargetCheck(part, from, to); }
+		if (check.filterObject == from) { check.filterObject = to; }
+		if (check.distanceTo == from) { check.distanceTo = to; }
+		if (check.sees == from) { check.sees = to; }
+		if (check.live)
+		{
+			WrittenValue renamed = *check.live;
+			renameInValue(renamed, from, to);
+			check.live = std::make_shared<const WrittenValue>(std::move(renamed));
+		}
+		for (Condition::Read& read : check.reads)
+		{
+			if (read.owner != from) { continue; }
+			read.owner = to;
+			read.slot = &expr.objectVariables[to + "." + read.variable];
+		}
+	}
+
+	bool Game::seesPast(const Object& from, const Object& to, const std::vector<Name>& past)
+	{
+		const Vector2f start = from.position + from.size * 0.5f;
+		const Vector2f end = to.position + to.size * 0.5f;
+		for (const Name objClass : past)
+		{
+			for (const std::size_t index : matching(objClass, Name{}))
+			{
+				const Object& other = objects[index];
+				if (&other == &from || &other == &to || !other.isVisible || !isShown(other)) { continue; }
+				if (lineCrosses(start, end, other)) { return false; }
+			}
+		}
+		return true;
+	}
+
+	Game::Reaction Game::reactTo(Object& self, Object& other, const Touch& touch)
 	{
 		CommandExecutor executor(*this);
 
-		// What the rules' values can read of the touch (touch.x, ...).
-		if (!liveLinked) { refreshLive(); }
-		const float numbers[] = { touch.point.x, touch.point.y, touch.along, touch.depth, touch.normal.x, touch.normal.y };
-		for (std::size_t i = 0; i < touchNumbers.size(); ++i)
-		{
-			if (touchNumbers[i]) { *touchNumbers[i] = numbers[i]; }
-		}
-
-		// How fast it is going at the moment of the touch, for the rules with
-		// slower/faster; taken once, so that a rule that stops it does not
+		// How fast it is going at the moment of the touch (its live speed while
+		// the rules run); taken once, so that a rule that stops it does not
 		// change which of the rules after it run.
-		const Vector2f motion = motionOf(self);
-		const float speed = std::sqrt(motion.x * motion.x + motion.y * motion.y);
+		const Vector2f motion = motionOf(self, 1.0f);
+		self.motion.speed = std::sqrt(dotOf(motion, motion));
+		self.motion.speedHeld = true;
 		// Its look as the touch happens, for sprite=, likewise.
 		const std::string look = self.lookName();
 
 		// A rule with unless= is passed over while `self` is also touching
 		// something of that class.
-		for (const auto& rule : self.collisionData.others)
+		for (auto& rule : self.kind->collisionData.others)
 		{
 			if (!collisionRuleMatches(rule, other)) { continue; }
 			if (!rule.whileSprite.empty() && look != rule.whileSprite) { continue; }
 			if (!rule.unlessClass.empty() && isTouchingClass(self, other, rule.unlessClass)) { continue; }
 			if (touch.through ? *touch.through != rule.throughClass : !rule.throughClass.empty()) { continue; }
-			if (rule.slower && !(speed < *rule.slower)) { continue; }
-			if (rule.faster && !(speed >= *rule.faster)) { continue; }
 			if (!rule.sides.empty() && std::find(rule.sides.begin(), rule.sides.end(), touch.edge) == rule.sides.end()) { continue; }
-			if (rule.check && !holds(*rule.check)) { continue; }
+			// hitbox= and by=: which of each touched.
+			if ((!rule.hitbox.empty() || !rule.by.empty()) && !touchesWith(self, rule.hitbox, other, rule.by)) { continue; }
+			if (rule.check && !holdsFor(*rule.check, &self, &other)) { continue; }
 
 			// A verb refused ends the rule there, as it ends an action.
 			for (const auto& command : rule.commands)
 			{
-				if (!executor.executeObjectCollision(command, self, other, touch)) { break; }
+				if (!executor.run(command, Doer::meeting(self, other, touch))) { break; }
 			}
 		}
+		self.motion.speedHeld = false;
+		return { executor.throughAsked };
 	}
 
 	void Game::refreshLive(void)
 	{
-		if (!liveLinked)
+		if (!liveLinked || liveLinkedAt != expr.liveRead)
 		{
 			liveLinked = true;
-			const std::vector<std::string>& parts = liveNumberParts();
+			liveLinkedAt = expr.liveRead;
+			liveLinks.clear();
+			const std::vector<LivePart>& live = liveParts();
 			for (std::size_t i = 0; i < objects.size(); ++i)
 			{
-				for (std::size_t part = 0; part < parts.size(); ++part)
+				const std::vector<float*>& numbers = liveNumbersFor(objects[i].name);
+				for (std::size_t part = 0; part < numbers.size(); ++part)
 				{
-					const auto found = expr.liveNumbers.find(objects[i].name + "." + parts[part]);
-					if (found != expr.liveNumbers.end()) { liveLinks.push_back({ &found->second, i, part }); }
+					if (!numbers[part] || (live[part].has && !live[part].has(objectParts, objects[i]))) { continue; }
+					liveLinks.push_back({ numbers[part], i, part });
 				}
-			}
-			const std::vector<std::string>& touch = touchNumberNames();
-			for (std::size_t i = 0; i < touch.size() && i < touchNumbers.size(); ++i)
-			{
-				const auto found = expr.liveNumbers.find(touch[i]);
-				touchNumbers[i] = found == expr.liveNumbers.end() ? nullptr : &found->second;
 			}
 		}
 
 		const std::vector<LivePart>& parts = liveParts();
 		for (const LiveLink& link : liveLinks)
 		{
-			*link.number = parts[link.part].of(objects[link.object]);
+			*link.number = parts[link.part].of(objectParts, objects[link.object]);
 		}
 	}
 
-	float Game::stepHalf(const RawValue& value, const Object& follower)
+	const std::vector<float*>& Game::liveNumbersFor(Name owner)
 	{
-		RawValue own = value;
-		own.text = renameStart(own.text, "self", follower.name);
+		// Calc reads more of them: each is found again.
+		if (liveNumbersAt != expr.liveRead)
+		{
+			liveNumbersOf.clear();
+			liveNumbersAt = expr.liveRead;
+		}
+		const auto [at, added] = liveNumbersOf.try_emplace(owner);
+		if (added)
+		{
+			const std::string prefix = Calc::nameOf(owner) + ".";
+			for (const std::string& part : livePartNames())
+			{
+				const std::string name = prefix + part;
+				const auto found = expr.liveNumbers.find(name);
+				at->second.push_back(found != expr.liveNumbers.end() && expr.calc.has(name) ? &found->second : nullptr);
+			}
+		}
+		return at->second;
+	}
+
+	void Game::follow(void)
+	{
+		for (Object& object : getCurrentObjects())
+		{
+			const Object::Follows* follows = objectParts.follows.find(object.id);
+			if (!follows || !object.exists) { continue; }
+			for (const Object::Follow& each : follows->each)
+			{
+				const float value = evaluateFor(each.value, object);
+				switch (each.part)
+				{
+				case Object::Follow::Part::X: object.position.x = value + object.layout.cellOffset.x; break;
+				case Object::Follow::Part::Y: object.position.y = value + object.layout.cellOffset.y; break;
+				case Object::Follow::Part::Heading:
+				{
+					float degrees = std::fmod(value, 360.0f);
+					if (degrees < 0.0f) { degrees += 360.0f; }
+					if (degrees != object.heading) { object.heading = degrees; object.showHeading(); }
+					break;
+				}
+				case Object::Follow::Part::Variable:
+				{
+					const auto held = object.variable.find(each.variable);
+					if (held != object.variable.end() && held->second != value)
+					{
+						held->second = value;
+						variableChanged(object.name, each.variable, value);
+					}
+					break;
+				}
+				case Object::Follow::Part::Seconds:
+					object.timeAnimation(each.look, each.frame, std::max(0.0f, value));
+					break;
+				}
+			}
+		}
+	}
+
+	float Game::stepHalf(const WrittenValue& value, const Object& follower)
+	{
+		WrittenValue own = value;
+		renameInValue(own, "self", follower.name);
 		return evaluateNow(own, "object '" + follower.name + "' > <follow> > <step>");
 	}
 
-	float Game::evaluateNow(const RawValue& value, const std::string& where)
+	float Game::evaluateNow(const WrittenValue& value, const std::string& where)
 	{
 		refreshLive();
 		return expr.evaluate(value, where);
 	}
 
-	Command Game::makeNow(const CmdLive& live)
+	float Game::evaluateFor(const WrittenValue& value, const Object& object)
+	{
+		// Where it is written is told only when it fails.
+		try { return evaluateNow(value, std::string{}); }
+		catch (const std::runtime_error& error) { throw std::runtime_error("object '" + object.name + "'" + error.what()); }
+	}
+
+	Command Game::makeNow(const CmdLive& live, const Object* self, const Object* other)
 	{
 		try
 		{
-			return makeCommand(*live.raw, [&](const RawValue& value) { return evaluateNow(value, live.where); });
+			// One that says self, for the object running it, and other, for
+			// the one it touched; with none to say, as it was made at load.
+			if (live.namesSelf || live.namesOther)
+			{
+				if ((live.namesSelf && !self) || (live.namesOther && !other)) { return live.loaded->command; }
+				// Into one kept for it, so its texts' room is used again.
+				ownCommands.resize(1);
+				ownCommands.front() = *live.written;
+				if (live.namesSelf) { nameSelfIn(ownCommands.front(), self->name); }
+				if (live.namesOther) { renameObjectIn(ownCommands, "other", other->name); }
+				return makeCommand(ownCommands.front(), [&](const WrittenValue& value) { return evaluateNow(value, live.where); });
+			}
+			return makeCommand(*live.written, [&](const WrittenValue& value) { return evaluateNow(value, live.where); });
 		}
 		catch (const std::runtime_error& error)
 		{
@@ -2003,7 +2386,7 @@ namespace xge
 		{
 			return setVariable(target.owner, target.variable, value);
 		}
-		const std::string& owner = target.owner;
+		const Name owner = target.owner;
 		const LivePart* part = livePartNamed(target.variable);
 		if (!part)
 		{
@@ -2017,8 +2400,8 @@ namespace xge
 			if (!object.named(owner)) { continue; }
 			found = true;
 			const bool heading = std::string(part->name) == "heading";
-			if (heading && !object.hasHeading) { continue; }
-			part->of(object) = part->notBelowZero ? std::max(0.0f, value) : value;
+			if (heading && !object.turning.hasHeading) { continue; }
+			part->of(objectParts, object) = part->notBelowZero ? std::max(0.0f, value) : value;
 			if (heading) { object.showHeading(); }
 		}
 		if (!found)
@@ -2050,28 +2433,39 @@ namespace xge
 		if (found != state.scenes.end()) { checkConditionList(found->conditions); }
 	}
 
-	std::set<KeyCode> Game::computerButtons()
+	std::set<KeyCode> Game::computerButtons(std::set<KeyCode>& taps, float seconds)
 	{
 		std::set<KeyCode> held;
 		bool thought = false;
+		// A <think> with no class= plays the pieces of the player on its turn.
+		const auto play = [&](const CmdThink& written)
+		{
+			thought = true;
+			CmdThink each = written;
+			if (each.objClass.empty()) { each.objClass = playerGroups.turnClass(); }
+			if (const auto key = thinker.think(*this, each, seconds)) { taps.insert(*key); }
+		};
 		for (const Condition& condition : currentState.top().computer)
 		{
 			if (!holds(condition)) { continue; }
 			for (const Command& command : condition.commands)
 			{
 				if (const auto* hold = std::get_if<CmdHold>(&shapeOf(command))) { held.insert(hold->button); }
-				if (const auto* each = std::get_if<CmdThink>(&shapeOf(command)))
-				{
-					thought = true;
-					if (const auto key = think(*each)) { held.insert(*key); }
-				}
+				if (const auto* each = std::get_if<CmdThink>(&shapeOf(command))) { play(*each); }
 			}
+		}
+		// A player the computer plays, on its turn.
+		for (const auto& [name, plays] : playerGroups.memberThinks)
+		{
+			const Object* member = find(name);
+			if (!member || !member->exists || !isShown(*member) || member->variable.find(words::turn)->second == 0.0f) { continue; }
+			play(plays);
 		}
 		// Its turn is over (or the game was put back): the next is planned anew.
 		if (!thought)
 		{
-			stopThinking();
-			cardWait = 30;
+			thinker.stop();
+			itemHolders.itemWait = Holders::kItemPace;
 		}
 		return held;
 	}
@@ -2080,16 +2474,29 @@ namespace xge
 	{
 		for (auto& condition : conditions)
 		{
-			if (holds(condition))
+			if (condition.each.empty())
 			{
+				if (!holds(condition)) { continue; }
 				runConditionCommands(condition.commands);
 				return true; // the state may have just changed - stop for this frame
 			}
+			// Commands that name self: for each one it holds for, in order.
+			std::vector<const Object*> who;
+			if (!holds(condition, &who)) { continue; }
+			for (const Condition::Each& each : condition.each)
+			{
+				if (std::any_of(who.begin(), who.end(), [&](const Object* one) { return one->name == each.object; }))
+				{
+					runConditionCommands(each.commands);
+				}
+			}
+			runConditionCommands(condition.commands);
+			return true;
 		}
 		return false;
 	}
 
-	const std::vector<std::size_t>& Game::matching(const std::string& filterClass, const std::string& filterObject)
+	const std::vector<std::size_t>& Game::matching(Name filterClass, Name filterObject)
 	{
 		auto found = filtered.find({ filterClass, filterObject });
 		if (found == filtered.end())
@@ -2099,49 +2506,58 @@ namespace xge
 			{
 				if (matchesClassOrObjectFilter(filterClass, filterObject, objects[i])) { indices.push_back(i); }
 			}
-			found = filtered.emplace(std::make_pair(filterClass, filterObject), std::move(indices)).first;
+			found = filtered.emplace(std::pair<Name, Name>{ filterClass, filterObject }, std::move(indices)).first;
 		}
 		return found->second;
 	}
 
-	bool Game::holds(const Condition& condition)
+	// A class, or a name every scene has (robots, for playing.robots),
+	// is what is in this state and scene (and the game's own); a name
+	// by its path (room2.robots, playing.room2.robots.3) is that
+	// thing, wherever it is.
+	bool Game::considers(const Condition& condition, const Object& object) const
 	{
-		if (condition.join == RawCondition::Join::All)
-		{
-			return std::all_of(condition.parts.begin(), condition.parts.end(), [&](const Condition& part) { return holds(part); });
-		}
-		if (condition.join == RawCondition::Join::Any)
-		{
-			return std::any_of(condition.parts.begin(), condition.parts.end(), [&](const Condition& part) { return holds(part); });
-		}
+		return (inScope(object) || namedByPath(object, selfIn(condition, condition.filterObject)))
+			&& (condition.sprite.empty() || object.lookName() == condition.sprite);
+	}
 
-		// A class, or a name every scene has (robots, for playing.robots),
-		// is what is in this state and scene (and the game's own); a name
-		// by its path (room2.robots, playing.room2.robots.3) is that
-		// thing, wherever it is.
-		// Only the objects the filter matches are looked at (matching).
-		const std::vector<std::size_t>& candidates = matching(condition.filterClass, condition.filterObject);
-		const auto considers = [&](const Object& object)
-		{
-			return inScope(object) || namedByPath(object, condition.filterObject);
-		};
-
-		// The number compared with: as it was at load, or, when it names
-		// something that changes, as it is now. One that cannot be worked out
-		// now stays as it was at load, with one warning.
+	// The number compared with: as it was at load, or, when it names
+	// something that changes, as it is now. One that cannot be worked out
+	// now stays as it was at load, with one warning.
+	float Game::comparedWith(const Condition& condition)
+	{
 		float against = condition.value;
 		if (condition.live)
 		{
 			for (const Condition::Read& read : condition.reads)
 			{
-				if (const Object* owner = tryGetObject(read.owner))
+				if (const Object* owner = find(read.owner))
 				{
 					if (const auto found = owner->variable.find(read.variable); found != owner->variable.end()) { *read.slot = found->second; }
 				}
 			}
+			const Object* self = condition.saysSelf && !condition.madeFor.empty() ? (testing ? testing : find(condition.madeFor)) : nullptr;
+			const Object* other = condition.saysSelf && !condition.madeAgainst.empty() ? (testingOther ? testingOther : find(condition.madeAgainst)) : nullptr;
+			const auto readOwn = [&](const Object* owner, const std::vector<Name>& reads)
+			{
+				if (!owner) { return; }
+				for (const Name variable : reads)
+				{
+					float* const held = expressionSlot(owner->name, variable);
+					const auto found = owner->variable.find(variable);
+					if (held && found != owner->variable.end()) { *held = found->second; }
+				}
+			};
+			readOwn(self, condition.selfReads);
+			readOwn(other, condition.otherReads);
 			try
 			{
-				against = evaluateNow(*condition.live, condition.where);
+				const std::string* was = std::exchange(expr.selfNow, self ? &self->name.str() : nullptr);
+				const std::string* wasOther = std::exchange(expr.otherNow, other ? &other->name.str() : nullptr);
+				try { against = evaluateNow(*condition.live, condition.where); }
+				catch (...) { expr.selfNow = was; expr.otherNow = wasOther; throw; }
+				expr.selfNow = was;
+				expr.otherNow = wasOther;
 			}
 			catch (const std::runtime_error& error)
 			{
@@ -2151,6 +2567,123 @@ namespace xge
 				}
 			}
 		}
+		return against;
+	}
+
+	// What is tested of one object: how far it is from the nearest of
+	// the other (both in play), or its variable.
+	std::optional<float> Game::measure(const Condition& condition, const Object& object)
+	{
+		if (!condition.sees.empty())
+		{
+			if (!object.isVisible || !isShown(object)) { return std::nullopt; }
+			const Object* nearest = nearestInPlay(object, selfIn(condition, condition.sees));
+			if (!nearest) { return std::nullopt; }
+			return seesPast(object, *nearest, condition.past) ? 1.0f : 0.0f;
+		}
+		if (condition.distanceTo.empty()) { return numberOf(objectParts, object, condition.variableName); }
+		if (!object.isVisible || !isShown(object)) { return std::nullopt; }
+		const Object* nearest = nearestInPlay(object, selfIn(condition, condition.distanceTo));
+		if (!nearest) { return std::nullopt; }
+		const Vector2f apart = (nearest->position + nearest->size * 0.5f) - (object.position + object.size * 0.5f);
+		return lengthOf(apart);
+	}
+
+	// A total over everything that matches and is in play.
+	bool Game::holdsTotal(const Condition& condition, const std::vector<std::size_t>& candidates, float against)
+	{
+		float total = 0.0f;
+		std::size_t counted = 0;
+		for (const std::size_t index : candidates)
+		{
+			const Object& object = objects[index];
+			if (!object.isVisible || !considers(condition, object)) { continue; }
+			if (condition.total == Total::Count)
+			{
+				++counted;
+				continue;
+			}
+			const std::optional<float> number = measure(condition, object);
+			if (!number) { continue; }
+			const float value = *number;
+			if (condition.total == Total::Sum) { total += value; }
+			else if (counted == 0) { total = value; }
+			else if (condition.total == Total::Highest) { total = std::max(total, value); }
+			else { total = std::min(total, value); }
+			++counted;
+		}
+		if (condition.total == Total::Count)
+		{
+			total = static_cast<float>(counted);
+		}
+		else if (counted == 0 && condition.total != Total::Sum)
+		{
+			return false; // no highest or lowest of nothing
+		}
+		return passes(condition.compare, total, against);
+	}
+
+	// The lowest or highest of them: the first that has it.
+	bool Game::holdsExtreme(const Condition& condition, const std::vector<std::size_t>& candidates, std::vector<const Object*>* who)
+	{
+		const Object* best = nullptr;
+		float extreme = 0.0f;
+		for (const std::size_t index : candidates)
+		{
+			const Object& object = objects[index];
+			if (!considers(condition, object)) { continue; }
+			const std::optional<float> number = measure(condition, object);
+			if (!number) { continue; }
+			if (!best || (condition.compare == Compare::Lowest ? *number < extreme : *number > extreme))
+			{
+				best = &object;
+				extreme = *number;
+			}
+		}
+		if (best && who) { who->push_back(best); }
+		return best != nullptr;
+	}
+
+	Name Game::selfIn(const Condition& condition, Name name) const noexcept
+	{
+		if (!condition.saysSelf) { return name; }
+		if (name == words::self) { return testing ? testing->name : condition.madeFor; }
+		if (name == words::other) { return testingOther ? testingOther->name : condition.madeAgainst; }
+		return name;
+	}
+
+	bool Game::holdsFor(const Condition& condition, const Object* self, const Object* other)
+	{
+		const Object* was = std::exchange(testing, self);
+		const Object* wasOther = std::exchange(testingOther, other);
+		const bool held = holds(condition);
+		testing = was;
+		testingOther = wasOther;
+		return held;
+	}
+
+	bool Game::holds(const Condition& condition, std::vector<const Object*>* who)
+	{
+		if (condition.join == WrittenCondition::Join::All)
+		{
+			for (std::size_t i = 0; i < condition.parts.size(); ++i)
+			{
+				if (!holds(condition.parts[i], i + 1 == condition.parts.size() ? who : nullptr)) { return false; }
+			}
+			return true;
+		}
+		if (condition.join == WrittenCondition::Join::Any)
+		{
+			return std::any_of(condition.parts.begin(), condition.parts.end(), [&](const Condition& part)
+				{
+					if (who) { who->clear(); }
+					return holds(part, who);
+				});
+		}
+
+		// Only the objects the filter matches are looked at (matching).
+		const std::vector<std::size_t>& candidates = matching(condition.filterClass, selfIn(condition, condition.filterObject));
+		const float against = comparedWith(condition);
 
 		// "No more than N of them left": everything that matches, still
 		// in play.
@@ -2158,72 +2691,32 @@ namespace xge
 		{
 			const auto stillIn = std::count_if(candidates.begin(), candidates.end(), [&](std::size_t index)
 				{
-					return objects[index].isVisible && considers(objects[index]);
+					return objects[index].isVisible && considers(condition, objects[index]);
 				});
 			return static_cast<float>(stillIn) <= (condition.live ? against : *condition.remaining);
 		}
 
-		// What is tested of one object: how far it is from the nearest of
-		// the other (both in play), or its variable.
-		const auto measure = [&](const Object& object) -> std::optional<float>
-		{
-			if (condition.distanceTo.empty()) { return numberOf(object, condition.variableName); }
-			if (!object.isVisible || !isShown(object)) { return std::nullopt; }
-			const Object* nearest = nearestInPlay(object, condition.distanceTo);
-			if (!nearest) { return std::nullopt; }
-			const Vector2f apart = (nearest->position + nearest->size * 0.5f) - (object.position + object.size * 0.5f);
-			return std::hypot(apart.x, apart.y);
-		};
+		if (condition.total != Total::None) { return holdsTotal(condition, candidates, against); }
+		if (condition.compare == Compare::Lowest || condition.compare == Compare::Highest) { return holdsExtreme(condition, candidates, who); }
 
-		// A total over everything that matches and is in play.
-		if (condition.total != Total::None)
-		{
-			float total = 0.0f;
-			std::size_t counted = 0;
-			for (const std::size_t index : candidates)
-			{
-				const Object& object = objects[index];
-				if (!object.isVisible || !considers(object)) { continue; }
-				if (condition.total == Total::Count)
-				{
-					++counted;
-					continue;
-				}
-				const std::optional<float> number = measure(object);
-				if (!number) { continue; }
-				const float value = *number;
-				if (condition.total == Total::Sum) { total += value; }
-				else if (counted == 0) { total = value; }
-				else if (condition.total == Total::Highest) { total = std::max(total, value); }
-				else { total = std::min(total, value); }
-				++counted;
-			}
-			if (condition.total == Total::Count)
-			{
-				total = static_cast<float>(counted);
-			}
-			else if (counted == 0 && condition.total != Total::Sum)
-			{
-				return false; // no highest or lowest of nothing
-			}
-			return passes(condition.compare, total, against);
-		}
-
+		bool held = false;
 		for (const std::size_t index : candidates)
 		{
 			const Object& object = objects[index];
-			if (!considers(object))
+			if (!considers(condition, object))
 			{
 				continue;
 			}
 
-			const std::optional<float> tested = measure(object);
+			const std::optional<float> tested = condition.compare == Compare::Shows ? std::optional<float>{ 0.0f } : measure(condition, object);
 			if (tested && passes(condition.compare, *tested, against))
 			{
-				return true;
+				if (!who) { return true; }
+				who->push_back(&object);
+				held = true;
 			}
 		}
-		return false;
+		return held;
 	}
 
 	// A copy of the commands, not the state's own list: the list belongs to the
@@ -2235,7 +2728,7 @@ namespace xge
 		takeTurnStop();
 		for (const auto& command : commands)
 		{
-			if (!executor.executeCondition(command) || takeTurnStop()) { break; }
+			if (!executor.run(command, Doer{}) || takeTurnStop()) { break; }
 		}
 	}
 }

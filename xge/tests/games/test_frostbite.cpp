@@ -1,0 +1,422 @@
+// test_frostbite.cpp
+// XML Game Engine
+// author: beefviper
+// date: Oct 3, 2026
+//
+// Catch2 tests for games/descriptions/frostbite.xml, played through a real xge::Engine
+// with no window and the keys a player would press. Bailey hops (<hop>)
+// between the shore and four rows of drifting ice; a row he lands on while
+// it is white turns blue (<become>, and a rule with sprite="white") and puts
+// a block on the igloo (<reveal>); the water drowns him unless he is on a
+// floe; a state <timer> takes a degree a second off the thermometer.
+//
+// Window::init() normally measures each object's size once a backend exists;
+// the helper gives every shape the size its sprite implies instead.
+
+#include "engine/engine.h"
+#include "game/game.h"
+#include "window/null.h"
+
+#include <catch2/catch_approx.hpp>
+#include <catch2/catch_test_macros.hpp>
+
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
+using namespace xge;
+using Catch::Approx;
+
+namespace
+{
+	constexpr int kFramerate = 60;
+	constexpr int kJumpFrames = 21; // 0.35 seconds
+	constexpr float kRowGap = 90.0f;
+
+
+	struct Frostbite
+	{
+		Game game{ "descriptions/frostbite.xml" };
+		Engine engine{ game, std::make_unique<NullWindow>() };
+
+		Frostbite()
+		{
+			for (auto& object : game.getCurrentObjects())
+			{
+				object.size = measureShapeSize(object.drawn.picture);
+			}
+		}
+
+		// Starts a game with the ice, the geese and the fish held still, so a
+		// test is about Bailey and not about where a floe has drifted to.
+		void startStill()
+		{
+			tap(KeyCode::Space);
+			REQUIRE(state() == "playing");
+			for (auto& object : game.getCurrentObjects())
+			{
+				if (object.objClass == "floe" || object.objClass == "goose" || object.objClass == "fish") { object.velocity = { 0, 0 }; }
+			}
+		}
+
+		void tap(KeyCode key)
+		{
+			engine.handleKeyPressed(key);
+			engine.handleKeyReleased(key);
+		}
+
+		void frames(int count)
+		{
+			for (int i = 0; i < count; ++i) { engine.input(); engine.update(xge::kSixtieth); }
+		}
+
+		// One jump, all the way to its landing and a frame after.
+		void jump(KeyCode key)
+		{
+			tap(key);
+			frames(kJumpFrames + 1);
+		}
+
+		std::string state() { return game.getCurrentState().name; }
+		Object& bailey() { return game.object("bailey"); }
+		float variable(const char* name) { return bailey().variable.at(name); }
+		float degrees() { return game.object("thermometer").variable.at("degrees"); }
+
+		int visible(const std::string& group)
+		{
+			int n = 0;
+			for (const auto& object : game.getCurrentObjects())
+			{
+				if (object.inGroup("playing.night1." + group) && object.isVisible) { ++n; }
+			}
+			return n;
+		}
+
+		// Every floe of a row shows this look (the rows are the first night's
+		// groups, playing.night1.row1 and so on).
+		bool rowIs(const std::string& row, const std::string& look)
+		{
+			for (const auto& object : game.getCurrentObjects())
+			{
+				if (object.inGroup("playing.night1." + row) && object.lookName() != look) { return false; }
+			}
+			return true;
+		}
+
+		// Puts Bailey on the shore, right above the first floe of a row, so
+		// that jumping down `rows` times lands on that floe's row.
+		void standAbove(const std::string& floe)
+		{
+			Object& target = game.object(floe);
+			bailey().position.x = target.position.x + 40.0f;
+		}
+	};
+}
+
+TEST_CASE("frostbite.xml loads a shore, four rows of white ice, a hidden igloo and door, and Bailey", "[frostbite]")
+{
+	Frostbite play;
+	CHECK(play.state() == "title");
+
+	for (const char* row : { "row1", "row2", "row3", "row4" })
+	{
+		CHECK(play.visible(row) == 3);
+		CHECK(play.rowIs(row, "white"));
+	}
+	CHECK(play.visible("igloo") == 0);
+	CHECK_FALSE(play.game.object("night1.door").isVisible);
+	CHECK(play.degrees() == 45);
+	CHECK(play.variable("lives") == 4);
+
+	// Bailey stands on the shore, clear of the water.
+	CHECK(play.bailey().position.y + play.bailey().size.y <= 125.0f);
+}
+
+TEST_CASE("a jump down lands on the ice a row below, taking its time, and the row turns blue and builds a block", "[frostbite]")
+{
+	Frostbite play;
+	play.startStill();
+	play.standAbove("night1.row1.1.1");
+	const float startY = play.bailey().position.y;
+
+	play.tap(KeyCode::S);
+	play.frames(10);
+	CHECK(play.bailey().isAirborne());
+	CHECK(play.bailey().position.y > startY);
+	CHECK(play.bailey().position.y < startY + kRowGap);
+	CHECK(play.rowIs("row1", "white"));
+
+	play.frames(kJumpFrames - 10 + 1);
+	CHECK_FALSE(play.bailey().isAirborne());
+	CHECK(play.bailey().position.y == Approx(startY + kRowGap));
+	CHECK(play.variable("lives") == 4); // on the ice, not in the water
+
+	CHECK(play.rowIs("row1", "blue"));
+	CHECK(play.rowIs("row2", "white"));
+	CHECK(play.variable("score") == 10);
+	CHECK(play.visible("igloo") == 1);
+
+	// Standing on it, or landing on it again, earns nothing more.
+	play.frames(60);
+	CHECK(play.variable("score") == 10);
+	play.jump(KeyCode::W);
+	play.jump(KeyCode::S);
+	CHECK(play.variable("score") == 10);
+	CHECK(play.visible("igloo") == 1);
+}
+
+TEST_CASE("a jump into the water costs a life, the warmth comes back, and Bailey is home again", "[frostbite]")
+{
+	Frostbite play;
+	play.startStill();
+	const Vector2f home = play.game.startOf(play.bailey()).position;
+
+	// Between the first two floes of the top row.
+	play.bailey().position.x = 200;
+	play.frames(90);
+	REQUIRE(play.degrees() < 45);
+
+	play.jump(KeyCode::S);
+	CHECK(play.state() == "sinking");
+	CHECK(play.variable("lives") == 4);
+	play.frames(85); // he sinks first, everything standing still
+	CHECK(play.state() == "playing");
+	CHECK(play.variable("lives") == 3);
+	CHECK(play.degrees() == 45);
+	CHECK(play.bailey().position.x == Approx(home.x));
+	CHECK(play.bailey().position.y == Approx(home.y));
+}
+
+TEST_CASE("nothing is touched in mid-air: jumping across a row with a goose in it is safe", "[frostbite]")
+{
+	Frostbite play;
+	play.startStill();
+	play.standAbove("night1.row1.1.1");
+	play.jump(KeyCode::S);
+	REQUIRE(play.variable("lives") == 4);
+
+	// The first goose sits on row 2, right where Bailey would pass by and land.
+	Object& goose = play.game.object("geese.1");
+	Object& floe = play.game.object("night1.row2.1.1");
+	floe.position.x = play.bailey().position.x - 40.0f;
+	goose.position.x = play.bailey().position.x + 30.0f;
+
+	const float x = play.bailey().position.x;
+	play.tap(KeyCode::S);
+	play.frames(kJumpFrames - 1);
+	CHECK(play.bailey().position.x == Approx(x));
+}
+
+TEST_CASE("up from the shore goes nowhere", "[frostbite]")
+{
+	Frostbite play;
+	play.startStill();
+	const float y = play.bailey().position.y;
+
+	play.jump(KeyCode::W);
+	CHECK(play.bailey().position.y == Approx(y));
+	CHECK(play.variable("lives") == 4);
+}
+
+TEST_CASE("Bailey rides a floe, and a goose pushes him", "[frostbite]")
+{
+	Frostbite play;
+	play.tap(KeyCode::Space);
+	play.standAbove("night1.row1.1.1");
+	play.game.object("night1.row1.1.1").position.x = play.bailey().position.x - 40.0f;
+	play.jump(KeyCode::S);
+	REQUIRE(play.variable("lives") == 4);
+
+	const float x = play.bailey().position.x;
+	play.frames(30);
+	CHECK(play.bailey().position.x == Approx(x + 30 * 1.2f).margin(2));
+
+	// A goose catching him takes him along at its own speed (he rides it).
+	Object& goose = play.game.object("geese.1");
+	goose.position = { play.bailey().position.x - 30.0f, play.bailey().position.y + 10.0f };
+	const float before = play.bailey().position.x;
+	play.frames(5);
+	CHECK(play.bailey().position.x > before + 5 * 1.2f + 1.0f);
+}
+
+TEST_CASE("once all four rows are blue, they all turn white again, and the one he stands on is his again", "[frostbite]")
+{
+	Frostbite play;
+	play.startStill();
+
+	// Line a floe of every row up under Bailey, and jump down through them.
+	for (const char* floe : { "night1.row1.1.1", "night1.row2.1.1", "night1.row3.1.1", "night1.row4.1.1" })
+	{
+		play.game.object(floe).position.x = play.bailey().position.x - 40.0f;
+	}
+
+	for (int row = 1; row <= 3; ++row)
+	{
+		play.jump(KeyCode::S);
+		REQUIRE(play.variable("lives") == 4);
+	}
+	CHECK(play.rowIs("row3", "blue"));
+
+	play.jump(KeyCode::S);
+	play.frames(1);
+	// All white again; the row he stands on changed under him, so he meets
+	// it white and it is his at once, as a crocodile's jaws opening under a
+	// still Harry bite.
+	play.frames(1);
+	CHECK(play.variable("score") == 50);
+	CHECK(play.visible("igloo") == 5);
+	for (const char* row : { "row1", "row2", "row3" })
+	{
+		CHECK(play.rowIs(row, "white"));
+	}
+	CHECK(play.rowIs("row4", "blue"));
+	CHECK(play.variable("blue") == 1);
+}
+
+TEST_CASE("the cold takes a degree a second; at zero Bailey freezes, loses a life and starts warm on the shore", "[frostbite]")
+{
+	Frostbite play;
+	play.startStill();
+
+	play.frames(kFramerate * 3);
+	CHECK(play.degrees() == 42);
+
+	play.bailey().position.x = 300;
+	play.game.object("thermometer").variable.at("degrees") = 1;
+	play.frames(kFramerate + 1);
+	CHECK(play.state() == "frozen");
+	CHECK(play.variable("lives") == 4);
+	play.frames(95); // he freezes blue and shivers first
+
+	CHECK(play.variable("lives") == 3);
+	CHECK(play.degrees() >= 44);
+	CHECK(play.bailey().position.x == Approx(play.game.startOf(play.bailey()).position.x));
+}
+
+TEST_CASE("a finished igloo opens its door; walking in is a bonus and the next night, and the third wins", "[frostbite]")
+{
+	Frostbite play;
+	play.startStill();
+
+	play.bailey().variable.at("blocks") = 15;
+	play.frames(1);
+	Object& door = play.game.object("night1.door");
+	REQUIRE(door.isVisible);
+	const float degrees = play.degrees();
+
+	// Walk right along the shore until he reaches it.
+	play.engine.handleKeyPressed(KeyCode::D);
+	for (int frame = 0; frame < 400 && play.variable("nights") == 0; ++frame) { play.frames(1); }
+	play.engine.handleKeyReleased(KeyCode::D);
+	CHECK(play.variable("nights") == 1);
+	CHECK(play.variable("score") >= (degrees - 7) * 10);
+	CHECK(play.variable("blocks") == 0);
+	CHECK(play.game.currentScene("playing") == "playing.night2");
+	CHECK(play.bailey().position.x == Approx(play.game.startOf(play.bailey()).position.x).margin(4)); // the held key walks on
+	CHECK(play.state() == "playing");
+
+	// The ice of the second night drifts faster.
+	CHECK(std::abs(play.game.object("night2.row1.1.1").velocity.x) == Approx(72.0f * 1.4f));
+
+	// Two nights home, and in at the third night's door: a win.
+	play.bailey().variable.at("nights") = 2;
+	play.bailey().variable.at("blocks") = 15;
+	play.frames(1);
+	REQUIRE(play.game.object("night2.door").isVisible);
+	play.engine.handleKeyPressed(KeyCode::D);
+	for (int frame = 0; frame < 400 && play.state() == "playing"; ++frame) { play.frames(1); }
+	play.engine.handleKeyReleased(KeyCode::D);
+	CHECK(play.state() == "over");
+	CHECK(play.game.object("over.message").lookName() == "won");
+}
+
+TEST_CASE("the fish is worth a bonus, and comes back a while later", "[frostbite]")
+{
+	Frostbite play;
+	play.startStill();
+	Object& fish = play.game.object("fish");
+	fish.velocity = play.game.startOf(fish).velocity; // swimming: touches are only checked for what moves
+
+	// Put Bailey on the ice of the third row, on the fish.
+	Object& floe = play.game.object("night1.row3.1.1");
+	play.bailey().position = { fish.position.x, floe.position.y - 2.0f };
+	floe.position.x = fish.position.x - 40.0f;
+	play.frames(2);
+
+	CHECK(play.variable("score") >= 100);
+	CHECK_FALSE(fish.isVisible);
+
+	play.bailey().position = play.game.startOf(play.bailey()).position;
+	play.frames(12 * kFramerate);
+	CHECK(fish.isVisible);
+}
+
+TEST_CASE("no lives left is game over, and Space starts over with the ice white and the igloo gone", "[frostbite]")
+{
+	Frostbite play;
+	play.startStill();
+	play.standAbove("night1.row1.1.1");
+	play.jump(KeyCode::S);
+	REQUIRE(play.rowIs("row1", "blue"));
+
+	play.bailey().variable.at("lives") = 0;
+	play.frames(1);
+	CHECK(play.state() == "over");
+	CHECK(play.game.object("over.message").lookName() == "lost");
+
+	play.tap(KeyCode::Space);
+	CHECK(play.state() == "title");
+	CHECK(play.rowIs("row1", "white"));
+	CHECK(play.visible("igloo") == 0);
+	CHECK(play.variable("lives") == 4);
+	CHECK(play.degrees() == 45);
+}
+
+TEST_CASE("paused, the shore and the ice are drawn still and nothing drifts", "[frostbite]")
+{
+	Frostbite play;
+	play.tap(KeyCode::Space);
+	REQUIRE(play.state() == "playing");
+	Object& floe = play.game.object("night1.row1.1.1");
+	const float floeAt = floe.position.x;
+	const float degrees = play.degrees();
+
+	play.tap(KeyCode::Pause);
+	REQUIRE(play.state() == "paused");
+	play.frames(3 * kFramerate);
+	CHECK(floe.position.x == floeAt);
+	CHECK(play.degrees() == degrees);
+	CHECK(play.game.isStill(floe));
+	CHECK(play.game.isStill(play.bailey()));
+	CHECK(play.game.isStill(play.game.object("snow")));
+	CHECK_FALSE(play.game.isShown(play.bailey()));
+	CHECK(play.game.isShown(play.game.object("paused")));
+	CHECK_FALSE(play.game.isStill(play.game.object("night1.door"))); // still hidden
+
+	play.tap(KeyCode::Pause);
+	REQUIRE(play.state() == "playing");
+	play.frames(1);
+	CHECK(floe.position.x != floeAt);
+}
+
+TEST_CASE("each state owns what it draws, and frozen draws the ice still under its message", "[frostbite]")
+{
+	Frostbite play;
+	CHECK(play.bailey().ownerState == "playing");
+	CHECK(play.game.object("title").ownerState == "title");
+	CHECK(play.game.object("over.again").ownerState == "over");
+	CHECK(play.game.isShown(play.game.object("title")));
+	CHECK_FALSE(play.game.isShown(play.bailey()));
+	CHECK_FALSE(play.game.isStill(play.bailey()));
+
+	play.startStill();
+	play.bailey().variable.at("lives") = 0;
+	play.frames(1);
+	REQUIRE(play.state() == "over");
+	CHECK(play.game.object("over.message").lookName() == "lost");
+	CHECK(play.game.isStill(play.game.object("score")));
+	CHECK(play.game.isStill(play.game.object("night1.row4.3.1")));
+	CHECK(play.game.isShown(play.game.object("over.message")));
+	CHECK(play.game.isShown(play.game.object("over.again")));
+}

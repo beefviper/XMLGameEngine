@@ -17,26 +17,29 @@
   are not limited, but every one struck counts against you.
 
   W A S D or the arrow keys walk, Space strikes a match (and starts and plays
-  again), P or Escape pauses.
+  again), Pause pauses.
 
   How it is written:
   * The floors are the <scenes> of the playing state, each a <map>: # is a
     wall, ^ the stairs up and v the stairs down (a way of the floor's own,
-    <enter way>), and D marks where a locked door of the kit is put. Each
-    floor's map takes the kit's map "house" (its tile, place and walls) and
+    <enter way>), and D marks where a locked door piece is put. Each
+    floor's map takes the map piece "house" (its tile, place and walls) and
     gives its rows, its stairs and the colour of its walls. The eyes pick
     the key up by touching it (<carry />, so it goes with them up and down
     the stairs), and a door opens to the eyes while the key is by them (its
     rule's <condition distance>).
     The stairs of one floor are a few tiles from where the next floor's
     lead back, so the eyes do not arrive on them.
-  * The creatures are the kit's, each floor taking the ones it has and
-    saying where they start. The tarantula <hunt>s the eyes along the halls
-    and the bat <wander>s them (both walk the floor's map, <maze>); the ghost
-    <chase>s through the walls. One that touches the eyes goes back to its
-    start (<reset />), and the eyes' own rule for class creature takes the
-    life.
-  * The eyes have a <light>, how far round them things can be seen. A match
+  * The creatures are pieces, each floor taking the ones it has and
+    saying where they start. The tarantula <hunt>s the eyes the shortest
+    way along the halls (<search />) and the bat <wander>s them (both
+    walk the floor's map, <maze>); the ghost <chase>s through the walls.
+    One that touches the eyes goes back to its start (<reset />), and
+    the eyes' own rule for class creature takes the life and shows their
+    look "scared": they flash red and blink, an animation played
+    <once />, then look as before.
+  * The eyes have a <light>, how far round them things can be seen; it does
+    not shine through the walls (<past class="wall" />). A match
     puts it up (<set variable="player.light">), and a timer of the eyes
     burns it back down, a little every tenth of a second.
   * The walls, the stairs and the creatures are <dark>unlit</dark>: drawn
@@ -54,54 +57,20 @@
   </window>
   <variables>
     <variable name="tile">40</variable>
-    <variable name="step">2</variable>
+    <variable name="step">120</variable>
     <variable name="near">40</variable>
     <variable name="match">260</variable>
   </variables>
-  <sounds>
-    <sound name="strike" wave="noise">
-      <volume>0.3</volume>
-      <note pitch="3000" to="800">0.2</note>
-    </sound>
-    <sound name="found" wave="square">
-      <volume>0.2</volume>
-      <note pitch="C5">0.08</note>
-      <note pitch="G5">0.12</note>
-    </sound>
-    <sound name="caught" wave="triangle">
-      <volume>0.4</volume>
-      <note pitch="A3" to="A2">0.5</note>
-    </sound>
-    <sound name="stairs" wave="square">
-      <volume>0.15</volume>
-      <note pitch="C4">0.06</note>
-      <note pitch="E4">0.06</note>
-      <note pitch="G4">0.06</note>
-    </sound>
-    <sound name="unlock" wave="square">
-      <volume>0.2</volume>
-      <note pitch="G4">0.06</note>
-      <note pitch="G5">0.1</note>
-    </sound>
-    <sound name="wind" wave="noise">
-      <volume>0.25</volume>
-      <note pitch="400" to="1200">0.4</note>
-      <note pitch="1200" to="300">0.5</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>90</size><color>color.orange</color></style>
     <style name="hud"><size>28</size><color>color.lightgrey</color></style>
+    <style name="prompt"><size>40</size></style>
   </styles>
-  <kit>
+  <objects>
     <!-- the tarantula: runs along the halls straight for the eyes -->
     <object name="spider" class="creature">
       <sprite>
-        <bitmap>
-          <row>*.*..*.*</row><row>.******.</row><row>********</row><row>.******.</row><row>*.*..*.*</row>
-          <scale>3</scale>
-          <color>color.orange</color>
-        </bitmap>
+        <bitmap from="spider" />
       </sprite>
       <position><x>0</x><y>0</y></position>
       <dark>unlit</dark>
@@ -110,17 +79,13 @@
         <collision object="player"><reset /></collision>
       </collisions>
       <timers>
-        <timer><after>0</after><hunt object="player">0.9</hunt></timer>
+        <timer><after>0</after><hunt object="player">54<search /></hunt></timer>
       </timers>
     </object>
     <!-- the vampire bat: flits about the halls this way and that -->
     <object name="bat" class="creature">
       <sprite>
-        <bitmap>
-          <row>*......*</row><row>**.**.**</row><row>.******.</row><row>...**...</row>
-          <scale>3</scale>
-          <color>color.magenta</color>
-        </bitmap>
+        <bitmap from="bat" />
       </sprite>
       <position><x>0</x><y>0</y></position>
       <dark>unlit</dark>
@@ -129,16 +94,13 @@
         <collision object="player"><reset /></collision>
       </collisions>
       <timers>
-        <timer><after>0</after><wander>1.6</wander></timer>
+        <timer><after>0</after><wander>96</wander></timer>
       </timers>
     </object>
     <!-- the ghost of Zachary Graves: drifts through the walls toward the eyes -->
     <object name="ghost" class="creature">
       <sprite>
-        <bitmap>
-          <row>..****..</row><row>.******.</row><row>**.**.**</row><row>********</row><row>********</row><row>*.*..*.*</row>
-          <scale>3</scale>
-        </bitmap>
+        <bitmap from="ghost" />
       </sprite>
       <position><x>0</x><y>0</y></position>
       <dark>unlit</dark>
@@ -148,13 +110,13 @@
       <timers>
         <timer>
           <every>0.1</every>
-          <chase object="player">0.6</chase>
+          <chase object="player">36</chase>
         </timer>
       </timers>
     </object>
     <!-- a locked door: opens to the eyes while the key is by them -->
     <object name="door" class="door">
-      <sprite><rectangle><width>tile / 4</width><height>tile</height><color>color.cyan</color></rectangle></sprite>
+      <sprite><rectangle><width><divide><value>tile</value><value>4</value></divide></width><height>tile</height><color>color.cyan</color></rectangle></sprite>
       <position><x>0</x><y>0</y></position>
       <dark>unseen</dark>
       <collisions>
@@ -179,11 +141,7 @@
     <!-- the pieces of the urn, one on each upper floor -->
     <group name="urn" class="urn">
       <sprite>
-        <bitmap>
-          <row>.****.</row><row>******</row><row>.****.</row><row>..**..</row><row>.****.</row>
-          <scale>3</scale>
-          <color>color.yellow</color>
-        </bitmap>
+        <bitmap from="urn" />
       </sprite>
       <position><x>0</x><y>0</y></position>
       <dark>unseen</dark>
@@ -205,19 +163,19 @@
         <collisions />
       </group>
     </map>
-  </kit>
-  <objects>
-    <object name="continue">
-      <sprite><text><content>spacebar to play</content><size>40</size></text></sprite>
-      <position><x><centered /></x><y>window.height.center + 60</y></position>
-    </object>
   </objects>
   <states>
-    <state name="mainmenu">
+    <objects>
+      <object name="continue">
+        <sprite><text style="prompt"><content>spacebar to play</content></text></sprite>
+        <position><x><centered /></x><y><add><value>window.height.center</value><value>60</value></add></y></position>
+      </object>
+    </objects>
+    <state name="title">
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>HAUNTED HOUSE</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 80</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-80</offset></centered></y></position>
         </object>
       </objects>
       <shows>
@@ -232,14 +190,34 @@
       <objects>
         <!-- the eyes: always seen, and they light a little round them -->
         <object name="player">
-          <sprite>
-            <bitmap>
-              <row>**..**</row><row>*.**.*</row><row>**..**</row>
-              <scale>3</scale>
-            </bitmap>
+          <sprite name="open">
+            <bitmap from="player" />
           </sprite>
-          <position><x>tile + 11</x><y>tile * 12 + 15</y></position>
-          <light>near</light>
+          <sprite name="shut">
+            <bitmap from="player-shut" />
+          </sprite>
+          <sprite name="red">
+            <bitmap from="player-red" />
+          </sprite>
+          <!-- caught: the eyes flash red and blink, once -->
+          <animation name="scared">
+            <seconds>0.1</seconds>
+            <once />
+            <frame sprite="red" />
+            <frame sprite="shut" />
+            <frame sprite="red" />
+            <frame sprite="shut" />
+            <frame sprite="red" />
+            <frame sprite="shut" />
+            <frame sprite="red"><seconds>0.3</seconds></frame>
+          </animation>
+          <position><x><add><value>tile</value><value>11</value></add></x><y>
+            <add>
+              <value><multiply><value>tile</value><value>12</value></multiply></value>
+              <value>15</value>
+            </add>
+          </y></position>
+          <light>near<past class="wall" /></light>
           <collisions>
             <collision class="wall"><stop /></collision>
             <collision class="door"><stop /></collision>
@@ -252,6 +230,7 @@
               <dec variable="player.lives" />
               <set variable="player.light">near</set>
               <play sound="caught" />
+              <become sprite="scared" />
             </collision>
             <collision class="up">
               <enter way="up" />
@@ -283,12 +262,10 @@
             <timer>
               <every>0.1</every>
               <set variable="player.light">
-                <formula>
-                  <largest>
-                    <value>near</value>
-                    <value><subtract><minuend>player.light</minuend><subtrahend>5</subtrahend></subtract></value>
-                  </largest>
-                </formula>
+                <largest>
+                  <value>near</value>
+                  <value><subtract><value>player.light</value><value>5</value></subtract></value>
+                </largest>
               </set>
             </timer>
           </timers>
@@ -333,28 +310,34 @@
               <row>#E     #     #     #</row>
               <row>####################</row>
               <group name="stairs" char="^" class="up">
-                <sprite><bitmap><row>...*</row><row>..**</row><row>.***</row><row>****</row><scale>8</scale><color>color.brown</color></bitmap></sprite>
+                <sprite><bitmap from="stairs" /></sprite>
                 <dark>unlit</dark>
                 <collisions />
               </group>
               <!-- the door to the outside, where the urn must come -->
               <object name="entrance" char="E">
-                <sprite><rectangle><width>tile</width><height>tile / 4</height><color>color.brown</color></rectangle></sprite>
+                <sprite><rectangle><width>tile</width><height><divide><value>tile</value><value>4</value></divide></height><color>color.brown</color></rectangle></sprite>
               </object>
               <!-- the master key: opens a locked door by touching it -->
               <object name="key" char="k" class="key">
                 <sprite>
-                  <bitmap>
-                    <row>.**.....</row><row>*..*****</row><row>.**..*.*</row>
-                    <scale>3</scale>
-                    <color>color.cyan</color>
-                  </bitmap>
+                  <bitmap from="key" />
                 </sprite>
                 <dark>unseen</dark>
                 <collisions />
               </object>
             </map>
-            <object name="spider"><position><x>tile * 15 + 8</x><y>tile * 11 + 12</y></position></object>
+            <object name="spider"><position><x>
+              <add>
+                <value><multiply><value>tile</value><value>15</value></multiply></value>
+                <value>8</value>
+              </add>
+            </x><y>
+              <add>
+                <value><multiply><value>tile</value><value>11</value></multiply></value>
+                <value>12</value>
+              </add>
+            </y></position></object>
           </objects>
         </scene>
 
@@ -382,20 +365,55 @@
               <row>####################</row>
               <group name="walls"><sprite><rectangle><width>tile</width><height>tile</height><color>color.blue</color></rectangle></sprite></group>
               <group name="upstairs" char="^" class="up">
-                <sprite><bitmap><row>*...</row><row>**..</row><row>***.</row><row>****</row><scale>8</scale><color>color.brown</color></bitmap></sprite>
+                <sprite><bitmap from="upstairs" /></sprite>
                 <dark>unlit</dark>
                 <collisions />
               </group>
               <group name="downstairs" char="v" class="down">
-                <sprite><bitmap><row>****</row><row>.***</row><row>..**</row><row>...*</row><scale>8</scale><color>color.brown</color></bitmap></sprite>
+                <sprite><bitmap from="downstairs" /></sprite>
                 <dark>unlit</dark>
                 <collisions />
               </group>
             </map>
-            <object name="door"><position><x>tile * 12 + 15</x><y>tile * 6</y></position></object>
-            <object name="piece1"><position><x>tile * 9 + 11</x><y>tile * 5 + 12</y></position></object>
-            <object name="spider"><position><x>tile * 17 + 8</x><y>tile * 12 + 12</y></position></object>
-            <object name="bat"><position><x>tile * 9 + 8</x><y>tile * 8 + 14</y></position></object>
+            <object name="door"><position><x>
+              <add>
+                <value><multiply><value>tile</value><value>12</value></multiply></value>
+                <value>15</value>
+              </add>
+            </x><y><multiply><value>tile</value><value>6</value></multiply></y></position></object>
+            <object name="piece1"><position><x>
+              <add>
+                <value><multiply><value>tile</value><value>9</value></multiply></value>
+                <value>11</value>
+              </add>
+            </x><y>
+              <add>
+                <value><multiply><value>tile</value><value>5</value></multiply></value>
+                <value>12</value>
+              </add>
+            </y></position></object>
+            <object name="spider"><position><x>
+              <add>
+                <value><multiply><value>tile</value><value>17</value></multiply></value>
+                <value>8</value>
+              </add>
+            </x><y>
+              <add>
+                <value><multiply><value>tile</value><value>12</value></multiply></value>
+                <value>12</value>
+              </add>
+            </y></position></object>
+            <object name="bat"><position><x>
+              <add>
+                <value><multiply><value>tile</value><value>9</value></multiply></value>
+                <value>8</value>
+              </add>
+            </x><y>
+              <add>
+                <value><multiply><value>tile</value><value>8</value></multiply></value>
+                <value>14</value>
+              </add>
+            </y></position></object>
           </objects>
         </scene>
 
@@ -423,21 +441,56 @@
               <row>####################</row>
               <group name="walls"><sprite><rectangle><width>tile</width><height>tile</height><color>color.forestgreen</color></rectangle></sprite></group>
               <group name="upstairs" char="^" class="up">
-                <sprite><bitmap><row>...*</row><row>..**</row><row>.***</row><row>****</row><scale>8</scale><color>color.brown</color></bitmap></sprite>
+                <sprite><bitmap from="stairs" /></sprite>
                 <dark>unlit</dark>
                 <collisions />
               </group>
               <group name="downstairs" char="v" class="down">
-                <sprite><bitmap><row>****</row><row>***.</row><row>**..</row><row>*...</row><scale>8</scale><color>color.brown</color></bitmap></sprite>
+                <sprite><bitmap from="downstairs2" /></sprite>
                 <dark>unlit</dark>
                 <collisions />
               </group>
             </map>
-            <object name="door"><position><x>tile * 8 + 15</x><y>tile * 6</y></position></object>
+            <object name="door"><position><x>
+              <add>
+                <value><multiply><value>tile</value><value>8</value></multiply></value>
+                <value>15</value>
+              </add>
+            </x><y><multiply><value>tile</value><value>6</value></multiply></y></position></object>
             <object name="wind" />
-            <object name="piece2"><position><x>tile * 5 + 11</x><y>tile * 5 + 12</y></position></object>
-            <object name="bat"><position><x>tile * 13 + 8</x><y>tile * 8 + 14</y></position></object>
-            <object name="ghost"><position><x>tile * 17 + 8</x><y>tile * 12 + 11</y></position></object>
+            <object name="piece2"><position><x>
+              <add>
+                <value><multiply><value>tile</value><value>5</value></multiply></value>
+                <value>11</value>
+              </add>
+            </x><y>
+              <add>
+                <value><multiply><value>tile</value><value>5</value></multiply></value>
+                <value>12</value>
+              </add>
+            </y></position></object>
+            <object name="bat"><position><x>
+              <add>
+                <value><multiply><value>tile</value><value>13</value></multiply></value>
+                <value>8</value>
+              </add>
+            </x><y>
+              <add>
+                <value><multiply><value>tile</value><value>8</value></multiply></value>
+                <value>14</value>
+              </add>
+            </y></position></object>
+            <object name="ghost"><position><x>
+              <add>
+                <value><multiply><value>tile</value><value>17</value></multiply></value>
+                <value>8</value>
+              </add>
+            </x><y>
+              <add>
+                <value><multiply><value>tile</value><value>12</value></multiply></value>
+                <value>11</value>
+              </add>
+            </y></position></object>
           </objects>
         </scene>
 
@@ -464,25 +517,70 @@
               <row>####################</row>
               <group name="walls"><sprite><rectangle><width>tile</width><height>tile</height><color>color.red</color></rectangle></sprite></group>
               <group name="downstairs" char="v" class="down">
-                <sprite><bitmap><row>****</row><row>.***</row><row>..**</row><row>...*</row><scale>8</scale><color>color.brown</color></bitmap></sprite>
+                <sprite><bitmap from="downstairs" /></sprite>
                 <dark>unlit</dark>
                 <collisions />
               </group>
             </map>
             <object name="door">
-              <sprite><rectangle><width>tile</width><height>tile / 4</height><color>color.cyan</color></rectangle></sprite>
-              <position><x>tile * 9</x><y>tile * 7 + 15</y></position>
+              <sprite><rectangle><width>tile</width><height><divide><value>tile</value><value>4</value></divide></height><color>color.cyan</color></rectangle></sprite>
+              <position><x><multiply><value>tile</value><value>9</value></multiply></x><y>
+                <add>
+                  <value><multiply><value>tile</value><value>7</value></multiply></value>
+                  <value>15</value>
+                </add>
+              </y></position>
             </object>
             <object name="wind" />
-            <object name="piece3"><position><x>tile * 10 + 11</x><y>tile * 5 + 12</y></position></object>
-            <object name="spider"><position><x>tile * 2 + 8</x><y>tile * 12 + 12</y></position></object>
-            <object name="bat"><position><x>tile * 9 + 8</x><y>tile * 10 + 14</y></position></object>
-            <object name="ghost"><position><x>tile * 1 + 8</x><y>tile * 2 + 11</y></position></object>
+            <object name="piece3"><position><x>
+              <add>
+                <value><multiply><value>tile</value><value>10</value></multiply></value>
+                <value>11</value>
+              </add>
+            </x><y>
+              <add>
+                <value><multiply><value>tile</value><value>5</value></multiply></value>
+                <value>12</value>
+              </add>
+            </y></position></object>
+            <object name="spider"><position><x>
+              <add>
+                <value><multiply><value>tile</value><value>2</value></multiply></value>
+                <value>8</value>
+              </add>
+            </x><y>
+              <add>
+                <value><multiply><value>tile</value><value>12</value></multiply></value>
+                <value>12</value>
+              </add>
+            </y></position></object>
+            <object name="bat"><position><x>
+              <add>
+                <value><multiply><value>tile</value><value>9</value></multiply></value>
+                <value>8</value>
+              </add>
+            </x><y>
+              <add>
+                <value><multiply><value>tile</value><value>10</value></multiply></value>
+                <value>14</value>
+              </add>
+            </y></position></object>
+            <object name="ghost"><position><x>
+              <add>
+                <value><multiply><value>tile</value><value>1</value></multiply></value>
+                <value>8</value>
+              </add>
+            </x><y>
+              <add>
+                <value><multiply><value>tile</value><value>2</value></multiply></value>
+                <value>11</value>
+              </add>
+            </y></position></object>
           </objects>
         </scene>
       </scenes>
       <inputs>
-        <input><button>p</button><button>escape</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
         <input button="space"><trigger object="player" action="strike" /></input>
         <input><button>w</button><button>up</button><trigger object="player" action="up" /></input>
         <input><button>s</button><button>down</button><trigger object="player" action="down" /></input>
@@ -491,16 +589,16 @@
       </inputs>
       <conditions>
         <!-- the whole urn, carried out of the door it came in by -->
-        <condition>
-          <all>
-            <condition object="player" variable="urns"><atleast>3</atleast></condition>
-            <condition object="player" distance="entrance"><below>tile * 1.5</below></condition>
-          </all>
-          <push state="won" />
+        <condition object="player" variable="urns"><atleast>3</atleast>
+          <condition object="player" distance="entrance"><below><multiply><value>tile</value><value>1.5</value></multiply></below>
+            <become object="over.message" sprite="won" />
+            <push state="over" />
+          </condition>
         </condition>
         <condition object="player" variable="lives">
           <atmost>0</atmost>
-          <push state="lost" />
+          <become object="over.message" sprite="lost" />
+          <push state="over" />
         </condition>
       </conditions>
     </state>
@@ -516,14 +614,15 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
-    <state name="lost">
+    <state name="over">
       <objects>
         <object name="message">
-          <sprite><text style="banner"><content>THE HOUSE WINS</content><color>color.red</color></text></sprite>
-          <position><x><centered /></x><y>window.height.center - 150</y></position>
+          <sprite name="lost"><text style="banner"><content>THE HOUSE WINS</content><color>color.red</color></text></sprite>
+          <sprite name="won"><text style="banner"><content>THE URN IS WHOLE</content><color>color.yellow</color></text></sprite>
+          <position><x><centered /></x><y><subtract><value>window.height.center</value><value>150</value></subtract></y></position>
         </object>
       </objects>
       <shows>
@@ -534,12 +633,79 @@
         <input button="space"><reset /></input>
       </inputs>
     </state>
-    <state name="won" from="lost">
-      <objects>
-        <object name="message">
-          <sprite><text style="banner"><content>THE URN IS WHOLE</content><color>color.yellow</color></text></sprite>
-        </object>
-      </objects>
-    </state>
   </states>
+  <sounds>
+    <sound name="strike" wave="noise">
+      <volume>0.3</volume>
+      <note pitch="3000" to="800">0.2</note>
+    </sound>
+    <sound name="found" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5">0.08</note>
+      <note pitch="G5">0.12</note>
+    </sound>
+    <sound name="caught" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="A3" to="A2">0.5</note>
+    </sound>
+    <sound name="stairs" wave="square">
+      <volume>0.15</volume>
+      <note pitch="C4">0.06</note>
+      <note pitch="E4">0.06</note>
+      <note pitch="G4">0.06</note>
+    </sound>
+    <sound name="unlock" wave="square">
+      <volume>0.2</volume>
+      <note pitch="G4">0.06</note>
+      <note pitch="G5">0.1</note>
+    </sound>
+    <sound name="wind" wave="noise">
+      <volume>0.25</volume>
+      <note pitch="400" to="1200">0.4</note>
+      <note pitch="1200" to="300">0.5</note>
+    </sound>
+  </sounds>
+  <pictures>
+    <bitmap name="spider">
+      <row>*.*..*.*</row><row>.******.</row><row>********</row><row>.******.</row><row>*.*..*.*</row>
+      <scale>3</scale>
+      <color>color.orange</color>
+    </bitmap>
+    <bitmap name="bat">
+      <row>*......*</row><row>**.**.**</row><row>.******.</row><row>...**...</row>
+      <scale>3</scale>
+      <color>color.magenta</color>
+    </bitmap>
+    <bitmap name="ghost">
+      <row>..****..</row><row>.******.</row><row>**.**.**</row><row>********</row><row>********</row><row>*.*..*.*</row>
+      <scale>3</scale>
+    </bitmap>
+    <bitmap name="urn">
+      <row>.****.</row><row>******</row><row>.****.</row><row>..**..</row><row>.****.</row>
+      <scale>3</scale>
+      <color>color.yellow</color>
+    </bitmap>
+    <bitmap name="player">
+      <row>**..**</row><row>*.**.*</row><row>**..**</row>
+      <scale>3</scale>
+    </bitmap>
+    <bitmap name="player-shut">
+      <row>......</row><row>******</row><row>......</row>
+      <scale>3</scale>
+    </bitmap>
+    <bitmap name="player-red">
+      <row>**..**</row><row>*.**.*</row><row>**..**</row>
+      <scale>3</scale>
+      <color>color.red</color>
+    </bitmap>
+    <bitmap name="stairs"><row>...*</row><row>..**</row><row>.***</row><row>****</row><scale>8</scale><color>color.brown</color></bitmap>
+    <bitmap name="key">
+      <row>.**.....</row><row>*..*****</row><row>.**..*.*</row>
+      <scale>3</scale>
+      <color>color.cyan</color>
+    </bitmap>
+    <bitmap name="upstairs"><row>*...</row><row>**..</row><row>***.</row><row>****</row><scale>8</scale><color>color.brown</color></bitmap>
+    <bitmap name="downstairs"><row>****</row><row>.***</row><row>..**</row><row>...*</row><scale>8</scale><color>color.brown</color></bitmap>
+    <bitmap name="downstairs2"><row>****</row><row>***.</row><row>**..</row><row>*...</row><scale>8</scale><color>color.brown</color></bitmap>
+  </pictures>
 </game>

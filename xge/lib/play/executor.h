@@ -9,6 +9,7 @@
 #include "engine/keys.h"
 #include "game/object.h"
 #include "play/geometry.h"
+#include "verbs/verb.h"
 
 #include <optional>
 #include <string>
@@ -24,45 +25,12 @@ namespace xge
 	public:
 		explicit CommandExecutor(Game& gameToRun) noexcept : game(gameToRun) {}
 
-		// object.collisionData.edges, driven by
-		// touchesScreenEdge. Each of these returns false
-		// when the verb is refused (a <spawn> or <fire> with every copy out,
-		// an <aim> not lined up, a hop that cannot be made), which ends the
-		// rule, key or condition there, as it ends an action.
-		bool executeScreenEdgeCollision(const Command& command, Object& object, Edge edge);
-
-		// object.collisionData.others, driven by Game::reactTo. `other` is
-		// the object being touched. `touch` must already be self-relative to
-		// `object` (touch.edge the edge of *this* object that was touched,
-		// touch.normal the way out of `other` towards it) - see play/collision.h for why that's not simply the raw
-		// result of a check there.
-		bool executeObjectCollision(const Command& command, Object& object, Object& other, const Touch& touch);
-
-		// The same with only the edge known: a touch straight across it.
-		bool executeObjectCollision(const Command& command, Object& object, Object& other, Edge edge);
-
 		// A command bound to a key in the current State's <input> list: push or
 		// pop a state, or trigger a named action on another object.
 		bool executeInput(const Command& command, bool keyPressed);
 
-		// A State's <condition> action, once Game::checkConditions decides it's
-		// met: same command set as an <input> (in practice just push/pop a
-		// state), so this is just executeInput as an always-"pressed" input.
-		bool executeCondition(const Command& command);
-
-		// A command of a cell map's check that holds, about what it found.
-		bool executeCheck(const Command& command, const Object::CellMatch& match);
-
-		// A <timer> that has gone off: on an object (owner) or in a state (no
-		// owner). The state commands, inc, dec, play and trigger work in both;
-		// on an object, fire, reverse, move, die, stop, release and a bare reset
-		// act on that object (a bare reset in a state resets the game).
-		// False when the command is a verb that could not happen (see
-		// triggerObjectAction), and the timer's other commands are skipped.
-		bool executeTimer(const Command& command, Object* owner);
-
 		// A key that was already down when a state began: applies only the
-		// continuous part of its binding (an action's move.* and accelerate.*,
+		// continuous part of its binding (an action's move.* and thrust.*,
 		// a sound that loops) and returns true
 		// if the command was one of those. One-shot commands (state changes,
 		// fire) are left alone, since the key was never pressed in this state.
@@ -74,113 +42,58 @@ namespace xge
 		// axis's own direction.
 		void executeAxis(const Command& command, Axis axis, float fraction);
 
-	private:
+		// Whether the last <trigger> run reached an action and every action
+		// it reached was refused: what its <otherwise> answers.
+		bool triggerRefused() const noexcept { return lastTriggerRefused; }
+
+		// --- What the verbs use (verbs/, a file each): the game, and the work
+		// that needs it.
+
 		Game& game;
 
-		// Who runs a command, and where: what every verb looks at to know
-		// what to do. The places a verb may be written are the loader's
-		// (ruleFor in load/check.cpp); this runs whatever got there.
-		struct Doer
-		{
-			// The object the command is about (a rule's, a timer's, an
-			// action's); none for a state's list, where a bare <reset /> is
-			// the whole game.
-			Object* self{ nullptr };
-			// What it touched, for a rule about another object.
-			Object* other{ nullptr };
-			const Touch* touch{ nullptr };
-			// The window edge, for a screen-edge rule.
-			std::optional<Edge> screenEdge;
-			// False for a key let go: only what is held stops (actsOnLettingGo).
-			bool pressed{ true };
-			// Run by a rule, a timer or a condition, not by a key.
-			bool byRule{ true };
-			// In an object's action of this name: a <move> is held, and the
-			// controls (<hop>, <jump>, <climb>, <thrust>...) work.
-			const std::string* action{ nullptr };
-			// In a cell map's check: what it found.
-			const Object::CellMatch* match{ nullptr };
-		};
+		// While a held key's commands run, the step's length in seconds: an
+		// <inc> or <dec> adds its number times
+		// it, so a held count goes by the time held. 1 otherwise.
+		float heldShare = 1.0f;
 
-		// Every verb, done as `doer` says. False when the verb is refused,
-		// which ends the list it is in.
+		// A command, done as `doer` says by its verb (Verb::run): a rule
+		// about another object gives self, other and the touch (self-relative:
+		// see play/collision.h); one about the window's edge self and the
+		// edge; an object's timer self; a state's timer or condition nothing;
+		// a cell map's check what it found. False when the verb is refused
+		// (a <spawn> with every copy out, an <aim> not lined up, a hop that
+		// cannot be made), which ends the list it is in.
 		bool run(const Command& command, const Doer& doer);
 
 
 		// The command as it runs: itself, or one made as it runs (CmdLive)
 		// made again into `made` (see Game::makeNow).
-		const Command& now(const Command& command, Command& made);
+		const Command& now(const Command& command, Command& made, const Object* self, const Object* other);
 
-		// <spawn>: see CmdSpawn; false, and nothing made, when no more of
-		// it may exist (<most>).
-		bool spawn(const CmdSpawn& command, const Object* self = nullptr);
 
-		// <despawn />: `self` (none in a state's list), or with object= the
-		// objects it names.
-		void despawn(Object* self, const CmdDespawn& command);
-
-		// <carry />: see CmdCarry.
-		void carry(Object& object, const Object& item);
-
-		// A <play> on a key, or in the action a key triggers: the press asks
-		// for the sound; letting go silences it if it loops.
-		void playHeld(const std::string& sound, bool keyPressed);
-
-		void bounceScreenEdge(Object& object, Edge edge, float share);
-		void moveByStep(Object& object, Direction direction, float step);
-		void queueHop(Object& object, Vector2f step);
-		bool startJump(Object& object, const CmdJump& jump);
-
-		// A <hop>: at once (queued), or with <seconds> through the air, as a
-		// jump goes; either way the object then faces that way. False when
-		// it is in the air, or the hop would land outside the window.
-		bool hop(Object& object, const CmdHop& hop);
-
-		// A hunt by hops: see CmdHuntHop.
-		bool huntByHop(Object& object, const CmdHuntHop& hunt);
-
-		// Through the air by `whole` over `seconds`, touching nothing until it
-		// lands: a <jump>, or a <hop> that takes time. Not when it is in the
-		// air already, nor when it would land outside the window. With an
-		// arc it is drawn that high above its way halfway there.
-		bool startFlight(Object& object, Vector2f whole, float seconds, float arc);
-		void land(Object& object, const Object& other, Edge edge);
-
-		// <knock>: see CmdKnock. Into a thing with no mass, through it, to
-		// everything with a mass resting against its far side.
-		void knock(Object& object, Object& other, const Touch& touch, float bounce);
-		bool leap(Object& object, float height);
-		void chase(Object& object, const CmdChase& chase);
-		bool aim(Object& object, const CmdAim& command);
-		void reverse(Object& object);
-
-		// <become>: the object running it (self, which a state's commands do
-		// not have), or every object its object= names.
-		void become(Object* self, const CmdBecome& command);
-
-		// <follow>: with object=, every object of that name sets off along the
-		// path (Game::follow); without, `self` does (nothing when there is none).
-		void follow(Object* self, const CmdFollow& command);
-		void applyActionThrust(Object& object, Direction direction, float amount, const std::string& burn);
-		void applyActionTurn(Object& object, Direction direction, float rate);
-		void applyActionThrustAhead(Object& object, const std::string& action, float amount, const std::string& burn);
-		void release(const Object& from, const std::string& target, int count);
-		void restart(Object& object);
-
-		// Runs an action's commands in order. On the press, a verb that can
-		// be refused (<fire> with nothing left to fire, a <hop>, <jump>,
-		// <leap> or hunt by hops that cannot be made, an <aim> not lined up)
-		// and is refused ends the action there: what it would have done
-		// after (a sound, a look) is not done.
+		// Runs an action's commands in order; a refused verb ends it there.
 		// With `from`, only those showing that look run it. `byRule`: run by
 		// a rule, a timer or a condition rather than a key, so a <climb> in
 		// it takes the object along one ladder and then lets go.
-		void triggerObjectAction(const std::string& objectName, const std::string& actionName, bool keyPressed, bool byRule, const std::string& from = {});
+		// Sets lastTriggerRefused.
+		void triggerObjectAction(Name objectName, Name actionName, bool keyPressed, bool byRule, Name from = {});
 		// One object's action of that name, as triggerObjectAction runs it
-		// for that object or for each member of a group.
-		void runAction(Object& object, const std::string& actionName, bool keyPressed, bool byRule);
+		// for that object or for each member of a group. Whether it ran and
+		// a verb in it was refused.
+		bool runAction(Object& object, Name actionName, bool keyPressed, bool byRule);
+		// A <trigger> with <here /> or <around />: the action of each piece of
+		// its class in those cells about `self`, each piece once however the
+		// actions it runs trigger more (aboutReached, aboutDepth).
+		void triggerAbout(Object& self, const CmdTriggerAction& trigger, bool byRule);
 
-		// False when every one of the projectiles is in flight.
-		bool spawnProjectile(Object& shooter, const std::string& projectileName);
+
+		// A <through /> among the commands run: the refused cell step they
+		// answer is made anyway (Game::Reaction).
+		bool throughAsked{ false };
+
+	private:
+		bool lastTriggerRefused{ false };
+		std::vector<std::string> aboutReached;
+		int aboutDepth = 0;
 	};
 }

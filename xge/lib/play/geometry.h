@@ -116,6 +116,9 @@ namespace xge
 		const std::string* through{ nullptr };
 	};
 
+	// A touch straight across the middle of that edge of one's own.
+	Touch touchAcross(Edge edge) noexcept;
+
 	// The touch as the first or the second of the pair sees it.
 	Touch touchOfFirst(const Contact& contact) noexcept;
 	Touch touchOfSecond(const Contact& contact) noexcept;
@@ -281,7 +284,6 @@ namespace xge
 		const PixelSpread first = pixelSpreadAt(a, solidA, point, radius);
 		const PixelSpread second = pixelSpreadAt(b, solidB, point, radius);
 		const Vector2f apart = first.middle - second.middle;
-		const auto length = [](const Vector2f& v) { return std::hypot(v.x, v.y); };
 
 		// The surface lies flat across the point, both ways along it: it faces
 		// across itself. Nothing does (a corner, the end of a line, a point on
@@ -289,21 +291,21 @@ namespace xge
 		constexpr float flat = 1.5f;
 		const PixelSpread& surface = second.stretch >= first.stretch ? second : first;
 		const Vector2f off = point - surface.middle;
-		const bool across = std::abs(off.x * surface.along.x + off.y * surface.along.y) < 0.5f * surface.reach;
+		const bool across = std::abs(dotOf(off, surface.along)) < 0.5f * surface.reach;
 		Vector2f out;
 		if (surface.stretch < flat || surface.count < 3.0f || !across)
 		{
-			if (length(apart) < 0.01f) { return false; }
+			if (lengthOf(apart) < 0.01f) { return false; }
 			out = apart;
 		}
 		else
 		{
 			out = { -surface.along.y, surface.along.x };
-			const float side = out.x * apart.x + out.y * apart.y;
+			const float side = dotOf(out, apart);
 			if (std::abs(side) < 0.0001f) { return false; }
 			if (side < 0.0f) { out = out * -1.0f; }
 		}
-		normal = out * (1.0f / length(out));
+		normal = out * (1.0f / lengthOf(out));
 		return true;
 	}
 
@@ -510,7 +512,12 @@ namespace xge
 	// which is when its rules about the edge run.
 	bool pastWindowEdge(const Box& thing, const Vector2f& window, Edge edge) noexcept;
 
-	// Whether all of the box is inside the window: where a hop or a jump may land.
+	// How far through `move` (0 to 1) a thing not yet past that edge first
+	// meets that side of the window, going out; none when the move does not
+	// take it there.
+	std::optional<float> timeToWindowEdge(const Box& thing, const Vector2f& move, const Vector2f& window, Edge edge) noexcept;
+
+	// Whether all of the box is inside the window: where a hop may land.
 	bool insideWindow(const Box& at, const Vector2f& window) noexcept;
 
 	// --- What the verbs do. `edge` is always the thing's own edge that was
@@ -549,13 +556,17 @@ namespace xge
 	// than bounce: as fast as four frames of its pull into that surface. A
 	// ball resting on a slope only ever meets it that slowly; one meeting a
 	// surface its pull does not press it into (a walker meeting a wall)
-	// always bounces.
+	// always bounces. A frame is a sixtieth of a second.
 	float settleSpeed(const Vector2f& acceleration, const Vector2f& way) noexcept;
 
 	// Whether `thing` rests against that side of `base`: up to a pixel
 	// from it, and overlapping it along it (a walker standing on a floor
 	// tile rests against its top).
 	bool restsAgainst(const Box& thing, const Box& base, Edge side) noexcept;
+
+	// What carries it out through that edge of its own stops; the rest of
+	// its velocity is kept.
+	void stopGoingOut(Vector2f& velocity, Edge edge) noexcept;
 
 	// <stick />: pushed back inside the window on the touched edge's own axis,
 	// losing only the velocity carrying it into the edge; the other way it
@@ -574,11 +585,11 @@ namespace xge
 	// so a platform can be walked past and jumped up through.
 	bool landOn(Vector2f& position, Vector2f& velocity, const Vector2f& size, const Box& other, Edge edge, bool climbing) noexcept;
 
-	// <leap>: the speed up that, under a pull of `pull` a frame, rises
+	// <jump>: the speed up that, under a pull of `pull` a frame, rises
 	// `height`: v * v = 2 * pull * height.
-	float leapSpeed(float pull, float height) noexcept;
+	float jumpSpeed(float pull, float height) noexcept;
 
-	// A distance one of the four ways: a <hop>, or a <jump>'s whole way.
+	// A distance one of the four ways: a <hop>'s whole way.
 	Vector2f stepToward(Direction direction, float distance) noexcept;
 
 	// The way of the four nearest to `way`: the axis it goes further along.
@@ -608,23 +619,22 @@ namespace xge
 	Vector2f turnedToward(const Vector2f& velocity, const Vector2f& way, float degrees) noexcept;
 
 	// <chase>: straight from `from` at `to` at `speed`, or, within stopWithin
-	// of it, still. The way it set off, one pixel long, if it did.
-	std::optional<Vector2f> chase(const Vector2f& from, const Vector2f& to, float speed, float stopWithin, Vector2f& velocity) noexcept;
+	// of it, still. A step of `t` that would take it nearer goes only as far
+	// as stopWithin. The way it set off, one pixel long, if it did.
+	std::optional<Vector2f> chase(const Vector2f& from, const Vector2f& to, float speed, float stopWithin, float t, Vector2f& velocity) noexcept;
 
 	// Whether a climber is at a ladder: its middle over it, and its feet
 	// between the ladder's top and bottom (half a pixel either way).
 	bool atLadder(const Box& climber, const Box& ladder) noexcept;
 
-	// One frame at a ladder (<climb>), `step` the way the keys held climb (up
-	// below 0). Off it, it gets on only from the ground and when it can go
-	// that way, lined up with the ladder's middle. On it, it goes the step,
-	// its feet kept between the ladder's ends; at an end, going on, it gets
-	// off, unless it holds at that end (`holdTop`, `holdBottom`: nothing to
-	// stand on there), stopped. The step is its velocity,
-	// straight up or down, so it moves, and touches what it passes, as
-	// anything does. The answer is whether it was on the ladder this frame
-	// (`climbing` says whether it still is).
-	bool climbLadder(Vector2f& position, Vector2f& velocity, const Vector2f& size, float step, bool& climbing, bool grounded, const Box& ladder,
+	// One step at a ladder (<climb>), `step` the speed the keys held climb
+	// at (up below 0), `t` the step's length. Off it, it gets on only from
+	// the ground, lined up with the ladder's middle. On it, its feet stay
+	// between the ends; at an end, going on, it gets off unless it holds
+	// there (`holdTop`, `holdBottom`: nothing to stand on). The step is its
+	// velocity, so it touches what it passes. The answer is whether it was
+	// on the ladder this frame (`climbing` says whether it still is).
+	bool climbLadder(Vector2f& position, Vector2f& velocity, const Vector2f& size, float step, float t, bool& climbing, bool grounded, const Box& ladder,
 		bool holdTop, bool holdBottom) noexcept;
 
 	// --- Shots (<fire>), at the projectile's own speed.
@@ -640,9 +650,6 @@ namespace xge
 
 	// Along a heading, from the shooter's middle, out by half its longer side.
 	Shot shotAhead(const Box& shooter, const Vector2f& shotSize, float heading, float speed) noexcept;
-
-	// From the middle of the side the shooter faces, just clear of it.
-	Shot shotFacing(const Box& shooter, const Vector2f& shotSize, Direction facing, float speed) noexcept;
 
 	// From the shooter's top, the shot's middle over the shooter's, so a thin
 	// shot leaves the middle of the gun (the shot keeps its own velocity).

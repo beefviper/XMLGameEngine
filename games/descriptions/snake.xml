@@ -9,8 +9,7 @@
   food it eats makes it one longer and a little faster; it dies on the
   wall or on its own body.
 
-  W A S D or the arrows turn it (never straight back). Space starts,
-  pauses and plays again; P or Escape pauses too.
+  W A S D or the arrows turn it (never straight back). Space starts and plays again; Pause pauses.
 
   How it is written:
   * The field is a <map> of <cells />, drawn by its rows: # wall, the
@@ -33,38 +32,32 @@
   <variables>
     <variable name="cell">20</variable>
   </variables>
-  <sounds>
-    <sound name="eat"><note pitch="C6">0.03</note><note pitch="G6">0.04</note></sound>
-    <sound name="over" wave="triangle">
-      <note pitch="E4" to="E1">0.7</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>88</size><color>color.green</color></style>
     <style name="prompt"><size>32</size></style>
     <style name="help"><size>22</size><color>color.lightgrey</color></style>
     <style name="hud"><size>28</size></style>
   </styles>
-  <objects>
-    <object name="again">
-      <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
-      <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
-    </object>
-  </objects>
   <states>
+    <objects>
+      <object name="again">
+        <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
+        <position><x><centered /></x><y><centered><offset>70</offset></centered></y></position>
+      </object>
+    </objects>
     <state name="title">
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>SNAKE</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 100</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-100</offset></centered></y></position>
         </object>
         <object name="help">
-          <sprite><text style="help"><content>w a s d or the arrows turn, p pauses</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center</centered></y></position>
+          <sprite><text style="help"><content>w a s d or the arrows turn, pause key pauses</content></text></sprite>
+          <position><x><centered /></x><y><centered /></y></position>
         </object>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 80</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>80</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
@@ -116,10 +109,15 @@
             <sprite><rectangle><width>cell</width><height>cell</height><color>color.darkgrey</color></rectangle></sprite>
           </group>
           <group name="body" class="body" char="o">
-            <sprite><rectangle><width>cell - 2</width><height>cell - 2</height><color>color.forestgreen</color></rectangle></sprite>
+            <sprite><rectangle><width><subtract><value>cell</value><value>2</value></subtract></width><height><subtract><value>cell</value><value>2</value></subtract></height><color>color.forestgreen</color></rectangle></sprite>
           </group>
           <group name="food" class="food" char="f">
-            <sprite><circle><radius>cell / 2 - 2</radius><color>color.red</color></circle></sprite>
+            <sprite><circle><radius>
+              <subtract>
+                <value><divide><value>cell</value><value>2</value></divide></value>
+                <value>2</value>
+              </subtract>
+            </radius><color>color.red</color></circle></sprite>
             <collisions>
               <!-- eaten: gone, so the head's step goes on, and the next comes -->
               <collision class="snake">
@@ -129,7 +127,7 @@
             </collisions>
           </group>
           <object name="head" class="snake" char="@">
-            <sprite><rectangle><width>cell - 2</width><height>cell - 2</height><color>color.green</color></rectangle></sprite>
+            <sprite><rectangle><width><subtract><value>cell</value><value>2</value></subtract></width><height><subtract><value>cell</value><value>2</value></subtract></height><color>color.green</color></rectangle></sprite>
             <facing>right</facing>
             <chain object="body" />
             <collisions>
@@ -156,13 +154,13 @@
         <input><button>s</button><button>down</button><button>pad1.down</button><trigger object="head" action="down" /></input>
         <input><button>a</button><button>left</button><button>pad1.left</button><trigger object="head" action="left" /></input>
         <input><button>d</button><button>right</button><button>pad1.right</button><trigger object="head" action="right" /></input>
-        <input><button>space</button><button>p</button><button>escape</button><button>pad1.start</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <condition object="status" variable="over">
           <equal>1</equal>
           <play sound="over" />
-          <push state="gameover" />
+          <push state="over" />
         </condition>
       </conditions>
       <timers>
@@ -181,14 +179,14 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><button>pad1.start</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
-    <state name="gameover">
+    <state name="over">
       <objects>
         <object name="message">
           <sprite><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
         </object>
       </objects>
       <shows>
@@ -200,4 +198,10 @@
       </inputs>
     </state>
   </states>
+  <sounds>
+    <sound name="eat"><note pitch="C6">0.03</note><note pitch="G6">0.04</note></sound>
+    <sound name="over" wave="triangle">
+      <note pitch="E4" to="E1">0.7</note>
+    </sound>
+  </sounds>
 </game>

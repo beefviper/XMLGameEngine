@@ -7,15 +7,15 @@
 - The prototype found an edge hit and acted on it in one function, parsing action tokens by hand. Split into three:
   1. **Detection**: geometry only, no side effects (`play/collision.h`, `play/geometry.h`).
   2. **Dispatch**: what the XML declared for that touch (typed `Command`s from `game/command.cpp`).
-  3. **Execution**: `CommandExecutor::run`, one `std::visit` for every place a command runs, told by a `Doer` what it has (an object, what it touched, a key, an action).
+  3. **Execution**: `CommandExecutor::run`, one way in for every place a command runs: it calls the command's verb ([verbs](14-verbs.md)), told by a `Doer` what it has (an object, what it touched, a key, an action).
 - Declarative: the ball *has* a collision with the vertical edge whose answer is `<bounce />`; the "if" lives in detection.
 
 ## The algorithm
 
-- **Screen edges** are checked by position before the move, not swept.
+- **Screen edges** are swept with the touches between objects (delta time): the four sides are things a move can reach, so an edge rule runs at the moment of crossing and a fast ball in long steps never leaves the window. Things that jump (`<stepped />`, cell pieces) have no moment of crossing and are still checked by position before the move.
 - **Object against object is swept.** Both motions reduce to one; box against box by slabs, circle against box with rounded corners, circle against circle by the two radii. Touching and moving apart is not a hit.
 - **The frame loop** (`moveObjects`, `play/frame.cpp`): each round the earliest touch anywhere wins, everything advances to it, that pair's rules run, and the rest of the frame plays on. A pair reacts at most once a frame.
-- **What has moved.** A pair is looked at only when one has moved: a velocity, a ride, or being somewhere else than last frame (a hop, a `<set>` of `x`, a teleport, a spawn). Each object keeps last frame's `Moment` in `before`. Put somewhere by a load or a reset between frames is not a move (`placed`); reset in the middle of a frame is. Rejected: a list of verbs that move by place (one would be missed).
+- **What has moved or changed.** A pair is looked at only when one has moved or changed: a velocity, a ride, being somewhere else than last frame (a hop, a `<set>` of `x`, a teleport, a spawn), showing another picture (look, animation frame, size, mirrored: `Object::shownBefore`), or coming into play or having its collisions turned on. The author's rule: two things that neither moved nor changed never need comparing. Rejected: an `<always />` word on a rule checked every frame (no game wanted "while touching", and gravity hid the gap: the Pitfall croc only worked because Harry's pull counts as motion). Each object keeps where last frame left it, and whether it was in play and in view, in `before`. Put somewhere by a load or a reset between frames is not a move (`placed`); reset in the middle of a frame is. Rejected: a list of verbs that move by place (one would be missed).
 - **Hops land before collisions** and are judged where they land: swept, a frog hopping onto a log would first touch the water.
 
 ## Fewer checks
@@ -40,14 +40,23 @@ A screen grid was rejected: it needs a cell size per game, and what is left afte
 
 - `<type>pixel</type>` is opt-in. The box sweep runs first; only a touching pair is walked in half-pixel steps to the first shared solid pixel. Any alpha counts as solid. Refused on text and images (their pixels are a backend's).
 - Rejected: a list of boxes (a second picture that drifts), pixels for everything (costly), an alpha threshold.
-- **`<solid char>`** names which inks of a bitmap touch (Q*bert's cube tops); the mask goes with flips and turns. **`<hitbox>`** is a smaller box or circle used for every touch. Rejected: a separate collision picture, polygon hitboxes. Open: a hitbox per look.
+- **`<solid char>`** names which inks of a bitmap touch (Q*bert's cube tops); the mask goes with flips and turns. **`<hitbox>`** is a smaller box or circle, or the picture pulled in from its sides (the author's idea: the screen edges' words, one number each, the most particular winning, so `<all>5</all><bottom>10</bottom>` reads as said; no wrapper tag). Insets follow the picture's size and swap left and right when mirrored. A hitbox is for what hurts or is taken: a pair whose rules stand, stop, bounce or ride touches by the whole pictures (worked out once a pair, beside the partners), else a bottom inset sinks a walker into its floor. Rejected: a hitbox for every touch (sinking), a `class=` list of what the hitbox is for (every game would list it), a separate collision picture, polygon hitboxes. Several `<hitbox>`es may be written, any one a touch (the author's kicking leg); the touching pair of parts is the nearest, for the contact. Telling which touched: a hitbox takes a `name=`, and a rule picks its own with `hitbox=` and the other's with `by=` (two attributes, so one rule can say "their fist on my body"; a dotted `other.fist` in one attribute could not say both). Which touched is worked out where the two meet, part against part, not taken from the nearest pair, since a fist and a body can both be touching. A `<frame>` holds hitboxes of its own, added to the object's while it shows (a sword out mid-swing, as in a top-down adventure); added, not replacing, since the body is still there. Not per look: a still look that reaches is a one-frame `<once />` animation. Shape hitboxes are placed from the right while mirrored, as insets swap, so a boxer facing left punches left. Open: blocking (a guard hitbox that a fist meets first), key sequences, hit-stun.
 
 ## Filters and checks in rules
 
-- **`<slower>`/`<faster>`**: the speed is read once per touch, so a landing rule and a crash rule never both run.
+- **Speed on a touch** is the live number `speed`, held at the speed as the touch happened while the rules run, so a landing rule and a crash rule never both run. `<slower>`/`<faster>` were a second comparison vocabulary beside the conditions, and went.
 - **`side=`** is the side of the rule's own object that was touched; same words as `edge=` but a separate attribute, since `edge=` means a screen edge.
-- **Checks** reuse the condition tests (`<condition>`, `<all>`, `<any>`); one with no `object=` means the object itself. Not yet on edge rules.
+- **Checks** reuse the condition tests (`<condition>`, `<any>`; several in a row all hold, so no `<all>`); one with no `object=` means the object itself. Edge rules take them too, kept beside the rule's `sprite=` and `unless=` (`EdgeGuard`).
 - **`<trigger>` in rules** runs one of the object's actions, so a death is one action that every killing rule names.
+- **Rules in rules** (the author asked, with conditions in conditions): a rule holds rules that say what it says, so Centipede's shot or a creeper's look is written once over the rules it governs.
+  - Made at load into the plain rule list (attributes and checks passed down, `<first>` a rule before them), so detection is untouched.
+  - Saying an attribute twice stops the load rather than overriding: a rule below one about the shot about the ball reads as a mistake.
+  - No `<otherwise>`: every matching rule runs, so "none ran" would need the engine to track the rules of one touch.
+- **`other`, the object touched**: a rule about another object names it `other` (`other.score`, `object="other"`), so a two-player game's rules about either player are written once.
+  - One rule, with `other` found as it runs: a command saying it is made for the object touched (`CmdLive::namesOther`), and a test saying it is about that one (`Game::holdsFor`). The rules of a group's members stay alike, so they can be shared (CR3 step 5a), and a spawned copy needs nothing made for it.
+  - The load checks still see plain rules: `nameOther` (`game/object.cpp`) lists what each such rule can touch (`WrittenCollisionRule::touchable`), and its commands and test are made and checked for every one of them, then dropped but for the first.
+  - Was: one rule made at load for each object it could touch, and again for each spawned copy the first time it was touched. It multiplied the rules by the objects (and the stored rules with them), which is what sharing the kind could not live with.
+  - Open: a rule about its own kind (a copy touching a copy of the same piece) has no `other` of the file to be made for, and Pong's edge rules ("left edge: paddle2 scores") are no touch between objects, so they stay.
 
 ## Deflect
 
@@ -55,7 +64,7 @@ Pong's rule: the paddle's middle sends the ball straight back, its ends at 45 de
 
 ## Contacts and knocks
 
-- **A contact is worked out once per touch** (`contactOf`): edges, point, normal, where along each side, depth, time. Each side's rules see it from their own side; commands read `touch.x`, `touch.normal.x` and so on. Chosen over every sweep returning it, or each verb measuring for itself.
+- **A contact is worked out once per touch** (`contactOf`): edges, point, normal, where along each side, depth, time. Each side's rules see it from their own side, through the verbs (bounce, knock, deflect). Its numbers were once names a rule could read (`touch.x`, `touch.normal.x`); no game read them, so they went. Chosen over every sweep returning it, or each verb measuring for itself.
 - **`<knock>`** is a one-dimensional collision along the normal by `<mass>`, its content the bounce. Nothing happens unless closing, so both sides may say it. No mass is as heavy as can be. Chains of balls pass a knock on with no extra mechanism.
 - **Through a thing with no mass** (Mario Bros.' bumped floor): the knock goes to what rests on its far side, which then runs its rules as touched from below. A rule's `through="class"` takes only such felt-through touches.
 - Open: spin, rolling friction apart from `<drag>`.

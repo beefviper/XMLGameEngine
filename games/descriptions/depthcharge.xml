@@ -11,20 +11,20 @@
   ship. The game lasts 90 seconds, or three ships.
 
   A and D or the arrows move, Space drops a pair of charges, one off each
-  side, P or Escape pauses.
+  side, Pause pauses.
 
   How it is written:
   * A charge does not exist until the destroyer <spawn>s a pair of them at
     its two sides (positions read as Space is pressed); six at most are in
     the water, and one that hits a boat or the bottom is <despawn>ed.
   * The submarines are one group, which says once what every submarine
-    does (wrap round, lay a mine now and then with <release>, sink to a
+    does (wrap round, lay a mine now and then with <spawn>, sink to a
     charge for its lane's worth, self.worth), with a group inside it for
     each lane: its color, depth, speed, worth and boats. A sunk boat comes
     back where it started, on a timer of the playing state.
-  * A sunk boat <release>s a burst, an animated picture spawned where it
-    sank, which <despawn>s itself on its own timer. Mines are spawned the
-    same way.
+  * A sunk boat <spawn>s a burst, an animation played <once />, where
+    it sank, which <then> <despawn>s itself. Mines are spawned the same
+    way.
   * The sonar ping is the playing state's <music>.
   Not in it: the time given back for a high score, the charges' depth
   setting.
@@ -37,9 +37,257 @@
   </window>
   <variables>
     <variable name="surface">100</variable>
-    <variable name="step">4</variable>
+    <variable name="step">240</variable>
     <variable name="margin">20</variable>
   </variables>
+  <styles>
+    <style name="banner"><size>110</size><color>color.cyan</color></style>
+    <style name="line"><size>30</size><color>color.white</color></style>
+    <style name="hud"><size>30</size><color>color.white</color></style>
+  </styles>
+  <objects>
+    <!-- a charge, sinking slowly; six at most in the water -->
+    <object name="charge" class="charge">
+      <sprite>
+        <bitmap from="charge" />
+      </sprite>
+      <velocity><y>120</y></velocity>
+      <most>6</most>
+      <collisions>
+        <collision edge="bottom"><despawn /></collision>
+        <collision class="sub"><despawn /></collision>
+      </collisions>
+    </object>
+    <!-- the mines the submarines lay: they rise, and go off at the top of the water or under the destroyer -->
+    <object name="mine" class="mine">
+      <sprite>
+        <bitmap from="mine" />
+      </sprite>
+      <velocity><y>-72</y></velocity>
+      <most>6</most>
+      <collisions>
+        <collision object="ship"><despawn /></collision>
+        <collision object="waterline"><despawn /></collision>
+      </collisions>
+    </object>
+    <!-- a submarine going down -->
+    <object name="burst">
+      <sprite name="flash">
+        <bitmap from="burst-flash" />
+      </sprite>
+      <sprite name="spray">
+        <bitmap from="burst-spray" />
+      </sprite>
+      <animation>
+        <seconds>0.1</seconds>
+        <once />
+        <frame sprite="flash" />
+        <frame sprite="spray" />
+        <frame sprite="flash" />
+        <frame sprite="spray" />
+        <frame sprite="flash" />
+        <frame sprite="spray" />
+        <then><despawn /></then>
+      </animation>
+    </object>
+  </objects>
+  <states>
+    <state name="title">
+      <objects>
+        <object name="title">
+          <sprite><text style="banner"><content>DEPTH CHARGE</content></text></sprite>
+          <position><x><centered /></x><y><centered><offset>-130</offset></centered></y></position>
+        </object>
+        <group name="help">
+          <rows>2</rows>
+          <padding><y>50</y></padding>
+          <sprite><text style="line" /></sprite>
+          <position><x><centered /></x><y><centered><offset>-20</offset></centered></y></position>
+          <row number="1"><sprite><text><content>the deeper the submarine, the more it is worth</content></text></sprite></row>
+          <row number="2"><sprite><text><content>a and d or the arrows move, space drops a pair</content><size>28</size><color>color.lightgrey</color></text></sprite></row>
+        </group>
+        <object name="start">
+          <sprite><text style="line"><content>spacebar to start</content><size>48</size></text></sprite>
+          <position><x><centered /></x><y><centered><offset>130</offset></centered></y></position>
+        </object>
+      </objects>
+      <inputs>
+        <input button="space">
+          <push state="playing" />
+          <play sound="start" />
+        </input>
+      </inputs>
+    </state>
+    <state name="playing">
+      <objects>
+        <object name="sea">
+          <sprite><rectangle><width>window.right</width><height><subtract><value>window.bottom</value><value>surface</value></subtract></height><color>color.darkblue</color></rectangle></sprite>
+          <position><x>0</x><y>surface</y></position>
+        </object>
+        <!-- the top of the water, where a mine that has come up goes off -->
+        <object name="waterline">
+          <sprite><rectangle><width>window.right</width><height>2</height><color>color.cyan</color></rectangle></sprite>
+          <position><x>0</x><y>surface</y></position>
+          <collisions />
+        </object>
+        <object name="status">
+          <variables>
+            <variable name="score">0</variable>
+            <variable name="time">90</variable>
+            <variable name="ships">3</variable>
+          </variables>
+        </object>
+        <!-- the submarines: four lanes, each deeper, slower to reach and worth more -->
+        <group name="subs" class="sub">
+          <sprite>
+            <bitmap from="subs" />
+          </sprite>
+          <collisions>
+            <type>pixel</type>
+            <collision edge="horizontal"><wrap /></collision>
+            <collision class="charge">
+              <inc variable="status.score">self.worth</inc>
+              <play sound="sink" />
+              <spawn object="burst" />
+              <die />
+            </collision>
+          </collisions>
+          <timers>
+            <timer><every><random><min>3</min><max>9</max></random></every><spawn object="mine" /></timer>
+          </timers>
+          <group name="lane1">
+            <position><y>170</y></position>
+            <velocity><x>90</x></velocity>
+            <variables><variable name="worth">20</variable></variables>
+            <member><position><x>-60</x></position></member>
+            <member><position><x>240</x></position></member>
+            <member><position><x>540</x></position></member>
+          </group>
+          <group name="lane2">
+            <sprite><bitmap><color>color.green</color></bitmap></sprite>
+            <position><y>260</y></position>
+            <velocity><x>-120</x></velocity>
+            <variables><variable name="worth">40</variable></variables>
+            <member><position><x>80</x></position></member>
+            <member><position><x>380</x></position></member>
+            <member><position><x>680</x></position></member>
+          </group>
+          <group name="lane3">
+            <sprite><bitmap><color>color.orange</color></bitmap></sprite>
+            <position><y>350</y></position>
+            <velocity><x>150</x></velocity>
+            <variables><variable name="worth">60</variable></variables>
+            <member><position><x>-10</x></position></member>
+            <member><position><x>390</x></position></member>
+          </group>
+          <group name="lane4">
+            <sprite><bitmap><color>color.red</color></bitmap></sprite>
+            <position><y>440</y></position>
+            <velocity><x>-180</x></velocity>
+            <variables><variable name="worth">80</variable></variables>
+            <member><position><x>200</x></position></member>
+            <member><position><x>600</x></position></member>
+          </group>
+        </group>
+        <object name="ship">
+          <sprite>
+            <bitmap from="ship" />
+          </sprite>
+          <position><x><centered /></x><y><subtract><value>surface</value><value>20</value></subtract></y></position>
+          <collisions>
+            <type>pixel</type>
+            <collision edge="horizontal"><stick /></collision>
+            <collision class="mine">
+              <dec variable="status.ships" />
+              <play sound="boom" />
+            </collision>
+          </collisions>
+          <actions>
+            <action name="left"><move direction="left">step</move></action>
+            <action name="right"><move direction="right">step</move></action>
+            <action name="drop">
+              <spawn object="charge"><position><x><centered><add><value>ship.x</value><value>6</value></add></centered></x><y><add><value>ship.y</value><value>12</value></add></y></position></spawn>
+              <spawn object="charge"><position><x><centered>
+                <subtract>
+                  <value><add><value>ship.x</value><value>ship.width</value></add></value>
+                  <value>6</value>
+                </subtract>
+              </centered></x><y><add><value>ship.y</value><value>12</value></add></y></position></spawn>
+              <play sound="drop" />
+            </action>
+          </actions>
+        </object>
+        <object name="score">
+          <sprite><text style="hud"><content>SCORE </content><number>status.score</number></text></sprite>
+          <position><x>margin</x><y>margin</y></position>
+        </object>
+        <object name="clock">
+          <sprite><text style="hud"><content>TIME </content><number>status.time</number><color>color.yellow</color></text></sprite>
+          <position><x><centered /></x><y>margin</y></position>
+        </object>
+        <object name="ships">
+          <sprite><text style="hud"><content>SHIPS </content><number>status.ships</number></text></sprite>
+          <position><x><subtract><value>window.right</value><value>140</value></subtract></x><y>margin</y></position>
+        </object>
+      </objects>
+      <music sound="sonar" />
+      <inputs>
+        <input><button>a</button><button>left</button><trigger object="ship" action="left" /></input>
+        <input><button>d</button><button>right</button><trigger object="ship" action="right" /></input>
+        <input button="space"><trigger object="ship" action="drop" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
+      </inputs>
+      <conditions>
+        <condition object="status" variable="time">
+          <atmost>0</atmost>
+          <push state="over" />
+          <play sound="gameover" />
+        </condition>
+        <condition object="status" variable="ships">
+          <atmost>0</atmost>
+          <push state="over" />
+          <play sound="gameover" />
+        </condition>
+      </conditions>
+      <timers>
+        <timer><every>1</every><dec variable="status.time" /></timer>
+        <!-- a sunk boat back in its lane -->
+        <timer><every>2</every><reveal object="subs" /></timer>
+      </timers>
+    </state>
+    <state name="paused">
+      <objects>
+        <object name="paused">
+          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <position><x><centered /></x><y><centered /></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
+      </inputs>
+    </state>
+    <state name="over">
+      <objects>
+        <object name="message">
+          <sprite><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>
+          <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
+        </object>
+        <object name="again">
+          <sprite><text style="line"><content>spacebar to play again</content><size>48</size></text></sprite>
+          <position><x><centered /></x><y><centered><offset>70</offset></centered></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input button="space"><reset /></input>
+      </inputs>
+    </state>
+  </states>
   <sounds>
     <!-- the sonar, pinging all through the hunt -->
     <sound name="sonar" wave="sine">
@@ -74,295 +322,63 @@
       <note pitch="C4" to="C3">0.7</note>
     </sound>
   </sounds>
-  <styles>
-    <style name="banner"><size>110</size><color>color.cyan</color></style>
-    <style name="line"><size>30</size><color>color.white</color></style>
-    <style name="hud"><size>30</size><color>color.white</color></style>
-  </styles>
-  <kit>
-    <!-- a charge, sinking slowly; six at most in the water -->
-    <object name="charge" class="charge">
-      <sprite>
-        <bitmap>
-          <row>.**.</row>
-          <row>****</row>
-          <row>****</row>
-          <row>.**.</row>
-          <scale>3</scale>
-          <color>color.orange</color>
-        </bitmap>
-      </sprite>
-      <velocity><y>2</y></velocity>
-      <most>6</most>
-      <collisions>
-        <collision edge="bottom"><despawn /></collision>
-        <collision class="sub"><despawn /></collision>
-      </collisions>
-    </object>
-    <!-- the mines the submarines lay: they rise, and go off at the top of the water or under the destroyer -->
-    <object name="mine" class="mine">
-      <sprite>
-        <bitmap>
-          <row>*.*.*</row>
-          <row>.***.</row>
-          <row>*****</row>
-          <row>.***.</row>
-          <row>*.*.*</row>
-          <scale>2</scale>
-          <color>color.white</color>
-        </bitmap>
-      </sprite>
-      <velocity><y>-1.2</y></velocity>
-      <most>6</most>
-      <collisions>
-        <collision object="ship"><despawn /></collision>
-        <collision object="waterline"><despawn /></collision>
-      </collisions>
-    </object>
-    <!-- a submarine going down -->
-    <object name="burst">
-      <sprite name="flash">
-        <bitmap>
-          <row>.*..*..*.</row>
-          <row>..*.*.*..</row>
-          <row>*..***..*</row>
-          <row>..*.*.*..</row>
-          <row>.*..*..*.</row>
-          <scale>4</scale>
-          <color>color.white</color>
-        </bitmap>
-      </sprite>
-      <sprite name="spray">
-        <bitmap>
-          <row>*...*...*</row>
-          <row>.*.....*.</row>
-          <row>...*.*...</row>
-          <row>.*.....*.</row>
-          <row>*...*...*</row>
-          <scale>4</scale>
-          <color>color.cyan</color>
-        </bitmap>
-      </sprite>
-      <animation>
-        <interval>0.1</interval>
-        <frame sprite="flash" />
-        <frame sprite="spray" />
-      </animation>
-      <timers>
-        <timer><every>0.6</every><despawn /></timer>
-      </timers>
-    </object>
-  </kit>
-  <states>
-    <state name="mainmenu">
-      <objects>
-        <object name="title">
-          <sprite><text style="banner"><content>DEPTH CHARGE</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 130</centered></y></position>
-        </object>
-        <object name="help">
-          <sprite><text style="line"><content>the deeper the submarine, the more it is worth</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 20</centered></y></position>
-        </object>
-        <object name="keys">
-          <sprite><text style="line"><content>a and d or the arrows move, space drops a pair</content><size>28</size><color>color.lightgrey</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 30</centered></y></position>
-        </object>
-        <object name="start">
-          <sprite><text style="line"><content>spacebar to start</content><size>48</size></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 130</centered></y></position>
-        </object>
-      </objects>
-      <inputs>
-        <input button="space">
-          <push state="playing" />
-          <play sound="start" />
-        </input>
-      </inputs>
-    </state>
-    <state name="playing">
-      <objects>
-        <object name="sea">
-          <sprite><rectangle><width>window.right</width><height>window.bottom - surface</height><color>color.darkblue</color></rectangle></sprite>
-          <position><x>0</x><y>surface</y></position>
-        </object>
-        <!-- the top of the water, where a mine that has come up goes off -->
-        <object name="waterline">
-          <sprite><rectangle><width>window.right</width><height>2</height><color>color.cyan</color></rectangle></sprite>
-          <position><x>0</x><y>surface</y></position>
-          <collisions />
-        </object>
-        <object name="status">
-          <variables>
-            <variable name="score">0</variable>
-            <variable name="time">90</variable>
-            <variable name="ships">3</variable>
-          </variables>
-        </object>
-        <!-- the submarines: four lanes, each deeper, slower to reach and worth more -->
-        <group name="subs" class="sub">
-          <sprite>
-            <bitmap>
-              <row>.........**.........</row>
-              <row>........****........</row>
-              <row>.******************.</row>
-              <row>********************</row>
-              <row>.******************.</row>
-              <row>..****************..</row>
-              <scale>3</scale>
-              <color>color.yellow</color>
-            </bitmap>
-          </sprite>
-          <collisions>
-            <type>pixel</type>
-            <collision edge="horizontal"><wrap /></collision>
-            <collision class="charge">
-              <inc variable="status.score">self.worth</inc>
-              <play sound="sink" />
-              <release object="burst" />
-              <die />
-            </collision>
-          </collisions>
-          <timers>
-            <timer><every><random><min>3</min><max>9</max></random></every><release object="mine" /></timer>
-          </timers>
-          <group name="lane1">
-            <position><y>170</y></position>
-            <velocity><x>1.5</x></velocity>
-            <variables><variable name="worth">20</variable></variables>
-            <member><position><x>-60</x></position></member>
-            <member><position><x>240</x></position></member>
-            <member><position><x>540</x></position></member>
-          </group>
-          <group name="lane2">
-            <sprite><bitmap><color>color.green</color></bitmap></sprite>
-            <position><y>260</y></position>
-            <velocity><x>-2</x></velocity>
-            <variables><variable name="worth">40</variable></variables>
-            <member><position><x>80</x></position></member>
-            <member><position><x>380</x></position></member>
-            <member><position><x>680</x></position></member>
-          </group>
-          <group name="lane3">
-            <sprite><bitmap><color>color.orange</color></bitmap></sprite>
-            <position><y>350</y></position>
-            <velocity><x>2.5</x></velocity>
-            <variables><variable name="worth">60</variable></variables>
-            <member><position><x>-10</x></position></member>
-            <member><position><x>390</x></position></member>
-          </group>
-          <group name="lane4">
-            <sprite><bitmap><color>color.red</color></bitmap></sprite>
-            <position><y>440</y></position>
-            <velocity><x>-3</x></velocity>
-            <variables><variable name="worth">80</variable></variables>
-            <member><position><x>200</x></position></member>
-            <member><position><x>600</x></position></member>
-          </group>
-        </group>
-        <object name="ship">
-          <sprite>
-            <bitmap>
-              <row>..........*...................</row>
-              <row>.........***......*...........</row>
-              <row>....**..*****....***..........</row>
-              <row>..**************************..</row>
-              <row>******************************</row>
-              <row>.****************************.</row>
-              <row>..**************************..</row>
-              <row>...************************...</row>
-              <scale>3</scale>
-              <color>color.lightgrey</color>
-            </bitmap>
-          </sprite>
-          <position><x><centered /></x><y>surface - 20</y></position>
-          <collisions>
-            <type>pixel</type>
-            <collision edge="horizontal"><stick /></collision>
-            <collision class="mine">
-              <dec variable="status.ships" />
-              <play sound="boom" />
-            </collision>
-          </collisions>
-          <actions>
-            <action name="left"><move direction="left">step</move></action>
-            <action name="right"><move direction="right">step</move></action>
-            <action name="drop">
-              <spawn object="charge"><position><x><centered>ship.x + 6</centered></x><y>ship.y + 12</y></position></spawn>
-              <spawn object="charge"><position><x><centered>ship.x + ship.width - 6</centered></x><y>ship.y + 12</y></position></spawn>
-              <play sound="drop" />
-            </action>
-          </actions>
-        </object>
-        <object name="score">
-          <sprite><text style="hud"><content>SCORE </content><number>status.score</number></text></sprite>
-          <position><x>margin</x><y>margin</y></position>
-        </object>
-        <object name="clock">
-          <sprite><text style="hud"><content>TIME </content><number>status.time</number><color>color.yellow</color></text></sprite>
-          <position><x><centered /></x><y>margin</y></position>
-        </object>
-        <object name="ships">
-          <sprite><text style="hud"><content>SHIPS </content><number>status.ships</number></text></sprite>
-          <position><x>window.right - 140</x><y>margin</y></position>
-        </object>
-      </objects>
-      <music sound="sonar" />
-      <inputs>
-        <input><button>a</button><button>left</button><trigger object="ship" action="left" /></input>
-        <input><button>d</button><button>right</button><trigger object="ship" action="right" /></input>
-        <input button="space"><trigger object="ship" action="drop" /></input>
-        <input><button>p</button><button>escape</button><push state="paused" /></input>
-      </inputs>
-      <conditions>
-        <condition object="status" variable="time">
-          <atmost>0</atmost>
-          <push state="gameover" />
-          <play sound="gameover" />
-        </condition>
-        <condition object="status" variable="ships">
-          <atmost>0</atmost>
-          <push state="gameover" />
-          <play sound="gameover" />
-        </condition>
-      </conditions>
-      <timers>
-        <timer><every>1</every><dec variable="status.time" /></timer>
-        <!-- a sunk boat back in its lane -->
-        <timer><every>2</every><reveal object="subs" /></timer>
-      </timers>
-    </state>
-    <state name="paused">
-      <objects>
-        <object name="paused">
-          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
-          <position><x><centered /></x><y><centered /></y></position>
-        </object>
-      </objects>
-      <shows>
-        <show state="playing" />
-      </shows>
-      <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><pop /></input>
-      </inputs>
-    </state>
-    <state name="gameover">
-      <objects>
-        <object name="message">
-          <sprite><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
-        </object>
-        <object name="again">
-          <sprite><text style="line"><content>spacebar to play again</content><size>48</size></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
-        </object>
-      </objects>
-      <shows>
-        <show state="playing" />
-      </shows>
-      <inputs>
-        <input button="space"><reset /></input>
-      </inputs>
-    </state>
-  </states>
+  <pictures>
+    <bitmap name="charge">
+      <row>.**.</row>
+      <row>****</row>
+      <row>****</row>
+      <row>.**.</row>
+      <scale>3</scale>
+      <color>color.orange</color>
+    </bitmap>
+    <bitmap name="mine">
+      <row>*.*.*</row>
+      <row>.***.</row>
+      <row>*****</row>
+      <row>.***.</row>
+      <row>*.*.*</row>
+      <scale>2</scale>
+      <color>color.white</color>
+    </bitmap>
+    <bitmap name="burst-flash">
+      <row>.*..*..*.</row>
+      <row>..*.*.*..</row>
+      <row>*..***..*</row>
+      <row>..*.*.*..</row>
+      <row>.*..*..*.</row>
+      <scale>4</scale>
+      <color>color.white</color>
+    </bitmap>
+    <bitmap name="burst-spray">
+      <row>*...*...*</row>
+      <row>.*.....*.</row>
+      <row>...*.*...</row>
+      <row>.*.....*.</row>
+      <row>*...*...*</row>
+      <scale>4</scale>
+      <color>color.cyan</color>
+    </bitmap>
+    <bitmap name="subs">
+      <row>.........**.........</row>
+      <row>........****........</row>
+      <row>.******************.</row>
+      <row>********************</row>
+      <row>.******************.</row>
+      <row>..****************..</row>
+      <scale>3</scale>
+      <color>color.yellow</color>
+    </bitmap>
+    <bitmap name="ship">
+      <row>..........*...................</row>
+      <row>.........***......*...........</row>
+      <row>....**..*****....***..........</row>
+      <row>..**************************..</row>
+      <row>******************************</row>
+      <row>.****************************.</row>
+      <row>..**************************..</row>
+      <row>...************************...</row>
+      <scale>3</scale>
+      <color>color.lightgrey</color>
+    </bitmap>
+  </pictures>
 </game>

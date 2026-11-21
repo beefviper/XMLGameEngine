@@ -11,14 +11,8 @@
 
 namespace xge
 {
-	// Where the games and the assets are, shared by every program that runs a
-	// game (xgecli and xgegui), so they look in the same places. Both are in
-	// games/: the game files in games/descriptions/ and their media in
-	// games/assets/. The engine reads assets/ (the font, images) relative to
-	// the working directory, so games/ is made the working directory. The build
-	// puts a copy of games/ in the build directory, which is one folder above
-	// the programs in a Visual Studio build (build/Debug), so a program started
-	// from there, or from anywhere else, has to find it.
+	// Where the games folder is, for every program, so they look alike: it is
+	// made the working directory, as games name their assets relative to it.
 
 	// The folder the running program is in, or an empty path if the system
 	// does not say.
@@ -42,15 +36,8 @@ namespace xge
 	// with none gets ".xml" ("pong" is "pong.xml"); anything else is as given.
 	std::filesystem::path gameFileGiven(const std::string& game);
 
-	// Finds a game file for a name or path, in this order:
-	//
-	//   1. exactly as given (a path, or a name in the current directory)
-	//   2. its file name alone in the working directory (the same place as 1
-	//      for a bare name; only differs when a directory was given)
-	//   3. its file name alone in gamesDirectory (descriptions/ in the games
-	//      folder)
-	//
-	// Returns the path as it was found, or nothing.
+	// A game file: as given, else its file name in the working directory,
+	// else in gamesDirectory.
 	std::optional<std::filesystem::path> locateGameFile(const std::string& game,
 		const std::filesystem::path& gamesDirectory);
 

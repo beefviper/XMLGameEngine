@@ -1,0 +1,182 @@
+// test_holes.cpp
+// XML Game Engine
+// author: beefviper
+// date: Oct 17, 2026
+//
+// Catch2 tests for <hole>: a rule that cuts a round hole in an object's own
+// picture where something hit it, which a pixel collision then lets the next
+// thing through; then the shields of games/descriptions/spaceinvaders.xml.
+
+#include "copies.h"
+#include "played.h"
+
+#include <catch2/catch_approx.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_string.hpp>
+
+#include <string>
+
+using namespace xge;
+using namespace played;
+using Catch::Approx;
+using Catch::Matchers::ContainsSubstring;
+
+namespace
+{
+	// A wall, 40 by 40 solid pixels at 100, 100, that holes are cut in.
+	std::string wall(const std::string& rule, const std::string& extra = "")
+	{
+		std::string rows;
+		for (int i = 0; i < 10; ++i) { rows += "<row>**********</row>"; }
+		return "<object name=\"wall\"><sprite><bitmap>" + rows + "<scale>4</scale><color>color.green</color></bitmap></sprite>"
+			"<position><x>100</x><y>100</y></position>" + extra + "<collisions><type>pixel</type>" + rule + "</collisions></object>";
+	}
+
+	int solidPixels(const Bitmap& bitmap)
+	{
+		int count = 0;
+		for (int y = 0; y < bitmap.height; ++y)
+		{
+			for (int x = 0; x < bitmap.width; ++x) { count += bitmap.solidAt(x, y) ? 1 : 0; }
+		}
+		return count;
+	}
+
+	int solidPixels(const Object& object) { return solidPixels(*object.drawn.bitmap); }
+}
+
+TEST_CASE("a <hole> is cut round the middle of what hit, and the next shot goes through it", "[hole]")
+{
+	const std::string shot = box("shot", 115, 300, "<velocity><x>0</x><y>-480</y></velocity><collisions>"
+		"<collision object=\"wall\"><reset /></collision></collisions>");
+	const Scratch file(wall("<collision object=\"shot\"><hole>8</hole></collision>") + shot
+		+ box("another", 600, 100), "<reset object=\"wall\" />");
+	Played play(file.path);
+	const auto whole = play.get("wall").drawn.bitmap;
+	REQUIRE(solidPixels(play.get("wall")) == 1600);
+
+	// It hits the bottom of the wall, a hole is cut there, and it is put back.
+	play.frames(30);
+	const Object& hit = play.get("wall");
+	CHECK(hit.drawn.bitmap != whole);
+	REQUIRE(play.game.parts().unholed.find(hit.id));
+	CHECK(play.game.parts().unholed.find(hit.id)->bitmap == whole);
+	CHECK_FALSE(hit.drawn.bitmap->solidAt(20, 39));
+	CHECK(hit.drawn.bitmap->solidAt(20, 20));
+	CHECK(hit.drawn.bitmap->solidAt(2, 39));
+	const int afterOne = solidPixels(hit);
+	CHECK(afterOne < 1600);
+	CHECK(afterOne > 1600 - 260);
+
+	// Every shot up the same line goes a little deeper, until one goes
+	// right through and out of the top.
+	bool through = false;
+	for (int i = 0; i < 300 && !through; ++i)
+	{
+		play.frames(1);
+		through = play.get("shot").position.y < 90.0f;
+	}
+	CHECK(through);
+	CHECK(solidPixels(play.get("wall")) < afterOne);
+
+	// The picture the wall started with was never touched, and a reset puts it back.
+	CHECK(solidPixels(*whole) == 1600);
+	play.tap(KeyCode::Space);
+	CHECK(play.get("wall").drawn.bitmap == whole);
+	CHECK_FALSE(play.game.parts().unholed.has(play.get("wall").id));
+	CHECK(solidPixels(play.get("wall")) == 1600);
+}
+
+TEST_CASE("a rough hole keeps some pixels at its edge, never more than it would have had", "[hole]")
+{
+	const auto cut = [](const std::string& rough)
+	{
+		const Scratch file(wall("<collision object=\"shot\"><hole>12" + rough + "</hole></collision>")
+			+ box("shot", 115, 115, "<velocity><x>0</x><y>-60</y></velocity><collisions></collisions>"), "<pop />");
+		Played play(file.path);
+		play.frames(1);
+		return 1600 - solidPixels(play.get("wall"));
+	};
+
+	const int smooth = cut("");
+	const int rough = cut("<rough>0.8</rough>");
+	CHECK(smooth == Approx(3.14159 * 144).epsilon(0.1));
+	CHECK(rough < smooth);
+	CHECK(rough > 0);
+}
+
+TEST_CASE("a <hole> is cut only in a picture that stays as it is", "[hole]")
+{
+	const auto load = [](const std::string& objects)
+	{
+		const Scratch file(objects, "<pop />");
+		Game game(file.path);
+	};
+
+	CHECK_THROWS_WITH(load(box("wall", 0, 0, "<collisions><collision object=\"shot\"><hole>4</hole></collision></collisions>") + box("shot", 50, 50)),
+		ContainsSubstring("<hole> cuts a picture that stays as it is"));
+	CHECK_THROWS_WITH(load(wall("<collision object=\"shot\"><hole>0</hole></collision>") + box("shot", 300, 300)), ContainsSubstring("a radius of 0"));
+	CHECK_THROWS_WITH(load(wall("<collision object=\"shot\"><hole>3<rough>2</rough></hole></collision>") + box("shot", 300, 300)), ContainsSubstring("<rough> of 2"));
+	CHECK_THROWS_WITH(load(wall("<collision object=\"shot\"><hole>3</hole></collision>", "<heading>0</heading>") + box("shot", 300, 300)),
+		ContainsSubstring("<hole> cuts a picture"));
+}
+
+TEST_CASE("spaceinvaders.xml: shots wear holes in a shield until they pass through it", "[hole][spaceinvaders]")
+{
+	Played play("descriptions/spaceinvaders.xml");
+	play.tap(KeyCode::Space);
+	REQUIRE(play.state() == "playing");
+
+	// Four shields, none of them hit yet; the second stands over x 349 to 437.
+	Object& shield = play.get("shields.2.1");
+	REQUIRE(play.get("shields.4.1").isVisible);
+	const auto whole = shield.drawn.bitmap;
+	CHECK(shield.position.x == Approx(349));
+
+	// Move the ship under the shield's middle and fire up into it.
+	Object& ship = play.get("player");
+	ship.position.x = shield.position.x + shield.size.x / 2 - ship.size.x / 2;
+	bool through = false;
+	for (int shot = 0; shot < 20 && !through; ++shot)
+	{
+		play.tap(KeyCode::Space);
+		play.frames(1);
+		for (int i = 0; i < 70 && copies::count(play.game, "bullet") == 1; ++i)
+		{
+			const Object& bullet = play.get("bullet.1");
+			through = through || bullet.position.y + measureShapeSize(bullet.drawn.picture).y < shield.position.y;
+			play.frames(1);
+		}
+		ship.position.x = shield.position.x + shield.size.x / 2 - ship.size.x / 2;
+	}
+	CHECK(play.get("shields.2.1").drawn.bitmap != whole);
+	CHECK(through);
+}
+
+TEST_CASE("a sprite of <polygon>s is filled, tested by its pixels, and holed where it is struck", "[hole][polygon]")
+{
+	const std::string hill = "<object name=\"hill\" class=\"ground\"><sprite><polygon>"
+		"<point><x>0</x><y>100</y></point><point><x>50</x><y>40</y></point><point><x>100</x><y>100</y></point>"
+		"<color>color.green</color></polygon></sprite>"
+		"<position><x>100</x><y>100</y></position>"
+		"<collisions><type>pixel</type><collision class=\"shell\"><hole>8</hole></collision></collisions></object>";
+	const std::string shell = box("shell", 148, 100, "<velocity><x>0</x><y>180</y></velocity><collisions>"
+		"<collision class=\"ground\"><stop /></collision></collisions>");
+	const Scratch file(hill + shell.substr(0, shell.find('>')) + " class=\"shell\"" + shell.substr(shell.find('>')), "<reset object=\"hill\" />");
+	Played play(file.path);
+	const Object& ground = play.get("hill");
+	REQUIRE(ground.drawn.bitmap);
+	CHECK(ground.drawn.bitmap->width == 100);
+	CHECK(ground.drawn.bitmap->height == 100);
+	CHECK(ground.drawn.bitmap->solidAt(50, 45));
+	CHECK_FALSE(ground.drawn.bitmap->solidAt(20, 45));
+
+	// Falling onto the peak: it stops on the slope, a hole cut round it.
+	play.frames(30);
+	CHECK(play.get("shell").position.y < 145.0f);
+	CHECK(play.get("shell").position.y > 125.0f);
+	CHECK_FALSE(play.get("hill").drawn.bitmap->solidAt(50, 45));
+	CHECK(play.get("hill").drawn.bitmap->solidAt(50, 90));
+	play.tap(KeyCode::Space);
+	CHECK(play.get("hill").drawn.bitmap->solidAt(50, 45));
+}

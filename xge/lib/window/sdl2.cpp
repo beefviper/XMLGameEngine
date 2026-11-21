@@ -5,11 +5,12 @@
 
 #include "window/sdl2.h"
 
-#include "picture/font.h"
 #include "picture/color.h"
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
+#include <memory>
 #include <cstdlib>
 #include <iostream>
 #include <stdexcept>
@@ -93,12 +94,6 @@ namespace xge
 			throw std::runtime_error(std::string("SDL2 could not start: ") + SDL_GetError());
 		}
 
-		ttfInitialized = (TTF_Init() == 0);
-		if (!ttfInitialized)
-		{
-			std::cout << "error: failed to initialize SDL2_ttf: " << TTF_GetError() << std::endl;
-		}
-
 		Uint32 flags = SDL_WINDOW_SHOWN;
 		if (windowDesc.fullscreen == "true")
 		{
@@ -106,17 +101,19 @@ namespace xge
 		}
 
 		scale = static_cast<float>(std::max(1, windowDesc.scale));
+		setPictureScale(scale);
 		window = SDL_CreateWindow(windowDesc.name.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
 			static_cast<int>(windowDesc.width * scale), static_cast<int>(windowDesc.height * scale), flags);
 
 		if (!window)
 		{
 			const std::string why = SDL_GetError();
-			if (ttfInitialized) { TTF_Quit(); }
 			quitVideo();
 			throw std::runtime_error("SDL2 could not make a window: " + why);
 		}
 
+		// The engine sets the game's speed (Engine::loop); the window only waits
+		// for the screen's refresh, so a picture is never torn.
 		renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 
 		if (!renderer)
@@ -124,7 +121,6 @@ namespace xge
 			const std::string why = SDL_GetError();
 			SDL_DestroyWindow(window);
 			window = nullptr;
-			if (ttfInitialized) { TTF_Quit(); }
 			quitVideo();
 			throw std::runtime_error("SDL2 could not make a renderer: " + why);
 		}
@@ -154,18 +150,12 @@ namespace xge
 		}
 
 		visuals.clear();
-
-		for (auto& [key, loadedFont] : fontsBySize)
-		{
-			if (loadedFont) { TTF_CloseFont(loadedFont); }
-		}
-		fontsBySize.clear();
+		textures.forEach([](SDL_Texture* texture) { if (texture) { SDL_DestroyTexture(texture); } });
+		textures.clear();
 
 		if (renderer) { SDL_DestroyRenderer(renderer); renderer = nullptr; }
 		if (window) { SDL_DestroyWindow(window); window = nullptr; }
 
-		if (imgInitialized) { IMG_Quit(); imgInitialized = false; }
-		if (ttfInitialized) { TTF_Quit(); ttfInitialized = false; }
 
 		for (SDL_GameController*& pad : pads)
 		{
@@ -257,14 +247,9 @@ namespace xge
 
 	void SDL2Window::init(std::vector<Object>& objects)
 	{
-		// Object::position is already final by now - see the identical
-		// comment in SFMLWindow::init() (window/sfml.cpp).
 		for (auto& object : objects)
 		{
-			CachedVisual& visual = visuals[object.name];
-
-			buildShapeOnly(object, visual);
-			finalizeVisual(object, visual);
+			build(object, visuals[object.name]);
 		}
 	}
 
@@ -279,7 +264,7 @@ namespace xge
 			{
 				// Not close(): the engine finishes the frame this was read in
 				// (clear, draw, display) before it looks at isOpen() again, and
-				// that needs the renderer, the textures and SDL_ttf. They are
+				// that needs the renderer and the textures. They are
 				// torn down by close() when the window is destroyed.
 				closeRequested = true;
 			}
@@ -299,8 +284,7 @@ namespace xge
 	void SDL2Window::clear(const std::string& colorName)
 	{
 		const Color c = colorFromName(colorName);
-		// The game's pixels, scale window pixels each (set again each frame:
-		// drawing into a texture uses a scale of its own).
+		// The game's pixels, scale window pixels each.
 		SDL_RenderSetScale(renderer, scale, scale);
 		SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, c.a);
 		SDL_RenderClear(renderer);
@@ -310,12 +294,9 @@ namespace xge
 	{
 		CachedVisual& visual = visuals[object.name];
 
-		if (object.visualDirty || !visual.texture)
+		if (object.drawn.visualDirty || !visual.built || (object.drawnAtScale() && visual.drawnAt != pictureScale()))
 		{
-			// Only redraws; the position is final - see the matching comment in
-			// SFMLWindow::draw() (window/sfml.cpp).
-			buildShapeOnly(object, visual);
-			finalizeVisual(object, visual);
+			build(object, visual);
 		}
 	}
 
@@ -329,11 +310,16 @@ namespace xge
 			return;
 		}
 
-		int w = 0, h = 0;
-		SDL_QueryTexture(visual.texture, nullptr, nullptr, &w, &h);
+		// Whole game pixels, so a texture is never sampled between two of
+		// its pixels; stretched over the object's size in the game's pixels.
+		const Vector2f size = object.pictureSize();
+		const SDL_FRect where{ std::floor(object.position.x), std::floor(object.position.y), size.x, size.y };
+		SDL_RenderCopyF(renderer, visual.texture, nullptr, &where);
+	}
 
-		const SDL_Rect dst{ static_cast<int>(object.position.x), static_cast<int>(object.position.y), w, h };
-		SDL_RenderCopyEx(renderer, visual.texture, nullptr, &dst, 0.0, nullptr, visual.flip);
+	float SDL2Window::fit() const
+	{
+		return scale;
 	}
 
 	void SDL2Window::display()
@@ -351,244 +337,52 @@ namespace xge
 		return KeyCode::Unknown;
 	}
 
-	bool SDL2Window::ensureImages()
+	Bitmap SDL2Window::capture()
 	{
-		if (imgTried)
-		{
-			return imgInitialized;
-		}
-		imgTried = true;
-
-		// PNG is needed; JPEG is a bonus (a vcpkg SDL2_image built without
-		// libjpeg-turbo has none), so a missing JPEG is reported but does not
-		// stop the images that can be read.
-		const int imgLoaded = IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG);
-		imgInitialized = (imgLoaded & IMG_INIT_PNG) != 0;
-		if (!imgInitialized)
-		{
-			std::cout << "error: failed to initialize SDL2_image: " << IMG_GetError() << std::endl;
-		}
-		else if ((imgLoaded & IMG_INIT_JPG) == 0)
-		{
-			std::cout << "warning: this SDL2_image has no JPEG support, so JPEG images will not load" << std::endl;
-		}
-
-		return imgInitialized;
+		Bitmap bitmap;
+		if (SDL_GetRendererOutputSize(renderer, &bitmap.width, &bitmap.height) != 0 || bitmap.width <= 0 || bitmap.height <= 0) { return {}; }
+		bitmap.rgba.resize(static_cast<std::size_t>(bitmap.width) * static_cast<std::size_t>(bitmap.height) * 4);
+		if (SDL_RenderReadPixels(renderer, nullptr, SDL_PIXELFORMAT_RGBA32, bitmap.rgba.data(), bitmap.width * 4) != 0) { return {}; }
+		return bitmap;
 	}
 
-	TTF_Font* SDL2Window::getFont(const std::string& file, int pointSize)
+	// The engine's picture of the object, at pictureScale().
+	void SDL2Window::build(Object& object, CachedVisual& visual)
 	{
-		const std::string key = file + "@" + std::to_string(pointSize);
-		auto it = fontsBySize.find(key);
-		if (it != fontsBySize.end())
+		object.drawn.visualDirty = false;
+		visual.drawnAt = pictureScale();
+		visual.built = true;
+		const bool smooth = object.drawnAtScale();
+		visual.texture = textures.of(pictureOf(object), [&](const Bitmap& picture, SDL_Texture*& made)
 		{
-			return it->second;
-		}
-
-		TTF_Font* loaded = TTF_OpenFont(file.c_str(), pointSize);
-		if (!loaded)
-		{
-			// Said once, not once for every size asked for.
-			if (fontsMissing.insert(file).second)
+			if (made)
 			{
-				std::cout << "error: failed to load font: " << file << ": " << TTF_GetError() << " - drawing text with the built-in 8x8 font instead" << std::endl;
+				SDL_DestroyTexture(made);
+				made = nullptr;
 			}
-		}
-
-		fontsBySize.emplace(key, loaded);
-		return loaded;
-	}
-
-	void SDL2Window::reloadTargetTexture(CachedVisual& visual, int width, int height)
-	{
-		if (visual.texture)
-		{
-			SDL_DestroyTexture(visual.texture);
-		}
-
-		visual.texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET,
-			width > 0 ? width : 1, height > 0 ? height : 1);
-		SDL_SetTextureBlendMode(visual.texture, SDL_BLENDMODE_BLEND);
-	}
-
-	void SDL2Window::buildShapeOnly(Object& object, CachedVisual& visual)
-	{
-		switch (object.picture.kind)
-		{
-		case ShapeKind::Circle:    buildCircle(object, visual); break;
-		case ShapeKind::Rectangle: buildRectangle(object, visual); break;
-		case ShapeKind::Text:      buildText(object, visual); break;
-		case ShapeKind::Image:     buildImage(object, visual); break;
-		case ShapeKind::Line:      buildLines(object, visual); break;
-		case ShapeKind::Unknown:   break;
-		}
-	}
-
-	void SDL2Window::buildCircle(Object& object, CachedVisual& visual)
-	{
-		const float radiusF = object.picture.radius;
-		const int radius = static_cast<int>(radiusF);
-		const int diameter = static_cast<int>(std::ceil(radiusF * 2.0f));
-
-		reloadTargetTexture(visual, diameter, diameter);
-		visual.flip = SDL_FLIP_NONE;
-
-		SDL_SetRenderTarget(renderer, visual.texture);
-		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-		SDL_RenderClear(renderer);
-
-		const Color c = colorFromName(object.picture.color);
-		SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, c.a);
-
-		for (int y = -radius; y <= radius; ++y)
-		{
-			for (int x = -radius; x <= radius; ++x)
+			if (picture.rgba.empty())
 			{
-				if (x * x + y * y <= radius * radius)
-				{
-					SDL_RenderDrawPoint(renderer, radius + x, radius + y);
-				}
+				return;
 			}
-		}
 
-		SDL_SetRenderTarget(renderer, nullptr);
-	}
+			// A surface that only looks at the bitmap's pixels (they are copied
+			// into the texture below, and the surface is freed before the bitmap).
+			SDL_Surface* surface = SDL_CreateRGBSurfaceWithFormatFrom(const_cast<std::uint8_t*>(picture.rgba.data()),
+				picture.width, picture.height, 32, picture.width * 4, SDL_PIXELFORMAT_RGBA32);
+			if (!surface)
+			{
+				std::cout << "error: SDL2: failed to make a surface from the picture of '" << object.name << "': " << SDL_GetError() << std::endl;
+				return;
+			}
 
-	void SDL2Window::buildRectangle(Object& object, CachedVisual& visual)
-	{
-		const int width = static_cast<int>(std::ceil(object.picture.size.x));
-		const int height = static_cast<int>(std::ceil(object.picture.size.y));
+			made = SDL_CreateTextureFromSurface(renderer, surface);
+			SDL_FreeSurface(surface);
 
-		reloadTargetTexture(visual, width, height);
-		visual.flip = SDL_FLIP_NONE;
-
-		SDL_SetRenderTarget(renderer, visual.texture);
-		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-		SDL_RenderClear(renderer);
-
-		const Color c = colorFromName(object.picture.color);
-		SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, c.a);
-		const SDL_Rect rect{ 0, 0, width, height };
-		SDL_RenderFillRect(renderer, &rect);
-
-		SDL_SetRenderTarget(renderer, nullptr);
-	}
-
-	void SDL2Window::buildText(Object& object, CachedVisual& visual)
-	{
-		if (visual.texture)
-		{
-			SDL_DestroyTexture(visual.texture);
-			visual.texture = nullptr;
-		}
-		visual.flip = SDL_FLIP_NONE;
-
-		const int requestedSize = object.picture.textSize;
-		TTF_Font* font = getFont(textFontFile(object.picture.font), requestedSize);
-		if (!font)
-		{
-			buildBitmap(object, visual, rasterizeText(object.picture.text, requestedSize, colorFromName(object.picture.color)));
-			return;
-		}
-
-		const Color c = colorFromName(object.picture.color);
-		const SDL_Color sdlColor{ c.r, c.g, c.b, c.a };
-
-		SDL_Surface* surface = TTF_RenderUTF8_Blended(font, object.picture.text.c_str(), sdlColor);
-		if (!surface)
-		{
-			std::cout << "error: SDL2_ttf: failed to render text: " << TTF_GetError() << std::endl;
-			return;
-		}
-
-		visual.texture = SDL_CreateTextureFromSurface(renderer, surface);
-		SDL_FreeSurface(surface);
-	}
-
-	void SDL2Window::buildImage(Object& object, CachedVisual& visual)
-	{
-		if (visual.texture)
-		{
-			SDL_DestroyTexture(visual.texture);
-			visual.texture = nullptr;
-		}
-
-		const std::string& imageFile = object.picture.file;
-		ensureImages();
-		SDL_Surface* surface = IMG_Load(imageFile.c_str());
-		if (!surface)
-		{
-			throw std::runtime_error("SDL2_image could not load the image " + imageFile + ": " + IMG_GetError());
-		}
-
-		visual.texture = SDL_CreateTextureFromSurface(renderer, surface);
-		SDL_FreeSurface(surface);
-
-		visual.flip = SDL_FLIP_NONE;
-		if (object.picture.flipHorizontal)
-		{
-			visual.flip = SDL_FLIP_HORIZONTAL;
-		}
-		else if (object.picture.flipVertical)
-		{
-			visual.flip = SDL_FLIP_VERTICAL;
-		}
-	}
-
-	// A sprite of lines was already drawn, pixel by pixel, when the game loaded
-	// (see Bitmap); all that is left is to show that picture.
-	void SDL2Window::buildLines(Object& object, CachedVisual& visual)
-	{
-		buildBitmap(object, visual, *object.bitmap);
-	}
-
-	// Shows a picture the engine drew itself: a sprite of lines, or text in
-	// the built-in font.
-	void SDL2Window::buildBitmap(Object& object, CachedVisual& visual, const Bitmap& bitmap)
-	{
-		if (visual.texture)
-		{
-			SDL_DestroyTexture(visual.texture);
-			visual.texture = nullptr;
-		}
-		visual.flip = SDL_FLIP_NONE;
-
-		if (bitmap.rgba.empty())
-		{
-			reloadTargetTexture(visual, 1, 1);
-			return;
-		}
-
-		// A surface that only looks at the bitmap's pixels (they are copied
-		// into the texture below, and the surface is freed before the bitmap).
-		SDL_Surface* surface = SDL_CreateRGBSurfaceWithFormatFrom(const_cast<std::uint8_t*>(bitmap.rgba.data()),
-			bitmap.width, bitmap.height, 32, bitmap.width * 4, SDL_PIXELFORMAT_RGBA32);
-		if (!surface)
-		{
-			std::cout << "error: SDL2: failed to make a surface from the picture of '" << object.name << "': " << SDL_GetError() << std::endl;
-			return;
-		}
-
-		visual.texture = SDL_CreateTextureFromSurface(renderer, surface);
-		SDL_FreeSurface(surface);
-
-		if (visual.texture)
-		{
-			SDL_SetTextureBlendMode(visual.texture, SDL_BLENDMODE_BLEND);
-		}
-	}
-
-	void SDL2Window::finalizeVisual(Object& object, CachedVisual& visual)
-	{
-		int w = 0, h = 0;
-		if (visual.texture)
-		{
-			SDL_QueryTexture(visual.texture, nullptr, nullptr, &w, &h);
-		}
-
-		object.size.x = static_cast<float>(w);
-		object.size.y = static_cast<float>(h);
-		object.sizeKnown = true;
-		object.visualDirty = false;
+			if (made)
+			{
+				SDL_SetTextureBlendMode(made, SDL_BLENDMODE_BLEND);
+				SDL_SetTextureScaleMode(made, smooth ? SDL_ScaleModeLinear : SDL_ScaleModeNearest);
+			}
+		});
 	}
 }

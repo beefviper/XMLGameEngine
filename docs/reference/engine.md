@@ -4,16 +4,31 @@ How a game is loaded and played, the libraries behind it, how to build it, and w
 
 ## Loading
 
-1. **Parse and validate** (`load/xml`). If the file names a schema it is validated: Xerces fully ("strong"); the other XML libraries with a small built-in validator for the XSD the schema uses ("weak", `load/xsd`).
-2. **Work out the kit and every `from=`** on the XML (`load/merge`).
-3. **Read** the tags into a `GameData` (`game/data.h`), a group as one raw object per member. A generated program starts here, with its `GameData` compiled in.
+1. **Parse and validate** (`load/xml`). If the file names a schema it is validated: Xerces fully ("strong"); the other XML libraries with a small built-in validator for the XSD the schema uses ("weak", `load/xsd`), which parses a schema once for the program and again only when its file changes.
+2. **Work out the pieces and every `from=`** on the XML (`load/merge`).
+3. **Read** the tags into a `GameData` (`game/data.h`), the game as written: a group as one `WrittenObject` per member. A generated program starts here, with its `GameData` compiled in.
 4. **Lay out states and scenes** (`layOutScenes`, `game/scenes.cpp`): owned objects named by path, every name written out in full.
-5. **Evaluate** (`load/expr`, `load/calc`): every value worked out (`<random>` drawn), objects, states and sounds built, every name checked. Nothing needs a window yet.
-6. **Open the window and sound** (`Engine`): sounds made into samples, sizes measured, size-dependent positions finished, the first state pushed. If sound will not start the game plays silently, with a warning.
+5. **Evaluate** (`load/expr`, `load/calc`): every value worked out (`<random>` drawn), objects, states and sounds built ([an object](#an-object)), every name checked, every object's size known (text and image files included) and the positions made from sizes finished. Nothing needs a window.
+6. **Open the window and sound** (`Engine`): sounds made into samples, each object's picture handed to the window, the first state pushed. If sound will not start the game plays silently, with a warning.
+
+## An object
+
+- **What every object has** is in `Object` (`game/object.h`): its `Moment` (place, speed, look, light, variables and the rest that change as it plays), its picture, and its handle, an `ObjectId`.
+- **What alike objects share** and never change while playing (rules, actions, timers) is one `Kind`, held once for the members of a group or a piece and its copies.
+- **Everything else is a part**, kept in a `Store` (`game/store.h`), one store per kind of part (`Game::parts()`, `game/parts.h`). Only an object that uses a part has one: Pong's ball has no holder, hand or cells. A part that a reset puts back keeps its start in its store.
+- **A handle** is a slot and a generation. A slot freed by a despawn is used again a generation on, so an old handle finds nothing (`Game::find(ObjectId)`).
+- **Names** (an object's, its group's, a variable's) are `Name`s: ids into one table for the program, made once at load and compared as ids while playing (`game/name.h`).
+- **Pictures and sounds** are the game's `Resources` (`engine/resources.h`), each held once and named by an id, however many objects use it.
 
 ## Each frame
 
-`Engine::step` reads the keys (or the demo's, or the computer's) and runs the current state's bindings for each press and release, then its `on="hold"` bindings. Then `playOneFrame` (`play/frame.cpp`):
+`Engine::run` is the loop, three stages a frame:
+
+- **`input()`**: what came from outside, the window's keys, mouse and pads, or a demo's or replay's keys. Each press and release runs the current state's bindings for it.
+- **`update(seconds)`**: the computer's presses, the `on="hold"` bindings of held keys, then the game's own step (`Game::updateObjects`: spawns and scene changes settled, `playOneFrame`, settled again, joined pieces shown, positions that read a text's size placed again), then the sounds asked for and what the game keeps.
+- **`render()`**: what a `<show state>` shows still, then what is in play, except `<hidden />` objects.
+
+`playOneFrame` (`play/frame.cpp`):
 
 1. animations and blinking count;
 2. timers count, and those due run;
@@ -21,27 +36,57 @@ How a game is loaded and played, the libraries behind it, how to build it, and w
 4. climbing, grip, acceleration, held thrust, turns and swings, pulls and seeking, altitudes;
 5. screen-edge rules for what is moving;
 6. **the move**: hops are made, carried things lent their carrier's motion, everything moves (a swing turns through it), and each touch found on the way runs its rules;
-7. sticks hold, carried things are placed, tethers and shadows follow, light and dark worked out, poses picked;
+7. sticks hold, carried things are placed, `update="live"` numbers are worked out again (`Game::follow`), tethers and shadows follow, light and dark worked out, poses picked;
 8. conditions: the state's, then its current scene's;
 9. copies made join, despawned ones go.
 
-Then the sounds asked for play, loops start or stop, and the frame is drawn: what a `<show state>` shows still, then what is in play, except objects not `<drawn>`.
+An object is **in play** when it is not out of play (`<waiting />`, dead, despawned) and belongs to the current state, its current scene, or the game, or is shown by the state. Timers count seconds, and every speed is a second.
 
-An object is **in play** when it is not out of play (`<active>false</active>`, dead, despawned) and belongs to the current state, its current scene, or the game, or is shown by the state. Movement is pixels per frame and timers count frames; there is no time step.
+**Pace.** `update` steps the game by the real time that passed since the last frame. There is no fixed step and no sub-step: every sum takes the step's length ([time](../designs/29-time.md)).
+
+- `<framerate>` is the most frames a second: a frame waits until that much time has passed. On Windows the engine asks for 1 ms sleeps while it runs (`timeBeginPeriod`), or a wait would end on the 15.6 ms tick.
+- Every library waits for the screen's refresh (vsync) but sets no speed of its own, so a game plays at the same speed with any library and on any screen.
+- No step is longer than a quarter second (`kLongestStep`): after a stall (the window dragged, a breakpoint) the game goes on from now.
+- `xgegui` and the tests call `input()`, `update()` and `render()` themselves, the same way.
 
 ## Backends
 
 | Job | Interface | Libraries |
 |---|---|---|
 | Read XML | `XmlDocument` / `XmlNode` (`xml/document.h`) | Xerces (default), TinyXML2, PugiXML, RapidXML |
-| Window, drawing, keys, mouse, pads | `Window` (`window/window.h`) | SFML 3 (default), raylib, SDL2, OpenGL (GLFW); `xgegui`'s Qt renderer |
+| Window, drawing, keys, mouse, pads | `Window` (`window/window.h`) | SFML 3 (default), raylib, SDL2, OpenGL and Vulkan (GLFW windows, keys and pads in `window/glfw.h`), Direct3D 9, 10, 11 and 12 (Windows only, one Win32 window in `window/win32.h`); `xgegui`'s Qt renderer |
 | Sound | `Audio` (`audio/audio.h`) | SFML 3 (default), raylib, SDL2, none |
 
 - `Game` and `Engine` see only the interfaces. One factory per kind (`XmlDocumentFactory`, `WindowFactory`, `AudioFactory`) knows every library.
-- **A build has some, not all**: SFML 3 and Xerces by default; `-DXGE_WITH_<NAME>=ON` adds one, `-DXGE_ALL_BACKENDS=ON` or `-DBUILD_TESTING=ON` all. A library's code compiles only behind `XGE_WITH_<NAME>`. Each factory says what it has (`available()`, `availableBackends()`, `defaultBackend()`, `name()`); `create()` of one not built throws, naming those that are.
-- **Pictures** are drawn by the engine, so a window library only shows a bitmap; only text and image files are its own.
+- **A build has some, not all**: SFML 3 and Xerces by default; `-DXGE_WITH_<NAME>=ON` adds one, `-DXGE_ALL_BACKENDS=ON` or `-DBUILD_TESTING=ON` all (Direct3D only on Windows). A library's code compiles only behind `XGE_WITH_<NAME>`. Each factory says what it has (`available()`, `availableBackends()`, `defaultBackend()`, `name()`); `create()` of one not built throws, naming those that are.
+- **Pictures** are drawn by the engine, so a window library mostly shows bitmaps; only circles and rectangles are its own.
 - **Sound** is made by the engine (`synthesize()`, `audio/sound.h`), so it is the same whichever library plays it. `Game` never makes a noise: `<play>` asks, and `Engine` hands the frame's sounds to its `Audio`. Window and sound libraries are chosen apart; any goes with any.
 - `Engine::replaceWindow()` swaps the window of a running game (the old destroyed first), `Engine::replaceAudio()` the sound, `Engine::silence()` stops what plays, `Engine::pump()` keeps a paused window responsive.
+
+### What a window must do
+
+A `Window` (`window/window.h`) is everything a window library adds. It must:
+
+1. **Open** a window the game's size times its `<scale>`, titled with its name, or throw `std::runtime_error`.
+2. **Keep the game's proportions** when the window is resized: the game's pixels as large as fit, centred, the rest bars.
+3. **Ask each object's picture** in `init()`, and again when `drawn.visualDirty` is set (`prepare()`), then clear it. Sizes are the game's own (`Object::pictureSize`), never the window's.
+4. **Take the picture from the engine, a texture a picture:** `Window::pictureOf(object)` gives every kind as a `PictureId` from the game's `Resources` (a text, a circle, a rectangle, an image file, or the object's own `drawn.bitmap` for lines, rows and SVGs), so pictures look and measure the same in every window. Keep one texture a picture id (`Window::Textures`), however many objects show it, and make it again only when the picture's `version()` changes (an object's own picture drawn anew, as a text is). When `pictureScale()` changes, ask again for objects that are `drawnAtScale()`.
+5. **Draw** each object's picture stretched over `pictureSize()` at its `position`, its top left, each frame (`draw()`), after `clear()` with the background colour and before `display()`: smoothed if it is `drawnAtScale()`, hard edged if not.
+6. **Report keys** that went down or up since the last call (`pollEvents()`), as `KeyCode`s, and close itself when asked to.
+7. **Report the mouse and pads** (`controls()`), the mouse in the game's own pixels; a library without them reports nothing.
+8. **Say its size** (`fit()`): how many of its pixels show one of the game's now, and start `pictureScale()` at that when it opens.
+
+It may assume:
+
+- positions and sizes are the game's own pixels, and an object's picture changes only with `drawn.visualDirty` or `pictureScale()`;
+- a bitmap is red, green, blue, alpha, a byte each, not premultiplied, row by row from the top left;
+- every call comes from one thread.
+
+It changes nothing on an object but `drawn.visualDirty`; it draws its texts and shapes into the game's `Resources`, which the engine gives it (`usePictures`). It counts the textures it makes (`texturesMade()`). It may also hand back what it drew (`capture()`), for the test below.
+
+**The window test** (`test_backends.cpp`, hidden: `xgetest "[window]"`) holds every backend built to this list: it opens a 160 by 120 window, draws a bitmap, a rectangle and a circle, reads the pixels back, presses A (xdotool on X, `SendInput` on Windows) and closes. A new backend passes it before it is done.
+
+**Sharp at any size.** Once a window's `fit()` has held still a quarter of a second after a change (`SettledFit`), the engine sets its `pictureScale()`, and text, circles and rectangles are drawn again with that many pixels to each of the game's. While a window is being dragged it stretches what it has. Positions, sizes and touches stay in the game's pixels. Bitmaps and image files keep their own pixels, shown hard edged. SVGs are bitmaps for now, so they stretch.
 
 Design: [backends](../designs/50-backends.md), [gui](../designs/53-gui.md).
 
@@ -53,19 +98,27 @@ cmake --build build --parallel
 output/Debug/xgecli frogger
 cmake -B build -DBUILD_TESTING=ON   # every backend, and the tests
 output/Debug/xgetest                # Catch2 filters work: "[kaboom]"
-cmake --build build --target xgetest-generated && output/Debug/xgetest-generated
+ctest --test-dir build/generated -j16
+ctest --test-dir build/long -j16   # xgetest's hidden [.long] tests: minutes
+xvfb-run -a output/Debug/xgetest "[window]"   # opens every window backend (no xvfb-run on Windows)
 ```
 
 | Target | What |
 |---|---|
 | `xgelib` | the engine (`xge/lib/`), static by default (`-DXGE_BUILD_SHARED=ON` for shared) |
 | `xgecli`, `xgegui` | the programs (`xge/cli/`, `xge/gui/`; the second only when Qt 6 is found) |
-| `xgetest`, `xgetest-generated` | the tests; the second generates every game and is never in an ordinary build |
+| `xgetest`, `xgetest-generated` | the tests. `xgetest` holds hidden long ones (`[.long]`: every game played 20,000 frames on random keys from two seeds, every game damaged 40 ways, load and frame times, frame pace by the clock) that an ordinary run skips; `xgetest-generated` generates every game and is not in an ordinary build. Neither the long tests nor the generated ones are in the ordinary `ctest`: each has its own folder, `build/long` and `build/generated`, with a test per game for the every-game cases (`xge_ctest_folder` in `scripts/cmake/tests.cmake`). `build/generated` builds `xgetest-generated` as its first test, and has a test `program: <game>` per game that generates it, builds it as a program of its own and fails on any warning (`scripts/cmake/build_generated.cmake`); a clean build keeps the program in `<game>/output/` and its `build.log`, and drops its near-gigabyte build folder. On a multi-config generator (Visual Studio) add `-C Debug` |
+| `pong`, `pong_min` | the hand-written prototypes (`games/prototypes/`) |
 | `xgedata` | copies `games/` beside the programs |
 
+`output/<config>/` holds the programs, `games/` and `libraries/`, and `generated/` what belongs to the generator: `xgetest-generated`, `prototypes/` (`pong`, `pong_min`), and `games/<game>/`, where the `program: <game>` tests write and build each game. In Visual Studio `xgetest-generated` is in the `XGETestGenerated` folder and the prototypes in `XGETestGenerated/XGETestPrototypes`.
+
 - **Output.** Everything to run lands in `output/<Config>/`: the programs, a copy of `games/` with the schema, and the libraries in `libraries/` (found through a manifest on Windows, a relative run path elsewhere). The folder can be copied anywhere.
-- **Dependencies** are found through vcpkg or the system, or fetched and built (`FORCE_LOCAL_<NAME>` forces a fetch). Qt 6 and libxslt are only found, never fetched. CMake modules are in `scripts/cmake/`.
+- **Dependencies** are found through vcpkg or the system, or fetched and built (`FORCE_LOCAL_<NAME>` forces a fetch). Qt 6 and libxslt are only found, never fetched. Vulkan needs no SDK: Khronos's headers and volk are fetched, and volk opens the driver's own Vulkan library when the window opens. In Visual Studio every fetched library's projects sit in one solution folder, `CMakeFetchedLibraries` (`xge_fold_fetched_targets`). CMake modules are in `scripts/cmake/`.
 - **Warnings** stay at zero under a strict set on GCC, Clang and MSVC (`xge_warnings()`, `platform.cmake`).
+- **Sanitizers** (GCC and Clang, off unless asked for): `-DXGE_SANITIZE=address` checks memory and undefined behaviour, `-DXGE_SANITIZE=thread` data races.
+  - Only the project's own targets are instrumented, unoptimized (`-O0`) and without the strict warnings: with a sanitizer, either makes GCC take minutes to hours a file.
+  - Use a build type of its own (`RelWithDebInfo`) so `output/Release` is left alone, and run with `ASAN_OPTIONS=detect_container_overflow=0`, since the fetched libraries are not instrumented.
 
 Design: [build-and-layout](../designs/51-build-and-layout.md).
 
@@ -73,25 +126,39 @@ Design: [build-and-layout](../designs/51-build-and-layout.md).
 
 | Part | Files | What |
 |---|---|---|
-| reading | `load/xml.cpp` | tags into a `GameData` (`readGame()`) |
-| | `load/merge.cpp` | the kit and `from=` on the XML (`layOut`, `addWaiting`), as `merge.xsl` does |
-| | `load/expr.cpp` | values, `<formula>`, building `Object`s and `State`s, pictures (`buildPicture`) |
-| | `load/calc.cpp` | arithmetic in text, compiled once into steps |
-| | `load/check.cpp` | load-time checks of names, and where commands may go (`ruleFor`) |
+| reading | `load/file.cpp` | a game file loaded with an XML library and checked against its schema, then read (`readGame(filename)`) |
+| | `load/xml.cpp` | a checked `<game>` element's tags into a `GameData` (`readGame(root)`) |
+| | `xml/tree.cpp` | an element held as plain C++ data (`TreeElement`), read as an `XmlNode` (`viewOfTree`): how a generated program holds its game |
+| | `load/reading.cpp` | what every reader shares: a child, an attribute, a value, `fail` |
+| | `load/merge.cpp` | pieces and `from=` on the XML (`layOut`, `addWaiting`) |
+| | `load/expr.cpp` | values, operations, building `Object`s and `State`s; the loading stages in order (`Evaluator::init`) |
+| | `load/build.cpp` | one `Object` from its `WrittenObject` (`makeObject`), a step per part: looks, numbers, motion, timers, rules, actions, holder, moves |
+| | `load/conditions.cpp` | conditions and their tests, as states, rules and holders use them |
+| | `load/pictures.cpp` | pictures (`buildPicture`, `drawPicture`), animations, styles and palettes, cell layout |
+| | `load/calc.cpp` | a value's text: one number or one name, bound once |
+| | `load/check.cpp` | load-time checks of names, and of where commands may go (each verb's places) |
 | | `load/xsd.cpp`, `load/spelling.cpp` | the weak validator; "did you mean" (`didYouMean`, `listOf`) |
 | the game | `game/game.cpp` | the interpreter: objects, the state stack, scenes, conditions, resets, paths, spawns, the answers to `FrameRules` |
 | | `game/scenes.cpp` | `layOutScenes`, states `from=` others |
-| | `game/command.cpp` | raw command tags into typed `Command`s; `operationShape` |
+| | `game/command.cpp` | written commands into typed `Command`s (`makeCommand`, by the verb), printing them and objects; `operationShape` |
+| | `verbs/` | a file per verb: its name, the places it may go, `read`, `make`, `check`, `run`, `hold` and `print`, and the work it does; `verb.h` says what a verb is, `all.cpp` lists them |
 | | `game/object.*`, `game/states.*`, `game/data.h`, `game/random.cpp` | the data model; the one random source |
-| | `game/cells.cpp`, `game/cards.cpp`, `game/think.cpp` | maps of cells and board games; cards; the board-game search |
+| | `game/name.h`, `game/variables.h`, `game/words.h` | `Name`, a name from a game file held once in the program's `NameStore` (`Name::of`, or a `std::string` made a `Name`) and compared as an id; `Variables`, an object's variables as one short list under `Name`s; `words`, the names the engine gives itself (`turn`, `worth`, `self`), made once |
+| | `game/parts.*`, `game/store.h` | every object's handle (`ObjectId`) and the parts it has, a `Store` per kind (`Game::parts()`) |
+| | `game/cells.*`, `game/holders.*`, `game/players.*`, `game/sounds.*`, `game/think.*` | maps of cells and board games (`CellMaps`, `Game::cellMaps()`); cards in holders and hands (`Holders`, `Game::holders()`); players as a group taking turns (`Players`, `Game::players()`); the sounds asked for and looping, which Engine plays (`Sounds`, `Game::sounds()`); the board-game search (`Thinker`). The game holds one of each, and they read it through its public functions |
 | the frame | `play/frame.cpp` | `playOneFrame`: the order of a frame and the moving |
 | | `play/geometry.cpp`, `play/collision.cpp` | touching (box, circle, swept, pixel walk, `contactOf`) and the verbs' arithmetic |
-| | `play/verbs.cpp`, `play/executor.cpp` | what a verb does; which verb and on what |
+| | `play/verbs.cpp`, `play/executor.cpp` | what several verbs and the frame do to an object; running a list of commands by their verbs |
 | | `play/maze.cpp` | walking a map's tiles |
-| pictures | `picture/bitmap.cpp`, `svg.cpp`, `font.cpp`, `color.cpp` | pixels, flips and turns; SVG with lunasvg; fonts and the 8x8 fallback; colour names |
-| loop and libraries | `engine/engine.cpp`, `backends.cpp`, `keys.cpp`, `folder.cpp` | the loop (`loop()`, or `step()` and `render()`), choosing libraries, key names, the games folder and `findSchema` |
-| | `window/*`, `audio/*`, `xml/*` | each kind's interface and factory, a file per library; `audio/sound.cpp` is the synthesizer |
+| | `play/numbers.h` | the one-number operations of a value (`sign`, `sine`, `cosine`) |
+| pictures | `picture/bitmap.cpp`, `svg.cpp`, `image.cpp`, `font.cpp`, `color.cpp` | pixels, flips and turns; SVG with lunasvg; picture sheets cut and shrunk (`<pictures>`); fonts and the 8x8 fallback; colour names |
+| resources | `engine/resources.cpp` | `Resources`, one a game (in its `Evaluator`, `Game::resources()`): every picture loaded or made, held once and named by a `PictureId`, which objects hold; each sound's samples, shared by sounds that sound the same and handed to the audio library (`Audio::load`); a sheet's picture while the game loads |
+| loop and libraries | `engine/engine.cpp`, `backends.cpp`, `keys.cpp`, `folder.cpp` | the loop (`run()`: `input()`, `update()`, `render()`), choosing libraries, key names, the games folder and `findSchema` |
+| | `window/*`, `audio/*`, `xml/*` | each kind's interface and factory, a file per library; `window/picture.cpp` draws a frame into one image (`--picture`); `audio/sound.cpp` is the synthesizer |
 | programs | `xge/cli/source/` | `cli.cpp` (options, finding the game), `generate.cpp` (`--generate`), `main.cpp` |
 | | `xge/gui/source/` | `main_window`, `game_session`, `game_stage`, `game_view`, `qt_window`, `key_queue`, `options_dialog`, `session_options`, `app_settings` (`xgegui.ini`), `inspector`, `theme` |
-| generator | `games/generators/windows-cpp/` | `generate.xsl`, `merge.xsl`, `data.xsl`, `program.xsl`, `text.xsl`, `engine.xml`, `modules/game_parts.h` |
-| tests | `xge/tests/` | one `test_<topic>.cpp` per area and per game (played frame by frame). `played.h` is shared, `invaders_fixture.h` a frozen Space Invaders, `scratch.h` a scratch name per run. `xgetest "[.speed]"` prints load and frame times |
+| generator | `games/generators/engine-cpp/` | `generate.xsl`, `tree.xsl`, `program.xsl`, `text.xsl`, `engine.xml` |
+| | `games/generators/windows-cpp/` | `generate.xsl`, `covers.xsl`, `game.xsl`, `names.xsl`, `values.xsl`, `program.xsl`, `verbs/` (a file per verb it can write) |
+| | `games/prototypes/pong_min/` | `pong_min.xml` as a stand-alone SFML game, the `pong_min` program: what the `windows-cpp` generator writes for it |
+| | `games/prototypes/pong/` | `pong.xml` as a stand-alone SFML game with no engine code (states, texts, sounds, a computer player), the `pong` program: what it is to write next |
+| tests | `xge/tests/` | `engine/` one `test_<topic>.cpp` per area (`test_vocabulary.cpp`: every schema word used by a game or listed with why, in the docs, and every game through 1,000 frames of random keys; `test_names.cpp`: names that match nothing); `games/` one per game (played frame by frame); `generated/` the generated games (`xgetest-generated`: `engine-cpp` for every game, `windows-cpp` for those it covers); `written/` what each game `windows-cpp` covers must do, run on its prototype and its generated copy; `long/` the long runs (hidden in `xgetest` as `[.long]`: random keys, damaged files, load and frame times, `test_pace.cpp` frame pace in real time); `helpers/` what they share: `played.h`, `invaders_fixture.h` a frozen Space Invaders, `scratch.h` a scratch name per run, `test_main.cpp` |

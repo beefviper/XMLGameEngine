@@ -1,17 +1,17 @@
 # Pictures
 
-**Status:** Built: lines, polygons, bitmaps with inks and styles, palette swaps, SVG parts, tethers, flips, turning, holes, light and dark. Reference: [pictures](../reference/pictures.md).
+**Status:** Built: lines, polygons, bitmaps with inks and styles, palette swaps, SVG parts, picture sheets, tethers, flips, turning, holes, light and dark. Reference: [pictures](../reference/pictures.md).
 
 ## The one decision behind all of it
 
-**The engine draws every picture it can, once, at load, into its own `Bitmap`; backends only show that bitmap.** One path, `buildPicture` (`load/expr.cpp`): read, draw, flip, keep a `Turnable` for objects with a heading. What an object shows is a typed `Picture`, never strings a backend parses. So:
+**The engine draws every picture it can, once, at load, into its own `Bitmap`; backends only show that bitmap.** One path, `buildPicture` (`load/pictures.cpp`): read, draw, flip, keep a `Turnable` for objects with a heading. What an object shows is a typed `Picture`, never strings a backend parses. So:
 
 - adding a picture kind changes no window backend, and every library shows the same pixels;
 - an object's size is known without a window (`name.width` works in tests);
 - a `pixel` collision tests exactly the pixels drawn;
 - cells drawing the same picture share it.
 
-Text and `<image>` files are the exception: only a backend can measure them, so they cannot be `pixel`, and a size reads 0 until measured. Keep new kinds on this path.
+Text and `<image>` files are made by the engine as well (plutovg reads both), so every size is known at load; they cannot be `pixel` yet. Keep new kinds on this path.
 
 ## Lines and polygons
 
@@ -25,20 +25,37 @@ Text and `<image>` files are the exception: only a backend can measure them, so 
 - **`<bitmap>`** of `<row>`s, `.` clear and `*` solid, a whole `<scale>`, a `<color>`. Strict: an unnamed character or unequal rows stop the load. One element per row, since whitespace in text differs between the four XML libraries.
 - **Inks:** more `<color char="w">`s, so a ghost's eyes follow its body's looks. Rejected: two or three objects on top of each other.
 - **Styles as palettes:** `<bitmap style="mario">` takes the style's scale and inks, its own winning. About 150 lines repeated another bitmap's colours. Rejected: a separate `<palettes>` container, taking another sprite's colours by name.
+- **Pictures at the bottom** (the author: bitmaps are visually noisy at the top of a file): `<pictures>` after the states holds each `<bitmap name>` and the sheets, and a sprite takes one with `<bitmap from>`, changing what it gives by the take rule.
+  - Worked out on the XML before reading (`withPictures`), so nothing after it changed.
+  - One picture shown by two sprites is written once.
+  - The author offered `<video>` (and `<audio>`); `<pictures>` and the old `<sounds>` were proposed for being what the engine already calls them.
+  - Maps stay in the objects: their rows are where things are.
+- **Drawings at the bottom too** (the author: keep all the art together): a `<drawing name>` of `<line>`s or `<polygon>`s in `<pictures>`, taken whole by a sprite's `<drawing from>` (the author picked it over a whole `<sprite name>` in `<pictures>`, which would be a second way to take a bitmap). Asteroids' rocks, ships and saucers, the lander, the ladder and the card games' empty-place outlines moved; lines that are layout (Pinball's walls, Putt Park's holes, the moon, the tennis court) stay in their objects, like maps.
 - **Palette swap:** `<become style="angry">` puts a style's colours on. Each palette an object can reach is drawn at load and shared by copies, so a swap only points at other pictures. Rejected: recolouring at run time (a pixel does not know its character). Not for an object with a heading.
 
 ## SVG parts
 
-- A vector sprite sheet. `<image>` hands a file to the backend, and only some read SVG, so pictures would differ per library.
+- A vector sprite sheet. `<image>` reads only picture files (PNG, JPEG and the like), not SVG.
 - **`<svg>`**: a path, an optional part (all four of x, y, width, height, or none), `<scale>`, `<hide>` by id (a missing id is not an error).
 - **lunasvg is not a backend:** no factory or choice, since a choice would only make a sprite differ. Only `picture/svg.cpp` includes it. It supports `<use>`; nanosvg does not.
 - Cut the sheet close round what is drawn, since non-pixel touches use the whole box.
 - Rejected: SDL_image in backends, PNG at build time, rasterizing at window size.
 
+## Sheets
+
+- the author: sprite animations and card sheets are the same idea, so one neutral word for both, dead simple for a plain grid and able to say groups, margins, gaps, split runs and scattered pictures when needed.
+- **Sheets named once, in the `<pictures>`** (once a game-level `<sheets>`): a path, a grid (`<columns>`/`<rows>` or a `<cell>` size), `<margin>` and `<gap>` (0 when left out), `<hide>` for SVG.
+  - Sprites take `<cell sheet>` by column and row or by x, y, width, height; animations take `<cell>`s and runs of `<cells>` (`<count>`, `<down />`); a deck takes `sheet=` and optional `<faces>` runs.
+  - One reader (`picture/image.cpp`, plutovg for PNG, JPEG, BMP; lunasvg for SVG), one cutter, area-average shrink.
+- **Runs mirror group layout:** start, count, along or down. A run never wraps at the row's end; a split animation is two runs, as the author described it.
+- **Animation cells need no sprites:** each is a sprite named `walk.N`, so `<become>`, looks and `from=` treat it like any other.
+- A cell is a whole sprite: a member changing one replaces it. Open: a row or member changing only a cell's column or row (what Space Invaders 2's SVG parts do), which would let that game move onto a sheet.
+- Rejected: a sheet per sprite (the path and grid said again and again); a list of cells in one string (the format's rule); wrapping runs (a hidden rule about where a row ends).
+
 ## Flip and turning
 
 - `<flip>` is applied right after drawing, before turning, so the size is exact.
-- **Turning by heading, on demand:** an object keeps the original (`Turnable`) and one current bitmap, redrawn when the whole-degree heading changes. Nearest sample keeps hard edges; lines are redrawn turned. Every heading is the same square. Rejected: 72 pictures made at load.
+- **Turning by heading, on demand:** an object keeps the original (`Turnable`) and one current bitmap, asked for when the whole-degree heading changes; each heading's drawing is made once by the game's `Resources` and shared by every object turning that drawing. Nearest sample keeps hard edges; lines are redrawn turned. Every heading is the same square. Rejected: 72 pictures made at load.
 - Not done: smooth turned edges, fractions of a degree.
 
 ## Tethers
@@ -57,4 +74,5 @@ Text and `<image>` files are the exception: only a backend can measure them, so 
 
 - Haunted House: walls seen only by a match. **`<light>`** is a radius; **`<dark>`** `unlit` draws only while lit, `unseen` from the first time lit. Only drawing changes, in one place (`drawObject`), so every library and generated game gets it.
 - Rejected: darkening the screen and cutting a circle (a backend effect four times), clipping pixels to the circle, a map of seen tiles.
-- Open: lights that fade at the edge, line of sight.
+- **Line of sight:** `<past class>` in a `<light>` names what it does not shine through. A dark thing is lit when the line to its nearest part (a pixel in, so a touching neighbour does not count) crosses none in play; the test is `lineCrosses` (play/collision), shared with `<sees>`. Rejected: casting shadows as shapes (a backend effect), a map of seen tiles.
+- Open: lights that fade at the edge.

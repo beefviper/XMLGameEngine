@@ -12,13 +12,13 @@
   the fuel is gone.
 
   A and D or Left and Right turn the lander, W or Up fires the engine the
-  way it points, Space, P or Escape pauses.
+  way it points, Pause pauses.
 
   How it is written:
   * Everything is drawn from <line>s and tested by pixel, so the lander
     touches the moon only where a pixel of it lies on a pixel of the moon.
     The lander has a <heading>: <turn> leans it and <thrust> pushes it the
-    way it points, burning a unit of fuel a frame.
+    way it points, burning 60 units of fuel a second.
   * The terrain and the pads are both class "ground". A landing is one rule
     about the pads: slower than the safe speed and nearly upright (an <any>
     of two <condition>s of the heading); every other touch of the ground is a
@@ -28,7 +28,7 @@
     in around the reset, and the game is over when what was copied out is
     nothing; the score is kept apart. A landing pushes a state
     that holds the lander still on the pad; a wreck breaks it into pieces
-    (<release>d at the lander) under a message whose timer says when the
+    (<spawn>ed at the lander) under a message whose timer says when the
     next one may come.
   Not in it: the terrain scrolling and the close-up view, the abort button,
   hard landings.
@@ -40,75 +40,49 @@
     <height>600</height>
   </window>
   <variables>
-    <variable name="gravity">0.01</variable>
-    <variable name="thrustpower">0.03</variable>
-    <variable name="turnrate">3</variable>
+    <variable name="gravity">36</variable>
+    <variable name="thrustpower">108</variable>
+    <variable name="turnrate">180</variable>
     <variable name="fuelstart">1000</variable>
     <variable name="wreckcost">200</variable>
-    <variable name="safespeed">1.2</variable>
+    <variable name="safespeed">72</variable>
     <variable name="upright">10</variable>
     <variable name="margin">20</variable>
   </variables>
-  <sounds>
-    <!-- the engine, for as long as it is held: a low rumble of noise -->
-    <sound name="thrust" wave="noise">
-      <loop />
-      <volume>0.15</volume>
-      <note pitch="150">1</note>
-    </sound>
-    <sound name="land" wave="triangle">
-      <volume>0.4</volume>
-      <note pitch="C4">0.1</note>
-      <note pitch="E4">0.1</note>
-      <note pitch="G4">0.1</note>
-      <note pitch="C5">0.3</note>
-    </sound>
-    <sound name="crash" wave="noise">
-      <volume>0.45</volume>
-      <note pitch="3000" to="100">0.8</note>
-    </sound>
-    <sound name="start" wave="square">
-      <volume>0.2</volume>
-      <note pitch="C5">0.07</note>
-      <note pitch="E5">0.07</note>
-      <note pitch="G5">0.07</note>
-      <note pitch="C6">0.14</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>80</size><color>color.white</color></style>
     <style name="line"><size>28</size><color>color.white</color></style>
     <style name="hud"><size>26</size><color>color.white</color></style>
   </styles>
-  <kit>
+  <objects>
     <!-- what is left of a wrecked lander, flung out and falling -->
     <group name="debris">
-      <sprite><line><from><x>0</x><y>0</y></from><to><x>8</x><y>6</y></to><thickness>2</thickness></line></sprite>
-      <acceleration><x>0</x><y>gravity * 4</y></acceleration>
-      <member><velocity><x>-1.6</x><y>-2</y></velocity></member>
-      <member><velocity><x>1.4</x><y>-2.4</y></velocity></member>
-      <member><velocity><x>-0.6</x><y>-3</y></velocity></member>
-      <member><velocity><x>0.8</x><y>-1.6</y></velocity></member>
+      <sprite><drawing from="debris" /></sprite>
+      <acceleration><x>0</x><y><multiply><value>gravity</value><value>4</value></multiply></y></acceleration>
+      <member><velocity><x>-96</x><y>-120</y></velocity></member>
+      <member><velocity><x>84</x><y>-144</y></velocity></member>
+      <member><velocity><x>-36</x><y>-180</y></velocity></member>
+      <member><velocity><x>48</x><y>-96</y></velocity></member>
     </group>
-  </kit>
+  </objects>
   <states>
-    <state name="mainmenu">
+    <state name="title">
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>LUNAR LANDER</content><size>100</size></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 130</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-130</offset></centered></y></position>
         </object>
-        <object name="help">
-          <sprite><text style="line"><content>land upright and slowly on a pad: 2X, 3X or 5X the points</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 20</centered></y></position>
-        </object>
-        <object name="keys">
-          <sprite><text style="line"><content>left and right turn, up fires the engine</content><color>color.lightgrey</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 25</centered></y></position>
-        </object>
+        <group name="help">
+          <rows>2</rows>
+          <padding><y>45</y></padding>
+          <sprite><text style="line" /></sprite>
+          <position><x><centered /></x><y><centered><offset>-20</offset></centered></y></position>
+          <row number="1"><sprite><text><content>land upright and slowly on a pad: 2X, 3X or 5X the points</content></text></sprite></row>
+          <row number="2"><sprite><text><content>left and right turn, up fires the engine</content><color>color.lightgrey</color></text></sprite></row>
+        </group>
         <object name="start">
           <sprite><text style="line"><content>spacebar to start</content><size>48</size><color>color.green</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 110</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>110</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
@@ -168,26 +142,9 @@
           <member><sprite><text style="hud"><content>3X</content></text></sprite><position><x>502</x><y>508</y></position></member>
         </group>
         <object name="lander">
-          <sprite>
-            <line><from><x>10</x><y>2</y></from><to><x>20</x><y>2</y></to><thickness>2</thickness></line>
-            <line><from><x>20</x><y>2</y></from><to><x>25</x><y>7</y></to><thickness>2</thickness></line>
-            <line><from><x>25</x><y>7</y></from><to><x>25</x><y>12</y></to><thickness>2</thickness></line>
-            <line><from><x>25</x><y>12</y></from><to><x>5</x><y>12</y></to><thickness>2</thickness></line>
-            <line><from><x>5</x><y>12</y></from><to><x>5</x><y>7</y></to><thickness>2</thickness></line>
-            <line><from><x>5</x><y>7</y></from><to><x>10</x><y>2</y></to><thickness>2</thickness></line>
-            <line><from><x>7</x><y>14</y></from><to><x>23</x><y>14</y></to><thickness>2</thickness></line>
-            <line><from><x>23</x><y>14</y></from><to><x>23</x><y>19</y></to><thickness>2</thickness></line>
-            <line><from><x>23</x><y>19</y></from><to><x>7</x><y>19</y></to><thickness>2</thickness></line>
-            <line><from><x>7</x><y>19</y></from><to><x>7</x><y>14</y></to><thickness>2</thickness></line>
-            <line><from><x>13</x><y>19</y></from><to><x>11</x><y>23</y></to><thickness>2</thickness></line>
-            <line><from><x>17</x><y>19</y></from><to><x>19</x><y>23</y></to><thickness>2</thickness></line>
-            <line><from><x>7</x><y>18</y></from><to><x>2</x><y>28</y></to><thickness>2</thickness></line>
-            <line><from><x>23</x><y>18</y></from><to><x>28</x><y>28</y></to><thickness>2</thickness></line>
-            <line><from><x>0</x><y>28</y></from><to><x>5</x><y>28</y></to><thickness>2</thickness></line>
-            <line><from><x>25</x><y>28</y></from><to><x>30</x><y>28</y></to><thickness>2</thickness></line>
-          </sprite>
+          <sprite><drawing from="lander" /></sprite>
           <position><x><random><min>40</min><max>300</max></random></x><y>40</y></position>
-          <velocity><x><random><min>0.5</min><max>1.2</max></random></x></velocity>
+          <velocity><x><random><min>30</min><max>72</max></random></x></velocity>
           <acceleration><x>0</x><y>gravity</y></acceleration>
           <heading>0</heading>
           <collisions>
@@ -198,10 +155,10 @@
             <collision object="pad3"><set variable="lander.worth">150</set></collision>
             <collision object="pad5"><set variable="lander.worth">250</set></collision>
             <collision object="pads">
-              <slower>safespeed</slower>
+              <condition variable="speed"><below>safespeed</below></condition>
               <any>
                 <condition variable="heading"><atmost>upright</atmost></condition>
-                <condition variable="heading"><atleast>360 - upright</atleast></condition>
+                <condition variable="heading"><atleast><subtract><value>360</value><value>upright</value></subtract></atleast></condition>
               </any>
               <set variable="lander.landed">1</set>
               <stop />
@@ -209,7 +166,7 @@
             <collision class="ground">
               <condition variable="landed"><equal>0</equal></condition>
               <set variable="lander.crashed">1</set>
-              <release object="debris">4</release>
+              <spawn object="debris"><count>4</count></spawn>
               <die />
             </collision>
           </collisions>
@@ -231,8 +188,8 @@
         </object>
         <object name="wrecked">
           <sprite><text style="line"><content>YOU JUST DESTROYED A 100 MEGABUCK LANDER</content><color>color.red</color></text></sprite>
-          <position><x><centered /></x><y>window.height.center - 140</y></position>
-          <active>false</active>
+          <position><x><centered /></x><y><subtract><value>window.height.center</value><value>140</value></subtract></y></position>
+          <waiting />
           <timers>
             <timer><every>2.5</every><inc variable="lander.ready" /><die /></timer>
           </timers>
@@ -250,20 +207,20 @@
         </object>
         <object name="fuel">
           <sprite><text style="hud"><content>FUEL </content><number>lander.fuel</number></text></sprite>
-          <position><x>window.right - margin - 160</x><y>margin</y></position>
+          <position><x><subtract><value>window.right</value><value>margin</value><value>160</value></subtract></x><y>margin</y></position>
         </object>
       </objects>
       <inputs>
         <input><button>up</button><button>w</button><trigger object="lander" action="thrust" /></input>
         <input><button>left</button><button>a</button><trigger object="lander" action="left" /></input>
         <input><button>right</button><button>d</button><trigger object="lander" action="right" /></input>
-        <input><button>space</button><button>p</button><button>escape</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <!-- the last lander down with no fuel left -->
         <condition object="status" variable="fuel">
           <atmost>0</atmost>
-          <push state="gameover" />
+          <push state="over" />
         </condition>
         <!-- the next lander, from the top -->
         <condition object="lander" variable="ready">
@@ -284,12 +241,10 @@
           <atleast>1</atleast>
           <set variable="lander.crashed">0</set>
           <set variable="lander.fuel">
-            <formula>
-              <largest>
-                <value>0</value>
-                <value><subtract><minuend>lander.fuel</minuend><subtrahend>wreckcost</subtrahend></subtract></value>
-              </largest>
-            </formula>
+            <largest>
+              <value>0</value>
+              <value><subtract><value>lander.fuel</value><value>wreckcost</value></subtract></value>
+            </largest>
           </set>
           <silence sound="thrust" />
           <play sound="crash" />
@@ -313,7 +268,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
     <!-- down on a pad: the lander stays still while the points are shown, then the next one comes -->
@@ -321,32 +276,32 @@
       <objects>
         <object name="message">
           <sprite><text style="banner"><content>THE EAGLE HAS LANDED</content><size>56</size><color>color.green</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 150</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-150</offset></centered></y></position>
         </object>
         <object name="points">
           <sprite><text style="line"><number>lander.worth</number><content> POINTS</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 90</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-90</offset></centered></y></position>
         </object>
       </objects>
       <shows>
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <timers>
         <timer><every>2.5</every><inc variable="lander.ready" /><pop /></timer>
       </timers>
     </state>
-    <state name="gameover">
+    <state name="over">
       <objects>
         <object name="message">
           <sprite><text style="banner"><content>OUT OF FUEL</content><color>color.red</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 140</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-140</offset></centered></y></position>
         </object>
         <object name="again">
           <sprite><text style="line"><content>spacebar to play again</content><size>48</size></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
         </object>
       </objects>
       <shows>
@@ -357,4 +312,53 @@
       </inputs>
     </state>
   </states>
+  <sounds>
+    <!-- the engine, for as long as it is held: a low rumble of noise -->
+    <sound name="thrust" wave="noise">
+      <loop />
+      <volume>0.15</volume>
+      <note pitch="150">1</note>
+    </sound>
+    <sound name="land" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="C4">0.1</note>
+      <note pitch="E4">0.1</note>
+      <note pitch="G4">0.1</note>
+      <note pitch="C5">0.3</note>
+    </sound>
+    <sound name="crash" wave="noise">
+      <volume>0.45</volume>
+      <note pitch="3000" to="100">0.8</note>
+    </sound>
+    <sound name="start" wave="square">
+      <volume>0.2</volume>
+      <note pitch="C5">0.07</note>
+      <note pitch="E5">0.07</note>
+      <note pitch="G5">0.07</note>
+      <note pitch="C6">0.14</note>
+    </sound>
+  </sounds>
+  <pictures>
+    <drawing name="debris">
+      <line><from><x>0</x><y>0</y></from><to><x>8</x><y>6</y></to><thickness>2</thickness></line>
+    </drawing>
+    <drawing name="lander">
+      <line><from><x>10</x><y>2</y></from><to><x>20</x><y>2</y></to><thickness>2</thickness></line>
+      <line><from><x>20</x><y>2</y></from><to><x>25</x><y>7</y></to><thickness>2</thickness></line>
+      <line><from><x>25</x><y>7</y></from><to><x>25</x><y>12</y></to><thickness>2</thickness></line>
+      <line><from><x>25</x><y>12</y></from><to><x>5</x><y>12</y></to><thickness>2</thickness></line>
+      <line><from><x>5</x><y>12</y></from><to><x>5</x><y>7</y></to><thickness>2</thickness></line>
+      <line><from><x>5</x><y>7</y></from><to><x>10</x><y>2</y></to><thickness>2</thickness></line>
+      <line><from><x>7</x><y>14</y></from><to><x>23</x><y>14</y></to><thickness>2</thickness></line>
+      <line><from><x>23</x><y>14</y></from><to><x>23</x><y>19</y></to><thickness>2</thickness></line>
+      <line><from><x>23</x><y>19</y></from><to><x>7</x><y>19</y></to><thickness>2</thickness></line>
+      <line><from><x>7</x><y>19</y></from><to><x>7</x><y>14</y></to><thickness>2</thickness></line>
+      <line><from><x>13</x><y>19</y></from><to><x>11</x><y>23</y></to><thickness>2</thickness></line>
+      <line><from><x>17</x><y>19</y></from><to><x>19</x><y>23</y></to><thickness>2</thickness></line>
+      <line><from><x>7</x><y>18</y></from><to><x>2</x><y>28</y></to><thickness>2</thickness></line>
+      <line><from><x>23</x><y>18</y></from><to><x>28</x><y>28</y></to><thickness>2</thickness></line>
+      <line><from><x>0</x><y>28</y></from><to><x>5</x><y>28</y></to><thickness>2</thickness></line>
+      <line><from><x>25</x><y>28</y></from><to><x>30</x><y>28</y></to><thickness>2</thickness></line>
+    </drawing>
+  </pictures>
 </game>

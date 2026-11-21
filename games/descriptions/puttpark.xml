@@ -9,8 +9,7 @@
   walls send the ball off at their angle, round posts kick it away faster
   than it came, soft cushions take the pace off it. Par for the park is 18.
 
-  A and D or the arrows aim, Space held then let go putts, P or Escape
-  pauses, Space starts and plays again.
+  A and D or the arrows aim, Space held then let go putts, Pause pauses, Space starts and plays again.
 
   It is the game the first stage of tables and tracks was made for:
   * The walls of each hole are one picture of <line>s, tested by its pixels,
@@ -19,7 +18,7 @@
     eight tenths of the pace; the posts' <bounce>1.3</bounce> gives more back
     than came in, and the cushions' 0.4 deadens it.
   * The putt is a key's three moments: Space pressed does nothing of its
-    own, held (on="hold") adds to the arrow's power every frame up to 100,
+    own, held (on="hold") adds to the arrow's power, 120 a second, up to 100,
     and let go (on="release") strikes, setting the ball's speed along the
     arrow's heading from that power. Both only while the arrow shows its
     ready look, so the ball cannot be struck while it rolls.
@@ -38,32 +37,20 @@
   </window>
   <variables>
     <variable name="radius">5</variable>
-    <variable name="green">0.012</variable>
-    <variable name="charge">2</variable>
+    <variable name="green">0.96</variable>
+    <variable name="charge">120</variable>
     <variable name="most">100</variable>
-    <variable name="pace">0.1</variable>
-    <variable name="still">0.08</variable>
+    <variable name="pace">6</variable>
+    <variable name="still">4.8</variable>
     <variable name="holes">6</variable>
   </variables>
-  <sounds>
-    <sound name="putt"><volume>0.35</volume><note pitch="G5">0.04</note></sound>
-    <sound name="wall"><volume>0.15</volume><note pitch="C4">0.03</note></sound>
-    <sound name="post" wave="triangle"><volume>0.3</volume><note pitch="E6">0.06</note></sound>
-    <sound name="cushion" wave="triangle"><volume>0.2</volume><note pitch="A2">0.06</note></sound>
-    <sound name="cup" wave="triangle">
-      <volume>0.4</volume>
-      <note pitch="C5">0.08</note>
-      <note pitch="E5">0.08</note>
-      <note pitch="G5">0.16</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>100</size><color>color.yellow</color></style>
     <style name="prompt"><size>40</size></style>
     <style name="help"><size>28</size></style>
     <style name="hud"><size>26</size><color>color.lightgrey</color></style>
   </styles>
-  <kit>
+  <objects>
     <!-- a round post: kicks the ball off faster than it came -->
     <object name="post" class="post">
       <sprite><circle><radius>16</radius><color>color.red</color></circle></sprite>
@@ -74,31 +61,31 @@
       <sprite><rectangle><width>70</width><height>12</height><color>color.orange</color></rectangle></sprite>
       <collisions />
     </object>
-  </kit>
-  <objects>
-    <object name="again">
-      <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
-      <position><x><centered /></x><y><centered>window.height.center + 90</centered></y></position>
-    </object>
   </objects>
   <states>
+    <objects>
+      <object name="again">
+        <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
+        <position><x><centered /></x><y><centered><offset>90</offset></centered></y></position>
+      </object>
+    </objects>
     <state name="title">
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>PUTT PARK</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 140</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-140</offset></centered></y></position>
         </object>
-        <object name="help">
-          <sprite><text style="help"><content>six holes, par 18: sink each in as few putts as you can</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
-        </object>
-        <object name="keys">
-          <sprite><text style="help"><content>a and d or the arrows aim, hold spacebar and let go to putt</content><color>color.lightgrey</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 6</centered></y></position>
-        </object>
+        <group name="help">
+          <rows>2</rows>
+          <padding><y>46</y></padding>
+          <sprite><text style="help" /></sprite>
+          <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
+          <row number="1"><sprite><text><content>six holes, par 18: sink each in as few putts as you can</content></text></sprite></row>
+          <row number="2"><sprite><text><content>a and d or the arrows aim, hold spacebar and let go to putt</content><color>color.lightgrey</color></text></sprite></row>
+        </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 110</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>110</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
@@ -156,7 +143,7 @@
               <play sound="cup" />
               <set variable="self.velocity.x">0</set>
               <set variable="self.velocity.y">0</set>
-              <set variable="card.total">card.total + card.strokes</set>
+              <set variable="card.total"><add><value>card.total</value><value>card.strokes</value></add></set>
               <set variable="card.strokes">0</set>
               <inc variable="card.sunk" />
               <set variable="card.placed">0</set>
@@ -171,52 +158,35 @@
         <object name="arrow">
           <!-- as big as the ready look, all clear, so the arrow keeps its size -->
           <sprite name="waiting">
-            <bitmap>
-              <row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row>
-              <row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row>
-              <row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row>
-              <row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row>
-              <scale>2</scale>
-            </bitmap>
+            <bitmap from="arrow-waiting" />
           </sprite>
           <sprite name="ready">
-            <bitmap>
-              <row>.*.</row><row>***</row><row>.*.</row><row>...</row><row>.*.</row><row>.*.</row><row>...</row><row>.*.</row>
-              <row>.*.</row><row>...</row><row>.*.</row><row>.*.</row><row>...</row><row>.*.</row><row>.*.</row><row>...</row>
-              <row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row>
-              <row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row>
-              <scale>2</scale>
-              <color>color.yellow</color>
-            </bitmap>
+            <bitmap from="arrow-ready" />
           </sprite>
           <position><x>0</x><y>0</y></position>
           <heading>90</heading>
           <actions>
-            <action name="left"><turn direction="counterclockwise">2</turn></action>
-            <action name="right"><turn direction="clockwise">2</turn></action>
+            <action name="left"><turn direction="counterclockwise">120</turn></action>
+            <action name="right"><turn direction="clockwise">120</turn></action>
             <action name="charge">
               <inc variable="arrow.power">charge</inc>
-              <set variable="arrow.power"><formula><smallest><value>arrow.power</value><value>most</value></smallest></formula></set>
+              <set variable="arrow.power"><smallest><value>arrow.power</value><value>most</value></smallest></set>
             </action>
             <action name="putt">
               <set variable="ball.velocity.x">
-                <formula>
-                  <multiply>
-                    <multiplicand>arrow.power</multiplicand>
-                    <multiplier>pace</multiplier>
-                    <multiplier><sine><value>arrow.heading</value></sine></multiplier>
-                  </multiply>
-                </formula>
+                <multiply>
+                  <value>arrow.power</value>
+                  <value>pace</value>
+                  <value><sine><value>arrow.heading</value></sine></value>
+                </multiply>
               </set>
               <set variable="ball.velocity.y">
-                <formula>
-                  <multiply>
-                    <multiplicand>arrow.power</multiplicand>
-                    <multiplier>pace</multiplier>
-                    <multiplier>-1</multiplier>
-                    <multiplier><cosine><value>arrow.heading</value></cosine></multiplier>
-                  </multiply>
-                </formula>
+                <multiply>
+                  <value>arrow.power</value>
+                  <value>pace</value>
+                  <value>-1</value>
+                  <value><cosine><value>arrow.heading</value></cosine></value>
+                </multiply>
               </set>
               <set variable="arrow.power">0</set>
               <set variable="arrow.rolling">1</set>
@@ -270,8 +240,8 @@
             <!-- just come in: the ball on this hole's tee -->
             <condition object="card" variable="placed">
               <equal>0</equal>
-              <set variable="ball.x">teex - radius</set>
-              <set variable="ball.y">teey - radius</set>
+              <set variable="ball.x"><subtract><value>teex</value><value>radius</value></subtract></set>
+              <set variable="ball.y"><subtract><value>teey</value><value>radius</value></subtract></set>
               <set variable="ball.velocity.x">0</set>
               <set variable="ball.velocity.y">0</set>
               <set variable="card.hole">number</set>
@@ -420,28 +390,39 @@
         <input><button>d</button><button>right</button><trigger object="arrow" action="right" from="ready" /></input>
         <input button="space" on="hold"><trigger object="arrow" action="charge" from="ready" /></input>
         <input button="space" on="release"><trigger object="arrow" action="putt" from="ready" /></input>
-        <input><button>p</button><button>escape</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <!-- all but stopped: stopped dead, and the arrow on it, ready -->
-        <condition>
-          <all>
-            <condition object="arrow" variable="rolling"><equal>1</equal></condition>
-            <condition object="ball" variable="velocity.x"><atmost>still</atmost></condition>
-            <condition object="ball" variable="velocity.x"><atleast>0 - still</atleast></condition>
-            <condition object="ball" variable="velocity.y"><atmost>still</atmost></condition>
-            <condition object="ball" variable="velocity.y"><atleast>0 - still</atleast></condition>
-          </all>
-          <set variable="ball.velocity.x">0</set>
-          <set variable="ball.velocity.y">0</set>
-          <become object="arrow" sprite="ready" />
-          <set variable="arrow.x">ball.x + radius - arrow.width / 2</set>
-          <set variable="arrow.y">ball.y + radius - arrow.height / 2</set>
-          <set variable="arrow.rolling">0</set>
+        <condition object="arrow" variable="rolling"><equal>1</equal>
+          <condition object="ball" variable="velocity.x"><atmost>still</atmost>
+            <condition object="ball" variable="velocity.x"><atleast><subtract><value>0</value><value>still</value></subtract></atleast>
+              <condition object="ball" variable="velocity.y"><atmost>still</atmost>
+                <condition object="ball" variable="velocity.y"><atleast><subtract><value>0</value><value>still</value></subtract></atleast>
+                  <set variable="ball.velocity.x">0</set>
+                  <set variable="ball.velocity.y">0</set>
+                  <become object="arrow" sprite="ready" />
+                  <set variable="arrow.x">
+                    <subtract>
+                      <value><add><value>ball.x</value><value>radius</value></add></value>
+                      <value><divide><value>arrow.width</value><value>2</value></divide></value>
+                    </subtract>
+                  </set>
+                  <set variable="arrow.y">
+                    <subtract>
+                      <value><add><value>ball.y</value><value>radius</value></add></value>
+                      <value><divide><value>arrow.height</value><value>2</value></divide></value>
+                    </subtract>
+                  </set>
+                  <set variable="arrow.rolling">0</set>
+                </condition>
+              </condition>
+            </condition>
+          </condition>
         </condition>
         <condition object="card" variable="sunk">
           <atleast>holes</atleast>
-          <push state="finished" />
+          <push state="over" />
         </condition>
       </conditions>
     </state>
@@ -457,19 +438,19 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>p</button><button>escape</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
 
-    <state name="finished">
+    <state name="over">
       <objects>
         <object name="message">
           <sprite><text style="banner"><content>ROUND OVER</content><size>80</size></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 90</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-90</offset></centered></y></position>
         </object>
         <object name="score">
           <sprite><text style="prompt"><content>STROKES</content><number>card.total</number><content>PAR 18</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center</centered></y></position>
+          <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
       <shows>
@@ -481,4 +462,33 @@
       </inputs>
     </state>
   </states>
+  <sounds>
+    <sound name="putt"><volume>0.35</volume><note pitch="G5">0.04</note></sound>
+    <sound name="wall"><volume>0.15</volume><note pitch="C4">0.03</note></sound>
+    <sound name="post" wave="triangle"><volume>0.3</volume><note pitch="E6">0.06</note></sound>
+    <sound name="cushion" wave="triangle"><volume>0.2</volume><note pitch="A2">0.06</note></sound>
+    <sound name="cup" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="C5">0.08</note>
+      <note pitch="E5">0.08</note>
+      <note pitch="G5">0.16</note>
+    </sound>
+  </sounds>
+  <pictures>
+    <bitmap name="arrow-waiting">
+      <row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row>
+      <row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row>
+      <row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row>
+      <row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row>
+      <scale>2</scale>
+    </bitmap>
+    <bitmap name="arrow-ready">
+      <row>.*.</row><row>***</row><row>.*.</row><row>...</row><row>.*.</row><row>.*.</row><row>...</row><row>.*.</row>
+      <row>.*.</row><row>...</row><row>.*.</row><row>.*.</row><row>...</row><row>.*.</row><row>.*.</row><row>...</row>
+      <row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row>
+      <row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row>
+      <scale>2</scale>
+      <color>color.yellow</color>
+    </bitmap>
+  </pictures>
 </game>

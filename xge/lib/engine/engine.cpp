@@ -8,36 +8,74 @@
 #include "game/random.h"
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <exception>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <optional>
 #include <random>
 #include <sstream>
 #include <stdexcept>
+#include <thread>
 #include <utility>
+
+#if defined(_WIN32)
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
+#include <timeapi.h>
+#if defined(_MSC_VER)
+#pragma comment(lib, "winmm.lib")
+#endif
+#endif
 
 namespace xge
 {
+	namespace
+	{
+		// Windows wakes a sleep on its own tick, 15.6 ms, unless a program
+		// asks for 1 ms while it runs: a frame of a 60 a second game would
+		// often wait two ticks.
+		struct FineSleep
+		{
+#if defined(_WIN32)
+			FineSleep() { timeBeginPeriod(1); }
+			~FineSleep() { timeEndPeriod(1); }
+			FineSleep(const FineSleep&) = delete;
+			FineSleep& operator=(const FineSleep&) = delete;
+#endif
+		};
+
+		// Sleeping wakes late by a few milliseconds on some systems (Windows
+		// wakes on its own tick), so the last of the wait is spent yielding.
+		void waitFor(std::chrono::steady_clock::duration time)
+		{
+			const auto until = std::chrono::steady_clock::now() + time;
+			const auto margin = std::chrono::milliseconds(2);
+			if (time > margin) { std::this_thread::sleep_for(time - margin); }
+			while (std::chrono::steady_clock::now() < until) { std::this_thread::yield(); }
+		}
+	}
+
 	Engine::Engine(Game& gameToRun, std::unique_ptr<Window> newWindow, std::unique_ptr<Audio> newAudio) :
 		game(gameToRun),
 		commandExecutor(gameToRun),
 		window(std::move(newWindow)),
 		audio(newAudio ? std::move(newAudio) : std::make_unique<NullAudio>())
 	{
-		this->audio->load(game.getSounds());
+		this->audio->load(game.getSounds(), game.resources());
 
-		// Builds and measures every object's initial visual now that a
-		// window (and therefore a real backend to build against) exists -
-		// this used to happen inside Game's own constructor, via the
-		// standalone game_sfml class, before Engine or any Window existed
-		// at all; see Window::init() in window/window.h for why it has to happen
-		// here instead.
+		// The window makes every object's picture, at its own scale; the
+		// pictures are drawn again at its size once a resize settles (render).
+		this->window->usePictures(game.resources());
 		this->window->init(game.getCurrentObjects());
-
-		// Sizes are real now: finish any position that depends on one.
-		game.resolveSizeDependentPositions();
+		settledFit = SettledFit(this->window->pictureScale());
 
 		game.setCurrentState(0);
 		syncedStateChanges = game.stateChangeCount();
@@ -52,10 +90,9 @@ namespace xge
 		window.reset();
 		window = create();
 
+		window->usePictures(game.resources());
 		window->init(game.getCurrentObjects());
-
-		// Sizes may differ a little between libraries (text above all).
-		game.resolveSizeDependentPositions();
+		settledFit = SettledFit(window->pictureScale());
 	}
 
 	void Engine::replaceAudio(const std::function<std::unique_ptr<Audio>()>& create)
@@ -78,26 +115,26 @@ namespace xge
 			audio = std::make_unique<NullAudio>();
 		}
 
-		audio->load(game.getSounds());
+		audio->load(game.getSounds(), game.resources());
 	}
 
 	void Engine::silence(void)
 	{
 		audio->stopAll();
 
-		// Started again by the next step() if the game still wants them.
+		// Started again by the next update() if the game still wants them.
 		playingLoops.clear();
 	}
 
 	void Engine::playRequestedSounds(void)
 	{
-		for (const std::string& name : game.takeSilenceRequests())
+		for (const std::string& name : game.sounds().takeSilenced())
 		{
 			audio->stop(name);
 			playingLoops.erase(name);
 		}
 
-		const std::set<std::string> wanted = game.soundsOn();
+		const std::set<std::string> wanted = game.sounds().playing();
 		for (const std::string& name : playingLoops)
 		{
 			if (!wanted.count(name)) { audio->stop(name); }
@@ -108,7 +145,7 @@ namespace xge
 		}
 		playingLoops = wanted;
 
-		for (const std::string& name : game.takeSoundRequests())
+		for (const std::string& name : game.sounds().takeRequests())
 		{
 			audio->play(name);
 		}
@@ -130,18 +167,38 @@ namespace xge
 		return window && window->isOpen();
 	}
 
-	void Engine::loop(void)
+	void Engine::run(void)
 	{
+		using Clock = std::chrono::steady_clock;
+		[[maybe_unused]] const FineSleep fineSleep;
+
 		// A computer thinks beside the game, which goes on being drawn.
 		game.thinkInBackground(true);
+
+		// <framerate> is the most frames a second: a frame waits until its
+		// time has passed.
+		const Clock::duration shortest = std::chrono::duration_cast<Clock::duration>(
+			std::chrono::duration<double>(1.0 / std::max(1, mostFrames > 0 ? mostFrames : game.getWindowDesc().framerate)));
+
+		Clock::time_point last = Clock::now();
 		while (isWindowOpen())
 		{
-			step();
-			render();
+			const Clock::time_point now = Clock::now();
+			if (now - last < shortest)
+			{
+				waitFor(shortest - (now - last));
+				continue;
+			}
+
+			const float seconds = std::min(std::chrono::duration<float>(now - last).count(), kLongestStep);
+			last = now;
+			input();
+			update(seconds);
+			if (isWindowOpen()) { render(); }
 		}
 	}
 
-	void Engine::step(void)
+	void Engine::input(void)
 	{
 		requireWindow();
 
@@ -172,6 +229,13 @@ namespace xge
 		}
 		else
 		{
+			for (; replaying && replayNext < replayed.keys.size() && replayed.keys[replayNext].frame <= replayFrame; ++replayNext)
+			{
+				const KeyCode key = keyCodeFromString(replayed.keys[replayNext].button);
+				if (replayed.keys[replayNext].pressed) { handleKeyPressed(key); }
+				else { handleKeyReleased(key); }
+			}
+
 			for (const auto& [key, pressed] : events)
 			{
 				if (pressed) { handleKeyPressed(key); }
@@ -180,26 +244,22 @@ namespace xge
 
 			handleControls(window->controls());
 		}
+	}
 
-		playComputer();
+	void Engine::update(float seconds)
+	{
+		requireWindow();
+		game.beginStep(seconds);
 
+		// The computer presses as a player would, by the time that passed;
+		// keys held go on adding by it too.
+		playComputer(seconds);
 		playHeldKeys();
 
-		game.updateObjects();
+		game.updateObjects(seconds);
 
 		// A <condition> can change the state during updateObjects.
 		syncHeldKeysToState();
-
-		// A text that grew or shrank (a score) needs its position worked out
-		// again for the new size, measured now rather than at the next draw.
-		for (auto& object : game.getCurrentObjects())
-		{
-			if (object.visualDirty && game_expr::sizeNeedsBackend(object.picture.kind))
-			{
-				window->prepare(object);
-			}
-		}
-		game.resolveSizeDependentPositions();
 
 		// Keys, collisions and conditions have all had their say.
 		playRequestedSounds();
@@ -216,6 +276,10 @@ namespace xge
 		{
 			++recordedSoFar.frames;
 		}
+		if (replaying && !demoPlaying)
+		{
+			++replayFrame;
+		}
 		if (demoPlaying && ++demoFrame >= game.getDemo().frames)
 		{
 			stopDemo();
@@ -228,7 +292,7 @@ namespace xge
 
 	void Engine::record(void)
 	{
-		recordedSoFar = RawDemo{};
+		recordedSoFar = WrittenDemo{};
 		recordedSoFar.recorded = true;
 		recordedSoFar.seed = std::random_device{}();
 		setRandomState(std::mt19937{ recordedSoFar.seed });
@@ -236,7 +300,17 @@ namespace xge
 		recording = true;
 	}
 
-	RawDemo Engine::recorded(void) const
+	void Engine::replay(const WrittenDemo& demo)
+	{
+		replayed = demo;
+		replaying = true;
+		replayFrame = 0;
+		replayNext = 0;
+		setRandomState(std::mt19937{ demo.seed });
+		game.resetAll();
+	}
+
+	WrittenDemo Engine::recorded(void) const
 	{
 		return recordedSoFar;
 	}
@@ -347,15 +421,22 @@ namespace xge
 	{
 		requireWindow();
 
+		// Text and shapes drawn again, sharp, at the window's size once it
+		// has held still after a resize.
+		const double now = std::chrono::duration<double>(std::chrono::steady_clock::now().time_since_epoch()).count();
+		if (const std::optional<float> scale = settledFit.update(window->fit(), now)) { window->setPictureScale(*scale); }
+
 		drawFrame(*window, game.getCurrentObjects(), game.getWindowDesc().background,
 			[&](const Object& object) { return object.isDrawn && game.isStill(object); },
 			[&](const Object& object) { return object.isDrawn && game.isShown(object); });
 	}
 
-	void Engine::playComputer(void)
+	void Engine::playComputer(float seconds)
 	{
-		const std::set<KeyCode> wanted = game.computerButtons();
+		std::set<KeyCode> taps;
+		const std::set<KeyCode> wanted = game.computerButtons(taps, seconds);
 		computerPressing = true;
+		game.players().pressingForComputer(true);
 		for (const KeyCode key : computerHeld)
 		{
 			if (!wanted.count(key)) { handleKeyReleased(key); }
@@ -364,7 +445,14 @@ namespace xge
 		{
 			if (!computerHeld.count(key)) { handleKeyPressed(key); }
 		}
+		for (const KeyCode key : taps)
+		{
+			if (wanted.count(key) || computerHeld.count(key)) { continue; }
+			handleKeyPressed(key);
+			handleKeyReleased(key);
+		}
 		computerPressing = false;
+		game.players().pressingForComputer(false);
 		computerHeld = wanted;
 	}
 
@@ -456,6 +544,13 @@ namespace xge
 
 	void Engine::runAsPress(const std::vector<Command>& commands)
 	{
+		game.cellMaps().pressBegins();
+		runPress(commands);
+		game.cellMaps().pressEnds();
+	}
+
+	void Engine::runPress(const std::vector<Command>& commands)
+	{
 		game.takeTurnStop();
 		// A <trigger from=> answers the look its object had when the key
 		// was pressed: one trigger's action changing the look (red's turn
@@ -469,15 +564,19 @@ namespace xge
 			bool answer = true;
 			if (trigger && !trigger->from.empty())
 			{
-				const Object& object = game.getObject(trigger->object);
+				const Object& object = game.object(trigger->object);
 				if (object.name == trigger->object || !object.inGroup(trigger->object)) { answer = object.lookName() == trigger->from; }
 			}
 			answers.push_back(answer);
 		}
 		for (std::size_t i = 0; i < commands.size(); ++i)
 		{
-			if (!answers[i]) { continue; }
+			const auto* trigger = std::get_if<CmdTriggerAction>(&shapeOf(commands[i]));
+			const std::size_t otherwise = trigger ? static_cast<std::size_t>(trigger->otherwise) : 0;
+			if (!answers[i]) { i += otherwise; continue; }
 			if (!commandExecutor.executeInput(commands[i], true) || game.takeTurnStop()) { break; }
+			// A trigger's <otherwise>: the commands after it, only when its action was refused.
+			if (otherwise > 0 && !commandExecutor.triggerRefused()) { i += otherwise; }
 		}
 	}
 
@@ -493,7 +592,10 @@ namespace xge
 		{
 			if (heldKeys.isDown(key) && pressedInState[static_cast<std::size_t>(key)] == now && game.stateChangeCount() == now)
 			{
+				// Held for this step: what it adds goes by the time passed.
+				commandExecutor.heldShare = game.stepTime();
 				runAsPress(commands);
+				commandExecutor.heldShare = 1.0f;
 			}
 		}
 		syncHeldKeysToState();

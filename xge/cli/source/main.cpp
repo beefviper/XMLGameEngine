@@ -7,6 +7,7 @@
 #include "engine/folder.h"
 #include "generate.h"
 #include "game/game.h"
+#include "game/random.h"
 #include "load/xml.h"
 #include "engine/engine.h"
 
@@ -45,7 +46,50 @@ int main(int argc, char* argv[])
 		dataFolder = xge::findDataFolder(std::filesystem::current_path(), xge::programDirectory());
 
 		const std::filesystem::path gamesDirectory = dataFolder.empty() ? std::filesystem::path("games/descriptions") : dataFolder / "descriptions";
+
+		// --check: each game loaded, a line each, nothing played.
+		if (options.check)
+		{
+			std::vector<std::string> files;
+			int missing = 0;
+			if (options.games.empty()) { files = xge::gameFilesIn(gamesDirectory); }
+			for (const std::string& game : options.games)
+			{
+				try
+				{
+					files.push_back(std::filesystem::absolute(xge::findGameFile(game, gamesDirectory)).string());
+				}
+				catch (const xge::CliError& error)
+				{
+					std::cout << game << ": " << error.what() << '\n';
+					++missing;
+				}
+			}
+			if (files.empty() && missing == 0) { throw xge::CliError("no games to check in " + gamesDirectory.string()); }
+			if (!dataFolder.empty())
+			{
+				std::error_code ignored;
+				std::filesystem::current_path(dataFolder, ignored);
+			}
+			const int failed = xge::checkGames(files, options.xml, std::cout) + missing;
+			return failed == 0 ? EXIT_SUCCESS : EXIT_FAILURE;
+		}
+
 		filename = std::filesystem::absolute(xge::findGameFile(options.game, gamesDirectory)).string();
+
+		// Relative to where the program was started, as the game is.
+		if (!options.keys.empty())
+		{
+			options.keys = std::filesystem::absolute(options.keys).string();
+		}
+		if (!options.dump.empty())
+		{
+			options.dump = std::filesystem::absolute(options.dump).string();
+		}
+		if (!options.picture.empty())
+		{
+			options.picture = std::filesystem::absolute(options.picture).string();
+		}
 	}
 	catch (const xge::CliError& error)
 	{
@@ -107,26 +151,26 @@ int main(int argc, char* argv[])
 		<< "xml: " << xge::xmlBackendName(options.xml) << '\n'
 		<< "audio: " << xge::audioBackendName(options.audio) << "\n\n";
 
+	// --frames: played to the end with no window, nothing printed but how
+	// far it got.
+	if (options.frames > 0)
+	{
+		return xge::playFrames(filename, options, std::cout);
+	}
+	if (options.seed)
+	{
+		xge::fixRandomSeed(options.seed);
+	}
+
 	// A game file that is wrong - an unknown tag, a missing <radius>, a value
 	// that will not evaluate - is reported by the exception loading it throws,
 	// with where in the file it was found.
 	try
 	{
-		// Game is fully evaluated the moment its constructor returns - every
-		// object's position (a group's cells included), velocity, action, and
-		// variable is real - none of it needs a Window/backend to exist first
-		// (see load/expr.cpp, game/command.cpp's measureShapeSize). The exceptions are
-		// Object::size of a text or image (the real rendered footprint, used for
-		// drawing/collision), which stays {0,0} until Engine's constructor builds
-		// a real Window backend to measure it (see Window::init(), window/window.h), and
-		// any <position> that uses the width or height of such an object (for
-		// example title.width), which can only be worked out after that. printGame() knows the
-		// difference and prints both as "unknown" instead of a misleading {0,0}
-		// if called before Engine exists, so it is called twice: once here to
-		// show what is known without a window, and once after Engine.
+		// Game is fully evaluated the moment its constructor returns: every
+		// object's position, size, velocity, action and variable is real, with
+		// no window (the engine draws text and reads image files itself).
 		xge::Game game{ xge::readGame(filename, options.xml) };
-
-		std::cout << "=== before Engine: sizes and size-dependent positions not yet known ===\n\n";
 		game.printGame();
 
 		xge::Engine engine(game, options.window, options.audio);
@@ -135,11 +179,13 @@ int main(int argc, char* argv[])
 		{
 			engine.record();
 		}
+		if (!options.keys.empty())
+		{
+			engine.replay(xge::readDemo(options.keys, options.xml));
+		}
 
-		std::cout << "=== after Engine: sizes measured, positions finished ===\n\n";
-		game.printGame();
-
-		engine.loop();
+		if (options.framerate > 0) { engine.setFramerate(options.framerate); }
+		engine.run();
 
 		if (options.record)
 		{
@@ -150,7 +196,7 @@ int main(int argc, char* argv[])
 				read << in.rdbuf();
 				text = read.str();
 			}
-			const xge::RawDemo demo = engine.recorded();
+			const xge::WrittenDemo demo = engine.recorded();
 			std::ofstream out(filename, std::ios::binary | std::ios::trunc);
 			out << xge::withDemo(text, demo);
 			if (!out)

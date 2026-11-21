@@ -1,0 +1,353 @@
+// test_spawn.cpp
+// XML Game Engine
+// author: beefviper
+// date: Oct 23, 2026
+//
+// Catch2 tests for objects that come and go while a game runs: an object
+// that does not exist until a <spawn> makes a copy of it, the copies'
+// names and their own rules, <despawn />, <most>, <fire> and a <spawn> with a <count>
+// making copies, a group spawned in turn, what other rules and conditions
+// see of copies, a copy's rule conditions, and resets.
+
+#include "played.h"
+#include "play/executor.h"
+
+#include <catch2/catch_approx.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_string.hpp>
+
+#include <string>
+
+using namespace xge;
+using played::box;
+using played::Played;
+using played::Scratch;
+using Catch::Approx;
+using Catch::Matchers::ContainsSubstring;
+
+namespace
+{
+	// A shot of the kit, so not in play at the start, going up, counting its
+	// own frames in a variable of its own, and gone at the top.
+	const std::string kShot = "<object name=\"shot\" class=\"bullet\"><sprite><rectangle><width>4</width><height>8</height></rectangle></sprite>"
+		"<velocity><x>0</x><y>-300</y></velocity>"
+		"<collisions><collision edge=\"top\"><despawn /></collision></collisions>"
+		"<variables><variable name=\"age\">0</variable></variables>"
+		"<timers><timer><every>0.01</every><inc variable=\"self.age\" /></timer></timers></object>";
+}
+
+TEST_CASE("a piece is not in play until a copy of it is spawned", "[spawn]")
+{
+	const Scratch file(box("ship", 300, 400),
+		"<spawn object=\"shot\"><position><x>ship.x</x><y>ship.y</y></position></spawn>", {}, kShot);
+	Played play(file.path);
+
+	CHECK_FALSE(play.get("shot").exists);
+	CHECK_FALSE(play.game.isShown(play.get("shot")));
+	CHECK(play.count("shot") == 0);
+
+	// Made at once, in the game when the frame is over.
+	play.tap(KeyCode::Space);
+	REQUIRE(play.game.justSpawned().size() == 1);
+	CHECK(play.game.justSpawned().front().name == "playing.shot.1");
+	play.frames(1);
+	REQUIRE(play.has("shot.1"));
+	const Object& copy = play.get("shot.1");
+	CHECK(copy.isCopy());
+	CHECK(copy.objClass == "bullet");
+	CHECK(copy.inGroup("playing.shot"));
+	CHECK(play.game.isShown(copy));
+	CHECK(copy.position.x == Approx(300));
+
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	CHECK(play.has("shot.2"));
+	CHECK(play.count("shot") == 2);
+	CHECK_FALSE(play.get("shot").exists); // the piece it makes copies of, never in play
+}
+
+TEST_CASE("a copy's own rules and values are about the copy, not the object it was copied from", "[spawn]")
+{
+	const Scratch file(box("ship", 300, 400), "<spawn object=\"shot\"><position><y>500</y></position></spawn>", {}, kShot);
+	Played play(file.path);
+
+	play.tap(KeyCode::Space);
+	play.frames(10);
+	play.tap(KeyCode::Space);
+	play.frames(5);
+
+	// Each counts its own time in hundredths of a second (self.age is its
+	// own): 15 and 5 sixtieths.
+	CHECK(play.get("shot.1").variable.at("age") == Approx(25).margin(1));
+	CHECK(play.get("shot.2").variable.at("age") == Approx(8).margin(1));
+	CHECK(play.get("shot").variable.at("age") == 0.0f);
+}
+
+TEST_CASE("<despawn /> takes a copy out for good, and its name is used again", "[spawn]")
+{
+	const Scratch file(box("ship", 300, 100),
+		"<spawn object=\"shot\"><position><x>ship.x</x><y>ship.y</y></position></spawn>", {}, kShot);
+	Played play(file.path);
+
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	const std::size_t with = play.game.getCurrentObjects().size();
+
+	// Up and off the top: despawned, and gone from the objects.
+	play.frames(30);
+	CHECK_FALSE(play.has("shot.1"));
+	CHECK(play.game.getCurrentObjects().size() == with - 1);
+
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	CHECK(play.has("shot.1"));
+	CHECK(play.get("shot.1").variable.at("age") <= 2.0f); // a new one, starting as the file says
+}
+
+TEST_CASE("<despawn object> takes out an object the file wrote, until a reset", "[spawn]")
+{
+	const Scratch file(box("wall", 100, 100) + box("door", 200, 100), "<despawn object=\"door\" />");
+	Played play(file.path);
+
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	CHECK_FALSE(play.get("door").exists);
+	CHECK_FALSE(play.game.isShown(play.get("door")));
+	CHECK(play.get("wall").exists);
+
+	// It stays among the objects, not existing; a reset brings it back.
+	play.game.resetObject("door");
+	CHECK(play.get("door").exists);
+	CHECK(play.game.isShown(play.get("door")));
+}
+
+TEST_CASE("<most> caps how many copies exist, and a refused spawn stops what comes after", "[spawn]")
+{
+	const Scratch file(box("ship", 300, 400, "<actions><action name=\"shoot\"><spawn object=\"shot\" /><inc variable=\"self.shots\" /></action></actions>"
+		"<variables><variable name=\"shots\">0</variable></variables>"),
+		"<trigger object=\"ship\" action=\"shoot\" />", {},
+		"<object name=\"shot\"><sprite><rectangle><width>4</width><height>8</height></rectangle></sprite><most>2</most></object>");
+	Played play(file.path);
+
+	for (int i = 0; i < 4; ++i) { play.tap(KeyCode::Space); }
+	play.frames(1);
+	CHECK(play.count("shot") == 2);
+	CHECK(play.get("ship").variable.at("shots") == 2.0f);
+
+	play.game.despawn(play.get("shot.1"));
+	play.frames(1);
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	CHECK(play.count("shot") == 2);
+	CHECK(play.has("shot.1"));
+
+	// By the end of its path, as a test or a front end names it.
+	play.game.despawn("shot");
+	play.frames(1);
+	CHECK(play.count("shot") == 0);
+}
+
+TEST_CASE("<fire> and <spawn> of a piece make copies of it", "[spawn]")
+{
+	const Scratch file(box("ship", 300, 400, "<collisions></collisions>"
+		"<actions><action name=\"shoot\"><fire object=\"shot\" /></action></actions>")
+		+ box("rock", 300, 380, "<collisions><collision object=\"ship\"><spawn object=\"piece\"><count>3</count></spawn><despawn /></collision></collisions>"),
+		"<trigger object=\"ship\" action=\"shoot\" />", {},
+		"<object name=\"shot\"><sprite><rectangle><width>4</width><height>8</height></rectangle></sprite>"
+		"<velocity><x>0</x><y>-360</y></velocity><most>1</most></object>"
+		"<object name=\"piece\"><sprite><rectangle><width>2</width><height>2</height></rectangle></sprite>"
+		"<velocity><x>60</x><y>60</y></velocity></object>");
+	Played play(file.path);
+
+	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Space); // one in flight at most
+	play.frames(1);
+	REQUIRE(play.count("shot") == 1);
+	const Object& shot = play.get("shot.1");
+	CHECK(shot.position.x + 2 == Approx(305)); // from the ship's top middle
+	CHECK(shot.velocity.y == Approx(-360));
+
+	// The ship touches the rock: it breaks into three pieces.
+	play.get("ship").velocity = { 0, -180 };
+	play.frames(8);
+	CHECK(play.count("piece") == 3);
+}
+
+TEST_CASE("a <spawn> with a <count> makes that many, at the spawner's middle unless a <position> says, up to the <most>", "[spawn]")
+{
+	const Scratch file(box("rock", 300, 380, "<actions><action name=\"break\">"
+		"<spawn object=\"piece\"><count>3</count></spawn><inc variable=\"self.breaks\" /></action></actions>"
+		"<variables><variable name=\"breaks\">0</variable></variables>")
+		+ box("cliff", 100, 100, "<actions><action name=\"drop\"><spawn object=\"piece\"><count>2</count><position><x>10</x></position></spawn></action></actions>"),
+		"<trigger object=\"rock\" action=\"break\" />", {},
+		"<object name=\"piece\"><sprite><rectangle><width>2</width><height>2</height></rectangle></sprite><most>4</most></object>");
+	Played play(file.path);
+
+	// Three, each in the middle of the rock.
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	REQUIRE(play.count("piece") == 3);
+	for (const char* name : { "piece.1", "piece.2", "piece.3" })
+	{
+		CHECK(play.get(name).position.x == Approx(304));
+		CHECK(play.get(name).position.y == Approx(384));
+	}
+	CHECK(play.get("rock").variable.at("breaks") == 1.0f);
+
+	// A half given is the given one; the other is still the spawner's middle.
+	// Only one more may exist, so one is made, and the spawn is not refused.
+	CommandExecutor executor(play.game);
+	CmdSpawn two;
+	two.target = "piece";
+	two.count = 2;
+	two.x = 10.0f;
+	Doer cliff;
+	cliff.self = &play.get("cliff");
+	REQUIRE(executor.run(Command{ two }, cliff));
+	play.frames(1);
+	REQUIRE(play.count("piece") == 4);
+	CHECK(play.get("piece.4").position.x == Approx(10));
+	CHECK(play.get("piece.4").position.y == Approx(104));
+
+	// None may be made: refused, so what comes after it does not run.
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	CHECK(play.count("piece") == 4);
+	CHECK(play.get("rock").variable.at("breaks") == 1.0f);
+}
+
+TEST_CASE("a <spawn> with a <count> under 1 stops the load", "[spawn][errors]")
+{
+	const Scratch file(box("rock", 300, 380), "<spawn object=\"piece\"><count>0</count></spawn>", {},
+		"<object name=\"piece\"><sprite><rectangle><width>2</width><height>2</height></rectangle></sprite></object>");
+	CHECK_THROWS_WITH(Game{ file.path }, ContainsSubstring("<count> under 1"));
+}
+
+TEST_CASE("other rules and conditions see the copies by the name of what they were copied from", "[spawn]")
+{
+	const Scratch file(box("ship", 300, 400, "<collisions></collisions>")
+		+ box("target", 0, 0, "<collisions></collisions><variables><variable name=\"done\">0</variable></variables>"),
+		"<spawn object=\"rock\"><position><x>300</x><y>380</y></position><velocity><y>240</y></velocity></spawn>",
+		"<conditions><condition object=\"rock\"><remaining>0</remaining><set variable=\"target.done\">1</set></condition></conditions>",
+		"<object name=\"rock\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
+		"<collisions><collision object=\"ship\"><despawn /></collision></collisions></object>");
+	Played play(file.path);
+
+	// None yet: none remaining.
+	play.frames(1);
+	CHECK(play.get("target").variable.at("done") == 1.0f);
+	play.get("target").variable.at("done") = 0;
+
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	CHECK(play.count("rock") == 1);
+	play.frames(1);
+	CHECK(play.get("target").variable.at("done") == 0.0f);
+
+	// It falls onto the ship and despawns itself; then none remain.
+	play.frames(10);
+	CHECK(play.count("rock") == 0);
+	CHECK(play.get("target").variable.at("done") == 1.0f);
+}
+
+TEST_CASE("a group spawned from makes its members in turn", "[spawn]")
+{
+	const Scratch file(box("ship", 300, 400), "<spawn object=\"rocks\" />", {},
+		"<group name=\"rocks\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
+		"<member name=\"big\"><velocity><x>60</x></velocity></member><member name=\"small\"><velocity><x>120</x></velocity></member></group>");
+	Played play(file.path);
+
+	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	CHECK(play.has("big.1"));
+	CHECK(play.has("small.1"));
+	CHECK(play.has("big.2"));
+	CHECK(play.count("rocks") == 3);
+	CHECK(play.get("small.1").velocity.x == Approx(120));
+}
+
+TEST_CASE("a new game takes away every copy, and a spawned object can be of one that exists", "[spawn]")
+{
+	const Scratch file(box("ball", 100, 100, "<velocity><x>60</x><y>0</y></velocity>"), "<spawn object=\"ball\"><position><y>300</y></position></spawn>");
+	Played play(file.path);
+
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	REQUIRE(play.has("ball.1"));
+	CHECK(play.get("ball.1").position.y == Approx(300));
+	CHECK(play.get("ball").exists);
+
+	play.game.resetAll();
+	CHECK_FALSE(play.has("ball.1"));
+	CHECK(play.count("ball") == 1);
+}
+
+TEST_CASE("a <despawn object> must name an object, and a piece may leave out its <position>", "[spawn]")
+{
+	const auto load = [](const std::string& objects, const std::string& onSpace, const std::string& kit = {})
+	{
+		const Scratch file(objects, onSpace, {}, kit);
+		Game game(file.path);
+	};
+
+	CHECK_THROWS_WITH(load(box("ship", 0, 0), "<despawn object=\"shots\" />"), ContainsSubstring("<despawn> names 'shots'"));
+	CHECK_THROWS_WITH(load(box("ship", 0, 0), "<despawn />"), ContainsSubstring("<despawn />"));
+	CHECK_NOTHROW(load(box("ship", 0, 0), "<spawn object=\"shot\" />", kShot));
+	CHECK_THROWS_WITH(load(box("ship", 0, 0) + "<object name=\"shot\"><sprite><rectangle><width>4</width><height>8</height></rectangle></sprite></object>", "<pop />"),
+		ContainsSubstring("missing <position>"));
+}
+
+TEST_CASE("a copy's rule with a condition tests the copy's own values", "[spawn]")
+{
+	const std::string ball = "<object name=\"ball\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
+		"<velocity><x>0</x><y>120</y></velocity>"
+		"<collisions><collision object=\"wall\"><condition variable=\"armed\"><equal>1</equal></condition><despawn /></collision>"
+		"<collision object=\"wall\"><stop /></collision></collisions>"
+		"<variables><variable name=\"armed\">0</variable></variables></object>";
+	const Scratch file(box("wall", 300, 300, "<collisions />"),
+		"<spawn object=\"ball\"><position><x>300</x><y>200</y></position></spawn>", {}, ball);
+	Played play(file.path);
+
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	REQUIRE(play.has("ball.2"));
+	play.game.setVariable("playing.ball.1", "armed", 1.0f);
+	play.frames(80);
+
+	// Only the armed one goes; the other stops on the wall.
+	CHECK_FALSE(play.has("ball.1"));
+	REQUIRE(play.has("ball.2"));
+	CHECK(play.get("ball.2").velocity.y == Approx(0.0f));
+}
+
+TEST_CASE("a spawn's <acceleration> is read as it runs and pulls the copy for as long as it lasts", "[spawn]")
+{
+	const Scratch file(box("gun", 300, 400, "<actions><action name=\"shoot\"><spawn object=\"shell\">"
+		"<velocity><y>-240</y></velocity><acceleration><x>self.wind</x><y>1800</y></acceleration></spawn></action></actions>"
+		"<variables><variable name=\"wind\">900</variable></variables>"),
+		"<trigger object=\"gun\" action=\"shoot\" />", {},
+		"<object name=\"shell\"><sprite><rectangle><width>4</width><height>4</height></rectangle></sprite></object>");
+	Played play(file.path);
+
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	REQUIRE(play.has("shell.1"));
+	const Object& shell = play.get("shell.1");
+	CHECK(shell.acceleration.x == Approx(900.0f));
+	CHECK(shell.acceleration.y == Approx(1800.0f));
+	const Vector2f was = shell.velocity;
+	play.frames(4);
+	CHECK(shell.velocity.x - was.x == Approx(60.0f));
+	CHECK(shell.velocity.y - was.y == Approx(120.0f));
+
+	// The next one takes the wind as it is then.
+	play.game.setVariable("playing.gun", "wind", -3600.0f);
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	REQUIRE(play.has("shell.2"));
+	CHECK(play.get("shell.2").acceleration.x == Approx(-3600.0f));
+}

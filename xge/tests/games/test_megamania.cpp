@@ -1,0 +1,331 @@
+// test_megamania.cpp
+// XML Game Engine
+// author: beefviper
+// date: Oct 7, 2026
+//
+// Catch2 tests for games/descriptions/megamania.xml, played through a real xge::Engine
+// with no window and the keys a player would press: a wave wrapping round
+// the sides and dropping bombs, a shot scoring, a bomb costing a ship, the
+// energy running out, the cookies bouncing, the eight waves (the scenes of
+// the playing state) won one after another, and the pause drawing the game
+// still.
+//
+// Window::init() normally measures each object's size once a backend exists;
+// the helper gives every shape the size its sprite implies instead.
+
+#include "engine/engine.h"
+#include "game/game.h"
+#include "window/null.h"
+
+#include <catch2/catch_approx.hpp>
+#include <catch2/catch_test_macros.hpp>
+
+#include <algorithm>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
+using namespace xge;
+using Catch::Approx;
+
+namespace
+{
+	struct Megamania
+	{
+		Game game{ "descriptions/megamania.xml" };
+		Engine engine{ game, std::make_unique<NullWindow>() };
+
+		Megamania()
+		{
+			for (auto& object : game.getCurrentObjects())
+			{
+				object.size = measureShapeSize(object.drawn.picture);
+			}
+		}
+
+		void tap(KeyCode key)
+		{
+			engine.handleKeyPressed(key);
+			engine.handleKeyReleased(key);
+		}
+
+		void frames(int count)
+		{
+			for (int i = 0; i < count; ++i) { engine.input(); engine.update(xge::kSixtieth); }
+		}
+
+		void start()
+		{
+			tap(KeyCode::Space);
+			REQUIRE(state() == "playing");
+			REQUIRE(wave() == "playing.wave1");
+		}
+
+		std::string state() { return game.getCurrentState().name; }
+		std::string wave() { return game.currentScene("playing"); }
+		Object& enemy(const std::string& scene, int member) { return game.object("playing." + scene + ".enemies." + std::to_string(member)); }
+		Object& player() { return game.object("player"); }
+		float energy() { return game.object("energy").variable.at("level"); }
+
+		// Stops a wave (a scene: wave1, wave2, wave3) dropping bombs, for the
+		// tests that are not about them.
+		void noBombs(const std::string& scene)
+		{
+			for (auto& object : game.getCurrentObjects())
+			{
+				if (object.groupName == "playing." + scene + ".enemies") { if (auto* clocks = game.clocksOf(object)) { clocks->clear(); } }
+			}
+		}
+
+		void clear(const std::string& scene)
+		{
+			for (auto& object : game.getCurrentObjects())
+			{
+				if (object.groupName == "playing." + scene + ".enemies") { object.isVisible = false; }
+			}
+		}
+
+		int bombsInPlay()
+		{
+			int n = 0;
+			for (const auto& object : game.getCurrentObjects())
+			{
+				// a bomb is the wave's, beside the enemies that drop it
+				const std::string& group = object.groupName;
+				if (group.size() > 5 && group.compare(group.size() - 5, 5, ".bomb") == 0 && object.isVisible && game.isShown(object)) { ++n; }
+			}
+			return n;
+		}
+	};
+}
+
+TEST_CASE("megamania.xml loads, and the hamburgers cross over and come round again", "[megamania]")
+{
+	Megamania play;
+	CHECK(play.state() == "title");
+	play.start();
+	play.noBombs("wave1");
+
+	Object& burger = play.enemy("wave1", 4);
+	const float y = burger.position.y;
+	play.frames(120);
+	CHECK(burger.isVisible);
+	CHECK(burger.position.x < 300.0f); // gone off the right, back in on the left
+	CHECK(burger.position.y == Approx(y));
+}
+
+TEST_CASE("the wave drops bombs, and a bomb costs a ship", "[megamania]")
+{
+	Megamania play;
+	play.start();
+	int most = 0;
+	for (int i = 0; i < 300; ++i)
+	{
+		play.frames(1);
+		most = std::max(most, play.bombsInPlay());
+	}
+	CHECK(most > 0);
+
+	play.noBombs("wave1");
+	play.game.despawn("bomb");
+	play.frames(90); // a blaster hit by then has burst and come back
+
+	const float lives = play.player().variable.at("lives");
+	Object* made = play.game.spawn("bomb");
+	INFO("bombs in play " << play.bombsInPlay());
+	REQUIRE(made);
+	Object& bomb = *made;
+	bomb.position = { play.player().position.x + 10.0f, play.player().position.y - 30.0f };
+	bomb.velocity = { 0.0f, 240.0f };
+	play.game.settleSpawns();
+	play.frames(15);
+	// The blaster bursts, out of play, and only then is it lost.
+	CHECK_FALSE(play.player().isVisible);
+	play.frames(70);
+	CHECK(play.player().isVisible);
+	CHECK(play.player().variable.at("lives") == lives - 1);
+	CHECK(play.bombsInPlay() == 0);
+}
+
+TEST_CASE("a shot brings one down, one shot at a time", "[megamania]")
+{
+	Megamania play;
+	play.start();
+	play.noBombs("wave1");
+
+	Object& burger = play.enemy("wave1", 5);
+	burger.velocity = { 0.0f, 0.0f };
+	play.player().position.x = burger.position.x + burger.size.x / 2 - play.player().size.x / 2;
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	const Vector2f shot = play.game.object("laser.1").position;
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	CHECK(play.game.object("laser.1").position.y < shot.y);
+	play.frames(60);
+	CHECK_FALSE(burger.isVisible);
+	CHECK(play.player().variable.at("score") == 20);
+}
+
+TEST_CASE("the energy runs down a second at a time, and running out costs a ship", "[megamania]")
+{
+	Megamania play;
+	play.start();
+	play.noBombs("wave1");
+
+	const float full = play.energy();
+	play.frames(120);
+	CHECK(play.energy() == Approx(full - 2.0f));
+
+	// Nearly out: the energy's timer a second from going off.
+	play.game.clocksOf(play.game.object("energy"))->at(0).counting = true; play.game.clocksOf(play.game.object("energy"))->at(0).secondsLeft = 1.0;
+	play.frames(1);
+	CHECK(play.energy() == Approx(1));
+	play.frames(130);
+	CHECK(play.player().variable.at("lives") == 2);
+	CHECK(play.energy() == Approx(full));
+}
+
+TEST_CASE("the cookies come down at a slant and bounce back up", "[megamania]")
+{
+	Megamania play;
+	play.start();
+	play.noBombs("wave1");
+	play.clear("wave1");
+	play.frames(2);
+	REQUIRE(play.wave() == "playing.wave2");
+	play.noBombs("wave2");
+
+	Object& cookie = play.enemy("wave2", 1);
+	CHECK(cookie.velocity.y > 0.0f);
+	cookie.position.y = 450.0f;
+	play.frames(20);
+	CHECK(cookie.velocity.y < 0.0f);
+}
+
+TEST_CASE("each wave cleared is the next with the energy full, and the eighth wins", "[megamania]")
+{
+	Megamania play;
+	play.start();
+	play.noBombs("wave1"); // a bomb that hits fills the energy again
+	play.frames(300);
+	CHECK(play.energy() < 45.0f);
+
+	CHECK_FALSE(play.game.isShown(play.enemy("wave2", 1)));
+
+	play.clear("wave1");
+	play.frames(2);
+	CHECK(play.state() == "playing");
+	CHECK(play.wave() == "playing.wave2");
+	CHECK(play.energy() == Approx(45.0f));
+	CHECK(play.game.isShown(play.enemy("wave2", 1)));
+	CHECK(play.game.isAway(play.enemy("wave1", 1)));
+
+	for (int wave = 2; wave < 8; ++wave)
+	{
+		play.clear("wave" + std::to_string(wave));
+		play.frames(2);
+		CHECK(play.wave() == "playing.wave" + std::to_string(wave + 1));
+	}
+	play.clear("wave8");
+	play.frames(2);
+	CHECK(play.state() == "over");
+	CHECK(play.game.object("over.message").lookName() == "won");
+	CHECK(play.game.isStill(play.player()));
+
+	play.tap(KeyCode::Space);
+	CHECK(play.state() == "title");
+	CHECK(play.wave() == "playing.wave1");
+	CHECK(play.enemy("wave1", 1).isVisible);
+}
+
+TEST_CASE("each wave is the formation piece with its own speed, rows and score", "[megamania]")
+{
+	Megamania play;
+	CHECK(play.enemy("wave1", 1).velocity.x == Approx(120.0f));
+	CHECK(play.enemy("wave1", 1).velocity.y == Approx(0.0f));
+	CHECK(play.enemy("wave1", 5).position.y == Approx(150.0f));
+	CHECK(play.enemy("wave2", 1).velocity.x == Approx(120.0f));
+	CHECK(play.enemy("wave2", 1).velocity.y == Approx(60.0f));
+	CHECK(play.enemy("wave2", 1).position.y == Approx(60.0f));
+	CHECK(play.enemy("wave3", 1).velocity.x == Approx(-180.0f));
+	CHECK(play.enemy("wave3", 8).position.y == Approx(170.0f));
+
+	// a bug scores 40
+	play.start();
+	play.noBombs("wave1");
+	play.clear("wave1");
+	play.frames(2);
+	play.clear("wave2");
+	play.frames(2);
+	REQUIRE(play.wave() == "playing.wave3");
+	play.noBombs("wave3");
+	Object& bug = play.enemy("wave3", 5);
+	bug.velocity = { 0.0f, 0.0f };
+	play.player().position.x = bug.position.x + bug.size.x / 2 - play.player().size.x / 2;
+	const float before = play.player().variable.at("score");
+	play.tap(KeyCode::Space);
+	play.frames(60);
+	CHECK_FALSE(bug.isVisible);
+	CHECK(play.player().variable.at("score") == before + 40);
+}
+
+TEST_CASE("paused, the game is drawn still underneath and does not move", "[megamania]")
+{
+	Megamania play;
+	play.start();
+	play.noBombs("wave1");
+	play.frames(5);
+
+	Object& burger = play.enemy("wave1", 1);
+	const float x = burger.position.x;
+	const float energy = play.energy();
+	play.tap(KeyCode::Pause);
+	REQUIRE(play.state() == "paused");
+	play.frames(120);
+	CHECK(burger.position.x == Approx(x));
+	CHECK(play.energy() == Approx(energy));
+	CHECK(play.game.isStill(burger));
+	CHECK(play.game.isStill(play.player()));
+
+	play.tap(KeyCode::Pause);
+	play.frames(1);
+	CHECK(play.state() == "playing");
+	CHECK(burger.position.x != Approx(x));
+}
+
+TEST_CASE("the energy left is a bonus, and its bar is covered as it runs down", "[megamania]")
+{
+	Megamania play;
+	play.start();
+	play.noBombs("wave1");
+
+	Object& cover = play.game.object("cover");
+	const float full = cover.position.x;
+	play.frames(600);
+	CHECK(cover.position.x < full);
+	CHECK(cover.position.x == Approx(full - 360.0f * (45.0f - play.energy()) / 45.0f).margin(9.0f));
+
+	const float left = play.energy();
+	play.clear("wave1");
+	play.frames(2);
+	CHECK(play.player().variable.at("score") == Approx(left * 10.0f));
+}
+
+TEST_CASE("the shot is steered with the blaster", "[megamania]")
+{
+	Megamania play;
+	play.start();
+	play.noBombs("wave1");
+
+	play.tap(KeyCode::Space);
+	play.frames(2);
+	Object& laser = play.game.object("laser.1");
+	REQUIRE(laser.isVisible);
+	play.engine.handleKeyPressed(KeyCode::A);
+	play.frames(10);
+	play.engine.handleKeyReleased(KeyCode::A);
+	play.frames(1);
+	CHECK(laser.position.x == Approx(play.player().position.x + 16.5f));
+}

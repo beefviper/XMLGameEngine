@@ -25,7 +25,7 @@ namespace xge
 	struct GenerateRequest
 	{
 		std::filesystem::path gameFile;      // the game (games/descriptions/pong.xml)
-		std::string target;                  // the generator ("windows-cpp")
+		std::string target;                  // the generator ("engine-cpp")
 		std::filesystem::path generators;    // the folder holding a folder of stylesheets per target (games/generators/)
 		std::filesystem::path dataFolder;    // where the game's assets/ are looked for (games/)
 		std::filesystem::path engineFolder;  // where the engine's lib/ is looked for (xge/ in the repository)
@@ -33,8 +33,8 @@ namespace xge
 	};
 
 	// What was written to the output folder, as paths relative to it: the
-	// program's files (those the stylesheet wrote, and the target's modules
-	// and the engine's files copied beside them), and the game's assets.
+	// program's files (those the stylesheet wrote, and the engine's files
+	// copied beside them), and the game's assets.
 	struct GeneratedProgram
 	{
 		std::vector<std::filesystem::path> files;
@@ -54,10 +54,9 @@ namespace xge
 	// The stylesheet writes the program's files with exsl:document, relative
 	// to the output folder, which is made if it is not there (and removed
 	// again if it was made and the game cannot be generated). Its own result
-	// lists them, the target's modules to copy (from
-	// games/generators/<target>/modules), the engine's own files to copy
-	// unchanged (from lib/ in the engine folder) and the asset files to copy
-	// (from the data folder): <generated><file path /><module path from /><engine path
-	// from /><asset path /></generated>. Throws GenerateError.
+	// lists them, the engine's own files to copy unchanged (from lib/ in the
+	// engine folder) and the asset files to copy (from the data folder):
+	// <generated><file path /><engine path from /><asset path /></generated>.
+	// Throws GenerateError.
 	GeneratedProgram generateGame(const GenerateRequest& request);
 }

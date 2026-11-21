@@ -14,7 +14,7 @@
   and 100, flagships 60 and 150. Shoot them all and the next fleet flies in;
   lose three ships and it is over.
 
-  A and D or the arrows move, Space fires and starts, P or Escape pauses, 2
+  A and D or the arrows move, Space fires and starts, Pause pauses, 2
   on the title for two players.
 
   How it is written:
@@ -48,9 +48,11 @@
     saves/galaxian.xml. A game over above the fifth asks for initials, a
     letter a state; the second and third letters are the first's state
     (from=) with the cursor moved and their own keys.
-  * Two players take turns (<turns>, <pass />, <out />); each turn begins
+  * Two players take turns (<alternate>, <pass />, <out />); each turn begins
     with a screen saying whose it is, player 2's a copy of player 1's.
-  * Left on the title for ten seconds, it plays its <demo>.
+  * A hit ship <spawn>s a wreck and <die>s: the wreck's burst plays
+    <once /> and <then> counts the loss and <reveal>s it again. What is
+    shot leaves a smaller burst, a "boom", that despawns itself.
   * The swarm hums under play (the playing state's <music>); a short tune
     plays as a game starts.
 -->
@@ -62,59 +64,32 @@
   </window>
   <variables>
     <variable name="pixel">3</variable>
-    <variable name="alienheight">8 * pixel</variable>
+    <variable name="alienheight"><multiply><value>8</value><value>pixel</value></multiply></variable>
     <variable name="left">83</variable>
     <variable name="gap">40</variable>
     <!-- the space between two aliens side by side -->
-    <variable name="apart">gap - 11 * pixel</variable>
-    <variable name="enterspeed">4</variable>
-    <variable name="divespeed">3</variable>
+    <variable name="apart">
+      <subtract>
+        <value>gap</value>
+        <value><multiply><value>11</value><value>pixel</value></multiply></value>
+      </subtract>
+    </variable>
+    <variable name="enterspeed">240</variable>
+    <variable name="divespeed">180</variable>
     <variable name="spacing">0.15</variable>
-    <variable name="step">4</variable>
+    <variable name="step">240</variable>
     <variable name="margin">12</variable>
     <variable name="tabletop">250</variable>
     <variable name="tablerow">36</variable>
-    <variable name="letters">window.width.center - 80</variable>
+    <variable name="letters"><subtract><value>window.width.center</value><value>80</value></subtract></variable>
     <variable name="letterstep">60</variable>
     <variable name="startlives">3</variable>
   </variables>
-  <sounds>
-    <sound name="shoot" wave="square"><volume>0.15</volume><note pitch="E6" to="E5">0.06</note></sound>
-    <sound name="hit" wave="noise"><volume>0.3</volume><note pitch="2000" to="200">0.2</note></sound>
-    <sound name="dive" wave="triangle"><volume>0.2</volume><note pitch="C6" to="C4">0.4</note></sound>
-    <sound name="boom" wave="noise"><volume>0.4</volume><note pitch="3000" to="100">0.6</note></sound>
-    <!-- the swarm, humming under play -->
-    <sound name="swarm" wave="triangle">
-      <loop />
-      <volume>0.1</volume>
-      <note pitch="A2" to="C3">0.3</note>
-      <note pitch="C3" to="A2">0.3</note>
-    </sound>
-    <!-- a game starting -->
-    <sound name="start">
-      <volume>0.2</volume>
-      <part wave="square">
-        <note pitch="C5">0.12</note>
-        <note pitch="E5">0.12</note>
-        <note pitch="G5">0.12</note>
-        <note pitch="C6">0.12</note>
-        <note pitch="B5">0.12</note>
-        <note pitch="G5">0.12</note>
-        <note pitch="A5">0.12</note>
-        <note pitch="C6">0.36</note>
-      </part>
-      <part wave="triangle">
-        <note pitch="C3">0.48</note>
-        <note pitch="G2">0.48</note>
-        <note pitch="C3">0.36</note>
-      </part>
-    </sound>
-  </sounds>
   <paths>
     <!-- the flagships: straight down the middle, a loop to the left, and up into place -->
     <path name="fromtop">
       <speed>enterspeed</speed>
-      <start><x>window.width.center - 16</x><y>-30</y></start>
+      <start><x><subtract><value>window.width.center</value><value>16</value></subtract></x><y>-30</y></start>
       <step><x>0</x><y>260</y></step>
       <step><x>-80</x><y>60</y></step>
       <step><x>-60</x><y>-60</y></step>
@@ -133,7 +108,7 @@
     <!-- the purples: the same from the top right -->
     <path name="fromtopright">
       <speed>enterspeed</speed>
-      <start><x>window.right - 133</x><y>-30</y></start>
+      <start><x><subtract><value>window.right</value><value>133</value></subtract></x><y>-30</y></start>
       <step><x>-60</x><y>200</y></step>
       <step><x>-120</x><y>40</y></step>
       <step><x>-40</x><y>-80</y></step>
@@ -151,7 +126,7 @@
     <!-- and from the right -->
     <path name="fromright">
       <speed>enterspeed</speed>
-      <start><x>window.right + 7</x><y>330</y></start>
+      <start><x><add><value>window.right</value><value>7</value></add></x><y>330</y></start>
       <step><x>-200</x><y>-20</y></step>
       <step><x>-100</x><y>-100</y></step>
       <step><x>40</x><y>-80</y></step>
@@ -170,9 +145,19 @@
       <!-- whoever dives, alone or taken along by a flagship, is worth more until it wraps -->
       <step><x>-24</x><y>-24</y><play sound="dive" /><set variable="self.pays">self.diving</set></step>
       <step><x>-24</x><y>40</y></step>
-      <step><x>(ship.x - self.x) / 2</x><y>160</y><fire object="bomb" /></step>
-      <step><x>ship.x - self.x</x><y>160</y><fire object="bomb" /></step>
-      <step><x>0</x><y>window.bottom + alienheight - 336</y></step>
+      <step><x>
+        <divide>
+          <value><subtract><value>ship.x</value><value>self.x</value></subtract></value>
+          <value>2</value>
+        </divide>
+      </x><y>160</y><fire object="bomb" /></step>
+      <step><x><subtract><value>ship.x</value><value>self.x</value></subtract></x><y>160</y><fire object="bomb" /></step>
+      <step><x>0</x><y>
+        <subtract>
+          <value><add><value>window.bottom</value><value>alienheight</value></add></value>
+          <value>336</value>
+        </subtract>
+      </y></step>
       <home />
     </path>
   </paths>
@@ -182,120 +167,67 @@
     <style name="hud"><size>36</size><color>color.white</color></style>
     <style name="letter"><size>60</size><color>color.cyan</color></style>
   </styles>
-  <kit>
+  <objects>
+    <!-- the ship's shot: one at a time, straight up -->
+    <object name="shot" class="projectile">
+      <sprite><rectangle><width>3</width><height>12</height><color>color.white</color></rectangle></sprite>
+      <velocity><y>-600</y></velocity>
+      <most>1</most>
+      <collisions>
+        <collision edge="all"><despawn /></collision>
+        <collision class="alien"><despawn /></collision>
+      </collisions>
+    </object>
     <!-- an alien's bomb, dropped by divers: six at most -->
     <object name="bomb" class="bomb">
       <sprite><rectangle><width>3</width><height>9</height><color>color.yellow</color></rectangle></sprite>
-      <velocity><y>6</y></velocity>
+      <velocity><y>360</y></velocity>
       <most>6</most>
       <collisions>
         <collision edge="all"><despawn /></collision>
         <collision object="ship"><despawn /></collision>
       </collisions>
     </object>
-  </kit>
-  <objects>
-    <!-- the stars, drifting down behind everything, each colour blinking at its own pace -->
-    <map name="sky">
-      <tile><width>40</width><height>40</height></tile>
-      <position><x>0</x><y>0</y></position>
-      <row>..r.......w...</row>
-      <row>.......b......</row>
-      <row>y..........r..</row>
-      <row>.....w........</row>
-      <row>.b.........y..</row>
-      <row>........r.....</row>
-      <row>...y.........b</row>
-      <row>.........w....</row>
-      <row>r....b........</row>
-      <row>...........y..</row>
-      <row>..w....r......</row>
-      <row>.............w</row>
-      <row>.y.....b......</row>
-      <row>.........r....</row>
-      <row>....w.......b.</row>
-      <row>b.........y...</row>
-      <group name="stars">
-        <sprite name="on"><bitmap><row>*</row><scale>2</scale></bitmap></sprite>
-        <sprite name="off"><bitmap><row>.</row><scale>2</scale></bitmap></sprite>
-        <animation><interval>0.4</interval><frame sprite="on" /><frame sprite="on" /><frame sprite="off" /></animation>
-        <velocity><y>0.5</y></velocity>
-        <collisions>
-          <collision edge="bottom"><wrap /></collision>
-        </collisions>
-        <group name="redstars" char="r"><sprite name="on"><bitmap><color>color.red</color></bitmap></sprite></group>
-        <group name="bluestars" char="b">
-          <sprite name="on"><bitmap><color>color.cyan</color></bitmap></sprite>
-          <animation><interval>0.3</interval><frame sprite="on" /><frame sprite="off" /></animation>
-        </group>
-        <group name="yellowstars" char="y">
-          <sprite name="on"><bitmap><color>color.yellow</color></bitmap></sprite>
-          <animation><interval>0.5</interval><frame sprite="off" /><frame sprite="on" /><frame sprite="on" /></animation>
-        </group>
-        <group name="whitestars" char="w" />
-      </group>
-    </map>
-    <!-- the best score, at the top in the middle on the title and in play -->
-    <object name="best">
-      <sprite><text style="hud"><number>best.score</number><color>color.red</color></text></sprite>
-      <position><x><centered /></x><y>margin</y></position>
-      <variables><variable name="score">0</variable></variables>
+    <!-- what a hit alien leaves: a burst that grows and scatters, then is gone -->
+    <object name="boom">
+      <sprite name="a"><bitmap from="burst-a" /></sprite>
+      <sprite name="b"><bitmap from="burst-b" /></sprite>
+      <sprite name="c"><bitmap from="burst-c" /></sprite>
+      <sprite name="d"><bitmap from="burst-d" /></sprite>
+      <animation>
+        <seconds>0.07</seconds>
+        <once />
+        <frame sprite="a" />
+        <frame sprite="b" />
+        <frame sprite="c" />
+        <frame sprite="d" />
+        <then><despawn /></then>
+      </animation>
+      <most>6</most>
     </object>
-    <!-- the best five, on the title screen: three letters and a score each -->
-    <group name="table">
-      <sprite>
-        <text>
-          <letter>table.first</letter>
-          <letter>table.second</letter>
-          <letter>table.third</letter>
-          <number>table.score</number>
-          <size>28</size>
-          <color>color.cyan</color>
-        </text>
-      </sprite>
-      <position><x>window.width.center - 60</x></position>
-      <variables>
-        <variable name="first">0</variable>
-        <variable name="second">0</variable>
-        <variable name="third">0</variable>
-        <variable name="score">0</variable>
-      </variables>
-      <member><position><y>tabletop</y></position></member>
-      <member><position><y>tabletop + tablerow</y></position></member>
-      <member><position><y>tabletop + tablerow * 2</y></position></member>
-      <member><position><y>tabletop + tablerow * 3</y></position></member>
-      <member><position><y>tabletop + tablerow * 4</y></position></member>
-    </group>
-    <!-- a score for the table, and the initials it is given -->
-    <object name="entry">
-      <sprite><text style="letter"><content>NEW BEST</content><color>color.yellow</color></text></sprite>
-      <position><x><centered /></x><y>120</y></position>
-      <variables>
-        <variable name="first">0</variable>
-        <variable name="second">0</variable>
-        <variable name="third">0</variable>
-        <variable name="score">0</variable>
-      </variables>
-    </object>
-    <object name="entryscore">
-      <sprite><text style="hud"><number>entry.score</number></text></sprite>
-      <position><x><centered /></x><y>210</y></position>
-    </object>
-    <object name="letter1">
-      <sprite><text style="letter"><letter>entry.first</letter></text></sprite>
-      <position><x>letters</x><y>300</y></position>
-    </object>
-    <object name="letter2">
-      <sprite><text style="letter"><letter>entry.second</letter></text></sprite>
-      <position><x>letters + letterstep</x><y>300</y></position>
-    </object>
-    <object name="letter3">
-      <sprite><text style="letter"><letter>entry.third</letter></text></sprite>
-      <position><x>letters + letterstep * 2</x><y>300</y></position>
-    </object>
-    <object name="howto">
-      <sprite><text><content>w and s, or up and down, change the letter; space for the next</content><size>18</size><color>color.lightgrey</color></text></sprite>
-      <position><x><centered /></x><y>440</y></position>
+    <!-- the ship hit: it bursts, slower, and only then is the ship lost -->
+    <object name="wreck">
+      <sprite name="a"><bitmap from="burst-a" /></sprite>
+      <sprite name="b"><bitmap from="burst-b" /></sprite>
+      <sprite name="c"><bitmap from="burst-c" /></sprite>
+      <sprite name="d"><bitmap from="burst-d" /></sprite>
+      <animation>
+        <seconds>0.15</seconds>
+        <once />
+        <frame sprite="a" />
+        <frame sprite="b" />
+        <frame sprite="c" />
+        <frame sprite="b" />
+        <frame sprite="c" />
+        <frame sprite="d"><seconds>0.4</seconds></frame>
+        <then>
+          <reveal object="ship" />
+          <dec variable="ship.lives" />
+          <inc variable="ship.lost" />
+          <despawn />
+        </then>
+      </animation>
+      <most>1</most>
     </object>
   </objects>
   <!-- a new game starts the score again, but not the best or the table -->
@@ -304,32 +236,146 @@
     <keep object="table" />
   </keeps>
   <states>
-    <!-- what the three states that ask for initials show -->
-    <shows name="initials">
-      <show object="entry" />
-      <show object="entryscore" />
-      <show object="letter1" />
-      <show object="letter2" />
-      <show object="letter3" />
-      <show object="howto" />
-    </shows>
-    <state name="mainmenu">
+    <objects>
+      <!-- the stars, drifting down behind everything, each colour blinking at its own pace -->
+      <map name="sky">
+        <tile><width>40</width><height>40</height></tile>
+        <position><x>0</x><y>0</y></position>
+        <row>..r.......w...</row>
+        <row>.......b......</row>
+        <row>y..........r..</row>
+        <row>.....w........</row>
+        <row>.b.........y..</row>
+        <row>........r.....</row>
+        <row>...y.........b</row>
+        <row>.........w....</row>
+        <row>r....b........</row>
+        <row>...........y..</row>
+        <row>..w....r......</row>
+        <row>.............w</row>
+        <row>.y.....b......</row>
+        <row>.........r....</row>
+        <row>....w.......b.</row>
+        <row>b.........y...</row>
+        <group name="stars">
+          <sprite name="on"><bitmap from="stars-on" /></sprite>
+          <sprite name="off"><bitmap from="stars-off" /></sprite>
+          <animation><seconds>0.4</seconds><frame sprite="on" /><frame sprite="on" /><frame sprite="off" /></animation>
+          <velocity><y>30</y></velocity>
+          <collisions>
+            <collision edge="bottom"><wrap /></collision>
+          </collisions>
+          <group name="redstars" char="r"><sprite name="on"><bitmap><color>color.red</color></bitmap></sprite></group>
+          <group name="bluestars" char="b">
+            <sprite name="on"><bitmap><color>color.cyan</color></bitmap></sprite>
+            <animation><seconds>0.3</seconds><frame sprite="on" /><frame sprite="off" /></animation>
+          </group>
+          <group name="yellowstars" char="y">
+            <sprite name="on"><bitmap><color>color.yellow</color></bitmap></sprite>
+            <animation><seconds>0.5</seconds><frame sprite="off" /><frame sprite="on" /><frame sprite="on" /></animation>
+          </group>
+          <group name="whitestars" char="w" />
+        </group>
+      </map>
+      <!-- the best score, at the top in the middle on the title and in play -->
+      <object name="best">
+        <sprite><text style="hud"><number>best.score</number><color>color.red</color></text></sprite>
+        <position><x><centered /></x><y>margin</y></position>
+        <variables><variable name="score">0</variable></variables>
+      </object>
+      <!-- the best five, on the title screen: three letters and a score each -->
+      <group name="table">
+        <sprite>
+          <text>
+            <letter>table.first</letter>
+            <letter>table.second</letter>
+            <letter>table.third</letter>
+            <number>table.score</number>
+            <size>28</size>
+            <color>color.cyan</color>
+          </text>
+        </sprite>
+        <position><x><subtract><value>window.width.center</value><value>60</value></subtract></x></position>
+        <variables>
+          <variable name="first">0</variable>
+          <variable name="second">0</variable>
+          <variable name="third">0</variable>
+          <variable name="score">0</variable>
+        </variables>
+        <member><position><y>tabletop</y></position></member>
+        <member><position><y><add><value>tabletop</value><value>tablerow</value></add></y></position></member>
+        <member><position><y>
+          <add>
+            <value>tabletop</value>
+            <value><multiply><value>tablerow</value><value>2</value></multiply></value>
+          </add>
+        </y></position></member>
+        <member><position><y>
+          <add>
+            <value>tabletop</value>
+            <value><multiply><value>tablerow</value><value>3</value></multiply></value>
+          </add>
+        </y></position></member>
+        <member><position><y>
+          <add>
+            <value>tabletop</value>
+            <value><multiply><value>tablerow</value><value>4</value></multiply></value>
+          </add>
+        </y></position></member>
+      </group>
+      <!-- a score for the table, and the initials it is given -->
+      <object name="entry">
+        <sprite><text style="letter"><content>NEW BEST</content><color>color.yellow</color></text></sprite>
+        <position><x><centered /></x><y>120</y></position>
+        <variables>
+          <variable name="first">0</variable>
+          <variable name="second">0</variable>
+          <variable name="third">0</variable>
+          <variable name="score">0</variable>
+        </variables>
+      </object>
+      <object name="entryscore">
+        <sprite><text style="hud"><number>entry.score</number></text></sprite>
+        <position><x><centered /></x><y>210</y></position>
+      </object>
+      <object name="letter1">
+        <sprite><text style="letter"><letter>entry.first</letter></text></sprite>
+        <position><x>letters</x><y>300</y></position>
+      </object>
+      <object name="letter2">
+        <sprite><text style="letter"><letter>entry.second</letter></text></sprite>
+        <position><x><add><value>letters</value><value>letterstep</value></add></x><y>300</y></position>
+      </object>
+      <object name="letter3">
+        <sprite><text style="letter"><letter>entry.third</letter></text></sprite>
+        <position><x>
+          <add>
+            <value>letters</value>
+            <value><multiply><value>letterstep</value><value>2</value></multiply></value>
+          </add>
+        </x><y>300</y></position>
+      </object>
+      <object name="howto">
+        <sprite><text><content>w and s, or up and down, change the letter; space for the next</content><size>18</size><color>color.lightgrey</color></text></sprite>
+        <position><x><centered /></x><y>440</y></position>
+      </object>
+    </objects>
+    <state name="title">
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>GALAXIAN</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 230</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-230</offset></centered></y></position>
         </object>
-        <object name="help">
-          <sprite><text><content>blue 30  purple 40  red 50  flagship 60</content><size>26</size><color>color.white</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 150</centered></y></position>
-        </object>
-        <object name="keys">
-          <sprite><text><content>a and d, or the arrows, to move; space to fire; p to pause</content><size>20</size><color>color.lightgrey</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 115</centered></y></position>
-        </object>
+        <group name="help">
+          <rows>2</rows>
+          <padding><y>35</y></padding>
+          <position><x><centered /></x><y><centered><offset>-150</offset></centered></y></position>
+          <row number="1"><sprite><text><content>blue 30  purple 40  red 50  flagship 60</content><size>26</size><color>color.white</color></text></sprite></row>
+          <row number="2"><sprite><text><content>a and d, or the arrows, to move; space to fire; pause key to pause</content><size>20</size><color>color.lightgrey</color></text></sprite></row>
+        </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start, 2 for two players</content><size>32</size></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 230</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>230</offset></centered></y></position>
         </object>
       </objects>
       <shows>
@@ -346,56 +392,39 @@
         <input button="num2">
           <push state="playing" />
           <play sound="start" />
-          <turns>
+          <alternate>
             <player state="player1" />
             <player state="player2" />
-          </turns>
+          </alternate>
         </input>
       </inputs>
-      <!-- left alone, the game shows itself being played -->
-      <timers>
-        <timer><after>10</after><demo /></timer>
-      </timers>
     </state>
     <state name="playing">
       <objects>
-        <object name="shot" class="projectile">
-          <sprite><rectangle><width>3</width><height>12</height><color>color.white</color></rectangle></sprite>
-          <position><x>0</x><y>0</y></position>
-          <velocity><y>-10</y></velocity>
-          <active>false</active>
-          <collisions>
-            <enabled>false</enabled>
-            <collision edge="all"><die /></collision>
-            <collision class="alien"><die /></collision>
-          </collisions>
-        </object>
         <object name="ship">
           <sprite>
-            <bitmap>
-              <row>.....*.....</row>
-              <row>....***....</row>
-              <row>....*r*....</row>
-              <row>.r.*****.r.</row>
-              <row>***********</row>
-              <row>*****.*****</row>
-              <row>**.......**</row>
-              <scale>pixel</scale>
-              <color>color.cyan</color>
-              <color char="r">color.red</color>
-            </bitmap>
+            <bitmap from="ship" />
           </sprite>
-          <position><x><centered /></x><y>window.bottom - ship.height - margin * 3</y></position>
+          <position><x><centered /></x><y>
+            <subtract>
+              <value>window.bottom</value>
+              <value>ship.height</value>
+              <value><multiply><value>margin</value><value>3</value></multiply></value>
+            </subtract>
+          </y></position>
           <collisions>
+            <!-- touched by its body, not the wingtips and the thin nose -->
+            <hitbox><horizontal>3</horizontal><top>6</top></hitbox>
             <collision edge="horizontal"><stick /></collision>
             <collision class="alien"><trigger action="lose" /></collision>
             <collision class="bomb"><trigger action="lose" /></collision>
           </collisions>
           <actions>
+            <!-- out of play while its wreck bursts, which then counts it lost -->
             <action name="lose">
-              <dec variable="ship.lives" />
-              <inc variable="ship.lost" />
+              <spawn object="wreck" />
               <play sound="boom" />
+              <die />
             </action>
             <action name="left"><move direction="left">step</move></action>
             <action name="right"><move direction="right">step</move></action>
@@ -416,7 +445,7 @@
         </object>
         <object name="lives">
           <sprite><text style="hud"><number>ship.lives</number><color>color.cyan</color></text></sprite>
-          <position><x>window.right - lives.width - margin</x><y>margin</y></position>
+          <position><x><right><offset>margin</offset></right></x><y>margin</y></position>
         </object>
       </objects>
       <scenes>
@@ -434,8 +463,12 @@
                   <die />
                   <inc variable="ship.score">self.pays</inc>
                   <play sound="hit" />
+                  <spawn object="boom" />
                 </collision>
-                <collision object="ship"><die /></collision>
+                <collision object="ship">
+                  <die />
+                  <spawn object="boom" />
+                </collision>
               </collisions>
               <actions>
                 <action name="dive">
@@ -451,23 +484,21 @@
               <group name="flagships">
                 <columns>2</columns>
                 <rows>1</rows>
-                <padding><x>gap * 3 - 11 * pixel</x><y>0</y></padding>
+                <padding><x>
+                  <subtract>
+                    <value><multiply><value>gap</value><value>3</value></multiply></value>
+                    <value><multiply><value>11</value><value>pixel</value></multiply></value>
+                  </subtract>
+                </x><y>0</y></padding>
                 <sprite>
-                  <bitmap>
-                    <row>...*...*...</row>
-                    <row>....***....</row>
-                    <row>..*******..</row>
-                    <row>.**.*r*.**.</row>
-                    <row>***********</row>
-                    <row>*.rrrrrrr.*</row>
-                    <row>*.*.....*.*</row>
-                    <row>...**.**...</row>
-                    <scale>pixel</scale>
-                    <color>color.yellow</color>
-                    <color char="r">color.red</color>
-                  </bitmap>
+                  <bitmap from="flagships" />
                 </sprite>
-                <position><x>left + gap * 3</x><y>70</y></position>
+                <position><x>
+                  <add>
+                    <value>left</value>
+                    <value><multiply><value>gap</value><value>3</value></multiply></value>
+                  </add>
+                </x><y>70</y></position>
                 <!-- a flagship dives with the two escorts nearest it -->
                 <actions>
                   <action name="dive">
@@ -482,21 +513,14 @@
                 <rows>1</rows>
                 <padding><x>apart</x><y>0</y></padding>
                 <sprite>
-                  <bitmap>
-                    <row>...*...*...</row>
-                    <row>..*******..</row>
-                    <row>.**.*b*.**.</row>
-                    <row>***********</row>
-                    <row>*.*******.*</row>
-                    <row>*.*.....*.*</row>
-                    <row>...*...*...</row>
-                    <row>..*.....*..</row>
-                    <scale>pixel</scale>
-                    <color>color.red</color>
-                    <color char="b">color.cyan</color>
-                  </bitmap>
+                  <bitmap from="escorts" />
                 </sprite>
-                <position><x>left + gap * 2</x><y>100</y></position>
+                <position><x>
+                  <add>
+                    <value>left</value>
+                    <value><multiply><value>gap</value><value>2</value></multiply></value>
+                  </add>
+                </x><y>100</y></position>
                 <variables><variable name="worth">50</variable><variable name="diving">100</variable><variable name="pays">50</variable></variables>
               </group>
               <group name="purples">
@@ -504,21 +528,9 @@
                 <rows>1</rows>
                 <padding><x>apart</x><y>0</y></padding>
                 <sprite>
-                  <bitmap>
-                    <row>..*.....*..</row>
-                    <row>...*...*...</row>
-                    <row>..*******..</row>
-                    <row>.**.*b*.**.</row>
-                    <row>***********</row>
-                    <row>*.*******.*</row>
-                    <row>*.*.....*.*</row>
-                    <row>...**.**...</row>
-                    <scale>pixel</scale>
-                    <color>color.magenta</color>
-                    <color char="b">color.cyan</color>
-                  </bitmap>
+                  <bitmap from="purples" />
                 </sprite>
-                <position><x>left + gap</x><y>130</y></position>
+                <position><x><add><value>left</value><value>gap</value></add></x><y>130</y></position>
                 <variables><variable name="worth">40</variable><variable name="diving">80</variable><variable name="pays">40</variable></variables>
               </group>
               <!-- three rows of blues, ten each -->
@@ -527,19 +539,7 @@
                 <rows>1</rows>
                 <padding><x>apart</x><y>0</y></padding>
                 <sprite>
-                  <bitmap>
-                    <row>....*.*....</row>
-                    <row>...*****...</row>
-                    <row>..**y*y**..</row>
-                    <row>.*********.</row>
-                    <row>*.*******.*</row>
-                    <row>*.*.....*.*</row>
-                    <row>..*.....*..</row>
-                    <row>.*.......*.</row>
-                    <scale>pixel</scale>
-                    <color>color.cyan</color>
-                    <color char="y">color.yellow</color>
-                  </bitmap>
+                  <bitmap from="blues" />
                 </sprite>
                 <variables><variable name="worth">30</variable><variable name="diving">60</variable><variable name="pays">30</variable></variables>
                 <!-- the top and bottom rows fly in from the left as one line of twenty -->
@@ -556,7 +556,7 @@
               <variables><variable name="way">1</variable></variables>
               <timers>
                 <timer><every>0.05</every><shift object="aliens"><x>sway.way</x></shift></timer>
-                <timer><every>2</every><set variable="sway.way">0 - sway.way</set></timer>
+                <timer><every>2</every><set variable="sway.way"><subtract><value>0</value><value>sway.way</value></subtract></set></timer>
               </timers>
             </object>
           </objects>
@@ -599,12 +599,12 @@
         <input><button>a</button><button>left</button><trigger object="ship" action="left" /></input>
         <input><button>d</button><button>right</button><trigger object="ship" action="right" /></input>
         <input button="space"><trigger object="ship" action="gun" /></input>
-        <input><button>p</button><button>escape</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <condition object="ship" variable="lives">
           <atmost>0</atmost>
-          <push state="gameover" />
+          <push state="over" />
         </condition>
         <!-- a ship lost: the other player's turn, with two -->
         <condition object="ship" variable="lost">
@@ -630,18 +630,18 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
-    <state name="gameover">
+    <state name="over">
       <objects>
         <object name="gameover">
           <sprite><text style="banner"><content>GAME OVER</content><size>80</size><color>color.red</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
         </object>
         <object name="again">
           <sprite><text style="prompt"><content>spacebar to go on</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 60</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>60</offset></centered></y></position>
         </object>
       </objects>
       <shows>
@@ -697,7 +697,12 @@
         </object>
       </objects>
       <shows>
-        <show set="initials" />
+        <show object="entry" />
+        <show object="entryscore" />
+        <show object="letter1" />
+        <show object="letter2" />
+        <show object="letter3" />
+        <show object="howto" />
       </shows>
       <inputs>
         <input><button>w</button><button>up</button><inc variable="entry.first" /></input>
@@ -707,7 +712,7 @@
     </state>
     <state name="initial2" from="initial1">
       <objects>
-        <object name="cursor"><position><x>letters + letterstep</x></position></object>
+        <object name="cursor"><position><x><add><value>letters</value><value>letterstep</value></add></x></position></object>
       </objects>
       <inputs>
         <input><button>w</button><button>up</button><inc variable="entry.second" /></input>
@@ -717,7 +722,12 @@
     </state>
     <state name="initial3" from="initial1">
       <objects>
-        <object name="cursor"><position><x>letters + letterstep * 2</x></position></object>
+        <object name="cursor"><position><x>
+          <add>
+            <value>letters</value>
+            <value><multiply><value>letterstep</value><value>2</value></multiply></value>
+          </add>
+        </x></position></object>
       </objects>
       <inputs>
         <input><button>w</button><button>up</button><inc variable="entry.third" /></input>
@@ -731,63 +741,161 @@
       </inputs>
     </state>
   </states>
-  <!-- the attract mode: a game played by itself, from the title after ten seconds -->
-  <demo>
-    <seed>20261016</seed>
-    <frames>1200</frames>
-    <press button="space">30</press>
-    <release button="space">34</release>
-    <press button="left">200</press>
-    <press button="space">240</press>
-    <release button="space">244</release>
-    <release button="left">260</release>
-    <press button="space">285</press>
-    <release button="space">289</release>
-    <press button="space">330</press>
-    <release button="space">334</release>
-    <press button="space">375</press>
-    <release button="space">379</release>
-    <press button="right">420</press>
-    <press button="space">420</press>
-    <release button="space">424</release>
-    <press button="space">465</press>
-    <release button="space">469</release>
-    <press button="space">510</press>
-    <release button="space">514</release>
-    <release button="right">540</release>
-    <press button="space">555</press>
-    <release button="space">559</release>
-    <press button="space">600</press>
-    <release button="space">604</release>
-    <press button="space">645</press>
-    <release button="space">649</release>
-    <press button="space">690</press>
-    <release button="space">694</release>
-    <press button="left">700</press>
-    <press button="space">735</press>
-    <release button="space">739</release>
-    <release button="left">760</release>
-    <press button="space">780</press>
-    <release button="space">784</release>
-    <press button="space">825</press>
-    <release button="space">829</release>
-    <press button="space">870</press>
-    <release button="space">874</release>
-    <press button="space">915</press>
-    <release button="space">919</release>
-    <press button="right">950</press>
-    <press button="space">960</press>
-    <release button="space">964</release>
-    <release button="right">990</release>
-    <press button="space">1005</press>
-    <release button="space">1009</release>
-    <press button="space">1050</press>
-    <release button="space">1054</release>
-    <press button="space">1095</press>
-    <release button="space">1099</release>
-    <press button="space">1140</press>
-    <release button="space">1144</release>
-    <press button="space">1185</press>
-    <release button="space">1189</release>
-  </demo>
+  <sounds>
+    <sound name="shoot" wave="square"><volume>0.15</volume><note pitch="E6" to="E5">0.06</note></sound>
+    <sound name="hit" wave="noise"><volume>0.3</volume><note pitch="2000" to="200">0.2</note></sound>
+    <sound name="dive" wave="triangle"><volume>0.2</volume><note pitch="C6" to="C4">0.4</note></sound>
+    <sound name="boom" wave="noise"><volume>0.4</volume><note pitch="3000" to="100">0.6</note></sound>
+    <!-- the swarm, humming under play -->
+    <sound name="swarm" wave="triangle">
+      <loop />
+      <volume>0.1</volume>
+      <note pitch="A2" to="C3">0.3</note>
+      <note pitch="C3" to="A2">0.3</note>
+    </sound>
+    <!-- a game starting -->
+    <sound name="start">
+      <volume>0.2</volume>
+      <part wave="square">
+        <note pitch="C5">0.12</note>
+        <note pitch="E5">0.12</note>
+        <note pitch="G5">0.12</note>
+        <note pitch="C6">0.12</note>
+        <note pitch="B5">0.12</note>
+        <note pitch="G5">0.12</note>
+        <note pitch="A5">0.12</note>
+        <note pitch="C6">0.36</note>
+      </part>
+      <part wave="triangle">
+        <note pitch="C3">0.48</note>
+        <note pitch="G2">0.48</note>
+        <note pitch="C3">0.36</note>
+      </part>
+    </sound>
+  </sounds>
+  <pictures>
+    <!-- a burst, four pictures: a flash, a ball, its pieces flying, the last sparks -->
+    <bitmap name="burst-a">
+      <row>.........</row>
+      <row>.........</row>
+      <row>....*....</row>
+      <row>...*o*...</row>
+      <row>..*ooo*..</row>
+      <row>...*o*...</row>
+      <row>....*....</row>
+      <row>.........</row>
+      <row>.........</row>
+      <scale>pixel</scale>
+      <color>color.yellow</color>
+      <color char="o">color.white</color>
+    </bitmap>
+    <bitmap name="burst-b">
+      <row>.........</row>
+      <row>..*...*..</row>
+      <row>...*o*...</row>
+      <row>..*ooo*..</row>
+      <row>.*oo.oo*.</row>
+      <row>..*ooo*..</row>
+      <row>...*o*...</row>
+      <row>..*...*..</row>
+      <row>.........</row>
+      <scale>pixel</scale>
+      <color>color.yellow</color>
+      <color char="o">color.red</color>
+    </bitmap>
+    <bitmap name="burst-c">
+      <row>*...*...*</row>
+      <row>.*.....*.</row>
+      <row>...o.o...</row>
+      <row>..o...o..</row>
+      <row>*.......*</row>
+      <row>..o...o..</row>
+      <row>...o.o...</row>
+      <row>.*.....*.</row>
+      <row>*...*...*</row>
+      <scale>pixel</scale>
+      <color>color.yellow</color>
+      <color char="o">color.red</color>
+    </bitmap>
+    <bitmap name="burst-d">
+      <row>o.......o</row>
+      <row>.........</row>
+      <row>.........</row>
+      <row>.........</row>
+      <row>....o....</row>
+      <row>.........</row>
+      <row>.........</row>
+      <row>.........</row>
+      <row>o.......o</row>
+      <scale>pixel</scale>
+      <color>color.red</color>
+      <color char="o">color.red</color>
+    </bitmap>
+    <bitmap name="stars-on"><row>*</row><scale>2</scale></bitmap>
+    <bitmap name="stars-off"><row>.</row><scale>2</scale></bitmap>
+    <bitmap name="ship">
+      <row>.....*.....</row>
+      <row>....***....</row>
+      <row>....*r*....</row>
+      <row>.r.*****.r.</row>
+      <row>***********</row>
+      <row>*****.*****</row>
+      <row>**.......**</row>
+      <scale>pixel</scale>
+      <color>color.cyan</color>
+      <color char="r">color.red</color>
+    </bitmap>
+    <bitmap name="flagships">
+      <row>...*...*...</row>
+      <row>....***....</row>
+      <row>..*******..</row>
+      <row>.**.*r*.**.</row>
+      <row>***********</row>
+      <row>*.rrrrrrr.*</row>
+      <row>*.*.....*.*</row>
+      <row>...**.**...</row>
+      <scale>pixel</scale>
+      <color>color.yellow</color>
+      <color char="r">color.red</color>
+    </bitmap>
+    <bitmap name="escorts">
+      <row>...*...*...</row>
+      <row>..*******..</row>
+      <row>.**.*b*.**.</row>
+      <row>***********</row>
+      <row>*.*******.*</row>
+      <row>*.*.....*.*</row>
+      <row>...*...*...</row>
+      <row>..*.....*..</row>
+      <scale>pixel</scale>
+      <color>color.red</color>
+      <color char="b">color.cyan</color>
+    </bitmap>
+    <bitmap name="purples">
+      <row>..*.....*..</row>
+      <row>...*...*...</row>
+      <row>..*******..</row>
+      <row>.**.*b*.**.</row>
+      <row>***********</row>
+      <row>*.*******.*</row>
+      <row>*.*.....*.*</row>
+      <row>...**.**...</row>
+      <scale>pixel</scale>
+      <color>color.magenta</color>
+      <color char="b">color.cyan</color>
+    </bitmap>
+    <bitmap name="blues">
+      <row>....*.*....</row>
+      <row>...*****...</row>
+      <row>..**y*y**..</row>
+      <row>.*********.</row>
+      <row>*.*******.*</row>
+      <row>*.*.....*.*</row>
+      <row>..*.....*..</row>
+      <row>.*.......*.</row>
+      <scale>pixel</scale>
+      <color>color.cyan</color>
+      <color char="y">color.yellow</color>
+    </bitmap>
+  </pictures>
 </game>

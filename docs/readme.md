@@ -8,7 +8,8 @@ A game is one XML file of tags, checked against `games/xgedef.xsd`. The engine r
 |---|---|---|
 | [reference/](reference/) | how the engine works **today**: every tag, what it does, the programs, the build | writing a game, or checking what a tag does. The code is the truth; these pages follow it |
 | [designs/](designs/00-designs.md) | one small file per topic: what was looked at, what was chosen and why, what is open | changing the language or the engine |
-| [agents/notes.md](agents/notes.md) | gotchas and working rules for anyone (or any AI) changing the code | before a change |
+| [agents/](agents/readme.md) | tips that are hard to work out from the code, for anyone (or any AI) changing it | before a change |
+| [plan.md](plan.md) | what is next: ordered tasks, each written to be picked up cold, then the backlog | choosing what to do next |
 
 New to it: read the tour below, then [the game file](reference/format.md), [objects](reference/objects.md), [collisions](reference/collisions.md), [input](reference/input.md) and [states](reference/states.md), with a game from [the shipped games](reference/games.md) open beside them.
 
@@ -19,42 +20,18 @@ New to it: read the tour below, then [the game file](reference/format.md), [obje
 - **Action**: a named thing an object can do (`up`, `fire`). Keys never live on objects. [Input](reference/input.md)
 - **State**: a mode of the game (title, playing, paused) that binds keys to actions and holds the state's own objects. [States](reference/states.md)
 - **Condition**: a test checked every frame ("no aliens left", "lives at 0") that runs commands when it holds. [Conditions](reference/states.md#conditions)
-- **Value**: a number, a name, or arithmetic on names (`window.right - margin`), worked out at load. [Values](reference/format.md#values)
+- **Value**: a number, a name, or an operation written as tags (`<subtract>`), worked out at load. [Values](reference/format.md#values)
 
-```xml
-<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
-  <window name="Bounce"><width>640</width><height>480</height></window>
-  <states>
-    <state name="playing">
-      <objects>
-        <object name="ball">
-          <sprite><circle><radius>8</radius></circle></sprite>
-          <position><x><centered /></x><y><centered /></y></position>
-          <velocity><x>3</x><y>2</y></velocity>
-          <collisions>
-            <collision edge="vertical"><bounce /></collision>
-            <collision edge="horizontal"><bounce /></collision>
-          </collisions>
-        </object>
-      </objects>
-      <inputs>
-        <input button="space"><reset /></input>
-      </inputs>
-    </state>
-  </states>
-</game>
-```
-
-A ball bounces round the window, and Space puts it back. Run a game with `output/Debug/xgecli <name>` ([programs](reference/programs.md)).
+A small whole game is in the [root readme](../readme.md#a-whole-game). Run a game with `output/Debug/xgecli <name>` ([programs](reference/programs.md)).
 
 ## The reference
 
 | Page | What is in it |
 |---|---|
 | [The game file](reference/format.md) | layout, the one rule, values and arithmetic, names, window, variables, styles, colours |
-| [Objects](reference/objects.md) | parts of an object, groups, columns and rows, the kit and `from=`, spawn and despawn |
-| [Pictures](reference/pictures.md) | shapes, lines, polygons, bitmaps, SVG, text, animation, looks, poses, turning, light, height |
-| [Sounds](reference/sounds.md) | notes, waves, music, playing |
+| [Objects](reference/objects.md) | parts of an object, groups, columns and rows, lines of text, pieces and `from=`, spawn and despawn |
+| [Pictures](reference/pictures.md) | shapes, lines, polygons, bitmaps, SVG, sheets, text, animation, looks, poses, turning, light, height |
+| [Sounds](reference/sounds.md) | notes, waves, music, recordings, playing |
 | [Collisions](reference/collisions.md) | rules, filters, how a touch is found, knocks |
 | [Commands](reference/commands.md) | every verb, where each may go, refused presses |
 | [Input](reference/input.md) | keys, mouse and pads, press/hold/release, held keys |
@@ -62,7 +39,7 @@ A ball bounces round the window, and Space puts it back. Run a game with `output
 | [States and scenes](reference/states.md) | the stack, scenes, conditions, keeps, best tables, turns, demos, computer players |
 | [Maps](reference/maps.md) | ASCII maps, mazes, cells for grid puzzles |
 | [Board games](reference/boards.md) | moves, the picker, marks, put pieces |
-| [Cards](reference/cards.md) | decks, piles, hands, patterns, tricks, the computer |
+| [Cards](reference/cards.md) | packs, holders, patterns, tricks, the computer |
 | [The shipped games](reference/games.md) | the key convention and each game, by kind |
 | [Programs](reference/programs.md) | `xgecli`, `xgegui`, generating a program |
 | [The engine](reference/engine.md) | loading, each frame, backends, building, source map |
@@ -72,20 +49,22 @@ A ball bounces round the window, and Space puts it back. Run a game with `output
 
 | Family | Words | Page |
 |---|---|---|
-| moving | `move`, `hop`, `jump`, `leap`, `land`, `climb`, `accelerate`, `thrust`, `turn`, `swing`, `reverse`, `stop`, `track` | [moving](reference/commands.md#moving) |
-| steering | `aim`, `chase`, `hunt`, `wander`, `follow`, `go` | [steering](reference/commands.md#steering), [paths](reference/timers.md#paths), [mazes](reference/maps.md#walking-a-map) |
+| moving | `move`, `hop`, `jump`, `land`, `climb`, `thrust`, `turn`, `swing`, `reverse`, `stop`, `track` | [moving](reference/commands.md#moving) |
+| steering | `aim`, `chase`, `hunt` (`search`), `wander`, `follow`, `go` | [steering](reference/commands.md#steering), [paths](reference/timers.md#paths), [mazes](reference/maps.md#walking-a-map) |
 | touching | `bounce`, `deflect`, `knock`, `stick`, `wrap`, `ride`, `carry`, `hole` | [touching](reference/commands.md#touching), [knocks](reference/collisions.md#knocks) |
-| in and out of play | `die`, `reveal`, `fire`, `release`, `drop`, `spawn`, `despawn`, `reset` | [in and out of play](reference/commands.md#in-and-out-of-play), [spawn](reference/objects.md#spawn-and-despawn) |
-| numbers | `inc`, `dec`, `set`, `copy`, `rank`, `formula` | [numbers](reference/commands.md#numbers), [arithmetic](reference/format.md#arithmetic-as-tags) |
-| look and sound | `become`, `play`, `silence`, `music` | [look and sound](reference/commands.md#look-and-sound) |
-| flow | `push`, `pop`, `enter`, `turns`, `pass`, `out`, `demo`, `trigger` | [flow](reference/commands.md#flow) |
-| cells | `settle`, `slide`, `cycle`, `fall`, `grow`, `split`, `send`, `through` | [cells](reference/maps.md#cells) |
-| boards | `pick`, `place`, `put`, `flank`, `moves` | [boards](reference/boards.md) |
-| cards | `deal`, `take`, `lay`, piles, patterns, tricks | [cards](reference/cards.md) |
+| in and out of play | `die`, `reveal`, `fire`, `drop`, `spawn` (`member`), `despawn`, `reset`; `waiting` (`ready`), `hidden` on an object | [in and out of play](reference/commands.md#in-and-out-of-play), [spawn](reference/objects.md#spawn-and-despawn) |
+| places | `centered` (`offset`), `left`, `right`, `top`, `bottom` (`offset` in from the side) in a position | [objects](reference/objects.md#parts-of-an-object) |
+| sight | `sees` (`past`) in a condition, `past` in a `light` | [conditions](reference/states.md#conditions), [light and dark](reference/pictures.md#light-and-dark) |
+| hitboxes | `hitbox` (`name=`, picked by a rule's `hitbox=` and `by=`) with `all`, `horizontal`, `vertical`, `top`, `bottom`, `left`, `right` (in from the picture's sides), or a `rectangle` or `circle` and `position` | [how a touch is found](reference/collisions.md#how-a-touch-is-found) |
+| numbers | `inc`, `dec`, `set`, `copy`, `rank`, the operations (`add`, `subtract`, `multiply`, `divide`, `clamp`, ...); `update="live"` on a variable, position or heading | [numbers](reference/commands.md#numbers), [arithmetic](reference/format.md#arithmetic-as-tags), [live numbers](reference/format.md#live-numbers-of-an-object) |
+| look and sound | `become`, `play`, `silence`, `music`; an empty `sprite name` (a look that draws nothing); `decay` in a sound or part; `stepped` in an animation | [look and sound](reference/commands.md#look-and-sound), [numbers only](reference/objects.md#numbers-only), [sounds](reference/sounds.md#parts-of-a-sound), [animation](reference/pictures.md#animation) |
+| flow | `push`, `pop`, `enter`, `alternate`, `pass`, `out`, `demo`, `trigger` (in a key, `otherwise`) | [flow](reference/commands.md#flow) |
+| rules in rules | a condition holding conditions (`first`, `otherwise`), a collision holding collisions (`first`), `sprite=` tests, `self`/`others`, `other` in a collision rule, `lowest`, `highest`, `unequal` | [conditions in conditions](reference/states.md#conditions-in-conditions), [collisions](reference/collisions.md) |
+| cells | `settle`, `slide` (`class=`), `cycle`, `fall`, `grow`, `split`, `send`, `through` | [cells](reference/maps.md#cells) |
+| cell puzzles | `shove`, `merge`, `undo`, `here`, `around` (`straight`, `alike`) in `count` and `trigger`; a `condition` in an action | [pushing, merging and counting](reference/maps.md#pushing-merging-and-counting), [conditions in an action](reference/commands.md#conditions-in-an-action) |
+| boards | `pick`, `place`, `put`, `flank`, `close`, `moves` | [boards](reference/boards.md) |
+| pictures | `pictures` (a `bitmap name` a sprite takes by `bitmap from`, a `drawing name` by `drawing from`, and each `sheet`), `cell`, `cells` (sprites, frames and cards cut from one picture) | [bitmaps](reference/pictures.md#bitmaps), [sheets](reference/pictures.md#sheets) |
+| holders | a pack's `columns name` and `rows name`, `holds`, `spread`, `accepts` (`condition` with `top`, `any`, `wild`, `empty`), `carry`, `top` (and live `top.` a variable), `order`, `counts`, `trick`, `score`, `picked`, `owns`, `starts`, `distribute`; in actions `send from into`, `order group`, `distribute`, `pick` (`most`), a holder's `become` | [holders](reference/cards.md#holders) |
+| players | `turns` on a group, `pass` (`member=`), a member's `think`, `owns` (`object=` or `class=`) and `team`, live `turn` | [players as a group](reference/states.md#players-as-a-group) |
+| patterns and tricks | `patterns` (`alike`, `run`), melds, tricks | [patterns](reference/cards.md#patterns), [tricks](reference/cards.md#tricks) |
 | computer | `computer`, `hold`, `think` | [computer players](reference/states.md#computer-players) |
-
-## Keeping the docs
-
-- **Docs move with code.** A change to a tag or to behaviour updates its reference page, and the matching design file, in the same commit.
-- **Reference pages say what is.** Short sections, a small example each, no history. Why it is so goes in the design file.
-- **Design files stay small** (about 6 KB): what was looked for, looked at, chosen and why, what is open. No diaries or test logs.

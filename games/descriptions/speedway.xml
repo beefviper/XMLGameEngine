@@ -11,7 +11,7 @@
   three laps wins.
 
   Player one drives with W A S D, player two with the arrows: up goes, down
-  brakes and backs, left and right steer. P or Escape pauses, Space starts
+  brakes and backs, left and right steer. Pause pauses, Space starts
   and plays again.
 
   It is the game the fourth stage of tables and tracks was made for:
@@ -37,33 +37,17 @@
   </window>
   <variables>
     <variable name="laps">3</variable>
-    <!-- a car: its push, its brake, its steering, its drag (top speed is about push / drag) and grip on tarmac -->
-    <variable name="push">0.14</variable>
-    <variable name="brake">0.08</variable>
-    <variable name="steer">3.5</variable>
-    <variable name="tarmac">0.03</variable>
-    <variable name="hold">0.3</variable>
+    <!-- a car: its push, its brake, its steering, its drag and grip on tarmac as half-lives in seconds (top speed is about push x drag / 0.69) -->
+    <variable name="push">504</variable>
+    <variable name="brake">288</variable>
+    <variable name="steer">210</variable>
+    <variable name="tarmac">0.38</variable>
+    <variable name="hold">0.032</variable>
   </variables>
-  <sounds>
-    <sound name="gate" wave="triangle"><volume>0.15</volume><note pitch="E5">0.04</note></sound>
-    <sound name="lap" wave="triangle">
-      <volume>0.35</volume>
-      <note pitch="C5">0.08</note>
-      <note pitch="G5">0.12</note>
-    </sound>
-    <sound name="bump"><volume>0.2</volume><note pitch="C3">0.04</note></sound>
-    <sound name="win" wave="triangle">
-      <volume>0.4</volume>
-      <note pitch="C5">0.1</note>
-      <note pitch="E5">0.1</note>
-      <note pitch="G5">0.1</note>
-      <note pitch="C6">0.3</note>
-    </sound>
-  </sounds>
   <paths>
     <!-- the outer lane, from the front of the grid, round and back -->
     <path name="outer">
-      <speed>3.4</speed>
+      <speed>204</speed>
       <step><x>120</x><y>0</y></step>
       <step><x>60</x><y>60</y></step>
       <step><x>0</x><y>240</y></step>
@@ -76,7 +60,7 @@
     </path>
     <!-- the inner lane: shorter, a little slower -->
     <path name="inner">
-      <speed>3.1</speed>
+      <speed>186</speed>
       <step><x>60</x><y>0</y></step>
       <step><x>40</x><y>40</y></step>
       <step><x>0</x><y>120</y></step>
@@ -94,7 +78,7 @@
     <style name="help"><size>24</size></style>
     <style name="hud"><size>22</size><color>color.lightgrey</color></style>
   </styles>
-  <kit>
+  <objects>
     <!-- What every car has: its laps, and the gates. Starting just past the
          finish line, the next gate is the second; crossing the finish line
          when the fourth was the last finishes a lap. -->
@@ -124,31 +108,31 @@
       <position><x>0</x><y>0</y></position>
       <collisions />
     </object>
-  </kit>
-  <objects>
-    <object name="again">
-      <sprite><text style="prompt"><content>spacebar to race again</content></text></sprite>
-      <position><x><centered /></x><y><centered>window.height.center + 90</centered></y></position>
-    </object>
   </objects>
   <states>
+    <objects>
+      <object name="again">
+        <sprite><text style="prompt"><content>spacebar to race again</content></text></sprite>
+        <position><x><centered /></x><y><centered><offset>90</offset></centered></y></position>
+      </object>
+    </objects>
     <state name="title">
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>SPEEDWAY</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 140</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-140</offset></centered></y></position>
         </object>
-        <object name="help">
-          <sprite><text style="help"><content>three laps against each other and two computer cars: keep off the grass, mind the oil</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
-        </object>
-        <object name="keys">
-          <sprite><text style="help"><content>player one w a s d, player two the arrows: up goes, down brakes, left and right steer</content><color>color.lightgrey</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 6</centered></y></position>
-        </object>
+        <group name="help">
+          <rows>2</rows>
+          <padding><y>46</y></padding>
+          <sprite><text style="help" /></sprite>
+          <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
+          <row number="1"><sprite><text><content>three laps against each other and two computer cars: keep off the grass, mind the oil</content></text></sprite></row>
+          <row number="2"><sprite><text><content>player one w a s d, player two the arrows: up goes, down brakes, left and right steer</content><color>color.lightgrey</color></text></sprite></row>
+        </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 110</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>110</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
@@ -198,15 +182,15 @@
           </group>
           <group name="grass" char="g">
             <sprite><rectangle><width>40</width><height>40</height><color>color.forestgreen</color></rectangle></sprite>
-            <surface><drag>0.08</drag><grip>0.3</grip></surface>
+            <surface><drag>0.14</drag><grip>0.032</grip></surface>
           </group>
           <group name="sand" char="s">
             <sprite><rectangle><width>40</width><height>40</height><color>color.brown</color></rectangle></sprite>
-            <surface><drag>0.14</drag><grip>0.5</grip></surface>
+            <surface><drag>0.077</drag><grip>0.017</grip></surface>
           </group>
           <group name="oil" char="o">
             <sprite><rectangle><width>40</width><height>40</height><color>color.black</color></rectangle></sprite>
-            <surface><drag>0.005</drag><grip>0.02</grip></surface>
+            <surface><drag>2.3</drag><grip>0.57</grip></surface>
           </group>
         </map>
 
@@ -225,19 +209,7 @@
         <!-- the players' cars -->
         <object name="p1" class="car" from="racer">
           <sprite>
-            <bitmap>
-              <row>.****.</row>
-              <row>******</row>
-              <row>.*ww*.</row>
-              <row>.****.</row>
-              <row>.****.</row>
-              <row>.*ww*.</row>
-              <row>******</row>
-              <row>.****.</row>
-              <scale>2</scale>
-              <color>color.orange</color>
-              <color char="w">color.lightgrey</color>
-            </bitmap>
+            <bitmap from="p1" />
           </sprite>
           <position><x><centered>440</centered></x><y><centered>160</centered></y></position>
           <drag>tarmac</drag>
@@ -250,26 +222,14 @@
           </collisions>
           <actions>
             <action name="go"><thrust>push</thrust></action>
-            <action name="brake"><thrust>0 - brake</thrust></action>
+            <action name="brake"><thrust><subtract><value>0</value><value>brake</value></subtract></thrust></action>
             <action name="left"><turn direction="counterclockwise">steer</turn></action>
             <action name="right"><turn direction="clockwise">steer</turn></action>
           </actions>
         </object>
         <object name="p2" class="car" from="racer">
           <sprite>
-            <bitmap>
-              <row>.****.</row>
-              <row>******</row>
-              <row>.*ww*.</row>
-              <row>.****.</row>
-              <row>.****.</row>
-              <row>.*ww*.</row>
-              <row>******</row>
-              <row>.****.</row>
-              <scale>2</scale>
-              <color>color.cyan</color>
-              <color char="w">color.lightgrey</color>
-            </bitmap>
+            <bitmap from="p2" />
           </sprite>
           <position><x><centered>440</centered></x><y><centered>200</centered></y></position>
           <drag>tarmac</drag>
@@ -282,7 +242,7 @@
           </collisions>
           <actions>
             <action name="go"><thrust>push</thrust></action>
-            <action name="brake"><thrust>0 - brake</thrust></action>
+            <action name="brake"><thrust><subtract><value>0</value><value>brake</value></subtract></thrust></action>
             <action name="left"><turn direction="counterclockwise">steer</turn></action>
             <action name="right"><turn direction="clockwise">steer</turn></action>
           </actions>
@@ -291,19 +251,7 @@
         <!-- the computer's cars, each on its lane's path, round and round -->
         <object name="cpu1" class="cpu" from="racer">
           <sprite>
-            <bitmap>
-              <row>.****.</row>
-              <row>******</row>
-              <row>.*ww*.</row>
-              <row>.****.</row>
-              <row>.****.</row>
-              <row>.*ww*.</row>
-              <row>******</row>
-              <row>.****.</row>
-              <scale>2</scale>
-              <color>color.magenta</color>
-              <color char="w">color.lightgrey</color>
-            </bitmap>
+            <bitmap from="cpu1" />
           </sprite>
           <position><x><centered>520</centered></x><y><centered>140</centered></y></position>
           <timers>
@@ -312,19 +260,7 @@
         </object>
         <object name="cpu2" class="cpu" from="racer">
           <sprite>
-            <bitmap>
-              <row>.****.</row>
-              <row>******</row>
-              <row>.*ww*.</row>
-              <row>.****.</row>
-              <row>.****.</row>
-              <row>.*ww*.</row>
-              <row>******</row>
-              <row>.****.</row>
-              <scale>2</scale>
-              <color>color.yellow</color>
-              <color char="w">color.lightgrey</color>
-            </bitmap>
+            <bitmap from="cpu2" />
           </sprite>
           <position><x><centered>520</centered></x><y><centered>220</centered></y></position>
           <timers>
@@ -341,7 +277,7 @@
         <input button="down"><trigger object="p2" action="brake" /></input>
         <input button="left"><trigger object="p2" action="left" /></input>
         <input button="right"><trigger object="p2" action="right" /></input>
-        <input><button>p</button><button>escape</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <!-- the first time round: on your marks -->
@@ -380,14 +316,14 @@
       <objects>
         <object name="ready">
           <sprite><text style="banner"><content>GET READY</content><color>color.white</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 20</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-20</offset></centered></y></position>
         </object>
       </objects>
       <shows>
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>p</button><button>escape</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <timers>
         <timer><after>1.5</after><pop /></timer>
@@ -405,7 +341,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>p</button><button>escape</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
 
@@ -415,7 +351,7 @@
           <sprite name="p1"><text style="banner"><content>PLAYER 1 WINS</content><color>color.orange</color></text></sprite>
           <sprite name="p2"><text style="banner"><content>PLAYER 2 WINS</content><color>color.cyan</color></text></sprite>
           <sprite name="cpu"><text style="banner"><content>THE COMPUTER WINS</content><color>color.magenta</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 90</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-90</offset></centered></y></position>
         </object>
       </objects>
       <shows>
@@ -427,4 +363,74 @@
       </inputs>
     </state>
   </states>
+  <sounds>
+    <sound name="gate" wave="triangle"><volume>0.15</volume><note pitch="E5">0.04</note></sound>
+    <sound name="lap" wave="triangle">
+      <volume>0.35</volume>
+      <note pitch="C5">0.08</note>
+      <note pitch="G5">0.12</note>
+    </sound>
+    <sound name="bump"><volume>0.2</volume><note pitch="C3">0.04</note></sound>
+    <sound name="win" wave="triangle">
+      <volume>0.4</volume>
+      <note pitch="C5">0.1</note>
+      <note pitch="E5">0.1</note>
+      <note pitch="G5">0.1</note>
+      <note pitch="C6">0.3</note>
+    </sound>
+  </sounds>
+  <pictures>
+    <bitmap name="p1">
+      <row>.****.</row>
+      <row>******</row>
+      <row>.*ww*.</row>
+      <row>.****.</row>
+      <row>.****.</row>
+      <row>.*ww*.</row>
+      <row>******</row>
+      <row>.****.</row>
+      <scale>2</scale>
+      <color>color.orange</color>
+      <color char="w">color.lightgrey</color>
+    </bitmap>
+    <bitmap name="p2">
+      <row>.****.</row>
+      <row>******</row>
+      <row>.*ww*.</row>
+      <row>.****.</row>
+      <row>.****.</row>
+      <row>.*ww*.</row>
+      <row>******</row>
+      <row>.****.</row>
+      <scale>2</scale>
+      <color>color.cyan</color>
+      <color char="w">color.lightgrey</color>
+    </bitmap>
+    <bitmap name="cpu1">
+      <row>.****.</row>
+      <row>******</row>
+      <row>.*ww*.</row>
+      <row>.****.</row>
+      <row>.****.</row>
+      <row>.*ww*.</row>
+      <row>******</row>
+      <row>.****.</row>
+      <scale>2</scale>
+      <color>color.magenta</color>
+      <color char="w">color.lightgrey</color>
+    </bitmap>
+    <bitmap name="cpu2">
+      <row>.****.</row>
+      <row>******</row>
+      <row>.*ww*.</row>
+      <row>.****.</row>
+      <row>.****.</row>
+      <row>.*ww*.</row>
+      <row>******</row>
+      <row>.****.</row>
+      <scale>2</scale>
+      <color>color.yellow</color>
+      <color char="w">color.lightgrey</color>
+    </bitmap>
+  </pictures>
 </game>

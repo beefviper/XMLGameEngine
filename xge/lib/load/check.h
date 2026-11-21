@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include "game/parts.h"
+
 #include "audio/sound.h"
 #include "game/command.h"
 #include "game/object.h"
@@ -23,7 +25,7 @@ namespace xge
 
 	// The object a command names: its exact name (aliens.3.2), the name
 	// from the file (aliens), or the name of its <group> - the same lookup
-	// Game::tryGetObject does while the game runs.
+	// Game::find does while the game runs.
 	const Object* findObject(const std::vector<Object>& objects, const std::string& name);
 
 	// Every name an object can be called by (its own and its group's),
@@ -41,12 +43,48 @@ namespace xge
 		const std::map<std::string, Path>& paths);
 
 	// The palettes the <become style>s can give each object, by its name,
-	// each style once (see game_expr::makePalettes).
+	// each style once (see Evaluator::makePalettes).
 	using WantedPalettes = std::map<std::string, std::vector<std::string>>;
+
+	// What a verb's check is given (Verb::check, verbs/verb.h): the game as
+	// it was built, and where the command is, for a message.
+	struct Checking
+	{
+		const std::vector<State>& states;
+		const std::vector<Object>& objects;
+		const std::vector<SoundDesc>& sounds;
+		const std::map<std::string, Path>& paths;
+		const std::vector<WrittenStyle>& styles;
+		WantedPalettes& wanted;
+		const std::string& where;
+		const Parts& parts;
+	};
+
+	// What the verbs' checks share. Each throws std::runtime_error saying
+	// where, what was written and what there is instead.
+	// `what` (a tag, as "<chase>") names an object, or an object or group.
+	void checkObject(const Checking& checking, const std::string& name, const std::string& what, const char* kind = "object");
+	// `what` (as "<push state=\"menu\" />") names a state.
+	void checkState(const Checking& checking, const std::string& name, const std::string& what);
+	// <play> or <silence> names a sound.
+	void checkSound(const Checking& checking, const char* verb, const std::string& name);
+	// <enter> or <reset> names a scene, or a way some scene has.
+	void checkScene(const Checking& checking, const char* verb, const std::string& scene, const std::string& way);
+	// A map of cells a command names (a spawn's or a send's into=).
+	void checkCellMap(const Checking& checking, const std::string& map, const std::string& tag);
+	// The variable a command names: owner.variable, the variable after the
+	// last dot (the owner may be a path).
+	void checkVariable(const Checking& checking, const VariableName& target, const std::string& tag);
+	// A command writing what its object follows (update="live"): it would
+	// be undone at the end of the frame, so it is a mistake.
+	void refuseFollowed(const Checking& checking, const VariableName& target, const std::string& tag);
+	// A <become style>: the style exists, and the object is to be given its
+	// palette.
+	void wantPalette(const Checking& checking, const Object& object, const std::string& style);
 
 	// Every command of every state, scene, object and path checked for the
 	// names it uses and for being in a place where it does something
-	// (ruleFor); hands back the palettes the <become style>s ask for.
-	WantedPalettes checkReferences(const std::vector<State>& states, const std::vector<Object>& objects, const std::vector<SoundDesc>& sounds,
-		const std::map<std::string, Path>& paths, const std::vector<RawStyle>& styles);
+	// (the places of its verb, verbs/verb.h); hands back the palettes the <become style>s ask for.
+	WantedPalettes checkReferences(const Parts& parts, const std::vector<State>& states, const std::vector<Object>& objects, const std::vector<SoundDesc>& sounds,
+		const std::map<std::string, Path>& paths, const std::vector<WrittenStyle>& styles);
 }

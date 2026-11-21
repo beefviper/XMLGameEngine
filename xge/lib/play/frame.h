@@ -5,7 +5,9 @@
 
 #pragma once
 
+#include "engine/resources.h"
 #include "game/object.h"
+#include "game/parts.h"
 #include "game/types.h"
 #include "play/geometry.h"
 
@@ -16,12 +18,6 @@
 
 namespace xge
 {
-	// What a game says should happen, asked by playOneFrame as each moment
-	// of the frame comes. The engine's Game answers by looking in the game
-	// file (its rules, states and conditions); a generated game answers with
-	// code written from the same file. Everything not asked here (the order,
-	// the moving, the sweep, the pull, the arithmetic) is playOneFrame's own,
-	// so the two cannot play differently except by answering differently.
 	// The tiles of a <map>, as play/maze walks them: which objects (by index)
 	// stand on each tile, row by row. Fixed for the whole game.
 	struct MazeGrid
@@ -39,6 +35,19 @@ namespace xge
 		}
 	};
 
+	// The length of a step when none is measured: a sixtieth of a second,
+	// as xgecli --frames and the tests play.
+	inline constexpr float kSixtieth = 1.0f / 60.0f;
+
+	// The longest step a window's loop plays: after a stall (the window
+	// dragged, a breakpoint) the game goes on from now with one step this
+	// long, rather than leaping through all the time it missed.
+	inline constexpr float kLongestStep = 0.25f;
+
+	// What a game says should happen, asked by playOneFrame as each moment
+	// of the frame comes: Game answers from the game file, a generated game
+	// with code written from it. Everything else (the order, the moving, the
+	// sweep, the pull) is playOneFrame's own, so the two play alike.
 	class FrameRules
 	{
 	public:
@@ -48,20 +57,36 @@ namespace xge
 		// dead. Nothing else is animated, moved, pulled or touched.
 		virtual bool inPlay(const Object& object) = 0;
 
-		// The timers that go off this frame, before anything moves, so a bomb
-		// dropped this frame starts falling this frame.
-		virtual void timers() {}
+		// Every object's handle and the parts it has (a Store each): what a
+		// pass reads of a part few objects have.
+		virtual Parts& parts() noexcept = 0;
 
-		// Every object on a path takes this frame's step of it.
-		virtual void followPaths() {}
+		// The game's pictures: where an object's own picture (a tether's
+		// line) is drawn again.
+		virtual Resources& resources() noexcept = 0;
+
+		// An animation that plays once has just ended on objects[index], which
+		// was showing looks[look] (0 for its one unnamed animation): its
+		// <then> commands run, before the timers.
+		virtual void animationEnded(std::size_t index, std::size_t look) { (void)index; (void)look; }
+		// An animation moved on to its picture `picture`, which has commands
+		// of its own: they run, as an object's timer's do.
+		virtual void frameCameUp(std::size_t index, std::size_t look, std::size_t picture) { (void)index; (void)look; (void)picture; }
+
+		// The timers that go off this step of `seconds`, before anything
+		// moves, so a bomb dropped this step starts falling this step.
+		virtual void timers(float seconds) { (void)seconds; }
+
+		// Every object on a path takes this step's share of it.
+		virtual void followPaths(float seconds) { (void)seconds; }
 
 		// Every held move on a map with <cells /> takes its next step, if
 		// one is due this frame.
-		virtual void cellMoves() {}
+		virtual void cellMoves(float seconds) { (void)seconds; }
 
 		// A thruster burns one unit of the object's `variable`; false
 		// (and nothing burnt) when there is none left.
-		virtual bool burn(Object& object, const std::string& variable)
+		virtual bool burn(Object& object, Name variable)
 		{
 			(void)object; (void)variable;
 			return true;
@@ -83,14 +108,28 @@ namespace xge
 		// partners).
 		virtual bool canCollide(const Object& a, const Object& b) { (void)a; (void)b; return false; }
 
+		// For each object, a number shared by those canCollide answers alike
+		// against anything, so that two of them are asked about once (a maze
+		// of dots). Empty: every object its own.
+		virtual std::vector<std::size_t> answerGroups(const std::vector<Object>& objects) { (void)objects; return {}; }
+
 		// Whether the object has any rule for touching others at all: two
 		// with none never answer each other, so canCollide is not asked.
 		virtual bool hasRules(const Object& object) { (void)object; return true; }
+
+		// Whether two that can collide touch by their whole pictures, a
+		// hitbox of either aside: a pair whose rules stand on, stop at or
+		// bounce off each other. Asked with canCollide, once a pair.
+		virtual bool touchesByPicture(const Object& a, const Object& b) { (void)a; (void)b; return false; }
 
 		// a and b have met during the move (contact.edgeOfSecond is the edge
 		// of b that was hit, so a's is the opposite one; the rest of the
 		// contact is where and how): both their rules for it.
 		virtual void touched(Object& a, Object& b, const Contact& contact) { (void)a; (void)b; (void)contact; }
+
+		// After everything has moved and what is carried is held: what
+		// follows something (update="live") worked out again.
+		virtual void follow() {}
 
 		// After everything has moved: the state's conditions.
 		virtual void conditions() {}
@@ -100,6 +139,9 @@ namespace xge
 		// two objects every frame: most pairs (a wall and a wall) never can.
 		// Asked again when `objects` is a different list.
 		const std::vector<std::vector<std::size_t>>& partners(const std::vector<Object>& objects);
+		// Beside each of partners' lists, whether that pair touches by its
+		// pictures (touchesByPicture); good once partners has been asked.
+		const std::vector<std::vector<char>>& partnersByPicture() const noexcept { return pictureLists; }
 
 		// The tiles of the <map> named `map` (empty when there is none),
 		// found once for the whole game: a map's pieces never move from
@@ -119,6 +161,7 @@ namespace xge
 		std::size_t keptCount{ 0 };
 		bool partnersFound{ false };
 		std::vector<std::vector<std::size_t>> partnerLists;
+		std::vector<std::vector<char>> pictureLists;
 		std::map<std::string, MazeGrid> mazeGrids;
 	};
 
@@ -127,5 +170,5 @@ namespace xge
 	// (before the move), the move (hops, then every pair that can touch swept
 	// through the frame and met in the order they meet), sticks, what is
 	// carried put where it is held, conditions.
-	void playOneFrame(std::vector<Object>& objects, const WindowDesc& window, FrameRules& rules);
+	void playOneFrame(std::vector<Object>& objects, const WindowDesc& window, FrameRules& rules, float seconds);
 }

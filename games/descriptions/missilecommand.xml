@@ -13,8 +13,7 @@
   more missiles and faster ones; survive them all to win, and lose every
   city to lose.
 
-  W A S D or the arrow keys move the sight, Space launches, P or Escape
-  pauses.
+  W A S D or the arrow keys move the sight, Space launches, Pause pauses.
 
   How it is written:
   * The three waves are the <scenes> of the playing state. The ground, the
@@ -24,14 +23,14 @@
   * The base <aim>s at the sight on a timer, all the time, so whatever it
     <fire>s goes straight at where the sight is. Each trail is a <tether>
     from the base to one counter-missile, in play while it is.
-  * A counter-missile that meets the sight <release>s a burst there, whose
-    <animation> grows and shrinks, tested by its pixels, and which
-    <despawn />s on a timer of its own.
+  * A counter-missile that meets the sight <spawn>s a burst there, whose
+    <animation> grows and shrinks <once />, tested by its pixels, and
+    <then> <despawn />s.
   * A missile is a streak of one line with a <heading>; it <chase>s the
     nearest city still standing, worked out again on a timer, and turns
     to point the way it goes. One that is done (shot down, or landed) is
     <reset /> above the sky, drawn again from its <random>s, and counted.
-  * The missiles are the kit's pool of eight, in three groups inside it:
+  * The missiles are a pool piece of eight, in three groups inside it:
     the first wave has the salvo of four, the second two more and the third
     the last two. Each wave is the one before it (from=) with its own speed
     and total, colour and way on; the last one's "cleared" condition wins.
@@ -47,11 +46,296 @@
   <variables>
     <variable name="margin">10</variable>
     <variable name="ground">450</variable>
-    <variable name="sightstep">5</variable>
-    <variable name="abmspeed">7</variable>
+    <variable name="sightstep">300</variable>
+    <variable name="abmspeed">420</variable>
     <!-- how high above the sky a missile starts, at most -->
     <variable name="sky">600</variable>
   </variables>
+  <styles>
+    <style name="banner"><size>100</size><color>color.red</color></style>
+    <style name="prompt"><size>40</size><color>color.white</color></style>
+    <style name="hud"><size>24</size><color>color.lightgrey</color></style>
+  </styles>
+  <objects>
+    <!-- the missiles: streaks that start somewhere above the sky and make for the nearest city, at the wave's speed -->
+    <group name="missiles" class="missile">
+      <sprite><line><from><x>0</x><y>0</y></from><to><x>0</x><y>14</y></to><color>color.red</color><thickness>2</thickness></line></sprite>
+      <position>
+        <x><random><min>margin</min><max><subtract><value>window.right</value><value>margin</value></subtract></max></random></x>
+        <y><random><min><negate><value>sky</value></negate></min><max>-10</max></random></y>
+      </position>
+      <velocity><y>speed</y></velocity>
+      <heading>180</heading>
+      <collisions>
+        <type>pixel</type>
+        <collision class="city"><inc variable="status.spent" /><reset /></collision>
+        <collision class="burst">
+          <inc variable="status.score">25</inc>
+          <inc variable="status.spent" />
+          <reset />
+        </collision>
+        <collision edge="bottom"><inc variable="status.spent" /><reset /></collision>
+      </collisions>
+      <timers>
+        <timer><every>0.25</every><chase object="cities">speed</chase></timer>
+      </timers>
+      <group name="salvo"><member /><member /><member /><member /></group>
+      <group name="more"><member /><member /></group>
+      <group name="most"><member /><member /></group>
+    </group>
+    <!-- the counter-missiles, three in the air at once; each bursts where it meets the sight -->
+    <object name="abm" class="abm">
+      <sprite><rectangle><width>4</width><height>4</height></rectangle></sprite>
+      <velocity><y><negate><value>abmspeed</value></negate></y></velocity>
+      <most>3</most>
+      <collisions>
+        <collision edge="all"><despawn /></collision>
+        <collision object="sight">
+          <spawn object="burst" />
+          <play sound="burst" />
+          <despawn />
+        </collision>
+      </collisions>
+    </object>
+    <!-- a burst: a fireball that swells, flashes and shrinks, then is gone -->
+    <object name="burst" class="burst">
+      <sprite name="small">
+        <bitmap from="burst-small" />
+      </sprite>
+      <sprite name="middle">
+        <bitmap from="burst-middle" />
+      </sprite>
+      <sprite name="full">
+        <bitmap from="burst-full" />
+      </sprite>
+      <animation>
+        <seconds>0.15</seconds>
+        <once />
+        <frame sprite="small" />
+        <frame sprite="middle" />
+        <frame sprite="full"><seconds>0.3</seconds></frame>
+        <frame sprite="middle" />
+        <then><despawn /></then>
+      </animation>
+      <most>3</most>
+      <collisions>
+        <type>pixel</type>
+      </collisions>
+    </object>
+  </objects>
+  <states>
+    <state name="title">
+      <objects>
+        <object name="title">
+          <sprite><text style="banner"><content>MISSILE COMMAND</content><size>72</size></text></sprite>
+          <position><x><centered /></x><y><centered><offset>-120</offset></centered></y></position>
+        </object>
+        <object name="keys">
+          <sprite><text style="hud"><content>w a s d or the arrows move the sight, space launches</content><size>20</size></text></sprite>
+          <position><x><centered /></x><y><centered /></y></position>
+        </object>
+        <object name="start">
+          <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
+          <position><x><centered /></x><y><centered><offset>100</offset></centered></y></position>
+        </object>
+      </objects>
+      <inputs>
+        <input button="space"><push state="playing" /><play sound="wave" /></input>
+      </inputs>
+    </state>
+
+    <state name="playing">
+      <objects>
+        <!-- the score, the wave, and the missiles done with in this wave; never drawn -->
+        <object name="status">
+          <variables>
+            <variable name="score">0</variable>
+            <variable name="wave">1</variable>
+            <variable name="spent">0</variable>
+          </variables>
+        </object>
+        <object name="ground">
+          <sprite><rectangle><width>window.right</width><height><subtract><value>window.bottom</value><value>ground</value></subtract></height><color>color.yellow</color></rectangle></sprite>
+          <position><x>0</x><y>ground</y></position>
+        </object>
+        <!-- six cities, three either side of the base -->
+        <group name="cities" class="city">
+          <sprite>
+            <bitmap from="cities" />
+          </sprite>
+          <position><y><subtract><value>ground</value><value>14</value></subtract></y></position>
+          <collisions>
+            <collision class="missile"><play sound="city" /><die /></collision>
+          </collisions>
+          <member><position><x>50</x></position></member>
+          <member><position><x>130</x></position></member>
+          <member><position><x>210</x></position></member>
+          <member><position><x>402</x></position></member>
+          <member><position><x>482</x></position></member>
+          <member><position><x>562</x></position></member>
+        </group>
+        <!-- the base: always aimed at the sight -->
+        <object name="base">
+          <sprite>
+            <bitmap from="base" />
+          </sprite>
+          <position><x><centered /></x><y><subtract><value>ground</value><value>base.height</value></subtract></y></position>
+          <actions>
+            <action name="launch">
+              <fire object="abm" />
+              <play sound="launch" />
+            </action>
+          </actions>
+          <timers>
+            <timer><every>0.05</every><aim object="sight" /></timer>
+          </timers>
+        </object>
+        <!-- the counter-missiles' trails, back to the base -->
+        <object name="trail1"><sprite><tether from="base" to="abm.1"><color>color.blue</color></tether></sprite><position><x>0</x><y>0</y></position></object>
+        <object name="trail2"><sprite><tether from="base" to="abm.2"><color>color.blue</color></tether></sprite><position><x>0</x><y>0</y></position></object>
+        <object name="trail3"><sprite><tether from="base" to="abm.3"><color>color.blue</color></tether></sprite><position><x>0</x><y>0</y></position></object>
+        <!-- the sight the player steers -->
+        <object name="sight">
+          <sprite>
+            <bitmap from="sight" />
+          </sprite>
+          <position><x><centered /></x><y><centered /></y></position>
+          <collisions>
+            <collision edge="all"><stick /></collision>
+          </collisions>
+          <actions>
+            <action name="up"><move direction="up">sightstep</move></action>
+            <action name="down"><move direction="down">sightstep</move></action>
+            <action name="left"><move direction="left">sightstep</move></action>
+            <action name="right"><move direction="right">sightstep</move></action>
+          </actions>
+        </object>
+        <object name="score">
+          <sprite><text style="hud"><number>status.score</number><size>28</size><color>color.red</color></text></sprite>
+          <position><x>margin</x><y>margin</y></position>
+        </object>
+        <object name="label">
+          <sprite><text style="hud"><content>WAVE</content><number>status.wave</number></text></sprite>
+          <position><x><right><offset>margin</offset></right></x><y>margin</y></position>
+        </object>
+      </objects>
+      <scenes>
+
+        <!-- four missiles at a time, twelve in all -->
+        <scene name="wave1">
+          <ways><way name="next" scene="wave2" /></ways>
+          <variables>
+            <variable name="speed">48</variable>
+            <variable name="total">12</variable>
+          </variables>
+          <objects>
+            <group name="missiles" />
+            <group name="more"><waiting /></group>
+            <group name="most"><waiting /></group>
+          </objects>
+          <conditions>
+            <condition name="cleared" object="status" variable="spent">
+              <atleast>total</atleast>
+              <dec variable="status.spent">total</dec>
+              <inc variable="status.wave" />
+              <play sound="wave" />
+              <enter way="next" />
+            </condition>
+          </conditions>
+        </scene>
+
+        <!-- six at a time, eighteen in all -->
+        <scene name="wave2" from="wave1">
+          <ways><way name="next" scene="wave3" /></ways>
+          <variables>
+            <variable name="speed">66</variable>
+            <variable name="total">18</variable>
+          </variables>
+          <objects>
+            <group name="missiles">
+              <sprite><line><from><x>0</x><y>0</y></from><to><x>0</x><y>14</y></to><color>color.magenta</color><thickness>2</thickness></line></sprite>
+            </group>
+            <group name="more"><ready /></group>
+          </objects>
+        </scene>
+
+        <!-- all eight at a time, twenty-four in all; clearing it wins -->
+        <scene name="wave3" from="wave2">
+          <variables>
+            <variable name="speed">84</variable>
+            <variable name="total">24</variable>
+          </variables>
+          <objects>
+            <group name="missiles">
+              <sprite><line><from><x>0</x><y>0</y></from><to><x>0</x><y>14</y></to><color>color.green</color><thickness>2</thickness></line></sprite>
+            </group>
+            <group name="most"><ready /></group>
+          </objects>
+          <conditions>
+            <condition name="cleared" object="status" variable="spent">
+              <atleast>total</atleast>
+              <play sound="wave" />
+              <become object="over.message" sprite="won" />
+              <push state="over" />
+            </condition>
+          </conditions>
+        </scene>
+      </scenes>
+      <inputs>
+        <input><button>w</button><button>up</button><trigger object="sight" action="up" /></input>
+        <input><button>s</button><button>down</button><trigger object="sight" action="down" /></input>
+        <input><button>a</button><button>left</button><trigger object="sight" action="left" /></input>
+        <input><button>d</button><button>right</button><trigger object="sight" action="right" /></input>
+        <input button="space"><trigger object="base" action="launch" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
+      </inputs>
+      <conditions>
+        <!-- every city gone -->
+        <condition class="city">
+          <remaining>0</remaining>
+          <play sound="theend" />
+          <become object="over.message" sprite="lost" />
+          <push state="over" />
+        </condition>
+      </conditions>
+    </state>
+
+    <state name="paused">
+      <objects>
+        <object name="paused">
+          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <position><x><centered /></x><y><centered /></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
+      </inputs>
+    </state>
+
+    <state name="over">
+      <objects>
+        <object name="message">
+          <sprite name="won"><text style="banner"><content>YOU WIN</content><color>color.green</color></text></sprite>
+          <sprite name="lost"><text style="banner"><content>THE END</content></text></sprite>
+          <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
+        </object>
+        <object name="again">
+          <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
+          <position><x><centered /></x><y><centered><offset>70</offset></centered></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input button="space"><reset /></input>
+      </inputs>
+    </state>
+
+  </states>
   <sounds>
     <sound name="launch" wave="noise">
       <volume>0.2</volume>
@@ -77,359 +361,76 @@
       <note pitch="C4" to="C2">1.5</note>
     </sound>
   </sounds>
-  <styles>
-    <style name="banner"><size>100</size><color>color.red</color></style>
-    <style name="prompt"><size>40</size><color>color.white</color></style>
-    <style name="hud"><size>24</size><color>color.lightgrey</color></style>
-  </styles>
-  <kit>
-    <!-- the missiles: streaks that start somewhere above the sky and make for the nearest city, at the wave's speed -->
-    <group name="missiles" class="missile">
-      <sprite><line><from><x>0</x><y>0</y></from><to><x>0</x><y>14</y></to><color>color.red</color><thickness>2</thickness></line></sprite>
-      <position>
-        <x><random><min>margin</min><max>window.right - margin</max></random></x>
-        <y><random><min>-sky</min><max>-10</max></random></y>
-      </position>
-      <velocity><y>speed</y></velocity>
-      <heading>180</heading>
-      <collisions>
-        <type>pixel</type>
-        <collision class="city"><inc variable="status.spent" /><reset /></collision>
-        <collision class="burst">
-          <inc variable="status.score">25</inc>
-          <inc variable="status.spent" />
-          <reset />
-        </collision>
-        <collision edge="bottom"><inc variable="status.spent" /><reset /></collision>
-      </collisions>
-      <timers>
-        <timer><every>0.25</every><chase object="cities">speed</chase></timer>
-      </timers>
-      <group name="salvo"><member /><member /><member /><member /></group>
-      <group name="more"><member /><member /></group>
-      <group name="most"><member /><member /></group>
-    </group>
-    <!-- the counter-missiles, three in the air at once; each bursts where it meets the sight -->
-    <object name="abm" class="abm">
-      <sprite><rectangle><width>4</width><height>4</height></rectangle></sprite>
-      <velocity><y>-abmspeed</y></velocity>
-      <most>3</most>
-      <collisions>
-        <collision edge="all"><despawn /></collision>
-        <collision object="sight">
-          <release object="burst" />
-          <play sound="burst" />
-          <despawn />
-        </collision>
-      </collisions>
-    </object>
-    <!-- a burst: a fireball that swells, flashes and shrinks, then is gone -->
-    <object name="burst" class="burst">
-      <sprite name="small">
-        <bitmap>
-          <row>.........</row>
-          <row>.........</row>
-          <row>.........</row>
-          <row>...***...</row>
-          <row>...***...</row>
-          <row>...***...</row>
-          <row>.........</row>
-          <row>.........</row>
-          <row>.........</row>
-          <scale>6</scale>
-          <color>color.white</color>
-        </bitmap>
-      </sprite>
-      <sprite name="middle">
-        <bitmap>
-          <row>.........</row>
-          <row>...***...</row>
-          <row>..*****..</row>
-          <row>.***o***.</row>
-          <row>.**ooo**.</row>
-          <row>.***o***.</row>
-          <row>..*****..</row>
-          <row>...***...</row>
-          <row>.........</row>
-          <scale>6</scale>
-          <color>color.orange</color>
-          <color char="o">color.yellow</color>
-        </bitmap>
-      </sprite>
-      <sprite name="full">
-        <bitmap>
-          <row>...***...</row>
-          <row>.*******.</row>
-          <row>.**ooo**.</row>
-          <row>**ooooo**</row>
-          <row>**ooooo**</row>
-          <row>**ooooo**</row>
-          <row>.**ooo**.</row>
-          <row>.*******.</row>
-          <row>...***...</row>
-          <scale>6</scale>
-          <color>color.red</color>
-          <color char="o">color.magenta</color>
-        </bitmap>
-      </sprite>
-      <animation>
-        <interval>0.15</interval>
-        <frame sprite="small" />
-        <frame sprite="middle" />
-        <frame sprite="full" />
-        <frame sprite="full" />
-        <frame sprite="middle" />
-      </animation>
-      <most>3</most>
-      <collisions>
-        <type>pixel</type>
-      </collisions>
-      <timers>
-        <timer><every>0.75</every><despawn /></timer>
-      </timers>
-    </object>
-  </kit>
-  <states>
-    <state name="title">
-      <objects>
-        <object name="title">
-          <sprite><text style="banner"><content>MISSILE COMMAND</content><size>72</size></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 120</centered></y></position>
-        </object>
-        <object name="keys">
-          <sprite><text style="hud"><content>w a s d or the arrows move the sight, space launches</content><size>20</size></text></sprite>
-          <position><x><centered /></x><y><centered /></y></position>
-        </object>
-        <object name="start">
-          <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 100</centered></y></position>
-        </object>
-      </objects>
-      <inputs>
-        <input button="space"><push state="playing" /><play sound="wave" /></input>
-      </inputs>
-    </state>
-
-    <state name="playing">
-      <objects>
-        <!-- the score, the wave, and the missiles done with in this wave; never drawn -->
-        <object name="status">
-          <variables>
-            <variable name="score">0</variable>
-            <variable name="wave">1</variable>
-            <variable name="spent">0</variable>
-          </variables>
-        </object>
-        <object name="ground">
-          <sprite><rectangle><width>window.right</width><height>window.bottom - ground</height><color>color.yellow</color></rectangle></sprite>
-          <position><x>0</x><y>ground</y></position>
-        </object>
-        <!-- six cities, three either side of the base -->
-        <group name="cities" class="city">
-          <sprite>
-            <bitmap>
-              <row>....*.........</row>
-              <row>....*....*....</row>
-              <row>.*..**...*..*.</row>
-              <row>.*.***..***.*.</row>
-              <row>**********.***</row>
-              <row>**************</row>
-              <row>**************</row>
-              <scale>2</scale>
-              <color>color.cyan</color>
-            </bitmap>
-          </sprite>
-          <position><y>ground - 14</y></position>
-          <collisions>
-            <collision class="missile"><play sound="city" /><die /></collision>
-          </collisions>
-          <member><position><x>50</x></position></member>
-          <member><position><x>130</x></position></member>
-          <member><position><x>210</x></position></member>
-          <member><position><x>402</x></position></member>
-          <member><position><x>482</x></position></member>
-          <member><position><x>562</x></position></member>
-        </group>
-        <!-- the base: always aimed at the sight -->
-        <object name="base">
-          <sprite>
-            <bitmap>
-              <row>.....**.....</row>
-              <row>.....**.....</row>
-              <row>....****....</row>
-              <row>..********..</row>
-              <row>************</row>
-              <scale>2</scale>
-            </bitmap>
-          </sprite>
-          <position><x><centered /></x><y>ground - base.height</y></position>
-          <actions>
-            <action name="launch">
-              <fire object="abm" />
-              <play sound="launch" />
-            </action>
-          </actions>
-          <timers>
-            <timer><every>0.05</every><aim object="sight" /></timer>
-          </timers>
-        </object>
-        <!-- the counter-missiles' trails, back to the base -->
-        <object name="trail1"><sprite><tether from="base" to="abm.1"><color>color.blue</color></tether></sprite><position><x>0</x><y>0</y></position></object>
-        <object name="trail2"><sprite><tether from="base" to="abm.2"><color>color.blue</color></tether></sprite><position><x>0</x><y>0</y></position></object>
-        <object name="trail3"><sprite><tether from="base" to="abm.3"><color>color.blue</color></tether></sprite><position><x>0</x><y>0</y></position></object>
-        <!-- the sight the player steers -->
-        <object name="sight">
-          <sprite>
-            <bitmap>
-              <row>...*...</row>
-              <row>...*...</row>
-              <row>.......</row>
-              <row>**...**</row>
-              <row>.......</row>
-              <row>...*...</row>
-              <row>...*...</row>
-              <scale>2</scale>
-            </bitmap>
-          </sprite>
-          <position><x><centered /></x><y><centered /></y></position>
-          <collisions>
-            <collision edge="all"><stick /></collision>
-          </collisions>
-          <actions>
-            <action name="up"><move direction="up">sightstep</move></action>
-            <action name="down"><move direction="down">sightstep</move></action>
-            <action name="left"><move direction="left">sightstep</move></action>
-            <action name="right"><move direction="right">sightstep</move></action>
-          </actions>
-        </object>
-        <object name="score">
-          <sprite><text style="hud"><number>status.score</number><size>28</size><color>color.red</color></text></sprite>
-          <position><x>margin</x><y>margin</y></position>
-        </object>
-        <object name="label">
-          <sprite><text style="hud"><content>WAVE</content><number>status.wave</number></text></sprite>
-          <position><x>window.right - label.width - margin</x><y>margin</y></position>
-        </object>
-      </objects>
-      <scenes>
-
-        <!-- four missiles at a time, twelve in all -->
-        <scene name="wave1">
-          <ways><way name="next" scene="wave2" /></ways>
-          <variables>
-            <variable name="speed">0.8</variable>
-            <variable name="total">12</variable>
-          </variables>
-          <objects>
-            <group name="missiles" />
-            <group name="more"><active>false</active></group>
-            <group name="most"><active>false</active></group>
-          </objects>
-          <conditions>
-            <condition name="cleared" object="status" variable="spent">
-              <atleast>total</atleast>
-              <dec variable="status.spent">total</dec>
-              <inc variable="status.wave" />
-              <play sound="wave" />
-              <enter way="next" />
-            </condition>
-          </conditions>
-        </scene>
-
-        <!-- six at a time, eighteen in all -->
-        <scene name="wave2" from="wave1">
-          <ways><way name="next" scene="wave3" /></ways>
-          <variables>
-            <variable name="speed">1.1</variable>
-            <variable name="total">18</variable>
-          </variables>
-          <objects>
-            <group name="missiles">
-              <sprite><line><from><x>0</x><y>0</y></from><to><x>0</x><y>14</y></to><color>color.magenta</color><thickness>2</thickness></line></sprite>
-            </group>
-            <group name="more"><active>true</active></group>
-          </objects>
-        </scene>
-
-        <!-- all eight at a time, twenty-four in all; clearing it wins -->
-        <scene name="wave3" from="wave2">
-          <variables>
-            <variable name="speed">1.4</variable>
-            <variable name="total">24</variable>
-          </variables>
-          <objects>
-            <group name="missiles">
-              <sprite><line><from><x>0</x><y>0</y></from><to><x>0</x><y>14</y></to><color>color.green</color><thickness>2</thickness></line></sprite>
-            </group>
-            <group name="most"><active>true</active></group>
-          </objects>
-          <conditions>
-            <condition name="cleared" object="status" variable="spent">
-              <atleast>total</atleast>
-              <play sound="wave" />
-              <push state="youwin" />
-            </condition>
-          </conditions>
-        </scene>
-      </scenes>
-      <inputs>
-        <input><button>w</button><button>up</button><trigger object="sight" action="up" /></input>
-        <input><button>s</button><button>down</button><trigger object="sight" action="down" /></input>
-        <input><button>a</button><button>left</button><trigger object="sight" action="left" /></input>
-        <input><button>d</button><button>right</button><trigger object="sight" action="right" /></input>
-        <input button="space"><trigger object="base" action="launch" /></input>
-        <input><button>p</button><button>escape</button><push state="paused" /></input>
-      </inputs>
-      <conditions>
-        <!-- every city gone -->
-        <condition class="city">
-          <remaining>0</remaining>
-          <play sound="theend" />
-          <push state="theend" />
-        </condition>
-      </conditions>
-    </state>
-
-    <state name="paused">
-      <objects>
-        <object name="paused">
-          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
-          <position><x><centered /></x><y><centered /></y></position>
-        </object>
-      </objects>
-      <shows>
-        <show state="playing" />
-      </shows>
-      <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><pop /></input>
-      </inputs>
-    </state>
-
-    <state name="youwin">
-      <objects>
-        <object name="message">
-          <sprite><text style="banner"><content>YOU WIN</content><color>color.green</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
-        </object>
-        <object name="again">
-          <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
-        </object>
-      </objects>
-      <shows>
-        <show state="playing" />
-      </shows>
-      <inputs>
-        <input button="space"><reset /></input>
-      </inputs>
-    </state>
-
-    <state name="theend" from="youwin">
-      <objects>
-        <object name="message">
-          <sprite><text style="banner"><content>THE END</content></text></sprite>
-        </object>
-      </objects>
-    </state>
-  </states>
+  <pictures>
+    <bitmap name="burst-small">
+      <row>.........</row>
+      <row>.........</row>
+      <row>.........</row>
+      <row>...***...</row>
+      <row>...***...</row>
+      <row>...***...</row>
+      <row>.........</row>
+      <row>.........</row>
+      <row>.........</row>
+      <scale>6</scale>
+      <color>color.white</color>
+    </bitmap>
+    <bitmap name="burst-middle">
+      <row>.........</row>
+      <row>...***...</row>
+      <row>..*****..</row>
+      <row>.***o***.</row>
+      <row>.**ooo**.</row>
+      <row>.***o***.</row>
+      <row>..*****..</row>
+      <row>...***...</row>
+      <row>.........</row>
+      <scale>6</scale>
+      <color>color.orange</color>
+      <color char="o">color.yellow</color>
+    </bitmap>
+    <bitmap name="burst-full">
+      <row>...***...</row>
+      <row>.*******.</row>
+      <row>.**ooo**.</row>
+      <row>**ooooo**</row>
+      <row>**ooooo**</row>
+      <row>**ooooo**</row>
+      <row>.**ooo**.</row>
+      <row>.*******.</row>
+      <row>...***...</row>
+      <scale>6</scale>
+      <color>color.red</color>
+      <color char="o">color.magenta</color>
+    </bitmap>
+    <bitmap name="cities">
+      <row>....*.........</row>
+      <row>....*....*....</row>
+      <row>.*..**...*..*.</row>
+      <row>.*.***..***.*.</row>
+      <row>**********.***</row>
+      <row>**************</row>
+      <row>**************</row>
+      <scale>2</scale>
+      <color>color.cyan</color>
+    </bitmap>
+    <bitmap name="base">
+      <row>.....**.....</row>
+      <row>.....**.....</row>
+      <row>....****....</row>
+      <row>..********..</row>
+      <row>************</row>
+      <scale>2</scale>
+    </bitmap>
+    <bitmap name="sight">
+      <row>...*...</row>
+      <row>...*...</row>
+      <row>.......</row>
+      <row>**...**</row>
+      <row>.......</row>
+      <row>...*...</row>
+      <row>...*...</row>
+      <scale>2</scale>
+    </bitmap>
+  </pictures>
 </game>

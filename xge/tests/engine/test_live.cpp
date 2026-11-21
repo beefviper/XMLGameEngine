@@ -1,0 +1,589 @@
+// test_live.cpp
+// XML Game Engine
+// author: beefviper
+// date: Oct 17, 2026
+//
+// Catch2 tests for values read when they are used: a command's numbers
+// worked out as it runs (where things are, how they go, every variable as
+// it is now, the touch a rule answers), <set>, <spawn> and a <tether>
+// (more of <spawn> in test_spawn.cpp); what an object says update="live"
+// of, worked out again every frame;
+// then played in games/descriptions/fishingderby.xml.
+
+#include "scratch.h"
+#include "engine/engine.h"
+#include "copies.h"
+#include "game/game.h"
+#include "play/collision.h"
+#include "window/null.h"
+
+#include <catch2/catch_approx.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_string.hpp>
+
+#include <cmath>
+#include <filesystem>
+#include <fstream>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
+using namespace xge;
+using Catch::Approx;
+using Catch::Matchers::ContainsSubstring;
+
+namespace
+{
+	// A game played with no window, each shape the size its sprite implies.
+	struct Played
+	{
+		Game game;
+		Engine engine;
+
+		explicit Played(const std::string& file) : game(file), engine(game, std::make_unique<NullWindow>())
+		{
+			for (auto& object : game.getCurrentObjects())
+			{
+				object.size = measureShapeSize(object.drawn.picture);
+			}
+		}
+
+		void tap(KeyCode key)
+		{
+			engine.handleKeyPressed(key);
+			engine.handleKeyReleased(key);
+		}
+
+		void frames(int count)
+		{
+			for (int i = 0; i < count; ++i) { engine.input(); engine.update(xge::kSixtieth); }
+		}
+
+		std::string state() { return game.getCurrentState().name; }
+		Object& get(const std::string& name) { return game.object(name); }
+	};
+
+	// A game of one state, "playing", with these objects and these
+	// commands on the space bar, written out to be loaded and played.
+	class Scratch
+	{
+	public:
+		Scratch(const std::string& objects, const std::string& onSpace, const std::string& kit = {})
+		{
+			std::ofstream out(path);
+			out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
+				"<window name=\"live\"><width>800</width><height>600</height><background>color.black</background>"
+				"<framerate>60</framerate></window>"
+				"<variables><variable name=\"unused\">0</variable></variables>"
+				<< (kit.empty() ? std::string{} : "<objects>" + kit + "</objects>") <<
+				"<states><state name=\"playing\"><objects>" << objects << "</objects>"
+				"<inputs><input button=\"space\">" << onSpace << "</input></inputs></state></states></game>";
+		}
+		~Scratch() { std::filesystem::remove(path); }
+		Scratch(const Scratch&) = delete;
+		Scratch& operator=(const Scratch&) = delete;
+
+		const std::string path = scratchName("descriptions/live_scratch.xml");
+	};
+
+	std::string box(const std::string& name, float x, float y, const std::string& rest = "")
+	{
+		return "<object name=\"" + name + "\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
+			"<position><x>" + std::to_string(x) + "</x><y>" + std::to_string(y) + "</y></position>" + rest + "</object>";
+	}
+}
+
+TEST_CASE("a command's value is read when it runs: a variable as it is now, where things are and how they go", "[live]")
+{
+	const Scratch file(box("ball", 100, 50, "<velocity><x>120</x><y>0</y></velocity><variables><variable name=\"step\">5</variable><variable name=\"count\">0</variable></variables>"),
+		"<inc variable=\"ball.count\">ball.step</inc><set variable=\"ball.velocity.y\"><multiply><value>ball.velocity.x</value><value>3</value></multiply></set><set variable=\"ball.step\">ball.x</set>");
+	Played play(file.path);
+
+	play.tap(KeyCode::Space);
+	CHECK(play.get("ball").variable.at("count") == Approx(5));
+	CHECK(play.get("ball").velocity.y == Approx(360));
+	CHECK(play.get("ball").variable.at("step") == Approx(100));
+
+	// The step it adds is the one it was just set to.
+	play.tap(KeyCode::Space);
+	CHECK(play.get("ball").variable.at("count") == Approx(105));
+}
+
+TEST_CASE("<set> puts a value into where an object is, or into every member of a group", "[live]")
+{
+	const Scratch file(box("ball", 100, 50)
+		+ "<group name=\"row\"><sprite><rectangle><width>4</width><height>4</height></rectangle></sprite>"
+		"<member><position><x>0</x><y>300</y></position></member><member><position><x>20</x><y>300</y></position></member></group>",
+		"<set variable=\"ball.x\">400</set><set variable=\"row.y\"><divide><value>ball.x</value><value>2</value></divide></set><set variable=\"row.velocity.x\">-60</set>");
+	Played play(file.path);
+
+	play.tap(KeyCode::Space);
+	CHECK(play.get("ball").position.x == Approx(400));
+	CHECK(play.get("row.1").position.y == Approx(200));
+	CHECK(play.get("row.2").position.y == Approx(200));
+	CHECK(play.get("row.2").velocity.x == Approx(-60));
+}
+
+TEST_CASE("where things are is only known while the game runs, and <set> names something there is", "[live]")
+{
+	const auto load = [](const std::string& objects, const std::string& onSpace)
+	{
+		const Scratch file(objects, onSpace);
+		Game game(file.path);
+	};
+
+	CHECK_THROWS_WITH(load(box("ball", 100, 50) + box("another", 0, 0) + "<object name=\"late\"><sprite><rectangle><width>ball.x</width><height>4</height></rectangle></sprite>"
+		"<position><x>0</x><y>0</y></position></object>", "<pop />"),
+		ContainsSubstring("ball.x, which is only known while the game runs"));
+	CHECK_THROWS_WITH(load(box("ball", 100, 50), "<set variable=\"bat.x\">1</set>"), ContainsSubstring("there is no object named 'bat'"));
+	CHECK_THROWS_WITH(load(box("ball", 100, 50), "<set variable=\"ball.heading\">90</set>"), ContainsSubstring("has no <heading> to set"));
+	CHECK_THROWS_WITH(load(box("ball", 100, 50), "<spawn object=\"shots\" />"), ContainsSubstring("shots"));
+	CHECK_NOTHROW(load(box("ball", 100, 50), "<set variable=\"ball.velocity.x\"><add><value>ball.x</value><value>1</value></add></set>"));
+}
+
+TEST_CASE("<spawn> makes a new object where and going as it says, read as it runs", "[live]")
+{
+	const Scratch file(box("ship", 300, 400, "<velocity><x>180</x><y>0</y></velocity>"),
+		"<spawn object=\"shot\"><position><x><centered><add><value>ship.x</value><value>5</value></add></centered></x><y><subtract><value>ship.y</value><value>8</value></subtract></y></position>"
+		"<velocity><x>ship.velocity.x</x></velocity></spawn>",
+		"<object name=\"shot\"><sprite><rectangle><width>4</width><height>8</height></rectangle></sprite>"
+		"<velocity><x>0</x><y>-300</y></velocity></object>");
+	Played play(file.path);
+
+	play.tap(KeyCode::Space);
+	play.game.settleSpawns();
+	const Object& first = play.get("shot.1");
+	CHECK(first.isVisible);
+	CHECK(first.position.x == Approx(303));
+	CHECK(first.position.y == Approx(392));
+	CHECK(first.velocity.x == Approx(180));
+	CHECK(first.velocity.y == Approx(-300)); // left out: as the object starts
+	CHECK_FALSE(play.get("shot").exists);
+}
+
+TEST_CASE("touch.x and the other numbers of a touch are gone: no name reads them", "[live]")
+{
+	const Scratch file(box("ball", 100, 100, "<velocity><x>1200</x><y>0</y></velocity><collisions>"
+		"<collision object=\"wall\"><set variable=\"marker.x\">touch.x</set><stop /></collision></collisions>")
+		+ box("wall", 200, 95, "<collisions></collisions>") + box("marker", 0, 0), "<pop />");
+	CHECK_THROWS(Played(file.path));
+}
+
+TEST_CASE("a <tether> is drawn from one object's middle to another's, wherever they go", "[live]")
+{
+	const Scratch file(box("rod", 100, 100) + box("hook", 300, 200, "<velocity><x>0</x><y>120</y></velocity>")
+		+ "<object name=\"line\"><sprite><tether from=\"rod\" to=\"hook\"><thickness>2</thickness><color>color.red</color></tether></sprite>"
+		"<position><x>0</x><y>0</y></position></object>", "<pop />");
+	Played play(file.path);
+
+	play.frames(1);
+	const Object& line = play.get("line");
+	REQUIRE(line.drawn.bitmap);
+	CHECK(line.position.x == Approx(104));
+	CHECK(line.position.y == Approx(104));
+	CHECK(line.size.x == Approx(202).margin(1));
+	CHECK(line.size.y == Approx(102 + 2).margin(1));
+	CHECK(line.drawn.bitmap->solidAt(1, 1));
+
+	play.frames(10);
+	CHECK(play.get("line").size.y == Approx(124).margin(1));
+
+	const auto load = [](const std::string& objects)
+	{
+		const Scratch bad(objects, "<pop />");
+		Game game(bad.path);
+	};
+	CHECK_THROWS_WITH(load(box("rod", 0, 0) + "<object name=\"line\"><sprite><tether from=\"rod\" to=\"hook\" /></sprite><position><x>0</x><y>0</y></position></object>"),
+		ContainsSubstring("there is no object named 'hook'"));
+}
+
+TEST_CASE("a <tether> is in play only while both its ends are", "[live]")
+{
+	const Scratch file(box("rod", 100, 100) + box("hook", 300, 200, "<waiting />")
+		+ "<object name=\"line\"><sprite><tether from=\"rod\" to=\"hook\" /></sprite>"
+		"<position><x>0</x><y>0</y></position></object>", "<reveal object=\"hook\" />");
+	Played play(file.path);
+
+	play.frames(1);
+	CHECK_FALSE(play.get("line").isVisible);
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	CHECK(play.get("line").isVisible);
+	CHECK(play.get("line").size.x == Approx(201).margin(1));
+}
+
+TEST_CASE("an object brought back into play starts its timers over", "[live]")
+{
+	// A shot that goes out half a second after it comes in.
+	const Scratch file(box("shot", 100, 100, "<waiting /><timers><timer><every>0.5</every><die /></timer></timers>"), "<reveal object=\"shot\" />");
+	Played play(file.path);
+
+	play.tap(KeyCode::Space);
+	play.frames(20);
+	REQUIRE(play.get("shot").isVisible);
+
+	// Put out early, and brought in again: it has its whole half second.
+	play.get("shot").isVisible = false;
+	play.tap(KeyCode::Space);
+	play.frames(25);
+	CHECK(play.get("shot").isVisible);
+	play.frames(6);
+	CHECK_FALSE(play.get("shot").isVisible);
+}
+
+TEST_CASE("a <chase> turns the heading of what chases to the way it goes", "[live]")
+{
+	const Scratch file(box("target", 500, 100)
+		+ "<object name=\"missile\"><sprite><line><from><x>0</x><y>0</y></from><to><x>0</x><y>8</y></to><thickness>2</thickness></line></sprite>"
+		"<position><x>100</x><y>100</y></position><heading>0</heading>"
+		"<timers><timer><every>0.1</every><chase object=\"target\">120</chase></timer></timers></object>", "<pop />");
+	Played play(file.path);
+
+	play.frames(10);
+	CHECK(play.get("missile").heading == Approx(90).margin(1));
+	CHECK(play.get("missile").velocity.x == Approx(120).margin(0.6));
+}
+
+TEST_CASE("a group gives its members a <heading>, each turned on its own", "[live]")
+{
+	const Scratch file(box("target", 500, 100)
+		+ "<group name=\"missiles\"><sprite><line><from><x>0</x><y>0</y></from><to><x>0</x><y>8</y></to><thickness>2</thickness></line></sprite>"
+		"<position><y>100</y></position><heading>180</heading>"
+		"<timers><timer><every>0.1</every><chase object=\"target\">120</chase></timer></timers>"
+		"<member><position><x>100</x></position></member><member><position><x>900</x></position></member></group>", "<pop />");
+	Played play(file.path);
+
+	CHECK(play.get("missiles.1").turning.hasHeading);
+	CHECK(play.get("missiles.2").heading == Approx(180));
+	play.frames(10);
+	CHECK(play.get("missiles.1").heading == Approx(90).margin(1));
+	CHECK(play.get("missiles.2").heading == Approx(270).margin(1));
+}
+
+TEST_CASE("an object out of play does not act on a key", "[live]")
+{
+	const Scratch file(box("gun", 100, 300, "<waiting /><actions><action name=\"fire\"><fire object=\"shot\" /></action></actions>")
+, "<trigger object=\"gun\" action=\"fire\" />",
+		box("shot", 0, 0, "<velocity><x>0</x><y>-240</y></velocity><most>1</most>"));
+	Played play(file.path);
+
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	CHECK(copies::count(play.game, "shot") == 0);
+
+	play.get("gun").isVisible = true;
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	CHECK(copies::count(play.game, "shot") == 1);
+}
+
+TEST_CASE("fishingderby.xml: a fish that bites is claimed by that hook, landed for its worth, and back in its row", "[live][fishingderby]")
+{
+	Played play("descriptions/fishingderby.xml");
+	play.tap(KeyCode::Space);
+	REQUIRE(play.state() == "playing");
+
+	// Keep the shark well away, and put the hook just over the first cod.
+	play.get("shark").position = { 700, 195 };
+	play.get("shark").velocity = { 0, 0 };
+	Object& fish = play.get("cod.1");
+	REQUIRE(fish.variable.at("worth") == Approx(6));
+	const Vector2f start = fish.position;
+	Object& hook = play.get("hook1");
+	hook.position = { fish.position.x + 10, fish.position.y - 6 };
+	play.frames(2);
+	CHECK(play.game.carrying(play.get("hook1")) == fish.name);
+	CHECK(play.get("hook1").variable.at("line") == Approx(2));
+	CHECK(fish.variable.at("by") == Approx(1));
+	CHECK(fish.velocity.x == Approx(0));
+
+	// Reel it up.
+	play.engine.handleKeyPressed(KeyCode::W);
+	for (int i = 0; i < 400 && play.get("left").variable.at("score") == 0.0f; ++i) { play.frames(1); }
+	play.engine.handleKeyReleased(KeyCode::W);
+
+	CHECK(play.get("left").variable.at("score") == Approx(6));
+	CHECK(play.get("right").variable.at("score") == Approx(0));
+	CHECK(play.game.carrying(play.get("hook1")).empty());
+	CHECK(play.get("hook1").variable.at("line") == Approx(0));
+	const Object& again = play.get("cod.1");
+	CHECK(again.isVisible);
+	CHECK(again.variable.at("by") == Approx(0));
+	CHECK(again.position.y == Approx(start.y).margin(2));
+}
+
+TEST_CASE("fishingderby.xml: a hook on its way up takes no second fish, and the shark eats the one on it", "[live][fishingderby]")
+{
+	Played play("descriptions/fishingderby.xml");
+	play.tap(KeyCode::Space);
+	play.get("shark").position = { 700, 195 };
+	play.get("shark").velocity = { 0, 0 };
+
+	Object& cod = play.get("cod.1");
+	Object& hook = play.get("hook1");
+	hook.position = { cod.position.x + 10, cod.position.y - 6 };
+	play.frames(2);
+	REQUIRE(play.game.carrying(hook) == cod.name);
+
+	// Reel up through a perch: the hook keeps the cod.
+	Object& perch = play.get("perch.2");
+	perch.position = { hook.position.x - 10, hook.position.y - 30 };
+	perch.velocity = { 0, 0 };
+	play.engine.handleKeyPressed(KeyCode::W);
+	play.frames(20);
+	play.engine.handleKeyReleased(KeyCode::W);
+	CHECK(play.game.carrying(play.get("hook1")) == cod.name);
+	CHECK(play.get("perch.2").variable.at("by") == Approx(0));
+
+	// The shark swims into the cod: gone, back in its row, the hook put back.
+	Object& shark = play.get("shark");
+	shark.position = { play.get("cod.1").position.x - 100, play.get("cod.1").position.y - 4 };
+	shark.velocity = { 240, 0 };
+	play.frames(30);
+	CHECK(play.game.carrying(play.get("hook1")).empty());
+	CHECK(play.get("hook1").variable.at("line") == Approx(0));
+	CHECK(play.get("cod.1").variable.at("by") == Approx(0));
+	CHECK(play.get("cod.1").position.y == Approx(470).margin(2));
+	CHECK(play.get("left").variable.at("score") == Approx(0));
+}
+
+TEST_CASE("fishingderby.xml: the computer takes its hook down and lands what bites", "[live][fishingderby]")
+{
+	Played play("descriptions/fishingderby.xml");
+	play.tap(KeyCode::Space);
+	play.get("shark").velocity = { 0, 0 };
+	play.get("shark").position = { 0, 195 };
+	const float startY = play.get("hook2").position.y;
+	play.frames(30);
+	CHECK(play.get("hook2").position.y > startY);
+	for (int i = 0; i < 3000 && play.get("right").variable.at("score") == 0.0f; ++i) { play.frames(1); }
+	CHECK(play.get("right").variable.at("score") > 0.0f);
+	CHECK(play.get("left").variable.at("score") == Approx(0));
+}
+
+TEST_CASE("a named timer's time left is a number of its object: whole seconds, rounded up", "[live][timers]")
+{
+	const Scratch file(box("bomb", 100, 50, "<variables><variable name=\"bangs\">0</variable><variable name=\"read\">0</variable></variables>"
+		"<timers><timer name=\"fuse\"><after>3</after><inc variable=\"bomb.bangs\" /></timer>"
+		"<timer name=\"tick\"><every>0.5</every></timer></timers>")
+		+ "<object name=\"clock\"><sprite><text><content>LEFT</content><number>bomb.fuse</number><size>16</size><color>color.white</color></text></sprite>"
+		"<position><x>0</x><y>0</y></position></object>",
+		"<set variable=\"bomb.read\"><multiply><value>bomb.fuse</value><value>10</value></multiply></set>");
+	Played play(file.path);
+	Object& bomb = play.get("bomb");
+
+	// It starts at its whole time, before it has counted.
+	CHECK(bomb.variable.at("fuse") == Approx(3));
+	CHECK(bomb.variable.at("tick") == Approx(1));
+
+	play.frames(1);
+	CHECK(bomb.variable.at("fuse") == Approx(3));
+	CHECK(play.get("clock").drawn.picture->text == "LEFT 3");
+
+	// 179 frames counted of 180: under a second left still shows 1.
+	play.frames(178);
+	CHECK(bomb.variable.at("fuse") == Approx(1));
+	CHECK(play.get("clock").drawn.picture->text == "LEFT 1");
+	play.tap(KeyCode::Space);
+	CHECK(bomb.variable.at("read") == Approx(10));
+	CHECK(bomb.variable.at("bangs") == Approx(0));
+
+	// Gone off: 0 from then on.
+	play.frames(1);
+	CHECK(bomb.variable.at("bangs") == Approx(1));
+	CHECK(bomb.variable.at("fuse") == Approx(0));
+	play.frames(30);
+	CHECK(bomb.variable.at("fuse") == Approx(0));
+	CHECK(play.get("clock").drawn.picture->text == "LEFT 0");
+
+	// A reset gives it its whole time again.
+	play.game.resetObject("bomb");
+	CHECK(bomb.variable.at("fuse") == Approx(3));
+	play.frames(1);
+	CHECK(bomb.variable.at("fuse") == Approx(3));
+}
+
+TEST_CASE("a named timer's name cannot be a variable of its object or where it is", "[live][timers]")
+{
+	const auto load = [](const std::string& objects)
+	{
+		const Scratch file(objects, "<pop />");
+		Game game(file.path);
+	};
+
+	CHECK_THROWS_WITH(load(box("bomb", 0, 0, "<variables><variable name=\"fuse\">1</variable></variables><timers><timer name=\"fuse\"><after>3</after></timer></timers>")),
+		ContainsSubstring("bomb.fuse is the timer's time left"));
+	CHECK_THROWS_WITH(load(box("bomb", 0, 0, "<timers><timer name=\"x\"><after>3</after></timer></timers>")),
+		ContainsSubstring("give the timer another name"));
+}
+
+TEST_CASE("update=\"live\" on a half of a position: worked out again every frame, after the move", "[live][follow]")
+{
+	const Scratch file(box("ship", 300, 400, "<velocity><x>180</x><y>0</y></velocity>")
+		+ "<object name=\"shot\"><sprite><rectangle><width>4</width><height>8</height></rectangle></sprite>"
+		"<position><x update=\"live\"><add><value>ship.x</value><value>5</value></add></x><y>100</y></position><velocity><x>0</x><y>-120</y></velocity></object>",
+		"<pop />");
+	Played play(file.path);
+
+	// Already where it follows to as the game starts, though ship.x is only
+	// known while the game runs.
+	CHECK(play.get("shot").position.x == Approx(305));
+
+	play.frames(10);
+	CHECK(play.get("ship").position.x == Approx(330));
+	CHECK(play.get("shot").position.x == Approx(335));
+	// the other half moves as ever
+	CHECK(play.get("shot").position.y == Approx(80));
+}
+
+TEST_CASE("a live variable follows what it reads; one worked out once keeps its start", "[live][follow]")
+{
+	const Scratch file(box("ball", 100, 50, "<velocity><x>6000</x><y>0</y></velocity><variables><variable name=\"base\">2</variable>"
+		"<variable name=\"twice\" update=\"live\"><multiply><value>self.base</value><value>2</value></multiply></variable>"
+		"<variable name=\"start\"><multiply><value>self.base</value><value>2</value></multiply></variable>"
+		"<variable name=\"across\" update=\"live\"><smallest><value>self.x</value><value>500</value></smallest></variable></variables>"),
+		"<set variable=\"ball.base\">10</set>");
+	Played play(file.path);
+
+	CHECK(play.get("ball").variable.at("twice") == Approx(4));
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	CHECK(play.get("ball").variable.at("twice") == Approx(20));
+	CHECK(play.get("ball").variable.at("start") == Approx(4));
+	CHECK(play.get("ball").variable.at("across") == Approx(200));
+	play.frames(5);
+	CHECK(play.get("ball").variable.at("across") == Approx(500));
+}
+
+TEST_CASE("a live heading turns its object, and a spawned copy follows for itself", "[live][follow]")
+{
+	const Scratch file(box("gun", 300, 400, "<heading update=\"live\"><multiply><value>self.aim</value><value>10</value></multiply></heading><variables><variable name=\"aim\">3</variable></variables>"),
+		"<inc variable=\"gun.aim\" /><spawn object=\"tag\" />",
+		"<object name=\"tag\"><sprite><rectangle><width>4</width><height>4</height></rectangle></sprite>"
+		"<position><x update=\"live\"><add><value>gun.x</value><value>self.gap</value></add></x><y>0</y></position><variables><variable name=\"gap\">7</variable></variables></object>");
+	Played play(file.path);
+
+	CHECK(play.get("gun").heading == Approx(30));
+	play.tap(KeyCode::Space);
+	play.frames(1);
+	CHECK(play.get("gun").heading == Approx(40));
+	CHECK(play.get("tag.1").position.x == Approx(307));
+}
+
+namespace
+{
+	// An object of two pictures, a and b, with this animation and these variables.
+	std::string blinker(const std::string& animation, const std::string& variables, const std::string& motion = "")
+	{
+		return "<object name=\"blinker\">"
+			"<sprite name=\"a\"><bitmap><row>**</row><row>**</row></bitmap></sprite>"
+			"<sprite name=\"b\"><bitmap><row>*.</row><row>.*</row></bitmap></sprite>"
+			+ animation + "<position><x>10</x><y>10</y></position>" + motion + "<variables>" + variables + "</variables></object>";
+	}
+
+	// How many times the picture showing changes over `count` frames.
+	int changes(Played& play, int count)
+	{
+		int changed = 0;
+		std::size_t showing = play.get("blinker").animation.index;
+		for (int i = 0; i < count; ++i)
+		{
+			play.frames(1);
+			if (play.get("blinker").animation.index != showing) { ++changed; showing = play.get("blinker").animation.index; }
+		}
+		return changed;
+	}
+}
+
+TEST_CASE("an animation's live <seconds> follows what it reads: half the time, twice the changes", "[live][follow][animation]")
+{
+	const Scratch file(blinker("<animation><seconds update=\"live\">blinker.pace</seconds><frame sprite=\"a\" /><frame sprite=\"b\" /></animation>",
+		"<variable name=\"pace\">0.1</variable>"), "<set variable=\"blinker.pace\">0.05</set>");
+	Played play(file.path);
+
+	CHECK(changes(play, 60) == 10); // 6 frames a picture at 60 a second
+	play.tap(KeyCode::Space);
+	play.frames(6);
+	CHECK(changes(play, 60) == 20);
+}
+
+TEST_CASE("a live <seconds> times a named animation, and a frame's own live seconds that picture only", "[live][follow][animation]")
+{
+	const Scratch file(blinker("<animation name=\"blink\"><seconds update=\"live\">blinker.pace</seconds><frame sprite=\"a\"><seconds update=\"live\">blinker.long</seconds></frame><frame sprite=\"b\" /></animation>",
+		"<variable name=\"pace\">0.1</variable><variable name=\"long\">0.2</variable>"), "<set variable=\"blinker.pace\">0.05</set><set variable=\"blinker.long\">0.1</set>");
+	Played play(file.path);
+
+	REQUIRE(play.get("blinker").lookName() == "blink");
+	CHECK(changes(play, 180) == 20); // 12 frames on a, 6 on b: 18 for two changes
+	play.tap(KeyCode::Space);
+	play.frames(12);
+	CHECK(changes(play, 180) == 40); // 6 on a, 3 on b
+}
+
+TEST_CASE("a live <seconds> reading 0 waits a frame, never stops the load", "[live][follow][animation]")
+{
+	const Scratch file(blinker("<animation><seconds update=\"live\">blinker.pace</seconds><frame sprite=\"a\" /><frame sprite=\"b\" /></animation>",
+		"<variable name=\"pace\">0</variable>"), "<set variable=\"blinker.pace\">0.5</set>");
+	Played play(file.path);
+	CHECK(changes(play, 10) == 10); // a picture a frame while it reads 0
+	play.tap(KeyCode::Space);
+	play.frames(30);
+	CHECK(changes(play, 60) == 2);
+}
+
+TEST_CASE("a <stepped /> animation moves its object only as the picture changes, the whole way at once", "[animation][stepped]")
+{
+	const Scratch file(blinker("<animation><seconds>0.1</seconds><stepped /><frame sprite=\"a\" /><frame sprite=\"b\" /></animation>",
+		"<variable name=\"pace\">0</variable>", "<velocity><x>120</x><y>0</y></velocity>"), "<set variable=\"blinker.velocity.x\">-60</set>");
+	Played play(file.path);
+	Object& blinker = play.get("blinker");
+
+	play.frames(5);
+	CHECK(blinker.position.x == Approx(10));
+	play.frames(1);
+	CHECK(blinker.position.x == Approx(22)); // six frames' worth at 2 a frame
+	play.frames(6);
+	CHECK(blinker.position.x == Approx(34));
+
+	// A new velocity is the next step's.
+	play.tap(KeyCode::Space);
+	play.frames(6);
+	CHECK(blinker.position.x == Approx(28));
+}
+
+TEST_CASE("a stepped object still meets the window's edge and bounces off it", "[animation][stepped]")
+{
+	const Scratch file("<object name=\"blinker\">"
+		"<sprite name=\"a\"><bitmap><row>**</row><row>**</row></bitmap></sprite>"
+		"<sprite name=\"b\"><bitmap><row>*.</row><row>.*</row></bitmap></sprite>"
+		"<animation><seconds>0.1</seconds><stepped /><frame sprite=\"a\" /><frame sprite=\"b\" /></animation>"
+		"<position><x>790</x><y>10</y></position><velocity><x>120</x><y>0</y></velocity>"
+		"<collisions><collision edge=\"right\"><bounce /></collision></collisions></object>", "<pop />");
+	Played play(file.path);
+	Object& blinker = play.get("blinker");
+
+	play.frames(7);
+	CHECK(blinker.velocity.x < 0); // the step on frame 6 went past the edge; the next frame meets it
+	const float there = blinker.position.x;
+	play.frames(6);
+	CHECK(blinker.position.x < there);
+}
+
+TEST_CASE("no command can change what is live", "[live][follow]")
+{
+	const auto load = [](const std::string& objects, const std::string& onSpace)
+	{
+		const Scratch file(objects, onSpace);
+		Game game(file.path);
+	};
+	const std::string follower = box("ship", 300, 400)
+		+ "<object name=\"shot\"><sprite><rectangle><width>4</width><height>8</height></rectangle></sprite>"
+		"<position><x update=\"live\">ship.x</x><y>0</y></position>"
+		"<variables><variable name=\"far\" update=\"live\"><multiply><value>ship.x</value><value>2</value></multiply></variable><variable name=\"near\">0</variable></variables></object>";
+
+	CHECK_THROWS_WITH(load(follower, "<set variable=\"shot.x\">1</set>"), ContainsSubstring("shot.x' is update=\"live\""));
+	CHECK_THROWS_WITH(load(follower, "<inc variable=\"shot.far\" />"), ContainsSubstring("shot.far' is update=\"live\""));
+	CHECK_THROWS_WITH(load(follower, "<copy variable=\"shot.near\" into=\"shot.far\" />"), ContainsSubstring("no command can change it"));
+	CHECK_NOTHROW(load(follower, "<set variable=\"shot.y\">1</set><set variable=\"shot.near\">shot.far</set>"));
+}

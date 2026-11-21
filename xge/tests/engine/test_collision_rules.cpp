@@ -1,0 +1,414 @@
+// test_collision_rules.cpp
+// XML Game Engine
+// author: beefviper
+// date: Sept 29, 2026
+//
+// Catch2 tests for object-against-object <collision> rules, loaded from the
+// shipped games by a real xge::Game. A rule can be written with just a
+// class (or object) to apply to - <collision class="aliens"><die /></collision> -
+// and a <collision> with no selector at all is the rule that matches anything.
+//
+// Rules can also <trigger> an action (of the object itself when object= is
+// left out), hold <condition>s that must all hold, and name the side= touched.
+//
+// Regression covered: Space Invaders' bullet used an unfiltered collision
+// rule, so it died the moment it overlapped the ship that fired it.
+
+#include "scratch.h"
+#include "copies.h"
+#include "game/game.h"
+#include "load/xml.h"
+#include "played.h"
+
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/generators/catch_generators.hpp>
+#include <catch2/matchers/catch_matchers_string.hpp>
+
+#include <filesystem>
+#include <fstream>
+#include <optional>
+#include <string>
+#include <tuple>
+
+using namespace xge;
+
+TEST_CASE("a collision with no selector still matches anything", "[collision_rules]")
+{
+	Game game{ "descriptions/pong_min.xml" };
+	const Object& ball = game.object("ball");
+
+	// pong_min.xml's ball: <collision><deflect>45</deflect></collision>
+	REQUIRE(ball.kind->collisionData.others.size() == 1);
+	CHECK(ball.kind->collisionData.others[0].filterClass.empty());
+	CHECK(ball.kind->collisionData.others[0].filterObject.empty());
+}
+
+TEST_CASE("a collision naming only a class is an object rule for that class", "[collision_rules]")
+{
+	Game game{ "descriptions/spaceinvaders.xml" };
+	const Object& bullet = game.object("bullet");
+
+	// spaceinvaders.xml's bullet: <collision class="aliens"><die /></collision>,
+	// then the same for the shields, the bombs and the mystery ship
+	REQUIRE(bullet.kind->collisionData.others.size() == 4);
+	CHECK(bullet.kind->collisionData.others[0].filterClass == "aliens");
+	CHECK(bullet.kind->collisionData.others[0].filterObject.empty());
+	CHECK(bullet.kind->collisionData.others[1].filterClass == "shield");
+
+	// ...and it did not also turn into a screen-edge rule.
+	CHECK(bullet.kind->collisionData.edges[edgeIndex(Edge::Left)].commands.size() == 1); // only the edge="all" <die />
+}
+
+TEST_CASE("a bullet fired from the ship survives touching it", "[collision_rules]")
+{
+	Game game{ "descriptions/spaceinvaders.xml" };
+	game.setCurrentState("playing");
+
+	Object& player = game.object("player");
+	Object& bullet = copies::spawned(game, "bullet");
+	player.size = { 50.0f, 50.0f };
+	bullet.size = { 8.0f, 8.0f };
+
+	// The engine spawns a bullet with its top-left corner at the ship's top
+	// edge, so it starts out overlapping the ship and only clears it a few
+	// frames later (360 px a second, 6 a step, 8 px tall).
+	bullet.position = { player.position.x + 25.0f, player.position.y };
+	bullet.velocity.y = -360.0f;
+
+	for (int frame = 0; frame < 4; ++frame)
+	{
+		game.updateObjects(xge::kSixtieth);
+		CHECK(copies::count(game, "bullet") == 1);
+	}
+	CHECK(bullet.position.y < player.position.y - bullet.size.y);
+}
+
+TEST_CASE("a bullet is taken away on touching an alien", "[collision_rules]")
+{
+	Game game{ "descriptions/spaceinvaders.xml" };
+	game.setCurrentState("playing");
+
+	Object& alien = game.object("aliens");
+	Object& bullet = copies::spawned(game, "bullet");
+	alien.size = { 50.0f, 50.0f };
+	bullet.size = { 8.0f, 8.0f };
+
+	// Just under the alien, its centre a couple of pixels below the bottom
+	// edge, so it overlaps by less than its radius.
+	bullet.position = { alien.position.x + 20.0f, alien.position.y + alien.size.y - 2.0f };
+	bullet.velocity.y = -360.0f;
+
+	game.updateObjects(xge::kSixtieth);
+
+	CHECK(copies::count(game, "bullet") == 0);
+}
+
+namespace
+{
+	// A ball falling onto a block, its rule about the block given; the game
+	// written beside the shipped ones for as long as it lives.
+	struct Falling
+	{
+		std::filesystem::path path = scratchName("descriptions/rules_scratch.xml");
+		std::optional<Game> game;
+
+		Falling(const std::string& rule, const std::string& armed, XmlBackend backend = XmlBackend::Xerces)
+		{
+			{
+				std::ofstream out(path);
+				out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
+					"<window name=\"rules\"><width>800</width><height>600</height><background>color.black</background>"
+					"<framerate>60</framerate></window>"
+					"<variables><variable name=\"unused\">0</variable></variables><states><objects>"
+					"<object name=\"ball\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
+					"<position><x>100</x><y>0</y></position><velocity><y>300</y></velocity>"
+					"<collisions>" << rule << "</collisions>"
+					"<actions><action name=\"hit\"><reset /></action></actions>"
+					"<variables><variable name=\"armed\">" << armed << "</variable></variables></object>"
+					"<object name=\"block\" class=\"block\"><sprite><rectangle><width>100</width><height>20</height></rectangle></sprite>"
+					"<position><x>50</x><y>100</y></position><collisions></collisions></object>"
+					"</objects><state name=\"playing\"><shows><show object=\"ball\" /><show object=\"block\" /></shows>"
+					"<inputs><input button=\"space\"><pop /></input></inputs></state></states></game>";
+			}
+			game.emplace(readGame(path.string(), backend));
+			game->setCurrentState(0);
+			for (auto& object : game->getCurrentObjects()) { object.size = measureShapeSize(object.drawn.picture); }
+		}
+		Falling(const Falling&) = delete;
+		Falling& operator=(const Falling&) = delete;
+		~Falling()
+		{
+			std::error_code ignored;
+			std::filesystem::remove(path, ignored);
+		}
+
+		// Where the ball is after `frames` frames.
+		float after(int frames)
+		{
+			for (int i = 0; i < frames; ++i) { game->updateObjects(xge::kSixtieth); }
+			return game->object("ball").position.y;
+		}
+	};
+}
+
+TEST_CASE("a collision can <trigger> an action of the object itself, left to mean it", "[collision_rules]")
+{
+	auto backend = GENERATE(XmlBackend::Xerces, XmlBackend::TinyXml2);
+	Falling falling("<collision class=\"block\"><trigger action=\"hit\" /></collision>", "1", backend);
+	// It reaches the block at y 90 in frame 18 and is put back at the top.
+	CHECK(falling.after(18) < 10.0f);
+}
+
+TEST_CASE("a collision rule with a <condition> runs only while the check holds", "[collision_rules]")
+{
+	const std::string rule = "<collision class=\"block\"><condition variable=\"armed\"><atleast>1</atleast></condition><trigger action=\"hit\" /></collision>";
+	SECTION("its own variable holds: the rule runs")
+	{
+		Falling falling(rule, "1");
+		CHECK(falling.after(18) < 10.0f);
+	}
+	SECTION("it does not: the ball falls on through")
+	{
+		Falling falling(rule, "0");
+		CHECK(falling.after(18) > 80.0f);
+	}
+}
+
+TEST_CASE("a collision rule with side= runs only when touched on that side of its own", "[collision_rules]")
+{
+	SECTION("the ball's bottom meets the block")
+	{
+		Falling falling("<collision class=\"block\" side=\"bottom\"><trigger action=\"hit\" /></collision>", "1");
+		CHECK(falling.after(18) < 10.0f);
+	}
+	SECTION("a rule for its top passes it over")
+	{
+		Falling falling("<collision class=\"block\" side=\"top\"><trigger action=\"hit\" /></collision>", "1");
+		CHECK(falling.after(18) > 80.0f);
+	}
+	SECTION("vertical is top or bottom")
+	{
+		Falling falling("<collision class=\"block\" side=\"vertical\"><trigger action=\"hit\" /></collision>", "1");
+		CHECK(falling.after(18) < 10.0f);
+	}
+}
+
+TEST_CASE("a <trigger> with no object= outside an object's own lists stops the load", "[collision_rules]")
+{
+	const std::filesystem::path path = scratchName("descriptions/rules_scratch.xml");
+	{
+		std::ofstream out(path);
+		out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
+			"<window name=\"rules\"><width>800</width><height>600</height><background>color.black</background>"
+			"<framerate>60</framerate></window>"
+			"<variables><variable name=\"unused\">0</variable></variables><states><objects>"
+			"<object name=\"ball\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
+			"<position><x>100</x><y>0</y></position><actions><action name=\"hit\"><reset /></action></actions></object>"
+			"</objects><state name=\"playing\"><inputs><input button=\"space\"><trigger action=\"hit\" /></input></inputs></state></states></game>";
+	}
+	CHECK_THROWS_WITH(Game(readGame(path.string(), XmlBackend::Xerces)), Catch::Matchers::ContainsSubstring("needs object="));
+	std::error_code ignored;
+	std::filesystem::remove(path, ignored);
+}
+
+TEST_CASE("a rule written on a group of groups, with a check about itself, looks at the member it runs for", "[collision_rules][check][group]")
+{
+	// Rocks of two sizes, each a group inside "rocks"; the rule about the
+	// shot is the outer group's, and only a rock worth 10 counts a split.
+	const auto variant = GENERATE(
+		std::tuple{ std::string("worth"), std::string("<member><position><x>100</x><y>100</y></position></member>"), std::string("<member><position><x>300</x><y>100</y></position></member>") },
+		std::tuple{ std::string("self.worth"), std::string("<member><position><x>100</x><y>100</y></position></member>"), std::string("<member><position><x>300</x><y>100</y></position></member>") },
+		std::tuple{ std::string("worth"), std::string("<columns>1</columns><rows>1</rows><position><x>100</x><y>100</y></position>"), std::string("<columns>1</columns><rows>1</rows><position><x>300</x><y>100</y></position>") });
+	const auto& [variable, big, small] = variant;
+	INFO(variable << " " << big);
+	// Members come after the group's variables, columns and rows before.
+	const auto inGroup = [](const std::string& cells, const std::string& worth)
+	{
+		const std::string variables = "<variables><variable name=\"worth\">" + worth + "</variable></variables>";
+		return cells.rfind("<member>", 0) == 0 ? variables + cells : cells + variables;
+	};
+	const played::Scratch file(
+		"<group name=\"rocks\" class=\"rock\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
+		"<collisions><collision object=\"shot\"><condition variable=\"" + variable + "\"><equal>10</equal></condition>"
+		"<inc variable=\"tally.splits\" /><die /></collision></collisions>"
+		"<group name=\"big\">" + inGroup(big, "10") + "</group>"
+		"<group name=\"small\">" + inGroup(small, "20") + "</group>"
+		"</group>"
+		+ played::box("shot", 300, 130, "<velocity><x>0</x><y>-240</y></velocity><collisions></collisions>")
+		+ played::box("tally", 700, 500, "<variables><variable name=\"splits\">0</variable></variables>"),
+		"<pop />");
+	played::Played play(file.path);
+
+	// The shot goes up into the small rock: no split.
+	play.frames(10);
+	CHECK(play.get("tally").variable.at("splits") == 0.0f);
+
+	// Into the big one: a split.
+	play.get("shot").position = { 100, 130 };
+	play.frames(10);
+	CHECK(play.get("tally").variable.at("splits") == 1.0f);
+}
+
+TEST_CASE("an object put somewhere has moved: it touches what it is put on, with no velocity", "[collision_rules][moved]")
+{
+	const std::filesystem::path path = std::filesystem::temp_directory_path() / scratchName("xge_moved_scratch.xml");
+	{
+		std::ofstream out(path);
+		out << "<game><window name=\"moved\"><width>200</width><height>100</height><background>color.black</background>"
+			"<framerate>10</framerate></window><variables><variable name=\"unused\">0</variable></variables>"
+			"<states><objects>"
+			"<object name=\"a\"><sprite><rectangle><width>4</width><height>4</height><color>color.white</color></rectangle></sprite>"
+			"<position><x>10</x><y>10</y></position>"
+			"<collisions><collision object=\"b\"><inc variable=\"self.hits\" /></collision></collisions><variables><variable name=\"hits\">0</variable></variables></object>"
+			"<object name=\"b\"><sprite><rectangle><width>4</width><height>4</height><color>color.white</color></rectangle></sprite>"
+			"<position><x>100</x><y>50</y></position><collisions></collisions></object>"
+						"</objects><state name=\"playing\"><shows><show object=\"a\" /><show object=\"b\" /></shows>"
+			"<inputs></inputs></state></states></game>";
+	}
+	Game game(path.string());
+	game.setCurrentState(0);
+	for (auto& object : game.getCurrentObjects()) { object.size = { 4.0f, 4.0f }; }
+	Object& a = game.object("a");
+
+	// Standing still apart: nothing.
+	game.updateObjects(xge::kSixtieth);
+	CHECK(a.variable.at("hits") == 0.0f);
+
+	// Put on b, as a teleport would: a touch, though neither has a velocity.
+	a.position = { 101.0f, 51.0f };
+	game.updateObjects(xge::kSixtieth);
+	CHECK(a.variable.at("hits") == 1.0f);
+
+	// Left there, nothing has moved since: not touched again.
+	game.updateObjects(xge::kSixtieth);
+	CHECK(a.variable.at("hits") == 1.0f);
+
+	// b put on a: b has moved, so the pair is looked at.
+	game.object("b").position = { 200.0f, 0.0f };
+	game.updateObjects(xge::kSixtieth);
+	game.object("b").position = { 100.0f, 50.0f };
+	game.updateObjects(xge::kSixtieth);
+	CHECK(a.variable.at("hits") == 2.0f);
+
+	std::filesystem::remove(path);
+}
+
+TEST_CASE("a rule names the object it touched other, whichever of its class that was", "[collision_rules][other]")
+{
+	// Two players of one class; the coin's one rule pays whichever touched it,
+	// and only while that one has no shield up, which paying puts up.
+	const std::string player = "<collisions></collisions>"
+		"<variables><variable name=\"score\">0</variable><variable name=\"shield\">0</variable></variables>";
+	const played::Scratch file(
+		"<object name=\"p1\" class=\"player\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
+		"<position><x>100</x><y>100</y></position>" + player + "</object>"
+		"<object name=\"p2\" class=\"player\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
+		"<position><x>400</x><y>100</y></position>" + player + "</object>"
+		+ played::box("coin", 600, 400, "<collisions><collision class=\"player\">"
+			"<condition object=\"other\" variable=\"shield\"><atmost>0</atmost></condition>"
+			"<inc variable=\"other.score\">5</inc><set variable=\"other.shield\">1</set></collision></collisions>"),
+		"<pop />");
+	played::Played play(file.path);
+
+	// The rule is made once, and other is found as it runs.
+	REQUIRE(play.get("coin").kind->collisionData.others.size() == 1);
+	CHECK(play.get("coin").kind->collisionData.others[0].filterClass == "player");
+
+	// p2 walks onto the coin: p2 is paid, once (its shield goes up), and p1 is not.
+	play.get("p2").position = { 585, 402 };
+	play.get("p2").velocity = { 120, 0 };
+	play.frames(5);
+	CHECK(play.get("p2").variable.at("score") == 5.0f);
+	CHECK(play.get("p2").variable.at("shield") == 1.0f);
+	CHECK(play.get("p1").variable.at("score") == 0.0f);
+
+	// p1, shielded: the rule's test is about p1, so nothing.
+	play.get("p1").variable.at("shield") = 1.0f;
+	play.get("p1").position = { 585, 402 };
+	play.get("p1").velocity = { 120, 0 };
+	play.frames(5);
+	CHECK(play.get("p1").variable.at("score") == 0.0f);
+}
+
+TEST_CASE("other is a spawned copy when a copy is what was touched", "[collision_rules][other][spawn]")
+{
+	const std::string shot = "<object name=\"shot\" class=\"bullet\"><sprite><rectangle><width>4</width><height>8</height></rectangle></sprite>"
+		"<velocity><x>0</x><y>-300</y></velocity><collisions></collisions>"
+		"<variables><variable name=\"hits\">0</variable></variables></object>";
+	const played::Scratch file(
+		played::box("wall", 300, 300, "<collisions><collision class=\"bullet\"><inc variable=\"other.hits\" /></collision></collisions>"),
+		"<spawn object=\"shot\"><position><x>302</x><y>340</y></position></spawn>", {}, shot);
+	played::Played play(file.path);
+
+	play.tap(xge::KeyCode::Space);
+	play.frames(12);
+	REQUIRE(play.has("shot.1"));
+	CHECK(play.get("shot.1").variable.at("hits") >= 1.0f);
+	CHECK(play.get("shot").variable.at("hits") == 0.0f);
+}
+
+TEST_CASE("other is only for a rule about another object", "[collision_rules][other]")
+{
+	const auto loads = [](const std::string& objects, const std::string& onSpace)
+	{
+		const played::Scratch file(objects, onSpace);
+		xge::Game game(file.path);
+	};
+	const std::string scored = played::box("p1", 100, 100, "<variables><variable name=\"score\">0</variable></variables>");
+	CHECK_THROWS_WITH(loads(scored, "<inc variable=\"other.score\" />"), Catch::Matchers::ContainsSubstring("only a rule about another object"));
+	CHECK_THROWS_WITH(loads(scored, "<reset object=\"other\" />"), Catch::Matchers::ContainsSubstring("only a rule about another object"));
+	// A rule about a class there is none of has no other to name.
+	CHECK_THROWS_WITH(loads(scored + played::box("coin", 0, 0, "<collisions><collision class=\"ghost\"><reset object=\"other\" /></collision></collisions>"), "<pop />"),
+		Catch::Matchers::ContainsSubstring("nothing of class \"ghost\" for it to touch"));
+	// What every object it can touch has is checked for each.
+	CHECK_THROWS_WITH(loads(scored + played::box("p2", 0, 0) + played::box("coin", 0, 0, "<collisions><collision><inc variable=\"other.score\" /></collision></collisions>"), "<pop />"),
+		Catch::Matchers::ContainsSubstring("p2"));
+}
+
+TEST_CASE("an object whose picture changes has changed: it touches what the new picture covers, though nothing moved", "[collision_rules][moved]")
+{
+	// A trap whose jaws open wider than it was, under a player standing still beside it.
+	const played::Scratch file(
+		"<object name=\"trap\"><sprite name=\"shut\"><rectangle><width>10</width><height>10</height></rectangle></sprite>"
+		"<sprite name=\"open\"><rectangle><width>40</width><height>10</height></rectangle></sprite>"
+		"<position><x>100</x><y>100</y></position>"
+		"<collisions><collision object=\"player\"><inc variable=\"self.bites\" /></collision></collisions>"
+		"<variables><variable name=\"bites\">0</variable></variables></object>"
+		+ played::box("player", 125, 100, "<collisions></collisions>"),
+		"<become object=\"trap\" sprite=\"open\" />");
+	played::Played play(file.path);
+	const auto bites = [&] { return play.get("trap").variable.at("bites"); };
+
+	play.frames(3);
+	CHECK(bites() == 0.0f);
+
+	// The jaws open: a touch, though neither has moved.
+	play.tap(xge::KeyCode::Space);
+	play.get("trap").size = { 40.0f, 10.0f };
+	play.frames(1);
+	CHECK(bites() == 1.0f);
+
+	// Left as they are, nothing has changed since: not touched again.
+	play.frames(3);
+	CHECK(bites() == 1.0f);
+}
+
+TEST_CASE("a rule about a screen edge can hold conditions: it runs only while they hold", "[collision_rules][edge]")
+{
+	// A box going out past the left edge, its rule there armed by a press.
+	const played::Scratch file(
+		played::box("box", 0, 100, "<velocity><x>-60</x><y>0</y></velocity>"
+			"<collisions><collision edge=\"left\"><condition variable=\"armed\"><atleast>1</atleast></condition>"
+			"<inc variable=\"self.hits\" /></collision></collisions>"
+			"<variables><variable name=\"armed\">0</variable><variable name=\"hits\">0</variable></variables>"),
+		"<set variable=\"box.armed\">1</set>");
+	played::Played play(file.path);
+	const auto hits = [&] { return play.get("box").variable.at("hits"); };
+
+	play.frames(5);
+	CHECK(hits() == 0.0f);
+
+	play.tap(xge::KeyCode::Space);
+	play.frames(5);
+	CHECK(hits() >= 4.0f);
+}

@@ -17,7 +17,8 @@ include(FetchContent)
 #       PACKAGE <find_package args>     look for it with find_package(<args> QUIET),
 #                                       or
 #       HEADER <file>                   with find_path(), for a header-only library
-#                                       that has no CMake package
+#                                       that has no CMake package (also in a
+#                                       folder of its lowercase name)
 #       REPO <git url> TAG <tag or commit>
 #       [SETTINGS <VARIABLE=VALUE>...]  ON/OFF cache settings for the fetched copy
 #       [BROUGHT_BY <library>]          the fetched copy of that library builds this
@@ -58,12 +59,22 @@ macro(xge_dependency name)
 			if (FORCE_LOCAL_${XD_UPPER})
 				unset(${XD_VARIABLE} CACHE)
 			else()
-				find_path(${XD_VARIABLE} "${XD_HEADER}")
+				# vcpkg puts a header-only library's header in a folder named
+				# for it (include/rapidxml/rapidxml.hpp), so that is looked in too.
+				string(TOLOWER "${name}" XD_LOWER)
+				find_path(${XD_VARIABLE} "${XD_HEADER}" PATH_SUFFIXES "${XD_LOWER}")
 			endif()
 
 			if (${XD_VARIABLE})
 				set(XD_FOUND TRUE)
 				set(${XD_UPPER}_PACKAGE_FOUND TRUE)
+				# A header has no package to give its version, but may say it
+				# near the top ("// Version 1.13", as RapidXML's does).
+				unset(XD_HEADER_VERSION)
+				file(STRINGS "${${XD_VARIABLE}}/${XD_HEADER}" XD_VERSION_LINE REGEX "Version [0-9]+(\\.[0-9]+)*" LIMIT_COUNT 1)
+				if (XD_VERSION_LINE MATCHES "Version ([0-9]+(\\.[0-9]+)*)")
+					set(XD_HEADER_VERSION "${CMAKE_MATCH_1}")
+				endif()
 			endif()
 
 			set(XD_VERB "download it locally")
@@ -84,10 +95,13 @@ macro(xge_dependency name)
 		# Say what was found, or fetch it.
 		if (XD_FOUND)
 			# The version, as the sanity check it is: the copy found can be older
-			# than the tag pinned below. Not every library says (a header search
-			# cannot), and then there is just the name.
+			# than the tag pinned below. Not every library says (OpenGL's version
+			# is the driver's, known only when a window opens), and then there
+			# is just the name.
 			if (XD_PACKAGE_NAME AND ${XD_PACKAGE_NAME}_VERSION)
 				message(STATUS "Found ${name} ${${XD_PACKAGE_NAME}_VERSION}")
+			elseif (XD_HEADER AND XD_HEADER_VERSION)
+				message(STATUS "Found ${name} ${XD_HEADER_VERSION}")
 			else()
 				message(STATUS "Found ${name}")
 			endif()
@@ -150,37 +164,33 @@ xge_dependency(OpenGL WHEN XGE_WITH_OPENGL
 	# (No semicolon in a MISSING text: it would split the argument.)
 	REQUIRED MISSING "the OpenGL backend needs the system's OpenGL (opengl32 comes with Windows, and on Linux install libgl-dev), or leave it out with -DXGE_WITH_OPENGL=OFF.")
 
-xge_dependency(GLFW WHEN XGE_WITH_OPENGL
+# Vulkan (window/vulkan.cpp) opens its window with GLFW as well.
+set(XGE_NEEDS_GLFW OFF)
+if (XGE_WITH_OPENGL OR XGE_WITH_VULKAN)
+	set(XGE_NEEDS_GLFW ON)
+endif()
+
+xge_dependency(GLFW WHEN XGE_NEEDS_GLFW
 	PACKAGE glfw3
 	REPO https://github.com/glfw/glfw.git TAG 3.4
 	BROUGHT_BY raylib
 	SETTINGS GLFW_BUILD_EXAMPLES=OFF GLFW_BUILD_TESTS=OFF GLFW_BUILD_DOCS=OFF GLFW_INSTALL=OFF)
 
-# SDL2_image and SDL2_ttf are built against whichever SDL2 target ends up
-# available (found or fetched); their own CMakeLists picks it up the same way
-# this project's other fetched libraries do. The OpenGL backend uses them too.
-xge_dependency(SDL2 WHEN XGE_NEEDS_SDL2
+xge_dependency(SDL2 WHEN XGE_WITH_SDL2
 	PACKAGE SDL2
 	REPO https://github.com/libsdl-org/SDL.git TAG release-2.30.9)
-
-xge_dependency(SDL2_image WHEN XGE_NEEDS_SDL2
-	PACKAGE SDL2_image
-	REPO https://github.com/libsdl-org/SDL_image.git TAG release-2.8.2
-	SETTINGS SDL2IMAGE_INSTALL=OFF SDL2IMAGE_VENDORED=ON)
-
-xge_dependency(SDL2_ttf WHEN XGE_NEEDS_SDL2
-	PACKAGE SDL2_ttf
-	REPO https://github.com/libsdl-org/SDL_ttf.git TAG release-2.22.0
-	SETTINGS SDL2TTF_INSTALL=OFF SDL2TTF_VENDORED=ON)
 
 # Any 10 or 11 works: the wrapper uses a handful of calls that did not change, and
 # the suite passes against both (11 only changed internal containers). No version
 # is asked of find_package on purpose: TinyXML2's package is SameMajorVersion, so
 # `10` refuses 11, `11` refuses 10, and a range across the two (10...<12) is
 # refused by both, finding nothing at all. The pin is for the copy that is fetched.
+# Its own xmltest is registered with ctest whenever BUILD_TESTING is on, but it
+# is EXCLUDE_FROM_ALL here, so never built: ctest would list it as a failure.
 xge_dependency(TinyXML2 WHEN XGE_WITH_TINYXML2
 	PACKAGE tinyxml2
-	REPO https://github.com/leethomason/tinyxml2.git TAG 11.0.0)
+	REPO https://github.com/leethomason/tinyxml2.git TAG 11.0.0
+	SETTINGS tinyxml2_BUILD_TESTING=OFF)
 
 xge_dependency(PugiXML WHEN XGE_WITH_PUGIXML
 	PACKAGE pugixml
@@ -213,6 +223,27 @@ xge_dependency(lunasvg
 xge_dependency(Qt6
 	PACKAGE Qt6 COMPONENTS Widgets
 	MISSING "xgegui will not be built (install qtbase with the widgets feature).")
+
+# The Vulkan backend needs no Vulkan SDK: Khronos's headers to build with, and
+# volk, which finds the graphics driver's own Vulkan library (vulkan-1.dll,
+# libvulkan.so.1) when the window opens, so nothing links against Vulkan. Its
+# two small shaders are written into window/vulkan.cpp already compiled.
+#
+# It comes after Qt: Qt (and CMake's own FindVulkan) may already have made
+# a Vulkan::Headers target from the headers it found, and then that is used.
+set(XGE_NEEDS_VULKAN_HEADERS OFF)
+if (XGE_WITH_VULKAN AND NOT TARGET Vulkan::Headers)
+	set(XGE_NEEDS_VULKAN_HEADERS ON)
+endif()
+
+xge_dependency(VulkanHeaders WHEN XGE_NEEDS_VULKAN_HEADERS
+	PACKAGE VulkanHeaders
+	REPO https://github.com/KhronosGroup/Vulkan-Headers.git TAG vulkan-sdk-1.4.341.0)
+
+xge_dependency(volk WHEN XGE_WITH_VULKAN
+	PACKAGE volk
+	REPO https://github.com/zeux/volk.git TAG vulkan-sdk-1.4.341.0
+	SETTINGS VOLK_PULL_IN_VULKAN=OFF)
 
 # libxslt runs the stylesheets that turn a game into a program (xgecli
 # --generate, xge/cli/source/generate.cpp); it is built on libxml2, and EXSLT (part
@@ -291,14 +322,36 @@ if (XGE_WITH_RAPIDXML AND NOT TARGET rapidxml::rapidxml)
 endif()
 
 # raylib's own CMake exports a plain `raylib` target (not namespaced) either
-# way (found or fetched) - nothing to alias. SDL2/SDL2_image/SDL2_ttf modern
+# way (found or fetched) - nothing to alias. SDL2 modern
 # enough to be pinned above all define their own SDL2::SDL2-style ALIAS
 # targets from either path too; the defensive alias below only covers an
 # older/nonstandard find_package result that doesn't.
-if (XGE_NEEDS_SDL2 AND SDL2_FOUND AND NOT TARGET SDL2::SDL2 AND TARGET SDL2)
+if (XGE_WITH_SDL2 AND SDL2_FOUND AND NOT TARGET SDL2::SDL2 AND TARGET SDL2)
 	add_library(SDL2::SDL2 ALIAS SDL2)
 endif()
 
 if(XGE_WITH_XERCES AND NOT TARGET XercesC::XercesC)
 	add_library(XercesC::XercesC ALIAS xerces-c)
 endif()
+
+# Every target of a fetched library, in one folder of the IDE's project list
+# (Visual Studio's "solution folder"), CMakeFetchedLibraries, beside CMake's
+# own CMakePredefinedTargets. A library that sorts its targets into folders
+# of its own keeps them, inside it. Called at the end of the top
+# CMakeLists.txt, once every library is fetched: the project adds no
+# subdirectory of its own, so every one is a fetched library's.
+function(xge_fold_fetched_targets directory)
+	get_property(subdirectories DIRECTORY "${directory}" PROPERTY SUBDIRECTORIES)
+	foreach(subdirectory IN LISTS subdirectories)
+		get_property(targets DIRECTORY "${subdirectory}" PROPERTY BUILDSYSTEM_TARGETS)
+		foreach(target IN LISTS targets)
+			get_target_property(folder ${target} FOLDER)
+			if (folder)
+				set_target_properties(${target} PROPERTIES FOLDER "CMakeFetchedLibraries/${folder}")
+			else()
+				set_target_properties(${target} PROPERTIES FOLDER "CMakeFetchedLibraries")
+			endif()
+		endforeach()
+		xge_fold_fetched_targets("${subdirectory}")
+	endforeach()
+endfunction()

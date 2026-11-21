@@ -1,0 +1,72 @@
+# Notes for AI coding agents
+
+Tips that are hard to work out from the code quickly. This page is for every change; the others are for the part being changed.
+
+| Page | Read when changing |
+|---|---|
+| [play.md](play.md) | values, objects and states, frames and touches, spawning, caches, loading |
+| [cells.md](cells.md) | grid puzzles, board games, the computer's search |
+| [pictures.md](pictures.md) | looks and pictures |
+| [tools.md](tools.md) | backends, the build, the generator, `xgegui` |
+
+Found something that cost time and is not here? Add a line to the page for its part.
+
+Rules, build and test commands: [AGENTS.md](../../AGENTS.md). How the engine works: [the reference](../reference/). Why: [the designs](../designs/00-designs.md). What is next: [the plan](../plan.md).
+
+## The repository
+
+- The games are in `games/descriptions/`, one test file per area in `xge/tests/engine/` and per game in `xge/tests/games/`. New work lands on `working` ahead of `master`: check `git branch -r` and `git log` first.
+- The author builds on Windows (Visual Studio, vcpkg). Agents build on Linux, often without Qt, and cannot watch or listen.
+- Windows headers define macros a Linux build never sees: `near`, `far`, `min`, `max`, `small`, `interface`, `ERROR`. Never name anything one of them (`-Dnear= -Dfar=` on a syntax-only compile catches it).
+- MSVC flags what GCC misses, in tests too: C4702 (unreachable code; also a loop whose body always throws, as `fail` does: test the first child with an `if`), C4459 (a local hiding a file-level name).
+
+## Looking at a game
+
+You cannot see a window, but you can see a frame. From `games/`:
+
+- `xgecli pacman --frames 600 --seed 1 --picture p.png --dump p.xml`, then read `p.png` (an image) and `p.xml` (every object in play, with its look and position).
+- Most games wait on a title: get past it with `--keys start.xml`, a file holding only a `<demo>` (`<seed>1</seed><frames>600</frames><press button="space">5</press><release button="space">8</release>`). Add presses to steer.
+- A real window under `xvfb-run -a` with `import -window root` also works, but the picture is the same drawing every window shows and needs neither.
+
+## Building in a Linux sandbox
+
+- The recipe that works with every backend on: `cmake -S . -B build -G Ninja -DBUILD_TESTING=ON -DCMAKE_BUILD_TYPE=Release -DFORCE_LOCAL_GLFW=ON -DBUILD_SHARED_LIBS=ON`, `cmake --build build --parallel`, `cd build && ctest -j4`.
+- Vulkan runs here on Mesa's software driver: `apt-get install mesa-vulkan-drivers` (and `vulkan-validationlayers`, then run with `VK_INSTANCE_LAYERS=VK_LAYER_KHRONOS_validation` to check every call). `glslang-tools` compiles a changed shader (the commands are beside the shaders in `window/vulkan.cpp`).
+- Never commit a build folder: build in `build/` (ignored) or outside the repository, and read `git status` before `git add`.
+- Build and test before and after a change. After any change to the reader, `WrittenObject`, `WrittenCommand` or the generator, also `ctest --test-dir build/generated -j16`.
+
+## Changing the language
+
+A language change is made everywhere in one commit:
+
+| What | Where |
+|---|---|
+| the schema | `games/xgedef.xsd` |
+| the reader | `xge/lib/load/xml.cpp`, and the verb's file in `xge/lib/verbs/` |
+| pieces and `from=`, if touched | `xge/lib/load/merge.cpp` |
+| the games | every game that uses the old form |
+| the tests | the area's `test_<topic>.cpp` |
+| the docs | the `docs/reference/` page, the word index in `docs/readme.md`, the matching `docs/designs/` file |
+
+## Tests
+
+- A new schema word needs a game that uses it and a mention in `docs/reference/` (`xgetest "[vocabulary]"`); one no game uses goes in `kUnused` in `test_vocabulary.cpp` with why it stays.
+- A new tag or type in the schema says what it does in an `xs:annotation`/`xs:documentation` as its first child, not in a `<!-- -->` comment (comments are for notes to whoever edits the schema). Code that walks the schema steps over an `xs:annotation` first child (`test_verbs.cpp`).
+- The engine's own schema checker (`load/xsd.h`) reads every construct and built-in type the schemas use and judges them as Xerces does; one it does not read stops it loading the schema, naming it. A new construct or type in a schema is taught to it, with a case in `test_schema_checker.cpp`, whose sweep changes every game seven ways and needs both checkers to agree. The one known difference: Xerces lets a lone `.` through as a decimal, against XSD. `xgetest "[check]"` loads every game with every library.
+- A test that builds a `Game` without an `Engine` calls `setCurrentState(0)`, or nothing is shown (sizes are set when the game loads).
+- A command run between frames leaves its copies waiting: call `settleSpawns()` first. Never hold a reference to a copy across frames: keep its `ObjectId` and ask `Game::find`, which answers nullptr once it is gone. Not the Qt word `slots` as a name in a game header: `xgegui` defines it.
+- A part an object may not have lives in a store (`Game::parts()`): ask `isHolder(object)` before `holderOf(object)`, which throws for an object with none, and guard every loop over all objects that reads a part. A part a verb gives while playing is added on first use (`Parts::give`, as `Game::driveFor`); the frame reads stores through `FrameRules::parts()`.
+- The working directory is `games/`, so a test names `descriptions/<game>.xml` and finds the schema with `findSchema("descriptions/pong.xml", "../xgedef.xsd")`. ctest runs from `output/<config>/games`, a plain run from the repository's `games/`: check a new schema test both ways.
+- A scratch file is named with `scratchName()`, so `ctest -j` never has two cases writing one file.
+- A test over every game is split into cases of a like size with `played::share` (`random_keys.h`), so ctest runs them side by side: one case over all of them took 100 s in a Windows Debug build.
+- Before touching `circleOverlapsBox`, add a test to `test_collision_geometry.cpp`.
+- `invaders_fixture.h` is a frozen copy of the first Space Invaders.
+
+## Docs
+
+- The rules for writing docs are in [AGENTS.md](../../AGENTS.md#writing-docs).
+- A change only eyes, ears or MSVC can check adds a line to [Waiting for a look on Windows](../plan.md#waiting-for-a-look-on-windows) in the plan; the author deletes it once seen.
+
+## Privacy
+
+This repository is public. Nothing personal from a chat export goes in it: no health, identity, contact or business details, no conversation titles, and no names beyond the `beefviper` handle in the code headers. Design files call the owner "the author".

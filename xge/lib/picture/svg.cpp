@@ -67,6 +67,7 @@ namespace xge
 				+ std::to_string(drawingWidth) + " by " + std::to_string(drawingHeight));
 		}
 
+		refusePictureSize(std::ceil(part.width * scale), std::ceil(part.height * scale), "an svg picture from " + path);
 		const int width = std::max(1, static_cast<int>(std::ceil(part.width * scale - 0.001f)));
 		const int height = std::max(1, static_cast<int>(std::ceil(part.height * scale - 0.001f)));
 
@@ -91,5 +92,12 @@ namespace xge
 		}
 
 		return bitmap;
+	}
+
+	SvgRegion svgSize(const std::string& path)
+	{
+		const std::unique_ptr<lunasvg::Document> document = lunasvg::Document::loadFromFile(path);
+		if (!document) { throw std::runtime_error("could not read the svg file " + path + " (missing, or not an SVG)"); }
+		return { 0.0f, 0.0f, document->width(), document->height() };
 	}
 }

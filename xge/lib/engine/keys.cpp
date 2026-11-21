@@ -12,9 +12,7 @@ namespace xge
 {
 	namespace
 	{
-		// Single source of truth for the KeyCode <-> string mapping - both
-		// keyCodeFromString and keyCodeToString are built from this one table
-		// instead of keeping two switch statements in sync by hand.
+		// Both ways of the names, from one table.
 		constexpr std::pair<KeyCode, const char*> table[] = {
 			{ KeyCode::A, "a" }, { KeyCode::B, "b" }, { KeyCode::C, "c" }, { KeyCode::D, "d" },
 			{ KeyCode::E, "e" }, { KeyCode::F, "f" }, { KeyCode::G, "g" }, { KeyCode::H, "h" },

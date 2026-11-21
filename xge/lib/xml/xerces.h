@@ -14,18 +14,20 @@
 #include <xercesc/util/XMLEntityResolver.hpp>
 
 #include <string>
+#include <unordered_map>
 
 namespace xc = xercesc;
 
 namespace xge
 {
-	// The Xerces XmlNode wrapper. Nothing outside this file, xml/xerces.cpp,
-	// and XmlDocumentFactory::create (the one place that constructs one)
-	// ever names a Xerces type - see xml/document.h.
+	// The line each element's tag was read on, which the DOM does not keep.
+	using XercesLines = std::unordered_map<const xc::DOMNode*, int>;
+
 	class XercesXmlNode : public XmlNode
 	{
 	public:
-		explicit XercesXmlNode(const xc::DOMElement* element) noexcept;
+		// `lines`: the lines its parser noted (XercesLineParser), or null.
+		explicit XercesXmlNode(const xc::DOMElement* element, const XercesLines* lines = nullptr) noexcept;
 
 		std::string getName() const override;
 		std::string getAttribute(const std::string& name) const override;
@@ -33,19 +35,25 @@ namespace xge
 		std::string getText() const override;
 		std::unique_ptr<XmlNode> getFirstChild() const override;
 		std::unique_ptr<XmlNode> getNextSibling() const override;
+		int line() const override;
 
 	private:
 		const xc::DOMElement* element;
+		const XercesLines* lines;
 	};
 
-	// The Xerces XmlDocument backend - the only one of the four (see also
-	// xml/tinyxml2.h, xml/pugixml.h, xml/rapidxml.h) that can validate against
-	// xgedef.xsd by itself; the other three only check
-	// well-formedness, and load/xml.cpp runs load/xsd.h's validator for them.
-	// Absorbs what used to be the standalone load/xml class's own Xerces
-	// lifecycle (XMLPlatformUtils::Initialize/Terminate, the DOM parser, the
-	// SAX error handler) - load/xml.cpp itself no longer names a Xerces type
-	// anywhere, same as Engine no longer naming an SFML/Raylib/SDL2 type.
+	// Xerces's DOM parser, noting the line each element is read on: where
+	// its start tag ends, which for a tag on one line is its line.
+	class XercesLineParser : public xc::XercesDOMParser
+	{
+	public:
+		XercesLines lines;
+
+		void startElement(const xc::XMLElementDecl& elemDecl, const unsigned int urlId, const XMLCh* const elemPrefix,
+			const xc::RefVectorOf<xc::XMLAttr>& attrList, const XMLSize_t attrCount, const bool isEmpty, const bool isRoot) override;
+	};
+
+	// The one backend that checks a document against xgedef.xsd itself.
 	class XercesXmlDocument : public XmlDocument
 	{
 	public:
@@ -90,7 +98,7 @@ namespace xge
 			std::string gameFile;
 		};
 
-		std::unique_ptr<xc::XercesDOMParser> domParser;
+		std::unique_ptr<XercesLineParser> domParser;
 		ParserErrorHandler parserErrorHandler;
 		SchemaResolver schemaResolver;
 		std::string errorMessage;

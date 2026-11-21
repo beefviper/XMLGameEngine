@@ -14,7 +14,8 @@ add_dependencies(xgelib xgedata)
 # changed. The engine's own files are not copied: --generate takes them from
 # xge/lib/ in the repository (xge_link_xslt, targets.cmake).
 set(data_xsd
-	"games/xgedef.xsd")
+	"games/xgedef.xsd"
+	"games/xgedump.xsd")
 
 set(data_xml
 	"games/descriptions/pong.xml"
@@ -23,6 +24,7 @@ set(data_xml
 	"games/descriptions/spaceinvaders2.xml"
 	"games/descriptions/frogger.xml"
 	"games/descriptions/spacerace.xml"
+	"games/descriptions/sparring.xml"
 	"games/descriptions/kaboom.xml"
 	"games/descriptions/freeway.xml"
 	"games/descriptions/depthcharge.xml"
@@ -71,25 +73,38 @@ set(data_xml
 	"games/descriptions/gin.xml"
 	"games/descriptions/pyramid.xml"
 	"games/descriptions/snake.xml"
-	"games/descriptions/centipede.xml")
+	"games/descriptions/centipede.xml"
+	"games/descriptions/crates.xml"
+	"games/descriptions/doubles.xml"
+	"games/descriptions/minefield.xml")
 
 set(data_assets
 	"games/assets/tuffy.ttf"
 	"games/assets/pressstart2p.ttf"
 	"games/assets/pressstart2p-ofl.txt"
 	"games/assets/paddle.jpg"
+	"games/assets/cards.png"
 	"games/assets/Space Invaders Color Sprites.svg")
 
-# The stylesheets xgecli --generate runs, a folder per target (generate.cpp),
-# and the target's modules, copied into a program unchanged.
+# The stylesheets xgecli --generate runs, a folder per target (generate.cpp).
 set(data_generators
+	"games/generators/engine-cpp/generate.xsl"
+	"games/generators/engine-cpp/text.xsl"
+	"games/generators/engine-cpp/program.xsl"
+	"games/generators/engine-cpp/tree.xsl"
+	"games/generators/engine-cpp/engine.xml"
 	"games/generators/windows-cpp/generate.xsl"
-	"games/generators/windows-cpp/text.xsl"
-	"games/generators/windows-cpp/merge.xsl"
-	"games/generators/windows-cpp/data.xsl"
+	"games/generators/windows-cpp/names.xsl"
+	"games/generators/windows-cpp/values.xsl"
+	"games/generators/windows-cpp/covers.xsl"
+	"games/generators/windows-cpp/game.xsl"
 	"games/generators/windows-cpp/program.xsl"
-	"games/generators/windows-cpp/engine.xml"
-	"games/generators/windows-cpp/modules/game_parts.h")
+	"games/generators/windows-cpp/verbs/bounce.xsl"
+	"games/generators/windows-cpp/verbs/deflect.xsl"
+	"games/generators/windows-cpp/verbs/move.xsl"
+	"games/generators/windows-cpp/verbs/reset.xsl"
+	"games/generators/windows-cpp/verbs/stick.xsl"
+	"games/generators/windows-cpp/verbs/trigger.xsl")
 
 set(data_outputs "")
 foreach(item IN LISTS data_xsd data_xml data_assets data_generators)

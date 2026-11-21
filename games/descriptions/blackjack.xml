@@ -18,21 +18,23 @@
   to two, unless the dealer has one too. Out of chips, the game is over.
 
   A and D or the arrows change the bet, Space deals. W or Up hits, S or
-  Down stands. Space after a hand clears the table. P or Escape pauses.
+  Down stands. Space after a hand clears the table. Pause pauses.
 
   How it is written:
-  * The deck is Klondike's, its ace worth <worth>1</worth><worth>11</worth>
-    and its court cards <worth>10</worth>.
-  * The two hands of cards are piles with <points><atmost>21</atmost>
-    </points>: the live number `points` counts their face-up cards, an
-    ace as 11 while that stays within 21.
-  * Two hands with piles of their own <deal pile="stock" /> into them,
-    the dealer's second card with faces="down"; <reveal pile="dealer" />
-    turns it up; <shuffle pile="stock" /> gathers every card for the next.
+  * The pack is a group of class card, a row for each suit and a column
+    for each rank, a card worth its column: the court cards' columns
+    give a worth of 10, the ace's a `high` of 11.
+  * Your cards and the dealer's are holders that <counts variable="worth">
+    <atmost>21</atmost>: their own `worth` adds up their face-up cards',
+    an ace's high while that stays within 21.
+  * The table's actions <send> cards from the stock, the dealer's second
+    showing its back; <become object="dealer" sprite="face" /> turns it
+    up. Between hands every card is sent back and <order>ed at random.
   * The dealer draws by a timer that follows a look its condition gives
-    it while its points are under 17.
-  * The table's `phase`: 0 betting, 1 your play, 2 the dealer's,
-    3 settling, 4 the hand over; its looks say what to do.
+    it while its worth is under 17.
+  * Where the hand is, is the table's look: betting, playing, dealer,
+    settling, done. Each look's rules sit inside one condition on it,
+    and what no rule in it catches comes last (the dealer wins).
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
@@ -48,25 +50,6 @@
     <variable name="dealerrow">110</variable>
     <variable name="yourrow">470</variable>
   </variables>
-  <sounds>
-    <sound name="deal" wave="noise"><note pitch="G5">0.02</note><note pitch="C6">0.02</note></sound>
-    <sound name="chip"><note pitch="E6">0.04</note></sound>
-    <sound name="win">
-      <note pitch="C5">0.1</note>
-      <note pitch="E5">0.1</note>
-      <note pitch="G5">0.2</note>
-    </sound>
-    <sound name="blackjack">
-      <note pitch="C5">0.1</note>
-      <note pitch="E5">0.1</note>
-      <note pitch="G5">0.1</note>
-      <note pitch="C6">0.3</note>
-    </sound>
-    <sound name="lose">
-      <note pitch="E4">0.15</note>
-      <note pitch="C4">0.3</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>80</size><color>color.yellow</color></style>
     <style name="prompt"><size>32</size></style>
@@ -79,23 +62,20 @@
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>BLACKJACK</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 170</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-170</offset></centered></y></position>
         </object>
-        <object name="help1">
-          <sprite><text style="help"><content>get nearer 21 than the dealer without going over;</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 90</centered></y></position>
-        </object>
-        <object name="help2">
-          <sprite><text style="help"><content>court cards count 10, an ace 1 or 11. the dealer draws to 17</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
-        </object>
-        <object name="help3">
-          <sprite><text style="help"><content>a d or the arrows bet, spacebar deals; w or up hits, s or down stands</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 20</centered></y></position>
-        </object>
+        <group name="help">
+          <rows>3</rows>
+          <padding><y>30</y></padding>
+          <sprite><text style="help" /></sprite>
+          <position><x><centered /></x><y><centered><offset>-90</offset></centered></y></position>
+          <row number="1"><sprite><text><content>get nearer 21 than the dealer without going over;</content></text></sprite></row>
+          <row number="2"><sprite><text><content>court cards count 10, an ace 1 or 11. the dealer draws to 17</content></text></sprite></row>
+          <row number="3"><sprite><text><content>a d or the arrows bet, spacebar deals; w or up hits, s or down stands</content></text></sprite><padding><y>40</y></padding></row>
+        </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 170</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>170</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
@@ -104,1026 +84,60 @@
     </state>
     <state name="playing">
       <objects>
-        <!-- the pack: Klondike's, an ace worth 1 or 11 and the court cards 10 -->
-        <deck name="cards" pile="stock">
-          <face><width>96</width><height>140</height><scale>1</scale><color>color.white</color><edge>color.grey</edge></face>
-          <back>
-            <color>color.darkblue</color>
-            <edge>color.lightgrey</edge>
-            <pattern>
-              <row>*.........*.</row>
-              <row>.*.......*..</row>
-              <row>..*.....*...</row>
-              <row>...*...*....</row>
-              <row>....*.*.....</row>
-              <row>.....*......</row>
-              <row>....*.*.....</row>
-              <row>...*...*....</row>
-              <row>..*.....*...</row>
-              <row>.*.......*..</row>
-              <row>*.........*.</row>
-              <row>............</row>
-            </pattern>
-          </back>
-          <!-- the colours of the court pictures -->
-          <color char="y">color.gold</color>
-          <color char="s">color.peach</color>
-          <color char="k">color.black</color>
-          <color char="n">color.brown</color>
-          <color char="r">color.red</color>
-          <color char="b">color.blue</color>
-          <color char="w">color.white</color>
-          <color char="g">color.lightgrey</color>
-          <color char="e">color.green</color>
-
-          <!-- spades: the pip, the corner pip and the ace's -->
-          <suit name="spades">
-            <color>color.black</color>
-            <row>........*........</row>
-            <row>.......***.......</row>
-            <row>......*****......</row>
-            <row>.....*******.....</row>
-            <row>....*********....</row>
-            <row>...***********...</row>
-            <row>..*************..</row>
-            <row>.***************.</row>
-            <row>*****************</row>
-            <row>*****************</row>
-            <row>*****************</row>
-            <row>*****************</row>
-            <row>.***************.</row>
-            <row>..****..*..****..</row>
-            <row>.......***.......</row>
-            <row>.......***.......</row>
-            <row>......*****......</row>
-            <row>......*****......</row>
-            <index>
-              <row>.....*.....</row>
-              <row>....***....</row>
-              <row>...*****...</row>
-              <row>..*******..</row>
-              <row>.*********.</row>
-              <row>***********</row>
-              <row>***********</row>
-              <row>***********</row>
-              <row>.*********.</row>
-              <row>.....*.....</row>
-              <row>....***....</row>
-              <row>....***....</row>
-            </index>
-            <large>
-              <row>....................*....................</row>
-              <row>...................**....................</row>
-              <row>...................***...................</row>
-              <row>..................*****..................</row>
-              <row>.................*******.................</row>
-              <row>................*********................</row>
-              <row>...............***********...............</row>
-              <row>..............*************..............</row>
-              <row>.............***************.............</row>
-              <row>............*****************............</row>
-              <row>...........*******************...........</row>
-              <row>..........*********************..........</row>
-              <row>........*************************........</row>
-              <row>.......***************************.......</row>
-              <row>......*****************************......</row>
-              <row>.....*******************************.....</row>
-              <row>....*********************************....</row>
-              <row>...***********************************...</row>
-              <row>...***********************************...</row>
-              <row>..*************************************..</row>
-              <row>.***************************************.</row>
-              <row>.***************************************.</row>
-              <row>****************************************.</row>
-              <row>*****************************************</row>
-              <row>*****************************************</row>
-              <row>*****************************************</row>
-              <row>*****************************************</row>
-              <row>*****************************************</row>
-              <row>*****************************************</row>
-              <row>.***************************************.</row>
-              <row>.***************************************.</row>
-              <row>..*************************************..</row>
-              <row>...***************.***.***************...</row>
-              <row>....*************..***..*************....</row>
-              <row>......*********....***....*********......</row>
-              <row>........****......****.......***.........</row>
-              <row>..................*****..................</row>
-              <row>..................*****..................</row>
-              <row>.................*******.................</row>
-              <row>.................*******.................</row>
-              <row>................********.................</row>
-              <row>................*********................</row>
-              <row>...............***********...............</row>
-              <row>...............***********...............</row>
-              <row>..............*************..............</row>
-              <row>.............***************.............</row>
-            </large>
-          </suit>
-
-          <!-- hearts: the pip, the corner pip and the ace's -->
-          <suit name="hearts">
-            <color>color.red</color>
-            <row>...***.....***...</row>
-            <row>.******...******.</row>
-            <row>.*******.*******.</row>
-            <row>*****************</row>
-            <row>*****************</row>
-            <row>*****************</row>
-            <row>*****************</row>
-            <row>.***************.</row>
-            <row>.***************.</row>
-            <row>..*************..</row>
-            <row>...***********...</row>
-            <row>....*********....</row>
-            <row>.....*******.....</row>
-            <row>......*****......</row>
-            <row>.......***.......</row>
-            <row>.......***.......</row>
-            <row>........*........</row>
-            <row>.................</row>
-            <index>
-              <row>.***...***.</row>
-              <row>*****.*****</row>
-              <row>***********</row>
-              <row>***********</row>
-              <row>***********</row>
-              <row>.*********.</row>
-              <row>.*********.</row>
-              <row>..*******..</row>
-              <row>...*****...</row>
-              <row>....***....</row>
-              <row>.....*.....</row>
-              <row>...........</row>
-            </index>
-            <large>
-              <row>........*****...............*****........</row>
-              <row>......*********...........*********......</row>
-              <row>....************.........************....</row>
-              <row>...**************.......**************...</row>
-              <row>..****************.....***************...</row>
-              <row>..*****************...*****************..</row>
-              <row>.******************...******************.</row>
-              <row>.*******************.*******************.</row>
-              <row>.*******************.*******************.</row>
-              <row>*****************************************</row>
-              <row>*****************************************</row>
-              <row>*****************************************</row>
-              <row>*****************************************</row>
-              <row>*****************************************</row>
-              <row>*****************************************</row>
-              <row>*****************************************</row>
-              <row>****************************************.</row>
-              <row>.***************************************.</row>
-              <row>.***************************************.</row>
-              <row>..*************************************..</row>
-              <row>..*************************************..</row>
-              <row>...***********************************...</row>
-              <row>...***********************************...</row>
-              <row>....*********************************....</row>
-              <row>.....*******************************.....</row>
-              <row>.....*******************************.....</row>
-              <row>......*****************************......</row>
-              <row>.......***************************.......</row>
-              <row>........*************************........</row>
-              <row>.........***********************.........</row>
-              <row>..........*********************..........</row>
-              <row>...........*******************...........</row>
-              <row>............*****************............</row>
-              <row>.............***************.............</row>
-              <row>.............**************..............</row>
-              <row>..............*************..............</row>
-              <row>...............***********...............</row>
-              <row>................*********................</row>
-              <row>.................*******.................</row>
-              <row>..................*****..................</row>
-              <row>..................*****..................</row>
-              <row>...................***...................</row>
-              <row>...................***...................</row>
-              <row>....................*....................</row>
-              <row>....................*....................</row>
-              <row>.........................................</row>
-            </large>
-          </suit>
-
-          <!-- clubs: the pip, the corner pip and the ace's -->
-          <suit name="clubs">
-            <color>color.black</color>
-            <row>.......***.......</row>
-            <row>.....*******.....</row>
-            <row>.....*******.....</row>
-            <row>.....*******.....</row>
-            <row>.....*******.....</row>
-            <row>...***********...</row>
-            <row>.***************.</row>
-            <row>*****************</row>
-            <row>*****************</row>
-            <row>*****************</row>
-            <row>*****************</row>
-            <row>.******.*.******.</row>
-            <row>..****..*..****..</row>
-            <row>........*........</row>
-            <row>.......***.......</row>
-            <row>.......***.......</row>
-            <row>......*****......</row>
-            <row>......*****......</row>
-            <index>
-              <row>....***....</row>
-              <row>...*****...</row>
-              <row>...*****...</row>
-              <row>...*****...</row>
-              <row>.*********.</row>
-              <row>***********</row>
-              <row>***********</row>
-              <row>***********</row>
-              <row>.***.*.***.</row>
-              <row>.....*.....</row>
-              <row>....***....</row>
-              <row>....***....</row>
-            </index>
-            <large>
-              <row>..................*****..................</row>
-              <row>................*********................</row>
-              <row>..............*************..............</row>
-              <row>.............***************.............</row>
-              <row>.............***************.............</row>
-              <row>............*****************............</row>
-              <row>............*****************............</row>
-              <row>...........*******************...........</row>
-              <row>...........*******************...........</row>
-              <row>...........*******************...........</row>
-              <row>...........*******************...........</row>
-              <row>...........*******************...........</row>
-              <row>...........*******************...........</row>
-              <row>............*****************............</row>
-              <row>......*****************************......</row>
-              <row>....*********************************....</row>
-              <row>...***********************************...</row>
-              <row>..*************************************..</row>
-              <row>.***************************************.</row>
-              <row>.***************************************.</row>
-              <row>.***************************************.</row>
-              <row>*****************************************</row>
-              <row>*****************************************</row>
-              <row>*****************************************</row>
-              <row>*****************************************</row>
-              <row>*****************************************</row>
-              <row>******************.***.******************</row>
-              <row>.*****************.***.*****************.</row>
-              <row>.*****************.***.*****************.</row>
-              <row>..***************..***..***************..</row>
-              <row>...*************...***...*************...</row>
-              <row>....***********....***....***********....</row>
-              <row>.....*********.....***.....*********.....</row>
-              <row>........***.......*****.......***........</row>
-              <row>..................*****..................</row>
-              <row>..................*****..................</row>
-              <row>..................*****..................</row>
-              <row>.................*******.................</row>
-              <row>.................*******.................</row>
-              <row>.................*******.................</row>
-              <row>................*********................</row>
-              <row>................*********................</row>
-              <row>...............***********...............</row>
-              <row>..............************...............</row>
-              <row>..............*************..............</row>
-              <row>.............***************.............</row>
-            </large>
-          </suit>
-
-          <!-- diamonds: the pip, the corner pip and the ace's -->
-          <suit name="diamonds">
-            <color>color.red</color>
-            <row>......*......</row>
-            <row>.....***.....</row>
-            <row>.....***.....</row>
-            <row>....*****....</row>
-            <row>...*******...</row>
-            <row>...*******...</row>
-            <row>..*********..</row>
-            <row>.***********.</row>
-            <row>*************</row>
-            <row>*************</row>
-            <row>.***********.</row>
-            <row>..*********..</row>
-            <row>...*******...</row>
-            <row>...*******...</row>
-            <row>....*****....</row>
-            <row>.....***.....</row>
-            <row>.....***.....</row>
-            <row>......*......</row>
-            <index>
-              <row>....*....</row>
-              <row>...***...</row>
-              <row>...***...</row>
-              <row>..*****..</row>
-              <row>.*******.</row>
-              <row>*********</row>
-              <row>*********</row>
-              <row>.*******.</row>
-              <row>..*****..</row>
-              <row>...***...</row>
-              <row>...***...</row>
-              <row>....*....</row>
-            </index>
-            <large>
-              <row>................*................</row>
-              <row>...............***...............</row>
-              <row>...............***...............</row>
-              <row>..............*****..............</row>
-              <row>.............*******.............</row>
-              <row>.............*******.............</row>
-              <row>............*********............</row>
-              <row>...........***********...........</row>
-              <row>..........*************..........</row>
-              <row>..........*************..........</row>
-              <row>.........***************.........</row>
-              <row>........*****************........</row>
-              <row>........*****************........</row>
-              <row>.......*******************.......</row>
-              <row>......*********************......</row>
-              <row>.....***********************.....</row>
-              <row>.....***********************.....</row>
-              <row>....*************************....</row>
-              <row>...***************************...</row>
-              <row>...***************************...</row>
-              <row>..*****************************..</row>
-              <row>.*******************************.</row>
-              <row>*********************************</row>
-              <row>*********************************</row>
-              <row>.*******************************.</row>
-              <row>..*****************************..</row>
-              <row>...***************************...</row>
-              <row>...***************************...</row>
-              <row>....*************************....</row>
-              <row>.....***********************.....</row>
-              <row>.....***********************.....</row>
-              <row>......*********************......</row>
-              <row>.......*******************.......</row>
-              <row>........*****************........</row>
-              <row>........*****************........</row>
-              <row>.........***************.........</row>
-              <row>..........*************..........</row>
-              <row>..........*************..........</row>
-              <row>...........***********...........</row>
-              <row>............*********............</row>
-              <row>.............*******.............</row>
-              <row>.............*******.............</row>
-              <row>..............*****..............</row>
-              <row>...............***...............</row>
-              <row>...............***...............</row>
-              <row>................*................</row>
-            </large>
-          </suit>
-
-          <!-- the ranks, lowest first: the corner index, then the pips on a grid of three columns and thirteen
-               rows ('*' a pip, 'v' a pip turned round, '@' the ace's big one), or the court picture's top half -->
-          <rank name="A">
-            <index>
-              <row>...***...</row>
-              <row>...***...</row>
-              <row>..**.**..</row>
-              <row>..**.**..</row>
-              <row>..**.**..</row>
-              <row>.**...**.</row>
-              <row>.**...**.</row>
-              <row>.**...**.</row>
-              <row>.*******.</row>
-              <row>**.....**</row>
-              <row>**.....**</row>
-              <row>**.....**</row>
-              <row>**.....**</row>
-              <row>**.....**</row>
-              <row>**.....**</row>
-            </index>
-            <pips>
-              <row>@</row>
-            </pips>
-            <worth>1</worth><worth>11</worth>
-          </rank>
-          <rank name="2">
-            <index>
-              <row>..*****..</row>
-              <row>.**...**.</row>
-              <row>**.....**</row>
-              <row>.......**</row>
-              <row>.......**</row>
-              <row>......**.</row>
-              <row>.....**..</row>
-              <row>....**...</row>
-              <row>...**....</row>
-              <row>..**.....</row>
-              <row>.**......</row>
-              <row>**.......</row>
-              <row>**.......</row>
-              <row>**.......</row>
-              <row>*********</row>
-            </index>
-            <pips>
-              <row>.*.</row>
-              <row>...</row>
-              <row>...</row>
-              <row>...</row>
-              <row>...</row>
-              <row>...</row>
-              <row>...</row>
-              <row>...</row>
-              <row>...</row>
-              <row>...</row>
-              <row>...</row>
-              <row>...</row>
-              <row>.v.</row>
-            </pips>
-          </rank>
-          <rank name="3">
-            <index>
-              <row>.******..</row>
-              <row>**....**.</row>
-              <row>.......**</row>
-              <row>.......**</row>
-              <row>.......**</row>
-              <row>......**.</row>
-              <row>..*****..</row>
-              <row>......**.</row>
-              <row>.......**</row>
-              <row>.......**</row>
-              <row>.......**</row>
-              <row>.......**</row>
-              <row>**.....**</row>
-              <row>.**...**.</row>
-              <row>..*****..</row>
-            </index>
-            <pips>
-              <row>.*.</row>
-              <row>...</row>
-              <row>...</row>
-              <row>...</row>
-              <row>...</row>
-              <row>...</row>
-              <row>.*.</row>
-              <row>...</row>
-              <row>...</row>
-              <row>...</row>
-              <row>...</row>
-              <row>...</row>
-              <row>.v.</row>
-            </pips>
-          </rank>
-          <rank name="4">
-            <index>
-              <row>......**.</row>
-              <row>.....***.</row>
-              <row>....****.</row>
-              <row>...**.**.</row>
-              <row>...**.**.</row>
-              <row>..**..**.</row>
-              <row>..**..**.</row>
-              <row>.**...**.</row>
-              <row>**....**.</row>
-              <row>*********</row>
-              <row>*********</row>
-              <row>......**.</row>
-              <row>......**.</row>
-              <row>......**.</row>
-              <row>......**.</row>
-            </index>
-            <pips>
-              <row>*.*</row>
-              <row>...</row>
-              <row>...</row>
-              <row>...</row>
-              <row>...</row>
-              <row>...</row>
-              <row>...</row>
-              <row>...</row>
-              <row>...</row>
-              <row>...</row>
-              <row>...</row>
-              <row>...</row>
-              <row>v.v</row>
-            </pips>
-          </rank>
-          <rank name="5">
-            <index>
-              <row>*********</row>
-              <row>**.......</row>
-              <row>**.......</row>
-              <row>**.......</row>
-              <row>**.......</row>
-              <row>*******..</row>
-              <row>......**.</row>
-              <row>.......**</row>
-              <row>.......**</row>
-              <row>.......**</row>
-              <row>.......**</row>
-              <row>.......**</row>
-              <row>**.....**</row>
-              <row>.**...**.</row>
-              <row>..*****..</row>
-            </index>
-            <pips>
-              <row>*.*</row>
-              <row>...</row>
-              <row>...</row>
-              <row>...</row>
-              <row>...</row>
-              <row>...</row>
-              <row>.*.</row>
-              <row>...</row>
-              <row>...</row>
-              <row>...</row>
-              <row>...</row>
-              <row>...</row>
-              <row>v.v</row>
-            </pips>
-          </rank>
-          <rank name="6">
-            <index>
-              <row>...*****.</row>
-              <row>..**.....</row>
-              <row>.**......</row>
-              <row>**.......</row>
-              <row>**.......</row>
-              <row>**.****..</row>
-              <row>***...**.</row>
-              <row>**.....**</row>
-              <row>**.....**</row>
-              <row>**.....**</row>
-              <row>**.....**</row>
-              <row>**.....**</row>
-              <row>**.....**</row>
-              <row>.**...**.</row>
-              <row>..*****..</row>
-            </index>
-            <pips>
-              <row>*.*</row>
-              <row>...</row>
-              <row>...</row>
-              <row>...</row>
-              <row>...</row>
-              <row>...</row>
-              <row>*.*</row>
-              <row>...</row>
-              <row>...</row>
-              <row>...</row>
-              <row>...</row>
-              <row>...</row>
-              <row>v.v</row>
-            </pips>
-          </rank>
-          <rank name="7">
-            <index>
-              <row>*********</row>
-              <row>.......**</row>
-              <row>.......**</row>
-              <row>......**.</row>
-              <row>......**.</row>
-              <row>.....**..</row>
-              <row>.....**..</row>
-              <row>....**...</row>
-              <row>....**...</row>
-              <row>...**....</row>
-              <row>...**....</row>
-              <row>...**....</row>
-              <row>...**....</row>
-              <row>...**....</row>
-              <row>...**....</row>
-            </index>
-            <pips>
-              <row>*.*</row>
-              <row>...</row>
-              <row>...</row>
-              <row>.*.</row>
-              <row>...</row>
-              <row>...</row>
-              <row>*.*</row>
-              <row>...</row>
-              <row>...</row>
-              <row>...</row>
-              <row>...</row>
-              <row>...</row>
-              <row>v.v</row>
-            </pips>
-          </rank>
-          <rank name="8">
-            <index>
-              <row>..*****..</row>
-              <row>.**...**.</row>
-              <row>**.....**</row>
-              <row>**.....**</row>
-              <row>**.....**</row>
-              <row>.**...**.</row>
-              <row>..*****..</row>
-              <row>.**...**.</row>
-              <row>**.....**</row>
-              <row>**.....**</row>
-              <row>**.....**</row>
-              <row>**.....**</row>
-              <row>**.....**</row>
-              <row>.**...**.</row>
-              <row>..*****..</row>
-            </index>
-            <pips>
-              <row>*.*</row>
-              <row>...</row>
-              <row>...</row>
-              <row>.*.</row>
-              <row>...</row>
-              <row>...</row>
-              <row>*.*</row>
-              <row>...</row>
-              <row>...</row>
-              <row>.v.</row>
-              <row>...</row>
-              <row>...</row>
-              <row>v.v</row>
-            </pips>
-          </rank>
-          <rank name="9">
-            <index>
-              <row>..*****..</row>
-              <row>.**...**.</row>
-              <row>**.....**</row>
-              <row>**.....**</row>
-              <row>**.....**</row>
-              <row>**.....**</row>
-              <row>**.....**</row>
-              <row>.**...***</row>
-              <row>..****.**</row>
-              <row>.......**</row>
-              <row>.......**</row>
-              <row>......**.</row>
-              <row>.....**..</row>
-              <row>....**...</row>
-              <row>.****....</row>
-            </index>
-            <pips>
-              <row>*.*</row>
-              <row>...</row>
-              <row>...</row>
-              <row>...</row>
-              <row>*.*</row>
-              <row>...</row>
-              <row>.*.</row>
-              <row>...</row>
-              <row>v.v</row>
-              <row>...</row>
-              <row>...</row>
-              <row>...</row>
-              <row>v.v</row>
-            </pips>
-          </rank>
-          <rank name="10">
-            <index>
-              <row>..**...****..</row>
-              <row>.***..**..**.</row>
-              <row>****.**....**</row>
-              <row>..**.**....**</row>
-              <row>..**.**....**</row>
-              <row>..**.**....**</row>
-              <row>..**.**....**</row>
-              <row>..**.**....**</row>
-              <row>..**.**....**</row>
-              <row>..**.**....**</row>
-              <row>..**.**....**</row>
-              <row>..**.**....**</row>
-              <row>..**.**....**</row>
-              <row>..**..**..**.</row>
-              <row>..**...****..</row>
-            </index>
-            <pips>
-              <row>*.*</row>
-              <row>...</row>
-              <row>.*.</row>
-              <row>...</row>
-              <row>*.*</row>
-              <row>...</row>
-              <row>...</row>
-              <row>...</row>
-              <row>v.v</row>
-              <row>...</row>
-              <row>.v.</row>
-              <row>...</row>
-              <row>v.v</row>
-            </pips>
-          </rank>
-          <rank name="J">
-            <index>
-              <row>....*****</row>
-              <row>......**.</row>
-              <row>......**.</row>
-              <row>......**.</row>
-              <row>......**.</row>
-              <row>......**.</row>
-              <row>......**.</row>
-              <row>......**.</row>
-              <row>......**.</row>
-              <row>......**.</row>
-              <row>......**.</row>
-              <row>**....**.</row>
-              <row>**....**.</row>
-              <row>.**..**..</row>
-              <row>..****...</row>
-            </index>
-            <picture>
-              <half />
-              <row>************************************rrr********</row>
-              <row>*...................................rrr.......*</row>
-              <row>*...................................rrr.......*</row>
-              <row>*.....gg..........................rrrr........*</row>
-              <row>*.....gg..........................rrrr........*</row>
-              <row>*.....gg..........................rrrr........*</row>
-              <row>*...ggggg........................rrr..........*</row>
-              <row>*...ggggg........bbbbbbbbbbbb....rrr..........*</row>
-              <row>*...ggggg......bbbbbbbbbbbbbbbbb.rrr..........*</row>
-              <row>*..gggggg....bbbbbbbbbbbbbbbbbbrrrr...........*</row>
-              <row>*..gggggg...bbbbbbbbbbbbbbbbbbbrrrr...........*</row>
-              <row>*...ggggg...bbbbbbbbbbbbbbbbbbbrrrr...........*</row>
-              <row>*...ggggg..bbbbbbbbbbbbbbbbbbbbbbbb...........*</row>
-              <row>*...ggggg.yyyyyyyyyyyyyyyyyyyyyyyyyy..........*</row>
-              <row>*.....nn..yyyyyyyyyyyyyyyyyyyyyyyyyy..........*</row>
-              <row>*.....nn..yyyyyyyyyyyyyyyyyyyyyyyyyy..........*</row>
-              <row>*.....nn..yyyyyyyyyyyyyyyyyyyyyyyyyy..........*</row>
-              <row>*.....nn......nnbbbbbbbbbbbbbbbn..............*</row>
-              <row>*.....nn......nnnsssbbbbbbbsssnnn.............*</row>
-              <row>*.....nn.....nnnssnnnssssnnnnsnnn.............*</row>
-              <row>*.....nn.....nnnssnnnssssnnnnsnnn.............*</row>
-              <row>*.....nn.....nnnssskksssskkssssnnn............*</row>
-              <row>*.....nn.....nnnssskksssskkssssnnn............*</row>
-              <row>*.....nn.....nnnsssssssssssssssnnn............*</row>
-              <row>*.....nn.....nnnssssssnnsssssssnnn............*</row>
-              <row>*.....nn.....nnnssssssnnsssssssnnn............*</row>
-              <row>*.....nn.....nnnssssssssssssssnnn.............*</row>
-              <row>*.....nn.....nnnnssssrrrrrssssnnn.............*</row>
-              <row>*.....nn......nnnssssrrrrrsssnnnn.............*</row>
-              <row>*.....nn......nnnnsssssssssssnnn..............*</row>
-              <row>*.....nn.......nnnnsssssssssnnnn..............*</row>
-              <row>*.....nn........nnnnssssssnnnnn...............*</row>
-              <row>*.....nn.........nnnnnnnnnnnnn................*</row>
-              <row>*.....nn..........nnnnnnnnnnn.................*</row>
-              <row>*.....nn............nnnnnnn...................*</row>
-              <row>*.....nn......................................*</row>
-              <row>*.....nn......................................*</row>
-              <row>*.....nn..yyyyyyyyyyyyyyyyyyyyyyyyyy..........*</row>
-              <row>*.....nn..yyyyyyyyyyyyyyyyyyyyyyyyyy..........*</row>
-              <row>*.....nn.byyyyyyyyyyyyyyyyyyyyyyyyyy**........*</row>
-              <row>*.....nn*byyyyyyyyyyyyyyyyyyyyyyyyyy*****.....*</row>
-              <row>*.....nn*bbb***bbb***bbb***bbb***********.....*</row>
-              <row>*....*nnb***bbb***bbb***bbb***************....*</row>
-              <row>*....*nnb***bbb***bbb***bbb***************....*</row>
-              <row>*..***nnb***bbb***bbb***bbb*****************..*</row>
-              <row>*..bbbnn*bbb***bbb***bbb***bbb**************..*</row>
-              <row>*..bbbnn*bbb***bbb***bbb***bbb**************..*</row>
-              <row>*..bbbnn*bbb***bbb***bbb***bbb**************..*</row>
-              <row>*..***nnb***bbb***bbb***bbb*****************..*</row>
-              <row>*..***nnb***bbb***bbb***bbb*****************..*</row>
-              <row>*..***nnb***bbb***bbb***bbb*****************..*</row>
-              <row>*..bbbnn*bbb***bbb***bbb***bbb**************..*</row>
-              <row>*..bbbnn*bbb***bbb***bbb***bbb**************..*</row>
-              <row>*..bbbnn*bbb***bbb***bbb***bbb**************..*</row>
-              <row>*..***nnb***bbb***bbb***bbb*****************..*</row>
-              <row>*..***nnb***bbb***bbb***bbb*****************..*</row>
-              <row>*..***nnb***bbb***bbb***bbb*****************..*</row>
-              <row>*..bbbnn*bbb***bbb***bbb***bbb**************..*</row>
-              <row>*..bbbnn*bbb***bbb***bbb***bbb**************..*</row>
-              <row>*..bbbnn*bbb***bbb***bbb***bbb**************..*</row>
-              <row>*..***nnb***bbb***bbb***bbb*****************..*</row>
-              <row>*..***nnb***bbb***bbb***bbb*****************..*</row>
-              <row>***********************************************</row>
-            </picture>
-            <worth>10</worth>
-          </rank>
-          <rank name="Q">
-            <index>
-              <row>..*****..</row>
-              <row>.**...**.</row>
-              <row>**.....**</row>
-              <row>**.....**</row>
-              <row>**.....**</row>
-              <row>**.....**</row>
-              <row>**.....**</row>
-              <row>**.....**</row>
-              <row>**.....**</row>
-              <row>**.....**</row>
-              <row>**..**.**</row>
-              <row>**...****</row>
-              <row>.**...**.</row>
-              <row>..*****.*</row>
-              <row>.......**</row>
-            </index>
-            <picture>
-              <half />
-              <row>***********************************************</row>
-              <row>*.............................................*</row>
-              <row>*.............................................*</row>
-              <row>*.............................................*</row>
-              <row>*............ww...ww..ww...ww..ww.............*</row>
-              <row>*............ww...ww..ww...ww..ww.............*</row>
-              <row>*............yy...yy..yy...yy..yy.............*</row>
-              <row>*............yy...yy..yy...yy..yy.............*</row>
-              <row>*............yy...yy..yy...yy..yy.............*</row>
-              <row>*............yyyyyyyyyyyyyyyyyyyy.............*</row>
-              <row>*............yyyyybbyyrryyybbyyyy.............*</row>
-              <row>*............yyyyybbyyrryyybbyyyy...rrrrr.....*</row>
-              <row>*............yyyyyyyyyyyyyyyyyyyy..rrrrrrr....*</row>
-              <row>*............yyyyyyyyyyyyyyyyyyyy..rryyrrr....*</row>
-              <row>*..............yyyyyyssssyyyyyy....rryyrrr....*</row>
-              <row>*.............yyyyyssssssssyyyyy...rrrrrrr....*</row>
-              <row>*............yyyyyssssssssssyyyyy..rrrrrr.....*</row>
-              <row>*............yyyyssssssssssssyyyyy..rrrr......*</row>
-              <row>*...........yyyyysssssssssssssyyyy...ee.......*</row>
-              <row>*...........yyyyssnnnssssnnnnsyyyyy..ee.......*</row>
-              <row>*..........yyyyyssnnnssssnnnnsyyyyy..ee.......*</row>
-              <row>*..........yyyyyssskksssskkssssyyyyy.ee.......*</row>
-              <row>*.........yyyyyyssskksssskkssssyyyyy.ee.......*</row>
-              <row>*.........yyyyyysssssssssssssssyyyyy.ee.......*</row>
-              <row>*.........yyyyyyssssssnnsssssssyyyyy.ee.......*</row>
-              <row>*.........yyyyyyssssssnnsssssssyyyyyyee.......*</row>
-              <row>*.........yyyyyyssssssssssssssyyyyyyyee.......*</row>
-              <row>*.........yyyyyyyssssrrrrrssssyyyyyyyee.......*</row>
-              <row>*.........yyyyyyyssssrrrrrsssyyyyyyyyee.......*</row>
-              <row>*.........yyyyyyyysssssssssssyyyyyyyyee.......*</row>
-              <row>*.........yyyyyyyyysssssssssyyyyyyeeeee.......*</row>
-              <row>*.........yyyyyyyyyyssssssyyyyyyyyeeeee.......*</row>
-              <row>*.........yyyyyyyyyyyyyyyyyyyyyyyyyy.ee.......*</row>
-              <row>*.........yyyyyyyyyyyyyyyyyyyyyyyyyy.ee.......*</row>
-              <row>*.........yyyyyyyyyyyyyyyyyyyyyyyyyy.ee.......*</row>
-              <row>*.........yyyyyyyyyyyyyyyyyyyyyyyyyy.ee.......*</row>
-              <row>*.........yyyyyyyyyyyyyyyyyyyyyyyyyy.eeeee....*</row>
-              <row>*.........yyyyyyyyyyyyyyyyyyyyyyyyyy.eeeee....*</row>
-              <row>*.........yyyyyyyyyyyyyyyyyyyyyyy.yy.ee.......*</row>
-              <row>*.........yyyyyyyyyyyyyyyyyyyyyyy.yy.ee.......*</row>
-              <row>*.........yyyyyyyyyyyyyyyyyyyyyyyyyy.ee.......*</row>
-              <row>*.........yyyyyyyyyyyyyyyyyyyyyyyyyy.ee.......*</row>
-              <row>*........*yyyyryyyyyyyyyyyyyyyyrryyy*ee.......*</row>
-              <row>*.....****yyyyryyyryyyyyyyyrryyrryyy*ee**.....*</row>
-              <row>*.....****yyyy********************yy*ee**.....*</row>
-              <row>*....********************************ee***....*</row>
-              <row>*...yy****yy****yy****yy****yy****yy*ee*yy....*</row>
-              <row>*..*yy****yy****yy****yy****yy****yy*ee*yy**..*</row>
-              <row>*..**********************************ee*****..*</row>
-              <row>*..**********************************ee*****..*</row>
-              <row>*..**********************************ee*****..*</row>
-              <row>*..****yy****yy****yy****yy****yy****yy****yy.*</row>
-              <row>*..****yy****yy****yy****yy****yy****yy****yy.*</row>
-              <row>*..*****************************************..*</row>
-              <row>*..*****************************************..*</row>
-              <row>*..*yy****yy****yy****yy****yy****yy****yy**..*</row>
-              <row>*..*yy****yy****yy****yy****yy****yy****yy**..*</row>
-              <row>*..*****************************************..*</row>
-              <row>*..*****************************************..*</row>
-              <row>*..*****************************************..*</row>
-              <row>*..****yy****yy****yy****yy****yy****yy****yy.*</row>
-              <row>*..****yy****yy****yy****yy****yy****yy****yy.*</row>
-              <row>***********************************************</row>
-            </picture>
-            <worth>10</worth>
-          </rank>
-          <rank name="K">
-            <index>
-              <row>**.....**</row>
-              <row>**....**.</row>
-              <row>**...**..</row>
-              <row>**..**...</row>
-              <row>**.**....</row>
-              <row>****.....</row>
-              <row>***......</row>
-              <row>****.....</row>
-              <row>**.**....</row>
-              <row>**..**...</row>
-              <row>**...**..</row>
-              <row>**....**.</row>
-              <row>**.....**</row>
-              <row>**.....**</row>
-              <row>**.....**</row>
-            </index>
-            <picture>
-              <half />
-              <row>***********************************************</row>
-              <row>*.............................................*</row>
-              <row>*.............................................*</row>
-              <row>*.............................................*</row>
-              <row>*.....................yy...............gww....*</row>
-              <row>*.....................yy...............gww....*</row>
-              <row>*...........yy........yy.........yy....gww....*</row>
-              <row>*...........yy..yy....yy....yy...yy....gww....*</row>
-              <row>*...........yy..yy....yy....yy...yy....gww....*</row>
-              <row>*...........yy..yy....yy....yy...yy....gww....*</row>
-              <row>*...........yyyyyyyyyyyyyyyyyyyyyyy....gww....*</row>
-              <row>*...........yyyyyyyyyyyyyyyyyyyyyyy....gww....*</row>
-              <row>*...........yyyrryyyyybbyyyyyyrryyy....gww....*</row>
-              <row>*...........yyyrryyyyybbyyyyyyrryyy....gww....*</row>
-              <row>*...........yyyyyyyyyyyyyyyyyyyyyyy....gww....*</row>
-              <row>*..............nnnnssssssssnnnnn.......gww....*</row>
-              <row>*.............nnnnssssssssssnnnnn......gww....*</row>
-              <row>*............nnnnssssssssssssnnnn......gww....*</row>
-              <row>*............nnnnsssssssssssssnnnn.....gww....*</row>
-              <row>*...........nnnnssnnnssssnnnnsnnnn.....gww....*</row>
-              <row>*...........nnnnssnnnssssnnnnsnnnnn....gww....*</row>
-              <row>*...........nnnnssskksssskkssssnnnn....gww....*</row>
-              <row>*..........nnnnnssskksssskkssssnnnn....gww....*</row>
-              <row>*..........nnnnnsssssssssssssssnnnn....gww....*</row>
-              <row>*..........nnnnnssssssnnsssssssnnnn....gww....*</row>
-              <row>*..........nnnnnssssssnnsssssssnnnn....gww....*</row>
-              <row>*..........nnnnnssssssssssssssnnnnn....gww....*</row>
-              <row>*...........nnnnnnnnnnnnnnnnnnnnnnn....gww....*</row>
-              <row>*...........nnnnnnnnnrrrrnnnnnnnnnn....gww....*</row>
-              <row>*...........nnnnnnnnnrrrrrnnnnnnnn.....gww....*</row>
-              <row>*...........nnnnnnnnnnnnnnnnnnnnnn.....gww....*</row>
-              <row>*............nnnnnnnnnnnnnnnnnnnnn.....gww....*</row>
-              <row>*............nnnnnnnnnnnnnnnnnnnn......gww....*</row>
-              <row>*.............nnnnnnnnnnnnnnnnnn.......gww....*</row>
-              <row>*..............nnnnnnnnnnnnnnnnn.......gww....*</row>
-              <row>*...............nnnnnnnnnnnnnnn........gww....*</row>
-              <row>*................nnnnnnnnnnnn..........gww....*</row>
-              <row>*..................nnnnnnnn............gww....*</row>
-              <row>*..................nnnnnnnn............gww....*</row>
-              <row>*.....kkwwwwkkwwwwkkwnnnnnwwwwkkwwwwkkwgww....*</row>
-              <row>*.....kkwkkwkkwkkwkkwnnnnnwkkwkkwkkwkkwgww....*</row>
-              <row>*.....wwwkkwwwwkkwwwwkkwwwwkkwwwwkkwwwwgww....*</row>
-              <row>*.....kkwwwwkkwwwwkkwwwwkkwwwwkkwwwwkkwgww....*</row>
-              <row>*....*kkwwwwkkwwwwkkwyyyyywwwwkkwwwwkkwgww....*</row>
-              <row>*....****************yyyyy*************gww....*</row>
-              <row>*..******************yyyyy**********yyyyyyyyy.*</row>
-              <row>*..******************yrryy**********yyynnnyyy.*</row>
-              <row>*..******************yrryy*************nnn**..*</row>
-              <row>*..******************yyyyy*************nnn**..*</row>
-              <row>*..******************yyyyy*************nnn**..*</row>
-              <row>*..******************yyyyy*************nnn**..*</row>
-              <row>*..******************yyyyy*************nnn**..*</row>
-              <row>*..******************yrryy*************nnn**..*</row>
-              <row>*..******************yrryy*************nnn**..*</row>
-              <row>*..******************yyyyy*************nnn**..*</row>
-              <row>*..******************yyyyy*************nnn**..*</row>
-              <row>*..******************yyyyy******************..*</row>
-              <row>*..******************yyyyy******************..*</row>
-              <row>*..******************yrryy******************..*</row>
-              <row>*..******************yrryy******************..*</row>
-              <row>*..******************yyyyy******************..*</row>
-              <row>*..******************yyyyy******************..*</row>
-              <row>***********************************************</row>
-            </picture>
-            <worth>10</worth>
-          </rank>
-        </deck>
+        <!-- the pack: a row for each suit (spades, hearts, clubs, diamonds), a column for each rank, each face its own
+             cell of the card sheet; a card is worth its column, the court cards 10, and an ace may count 11 -->
+        <group name="cards" class="card">
+          <columns name="rank">13</columns>
+          <rows name="suit">4</rows>
+          <sprite name="face"><cell sheet="cards"><scale>0.5</scale></cell></sprite>
+          <sprite name="back"><cell sheet="cards"><column>2</column><row>5</row><scale>0.5</scale></cell></sprite>
+          <position><x>0</x><y>0</y></position>
+          <column><number>1</number><variables><variable name="high">11</variable></variables></column>
+          <column><number>11</number><number>12</number><number>13</number><variables><variable name="worth">10</variable></variables></column>
+        </group>
 
         <!-- the stock, top right -->
         <object name="stock" class="place">
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
-          <position><x>window.width.center * 2 - cardwidth - 40</x><y>dealerrow</y></position>
-          <pile faces="down"><deals>1</deals></pile>
+          <position><x><subtract><value>window.width</value><value>cardwidth</value><value>40</value></subtract></x><y>dealerrow</y></position>
+          <holds class="card" sprite="back" />
         </object>
 
-        <!-- the dealer's cards and yours: their points count the face-up cards, an ace as 11 while within 21 -->
+        <!-- the dealer's cards and yours: their worth counts the face-up cards, an ace 11 while within 21 -->
         <object name="dealer" class="place">
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.darkgreen</color></rectangle></sprite>
           <position><x>left</x><y>dealerrow</y></position>
-          <pile faces="up">
-            <fan><x>48</x><width>480</width></fan>
-            <points><atmost>21</atmost></points>
-          </pile>
+          <holds class="card" sprite="face">
+            <spread><x>48</x><width>480</width></spread>
+            <counts variable="worth"><atmost>21</atmost></counts>
+          </holds>
         </object>
         <object name="player" class="place">
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.darkgreen</color></rectangle></sprite>
           <position><x>left</x><y>yourrow</y></position>
-          <pile faces="up">
-            <fan><x>48</x><width>480</width></fan>
-            <points><atmost>21</atmost></points>
-          </pile>
+          <holds class="card" sprite="face">
+            <spread><x>48</x><width>480</width></spread>
+            <counts variable="worth"><atmost>21</atmost></counts>
+          </holds>
         </object>
 
         <object name="dealerpoints">
-          <sprite><text style="note"><content>dealer </content><number>dealer.points</number></text></sprite>
-          <position><x>left</x><y>dealerrow - 44</y></position>
+          <sprite><text style="note"><content>dealer </content><number>dealer.worth</number></text></sprite>
+          <position><x>left</x><y><subtract><value>dealerrow</value><value>44</value></subtract></y></position>
         </object>
         <object name="yourpoints">
-          <sprite><text style="note"><content>you </content><number>player.points</number></text></sprite>
-          <position><x>left</x><y>yourrow - 44</y></position>
+          <sprite><text style="note"><content>you </content><number>player.worth</number></text></sprite>
+          <position><x>left</x><y><subtract><value>yourrow</value><value>44</value></subtract></y></position>
         </object>
 
-        <!-- who takes the cards: hands of their own, never seen -->
-        <object name="yourhand">
-          <sprite name="hand"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
-          <position><x>0</x><y>0</y></position>
-          <hand pile="player" />
-          <actions>
-            <action name="hit"><deal pile="stock" /><play sound="deal" /></action>
-          </actions>
-        </object>
-        <object name="dealerhand">
-          <sprite name="wait"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
-          <sprite name="draw"><rectangle><width>4</width><height>4</height><color>color.darkgreen</color></rectangle></sprite>
-          <position><x>0</x><y>0</y></position>
-          <hand pile="dealer" />
-          <actions>
-            <action name="up"><deal pile="stock" /></action>
-            <action name="down"><deal pile="stock" faces="down" /></action>
-          </actions>
-          <!-- drawing to 17, a card each half second -->
+        <!-- the dealer's draw: while it shows draw, a card each 0.6 seconds -->
+        <object name="drawing">
+          <sprite name="wait" />
+          <sprite name="draw" />
           <timers>
             <timer sprite="draw">
               <every>0.6</every>
-              <deal pile="stock" />
+              <send from="stock" into="dealer">1</send>
               <play sound="deal" />
               <become sprite="wait" />
             </timer>
@@ -1135,29 +149,31 @@
           <sprite name="betting"><text style="note"><content>a d to change the bet, spacebar deals</content></text></sprite>
           <sprite name="playing"><text style="note"><content>w to hit, s to stand</content></text></sprite>
           <sprite name="dealer"><text style="note"><content>the dealer plays</content><color>color.lightgrey</color></text></sprite>
+          <sprite name="settling"><text style="note"><content>the dealer plays</content><color>color.lightgrey</color></text></sprite>
           <sprite name="done"><text style="note"><content>spacebar for the next hand</content></text></sprite>
-          <position><x><centered /></x><y>yourrow + cardheight + 70</y></position>
+          <position><x><centered /></x><y><add><value>yourrow</value><value>cardheight</value><value>70</value></add></y></position>
           <actions>
             <action name="less"><dec variable="table.bet">10</dec><play sound="chip" /></action>
             <action name="more"><inc variable="table.bet">10</inc><play sound="chip" /></action>
+            <!-- two each, the dealer's second face down -->
             <action name="deal">
               <dec variable="table.bank">table.bet</dec>
-              <trigger object="yourhand" action="hit" />
-              <trigger object="dealerhand" action="up" />
-              <trigger object="yourhand" action="hit" />
-              <trigger object="dealerhand" action="down" />
-              <set variable="table.phase">1</set>
+              <send from="stock" into="player">1</send>
+              <send from="stock" into="dealer">1</send>
+              <send from="stock" into="player">1</send>
+              <send from="stock" into="dealer" sprite="back">1</send>
+              <play sound="deal" />
               <become sprite="playing" />
             </action>
-            <action name="hit"><trigger object="yourhand" action="hit" /></action>
+            <action name="hit"><send from="stock" into="player">1</send><play sound="deal" /></action>
             <action name="stand">
-              <reveal pile="dealer" />
-              <set variable="table.phase">2</set>
+              <become object="dealer" sprite="face" />
               <become sprite="dealer" />
             </action>
+            <!-- every card back in the stock, shuffled -->
             <action name="next">
-              <shuffle pile="stock" />
-              <set variable="table.phase">0</set>
+              <send from="cards" into="stock"><all /></send>
+              <order group="stock"><random /></order>
               <become sprite="betting" />
               <become object="result" sprite="none" />
             </action>
@@ -1165,7 +181,6 @@
           <variables>
             <variable name="bank">200</variable>
             <variable name="bet">10</variable>
-            <variable name="phase">0</variable>
           </variables>
         </object>
 
@@ -1177,14 +192,19 @@
           <sprite name="push"><text style="result"><content>push</content><color>color.white</color></text></sprite>
           <sprite name="lose"><text style="result"><content>dealer wins</content><color>color.lightgrey</color></text></sprite>
           <sprite name="bust"><text style="result"><content>bust</content><color>color.lightgrey</color></text></sprite>
-          <position><x><centered /></x><y>dealerrow + cardheight + 70</y></position>
+          <position><x><centered /></x><y><add><value>dealerrow</value><value>cardheight</value><value>70</value></add></y></position>
         </object>
 
         <object name="money">
           <sprite><text style="note"><content>chips </content><number>table.bank</number><content>    bet </content><number>table.bet</number></text></sprite>
-          <position><x><centered /></x><y>window.height.center * 2 - 60</y></position>
+          <position><x><centered /></x><y><subtract><value>window.height</value><value>60</value></subtract></y></position>
         </object>
       </objects>
+      <!-- the pack into the stock, shuffled -->
+      <starts>
+        <send from="cards" into="stock"><all /></send>
+        <order group="stock"><random /></order>
+      </starts>
       <inputs>
         <input><button>a</button><button>left</button><button>pad1.left</button><trigger object="table" action="less" from="betting" /></input>
         <input><button>d</button><button>right</button><button>pad1.right</button><trigger object="table" action="more" from="betting" /></input>
@@ -1195,114 +215,107 @@
           <trigger object="table" action="deal" from="betting" />
           <trigger object="table" action="next" from="done" />
         </input>
-        <input><button>p</button><button>escape</button><button>pad1.start</button><push state="paused" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <!-- the bet: 10 to 100, never more than the chips -->
-        <condition><all><condition object="table" variable="phase"><equal>0</equal></condition><condition object="table" variable="bank"><below>10</below></condition></all><play sound="lose" /><push state="broke" /></condition>
-        <condition><all><condition object="table" variable="phase"><equal>0</equal></condition><condition object="table" variable="bet"><above>table.bank</above></condition></all><set variable="table.bet">table.bank</set></condition>
-        <condition><all><condition object="table" variable="phase"><equal>0</equal></condition><condition object="table" variable="bet"><below>10</below></condition></all><set variable="table.bet">10</set></condition>
-        <condition><all><condition object="table" variable="phase"><equal>0</equal></condition><condition object="table" variable="bet"><above>100</above></condition></all><set variable="table.bet">100</set></condition>
+        <condition object="table" sprite="betting">
+          <condition object="table" variable="bank"><below>10</below>
+            <play sound="lose" />
+            <push state="over" />
+          </condition>
+          <condition object="table" variable="bet"><above>table.bank</above><set variable="table.bet">table.bank</set></condition>
+          <condition object="table" variable="bet"><below>10</below><set variable="table.bet">10</set></condition>
+          <condition object="table" variable="bet"><above>100</above><set variable="table.bet">100</set></condition>
+        </condition>
 
         <!-- your play: over 21 is bust; 21 stands by itself, at once with blackjack -->
-        <condition>
-          <all><condition object="table" variable="phase"><equal>1</equal></condition><condition object="player" variable="points"><above>21</above></condition></all>
-          <reveal pile="dealer" />
-          <set variable="table.phase">4</set>
-          <become object="table" sprite="done" />
-          <become object="result" sprite="bust" />
-          <play sound="lose" />
-        </condition>
-        <condition>
-          <all><condition object="table" variable="phase"><equal>1</equal></condition><condition object="player" variable="points"><equal>21</equal></condition><condition object="player" variable="cards"><equal>2</equal></condition></all>
-          <reveal pile="dealer" />
-          <set variable="table.phase">3</set>
-          <become object="table" sprite="dealer" />
-        </condition>
-        <condition>
-          <all><condition object="table" variable="phase"><equal>1</equal></condition><condition object="player" variable="points"><equal>21</equal></condition></all>
-          <trigger object="table" action="stand" />
+        <condition object="table" sprite="playing">
+          <condition object="player" variable="worth"><above>21</above>
+            <become object="dealer" sprite="face" />
+            <become object="table" sprite="done" />
+            <become object="result" sprite="bust" />
+            <play sound="lose" />
+          </condition>
+          <condition object="player" variable="worth"><equal>21</equal>
+            <condition object="player" variable="cards"><equal>2</equal>
+              <become object="dealer" sprite="face" />
+              <become object="table" sprite="settling" />
+            </condition>
+            <otherwise>
+              <trigger object="table" action="stand" />
+            </otherwise>
+          </condition>
         </condition>
 
         <!-- the dealer's play: under 17 it draws, else it stands -->
-        <condition>
-          <all><condition object="table" variable="phase"><equal>2</equal></condition><condition object="dealer" variable="points"><below>17</below></condition></all>
-          <become object="dealerhand" sprite="draw" from="wait" />
-        </condition>
-        <condition>
-          <all><condition object="table" variable="phase"><equal>2</equal></condition><condition object="dealer" variable="points"><atleast>17</atleast></condition></all>
-          <set variable="table.phase">3</set>
+        <condition object="table" sprite="dealer">
+          <condition object="dealer" variable="worth"><below>17</below>
+            <become object="drawing" sprite="draw" from="wait" />
+          </condition>
+          <otherwise>
+            <become object="table" sprite="settling" />
+          </otherwise>
         </condition>
 
-        <!-- settling: blackjack against blackjack is a push; blackjack pays three to two -->
-        <condition>
-          <all>
-            <condition object="table" variable="phase"><equal>3</equal></condition>
-            <condition object="player" variable="points"><equal>21</equal></condition><condition object="player" variable="cards"><equal>2</equal></condition>
-            <condition object="dealer" variable="points"><equal>21</equal></condition><condition object="dealer" variable="cards"><equal>2</equal></condition>
-          </all>
-          <inc variable="table.bank">table.bet</inc>
-          <set variable="table.phase">4</set>
-          <become object="table" sprite="done" />
-          <become object="result" sprite="push" />
-        </condition>
-        <condition>
-          <all><condition object="table" variable="phase"><equal>3</equal></condition><condition object="player" variable="points"><equal>21</equal></condition><condition object="player" variable="cards"><equal>2</equal></condition></all>
-          <inc variable="table.bank">table.bet * 2.5</inc>
-          <set variable="table.phase">4</set>
-          <become object="table" sprite="done" />
-          <become object="result" sprite="blackjack" />
-          <play sound="blackjack" />
-        </condition>
-        <!-- the dealer's blackjack beats any other 21 -->
-        <condition>
-          <all><condition object="table" variable="phase"><equal>3</equal></condition><condition object="dealer" variable="points"><equal>21</equal></condition><condition object="dealer" variable="cards"><equal>2</equal></condition></all>
-          <set variable="table.phase">4</set>
-          <become object="table" sprite="done" />
-          <become object="result" sprite="lose" />
-          <play sound="lose" />
-        </condition>
-        <condition>
-          <all><condition object="table" variable="phase"><equal>3</equal></condition><condition object="dealer" variable="points"><above>21</above></condition></all>
-          <inc variable="table.bank">table.bet * 2</inc>
-          <set variable="table.phase">4</set>
-          <become object="table" sprite="done" />
-          <become object="result" sprite="dealerbust" />
-          <play sound="win" />
-        </condition>
-        <condition>
-          <all><condition object="table" variable="phase"><equal>3</equal></condition><condition object="player" variable="points"><above>dealer.points</above></condition></all>
-          <inc variable="table.bank">table.bet * 2</inc>
-          <set variable="table.phase">4</set>
-          <become object="table" sprite="done" />
-          <become object="result" sprite="win" />
-          <play sound="win" />
-        </condition>
-        <condition>
-          <all><condition object="table" variable="phase"><equal>3</equal></condition><condition object="player" variable="points"><equal>dealer.points</equal></condition></all>
-          <inc variable="table.bank">table.bet</inc>
-          <set variable="table.phase">4</set>
-          <become object="table" sprite="done" />
-          <become object="result" sprite="push" />
-        </condition>
-        <condition object="table" variable="phase">
-          <equal>3</equal>
-          <set variable="table.phase">4</set>
-          <become object="table" sprite="done" />
-          <become object="result" sprite="lose" />
-          <play sound="lose" />
+        <!-- settling -->
+        <condition object="table" sprite="settling">
+          <first><become object="table" sprite="done" /></first>
+          <!-- blackjack, 21 in two cards: against the dealer's a push, else it pays three to two -->
+          <condition object="player" variable="worth"><equal>21</equal>
+            <condition object="player" variable="cards"><equal>2</equal>
+              <condition object="dealer" variable="worth"><equal>21</equal>
+                <condition object="dealer" variable="cards"><equal>2</equal>
+                  <inc variable="table.bank">table.bet</inc>
+                  <become object="result" sprite="push" />
+                </condition>
+              </condition>
+              <otherwise>
+                <inc variable="table.bank"><multiply><value>table.bet</value><value>2.5</value></multiply></inc>
+                <become object="result" sprite="blackjack" />
+                <play sound="blackjack" />
+              </otherwise>
+            </condition>
+          </condition>
+          <!-- the dealer's blackjack beats any other 21 -->
+          <condition object="dealer" variable="worth"><equal>21</equal>
+            <condition object="dealer" variable="cards"><equal>2</equal>
+              <become object="result" sprite="lose" />
+              <play sound="lose" />
+            </condition>
+          </condition>
+          <!-- the dealer bust or beaten pays two to one, a tie gives the bet back -->
+          <condition object="dealer" variable="worth"><above>21</above>
+            <inc variable="table.bank"><multiply><value>table.bet</value><value>2</value></multiply></inc>
+            <become object="result" sprite="dealerbust" />
+            <play sound="win" />
+          </condition>
+          <condition object="player" variable="worth"><above>dealer.worth</above>
+            <inc variable="table.bank"><multiply><value>table.bet</value><value>2</value></multiply></inc>
+            <become object="result" sprite="win" />
+            <play sound="win" />
+          </condition>
+          <condition object="player" variable="worth"><equal>dealer.worth</equal>
+            <inc variable="table.bank">table.bet</inc>
+            <become object="result" sprite="push" />
+          </condition>
+          <!-- otherwise the dealer wins -->
+          <otherwise>
+            <become object="result" sprite="lose" />
+            <play sound="lose" />
+          </otherwise>
         </condition>
       </conditions>
     </state>
-    <state name="broke">
+    <state name="over">
       <objects>
         <object name="over">
           <sprite><text style="banner"><content>OUT OF CHIPS</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
         </object>
         <object name="again">
           <sprite><text style="prompt"><content>spacebar to start again</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 40</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>40</offset></centered></y></position>
         </object>
       </objects>
       <shows>
@@ -1323,8 +336,31 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><button>pad1.start</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
   </states>
+  <sounds>
+    <sound name="deal" wave="noise"><note pitch="G5">0.02</note><note pitch="C6">0.02</note></sound>
+    <sound name="chip"><note pitch="E6">0.04</note></sound>
+    <sound name="win">
+      <note pitch="C5">0.1</note>
+      <note pitch="E5">0.1</note>
+      <note pitch="G5">0.2</note>
+    </sound>
+    <sound name="blackjack">
+      <note pitch="C5">0.1</note>
+      <note pitch="E5">0.1</note>
+      <note pitch="G5">0.1</note>
+      <note pitch="C6">0.3</note>
+    </sound>
+    <sound name="lose">
+      <note pitch="E4">0.15</note>
+      <note pitch="C4">0.3</note>
+    </sound>
+  </sounds>
+  <!-- the card sheet: a row for each suit, a column for each rank, then a row of backs -->
+  <pictures>
+    <sheet name="cards"><path>assets/cards.png</path><columns>13</columns><rows>5</rows></sheet>
+  </pictures>
 </game>

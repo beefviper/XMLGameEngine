@@ -14,7 +14,7 @@
 
   W A S D or the arrows move the cursor, Space puts a disc there. The
   mouse works too: the cursor follows it and a left click puts a disc.
-  P or Escape pauses. On the title, Space plays the computer and 2 is
+  Pause pauses. On the title, Space plays the computer and 2 is
   for two players; M turns on or off showing where a disc can go (kept).
   Space plays again.
 
@@ -22,13 +22,15 @@
   * The board is a <map> of <cells />: b black discs, w white. Each side
     is a group whose <moves> hold one <flank>: where a new disc of its
     kind may go, and what it turns.
-  * The cursor is on a map of its own over the board. <put class="black" />
-    puts a black disc in its cell; a put that traps nothing is refused,
-    so the turn passes (the commands after it) only when a disc is put.
+  * The players are a group that takes <turns>, each <owns> its discs.
+    The cursor is on a map of its own over the board. <put /> puts a disc
+    of the one on its turn in its cell; a put that traps nothing is
+    refused, so the turn passes (the commands after it) only when a disc
+    is put.
   * <count class="black" into="score.black" /> after each put keeps the
     score that the words beside the board show.
   * The live number `moves` of a side's discs is how many places it could
-    put one: none on its turn and it passes, none for either and the game
+    put one: none on its turn and it <pass>es, none for either and the game
     is over.
   * The cursor's <marks>: a dot where a disc can go, corners on the last
     one put.
@@ -45,16 +47,6 @@
     <variable name="left">100</variable>
     <variable name="top">80</variable>
   </variables>
-  <sounds>
-    <sound name="put" wave="triangle"><note pitch="C4">0.05</note></sound>
-    <sound name="pass"><note pitch="G3">0.1</note><note pitch="C3">0.15</note></sound>
-    <sound name="win">
-      <note pitch="C5">0.12</note>
-      <note pitch="E5">0.12</note>
-      <note pitch="G5">0.12</note>
-      <note pitch="C6">0.4</note>
-    </sound>
-  </sounds>
   <styles>
     <style name="banner"><size>80</size></style>
     <style name="prompt"><size>32</size></style>
@@ -72,92 +64,122 @@
     </style>
     <style name="cursor"><scale>6</scale><color>color.yellow</color></style>
   </styles>
-  <objects>
-    <!-- how many play: 1 against the computer, 2 at one keyboard -->
-    <object name="match">
-      <variables><variable name="players">1</variable></variables>
-    </object>
-    <!-- the player's option, kept: 1 on, 0 off -->
-    <object name="options">
-      <variables><variable name="moves">1</variable></variables>
-    </object>
-    <!-- discs of each side on the board -->
-    <object name="score">
-      <variables>
-        <variable name="black">2</variable>
-        <variable name="white">2</variable>
-      </variables>
-    </object>
-    <object name="again">
-      <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
-      <position><x><centered /></x><y><centered>window.height.center + 70</centered></y></position>
-    </object>
-  </objects>
   <keeps>
     <keep object="options" />
   </keeps>
   <states>
+    <objects>
+      <!-- how many play: 1 against the computer, 2 at one keyboard -->
+      <object name="match">
+        <variables><variable name="players">1</variable></variables>
+      </object>
+      <!-- the player's option, kept: 1 on, 0 off -->
+      <object name="options">
+        <variables><variable name="moves">1</variable></variables>
+      </object>
+      <!-- discs of each side on the board -->
+      <object name="score">
+        <variables>
+          <variable name="black">2</variable>
+          <variable name="white">2</variable>
+        </variables>
+      </object>
+      <object name="again">
+        <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
+        <position><x><centered /></x><y><centered><offset>70</offset></centered></y></position>
+      </object>
+    </objects>
     <state name="title">
       <objects>
         <object name="title">
           <sprite><text style="banner"><content>REVERSI</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 170</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-170</offset></centered></y></position>
         </object>
-        <object name="help1">
-          <sprite><text style="help"><content>you play black, and go first; 2 for two players</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 90</centered></y></position>
-        </object>
-        <object name="help2">
-          <sprite><text style="help"><content>trap a line of the other side's discs to turn them over</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
-        </object>
-        <object name="help3">
-          <sprite><text style="help"><content>w a s d or the arrows move, spacebar or a click puts a disc, p pauses</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 30</centered></y></position>
-        </object>
+        <group name="help">
+          <rows>3</rows>
+          <padding><y>30</y></padding>
+          <sprite><text style="help" /></sprite>
+          <position><x><centered /></x><y><centered><offset>-90</offset></centered></y></position>
+          <row number="1"><sprite><text><content>you play black, and go first; 2 for two players</content></text></sprite></row>
+          <row number="2"><sprite><text><content>trap a line of the other side's discs to turn them over</content></text></sprite></row>
+          <row number="3"><sprite><text><content>w a s d or the arrows move, spacebar or a click puts a disc, pause key pauses</content></text></sprite></row>
+        </group>
         <object name="option1">
           <sprite><text style="help"><content>m: show where a disc can go </content><choose><by>options.moves</by><word>off</word><word>on</word></choose></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 40</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>40</offset></centered></y></position>
         </object>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 170</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>170</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
         <input><button>space</button><button>pad1.start</button><set variable="match.players">1</set><push state="playing" /></input>
         <input><button>num2</button><button>numpad2</button><set variable="match.players">2</set><push state="playing" /></input>
-        <input button="m"><set variable="options.moves">1 - options.moves</set></input>
+        <input button="m"><set variable="options.moves"><subtract><value>1</value><value>options.moves</value></subtract></set></input>
       </inputs>
     </state>
     <state name="playing">
       <objects>
-        <object name="whoseturn">
-          <sprite name="black"><text style="hud"><content>black to move</content></text></sprite>
-          <sprite name="white"><text style="hud"><content>white to move</content></text></sprite>
-          <sprite name="blackagain"><text style="hud"><content>white cannot move: black again</content></text></sprite>
-          <sprite name="whiteagain"><text style="hud"><content>black cannot move: white again</content></text></sprite>
+        <!-- the players, black first: each the words over the board on its turn, nothing off it -->
+        <group name="players">
+          <sprite name="moving" />
+          <sprite name="again" />
+          <sprite name="waiting" />
           <position><x><centered /></x><y>24</y></position>
-        </object>
+          <turns sprite="waiting" />
+          <member name="blacks">
+            <sprite name="moving"><text style="hud"><content>black to move</content></text></sprite>
+            <sprite name="again"><text style="hud"><content>white cannot move: black again</content></text></sprite>
+            <owns class="black" />
+          </member>
+          <member name="whites">
+            <sprite name="moving"><text style="hud"><content>white to move</content></text></sprite>
+            <sprite name="again"><text style="hud"><content>black cannot move: white again</content></text></sprite>
+            <owns class="white" />
+          </member>
+        </group>
         <object name="blackscore">
           <sprite><text style="hud"><content>black </content><number>score.black</number></text></sprite>
-          <position><x>left + square * 8 + 30</x><y>top + 20</y></position>
+          <position><x>
+            <add>
+              <value>left</value>
+              <value><multiply><value>square</value><value>8</value></multiply></value>
+              <value>30</value>
+            </add>
+          </x><y><add><value>top</value><value>20</value></add></y></position>
         </object>
         <object name="whitescore">
           <sprite><text style="hud"><content>white </content><number>score.white</number></text></sprite>
-          <position><x>left + square * 8 + 30</x><y>top + 60</y></position>
+          <position><x>
+            <add>
+              <value>left</value>
+              <value><multiply><value>square</value><value>8</value></multiply></value>
+              <value>30</value>
+            </add>
+          </x><y><add><value>top</value><value>60</value></add></y></position>
         </object>
         <object name="frame">
-          <sprite><rectangle><width>square * 8 + 2</width><height>square * 8 + 2</height><color>color.black</color></rectangle></sprite>
-          <position><x>left - 1</x><y>top - 1</y></position>
+          <sprite><rectangle><width>
+            <add>
+              <value><multiply><value>square</value><value>8</value></multiply></value>
+              <value>2</value>
+            </add>
+          </width><height>
+            <add>
+              <value><multiply><value>square</value><value>8</value></multiply></value>
+              <value>2</value>
+            </add>
+          </height><color>color.black</color></rectangle></sprite>
+          <position><x><subtract><value>left</value><value>1</value></subtract></x><y><subtract><value>top</value><value>1</value></subtract></y></position>
         </object>
         <!-- the squares, a line between them -->
         <group name="squares">
           <columns>8</columns>
           <rows>8</rows>
           <padding><x>2</x><y>2</y></padding>
-          <sprite><rectangle><width>square - 2</width><height>square - 2</height><color>color.darkgreen</color></rectangle></sprite>
-          <position><x>left + 1</x><y>top + 1</y></position>
+          <sprite><rectangle><width><subtract><value>square</value><value>2</value></subtract></width><height><subtract><value>square</value><value>2</value></subtract></height><color>color.darkgreen</color></rectangle></sprite>
+          <position><x><add><value>left</value><value>1</value></add></x><y><add><value>top</value><value>1</value></add></y></position>
         </group>
 
         <map name="board">
@@ -175,21 +197,7 @@
 
           <group name="black" class="black" char="b">
             <sprite>
-              <bitmap style="blackdisc">
-                <row>....ddddd....</row>
-                <row>..dd*****dd..</row>
-                <row>.d*********d.</row>
-                <row>.d*********d.</row>
-                <row>d***********d</row>
-                <row>d***********d</row>
-                <row>d***********d</row>
-                <row>d***********d</row>
-                <row>d***********d</row>
-                <row>.d*********d.</row>
-                <row>.d*********d.</row>
-                <row>..dd*****dd..</row>
-                <row>....ddddd....</row>
-              </bitmap>
+              <bitmap from="black" />
             </sprite>
             <moves>
               <flank class="white" />
@@ -197,21 +205,7 @@
           </group>
           <group name="white" class="white" char="w">
             <sprite>
-              <bitmap style="whitedisc">
-                <row>....ddddd....</row>
-                <row>..dd*****dd..</row>
-                <row>.d*********d.</row>
-                <row>.d*********d.</row>
-                <row>d***********d</row>
-                <row>d***********d</row>
-                <row>d***********d</row>
-                <row>d***********d</row>
-                <row>d***********d</row>
-                <row>.d*********d.</row>
-                <row>.d*********d.</row>
-                <row>..dd*****dd..</row>
-                <row>....ddddd....</row>
-              </bitmap>
+              <bitmap from="white" />
             </sprite>
             <moves>
               <flank class="black" />
@@ -231,20 +225,7 @@
           </object>
           <object name="lastmark">
             <sprite>
-              <bitmap>
-                <row>**......**</row>
-                <row>*........*</row>
-                <row>..........</row>
-                <row>..........</row>
-                <row>..........</row>
-                <row>..........</row>
-                <row>..........</row>
-                <row>..........</row>
-                <row>*........*</row>
-                <row>**......**</row>
-                <scale>6</scale>
-                <color>color.orange</color>
-              </bitmap>
+              <bitmap from="lastmark" />
             </sprite>
           </object>
         </map>
@@ -264,57 +245,13 @@
           <row>........</row>
 
           <object name="cursor" char="c">
-            <!-- black's turn, white's, and the computer's (white's, with its own key) -->
-            <sprite name="blackfree">
-              <bitmap style="cursor">
-                <row>**********</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>**********</row>
-              </bitmap>
+            <sprite>
+              <bitmap from="cursor" />
             </sprite>
-            <sprite name="whitefree">
-              <bitmap style="cursor">
-                <row>**********</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>**********</row>
-              </bitmap>
-            </sprite>
-            <sprite name="cpufree">
-              <bitmap style="cursor">
-                <row>**********</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>*........*</row>
-                <row>**********</row>
-              </bitmap>
-            </sprite>
+            <!-- the last move, and where the player on its turn may put a disc -->
             <marks>
               <last object="lastmark" />
-            </marks>
-            <marks sprite="blackfree">
-              <put class="black" object="putmark" variable="options.moves" />
-            </marks>
-            <marks sprite="whitefree">
-              <put class="white" object="putmark" variable="options.moves" />
+              <put object="putmark" variable="options.moves" />
             </marks>
             <actions>
               <action name="up"><hop direction="up" /></action>
@@ -323,30 +260,15 @@
               <action name="right"><hop direction="right" /></action>
               <!-- where the mouse is -->
               <action name="point"><track /></action>
-              <!-- a disc put: the score counted, the turn passes -->
-              <action name="blackput">
-                <put class="black" />
+              <!-- a disc of the player on its turn put: the score counted, the turn passes -->
+              <action name="put">
+                <put />
                 <play sound="put" />
                 <count class="black" into="score.black" />
                 <count class="white" into="score.white" />
-                <set variable="cursor.turn">2</set>
-                <become sprite="whitefree" />
-                <become object="whoseturn" sprite="white" />
-              </action>
-              <action name="whiteput">
-                <put class="white" />
-                <play sound="put" />
-                <count class="black" into="score.black" />
-                <count class="white" into="score.white" />
-                <set variable="cursor.turn">1</set>
-                <become sprite="blackfree" />
-                <become object="whoseturn" sprite="black" />
+                <pass object="players" />
               </action>
             </actions>
-            <!-- whose turn: 1 black, 2 white -->
-            <variables>
-              <variable name="turn">1</variable>
-            </variables>
           </object>
         </map>
       </objects>
@@ -357,92 +279,56 @@
         <input><button>d</button><button>right</button><button>pad1.right</button><trigger object="cursor" action="right" /></input>
         <input>
           <button>space</button><button>pad1.a</button><button>mouse.left</button>
-          <trigger object="cursor" action="blackput" from="blackfree" />
-          <trigger object="cursor" action="whiteput" from="whitefree" />
+          <trigger object="cursor" action="put" />
         </input>
-        <!-- the mouse moves the cursor, but not on the computer's turn -->
-        <input axis="mouse.x">
-          <trigger object="cursor" action="point" from="blackfree" />
-          <trigger object="cursor" action="point" from="whitefree" />
-        </input>
-        <input axis="mouse.y">
-          <trigger object="cursor" action="point" from="blackfree" />
-          <trigger object="cursor" action="point" from="whitefree" />
-        </input>
-        <!-- the computer's key: only its look answers it -->
-        <input><button>f12</button><trigger object="cursor" action="whiteput" from="cpufree" /></input>
-        <input><button>p</button><button>escape</button><button>pad1.start</button><push state="paused" /></input>
+        <input axis="mouse.x"><trigger object="cursor" action="point" /></input>
+        <input axis="mouse.y"><trigger object="cursor" action="point" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
         <!-- neither side can move: the one with more discs wins -->
-        <condition>
-          <all>
-            <condition class="black" variable="moves" total="sum"><equal>0</equal></condition>
-            <condition class="white" variable="moves" total="sum"><equal>0</equal></condition>
-            <condition object="score" variable="black"><above>score.white</above></condition>
-          </all>
-          <become object="over.winner" sprite="black" />
-          <play sound="win" />
-          <push state="over" />
-        </condition>
-        <condition>
-          <all>
-            <condition class="black" variable="moves" total="sum"><equal>0</equal></condition>
-            <condition class="white" variable="moves" total="sum"><equal>0</equal></condition>
-            <condition object="score" variable="white"><above>score.black</above></condition>
-          </all>
-          <become object="over.winner" sprite="white" />
-          <play sound="win" />
-          <push state="over" />
-        </condition>
-        <condition>
-          <all>
-            <condition class="black" variable="moves" total="sum"><equal>0</equal></condition>
-            <condition class="white" variable="moves" total="sum"><equal>0</equal></condition>
-          </all>
-          <become object="over.winner" sprite="draw" />
-          <push state="over" />
+        <condition class="black" variable="moves" total="sum"><equal>0</equal>
+          <condition class="white" variable="moves" total="sum"><equal>0</equal>
+            <condition object="score" variable="black"><above>score.white</above>
+              <become object="over.winner" sprite="black" />
+              <play sound="win" />
+              <push state="over" />
+            </condition>
+            <condition object="score" variable="white"><above>score.black</above>
+              <become object="over.winner" sprite="white" />
+              <play sound="win" />
+              <push state="over" />
+            </condition>
+            <otherwise>
+              <become object="over.winner" sprite="draw" />
+              <push state="over" />
+            </otherwise>
+          </condition>
         </condition>
         <!-- a side with nowhere to put a disc on its turn passes -->
-        <condition>
-          <all>
-            <condition object="cursor" variable="turn"><equal>1</equal></condition>
-            <condition class="black" variable="moves" total="sum"><equal>0</equal></condition>
-          </all>
-          <play sound="pass" />
-          <set variable="cursor.turn">2</set>
-          <become object="cursor" sprite="whitefree" />
-          <become object="whoseturn" sprite="whiteagain" />
+        <condition object="blacks" variable="turn"><equal>1</equal>
+          <condition class="black" variable="moves" total="sum"><equal>0</equal>
+            <play sound="pass" />
+            <become object="whites" sprite="again" />
+            <pass object="players" />
+          </condition>
         </condition>
-        <condition>
-          <all>
-            <condition object="cursor" variable="turn"><equal>2</equal></condition>
-            <condition class="white" variable="moves" total="sum"><equal>0</equal></condition>
-          </all>
-          <play sound="pass" />
-          <set variable="cursor.turn">1</set>
-          <become object="cursor" sprite="blackfree" />
-          <become object="whoseturn" sprite="blackagain" />
-        </condition>
-        <!-- against the computer, white's turn is its: the cursor takes its look -->
-        <condition>
-          <all>
-            <condition object="match" variable="players"><equal>1</equal></condition>
-            <condition object="cursor" variable="turn"><equal>2</equal></condition>
-          </all>
-          <become object="cursor" sprite="cpufree" from="whitefree" />
+        <condition object="whites" variable="turn"><equal>1</equal>
+          <condition class="white" variable="moves" total="sum"><equal>0</equal>
+            <play sound="pass" />
+            <become object="blacks" sprite="again" />
+            <pass object="players" />
+          </condition>
         </condition>
       </conditions>
-      <!-- white's move: four ahead -->
+      <!-- against the computer, white's move: four ahead -->
       <computer>
-        <condition>
-          <all>
-            <condition object="match" variable="players"><equal>1</equal></condition>
-            <condition object="cursor" variable="turn"><equal>2</equal></condition>
-          </all>
-          <think class="white" object="cursor" button="f12">
-            <depth>4</depth>
-          </think>
+        <condition object="match" variable="players"><equal>1</equal>
+          <condition object="whites" variable="turn"><equal>1</equal>
+            <think object="cursor" button="space">
+              <depth>4</depth>
+            </think>
+          </condition>
         </condition>
       </computer>
     </state>
@@ -457,7 +343,7 @@
         <show state="playing" />
       </shows>
       <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><button>pad1.start</button><pop /></input>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
       </inputs>
     </state>
     <state name="over">
@@ -466,7 +352,7 @@
           <sprite name="black"><text style="banner"><content>BLACK WINS</content><color>color.yellow</color></text></sprite>
           <sprite name="white"><text style="banner"><content>WHITE WINS</content><color>color.yellow</color></text></sprite>
           <sprite name="draw"><text style="banner"><content>A DRAW</content><color>color.yellow</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 40</centered></y></position>
+          <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
         </object>
       </objects>
       <shows>
@@ -478,4 +364,72 @@
       </inputs>
     </state>
   </states>
+  <sounds>
+    <sound name="put" wave="triangle"><note pitch="C4">0.05</note></sound>
+    <sound name="pass"><note pitch="G3">0.1</note><note pitch="C3">0.15</note></sound>
+    <sound name="win">
+      <note pitch="C5">0.12</note>
+      <note pitch="E5">0.12</note>
+      <note pitch="G5">0.12</note>
+      <note pitch="C6">0.4</note>
+    </sound>
+  </sounds>
+  <pictures>
+    <bitmap name="black" style="blackdisc">
+      <row>....ddddd....</row>
+      <row>..dd*****dd..</row>
+      <row>.d*********d.</row>
+      <row>.d*********d.</row>
+      <row>d***********d</row>
+      <row>d***********d</row>
+      <row>d***********d</row>
+      <row>d***********d</row>
+      <row>d***********d</row>
+      <row>.d*********d.</row>
+      <row>.d*********d.</row>
+      <row>..dd*****dd..</row>
+      <row>....ddddd....</row>
+    </bitmap>
+    <bitmap name="white" style="whitedisc">
+      <row>....ddddd....</row>
+      <row>..dd*****dd..</row>
+      <row>.d*********d.</row>
+      <row>.d*********d.</row>
+      <row>d***********d</row>
+      <row>d***********d</row>
+      <row>d***********d</row>
+      <row>d***********d</row>
+      <row>d***********d</row>
+      <row>.d*********d.</row>
+      <row>.d*********d.</row>
+      <row>..dd*****dd..</row>
+      <row>....ddddd....</row>
+    </bitmap>
+    <bitmap name="lastmark">
+      <row>**......**</row>
+      <row>*........*</row>
+      <row>..........</row>
+      <row>..........</row>
+      <row>..........</row>
+      <row>..........</row>
+      <row>..........</row>
+      <row>..........</row>
+      <row>*........*</row>
+      <row>**......**</row>
+      <scale>6</scale>
+      <color>color.orange</color>
+    </bitmap>
+    <bitmap name="cursor" style="cursor">
+      <row>**********</row>
+      <row>*........*</row>
+      <row>*........*</row>
+      <row>*........*</row>
+      <row>*........*</row>
+      <row>*........*</row>
+      <row>*........*</row>
+      <row>*........*</row>
+      <row>*........*</row>
+      <row>**********</row>
+    </bitmap>
+  </pictures>
 </game>

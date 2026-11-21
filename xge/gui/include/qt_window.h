@@ -38,6 +38,7 @@ namespace xge
 		void clear(const std::string& colorName) override;
 		void draw(Object& object) override;
 		void display() override;
+		float fit() const override;
 
 	private:
 		GameView& view;
@@ -47,20 +48,17 @@ namespace xge
 		std::unique_ptr<QPainter> framePainter;
 		bool open{ true };
 
-		// Each object's picture, built once and again whenever the object's
-		// visualDirty flag says it changed (same pattern as the other backends).
-		std::map<std::string, QImage> visuals;
+		// What an object shows: the image of its picture, which objects
+		// showing the same picture share, asked again when its visualDirty
+		// flag says it changed or the pictures' scale did.
+		struct Visual
+		{
+			QImage image;
+			float drawnAt{ 0.0f };   // the pictureScale it was drawn at
+		};
+		Textures<QImage> images{ *this };
+		std::map<std::string, Visual> visuals;  // by object name
 
-		// The family of each font file loaded, by its name, empty for one
-		// that failed (its text is then drawn with the built-in 8x8 font).
-		std::map<std::string, QString> fontFamilies;
-
-		void build(Object& object, QImage& visual);
-		QImage buildCircle(const Object& object);
-		QImage buildRectangle(const Object& object);
-		QImage buildText(const Object& object);
-		QImage buildImage(const Object& object);
-		static QImage fromBitmap(const Bitmap& bitmap);
-		const QString& loadFont(const std::string& file);
+		void build(Object& object, Visual& visual);
 	};
 }

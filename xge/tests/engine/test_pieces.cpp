@@ -1,0 +1,275 @@
+// test_pieces.cpp
+// XML Game Engine
+// author: beefviper
+// date: Oct 25, 2026
+//
+// Catch2 tests for pieces and from=: the top-level <objects>, written once,
+// in play only where a deeper <objects> takes them (by from= or by a piece's name), each
+// take changing the piece by the one rule every start-from follows; a piece
+// from= an earlier one; a named member of a group piece taken on its own;
+// a map piece taken by a map that gives only its rows;
+// what a <spawn> or <fire> names coming in beside what runs it;
+// and the mistakes that stop the load. Small games are written out and
+// played with no window (played.h).
+
+#include "scratch.h"
+#include "played.h"
+
+#include <catch2/catch_approx.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_string.hpp>
+
+#include <filesystem>
+#include <fstream>
+#include <string>
+
+using namespace xge;
+using played::box;
+using played::Played;
+using played::Scratch;
+using Catch::Approx;
+using Catch::Matchers::ContainsSubstring;
+
+namespace
+{
+	// A paddle: a 10 by 40 rectangle at 10, 100, going down, with a score.
+	const std::string kPaddle = "<object name=\"paddle\" class=\"bat\"><sprite><rectangle><width>10</width><height>40</height></rectangle></sprite>"
+		"<position><x>10</x><y>100</y></position><velocity><x>0</x><y>60</y></velocity>"
+		"<variables><variable name=\"score\">0</variable><variable name=\"lives\">3</variable></variables></object>";
+
+	void fails(const std::string& objects, const std::string& kit, const std::string& message, const std::string& more = {})
+	{
+		const Scratch file(objects, "<pop />", more, kit);
+		REQUIRE_THROWS_WITH(Game(file.path), ContainsSubstring(message));
+	}
+}
+
+TEST_CASE("a piece is in play only where an <objects> takes it, by from= or by its name", "[pieces]")
+{
+	const Scratch file("<object name=\"paddle\" />"
+		"<object name=\"paddle2\" from=\"paddle\"><position><x>780</x></position><velocity><y>-120</y></velocity></object>",
+		"<pop />", {}, kPaddle);
+	Played play(file.path);
+
+	const Object& one = play.get("playing.paddle");
+	CHECK(one.position.x == Approx(10));
+	CHECK(one.objClass == "bat");
+
+	// The x of its position and the y of its velocity its own; the rest the piece's.
+	const Object& two = play.get("playing.paddle2");
+	CHECK(two.position.x == Approx(780));
+	CHECK(two.position.y == Approx(100));
+	CHECK(two.velocity.x == Approx(0));
+	CHECK(two.velocity.y == Approx(-120));
+	CHECK(two.objClass == "bat");
+	CHECK(two.variable.at("lives") == Approx(3));
+	CHECK(play.game.getCurrentObjects().size() == 2); // the piece itself is never in play
+}
+
+TEST_CASE("a take changes its piece: sprites by name, whole; variables one by one; collision rules after the piece's", "[pieces]")
+{
+	const std::string piece = "<object name=\"brick\" class=\"wall\">"
+		"<sprite name=\"whole\"><rectangle><width>20</width><height>10</height></rectangle></sprite>"
+		"<sprite name=\"cracked\"><rectangle><width>20</width><height>8</height></rectangle></sprite>"
+		"<position><x>100</x><y>100</y></position>"
+		"<collisions><collision class=\"treasure\"><inc variable=\"self.hits\" /></collision></collisions>"
+		"<variables><variable name=\"hits\">0</variable><variable name=\"worth\">10</variable></variables></object>";
+	const Scratch file("<object name=\"gold\" from=\"brick\" class=\"treasure\">"
+		"<sprite name=\"cracked\"><rectangle><width>20</width><height>4</height></rectangle></sprite>"
+		"<sprite name=\"shining\"><rectangle><width>20</width><height>12</height></rectangle></sprite>"
+		"<collisions><collision class=\"treasure\"><inc variable=\"self.worth\" /></collision></collisions>"
+		"<variables><variable name=\"worth\">50</variable><variable name=\"shine\">1</variable></variables></object>",
+		"<pop />", {}, piece);
+	Played play(file.path);
+
+	const Object& gold = play.get("gold");
+	CHECK(gold.objClass == "treasure");
+	REQUIRE(gold.looks.all().size() == 3);
+	CHECK(gold.looks.all()[0].name == "whole");
+	CHECK(gold.looks.all()[1].name == "cracked");
+	CHECK(gold.looks.all()[2].name == "shining");
+	CHECK(gold.looks.all()[1].picture != gold.looks.all()[0].picture);
+	CHECK(gold.variable.at("hits") == Approx(0));
+	CHECK(gold.variable.at("worth") == Approx(50));
+	CHECK(gold.variable.at("shine") == Approx(1));
+	CHECK(gold.collisionsOn);
+	CHECK(gold.kind->collisionData.others.size() == 2); // its rule after the piece's
+}
+
+TEST_CASE("a take of a <waiting /> piece waits too, and one that says <ready /> is in play: either written replaces the other", "[pieces]")
+{
+	const std::string piece = "<object name=\"door\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
+		"<position><x>100</x><y>100</y></position><waiting /><hidden /></object>";
+	const Scratch file("<object name=\"door\" /><object name=\"open\" from=\"door\"><ready /></object>", "<pop />", {}, piece);
+	Played play(file.path);
+
+	CHECK_FALSE(play.get("door").isVisible);
+	CHECK(play.get("open").isVisible);
+	CHECK_FALSE(play.get("open").isDrawn);
+}
+
+TEST_CASE("a piece can be from= an earlier one, and a named member of a group piece is taken on its own", "[pieces]")
+{
+	const std::string kit = box("rock", 0, 0, "<velocity><x>60</x><y>0</y></velocity>")
+		+ "<object name=\"boulder\" from=\"rock\"><sprite><rectangle><width>30</width><height>30</height></rectangle></sprite></object>"
+		"<group name=\"robots\" class=\"robot\"><sprite><rectangle><width>8</width><height>8</height></rectangle></sprite>"
+		"<member name=\"red\"><position><x>10</x><y>10</y></position></member>"
+		"<member name=\"blue\"><position><x>50</x><y>10</y></position></member></group>";
+	const Scratch file("<object name=\"boulder\" /><object name=\"red\"><position><x>200</x></position></object>", "<pop />", {}, kit);
+	Played play(file.path);
+
+	const Object& boulder = play.get("boulder");
+	CHECK(boulder.velocity.x == Approx(60));
+	CHECK(boulder.size.x == Approx(30));
+
+	const Object& red = play.get("red");
+	CHECK(red.objClass == "robot");
+	CHECK(red.position.x == Approx(200));
+	CHECK(red.position.y == Approx(10));
+	CHECK_FALSE(play.has("blue"));
+	CHECK(play.game.getCurrentObjects().size() == 2);
+}
+
+TEST_CASE("a group from= an object piece is a group: each member has what the object has", "[pieces]")
+{
+	const std::string kit = box("cannon", 10, 20, "<variables><variable name=\"power\">5</variable></variables>");
+	const Scratch file("<group name=\"cannons\" from=\"cannon\"><member name=\"left\" /><member name=\"right\"><position><x>50</x></position></member></group>"
+		"<object name=\"shown\"><sprite><text><number>right.power</number><size>10</size></text></sprite><position><x>0</x><y>0</y></position></object>", "<pop />", {}, kit);
+	Played play(file.path);
+
+	CHECK(play.get("left").variable.at("power") == Approx(5));
+	CHECK(play.get("left").position.x == Approx(10));
+	CHECK(play.get("right").variable.at("power") == Approx(5));
+	CHECK(play.get("right").position.x == Approx(50));
+	CHECK(play.get("right").position.y == Approx(20));
+}
+
+TEST_CASE("what a <fire> names comes in beside what fires it, so a copy reads its scene's variables", "[pieces][spawn]")
+{
+	const std::string kit = "<object name=\"bomb\"><sprite><rectangle><width>4</width><height>4</height></rectangle></sprite>"
+		"<velocity><x>0</x><y>pace</y></velocity><most>3</most></object>";
+	const std::string path = scratchName("descriptions/kit_scratch.xml");
+	{
+		std::ofstream out(path);
+		out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
+			"<window name=\"kit\"><width>800</width><height>600</height><background>color.black</background>"
+			"<framerate>60</framerate></window>"
+			"<variables><variable name=\"unused\">0</variable></variables><objects>" << kit << "</objects>"
+			"<states><state name=\"playing\"><objects>" << box("ship", 300, 500) << "</objects><scenes>"
+			"<scene name=\"wave1\"><variables><variable name=\"pace\">120</variable></variables><objects>"
+			<< box("dropper", 300, 100, "<timers><timer><every>0.05</every><fire object=\"bomb\" /></timer></timers>") << "</objects></scene>"
+			"<scene name=\"wave2\" from=\"wave1\"><variables><variable name=\"pace\">300</variable></variables></scene>"
+			"</scenes><inputs><input button=\"space\"><enter scene=\"wave2\" /></input></inputs></state></states></game>";
+	}
+	struct Gone
+	{
+		std::string file;
+		~Gone() { std::error_code ignored; std::filesystem::remove(file, ignored); }
+	} gone{ path };
+	Played play(path);
+
+	CHECK_FALSE(play.get("playing.wave1.bomb").exists);
+	play.frames(5);
+	REQUIRE(play.has("wave1.bomb.1"));
+	const Object& first = play.get("wave1.bomb.1");
+	CHECK(first.velocity.y == Approx(120));
+	CHECK(first.ownerScene == "playing.wave1");
+
+	play.tap(KeyCode::Space);
+	play.frames(5);
+	REQUIRE(play.has("wave2.bomb.1"));
+	CHECK(play.get("wave2.bomb.1").velocity.y == Approx(300));
+}
+
+TEST_CASE("a map piece is taken by a map, which gives its rows and changes what it will", "[pieces][map]")
+{
+	// A tile 10 across at 100, 50; # a wall, picked by the piece.
+	const std::string maze = "<map name=\"maze\"><tile><width>10</width><height>10</height></tile>"
+		"<position><x>100</x><y>50</y></position>"
+		"<group name=\"walls\" char=\"#\" class=\"wall\"><sprite><rectangle><width>10</width><height>10</height>"
+		"<color>color.blue</color></rectangle></sprite></group></map>";
+	SECTION("by its name, giving only its rows")
+	{
+		const Scratch file("<map name=\"maze\"><row>##.</row><row>#..</row></map>", "<pop />", {}, maze);
+		Played play(file.path);
+
+		CHECK(play.count("walls") == 3);
+		const Object& first = play.get("maze.walls.1");
+		CHECK(first.position.x == Approx(100));
+		CHECK(first.position.y == Approx(50));
+		CHECK(first.objClass == "wall");
+		CHECK(first.drawn.picture->color == "color.blue");
+	}
+	SECTION("by from=, changing its place and its walls")
+	{
+		const Scratch file("<map name=\"another\" from=\"maze\"><position><y>200</y></position><row>.#</row>"
+			"<group name=\"walls\"><sprite><rectangle><width>10</width><height>10</height><color>color.red</color></rectangle></sprite></group></map>",
+			"<pop />", {}, maze);
+		Played play(file.path);
+
+		// its own y and its own walls' color, the piece's x, tile and class
+		CHECK(play.count("walls") == 1);
+		const Object& other = play.get("another.walls.1");
+		CHECK(other.position.x == Approx(110));
+		CHECK(other.position.y == Approx(200));
+		CHECK(other.objClass == "wall");
+		CHECK(other.drawn.picture->color == "color.red");
+	}
+	SECTION("by two maps in one list, each one's pieces named under it")
+	{
+		const Scratch file("<map name=\"left\" from=\"maze\"><row>##</row></map>"
+			"<map name=\"right\" from=\"maze\"><position><y>200</y></position><row>.#</row></map>", "<pop />", {}, maze);
+		Played play(file.path);
+
+		// Both maps' walls are walls; each map's are numbered under its name.
+		CHECK(play.count("walls") == 3);
+		CHECK(play.get("left.walls.2").position.x == Approx(110));
+		CHECK(play.get("right.walls.1").position.x == Approx(110));
+		CHECK(play.get("right.walls.1").position.y == Approx(200));
+		CHECK(play.get("right.walls.1").inGroup("playing.right"));
+		CHECK_FALSE(play.get("right.walls.1").inGroup("playing.left"));
+	}
+}
+
+TEST_CASE("mistakes with pieces and from= stop the load", "[pieces][errors]")
+{
+	SECTION("an object from= a map, or a map from= an object")
+	{
+		const std::string maze = "<map name=\"maze\"><tile><width>10</width><height>10</height></tile><position><x>0</x><y>0</y></position>"
+			"<group name=\"walls\" char=\"#\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite></group></map>";
+		fails("<object name=\"bat\" from=\"maze\" />", maze, "names a <map> piece, which only a <map> takes");
+		fails("<map name=\"room\" from=\"paddle\"><row>#</row></map>", kPaddle, "names a piece that is not a <map>");
+	}
+	SECTION("a map that, with the piece it takes, still has no tile")
+	{
+		fails("<map name=\"maze\"><row>#</row></map>",
+			"<map name=\"maze\"><position><x>0</x><y>0</y></position><group name=\"walls\" char=\"#\" /></map>", "<tile>");
+	}
+	SECTION("from= a piece there is not")
+	{
+		fails("<object name=\"bat\" from=\"padle\" />", kPaddle, "from=\"padle\" names no piece of the top-level <objects>");
+	}
+	SECTION("a take by a name already in the list")
+	{
+		fails(box("bat", 0, 0) + "<object name=\"bat\" from=\"paddle\" />", kPaddle, "there is already an object or group called 'bat' here");
+	}
+	SECTION("a piece from= one after it")
+	{
+		fails(box("ball", 0, 0), "<object name=\"wide\" from=\"paddle\" />" + kPaddle, "names no piece of the top-level <objects> before it");
+	}
+	SECTION("two pieces of one name")
+	{
+		fails(box("ball", 0, 0), kPaddle + kPaddle, "the top-level <objects> has another piece (or a member of one) called 'paddle'");
+	}
+	SECTION("a piece with a dot in its name")
+	{
+		fails(box("ball", 0, 0), box("left.paddle", 0, 0), "a piece's name has no dots");
+	}
+	SECTION("a member changed in more than where it is and how it goes")
+	{
+		const std::string robots = "<group name=\"robots\"><sprite><rectangle><width>8</width><height>8</height></rectangle></sprite>"
+			"<member name=\"red\"><position><x>10</x><y>10</y></position></member><member name=\"blue\"><position><x>50</x><y>10</y></position></member></group>";
+		fails(robots + "<object name=\"red\"><variables><variable name=\"hp\">2</variable></variables></object>", {},
+			"a member changes only its <sprite>s, <animation>s, <position> and <velocity>");
+	}
+}

@@ -1,0 +1,293 @@
+// verb.h
+// XML Game Engine
+// author: beefviper
+// date: Nov 10, 2026
+
+#pragma once
+
+#include "game/command.h"
+#include "game/object.h"
+#include "play/geometry.h"
+
+#include <cstddef>
+#include <optional>
+#include <ostream>
+#include <string>
+#include <string_view>
+#include <type_traits>
+#include <variant>
+#include <vector>
+
+// A verb is one command tag of the language: <bounce />, <hop>, <spawn>.
+// Each has a file of its own in this folder that says everything the engine
+// knows about it: its name, where it may be written, how its numbers are
+// worked out and what it does. verbs/all.cpp lists them.
+
+namespace xge
+{
+	class CommandExecutor;
+	class Game;
+	class XmlNode;
+	struct Checking;
+
+	// Where a list of commands runs.
+	enum class Place { Edge, Touch, Input, Condition, StateTimer, ObjectTimer, Action, PathStep, Computer, Check };
+
+	// Some of the places, added up.
+	using Places = unsigned;
+	constexpr Places in(Place place) noexcept { return 1u << static_cast<unsigned>(place); }
+
+	// The places the schema's groups of commands go (xgedef.xsd,
+	// changesCommands and the rest), narrowed to where each does something.
+	namespace places
+	{
+		// What changes the game: anywhere but a <computer>.
+		constexpr Places changes = in(Place::Edge) | in(Place::Touch) | in(Place::Input) | in(Place::Condition) | in(Place::StateTimer)
+			| in(Place::ObjectTimer) | in(Place::Action) | in(Place::PathStep) | in(Place::Check);
+		// The game's own: a state's lists.
+		constexpr Places flow = in(Place::Input) | in(Place::Condition) | in(Place::StateTimer);
+		// About the object running it.
+		constexpr Places self = in(Place::Edge) | in(Place::Touch) | in(Place::ObjectTimer) | in(Place::Action) | in(Place::PathStep);
+		constexpr Places steering = in(Place::Touch) | in(Place::ObjectTimer) | in(Place::Action) | in(Place::PathStep);
+		// About what it touched, and the window's edge.
+		constexpr Places touch = in(Place::Touch);
+		constexpr Places edge = in(Place::Edge);
+		// The controls an action holds.
+		constexpr Places controls = in(Place::Action);
+		// What a <computer> does.
+		constexpr Places press = in(Place::Computer);
+		// About what a map's check found.
+		constexpr Places cells = in(Place::Check);
+	}
+
+	// Which of the Command's kinds a Cmd struct is: kindOf<CmdBounce>().
+	template <typename Wanted, typename... Kinds>
+	constexpr std::size_t kindAmong(const std::variant<Kinds...>*) noexcept
+	{
+		const bool same[] = { std::is_same_v<Wanted, Kinds>... };
+		std::size_t index = 0;
+		while (index < sizeof...(Kinds) && !same[index]) { ++index; }
+		return index;
+	}
+	template <typename Wanted>
+	constexpr std::size_t kindOf() noexcept { return kindAmong<Wanted>(static_cast<const Command*>(nullptr)); }
+
+	// Who runs a command, and where: what every verb looks at to know what
+	// to do. The places a verb may be written are its forms' (below); this
+	// runs whatever got there.
+	struct Doer
+	{
+		// The object the command is about (a rule's, a timer's, an
+		// action's); none for a state's list, where a bare <reset /> is
+		// the whole game.
+		Object* self{ nullptr };
+		// What it touched, for a rule about another object.
+		Object* other{ nullptr };
+		const Touch* touch{ nullptr };
+		// The window edge, for a screen-edge rule.
+		std::optional<Edge> screenEdge;
+		// False for a key let go: only what is held stops (Verb::onRelease).
+		bool pressed{ true };
+		// Run by a rule, a timer or a condition, not by a key.
+		bool byRule{ true };
+		// In an object's action of this name: a <move> is held, and the
+		// controls (<hop>, <jump>, <climb>, <thrust>...) work.
+		const Name* action{ nullptr };
+		// In a cell map's check: what it found.
+		const Object::CellMatch* match{ nullptr };
+		// What runs it, and the game it runs in (CommandExecutor::run).
+		CommandExecutor* executor{ nullptr };
+
+		// A rule about touching another object: self, other and the touch.
+		bool touching() const noexcept { return self && other && touch; }
+		// A rule about the window's edge: self and that edge.
+		bool atEdge() const noexcept { return self && screenEdge.has_value(); }
+		Game& game() const noexcept;
+
+		// The doer of each kind of list.
+		static Doer of(Object* self) noexcept { Doer doer; doer.self = self; return doer; }
+		static Doer meeting(Object& self, Object& other, const Touch& touch) noexcept { Doer doer = of(&self); doer.other = &other; doer.touch = &touch; return doer; }
+		static Doer atEdgeOf(Object& self, Edge edge) noexcept { Doer doer = of(&self); doer.screenEdge = edge; return doer; }
+		static Doer finding(const Object::CellMatch& match) noexcept { Doer doer; doer.match = &match; return doer; }
+	};
+
+	// One way a verb is written: how a message names it, where it may go
+	// and the command it makes. Most verbs have one; <reset /> has three.
+	struct Form
+	{
+		const char* tag{ nullptr };
+		Places places{ 0 };
+		std::size_t kind{ 0 };
+	};
+
+	// What a command's attributes name, so that a scene, a copy and self
+	// rename them rightly. Left out, an attribute names nothing to rename.
+	enum class Naming
+	{
+		None,
+		Variable,   // an object's variable: "frog.lives"
+		Object,     // an object, or every member of a group
+		OneObject,  // just the object of that name; left out, the one running it
+	};
+	struct VerbNames
+	{
+		Naming object = Naming::Object;
+		Naming variable = Naming::None;
+		Naming into = Naming::None;
+		Naming from = Naming::None;
+	};
+
+	struct Verb
+	{
+		// The tag: "bounce".
+		const char* name;
+		// Its forms; unused ones have no tag.
+		Form forms[3];
+		// Which form a command is, for a verb whose forms make the same
+		// kind of command; none: the first of that kind.
+		std::size_t (*formOf)(const Command& command) = nullptr;
+		// Acts when a key is let go as well: a held verb stops.
+		bool onRelease = false;
+		// What its object=, variable=, into= and from= name.
+		VerbNames names{};
+		// Made again each time it runs, even with no live number: what it
+		// puts somewhere is the point of it (<set>, <spawn>).
+		bool alwaysLive = false;
+		// What its tag says besides the names every command may have (see
+		// readCommand): the attributes it must have, its content and its
+		// children, into `command`. None: it says nothing more. Stops the
+		// load (fail, load/reading.h) at anything missing or unknown.
+		void (*read)(const XmlNode& node, const std::string& where, WrittenCommand& command) = nullptr;
+		// What was written, its numbers worked out. Throws
+		// std::runtime_error naming what is wrong with it.
+		Command (*make)(const WrittenCommand& written, const ValueEvaluator& evaluate) = nullptr;
+		// The names it uses exist (load/check.h); none: it names nothing.
+		// Throws std::runtime_error saying which does not.
+		void (*check)(const Command& command, const Checking& checking) = nullptr;
+		// Does it, as `doer` says. False when it is refused, which ends the
+		// list it is in. None: it does nothing when run (it acts elsewhere).
+		bool (*run)(const Command& command, const Doer& doer) = nullptr;
+		// Goes on while the key that ran it is still down as a state begins
+		// (a held move keeps going, a looping sound plays on). Whether it
+		// did. None: it is not held.
+		bool (*hold)(const Command& command, const Doer& doer) = nullptr;
+		// Answers a control that points (a mouse, a pad's stick), `fraction`
+		// (0 to 1) of the way `across` the window or down it. None: it does
+		// not follow one.
+		void (*point)(const Command& command, const Doer& doer, bool across, float fraction) = nullptr;
+		// How a command of it is printed (operator<< in game/command.cpp).
+		// None: the tag alone.
+		void (*print)(std::ostream& out, const Command& command) = nullptr;
+	};
+
+	// A verb's own functions written for its own command (`bool
+	// runBounce(const CmdBounce& bounce, const Doer& doer)`), as the Verb
+	// table takes them: `.run = runAs<runBounce>`.
+	template <typename Cmd> Cmd commandOf(bool (*)(const Cmd&, const Doer&));
+	template <typename Cmd> Cmd commandOf(void (*)(std::ostream&, const Cmd&));
+	template <typename Cmd> Cmd commandOf(void (*)(const Cmd&, const Checking&));
+	template <auto Run> bool runAs(const Command& command, const Doer& doer)
+	{
+		return Run(std::get<decltype(commandOf(Run))>(command), doer);
+	}
+	template <typename Cmd> Cmd commandOf(void (*)(const Cmd&, const Doer&, bool, float));
+	template <auto Point> void pointAs(const Command& command, const Doer& doer, bool across, float fraction)
+	{
+		Point(std::get<decltype(commandOf(Point))>(command), doer, across, fraction);
+	}
+	template <auto Print> void printAs(std::ostream& out, const Command& command)
+	{
+		Print(out, std::get<decltype(commandOf(Print))>(command));
+	}
+	template <auto Check> void checkAs(const Command& command, const Checking& checking)
+	{
+		Check(std::get<decltype(commandOf(Check))>(command), checking);
+	}
+
+	// Every verb, in the order of docs/reference/commands.md.
+	const std::vector<const Verb*>& allVerbs();
+
+	// The verb of that tag name; null when there is none.
+	const Verb* findVerb(std::string_view name) noexcept;
+	// What a written command's attributes name (VerbNames), by its verb.
+	VerbNames namesOf(const WrittenCommand& command) noexcept;
+	// Whether a written command is made again each time it runs (Verb::alwaysLive).
+	bool alwaysLive(const WrittenCommand& command) noexcept;
+
+	// The verb a command is of, and which of its forms; null for what is not
+	// a verb's (a condition in an action, a command made as it runs: see
+	// shapeOf).
+	const Verb* verbOf(const Command& command) noexcept;
+	const Form* formOf(const Command& command) noexcept;
+
+	// A command tag as written, read by its verb; an unknown tag stops the
+	// load.
+	WrittenCommand readCommand(const XmlNode& node, const std::string& where);
+
+	// --- What several verbs' read() share (more in load/reading.h).
+
+	// Whether a tag holds anything: text or a child.
+	bool hasContent(const XmlNode& node);
+	// What a <hop> says besides its direction: one distance as its content,
+	// or an <x> across and a <y> up or down; then how long it takes, its
+	// <seconds>, and how high it goes, its <arc>. True for an <x> and a <y>.
+	bool readHopParts(const XmlNode& node, const std::string& where, WrittenHop& hop);
+	// <onto class="hslot" />, one or more and nothing else: the cells a hop
+	// or a track on cells may go to.
+	void readOnto(const XmlNode& node, const std::string& here, std::vector<std::string>& onto);
+	// A <count>'s or <trigger>'s cells: one <here /> or <around>, the latter
+	// holding <straight /> and an <alike variable> if wanted.
+	CellPlace readCellPlace(const XmlNode& node, const std::string& where);
+	// Members of a held class, holder to holder: how many, or <all /> where
+	// it `takesAll` (a <send>; a <distribute> gives how many each, into a
+	// holder or a group's own ones).
+	void readSendHeld(const XmlNode& node, const std::string& where, WrittenCommand& command, bool takesAll);
+
+	// --- What several verbs' make() share.
+
+	// A command's own data as its verb reads it; one made with none (by
+	// hand, in a test) has its parts' defaults: each left out.
+	template <typename Own> const Own& ownOf(const WrittenCommand& command)
+	{
+		static const Own none{};
+		const Own* own = std::get_if<Own>(&command.own);
+		return own ? *own : none;
+	}
+
+	// Whether anything was written for a value.
+	bool isWritten(const WrittenValue& value) noexcept;
+	// The value, or `otherwise` when nothing was written.
+	float valueOr(const WrittenValue& value, float otherwise, const ValueEvaluator& evaluate);
+	float valueOr(const std::optional<WrittenValue>& value, float otherwise, const ValueEvaluator& evaluate);
+
+	// up, down, left or right; anything else throws, naming the verb.
+	Direction directionFromName(const std::string& name, const std::string& verb);
+	// A turn's way: a rotation, clockwise (adds to the heading, kept as
+	// Right) or counterclockwise (takes from it, kept as Left).
+	Direction rotationFromName(const std::string& name, const std::string& verb);
+	// How long a <hop> takes: no <seconds>, none at all.
+	float hopSeconds(const WrittenHop& hop, const ValueEvaluator& evaluate);
+	// How high a timed <hop> goes: no <arc>, not at all.
+	float arcOf(const WrittenHop& hop, const char* what, float seconds, const ValueEvaluator& evaluate);
+	// The speed of a <go>, <hunt> or <wander>, which may not be below 0.
+	float speedOf(const WrittenValue& written, const char* what, const ValueEvaluator& evaluate);
+	// What one holder holds, sent to another: a <distribute>, or a <send>
+	// that names no object.
+	Command makeSendHeld(const WrittenCommand& written, const ValueEvaluator& evaluate);
+
+	// --- What several verbs' run() share.
+
+	// A <hop> made by `object` (a <hunt> by hops makes them too): at once,
+	// or with <seconds> through the air; either way it then faces that way.
+	// False when it is in the air, or the hop would land outside the window.
+	bool hopObject(Game& game, Object& object, const CmdHop& hop);
+
+	// --- What several verbs' print() share.
+
+	// What a <hop> says as printed: its distance or diagonal, its seconds
+	// and arc.
+	void printHopParts(std::ostream& out, const WrittenHop& hop);
+	// A <count>'s or <trigger>'s cells as printed: ", here", ", around
+	// straight alike hue", or nothing for none.
+	std::string cellPlaceText(const CellPlace& place);
+}

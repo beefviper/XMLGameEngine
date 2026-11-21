@@ -9,14 +9,14 @@
 
 namespace xge
 {
-	void SFMLAudio::load(const std::vector<SoundDesc>& sounds)
+	void SFMLAudio::load(const std::vector<SoundDesc>& sounds, Resources& resources)
 	{
 		stopAll();
 		voices.clear();
 
 		for (const SoundDesc& sound : sounds)
 		{
-			const std::vector<std::int16_t> samples = synthesize(sound);
+			const std::vector<std::int16_t>& samples = *resources.samples(sound);
 			if (samples.empty())
 			{
 				continue;

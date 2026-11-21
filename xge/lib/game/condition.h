@@ -24,7 +24,7 @@ namespace xge
 	// another variable, read every frame: object= on the tag names whose, and
 	// without it it is the tested object's own (<above object="gun2"
 	// variable="score" />). <remaining>: if no more than that many of the
-	// matching objects are still in play (visible - die() hides an object),
+	// matching objects are still in play (<die /> takes one out),
 	// the commands fire; remaining 0 is "they are all gone". Leaving both
 	// filters empty matches any object, same as an unfiltered collision rule.
 	//
@@ -35,27 +35,48 @@ namespace xge
 	// its own, with no commands), which can hold <all>s and <any>s in turn:
 	// then `join` says which, the checks are `parts`, and the condition's own
 	// test is not used.
-	struct RawCondition
+	//
+	// sprite= looks only at the objects showing that look; with no test tag,
+	// showing it is the test (Test::Shows). A state's condition can hold
+	// conditions (`inner`), checked in order only while it holds: `first`
+	// (<first>) runs as soon as it holds, before them, and its `commands`
+	// (<otherwise>) when none of them does. flattened() turns those into the
+	// plain list the engine checks.
+	struct WrittenCondition
 	{
-		enum class Test { AtLeast, AtMost, Remaining, Above, Below, Equal };
+		enum class Test { AtLeast, AtMost, Remaining, Above, Below, Equal, Shows, Lowest, Highest, Unequal, Sees };
 		enum class Join { None, All, Any };
 
+		int line{ 0 }; // of its tag in the game file; 0 when not known (a generated program)
 		std::string filterClass;
 		std::string filterObject;
 		std::string variableName;
 		std::string total;    // total="...": "" (each object), count, sum, highest, lowest
 		std::string distance; // distance="...": the object or group measured to, or ""
+		std::string sprite;   // sprite="...": only those showing this look
+		// <sees object="player"><past class="wall" /></sees>: what each one
+		// looks for, and the classes the line to it must not cross.
+		std::string sees;
+		std::vector<std::string> past;
 		Test test{ Test::AtLeast };
-		RawValue threshold;      // the test tag's number
+		WrittenValue threshold;      // the test tag's number
 		Join join{ Join::None };
-		std::vector<RawCondition> parts; // <all> or <any>: its <condition>s, <all>s and <any>s
-		std::vector<RawCommand> commands;
+		std::vector<WrittenCondition> parts; // <all> or <any>: its <condition>s, <all>s and <any>s
+		std::vector<WrittenCondition> inner; // the conditions it holds, checked while it holds
+		std::vector<WrittenCommand> first;   // <first>: holding conditions, run before they are checked
+		std::vector<WrittenCommand> commands; // holding conditions: its <otherwise>
 		std::string name; // name="...": a scene from= this one's can put another in its place
 	};
 
+	// Conditions holding conditions, as the plain list the engine checks in
+	// order: each inner one as an <all> of its holder's test and its own,
+	// its holder's <first> before its commands; then the holder alone with
+	// its <first> and its <otherwise>, if it has either.
+	std::vector<WrittenCondition> flattened(const std::vector<WrittenCondition>& conditions);
+
 	// How a condition's variable is compared, and whether `variable` passes
 	// against `against` that way.
-	enum class Compare { AtLeast, AtMost, Above, Below, Equal };
+	enum class Compare { AtLeast, AtMost, Above, Below, Equal, Shows, Lowest, Highest, Unequal };
 	bool passes(Compare compare, float variable, float against) noexcept;
 
 
@@ -65,35 +86,67 @@ namespace xge
 
 	struct Condition
 	{
-		std::string filterClass;
-		std::string filterObject;
-		std::string variableName;
+		int line{ 0 }; // WrittenCondition::line
+		Name filterClass;
+		// "self": the object testing it (a rule's, an action's), as are
+		// distanceTo and sees; `selfReads` are the variables of its own a
+		// live number reads (self.worth).
+		Name filterObject;
+		bool saysSelf{ false };
+		Name madeFor;   // the object it was made for at load: self, when none tests it
+		Name madeAgainst;   // the same for other, in a rule about touching
+		std::vector<Name> otherReads;
+		std::vector<Name> selfReads;
+		Name variableName;
 		Total total{ Total::None };
-		std::string distanceTo; // measured to the nearest one in play of this name or group
-		RawCondition::Join join{ RawCondition::Join::None };
+		Name distanceTo; // measured to the nearest one in play of this name or group
+		Name sprite;     // only those showing this look
+		// <sees>: each one holds while the straight line from its middle to
+		// the middle of the nearest of `sees` in play crosses nothing in play
+		// of a class in `past` (measured as 1, or 0 when it crosses).
+		Name sees;
+		std::vector<Name> past;
+		WrittenCondition::Join join{ WrittenCondition::Join::None };
 		std::vector<Condition> parts;
 		Compare compare{ Compare::AtLeast };
 		float value{};
 		// A number that names something that changes as the game runs (an
 		// object's variable, where it is: ship.next) is worked out again each
 		// time the condition is tested, from this; value is what it was at load.
-		std::shared_ptr<const RawValue> live;
+		std::shared_ptr<const WrittenValue> live;
 		std::string where;
 		// The objects' variables it names, each with where the expressions
 		// read it from: brought up to date from the object before it is
 		// worked out, so a variable changed in any way is seen.
 		struct Read
 		{
-			std::string owner;
-			std::string variable;
+			Name owner;
+			Name variable;
 			float* slot{ nullptr };
 		};
 		std::vector<Read> reads;
 		std::optional<float> remaining;
 		std::vector<Command> commands;
+		// Commands that name self or others: a list for each object the
+		// condition may match, run for each one that holds.
+		struct Each
+		{
+			Name object;
+			std::vector<Command> commands;
+		};
+		std::vector<Each> each;
 	};
 
 	// "status.lives <= 0", "count of alien <= 2", "all of (...)": a
 	// condition's test in a line, for printing and the inspector.
 	std::string describe(const Condition& condition);
+
+	// A <condition> in an action (CmdWhen): what was written, its test once
+	// made (none until every object is known), and its commands.
+	struct WhenBody
+	{
+		std::shared_ptr<const WrittenCondition> written;
+		std::optional<Condition> test;
+		std::vector<Command> commands;
+	};
 }

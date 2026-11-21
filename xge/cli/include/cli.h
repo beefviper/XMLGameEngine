@@ -10,6 +10,8 @@
 #include "xml/document.h"
 
 #include <filesystem>
+#include <optional>
+#include <ostream>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -39,7 +41,7 @@ namespace xge
 		AudioBackend audio = AudioFactory::defaultBackend();
 
 		// --generate: the target to write the game out for instead of playing
-		// it ("windows-cpp"), or empty to play it; and -o/--output, the folder
+		// it ("engine-cpp"), or empty to play it; and -o/--output, the folder
 		// to write it to (empty: <game>-<target> in the working directory).
 		std::string generate;
 		std::string output;
@@ -47,6 +49,39 @@ namespace xge
 		// --record: play the game and write what was played into the game
 		// file as its <demo> when the window closes.
 		bool record = false;
+
+		// --check: load each game (`games`; none given, every one in
+		// games/descriptions/) as for play, print ok or what is wrong, and
+		// play nothing (checkGames).
+		bool check = false;
+		std::vector<std::string> games;
+
+		// --frames N: play that many frames as fast as they go, with no window
+		// and no sound, then stop (playFrames); 0 plays in a window as usual.
+		// --seed S: the random numbers start from S, from the moment the game
+		// loads, so the same command plays the same game every time.
+		int frames = 0;
+		std::optional<unsigned int> seed;
+
+		// --step S: the length in seconds of each step --frames plays (a
+		// sixtieth when not given). --framerate N: in a window, at most N
+		// frames a second in place of the game's <framerate> (0: the game's).
+		std::optional<float> step;
+		int framerate = 0;
+
+		// --keys file: play back the <demo> in that file (readDemo) from its
+		// own seed, its keys pressed in the frames they were recorded in.
+		std::string keys;
+
+		// --dump file: with --frames, the game as it is (Game::describe)
+		// written into that file at the end; --dump-every K, every K frames
+		// as well. games/xgedump.xsd is the file's schema.
+		std::string dump;
+		int dumpEvery = 0;
+
+		// --picture file.png: with --frames, the last frame drawn by the
+		// engine (window/picture.h) and written there as a PNG.
+		std::string picture;
 
 		bool showHelp = false;
 	};
@@ -57,7 +92,8 @@ namespace xge
 	//                          always was ("pong", "pong.xml", "a/b/pong.xml")
 	//   -g pong  -gpong        the game, same as the bare argument
 	//   --game pong
-	//   -w sfml3 -wsfml3       the window library: sfml3 (default), raylib, sdl2, opengl
+	//   -w sfml3 -wsfml3       the window library: sfml3 (default), raylib, sdl2, opengl,
+	//                          vulkan, direct3d9, direct3d10, direct3d11, direct3d12 (Windows)
 	//   --window sfml3
 	//   -x xerces -xxerces     the XML library: xerces (default), tinyxml2,
 	//   --xml xerces           pugixml, rapidxml
@@ -65,12 +101,20 @@ namespace xge
 	//   --audio sfml3          none (silent)
 	//   Only the libraries this program was built with can be named; another is an
 	//   error that says which there are (a default build has SFML 3 and Xerces).
-	//   --generate windows-cpp write the game out as a program for that target
+	//   --generate engine-cpp write the game out as a program for that target
 	//                          instead of playing it (no short form: -g is the game)
 	//   -o out -oout           the folder --generate writes to
 	//   --output out
 	//   --record               play and write what was played into the game
 	//                          file as its <demo>, for its attract mode
+	//   --frames 600           play that many frames with no window and no
+	//                          sound, then stop
+	//   --seed 1               the random numbers start from this seed
+	//   --keys play.xml        play back the <demo> in that file
+	//   --dump state.xml       with --frames, write the game's state there at
+	//                          the end
+	//   --dump-every 60        and every 60 frames on the way
+	//   --picture end.png      with --frames, draw the last frame into that PNG
 	//   -h  --help             show the usage and exit
 	//
 	// A short option takes its value attached or after a space; a long option
@@ -103,9 +147,27 @@ namespace xge
 	std::string xmlBackendName(XmlBackend backend);
 	std::string audioBackendName(AudioBackend backend);
 
-	// The targets --generate can write a game out for ("windows-cpp").
+	// The targets --generate can write a game out for ("engine-cpp",
+	// "windows-cpp").
 	std::vector<std::string> generateTargets();
 
 	// The usage text, for --help and after an error.
 	std::string usageText();
+
+	// Every .xml file in the folder, sorted: what --check with no game checks.
+	std::vector<std::string> gameFilesIn(const std::filesystem::path& gamesDirectory);
+
+	// Loads each game file as for play (the reader, then the engine with a
+	// null window and no sound, so sizes and the positions made from them are
+	// worked out too), and writes a line each to `out`: "pong.xml: ok", or
+	// "pong.xml: " and what stopped it. What the libraries say while reading is
+	// not shown; warnings still go to std::cerr. Gives back how many failed.
+	int checkGames(const std::vector<std::string>& files, XmlBackend xml, std::ostream& out);
+
+	// --frames: loads the game file (with options.xml, from options.seed if
+	// there is one, playing back options.keys if given), plays options.frames frames with a null window and no
+	// sound, writes options.dump and options.picture if asked, and writes one line to `out` saying how far it got. A game that
+	// will not load, or throws while it plays, is "Error: " and what it said.
+	// Gives back the program's exit code: EXIT_SUCCESS or EXIT_FAILURE.
+	int playFrames(const std::string& file, const CliOptions& options, std::ostream& out);
 }

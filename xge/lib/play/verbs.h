@@ -5,7 +5,9 @@
 
 #pragma once
 
+#include "engine/resources.h"
 #include "game/object.h"
+#include "game/parts.h"
 #include "game/types.h"
 #include "play/geometry.h"
 
@@ -14,10 +16,11 @@
 
 namespace xge
 {
-	// What a verb does to an object, once something has decided it should
-	// happen: no game file, no rules and no looking anything up, only the
-	// object (and what it touched) changed. CommandExecutor calls these
-	// when a game file's rule says so. The arithmetic is play/geometry.h's.
+	struct Parts;
+
+	// What more than one place does to an object: several verbs, or a verb
+	// and the frame. A verb's own work is in its file in verbs/; the
+	// arithmetic is play/geometry.h's.
 
 	// What an object measures: what the window measured, or, before there is
 	// one, what its sprite implies.
@@ -30,7 +33,7 @@ namespace xge
 	// leaving `from` out, among those `inPlay` takes; null if there is none.
 	// What <chase>, <aim>, <hunt>, <pull>, <seek> and distance= look for.
 	template <typename InPlay>
-	const Object* nearestInPlay(const std::vector<Object>& objects, const Object& from, const std::string& name, InPlay inPlay)
+	const Object* nearestInPlay(const std::vector<Object>& objects, const Object& from, Name name, InPlay inPlay)
 	{
 		const Vector2f here = middleOf(from);
 		const Object* nearest = nullptr;
@@ -39,7 +42,7 @@ namespace xge
 		{
 			if (&other == &from || !other.named(name) || !inPlay(other)) { continue; }
 			const Vector2f apart = middleOf(other) - here;
-			const float distance = apart.x * apart.x + apart.y * apart.y;
+			const float distance = dotOf(apart, apart);
 			if (!nearest || distance < nearestApart)
 			{
 				nearest = &other;
@@ -49,94 +52,28 @@ namespace xge
 		return nearest;
 	}
 
-	// How far an object moves in one frame: its own velocity, plus the
-	// velocity of whatever it is riding (see Object::riding).
-	inline Vector2f motionOf(const Object& object) noexcept
+	// How far an object moves in a step `t` seconds long: its own velocity times t (for a stepped
+	// animation, only on the step its picture changes, by the time saved up
+	// since: Object::Animation::stepped), plus the velocity of whatever it is
+	// riding (see Object::riding) times t. With t of 1, how fast it goes.
+	inline Vector2f motionOf(const Object& object, float t) noexcept
 	{
-		return object.velocity + object.riding;
+		return (object.animation.frames.shows().stepped ? object.velocity * object.animation.share : object.velocity * t) + object.riding * t;
 	}
 
-	// <bounce />: off what it touched, as off a surface standing still:
-	// mirrored about the touch's normal, keeping `share` of the speed it
-	// came in at; one already going away keeps on. A box's side faces
-	// straight out, so off a box this is the plain flip.
-	// With <friction>, it rubs along the surface and may come to rest on it
-	// (see Object::resting).
-	void bounce(Object& object, const Object& other, const Touch& touch, float share);
+	// How far the sweep moves it in a step `t` long: motionOf, less half of
+	// what its pull gained it this step (Object::Motion::gained), so that a
+	// constant pull moves it v t + a t t / 2 however the time is cut.
+	inline Vector2f sweptMotion(const Object& object, float t) noexcept
+	{
+		if (object.animation.frames.shows().stepped) { return motionOf(object, t); }
+		return motionOf(object, t) - object.motion.gained * (t * 0.5f);
+	}
 
-	// <bounce /> off a screen edge, which faces straight in.
-	void bounceOffEdge(Object& object, Edge edge, float share);
-
-	// <deflect>maxDegrees</deflect>: back off `other` at an angle set by
-	// where on the touched side it hit.
-	void deflect(Object& object, const Object& other, Edge edge, float maxDegrees);
-
-	// <knock>: the object knocks `other`, both with a mass (see
-	// knockedApart); `touch` is the object's own view of it. Two that went
-	// into each other are put apart along the touch, the lighter moved
-	// more. Whether they were coming together.
-	bool knock(Object& object, Object& other, const Touch& touch, float bounce);
-
-	// <hole>: clears the pixels of the object's own picture within `radius`
-	// of where `other` struck it - the solid pixel nearest the middle of
-	// `other`, within a pixel or two of it, or that middle when there is
-	// none - each at the edge kept at random by up to `rough` of the
-	// radius. So shot after shot up one line goes deeper and deeper. The
-	// first hole keeps the whole picture in Object::unholed for a reset; the
-	// picture is copied, never changed where other objects share it.
-	void cutHole(Object& object, const Object& other, float radius, float rough);
-
-	// <stick />: pushed back inside the window on that edge's axis, losing
-	// only the velocity carrying it into the edge.
-	void stick(Object& object, const WindowDesc& window, Edge edge);
-	// <stick /> in a rule about another object: only the velocity into
-	// the side it was touched on stops, so it slides along what it met.
-	void stickAgainst(Object& object, Edge side);
-
-	// <wrap />: once right off through `edge`, back in from the other side.
-	void wrap(Object& object, const WindowDesc& window, Edge edge);
-
-	// <ride />: moves with `other` for this frame.
-	void ride(Object& object, const Object& other);
-
-	// <carry />: picks `item` up, held where it is now, putting down what
-	// it carried before; nothing if it was just put down and is still
-	// being touched.
-	void carry(Object& object, const Object& item);
-
-	// <drop />: puts down what it carries.
-	void drop(Object& object);
-
-	// <track />: the object's middle goes to `fraction` (0 to 1) of the way
-	// across `span` (the window's width, or its height when not
-	// `horizontal`), kept wholly inside it. Its speed is left alone.
-	void track(Object& object, bool horizontal, float fraction, float span);
-
-	// <track path="...">: the object's middle `fraction` (0 to 1, held to
-	// that) of the way along the path, measured along its legs from its
-	// <start>; a <home /> leg goes back to the start.
-	void trackPath(Object& object, const Path& path, float fraction);
-
-	// <die />: out of play; not drawn, moved or collided with.
-	void die(Object& object);
-
-	// <stop />: at rest, with nothing left to move it.
-	void stop(Object& object);
-
-	// A bare <reset /> on an object: back where it started, facing and going
-	// the way it started; a held key still decides its velocity. The start
-	// is start.position and start.velocity, so a start that draws a
-	// <random> is drawn again before this.
-	void restart(Object& object);
-
-	// A direction held at `step` (0: let go), recombined with the others held
-	// into the velocity: Left/Right and Up/Down are separate axes, and in a
-	// <leap> the way across waits for the landing.
-	void holdStep(Object& object, Direction direction, float step);
-
-	// A <move> in an action, as its key goes down (pressed) or up: that
-	// direction held at `step`, recombined with the others held into the
-	// velocity, and the object faces that way: with a key of the other axis
-	// held too, the diagonal between them, which its <fire>s follow.
-	void holdMove(Object& object, Direction direction, float step, bool pressed);
+	// After `mover` has met `surface`, which does not move of itself (going
+	// at `surfaceAt` where they touch, `out` the way out of it to the
+	// mover), going at `before` as it came: its <friction> rubs it along the
+	// surface and may bring it to rest there (Object::Rest). What a <bounce>
+	// and a <knock> share.
+	void rub(Object& mover, Object::Rest* rest, const Object& surface, const Vector2f& out, const Vector2f& surfaceAt, const Vector2f& before, float settle);
 }

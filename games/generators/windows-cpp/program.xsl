@@ -2,85 +2,101 @@
 <!-- program.xsl -->
 <!-- XML Game Engine -->
 <!-- author: beefviper -->
-<!-- date: Oct 11, 2026 -->
+<!-- date: Nov 13, 2026 -->
 
-<!-- The rest of a generated program: source/main.cpp, which plays the game
-     with the engine's own Game and Engine on SFML, its build and its readme. -->
+<!-- The rest of a windows-cpp program: source/main.cpp, the loop on SFML
+     (keys, a step of the time since the last frame, the picture), its build and its
+     readme. -->
 <xsl:stylesheet version="1.0"
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
+  <!-- What the game is called: its window's name, or else the program's. -->
+  <xsl:variable name="title">
+    <xsl:choose>
+      <xsl:when test="/game/window/@name != ''"><xsl:value-of select="/game/window/@name" /></xsl:when>
+      <xsl:otherwise><xsl:value-of select="$name" /></xsl:otherwise>
+    </xsl:choose>
+  </xsl:variable>
+
   <xsl:template name="main-file">
-    <xsl:call-template name="header">
-      <xsl:with-param name="file" select="'main.cpp'" />
-    </xsl:call-template>
+    <xsl:call-template name="header"><xsl:with-param name="file" select="'main.cpp'" /></xsl:call-template>
     <xsl:text>//
-// </xsl:text>
-    <xsl:value-of select="concat($title, ', generated from ', $source, ' by xgecli --generate windows-cpp. The')" />
+// The window: keys in, a step of the time since the last frame, the picture out.
+</xsl:text>
+    <xsl:value-of select="concat('&#10;#include &quot;', $name, '.h&quot;&#10;')" />
     <xsl:text>
-// game is in source/</xsl:text>
-    <xsl:value-of select="$name" />
-    <xsl:text>.cpp, as the engine's own data; it is played
-// by the engine's own code (engine/), on SFML, as xgecli plays it.
+#include &lt;SFML/Graphics.hpp&gt;
 
-#include "audio/sfml.h"
-#include "engine/engine.h"
-#include "game/game.h"
-#include "window/sfml.h"
+#include &lt;algorithm&gt;
+#include &lt;optional&gt;
 
-#include &lt;cstdlib&gt;
-#include &lt;exception&gt;
-#include &lt;iostream&gt;
-#include &lt;memory&gt;
-
-// The game, as written in </xsl:text>
-    <xsl:value-of select="concat($source, ' (source/', $name, '.cpp).')" />
-    <xsl:text>
-xge::GameData </xsl:text>
-    <xsl:value-of select="$function" />
-    <xsl:text>();
+namespace
+{
+	void draw(sf::RenderWindow&amp; window, const </xsl:text>
+    <xsl:call-template name="namespace-name" />
+    <xsl:text>::Thing&amp; thing)
+	{
+		sf::RectangleShape shape(thing.size);
+		shape.setPosition(thing.position);
+		shape.setFillColor(sf::Color::White);
+		window.draw(shape);
+	}
+}
 
 int main()
 {
-	try
+	using namespace </xsl:text>
+    <xsl:call-template name="namespace-name" />
+    <xsl:text>;
+
+	sf::RenderWindow window(sf::VideoMode({ static_cast&lt;unsigned&gt;(windowWidth), static_cast&lt;unsigned&gt;(windowHeight) }), </xsl:text>
+    <xsl:call-template name="string"><xsl:with-param name="text" select="$title" /></xsl:call-template>
+    <xsl:text>);
+	window.setFramerateLimit(</xsl:text>
+    <xsl:call-template name="framerate" />
+    <xsl:text>);
+	window.setKeyRepeatEnabled(false);
+
+	</xsl:text>
+    <xsl:call-template name="class-name" />
+    <xsl:text> game;
+	sf::Clock clock;
+	while (window.isOpen())
 	{
-		xge::Game game{ </xsl:text>
-    <xsl:value-of select="$function" />
-    <xsl:text>() };
-
-		// No sound device is no reason not to play: silence, as xgecli does.
-		std::unique_ptr&lt;xge::Audio&gt; audio;
-		try
+		while (const std::optional event = window.pollEvent())
 		{
-			audio = std::make_unique&lt;xge::SFMLAudio&gt;();
-		}
-		catch (const std::exception&amp; error)
-		{
-			std::cerr &lt;&lt; "warning: no sound: " &lt;&lt; error.what() &lt;&lt; '\n';
+			if (event-&gt;is&lt;sf::Event::Closed&gt;()) { window.close(); }
+			if (const auto* key = event-&gt;getIf&lt;sf::Event::KeyPressed&gt;()) { game.key(key-&gt;code, true); }
+			if (const auto* key = event-&gt;getIf&lt;sf::Event::KeyReleased&gt;()) { game.key(key-&gt;code, false); }
 		}
 
-		xge::Engine engine(game, std::make_unique&lt;xge::SFMLWindow&gt;(game.getWindowDesc()), std::move(audio));
+		// the time since the last frame, at most a quarter of a second
+		game.frame(std::min(clock.restart().asSeconds(), 0.25f));
 
-		// What the game keeps (a best score) lasts from one run to the next.
-		engine.keepIn("saves/</xsl:text>
-    <xsl:value-of select="$name" />
-    <xsl:text>.xml");
-		engine.loop();
+		window.clear(sf::Color::Black);
+</xsl:text>
+    <xsl:for-each select="$objects">
+      <xsl:text>&#9;&#9;draw(window, game.</xsl:text>
+      <xsl:call-template name="object-name" />
+      <xsl:text>);&#10;</xsl:text>
+    </xsl:for-each>
+    <xsl:text>		window.display();
 	}
-	catch (const std::exception&amp; error)
-	{
-		std::cerr &lt;&lt; "Error: " &lt;&lt; error.what() &lt;&lt; '\n';
-		return EXIT_FAILURE;
-	}
-
-	return EXIT_SUCCESS;
 }
 </xsl:text>
+  </xsl:template>
+
+  <xsl:template name="framerate">
+    <xsl:choose>
+      <xsl:when test="/game/window/framerate"><xsl:value-of select="normalize-space(/game/window/framerate)" /></xsl:when>
+      <xsl:otherwise>60</xsl:otherwise>
+    </xsl:choose>
   </xsl:template>
 
   <xsl:template name="cmake-file">
     <xsl:text># CMakeLists.txt
 # </xsl:text>
-    <xsl:value-of select="concat($title, ', generated from ', $source, ' by xgecli --generate windows-cpp.')" />
+    <xsl:value-of select="concat($title, ', from ', $source, '.')" />
     <xsl:text>
 
 cmake_minimum_required(VERSION 3.28)
@@ -93,57 +109,34 @@ project(</xsl:text>
 # configuration, Debug or Release, under Visual Studio).
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/output")
 
-include(FetchContent)
-
-# What the engine is built with: SFML 3 for the window and sound, lunasvg for
-# any &lt;svg&gt; picture. Each as installed (vcpkg install sfml lunasvg), or
-# else fetched and built here.
-find_package(SFML 3 COMPONENTS Graphics Audio QUIET)
+# SFML 3 for the window: as installed (vcpkg install sfml), or else fetched
+# and built here.
+find_package(SFML 3 COMPONENTS Graphics QUIET)
 if (NOT SFML_FOUND)
 	message(STATUS "SFML 3 not found, using FetchContent to download and build it.")
-	set(SFML_BUILD_AUDIO ON CACHE BOOL "" FORCE)
+	include(FetchContent)
+	set(SFML_BUILD_AUDIO OFF CACHE BOOL "" FORCE)
 	set(SFML_BUILD_NETWORK OFF CACHE BOOL "" FORCE)
 	FetchContent_Declare(SFML GIT_REPOSITORY https://github.com/SFML/SFML.git GIT_TAG 3.1.0 EXCLUDE_FROM_ALL SYSTEM)
 	FetchContent_MakeAvailable(SFML)
 endif()
-
-find_package(lunasvg QUIET)
-if (NOT lunasvg_FOUND)
-	message(STATUS "lunasvg not found, using FetchContent to download and build it.")
-	set(LUNASVG_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-	set(PLUTOVG_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-	FetchContent_Declare(lunasvg GIT_REPOSITORY https://github.com/sammycage/lunasvg.git GIT_TAG v3.5.0 EXCLUDE_FROM_ALL SYSTEM)
-	FetchContent_MakeAvailable(lunasvg)
-endif()
-
-# A computer player thinks on a thread of its own.
-find_package(Threads REQUIRED)
 
 add_executable(</xsl:text>
     <xsl:value-of select="$name" />
     <xsl:text>
 	source/main.cpp
 	source/</xsl:text>
-    <xsl:value-of select="$name" />
-    <xsl:text>.cpp
-	source/game_parts.h
-	# the engine's own code, as it is in xge/lib/
-</xsl:text>
-    <xsl:for-each select="$engine">
-      <xsl:value-of select="concat('&#9;engine/', substring-after(., '/'), '&#10;')" />
-    </xsl:for-each>
-    <xsl:value-of select="concat(')&#10;target_include_directories(', $name, ' PRIVATE engine)&#10;target_compile_features(', $name, ' PRIVATE cxx_std_20)&#10;target_link_libraries(', $name, ' PRIVATE SFML::Graphics SFML::Audio lunasvg::lunasvg Threads::Threads)&#10;')" />
+    <xsl:value-of select="concat($name, '.h&#10;&#9;source/', $name, '.cpp&#10;')" />
+    <xsl:value-of select="concat(')&#10;target_compile_features(', $name, ' PRIVATE cxx_std_20)&#10;target_link_libraries(', $name, ' PRIVATE SFML::Graphics)&#10;')" />
     <xsl:text>
-# The warnings the engine is built with (xge_warnings in its
-# scripts/cmake/platform.cmake), for its code and the game's alike, /bigobj
-# included.
+# Every warning worth having, kept at zero.
 target_compile_options(</xsl:text>
     <xsl:value-of select="$name" />
     <xsl:text> PRIVATE
 	$&lt;$&lt;CXX_COMPILER_ID:MSVC&gt;:/W4
 		/w14242 /w14254 /w14263 /w14265 /w14287 /w14296 /w14311 /w14545 /w14546 /w14547
 		/w14549 /w14555 /w14619 /w14640 /w14826 /w14905 /w14906 /w14928
-		/external:anglebrackets /external:W0 /analyze:external- /bigobj /utf-8&gt;
+		/external:anglebrackets /external:W0 /analyze:external- /utf-8&gt;
 	$&lt;$&lt;CXX_COMPILER_ID:GNU,Clang,AppleClang&gt;:-Wall -Wextra -Wpedantic -Wshadow -Wconversion
 		-Wsign-conversion -Wnon-virtual-dtor -Woverloaded-virtual -Wcast-align -Wunused
 		-Wnull-dereference -Wformat=2 -Wimplicit-fallthrough
@@ -152,17 +145,6 @@ target_compile_options(</xsl:text>
 		-Wlogical-op -Wuseless-cast&gt;)
 
 </xsl:text>
-    <xsl:if test="$texts or $pictures">
-      <xsl:text># The game opens its font and pictures from assets/ beside where it runs:
-# copied beside the program, and the folder Visual Studio starts it in.
-add_custom_command(TARGET </xsl:text>
-      <xsl:value-of select="$name" />
-      <xsl:text> POST_BUILD
-	COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/assets" "$&lt;TARGET_FILE_DIR:</xsl:text>
-      <xsl:value-of select="$name" />
-      <xsl:text>&gt;/assets")
-</xsl:text>
-    </xsl:if>
     <xsl:value-of select="concat('set_property(TARGET ', $name, ' PROPERTY VS_DEBUGGER_WORKING_DIRECTORY &quot;$&lt;TARGET_FILE_DIR:', $name, '&gt;&quot;)&#10;')" />
     <xsl:text>
 # Visual Studio starts the game when you press F5, rather than ALL_BUILD.
@@ -170,7 +152,7 @@ set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT </xsl:text>
     <xsl:value-of select="$name" />
     <xsl:text>)
 
-# On Windows the program needs its libraries' DLLs beside it when they are shared.
+# On Windows the program needs SFML's DLLs beside it when they are shared.
 if (WIN32)
 	add_custom_command(TARGET </xsl:text>
     <xsl:value-of select="$name" />
@@ -186,31 +168,21 @@ endif()
   </xsl:template>
 
   <xsl:template name="readme-file">
-    <xsl:value-of select="concat('# ', $title, '&#10;&#10;Generated from `', $source, '` by `xgecli --generate windows-cpp`. It is the game xgecli and&#10;')" />
-    <xsl:text>xgegui play, built as a program of its own on SFML 3: the stylesheets in the engine's
-`games/generators/windows-cpp/` write the game file out as C++ data in `source/</xsl:text>
-    <xsl:value-of select="$name" />
-    <xsl:text>.cpp`,
-and everything that plays it (the frame, the physics and collisions, the keys, the
-pictures and the sounds) is the engine's own code, copied unchanged into `engine/`.
-Only reading XML and choosing among window and sound libraries are left out.
+    <xsl:value-of select="concat('# ', $title, '&#10;&#10;', $title, ' from `', $source, '`, written as a small program of its own on SFML 3.&#10;')" />
+    <xsl:text>
 
 | File | What |
 |---|---|
 | `source/</xsl:text>
-    <xsl:value-of select="concat($name, '.cpp` | the game, as the engine reads it from `', $source, '` |')" />
-    <xsl:text>
-| `source/game_parts.h` | the small functions the game is written with, a tag each |
-| `source/main.cpp` | makes the game, an SFML window and SFML sound, and runs the engine's loop |
-| `engine/` | the engine's own files, as they are in its `xge/lib/` |
-| `assets/` | the fonts and pictures it opens (a font with its licence), copied beside the program when it is built |
-| `LICENSE` | the engine's licence (MIT), which goes with its code |
-| `CMakeLists.txt` | the build; it uses installed SFML 3 and lunasvg, or downloads and builds them |
+    <xsl:value-of select="concat($name, '.h` | its numbers, its things and its class |&#10;| `source/', $name, '.cpp` | its rules: where things start, the keys, and a frame |&#10;')" />
+    <xsl:text>| `source/main.cpp` | the window: keys in, a step of the time since the last frame, the picture out |
+| `LICENSE` | the licence (MIT) |
+| `CMakeLists.txt` | the build; it uses installed SFML 3, or downloads and builds it |
 | `.gitignore` | leaves out `build/` and `output/` |
 
 ## Build and play
 
-On Windows with Visual Studio and vcpkg (`vcpkg install sfml lunasvg`), from this folder:
+On Windows with Visual Studio and vcpkg (`vcpkg install sfml`), from this folder:
 
 ```
 cmake -B build -DCMAKE_TOOLCHAIN_FILE=%VCPKG_ROOT%/scripts/buildsystems/vcpkg.cmake
@@ -220,12 +192,7 @@ output\Release\</xsl:text>
     <xsl:text>.exe
 ```
 
-Without vcpkg, leave out the toolchain file: the libraries are downloaded and built with the game.
-The built game, its DLLs and its `assets/` are in `output/`; `build/` holds the rest.
-
-Change the game in its XML file and generate it again, rather than editing `source/</xsl:text>
-    <xsl:value-of select="$name" />
-    <xsl:text>.cpp`.
+Without vcpkg, leave out the toolchain file: SFML is downloaded and built with the game.
 </xsl:text>
   </xsl:template>
 </xsl:stylesheet>

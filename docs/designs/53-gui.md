@@ -11,7 +11,7 @@
 
 ## Size
 
-- The windows keep their size between games and runs; a game is drawn as large as fits, any factor, with its proportions, in screen pixels (`devicePixelRatioF`, so a 125% display does not enlarge it). Whole-number steps were tried for sharp cards and dropped: they left much of the window empty.
+- The windows keep their size between games and runs; a game is drawn as large as fits, any factor, with its proportions, in screen pixels (`devicePixelRatioF`, so a 125% display does not enlarge it). Whole-number steps were tried for sharp cards and dropped: they left much of the window empty. Cards and text are sharp anyway now: the frame is drawn at the size it is shown once that settles ([backends](50-backends.md#scale)).
 - A bar under the picture shows the game's size, `<scale>`, and the percent shown, with smaller, 100% and bigger buttons (25 to 800%). In one window they zoom inside its room; in two they resize the game window. Rejected: resizing the main window to fit each game.
 
 ## Driving the engine

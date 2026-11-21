@@ -13,6 +13,11 @@ target_include_directories(xgelib PUBLIC xge/lib)
 # A computer player's search runs on a thread of its own (game/think.cpp).
 find_package(Threads REQUIRED)
 target_link_libraries(xgelib PUBLIC Threads::Threads)
+# Windows: winmm, so the frame wait can sleep to the millisecond
+# (timeBeginPeriod in engine/engine.cpp).
+if (WIN32)
+	target_link_libraries(xgelib PUBLIC winmm)
+endif()
 
 # Only the backends that are built (options.cmake) are linked, and each one
 # defines XGE_WITH_<NAME> for the engine and its users: the factories (window/window.cpp,
@@ -54,24 +59,60 @@ if (XGE_WITH_OPENGL)
 	target_link_libraries(xgelib PUBLIC glfw OpenGL::GL)
 endif()
 
-# SDL2's window and sound - see window/sdl2.h and audio/sdl2.h. Its libraries are
-# also the OpenGL backend's, for its pictures and text (options.cmake).
-if (XGE_WITH_SDL2)
-	xge_backend(SDL2)
+# The Vulkan window (window/vulkan.h): GLFW for the window, volk to reach the
+# driver's Vulkan, Khronos's headers. volk is built without looking for Vulkan
+# itself, and given the same headers as the engine here.
+if (XGE_WITH_VULKAN)
+	xge_backend(VULKAN)
+	if ("volk" IN_LIST FETCHED_LIBRARIES)
+		target_link_libraries(volk PUBLIC Vulkan::Headers)
+	endif()
+	target_link_libraries(xgelib PUBLIC glfw volk::volk Vulkan::Headers)
 endif()
 
-if (XGE_NEEDS_SDL2)
+# The Direct3D 11 window (window/direct3d11.h), on Windows only: its libraries
+# come with the Windows SDK. d3dcompiler compiles its two small shaders when
+# the window opens; xinput reads the pads.
+if (XGE_WITH_DIRECT3D11)
+	xge_backend(DIRECT3D11)
+	target_link_libraries(xgelib PUBLIC d3d11 dxgi d3dcompiler xinput)
+endif()
+
+# The Direct3D 9 window (window/direct3d9.h), on Windows only: it draws with
+# the fixed pipeline, so it needs no shader compiler; xinput reads the pads.
+if (XGE_WITH_DIRECT3D9)
+	xge_backend(DIRECT3D9)
+	target_link_libraries(xgelib PUBLIC d3d9 xinput)
+endif()
+
+# The Direct3D 10 window (window/direct3d10.h), on Windows only: Direct3D 11's
+# shape on the older library, with the same two shaders compiled as it opens.
+if (XGE_WITH_DIRECT3D10)
+	xge_backend(DIRECT3D10)
+	target_link_libraries(xgelib PUBLIC d3d10 dxgi d3dcompiler xinput)
+endif()
+
+# The Direct3D 12 window (window/direct3d12.h), on Windows only: like Direct3D
+# 11 it compiles its shaders when it opens.
+if (XGE_WITH_DIRECT3D12)
+	xge_backend(DIRECT3D12)
+	target_link_libraries(xgelib PUBLIC d3d12 dxgi d3dcompiler xinput)
+endif()
+
+# SDL2's window and sound - see window/sdl2.h and audio/sdl2.h.
+if (XGE_WITH_SDL2)
+	xge_backend(SDL2)
 	target_link_libraries(xgelib PUBLIC SDL2::SDL2)
 	if (TARGET SDL2::SDL2main)
 		target_link_libraries(xgelib PUBLIC SDL2::SDL2main)
 	endif()
-
-	target_link_libraries(xgelib PUBLIC SDL2_image::SDL2_image SDL2_ttf::SDL2_ttf)
 endif()
 
 # lunasvg is PRIVATE: only picture/svg.cpp uses it, and picture/svg.h speaks in the engine's
-# own Bitmap, so nothing that includes the engine's headers needs it.
-target_link_libraries(xgelib PRIVATE lunasvg::lunasvg)
+# own Bitmap, so nothing that includes the engine's headers needs it. The drawing library
+# inside it, plutovg, also reads picture files (picture/image.cpp) and draws text
+# (picture/font.cpp) for every window.
+target_link_libraries(xgelib PRIVATE lunasvg::lunasvg plutovg::plutovg)
 
 # TinyXML2, PugiXML and RapidXML XML backends - see xml/tinyxml2.h/
 # xml/pugixml.h/xml_rapidxml.h. Every game parses with one (chosen by whichever

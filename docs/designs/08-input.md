@@ -7,12 +7,12 @@
 - An **object** names what it can do (`<action name="up">`); a **state** binds a key to that name (`<input button="w"><trigger object="paddle1" action="up" />`); the **key** is only a label.
 - So remapping is one edit in one state, one key does different things in different states, and one action name means different things on different objects, with no class hierarchy.
 - Held `<move>`s record each direction's step and the velocity is worked out from all four on every key change, so Down held and Up tapped cancel and two keys make a diagonal. Replaced last-key-wins.
-- **Key sets:** a named `<keys>` set holds inputs; a state takes them (a `<keys>` each, not `keys="a b"`), its own inputs going over them key by key.
+- **Shared keys** come with a state `from=` another, its own inputs going over the copied ones key by key. Named `<keys>` sets did this once; no game used them after `from=`, so they went.
 
 ## A press that cannot be done
 
 - A ship played its firing sound with its shot already in flight; Q*bert squeaked when pressed in the air.
-- **Chosen: a list stops at the first verb refused** (`<fire>` with none free, a hop in the air, `<leap>` off the ground). Each verb already knew; it now says so. Commands before it still run, which Berserk's `<aim>` before `<fire>` needs. The same holds in rules, keys and conditions; later rules still run.
+- **Chosen: a list stops at the first verb refused** (`<fire>` with none free, a hop in the air, `<jump>` off the ground). Each verb already knew; it now says so. Commands before it still run, which Berserk's `<aim>` before `<fire>` needs. The same holds in rules, keys and conditions; later rules still run.
 - Rejected: running verbs first and the rest after (breaks aim-then-fire), a `<try><then>` wrapper (the same order in more tags).
 - **An object out of play does not act:** its press or trigger does nothing, though letting go still lets go. Yars' hidden cannon fired from where it waited. Rejected: a test in every action, a state per case.
 
@@ -21,7 +21,7 @@
 | Option | Behaviour |
 |---|---|
 | Latched to the press | Hold Left through pause and the paddle moves on the pause screen. Built first, replaced |
-| **Live held keys** | The current state decides what a held key means. On a change the old bindings are let go and the new state's held verbs resume for keys still down. One-shots and state changes need a real press |
+| **Live held keys** | The current state decides what a held key means. On a change the old bindings are let go and the new state's held verbs resume for keys still down, and a maze walker's `<go>` (the way asked for, as a joystick is). One-shots and state changes need a real press |
 | Cancel on change | Press again after every pause. Simple but annoying |
 
 Built by a state change count compared in `Engine::syncHeldKeysToState()` after each key event and frame.
@@ -32,6 +32,14 @@ Built by a state change count compared in `Engine::syncHeldKeysToState()` after 
 - **Chosen: `on="press|hold|release"`** (press if left out, so no game changed), rather than a `<charge>` verb; a charge is hold, `<inc>` and `<smallest>`. `release` as a value does not clash with the `<release>` command, and a `<demo>` already writes a let-go key as `<release>`.
 - **`hold` and `release` answer only a press made in the current state**, or Space held from the title would charge and strike.
 - Open: a repeat interval while held; how long a key has been held as a number.
+
+## Otherwise
+
+- **A trigger's `<otherwise>`** (the author agreed, from the readable-rules work): card and board games tried one action and then another on the same key (lay, then put back; place, then pick), which worked only because the first left the second nothing to do.
+  - Now the second is written as what happens when the first is refused.
+  - Kept in the key's flat command list (the trigger counts the commands after it), so every walker over commands is unchanged; the engine skips them unless the action was refused (`Engine::runAsPress`).
+  - Looked at first and rejected: nesting a key's triggers under the looks they answer, which made nothing shorter.
+  - Open: an `<otherwise>` in actions, rules and timers.
 
 ## Mouse and pads
 
@@ -46,3 +54,8 @@ Built by a state change count compared in `Engine::syncHeldKeysToState()` after 
 - A frame-scoped **command queue** (input makes intents, update uses them): determinism, replay, network sync. The three layers are the same idea from the XML side.
 - Many-to-one bindings (two players steering one object); axis inversion as a binding attribute.
 - The shipped games' key convention is in [the shipped games](../reference/games.md#the-key-convention), enforced by `test_engine_input`.
+- **One pause key:** the Pause key (and a pad's Start) pauses and plays on in every game, and nothing else does.
+  - Before, games paused on Space, P or Escape in eighteen mixtures, Space only where it did not fire.
+  - The author's call: one key, the one named for it; Space is left to start, play again, and jump or fire.
+  - All five window libraries read Pause; P was the fallback had one not.
+  - Open: a laptop without a Pause key pauses with the pad or not at all.

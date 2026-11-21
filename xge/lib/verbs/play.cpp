@@ -1,0 +1,65 @@
+// play.cpp
+// XML Game Engine
+// author: beefviper
+// date: Nov 10, 2026
+
+#include "verbs/verb.h"
+#include "game/game.h"
+#include "load/check.h"
+#include "load/reading.h"
+
+namespace xge
+{
+	// <play>: A sound; one that loops stops when its key is let go.
+	static void readPlay(const XmlNode& node, const std::string& where, WrittenCommand&)
+	{
+		requireAttribute(node, "sound", where);
+	}
+
+	static Command makePlay(const WrittenCommand& written, const ValueEvaluator&)
+	{
+		return CmdPlay{ written.sound };
+	}
+
+	static void checkPlay(const CmdPlay& play, const Checking& checking)
+	{
+		checkSound(checking, "play", play.sound);
+	}
+
+	// On a key, or in the action a key triggers: the press asks for the
+	// sound; letting go silences it if it loops.
+	static bool runPlay(const CmdPlay& play, const Doer& doer)
+	{
+		Game& game = doer.game();
+		if (doer.pressed) { game.sounds().request(play.sound); }
+		else if (game.sounds().loops(play.sound)) { game.sounds().silence(play.sound); }
+		return true;
+	}
+
+	// Only a sound that loops goes on.
+	static bool keepPlaying(const CmdPlay& play, const Doer& doer)
+	{
+		Game& game = doer.game();
+		if (!game.sounds().loops(play.sound)) { return false; }
+		game.sounds().request(play.sound);
+		return true;
+	}
+
+	static void printPlay(std::ostream& o, const CmdPlay& play)
+	{
+		o << "play(" << play.sound << ")";
+	}
+
+	extern const Verb playVerb;
+	const Verb playVerb{
+		.name = "play",
+		.forms = { { "<play>", places::changes, kindOf<CmdPlay>() } },
+		.onRelease = true,
+		.read = readPlay,
+		.make = makePlay,
+		.check = checkAs<checkPlay>,
+		.run = runAs<runPlay>,
+		.hold = runAs<keepPlaying>,
+		.print = printAs<printPlay>,
+	};
+}

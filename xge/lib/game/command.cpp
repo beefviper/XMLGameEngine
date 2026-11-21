@@ -4,8 +4,10 @@
 // date: Sept 27, 2026
 
 #include "game/command.h"
+
 #include "game/object.h"
 #include "play/geometry.h"
+#include "verbs/verb.h"
 
 #include <algorithm>
 #include <cctype>
@@ -13,32 +15,10 @@
 #include <iostream>
 #include <iterator>
 #include <stdexcept>
+#include <string>
 
 namespace xge
 {
-	namespace
-	{
-		Direction directionFromName(const std::string& name, const std::string& verb)
-		{
-			if (name == "up")    { return Direction::Up; }
-			if (name == "down")  { return Direction::Down; }
-			if (name == "left")  { return Direction::Left; }
-			if (name == "right") { return Direction::Right; }
-
-			throw std::runtime_error("<" + verb + "> has direction=\"" + name + "\"; expected up, down, left or right");
-		}
-
-		// A turn's way: a rotation, clockwise (adds to the heading, kept as
-		// Right) or counterclockwise (takes from it, kept as Left).
-		Direction rotationFromName(const std::string& name, const std::string& verb)
-		{
-			if (name == "clockwise")        { return Direction::Right; }
-			if (name == "counterclockwise") { return Direction::Left; }
-
-			throw std::runtime_error("<" + verb + "> has direction=\"" + name + "\"; expected clockwise or counterclockwise");
-		}
-	}
-
 	VariableName VariableName::of(const std::string& written)
 	{
 		const auto dot = written.rfind('.');
@@ -46,435 +26,24 @@ namespace xge
 		return { written.substr(0, dot), written.substr(dot + 1) };
 	}
 
-	Command makeCommand(const RawCommand& raw, const ValueEvaluator& evaluate)
+	Command makeCommand(const WrittenCommand& written, const ValueEvaluator& evaluate)
 	{
-		const std::string& verb = raw.verb;
-
-		if (verb == "bounce")
-		{
-			const bool none = raw.amount.kind == RawValue::Kind::Expression && raw.amount.text.empty();
-			const float share = none ? 1.0f : evaluate(raw.amount);
-			if (!(share >= 0.0f))
-			{
-				throw std::runtime_error("<bounce> keeps a share of " + formatDisplayNumber(share) + " of its speed; expected 0 or more");
-			}
-			return CmdBounce{ share };
-		}
-		if (verb == "stick")  { return CmdStick{}; }
-		if (verb == "die")    { return CmdDie{}; }
-		if (verb == "stop")   { return CmdStop{}; }
-		if (verb == "wrap")   { return CmdWrap{}; }
-		if (verb == "ride")   { return CmdRide{}; }
-		if (verb == "carry")  { return CmdCarry{}; }
-		if (verb == "drop")   { return CmdDrop{}; }
-		if (verb == "track")  { return CmdTrack{ raw.path, raw.onto }; }
-		if (verb == "land")   { return CmdLand{}; }
-		if (verb == "reverse") { return CmdReverse{}; }
-		if (verb == "settle") { return CmdSettle{}; }
-		if (verb == "clear") { return CmdClear{}; }
-		if (verb == "collapse") { return CmdCollapse{}; }
-		if (verb == "fall") { return CmdFall{ raw.objClass }; }
-		if (verb == "cycle") { return CmdCycle{}; }
-		if (verb == "grow") { return CmdGrow{}; }
-		if (verb == "split") { return CmdSplit{}; }
-		if (verb == "through") { return CmdThrough{}; }
-		if (verb == "pick") { return CmdPick{ raw.objClass, raw.only }; }
-		if (verb == "place") { return CmdPlace{}; }
-		if (verb == "take") { return CmdTake{}; }
-		if (verb == "lay") { return CmdLay{ raw.pile }; }
-		if (verb == "deal")
-		{
-			if (!raw.faces.empty() && raw.faces != "up" && raw.faces != "down") { throw std::runtime_error("<deal faces=\"" + raw.faces + "\">: expected up or down"); }
-			return CmdDeal{ raw.pile, raw.faces };
-		}
-		if (verb == "shuffle") { return CmdShuffle{ raw.pile }; }
-		if (verb == "redeal") { return CmdRedeal{}; }
-		if (verb == "collect") { return CmdCollect{ raw.pile, raw.into }; }
-		if (verb == "reveal" && !raw.pile.empty()) { return CmdRevealCards{ raw.pile }; }
-		if (verb == "call")
-		{
-			if (raw.pile.empty()) { throw std::runtime_error("<call>: needs pile=, the pile whose wild card the suit is called for"); }
-			return CmdCall{ raw.pile };
-		}
-		if (verb == "put") { return CmdPut{ raw.objClass, raw.closeClass, raw.closeObject }; }
-		if (verb == "count") { return CmdCount{ raw.objClass, VariableName::of(raw.into) }; }
-		if (verb == "slide") { return CmdSlide{ directionFromName(raw.direction, verb) }; }
-
-		// <reset/> puts the object in the rule (or, in a state's input or
-		// condition, the whole game) back; <reset object="name"/> that one object.
-		if (verb == "reset")
-		{
-			if (!raw.scene.empty() || !raw.way.empty()) { return CmdResetScene{ raw.scene, raw.way }; }
-			if (raw.object.empty()) { return CmdReset{}; }
-			return CmdResetObject{ raw.object };
-		}
-
-		// Nothing written: none (a hop or a turn on a cell map, one cell or
-		// a quarter).
-		const auto amountOr0 = [&]() { return raw.amount.kind == RawValue::Kind::Expression && raw.amount.text.empty() ? 0.0f : evaluate(raw.amount); };
-		if (verb == "move")
-		{
-			CmdMove move{ directionFromName(raw.direction, verb), evaluate(raw.amount) };
-			if (!(raw.seconds.kind == RawValue::Kind::Expression && raw.seconds.text.empty()))
-			{
-				move.wait = evaluate(raw.seconds);
-				if (move.wait < 0.0f) { throw std::runtime_error("<move> has a <wait> of " + formatDisplayNumber(move.wait) + "; expected 0 or more"); }
-			}
-			return move;
-		}
-		// How long a <hop> takes: no <seconds>, none at all.
-		const auto hopSeconds = [&]()
-		{
-			if (raw.seconds.kind == RawValue::Kind::Expression && raw.seconds.text.empty()) { return 0.0f; }
-			const float seconds = evaluate(raw.seconds);
-			if (!(seconds > 0.0f)) { throw std::runtime_error("<hop> has <seconds> of " + formatDisplayNumber(seconds) + "; expected more than 0"); }
-			return seconds;
-		};
-		// How high a timed <hop> or <jump> goes: no <arc>, not at all.
-		const auto arcOf = [&](const char* what, float seconds)
-		{
-			if (raw.arc.kind == RawValue::Kind::Expression && raw.arc.text.empty()) { return 0.0f; }
-			if (!(seconds > 0.0f)) { throw std::runtime_error(std::string("<") + what + "> has an <arc> but no <seconds>: only a hop that takes time leaves the ground"); }
-			const float arc = evaluate(raw.arc);
-			if (arc < 0.0f) { throw std::runtime_error(std::string("<") + what + "> has an <arc> of " + formatDisplayNumber(arc) + "; expected 0 or more"); }
-			return arc;
-		};
-
-		if (verb == "hop")
-		{
-			// up-left and the rest: one of up/down, then one of left/right.
-			const std::string& name = raw.direction;
-			const auto dash = name.find('-');
-			if (dash == std::string::npos)
-			{
-				CmdHop hop{ directionFromName(name, verb), amountOr0(), {}, hopSeconds(), 0.0f, {} };
-				hop.arc = arcOf("hop", hop.seconds);
-				hop.step = stepToward(hop.direction, hop.distance);
-				hop.onto = raw.onto;
-				return hop;
-			}
-
-			const Direction upDown = directionFromName(name.substr(0, dash), verb);
-			const Direction leftRight = directionFromName(name.substr(dash + 1), verb);
-			if ((upDown != Direction::Up && upDown != Direction::Down) || (leftRight != Direction::Left && leftRight != Direction::Right))
-			{
-				throw std::runtime_error("<hop> has direction=\"" + name + "\"; a diagonal is up-left, up-right, down-left or down-right");
-			}
-			const bool split = !raw.positionX.text.empty() || raw.positionX.kind != RawValue::Kind::Expression;
-			const float distance = split ? 0.0f : evaluate(raw.amount);
-			const float across = split ? evaluate(raw.positionX) : distance;
-			const float down = split ? evaluate(raw.positionY) : distance;
-			CmdHop hop{ upDown, distance, {}, hopSeconds(), 0.0f, {} };
-			hop.arc = arcOf("hop", hop.seconds);
-			hop.step = { leftRight == Direction::Left ? -across : across, upDown == Direction::Up ? -down : down };
-			return hop;
-		}
-
-		if (verb == "jump")
-		{
-			CmdJump jump{ directionFromName(raw.direction, verb), evaluate(raw.amount) };
-			const bool noSeconds = raw.seconds.kind == RawValue::Kind::Expression && raw.seconds.text.empty();
-			if (!noSeconds) { jump.seconds = evaluate(raw.seconds); }
-			if (!(jump.seconds > 0.0f)) { throw std::runtime_error("<jump> has <seconds> of " + std::to_string(jump.seconds) + "; expected more than 0"); }
-			jump.arc = arcOf("jump", jump.seconds);
-			return jump;
-		}
-
-		if (verb == "leap")
-		{
-			const float height = evaluate(raw.amount);
-			if (!(height > 0.0f)) { throw std::runtime_error("<leap> has a height of " + formatDisplayNumber(height) + "; expected more than 0"); }
-			return CmdLeap{ height };
-		}
-
-		if (verb == "climb")
-		{
-			const Direction direction = directionFromName(raw.direction, verb);
-			if (direction != Direction::Up && direction != Direction::Down)
-			{
-				throw std::runtime_error("<climb> has direction=\"" + raw.direction + "\"; expected up or down");
-			}
-			return CmdClimb{ direction, evaluate(raw.amount), raw.objClass };
-		}
-
-		if (verb == "chase")
-		{
-			const float speed = evaluate(raw.amount);
-			const bool noNear = raw.distance.kind == RawValue::Kind::Expression && raw.distance.text.empty();
-			const float stopWithin = noNear ? 0.0f : evaluate(raw.distance);
-			if (speed < 0.0f) { throw std::runtime_error("<chase object=\"" + raw.object + "\">: its speed is below 0"); }
-			if (stopWithin < 0.0f) { throw std::runtime_error("<chase object=\"" + raw.object + "\">: the <near> is below 0"); }
-			return CmdChase{ raw.object, speed, stopWithin };
-		}
-		if (verb == "aim")
-		{
-			const bool lined = !(raw.distance.kind == RawValue::Kind::Expression && raw.distance.text.empty());
-			const float within = lined ? evaluate(raw.distance) : 0.0f;
-			if (within < 0.0f) { throw std::runtime_error("<aim object=\"" + raw.object + "\">: the <lined> is below 0"); }
-			return CmdAim{ raw.object, lined, within };
-		}
-		if (verb == "hold")
-		{
-			const KeyCode button = keyCodeFromString(raw.button);
-			if (button == KeyCode::Unknown)
-			{
-				throw std::runtime_error("<hold button=\"" + raw.button + "\">: there is no key named '" + raw.button + "'");
-			}
-			return CmdHold{ button };
-		}
-		if (verb == "think")
-		{
-			const KeyCode button = keyCodeFromString(raw.button);
-			if (button == KeyCode::Unknown)
-			{
-				throw std::runtime_error("<think button=\"" + raw.button + "\">: there is no key named '" + raw.button + "'");
-			}
-			const bool none = raw.amount.kind == RawValue::Kind::Expression && raw.amount.text.empty();
-			const float depth = none ? 4.0f : evaluate(raw.amount);
-			if (!(depth >= 1.0f && depth <= 9.0f) || depth != std::floor(depth))
-			{
-				throw std::runtime_error("<think> looks " + formatDisplayNumber(depth) + " moves ahead; expected a whole number from 1 to 9");
-			}
-			return CmdThink{ raw.objClass, raw.object, button, static_cast<int>(depth), raw.worths, raw.avoid };
-		}
-
-		// The speed of a <go>, <hunt> or <wander>, which may not be below 0.
-		const auto speedOf = [&](const char* what)
-		{
-			const float speed = evaluate(raw.amount);
-			if (speed < 0.0f) { throw std::runtime_error(std::string("<") + what + ">: the speed is below 0"); }
-			return speed;
-		};
-
-		if (verb == "go") { return CmdGo{ directionFromName(raw.direction, verb), speedOf("go") }; }
-		if (verb == "wander") { return CmdWander{ speedOf("wander") }; }
-		if (verb == "hunt" && raw.byHops)
-		{
-			const bool diagonal = !raw.positionX.text.empty() || raw.positionX.kind != RawValue::Kind::Expression;
-			const float distance = diagonal ? 0.0f : evaluate(raw.amount);
-			const float seconds = hopSeconds();
-			return CmdHuntHop{ raw.object, diagonal ? evaluate(raw.positionX) : distance, diagonal ? evaluate(raw.positionY) : distance, diagonal, seconds, arcOf("hop", seconds) };
-		}
-		if (verb == "hunt")
-		{
-			CmdHunt hunt{ raw.object, speedOf("hunt"), 0.0f, raw.partner, raw.retreat, 0.0f };
-			const bool noAhead = raw.ahead.kind == RawValue::Kind::Expression && raw.ahead.text.empty();
-			if (!noAhead) { hunt.ahead = evaluate(raw.ahead); }
-			if (!raw.retreat.empty())
-			{
-				hunt.retreatWithin = evaluate(raw.distance);
-				if (hunt.retreatWithin < 0.0f) { throw std::runtime_error("<hunt object=\"" + raw.object + "\">: the <retreat> is below 0 tiles"); }
-			}
-			return hunt;
-		}
-
-		if (verb == "accelerate")
-		{
-			return CmdAccelerate{ directionFromName(raw.direction, verb), evaluate(raw.amount), raw.burn };
-		}
-
-		if (verb == "turn")
-		{
-			return CmdTurn{ rotationFromName(raw.direction, verb), amountOr0() };
-		}
-
-		if (verb == "thrust") { return CmdThrust{ evaluate(raw.amount), raw.burn }; }
-
-		if (verb == "swing")
-		{
-			const Direction direction = rotationFromName(raw.direction, verb);
-			const float seconds = evaluate(raw.seconds);
-			if (!(seconds > 0.0f)) { throw std::runtime_error("<swing> takes <seconds> of " + formatDisplayNumber(seconds) + "; expected more than 0"); }
-			const float degrees = evaluate(raw.distance);
-			if (!(degrees > 0.0f)) { throw std::runtime_error("<swing> takes <degrees> of " + formatDisplayNumber(degrees) + "; expected more than 0"); }
-			return CmdSwing{ direction == Direction::Left ? -degrees : degrees, seconds };
-		}
-
-		if (verb == "deflect")
-		{
-			const float maxAngle = evaluate(raw.amount);
-			if (!(maxAngle >= 0.0f && maxAngle < 90.0f))
-			{
-				throw std::runtime_error("<deflect> has an angle of " + formatDisplayNumber(maxAngle) + "; expected 0 up to (not including) 90 degrees");
-			}
-			return CmdDeflect{ maxAngle };
-		}
-
-		if (verb == "knock")
-		{
-			const bool none = raw.amount.kind == RawValue::Kind::Expression && raw.amount.text.empty();
-			const float bounce = none ? 1.0f : evaluate(raw.amount);
-			if (!(bounce >= 0.0f && bounce <= 1.0f))
-			{
-				throw std::runtime_error("<knock> has a bounce of " + formatDisplayNumber(bounce) + "; expected 0 up to 1");
-			}
-			return CmdKnock{ bounce };
-		}
-
-		if (verb == "hole")
-		{
-			const float radius = evaluate(raw.amount);
-			const bool smooth = raw.distance.kind == RawValue::Kind::Expression && raw.distance.text.empty();
-			const float rough = smooth ? 0.0f : evaluate(raw.distance);
-			if (!(radius > 0.0f)) { throw std::runtime_error("<hole> has a radius of " + formatDisplayNumber(radius) + "; expected above 0"); }
-			if (!(rough >= 0.0f && rough <= 1.0f)) { throw std::runtime_error("<hole> has a <rough> of " + formatDisplayNumber(rough) + "; expected 0 up to 1"); }
-			return CmdHole{ radius, rough };
-		}
-
-		if (verb == "release")
-		{
-			const int count = static_cast<int>(std::lround(evaluate(raw.amount)));
-			if (count < 1) { throw std::runtime_error("<release> of " + raw.object + " has a count under 1"); }
-			return CmdRelease{ raw.object, count };
-		}
-
-		// How much an <inc> or <dec> changes by: its amount, or 1 when it has none.
-		const auto amountOf = [&](const RawCommand& command)
-		{
-			const bool none = command.amount.kind == RawValue::Kind::Expression && command.amount.text.empty();
-			return none ? 1.0f : evaluate(command.amount);
-		};
-
-		if (verb == "inc") { return CmdIncrement{ VariableName::of(raw.variable), amountOf(raw) }; }
-		if (verb == "dec") { return CmdDecrement{ VariableName::of(raw.variable), amountOf(raw) }; }
-		if (verb == "copy") { return CmdCopy{ VariableName::of(raw.variable), VariableName::of(raw.into) }; }
-		if (verb == "rank") { return CmdRank{ VariableName::of(raw.variable), raw.into }; }
-		if (verb == "turns")
-		{
-			if (raw.players.empty()) { throw std::runtime_error("<turns> has no <player>; it needs one for each player"); }
-			return CmdTurns{ raw.players };
-		}
-		if (verb == "pass") { return CmdPass{}; }
-		if (verb == "out") { return CmdOut{}; }
-		if (verb == "demo") { return CmdDemo{}; }
-
-		if (verb == "push") { return CmdPushState{ raw.state }; }
-		if (verb == "enter") { return CmdEnterScene{ raw.scene, raw.way }; }
-		if (verb == "pop")  { return CmdPopState{ raw.state }; }
-
-		if (verb == "play")    { return CmdPlay{ raw.sound }; }
-		if (verb == "silence") { return CmdSilence{ raw.sound }; }
-		if (verb == "become")  { return CmdBecome{ raw.sprite, raw.object, raw.from, raw.style }; }
-		if (verb == "reveal")
-		{
-			const int count = static_cast<int>(std::lround(evaluate(raw.amount)));
-			if (count < 1) { throw std::runtime_error("<reveal> of " + raw.object + " has a count under 1"); }
-			return CmdReveal{ raw.object, count };
-		}
-		if (verb == "fire")    { return CmdFire{ raw.object }; }
-		if (verb == "trigger") { return CmdTriggerAction{ raw.object, raw.action, raw.from }; }
-		if (verb == "follow")
-		{
-			const bool none = raw.seconds.kind == RawValue::Kind::Expression && raw.seconds.text.empty();
-			const float stagger = none ? 0.0f : evaluate(raw.seconds);
-			if (stagger < 0.0f) { throw std::runtime_error("<follow path=\"" + raw.path + "\">: the <stagger> is below 0"); }
-			const bool all = raw.amount.kind == RawValue::Kind::Expression && raw.amount.text.empty();
-			const int nearest = all ? 0 : static_cast<int>(std::lround(evaluate(raw.amount)));
-			if (!all && nearest < 1) { throw std::runtime_error("<follow path=\"" + raw.path + "\">: <nearest> is under 1"); }
-			return CmdFollow{ raw.path, raw.object, stagger, nearest };
-		}
-		if (verb == "shift")
-		{
-			const auto half = [&](const RawValue& value) { return value.kind == RawValue::Kind::Expression && value.text.empty() ? 0.0f : evaluate(value); };
-			return CmdShift{ raw.object, { half(raw.positionX), half(raw.positionY) } };
-		}
-
-		if (verb == "set")
-		{
-			// One of the numbers every object has (ship.velocity.x) is
-			// split before its part, not at its last dot.
-			const std::string part = liveNumberPart(raw.variable);
-			VariableName target = part.empty() ? VariableName::of(raw.variable)
-				: VariableName{ raw.variable.substr(0, raw.variable.size() - part.size() - 1), part };
-			return CmdSet{ std::move(target), evaluate(raw.amount) };
-		}
-		if (verb == "despawn") { return CmdDespawn{ raw.object }; }
-
-		if (verb == "spawn")
-		{
-			CmdSpawn spawn;
-			spawn.target = raw.object;
-			// A <centered> half holds where the middle goes; left empty, the
-			// middle of the window.
-			const auto half = [&](const RawValue& value, std::optional<float>& into, bool* centered, const char* middle)
-			{
-				if (value.kind == RawValue::Kind::Expression && value.text.empty()) { return; }
-				if (value.kind == RawValue::Kind::Centered)
-				{
-					if (!centered)
-					{
-						throw std::runtime_error("<spawn object=\"" + raw.object + "\">: <centered> is for its <position>, not its <velocity> or <acceleration>");
-					}
-					*centered = true;
-					into = evaluate(RawValue::expression(value.text.empty() ? middle : value.text));
-					return;
-				}
-				into = evaluate(value);
-			};
-			half(raw.positionX, spawn.x, &spawn.centerX, "window.width.center");
-			half(raw.positionY, spawn.y, &spawn.centerY, "window.height.center");
-			half(raw.velocityX, spawn.velocityX, nullptr, "");
-			half(raw.velocityY, spawn.velocityY, nullptr, "");
-			half(raw.accelerationX, spawn.accelerationX, nullptr, "");
-			half(raw.accelerationY, spawn.accelerationY, nullptr, "");
-			half(raw.column, spawn.column, nullptr, "");
-			half(raw.row, spawn.row, nullptr, "");
-			spawn.random = raw.random;
-			spawn.into = raw.into;
-			spawn.free = raw.free;
-			std::optional<float> below;
-			half(raw.below, below, nullptr, "");
-			spawn.freeBelow = below ? static_cast<int>(std::lround(*below)) : 0;
-			return spawn;
-		}
-		if (verb == "send")
-		{
-			CmdSend send{ raw.object, raw.from, raw.into, std::nullopt, std::nullopt };
-			if (!(raw.column.kind == RawValue::Kind::Expression && raw.column.text.empty())) { send.column = evaluate(raw.column); }
-			if (!(raw.row.kind == RawValue::Kind::Expression && raw.row.text.empty())) { send.row = evaluate(raw.row); }
-			return send;
-		}
-
-		throw std::runtime_error("unknown command <" + verb + ">");
+		const Verb* verb = findVerb(written.verb);
+		if (!verb) { throw std::runtime_error("unknown command <" + written.verb + ">"); }
+		return verb->make(written, evaluate);
 	}
 
-	const Command& shapeOf(const Command& command) noexcept
-	{
-		if (const auto* live = std::get_if<CmdLive>(&command))
-		{
-			return live->loaded->command;
-		}
-		return command;
-	}
-
-	std::vector<Command> makeCommands(const std::vector<RawCommand>& raw, const ValueEvaluator& evaluate)
+	std::vector<Command> makeCommands(const std::vector<WrittenCommand>& written, const ValueEvaluator& evaluate)
 	{
 		std::vector<Command> commands;
-		commands.reserve(raw.size());
+		commands.reserve(written.size());
 
-		for (const RawCommand& rawCommand : raw)
+		for (const WrittenCommand& writtenCommand : written)
 		{
-			commands.push_back(makeCommand(rawCommand, evaluate));
+			commands.push_back(makeCommand(writtenCommand, evaluate));
 		}
 
 		return commands;
-	}
-
-	Vector2f measureShapeSize(const Picture& picture) noexcept
-	{
-		switch (picture.kind)
-		{
-		case ShapeKind::Circle:
-			return { picture.radius * 2.0f, picture.radius * 2.0f };
-		case ShapeKind::Rectangle:
-		case ShapeKind::Line:
-			return picture.size;
-		case ShapeKind::Text:
-		case ShapeKind::Image:
-		case ShapeKind::Unknown:
-		default:
-			return {};
-		}
 	}
 
 	std::ostream& operator<<(std::ostream& o, const Picture& picture)
@@ -517,209 +86,40 @@ namespace xge
 		return std::make_pair(reference.substr(0, dot), reference.substr(dot + 1));
 	}
 
-	std::string formatDisplayNumber(float value)
-	{
-		if (value == std::floor(value))
-		{
-			return std::to_string(static_cast<long long>(value));
-		}
-		return std::to_string(value);
-	}
-
 	std::ostream& operator<<(std::ostream& o, const Command& command)
 	{
-		std::visit(overload{
-			[&](const CmdBounce& b) { o << "bounce(" << b.share << ")"; },
-			[&](const CmdStick&) { o << "stick"; },
-			[&](const CmdReset&) { o << "reset"; },
-			[&](const CmdDie&) { o << "die"; },
-			[&](const CmdDespawn& d) { o << "despawn" << (d.target.empty() ? "" : "(" + d.target + ")"); },
-			[&](const CmdStop&) { o << "stop"; },
-			[&](const CmdSettle&) { o << "settle"; },
-			[&](const CmdClear&) { o << "clear"; },
-			[&](const CmdCollapse&) { o << "collapse"; },
-			[&](const CmdFall& fall) { o << "fall"; if (!fall.objClass.empty()) { o << "(" << fall.objClass << ")"; } },
-			[&](const CmdCycle&) { o << "cycle"; },
-			[&](const CmdGrow&) { o << "grow"; },
-			[&](const CmdSplit&) { o << "split"; },
-			[&](const CmdThrough&) { o << "through"; },
-			[&](const CmdPick& p) { o << "pick(" << p.objClass << (p.only ? ", only" : "") << ")"; },
-			[&](const CmdPlace&) { o << "place"; },
-			[&](const CmdTake&) { o << "take"; },
-			[&](const CmdLay& l) { o << "lay" << (l.pile.empty() ? "" : "(" + l.pile + ")"); },
-			[&](const CmdDeal& d) { o << "deal" << (d.pile.empty() ? "" : "(" + d.pile + ")") ; },
-			[&](const CmdCollect& c) { o << "collect(" << c.pile << " into " << c.into << ")"; },
-			[&](const CmdRevealCards& r) { o << "reveal(" << r.pile << ")"; },
-			[&](const CmdShuffle& s) { o << "shuffle(" << s.pile << ")"; },
-			[&](const CmdRedeal&) { o << "redeal()"; },
-			[&](const CmdCall& c) { o << "call(" << c.pile << ")"; },
-			[&](const CmdPut& p) { o << "put(" << p.objClass << (p.closeClass.empty() ? "" : ", close " + p.closeClass + " " + p.closeObject) << ")"; },
-			[&](const CmdCount& c) { o << "count(" << c.objClass << ", " << c.target.written() << ")"; },
-			[&](const CmdSlide& m)
+		// Two kinds are no verb's: a condition in a list, and a command
+		// whose numbers are worked out as it runs.
+		if (const auto* when = std::get_if<CmdWhen>(&command))
+		{
+			o << "when(";
+			if (when->body)
 			{
-				o << "slide." << ((m.direction == Direction::Up) ? "up" : (m.direction == Direction::Down) ? "down" : (m.direction == Direction::Left) ? "left" : "right");
-			},
-			[&](const CmdWrap&) { o << "wrap"; },
-			[&](const CmdRide&) { o << "ride"; },
-			[&](const CmdCarry&) { o << "carry"; },
-			[&](const CmdDrop&) { o << "drop"; },
-			[&](const CmdTrack& t)
-			{
-				o << "track" << (t.path.empty() ? "" : "(" + t.path + ")");
-				for (const std::string& onto : t.onto) { o << " onto " << onto; }
-			},
-			[&](const CmdDeflect& d) { o << "deflect(" << d.maxAngle << ")"; },
-			[&](const CmdKnock& k) { o << "knock(" << k.bounce << ")"; },
-			[&](const CmdHold& h) { o << "hold(" << keyCodeToString(h.button) << ")"; },
-			[&](const CmdThink& t)
-			{
-				o << "think(" << t.objClass << ", " << t.picker << ", " << keyCodeToString(t.button) << ", " << t.depth;
-				for (const auto& [look, worth] : t.worths) { o << ", " << look << "=" << worth; }
-				o << ")";
-			},
-			[&](const CmdHole& h) { o << "hole(" << h.radius << ", " << h.rough << ")"; },
-			[&](const CmdReverse&) { o << "reverse"; },
-			[&](const CmdMove& m)
-			{
-				const char* direction = (m.direction == Direction::Up) ? "up"
-					: (m.direction == Direction::Down) ? "down"
-					: (m.direction == Direction::Left) ? "left"
-					: "right";
-				o << "move." << direction << "(" << m.step << (m.wait > 0.0f ? ", wait " + formatDisplayNumber(m.wait) : std::string{}) << ")";
-			},
-			[&](const CmdHop& h)
-			{
-				const char* direction = (h.direction == Direction::Up) ? "up"
-					: (h.direction == Direction::Down) ? "down"
-					: (h.direction == Direction::Left) ? "left"
-					: "right";
-				if (h.step.x != 0.0f && h.step.y != 0.0f) { o << "hop(" << h.step.x << ", " << h.step.y; }
-				else { o << "hop." << direction << "(" << h.distance; }
-				o << (h.seconds > 0.0f ? ", " + formatDisplayNumber(h.seconds) + "s" : std::string{})
-					<< (h.arc > 0.0f ? ", arc " + formatDisplayNumber(h.arc) : std::string{});
-				for (const std::string& onto : h.onto) { o << ", onto " << onto; }
-				o << ")";
-			},
-			[&](const CmdHuntHop& h)
-			{
-				o << "hunt(" << h.target << ", by " << (h.diagonal ? "diagonal " : "") << "hops of " << h.across << ", " << h.down
-					<< (h.seconds > 0.0f ? ", " + formatDisplayNumber(h.seconds) + "s" : std::string{})
-					<< (h.arc > 0.0f ? ", arc " + formatDisplayNumber(h.arc) : std::string{}) << ")";
-			},
-			[&](const CmdJump& j)
-			{
-				const char* direction = (j.direction == Direction::Up) ? "up"
-					: (j.direction == Direction::Down) ? "down"
-					: (j.direction == Direction::Left) ? "left"
-					: "right";
-				o << "jump." << direction << "(" << j.distance << ", " << j.seconds << "s"
-					<< (j.arc > 0.0f ? ", arc " + formatDisplayNumber(j.arc) : std::string{}) << ")";
-			},
-			[&](const CmdLand&) { o << "land()"; },
-			[&](const CmdLeap& l) { o << "leap(" << l.height << ")"; },
-			[&](const CmdClimb& c) { o << "climb." << (c.direction == Direction::Up ? "up" : "down") << "(" << c.step << ", " << c.ladderClass << ")"; },
-			[&](const CmdChase& c) { o << "chase(" << c.target << ", " << c.speed << (c.stopWithin > 0.0f ? ", near " + formatDisplayNumber(c.stopWithin) : std::string{}) << ")"; },
-			[&](const CmdGo& g)
-			{
-				const char* direction = (g.direction == Direction::Up) ? "up"
-					: (g.direction == Direction::Down) ? "down"
-					: (g.direction == Direction::Left) ? "left"
-					: "right";
-				o << "go." << direction << "(" << g.speed << ")";
-			},
-			[&](const CmdHunt& h)
-			{
-				o << "hunt(" << h.target << ", " << h.speed;
-				if (h.ahead != 0.0f) { o << ", ahead " << h.ahead; }
-				if (!h.partner.empty()) { o << ", with " << h.partner; }
-				if (!h.retreatTo.empty()) { o << ", retreat " << h.retreatTo << " within " << h.retreatWithin; }
-				o << ")";
-			},
-			[&](const CmdWander& w) { o << "wander(" << w.speed << ")"; },
-			[&](const CmdAim& a) { o << "aim(" << a.target << (a.lined ? ", lined " + std::to_string(a.within) : std::string()) << ")"; },
-			[&](const CmdAccelerate& a)
-			{
-				const char* direction = (a.direction == Direction::Up) ? "up"
-					: (a.direction == Direction::Down) ? "down"
-					: (a.direction == Direction::Left) ? "left"
-					: "right";
-				o << "accelerate." << direction << "(" << a.amount << (a.burn.empty() ? "" : ", burn " + a.burn) << ")";
-			},
-			[&](const CmdTurn& t) { o << "turn." << (t.direction == Direction::Left ? "counterclockwise" : "clockwise") << "(" << t.rate << ")"; },
-			[&](const CmdSwing& s) { o << "swing(" << s.by << " degrees, " << s.seconds << "s)"; },
-			[&](const CmdThrust& t) { o << "thrust(" << t.amount << (t.burn.empty() ? "" : ", burn " + t.burn) << ")"; },
-			[&](const CmdRelease& r) { o << "release(" << r.target << ", " << r.count << ")"; },
-			[&](const CmdIncrement& c) { o << "inc(" << c.target.written() << (c.amount == 1.0f ? "" : ", " + formatDisplayNumber(c.amount)) << ")"; },
-			[&](const CmdDecrement& c) { o << "dec(" << c.target.written() << (c.amount == 1.0f ? "" : ", " + formatDisplayNumber(c.amount)) << ")"; },
-			[&](const CmdCopy& c) { o << "copy(" << c.from.written() << ", " << c.into.written() << ")"; },
-			[&](const CmdRank& c) { o << "rank(" << c.entry.written() << ", " << c.table << ")"; },
-			[&](const CmdTurns& c)
-			{
-				o << "turns(";
-				for (std::size_t i = 0; i < c.players.size(); ++i) { o << (i ? ", " : "") << (c.players[i].empty() ? "-" : c.players[i]); }
-				o << ")";
-			},
-			[&](const CmdPass&) { o << "pass()"; },
-			[&](const CmdOut&) { o << "out()"; },
-			[&](const CmdDemo&) { o << "demo()"; },
-			[&](const CmdPushState& s) { o << "state(" << s.name << ")"; },
-			[&](const CmdPopState& s) { o << "state()"; if (!s.name.empty()) { o << " state(" << s.name << ")"; } },
-			[&](const CmdFire& f) { o << "fire(" << f.projectileName << ")"; },
-			[&](const CmdTriggerAction& a) { o << "action(" << a.object << "," << a.action << (a.from.empty() ? std::string{} : "," + a.from) << ")"; },
-			[&](const CmdResetObject& r) { o << "reset(" << r.target << ")"; },
-			[&](const CmdPlay& p) { o << "play(" << p.sound << ")"; },
-			[&](const CmdSilence& s) { o << "silence(" << s.sound << ")"; },
-			[&](const CmdBecome& b) { o << "become(" << b.sprite << (b.target.empty() ? "" : ", " + b.target) << (b.from.empty() ? "" : ", from " + b.from) << (b.style.empty() ? "" : ", style " + b.style) << ")"; },
-			[&](const CmdReveal& r) { o << "reveal(" << r.target << ", " << r.count << ")"; },
-			[&](const CmdShift& s) { o << "shift(" << s.target << ", " << s.by.x << ", " << s.by.y << ")"; },
-			[&](const CmdFollow& f) { o << "follow(" << f.path << (f.target.empty() ? "" : ", " + f.target) << ")"; },
-			[&](const CmdEnterScene& e) { o << "enter(" << (e.way.empty() ? e.scene : "way " + e.way) << ")"; },
-			[&](const CmdResetScene& r) { o << "reset(" << (r.way.empty() ? "scene " + r.scene : "way " + r.way) << ")"; },
-			[&](const CmdSet& s) { o << "set(" << s.target.written() << ", " << s.value << ")"; },
-			[&](const CmdSpawn& s)
-			{
-				const auto half = [&](const std::optional<float>& value, bool centered)
-				{
-					if (!value) { o << "-"; return; }
-					o << (centered ? "centered " : "") << *value;
-				};
-				o << "spawn(" << s.target << ", ";
-				half(s.x, s.centerX);
-				o << " ";
-				half(s.y, s.centerY);
-				o << ", ";
-				half(s.velocityX, false);
-				o << " ";
-				half(s.velocityY, false);
-				if (s.accelerationX || s.accelerationY)
-				{
-					o << ", ";
-					half(s.accelerationX, false);
-					o << " ";
-					half(s.accelerationY, false);
-				}
-				o << ")";
-			},
-			[&](const CmdSend& s)
-			{
-				o << "send(" << s.target << ", " << s.from << " into " << s.into;
-				if (s.column && s.row) { o << ", " << *s.column << " " << *s.row; }
-				o << ")";
-			},
-			[&](const CmdLive& l) { o << "live " << l.loaded->command; },
-		}, command);
+				for (std::size_t i = 0; i < when->body->commands.size(); ++i) { o << (i ? ", " : "") << when->body->commands[i]; }
+			}
+			return o << ")";
+		}
+		if (const auto* live = std::get_if<CmdLive>(&command))
+		{
+			return o << "live " << live->loaded->command;
+		}
 
+		// Every other is a verb's, which prints it.
+		if (const Verb* verb = verbOf(command); verb && verb->print)
+		{
+			verb->print(o, command);
+		}
 		return o;
 	}
 
 	namespace
 	{
 		const OperationShape kOperationShapes[] = {
-			{ "add", "augend", "addend", '+' },
-			{ "subtract", "minuend", "subtrahend", '-' },
-			{ "multiply", "multiplicand", "multiplier", '*' },
-			{ "divide", "dividend", "divisor", '/' },
-			{ "remainder", "dividend", "divisor", 0, "remainder", 2, 2 },
+			{ "add", "value", "value", '+' },
+			{ "subtract", "value", "value", '-' },
+			{ "multiply", "value", "value", '*' },
+			{ "divide", "value", "value", '/' },
+			{ "remainder", "value", "value", 0, "remainder", 2, 2 },
 			{ "smallest", "value", "value", 0, "min" },
 			{ "largest", "value", "value", 0, "max" },
 			{ "absolute", "value", "value", 0, "abs", 1, 1 },
@@ -733,7 +133,7 @@ namespace xge
 			{ "clamp", "value", "atleast", 0, "clamp", 3, 3, "atmost" },
 			// A <value> and a test of it, the same words as a condition's: 1 or 0.
 			{ "compare", "value", "test", 0, "compare", 2, 2, nullptr, true },
-			// A <random> with a <formula> end (RawValue::operations).
+			// A <random> with an end that is an operation (WrittenValue::operations).
 			{ "random", "min", "max", 0, "random", 2, 2 },
 		};
 	}
@@ -767,7 +167,7 @@ namespace xge
 
 	namespace
 	{
-		std::string operationText(const RawOperation& operation)
+		std::string operationText(const WrittenOperation& operation)
 		{
 			const OperationShape* shape = operationShape(operation.op);
 			if (shape && shape->compares && operation.operands.size() == 2)
@@ -789,39 +189,41 @@ namespace xge
 		}
 	}
 
-	std::string valueText(const RawValue& value)
+	std::string valueText(const WrittenValue& value)
 	{
 		switch (value.kind)
 		{
-		case RawValue::Kind::Random:
+		case WrittenValue::Kind::Random:
 			if (value.operations && !value.operations->empty()) { return operationText(value.operations->front()); }
 			return "random(" + value.min + ", " + value.max + ")";
 
-		case RawValue::Kind::Centered:
-			return "centered(" + value.text + ")";
+		case WrittenValue::Kind::Centered:
+			if (value.edge != WrittenValue::Edge::Middle) { return std::string(value.edge == WrittenValue::Edge::Start ? "start" : "end") + "(offset " + (value.offset.empty() ? std::string("0") : value.offset) + ")"; }
+			if (value.operations && !value.operations->empty()) { return "centered(" + operationText(value.operations->front()) + ")"; }
+			return value.offset.empty() ? "centered(" + value.text + ")" : "centered(offset " + value.offset + ")";
 
-		case RawValue::Kind::Formula:
+		case WrittenValue::Kind::Formula:
 			return value.operations && !value.operations->empty() ? operationText(value.operations->front()) : "";
 
-		case RawValue::Kind::Expression:
+		case WrittenValue::Kind::Expression:
 			break;
 		}
 
 		return value.text;
 	}
 
-	std::vector<const std::string*> RawValue::expressions() const
+	std::vector<const std::string*> WrittenValue::expressions() const
 	{
 		if (kind == Kind::Random && !operations) { return { &min, &max }; }
 
-		if (kind == Kind::Formula || kind == Kind::Random)
+		if (kind == Kind::Formula || kind == Kind::Random || (kind == Kind::Centered && operations))
 		{
 			std::vector<const std::string*> all;
 			if (operations)
 			{
-				for (const RawOperation& operation : *operations)
+				for (const WrittenOperation& operation : *operations)
 				{
-					for (const RawOperand& operand : operation.operands)
+					for (const WrittenOperand& operand : operation.operands)
 					{
 						for (const std::string* expression : operand.value.expressions()) { all.push_back(expression); }
 					}
@@ -830,16 +232,17 @@ namespace xge
 			return all;
 		}
 
+		if (kind == Kind::Centered && !offset.empty()) { return { &text, &offset }; }
 		return { &text };
 	}
 
-	bool RawValue::drawsRandom() const
+	bool WrittenValue::drawsRandom() const
 	{
 		if (kind == Kind::Random) { return true; }
 		if (!operations) { return false; }
-		for (const RawOperation& operation : *operations)
+		for (const WrittenOperation& operation : *operations)
 		{
-			for (const RawOperand& operand : operation.operands)
+			for (const WrittenOperand& operand : operation.operands)
 			{
 				if (operand.value.drawsRandom()) { return true; }
 			}
@@ -847,130 +250,158 @@ namespace xge
 		return false;
 	}
 
-	std::ostream& operator<<(std::ostream& o, const RawValue& value)
+	std::ostream& operator<<(std::ostream& o, const WrittenValue& value)
 	{
 		return o << valueText(value);
 	}
 
-	std::ostream& operator<<(std::ostream& o, const RawCommand& command)
+	std::ostream& operator<<(std::ostream& o, const WrittenCommand& command)
 	{
-		o << command.verb;
+		return o << command.verb;
+	}
 
-		if (command.verb == "swing")
+	std::ostream& operator<<(std::ostream& o, const std::vector<WrittenCommand>& commands)
+	{
+		for (std::size_t i = 0; i < commands.size(); ++i)
 		{
-			o << "(" << command.direction << " " << command.distance << " degrees, " << command.seconds << "s)";
-		}
-		else if (command.verb == "thrust" || command.verb == "deflect")
-		{
-			o << "(" << command.amount << (command.burn.empty() ? "" : ", burn " + command.burn) << ")";
-		}
-		else if (command.verb == "hold")
-		{
-			o << "(" << command.button << ")";
-		}
-		else if (command.verb == "hole")
-		{
-			o << "(" << command.amount << ", " << command.distance << ")";
-		}
-		else if (command.verb == "release")
-		{
-			o << "(" << command.object << ", " << command.amount << ")";
-		}
-		else if (command.verb == "jump")
-		{
-			o << "." << command.direction << "(" << command.amount << ", " << command.seconds << ")";
-		}
-		else if (command.verb == "leap" || ((command.verb == "knock" || command.verb == "bounce") && (command.amount.kind != RawValue::Kind::Expression || !command.amount.text.empty())))
-		{
-			o << "(" << command.amount << ")";
-		}
-		else if (command.verb == "climb")
-		{
-			o << "." << command.direction << "(" << command.amount << ", " << command.objClass << ")";
-		}
-		else if (command.verb == "hop" || (command.verb == "hunt" && command.byHops))
-		{
-			o << (command.byHops ? "(" + command.object + ", by hops of " : "." + command.direction + "(") << command.amount << ", " << command.positionX << " " << command.positionY
-				<< ", " << command.seconds << ")";
-		}
-		else if (command.verb == "move" || command.verb == "accelerate" || command.verb == "turn" || command.verb == "go")
-		{
-			o << "." << command.direction << "(" << command.amount << (command.burn.empty() ? "" : ", burn " + command.burn) << ")";
-			if (command.verb == "move" && !(command.seconds.kind == RawValue::Kind::Expression && command.seconds.text.empty())) { o << "(wait " << command.seconds << ")"; }
-		}
-		else if (command.verb == "slide")
-		{
-			o << "." << command.direction;
-		}
-		else if (command.verb == "inc" || command.verb == "dec")
-		{
-			o << "(" << command.variable;
-			if (!(command.amount.kind == RawValue::Kind::Expression && (command.amount.text == "1" || command.amount.text.empty()))) { o << ", " << command.amount; }
-			o << ")";
-		}
-		else if (command.verb == "push")
-		{
-			o << "(" << command.state << ")";
-		}
-		else if (command.verb == "enter" || (command.verb == "reset" && !command.scene.empty()))
-		{
-			o << "(scene " << command.scene << ")";
-		}
-		else if (command.verb == "chase")
-		{
-			o << "(" << command.object << ", " << command.amount << ", " << command.distance << ")";
-		}
-		else if (command.verb == "hunt")
-		{
-			o << "(" << command.object << ", " << command.amount << ", ahead " << command.ahead << ", with " << command.partner
-				<< ", retreat " << command.retreat << " " << command.distance << ")";
-		}
-		else if (command.verb == "wander")
-		{
-			o << "(" << command.amount << ")";
-		}
-		else if (command.verb == "fire" || command.verb == "aim" || (command.verb == "reset" && !command.object.empty()) || (command.verb == "despawn" && !command.object.empty()))
-		{
-			o << "(" << command.object << ")";
-		}
-		else if (command.verb == "play" || command.verb == "silence")
-		{
-			o << "(" << command.sound << ")";
-		}
-		else if (command.verb == "trigger")
-		{
-			o << "(" << command.object << "," << command.action << ")";
-		}
-		else if (command.verb == "follow")
-		{
-			o << "(" << command.path << (command.object.empty() ? "" : ", " + command.object) << ")";
-		}
-		else if (command.verb == "track" && !command.path.empty())
-		{
-			o << "(" << command.path << ")";
-		}
-		else if (command.verb == "set")
-		{
-			o << "(" << command.variable << ", " << command.amount << ")";
-		}
-		else if (command.verb == "spawn")
-		{
-			o << "(" << command.object << ", " << command.positionX << " " << command.positionY << ", " << command.velocityX << " " << command.velocityY << ", " << command.accelerationX << " " << command.accelerationY
-				<< (command.random ? ", random" : "") << (command.free ? ", free" : "") << " " << command.below << ", " << command.column << " " << command.row << (command.into.empty() ? "" : ", into " + command.into) << ")";
-		}
-		else if (command.verb == "send")
-		{
-			o << "(" << command.object << ", " << command.from << " into " << command.into << ", " << command.column << " " << command.row << ")";
+			o << (i ? ";" : "") << commands[i];
 		}
 
 		return o;
 	}
 
-	std::ostream& operator<<(std::ostream& o, const std::vector<RawCommand>& commands)
+	std::ostream& operator<<(std::ostream& o, const WindowDesc& f)
 	{
-		for (std::size_t i = 0; i < commands.size(); ++i)
+		o << "window: ";
+		o << "title=" << f.name;
+		o << ", width=" << f.width;
+		o << ", height=" << f.height << '\n';
+
+		return o;
+	}
+
+	namespace
+	{
+		// A rule's selectors and speeds, as both kinds of rule print them.
+		template <typename Rule>
+		void printRuleFilters(std::ostream& o, const Rule& rule)
 		{
-			o << (i ? ";" : "") << commands[i];
+			if (!rule.filterClass.empty()) { o << " (class=" << rule.filterClass << ")"; }
+			if (!rule.filterObject.empty()) { o << " (object=" << rule.filterObject << ")"; }
+			if (!rule.unlessClass.empty()) { o << " (unless=" << rule.unlessClass << ")"; }
+			if (!rule.throughClass.empty()) { o << " (through=" << rule.throughClass << ")"; }
+		}
+
+		void printCommands(std::ostream& o, const std::vector<Command>& commands)
+		{
+			for (std::size_t i = 0; i < commands.size(); ++i) { o << (i ? ";" : "") << commands[i]; }
+		}
+	}
+
+	std::ostream& operator<<(std::ostream& o, const WrittenCollisionData& f)
+	{
+		if (f.type == CollisionType::Pixel) { o << ", type=pixel"; }
+		for (const Edge edge : { Edge::Top, Edge::Bottom, Edge::Left, Edge::Right })
+		{
+			const auto& rules = f.edges[edgeIndex(edge)].commands;
+			if (!rules.empty()) { o << ", " << edgeName(edge) << "=" << rules; }
+		}
+		for (const auto& rule : f.others)
+		{
+			o << ", others=" << rule.commands;
+			printRuleFilters(o, rule);
+		}
+		return o;
+	}
+
+	std::ostream& operator<<(std::ostream& o, const CollisionData& f)
+	{
+		if (f.type == CollisionType::Pixel) { o << ", type=pixel"; }
+		if (f.lockstep > 0) { o << ", lockstep=" << f.lockstep; }
+		for (const Edge edge : { Edge::Top, Edge::Bottom, Edge::Left, Edge::Right })
+		{
+			const auto& commands = f.edges[edgeIndex(edge)].commands;
+			if (!commands.empty()) { o << ", " << edgeName(edge) << "="; printCommands(o, commands); }
+		}
+		for (const auto& rule : f.others)
+		{
+			o << ", others=";
+			printCommands(o, rule.commands);
+			printRuleFilters(o, rule);
+		}
+		return o;
+	}
+
+	std::ostream& operator<<(std::ostream& o, const WrittenObject& f) {
+		o << "writtenObject: " << "name=" << f.name << (f.groupName.empty() ? "" : ", group=" + f.groupName) << ", sprite=" << f.sprite.kind
+			<< (f.cell.column > 0 ? " (cell " + std::to_string(f.cell.column) + "." + std::to_string(f.cell.row) + ")" : "")
+			<< (f.hasAnimation ? " (animated, " + std::to_string(f.animation.frames.size()) + " frames)" : "") << '\n'
+			<< "\tpos.x=" << f.writtenPosition.x << ", pos.y=" << f.writtenPosition.y << '\n'
+			<< "\tvel.x=" << f.writtenVelocity.x << ", vel.y=" << f.writtenVelocity.y << '\n'
+			<< "\tcollision=" << (f.writtenCollisionData.enabled ? "true" : "false") << f.writtenCollisionData;
+		o << '\n';
+
+		for (auto& action : f.action)
+		{
+			o << "\taction=" << action.first << ", value=" << action.second << '\n';
+		}
+
+		for (auto& variable : f.variable)
+		{
+			o << "\tvariable=" << variable.first << ", value=" << variable.second << '\n';
+		}
+
+		return o;
+	}
+
+	std::ostream& operator<<(std::ostream& o, const Object& f) {
+		o << "Object: " << "name=" << f.name << ", sprite=" << f.drawn.picture << '\n';
+
+		o << "\tpos.x=" << f.position.x << ", pos.y=" << f.position.y << '\n';
+
+		o << "\tvel.x=" << f.velocity.x << ", vel.y=" << f.velocity.y << '\n';
+
+		if (f.acceleration.x != 0 || f.acceleration.y != 0)
+		{
+			o << "\tacc.x=" << f.acceleration.x << ", acc.y=" << f.acceleration.y << '\n';
+		}
+
+		if (f.turning.hasHeading)
+		{
+			o << "\theading=" << f.heading << '\n';
+		}
+
+		if (f.animation.frames.shows().bitmaps.size() > 1)
+		{
+			o << "\tanimation=" << f.animation.frames.shows().bitmaps.size() << " frames, " << f.animation.frames.shows().seconds << " seconds each\n";
+		}
+
+		if (f.motion.drag != 0)
+		{
+			o << "\tdrag=" << f.motion.drag << '\n';
+		}
+
+		if (f.motion.mass != 0)
+		{
+			o << "\tmass=" << f.motion.mass << '\n';
+		}
+
+		if (f.light > 0.0f) { o << "\tlight=" << f.light << '\n'; }
+		if (f.dark.kind != Object::Darkness::None) { o << "\tdark=" << (f.dark.kind == Object::Darkness::Unlit ? "unlit" : "unseen") << '\n'; }
+
+		o << "\tsize.x=" << f.size.x << ", size.y=" << f.size.y << '\n';
+
+		o << "\tcollision=" << (f.collisionsOn ? "true" : "false") << f.kind->collisionData;
+		o << '\n';
+
+		for (auto& action : f.kind->action)
+		{
+			o << "\taction=" << action.first << ", value=";
+			for (auto& command : action.second)
+			{
+				o << command << (&command != &action.second.back() ? ";" : "");
+			}
+			o << '\n';
 		}
 
 		return o;

@@ -10,13 +10,13 @@ The vocabulary grew one game at a time (a word is added only when a real game ca
 
 | Part of speech | What it is | Examples |
 |---|---|---|
-| Nouns | things that exist | `object`, `group`, `map`, `state`, `scene`, `sound`, `path`, `timer`, `deck`, `pile` |
+| Nouns | things that exist | `object`, `group`, `map`, `state`, `scene`, `sound`, `path`, `timer` |
 | Verbs | commands | `move`, `bounce`, `fire`, `inc`, `become`, `push` ([commands](../reference/commands.md)) |
 | Adjectives | properties of a noun | `velocity`, `heading`, `drag`, `mass`, `grip`, `light`, `type`, `hitbox` |
 | Prepositions | who, when, where | `edge=`, `class=`, `object=`, `side=`, `unless=`, `from=`, `into=` |
 | Pronouns | names that point | `ball.radius`, `window.right`, `aliens.3.2`, `self.`, `touch.`, `energy.level` |
 | Adverbs | how, how much, how long | `every`, `after`, `seconds`, `burn`, a verb's amount |
-| Values | numbers | text arithmetic (`+ - * /`), `<random>`, `<formula>` tags |
+| Values | numbers | a number or a name, sides (`<left>`, `<right>`, ...), `<random>`, operation tags (`<add>`, `<clamp>`, ...) |
 
 A collision rule reads like a sentence: *this object*, *when it touches* *that class*, *on its top* (`side`), *unless* *it is on a log*, *do this*.
 
@@ -26,17 +26,17 @@ Adverbs are each verb's own: there is no shared "how" vocabulary. Its likely mem
 
 | Layer | How complete |
 |---|---|
-| Data model: objects, groups, maps, cells, the kit, states and scenes, keeps | solid |
+| Data model: objects, groups, maps, cells, pieces, states and scenes, keeps | solid |
 | Appearance: shapes, bitmaps with inks, SVG, animation, looks, poses, turning, light, shadows, holes | solid |
-| Kinematics: velocity, acceleration, heading, drag, mass, pull, seek, altitude, grip, swing | good; no air control in a `<leap>` |
+| Kinematics: velocity, acceleration, heading, drag, mass, pull, seek, altitude, grip, swing | good; no air control in a `<jump>` |
 | Steering: chase, aim, paths, maze walking | good; no search of a maze, straight legs only |
 | Collision: edges, filters, conditions, pixel tests, the touching verbs | the largest layer, where verbs, adjectives and prepositions meet |
 | Time: timers, intervals, seconds | built; counts frames |
 | Sound: notes, parts, waves, music | built; no envelope, no stereo |
 | Input: keys, axes, the three moments, computer players | small and clean |
 | Flow: the stack, scenes, conditions, turns, demos | enough for the shipped games |
-| Boards and cards: moves, picker, think, decks, piles, patterns | built for the shipped games |
-| Values: text arithmetic, `<random>`, `<formula>` | thinnest: no power, root, tangent or "if" |
+| Boards and cards: moves, picker, think, packs, holders, patterns | built for the shipped games |
+| Values: numbers, names, `<random>`, operations | thinnest: no power, root, tangent or "if" |
 
 ## Kinds of word the language does not have
 
@@ -52,6 +52,20 @@ Time, sound, conditions over many objects, maze walking, spawning, `negate`, `fl
 
 ## The shape this suggests
 
-Two grammars, one inside the other. The outer is **noun, property, verb, filter**: regular, checked by the schema, visible to XSLT. The inner is the **value**, with a small vocabulary of its own beside plain `+ - * /` text. Each further value word is a tag in the XSD, a row in `operationShape` and one case in the evaluator.
+Two grammars, one inside the other. The outer is **noun, property, verb, filter**: regular, checked by the schema, visible to XSLT. The inner is the **value**, with a small vocabulary of its own beside plain numbers and names. Each further value word is a tag in the XSD, a row in `operationShape` and one case in the evaluator.
 
 A verb that means "behave like one particular game" shows that its parameters were not found.
+
+## Rare words
+
+How often a word is used says little about its worth, with some fifty games written of the thousands it should cover. The test is whether two words do the same job; then they become one. Words used by one game or none were judged that way; only those that changed, or were looked at and kept apart, are listed. Schema words: 326 before, 323 after.
+
+| Word | Verdict |
+|---|---|
+| `slower`, `faster` | gone: a rule's condition on the live number `speed`, held as the touch happened |
+| `accelerate` | gone: `<thrust direction>` (one held push, along the heading or one way) |
+| `pull`, `seek` | kept apart: a pull adds speed toward the nearest (a gravity well), a seek turns at the same speed (a homing missile) |
+| `shift object` | kept: moves where something is by an amount; `move` sets a held velocity |
+| `slow class` | kept: one walker slowed on a tile; a `surface` holds back everything gripping it |
+| `image` | kept: a picture file (a still background); `assets/paddle.jpg` serves its tests |
+| `absolute`, `negate`, `floor`, `remainder`, `odd`, `framerate`, `fullscreen`, `margin`, `gap`, `rise`, `near` | kept: each the pair or the inverse of a word in use, or a setting with a default |

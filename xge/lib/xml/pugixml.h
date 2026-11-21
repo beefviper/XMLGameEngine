@@ -11,16 +11,13 @@
 
 namespace xge
 {
-	// The PugiXML XmlNode wrapper. Nothing outside this file, xml/pugixml.cpp,
-	// and XmlDocumentFactory::create ever names a PugiXML type - see
-	// xml/document.h. pugi::xml_node is a small value type (a pointer plus a
-	// null-object pattern - name()/attribute() are always safe to call even
-	// on an empty node), so this just stores one by value, unlike the raw
-	// pointer the other two backends keep.
+	// pugi::xml_node is a small value, safe to ask even when empty, so it is
+	// held by value.
 	class PugiXmlNode : public XmlNode
 	{
 	public:
-		explicit PugiXmlNode(pugi::xml_node node) noexcept;
+		// `lines`: where each line of the file starts (lineStarts), or null.
+		PugiXmlNode(pugi::xml_node node, const std::vector<std::size_t>* lines) noexcept;
 
 		std::string getName() const override;
 		std::string getAttribute(const std::string& name) const override;
@@ -28,14 +25,14 @@ namespace xge
 		std::string getText() const override;
 		std::unique_ptr<XmlNode> getFirstChild() const override;
 		std::unique_ptr<XmlNode> getNextSibling() const override;
+		int line() const override;
 
 	private:
 		pugi::xml_node node;
+		const std::vector<std::size_t>* lines;
 	};
 
-	// The PugiXML XmlDocument backend - well-formedness parsing only, no
-	// schema validation (see xml/xerces.h for the one backend that has it -
-	// PugiXML has no XSD validator at all).
+	// Parses only; the schema check is load/xsd.h's.
 	class PugiXmlDocument : public XmlDocument
 	{
 	public:
@@ -46,5 +43,6 @@ namespace xge
 	private:
 		pugi::xml_document document;
 		std::string errorMessage;
+		std::vector<std::size_t> lines;
 	};
 }

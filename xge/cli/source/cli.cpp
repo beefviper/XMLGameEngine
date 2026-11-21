@@ -4,10 +4,21 @@
 // date: Sept 28, 2026
 
 #include "cli.h"
+#include "engine/engine.h"
 #include "engine/folder.h"
+#include "game/game.h"
+#include "game/random.h"
+#include "load/xml.h"
+#include "window/picture.h"
 
 #include <algorithm>
 #include <cctype>
+#include <cstdlib>
+#include <exception>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <memory>
 #include <optional>
 #include <string_view>
 
@@ -40,6 +51,12 @@ namespace xge
 			{ "raylib", WindowBackend::Raylib },
 			{ "sdl2",   WindowBackend::SDL2 },
 			{ "opengl", WindowBackend::OpenGL },
+			{ "vulkan", WindowBackend::Vulkan },
+			{ "direct3d9", WindowBackend::Direct3D9 },
+			{ "direct3d10", WindowBackend::Direct3D10 },
+			{ "direct3d11", WindowBackend::Direct3D11 },
+			{ "direct3d12", WindowBackend::Direct3D12 },
+			{ "none",   WindowBackend::None },
 		};
 
 		constexpr XmlName xmlNames[] = {
@@ -59,8 +76,36 @@ namespace xge
 		// What --generate can write a game out as: a platform and a language,
 		// each a folder of stylesheets in games/generators/.
 		constexpr std::string_view generateNames[] = {
+			"engine-cpp",
 			"windows-cpp",
 		};
+
+		// A whole number from the command line: digits only, and at least
+		// `least`.
+		unsigned long wholeNumber(const std::string& value, const std::string& option, unsigned long least)
+		{
+			const bool digits = !value.empty() && value.size() <= 9 && value.find_first_not_of("0123456789") == std::string::npos;
+			if (!digits || std::stoul(value) < least)
+			{
+				throw CliError(option + " takes a whole number" + (least > 0 ? " of at least " + std::to_string(least) : std::string()) + ", not '" + value + "'");
+			}
+			return std::stoul(value);
+		}
+
+		// A length of time in seconds from the command line: a number above
+		// 0, at most kLongestStep.
+		float stepLength(const std::string& value, const std::string& option)
+		{
+			std::size_t used = 0;
+			float seconds = 0.0f;
+			try { seconds = std::stof(value, &used); }
+			catch (const std::exception&) { used = 0; }
+			if (used == 0 || used != value.size() || !(seconds > 0.0f) || seconds > kLongestStep)
+			{
+				throw CliError(option + " takes a number of seconds above 0 and at most " + std::to_string(kLongestStep).substr(0, 4) + ", not '" + value + "'");
+			}
+			return seconds;
+		}
 
 		std::string lowerCase(std::string text)
 		{
@@ -130,13 +175,22 @@ namespace xge
 			if (arg == "--generate") return 'G';
 			if (arg == "--output") return 'o';
 			if (arg == "--record") return 'r';
+			if (arg == "--check")  return 'c';
+			if (arg == "--frames") return 'f';
+			if (arg == "--framerate") return 'F';
+			if (arg == "--step")   return 'S';
+			if (arg == "--seed")   return 's';
+			if (arg == "--keys")   return 'k';
+			if (arg == "--dump")   return 'd';
+			if (arg == "--dump-every") return 'e';
+			if (arg == "--picture") return 'p';
 			if (arg == "--help")   return 'h';
 			return std::nullopt;
 		}
 
 		bool takesValue(char key)
 		{
-			return key != 'h' && key != 'r';
+			return key != 'h' && key != 'r' && key != 'c';
 		}
 
 		std::string optionName(char key)
@@ -149,6 +203,14 @@ namespace xge
 			case 'a': return "audio";
 			case 'G': return "target";
 			case 'o': return "folder";
+			case 'f': return "number of frames";
+			case 'F': return "frames a second";
+			case 'S': return "seconds";
+			case 's': return "seed";
+			case 'k': return "file";
+			case 'd': return "file";
+			case 'e': return "number of frames";
+			case 'p': return "file";
 			}
 			return "help";
 		}
@@ -164,14 +226,13 @@ namespace xge
 		bool haveAudio = false;
 		bool haveGenerate = false;
 		bool haveOutput = false;
+		bool haveFrames = false;
 
+		// Several only for --check, which may come after them: worked out at the end.
 		auto setGame = [&](const std::string& game)
 		{
-			if (haveGame)
-			{
-				throw CliError("more than one game given ('" + options.game + "' and '" + game + "')");
-			}
-			options.game = game;
+			if (!haveGame) { options.game = game; }
+			options.games.push_back(game);
 			haveGame = true;
 		};
 
@@ -234,6 +295,63 @@ namespace xge
 				options.output = value;
 				haveOutput = true;
 				break;
+			case 'f':
+				if (haveFrames)
+				{
+					throw CliError("--frames was given more than once");
+				}
+				options.frames = static_cast<int>(wholeNumber(value, "--frames", 1));
+				haveFrames = true;
+				break;
+			case 'F':
+				if (options.framerate > 0)
+				{
+					throw CliError("--framerate was given more than once");
+				}
+				options.framerate = static_cast<int>(wholeNumber(value, "--framerate", 1));
+				break;
+			case 'S':
+				if (options.step)
+				{
+					throw CliError("--step was given more than once");
+				}
+				options.step = stepLength(value, "--step");
+				break;
+			case 's':
+				if (options.seed)
+				{
+					throw CliError("--seed was given more than once");
+				}
+				options.seed = static_cast<unsigned int>(wholeNumber(value, "--seed", 0));
+				break;
+			case 'k':
+				if (!options.keys.empty())
+				{
+					throw CliError("--keys was given more than once");
+				}
+				options.keys = value;
+				break;
+			case 'd':
+				if (!options.dump.empty())
+				{
+					throw CliError("--dump was given more than once");
+				}
+				options.dump = value;
+				break;
+			case 'e':
+				if (options.dumpEvery > 0)
+				{
+					throw CliError("--dump-every was given more than once");
+				}
+				options.dumpEvery = static_cast<int>(wholeNumber(value, "--dump-every", 1));
+				break;
+			case 'p':
+				if (!options.picture.empty())
+				{
+					throw CliError("--picture was given more than once");
+				}
+				options.picture = value;
+				break;
 			}
 		};
 
@@ -285,6 +403,15 @@ namespace xge
 				}
 			}
 
+			if (match.key == 'c')
+			{
+				if (options.check)
+				{
+					throw CliError("--check was given more than once");
+				}
+				options.check = true;
+				continue;
+			}
 			if (match.key == 'r')
 			{
 				if (options.record)
@@ -320,6 +447,14 @@ namespace xge
 			setOption(match.key, value);
 		}
 
+		if (options.games.size() > 1 && !options.check)
+		{
+			throw CliError("more than one game given ('" + options.games[0] + "' and '" + options.games[1] + "'); only --check takes several");
+		}
+		if (options.check && (options.record || haveGenerate || haveWindow || haveAudio))
+		{
+			throw CliError("--check only loads the games: it opens no window, plays no sound, and does not --record or --generate");
+		}
 		if (haveOutput && !haveGenerate)
 		{
 			throw CliError("an output folder is only for --generate");
@@ -327,6 +462,58 @@ namespace xge
 		if (options.record && haveGenerate)
 		{
 			throw CliError("--record plays the game, and --generate writes it out instead; give one of them");
+		}
+		if (options.seed && (options.check || haveGenerate))
+		{
+			throw CliError("--seed is for playing: --check and --generate draw no numbers");
+		}
+		if (!options.keys.empty())
+		{
+			if (options.check || haveGenerate || options.record)
+			{
+				throw CliError("--keys plays a recording back; it does not go with --check, --generate or --record");
+			}
+			if (options.seed)
+			{
+				throw CliError("--keys plays from the recording's own seed; leave out --seed");
+			}
+		}
+		if (!options.dump.empty() && !haveFrames)
+		{
+			throw CliError("--dump writes what --frames played; give --frames too");
+		}
+		if (options.dumpEvery > 0 && options.dump.empty())
+		{
+			throw CliError("--dump-every says how often --dump writes; give --dump too");
+		}
+		if (options.step && !haveFrames)
+		{
+			throw CliError("--step is the length of each step --frames plays; give --frames too");
+		}
+		if (options.framerate > 0 && haveFrames)
+		{
+			throw CliError("--framerate is for a window; --frames plays steps of --step instead");
+		}
+		if (!options.picture.empty() && !haveFrames)
+		{
+			throw CliError("--picture draws the last frame --frames played; give --frames too");
+		}
+		if (haveFrames)
+		{
+			if (options.check || haveGenerate || options.record)
+			{
+				throw CliError("--frames plays the game; it does not go with --check, --generate or --record");
+			}
+			if (haveWindow && options.window != WindowBackend::None)
+			{
+				throw CliError("--frames plays with no window; leave out -w, or give -w none");
+			}
+			if (haveAudio && options.audio != AudioBackend::None)
+			{
+				throw CliError("--frames plays with no sound; leave out -a, or give -a none");
+			}
+			options.window = WindowBackend::None;
+			options.audio = AudioBackend::None;
 		}
 
 		return options;
@@ -402,14 +589,166 @@ namespace xge
 			"  -x, --xml <name>     XML library: " + namesOf(xmlNames) + " (default " + XmlDocumentFactory::name(XmlDocumentFactory::defaultBackend()) + ")\n"
 			"  -a, --audio <name>   sound library: " + namesOf(audioNames) + " (default " + AudioFactory::name(AudioFactory::defaultBackend()) + ")\n"
 			"  --generate <target>  write the game out as a program instead of playing it:\n"
-			"                       windows-cpp (plain C++ on SFML 3, with a CMakeLists.txt,\n"
-			"                       playing the game with the engine's own code)\n"
+			"                       engine-cpp (C++ on SFML 3, with a CMakeLists.txt: the\n"
+			"                       engine's own code with the game's data built in), or\n"
+			"                       windows-cpp (the game as a person would write it, on\n"
+			"                       SFML 3: pong_min.xml for now)\n"
 			"  -o, --output <dir>   where --generate writes it (default <game>-<target>)\n"
 			"  --record             play, and write what was played into the game file as\n"
 			"                       its <demo> when the window closes (the attract mode)\n"
+			"  --check              load the games given (several, or none for every game in\n"
+			"                       games/descriptions/) and print ok or what is wrong with\n"
+			"                       each; exits 1 if any is wrong\n"
+			"  --frames <n>         play n steps as fast as they go, with no window and no\n"
+			"                       sound, then stop\n"
+			"  --step <seconds>     with --frames, how long each step is (default 1/60)\n"
+			"  --framerate <n>      in a window, at most n frames a second, in place of the\n"
+			"                       game's <framerate>; each plays the time that passed\n"
+			"  --seed <n>           the random numbers start from n, so a game plays the\n"
+			"                       same every time\n"
+			"  --keys <file>        play back the <demo> in the file (one --record wrote, or a\n"
+			"                       file that is only a <demo>) from its own seed\n"
+			"  --dump <file>        with --frames, write the game's state into the file as\n"
+			"                       XML at the end (games/xgedump.xsd is its schema)\n"
+			"  --dump-every <n>     and every n frames on the way\n"
+			"  --picture <file>     with --frames, draw the last frame into the file as a PNG\n"
+			"                       (the game's size times its <scale>)\n"
 			"  -h, --help           show this text\n"
 			"\n"
 			"A short option can have its value attached (-gpong -wsdl2 -xtinyxml2 -anone); a\n"
 			"long option needs a space (--game pong).\n";
+	}
+
+	std::vector<std::string> gameFilesIn(const std::filesystem::path& gamesDirectory)
+	{
+		std::vector<std::string> files;
+		std::error_code error;
+		for (const auto& entry : std::filesystem::directory_iterator(gamesDirectory, error))
+		{
+			if (entry.is_regular_file() && entry.path().extension() == ".xml") { files.push_back(entry.path().string()); }
+		}
+		std::sort(files.begin(), files.end());
+		return files;
+	}
+
+	int checkGames(const std::vector<std::string>& files, XmlBackend xml, std::ostream& out)
+	{
+		int failed = 0;
+		for (const std::string& file : files)
+		{
+			std::string problem;
+			{
+				// The libraries' "loading, parsed" lines are not the answer.
+				struct Unheard : std::streambuf
+				{
+					int overflow(int c) override { return traits_type::not_eof(c); }
+				} unheard;
+				std::streambuf* const before = std::cout.rdbuf(&unheard);
+				try
+				{
+					Game game{ readGame(file, xml) };
+					Engine engine(game, WindowBackend::None, AudioBackend::None);
+				}
+				catch (const std::exception& error)
+				{
+					problem = error.what();
+					if (problem.empty()) { problem = "it does not load"; }
+				}
+				catch (...)
+				{
+					problem = "it does not load";
+				}
+				std::cout.rdbuf(before);
+			}
+			out << std::filesystem::path(file).filename().string() << ": " << (problem.empty() ? "ok" : problem) << '\n';
+			if (!problem.empty()) { ++failed; }
+		}
+		return failed;
+	}
+
+	int playFrames(const std::string& file, const CliOptions& options, std::ostream& out)
+	{
+		// The seed was fixed only for this game: what it was goes back after.
+		const std::optional<unsigned int> seedBefore = fixedRandomSeed();
+		if (options.seed) { fixRandomSeed(options.seed); }
+		struct SeedBack
+		{
+			std::optional<unsigned int> seed;
+			bool fixed;
+			~SeedBack() { if (fixed) { fixRandomSeed(seed); } }
+		} seedBack{ seedBefore, options.seed.has_value() };
+
+		// The dump is opened first, so a file that cannot be written stops
+		// the run before it plays, and is closed whole however the run ends.
+		std::ofstream dump;
+		if (!options.dump.empty())
+		{
+			dump.open(options.dump, std::ios::binary | std::ios::trunc);
+			if (!dump)
+			{
+				out << "Error: cannot write the dump to " << options.dump << '\n';
+				return EXIT_FAILURE;
+			}
+			const std::filesystem::path schema = std::filesystem::absolute("xgedump.xsd").lexically_normal();
+			dump << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+				<< "<!-- " << std::filesystem::path(file).filename().string() << " as xgecli played it, at each moment it was written. -->\n"
+				<< "<dump xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"" << schema.generic_string() << "\">\n";
+		}
+		struct DumpEnd
+		{
+			std::ofstream& file;
+			~DumpEnd() { if (file.is_open()) { file << "</dump>\n"; } }
+		} dumpEnd{ dump };
+
+		int played = 0;
+		try
+		{
+			Game game{ readGame(file, options.xml) };
+			// With --picture the frame is drawn by the engine into one image,
+			// still with no window; it is drawn once, at the end.
+			std::unique_ptr<Window> window;
+			PictureWindow* picture = nullptr;
+			if (options.picture.empty()) { window = WindowFactory::create(game.getWindowDesc(), WindowBackend::None); }
+			else
+			{
+				auto drawn = std::make_unique<PictureWindow>(game.getWindowDesc());
+				picture = drawn.get();
+				window = std::move(drawn);
+			}
+			Engine engine(game, std::move(window), nullptr);
+			if (!options.keys.empty())
+			{
+				engine.replay(readDemo(options.keys, options.xml));
+			}
+			const float step = options.step.value_or(xge::kSixtieth);
+			const auto describe = [&]
+			{
+				if (dump.is_open()) { game.describe(dump, static_cast<unsigned long>(played), static_cast<double>(played) * static_cast<double>(step), "  "); }
+			};
+			while (played < options.frames)
+			{
+				engine.input(); engine.update(step);
+				++played;
+				if (options.dumpEvery > 0 && played % options.dumpEvery == 0 && played < options.frames) { describe(); }
+			}
+			describe();
+			if (picture)
+			{
+				engine.render();
+				if (!writePng(picture->capture(), options.picture))
+				{
+					out << "Error: cannot write the picture to " << options.picture << '\n';
+					return EXIT_FAILURE;
+				}
+			}
+			out << "played " << played << " frames of " << std::filesystem::path(file).filename().string()
+				<< "; the state is " << game.getCurrentState().name << '\n';
+		}
+		catch (const std::exception& error)
+		{
+			out << "Error: " << (played > 0 ? "in frame " + std::to_string(played + 1) + ": " : std::string()) << error.what() << '\n';
+			return EXIT_FAILURE;
+		}
+		return EXIT_SUCCESS;
 	}
 }

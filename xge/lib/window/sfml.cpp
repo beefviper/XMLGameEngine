@@ -5,11 +5,11 @@
 
 #include "window/sfml.h"
 
-#include "picture/font.h"
 #include "picture/color.h"
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <cstdlib>
 #include <iostream>
 #include <optional>
@@ -37,7 +37,10 @@ namespace xge
 		// mouse is mapped back through the same view).
 		view = sf::View(sf::FloatRect({ 0.0f, 0.0f }, { windowDesc.width, windowDesc.height }));
 		fitView();
-		window.setFramerateLimit(static_cast<unsigned int>(windowDesc.framerate));
+		setPictureScale(fitNow);
+		// The engine sets the game's speed (Engine::loop); the window only waits
+		// for the screen's refresh, so a picture is never torn.
+		window.setVerticalSyncEnabled(true);
 	}
 
 	// The game's picture in the window as it is now: as large as fits with
@@ -48,13 +51,18 @@ namespace xge
 		if (size.x == 0 || size.y == 0) { return; }
 		const sf::Vector2f game = view.getSize();
 		const float fit = std::min(static_cast<float>(size.x) / game.x, static_cast<float>(size.y) / game.y);
-		const float scale = fit;
-		const float wide = std::floor(game.x * scale);
-		const float high = std::floor(game.y * scale);
+		fitNow = fit;
+		const float wide = std::floor(game.x * fit);
+		const float high = std::floor(game.y * fit);
 		const float left = std::floor((static_cast<float>(size.x) - wide) / 2.0f);
 		const float top = std::floor((static_cast<float>(size.y) - high) / 2.0f);
 		view.setViewport(sf::FloatRect({ left / static_cast<float>(size.x), top / static_cast<float>(size.y) }, { wide / static_cast<float>(size.x), high / static_cast<float>(size.y) }));
 		window.setView(view);
+	}
+
+	float SFMLWindow::fit() const
+	{
+		return fitNow;
 	}
 
 	bool SFMLWindow::isOpen() const
@@ -84,17 +92,9 @@ namespace xge
 
 	void SFMLWindow::init(std::vector<Object>& objects)
 	{
-		// Object::position is already final by now - including a group's
-		// cells - finalized entirely within Game's own construction (see
-		// load/expr.cpp, and main.cpp for why Engine/Window no longer needs
-		// to exist first). All that's left here is building each object's
-		// actual visual and measuring its real rendered Object::size.
 		for (auto& object : objects)
 		{
-			CachedVisual& visual = visuals[object.name];
-
-			buildShapeOnly(object, visual);
-			finalizeVisual(object, visual);
+			build(object, visuals[object.name]);
 		}
 	}
 
@@ -178,13 +178,9 @@ namespace xge
 	{
 		CachedVisual& visual = visuals[object.name];
 
-		if (object.visualDirty || !visual.sprite)
+		if (object.drawn.visualDirty || !visual.sprite || (object.drawnAtScale() && visual.drawnAt != pictureScale()))
 		{
-			// A rebuild after init() (e.g. a bound text display's number just
-			// changed - see Game::setVariable/resetObject/resetAll) only
-			// redraws: object.position is already final.
-			buildShapeOnly(object, visual);
-			finalizeVisual(object, visual);
+			build(object, visual);
 		}
 	}
 
@@ -193,16 +189,8 @@ namespace xge
 		prepare(object);
 		CachedVisual& visual = visuals[object.name];
 
-		// The cached sprite's position has to be refreshed every frame, not
-		// just on rebuild: Object::position changes constantly from plain
-		// movement (velocity integration, paddle input) with visualDirty
-		// never set for that (visualDirty is only for text-content rebuilds -
-		// see Game::setVariable/resetObject/resetAll), so without this the
-		// sprite you actually see would stay frozen at wherever it was last
-		// rebuilt while the real Object::position (and therefore collisions/
-		// scoring) kept moving underneath it.
+		// Set every frame: an object moves without its picture changing.
 		visual.sprite->setPosition({ object.position.x, object.position.y });
-
 		window.draw(*visual.sprite);
 	}
 
@@ -320,198 +308,49 @@ namespace xge
 		}
 	}
 
-	const sf::Font* SFMLWindow::getFont(const std::string& file)
+	Bitmap SFMLWindow::capture()
 	{
-		const auto found = fonts.find(file);
-		if (found != fonts.end()) { return found->second.get(); }
-
-		auto font = std::make_unique<sf::Font>();
-		if (font->openFromFile(file))
-		{
-			// A pixel font stays pixels when the game is drawn bigger.
-			font->setSmooth(false);
-		}
-		else
-		{
-			std::cout << "error: failed to load font: " << file << " - drawing text with the built-in 8x8 font instead" << std::endl;
-			font.reset();
-		}
-		return (fonts[file] = std::move(font)).get();
+		sf::Texture shown;
+		if (!shown.resize(window.getSize())) { return {}; }
+		shown.update(window);
+		const sf::Image image = shown.copyToImage();
+		Bitmap bitmap;
+		bitmap.width = static_cast<int>(image.getSize().x);
+		bitmap.height = static_cast<int>(image.getSize().y);
+		const std::uint8_t* pixels = image.getPixelsPtr();
+		bitmap.rgba.assign(pixels, pixels + static_cast<std::size_t>(bitmap.width) * static_cast<std::size_t>(bitmap.height) * 4);
+		return bitmap;
 	}
 
-	void SFMLWindow::buildShapeOnly(Object& object, CachedVisual& visual)
+	// The engine's picture of the object, as a texture stretched over the
+	// object's size in the game's pixels.
+	void SFMLWindow::build(Object& object, CachedVisual& visual)
 	{
-		switch (object.picture.kind)
+		const bool smooth = object.drawnAtScale();
+		const sf::Texture& texture = textures.of(pictureOf(object), [&](const Bitmap& picture, sf::Texture& made)
 		{
-		case ShapeKind::Circle:    buildCircle(object, visual); break;
-		case ShapeKind::Rectangle: buildRectangle(object, visual); break;
-		case ShapeKind::Text:      buildText(object, visual); break;
-		case ShapeKind::Image:     buildImage(object, visual); break;
-		case ShapeKind::Line:      buildLines(object, visual); break;
-		case ShapeKind::Unknown:   break;
-		}
-	}
+			const auto width = static_cast<unsigned int>(std::max(picture.width, 1));
+			const auto height = static_cast<unsigned int>(std::max(picture.height, 1));
+			if (picture.rgba.empty())
+			{
+				const std::uint8_t clear[4] = { 0, 0, 0, 0 };
+				if (!made.resize({ 1, 1 })) { std::cout << "error: SFML: failed to make a texture for '" << object.name << "'\n"; }
+				made.update(clear);
+			}
+			else if (!made.loadFromImage(sf::Image(sf::Vector2u(width, height), picture.rgba.data())))
+			{
+				std::cout << "error: SFML: failed to make a texture from the picture of '" << object.name << "'\n";
+			}
+			made.setSmooth(smooth);
+		});
 
-	void SFMLWindow::buildCircle(Object& object, CachedVisual& visual)
-	{
-		sf::CircleShape circle;
-
-		const float radius = object.picture.radius;
-		circle.setRadius(radius);
-
-		const Color c = colorFromName(object.picture.color);
-		circle.setFillColor(sf::Color(c.r, c.g, c.b, c.a));
-
-		const int width = static_cast<int>(std::ceil(circle.getLocalBounds().size.x));
-		const int height = static_cast<int>(std::ceil(circle.getLocalBounds().size.y));
-
-		if (!visual.renderTexture.resize({ static_cast<unsigned int>(width), static_cast<unsigned int>(height) }))
-		{
-			std::cout << "error: failed to resize render texture" << std::endl;
-		}
-
-		// Resizing to the size it already is keeps what was drawn before, so a
-		// rebuilt visual (a turned ship, a text with a new number) would be drawn
-		// over its old self.
-		visual.renderTexture.clear(sf::Color::Transparent);
-		visual.renderTexture.draw(circle);
-	}
-
-	void SFMLWindow::buildRectangle(Object& object, CachedVisual& visual)
-	{
-		sf::RectangleShape rectangle;
-
-		const float recWidth = object.picture.size.x;
-		const float recHeight = object.picture.size.y;
-		rectangle.setSize(sf::Vector2f(recWidth, recHeight));
-
-		const Color c = colorFromName(object.picture.color);
-		rectangle.setFillColor(sf::Color(c.r, c.g, c.b, c.a));
-
-		const int width = static_cast<int>(std::ceil(rectangle.getLocalBounds().size.x));
-		const int height = static_cast<int>(std::ceil(rectangle.getLocalBounds().size.y));
-
-		if (!visual.renderTexture.resize({ static_cast<unsigned int>(width), static_cast<unsigned int>(height) }))
-		{
-			std::cout << "error: failed to resize render texture" << std::endl;
-		}
-
-		visual.renderTexture.clear(sf::Color::Transparent);
-		visual.renderTexture.draw(rectangle);
-	}
-
-	void SFMLWindow::buildText(Object& object, CachedVisual& visual)
-	{
-		const sf::Font* f = getFont(textFontFile(object.picture.font));
-
-		if (!f)
-		{
-			buildBitmap(object, visual, rasterizeText(object.picture.text, object.picture.textSize, colorFromName(object.picture.color)));
-			return;
-		}
-
-		sf::Text text(*f);
-		text.setString(object.picture.text);
-		text.setCharacterSize(static_cast<unsigned int>(object.picture.textSize));
-
-		const Color c = colorFromName(object.picture.color);
-		text.setFillColor(sf::Color(c.r, c.g, c.b, c.a));
-		text.setPosition({ -text.getLocalBounds().position.x, -text.getLocalBounds().position.y });
-
-		const int width = static_cast<int>(std::ceil(text.getLocalBounds().size.x));
-		const int height = static_cast<int>(std::ceil(text.getLocalBounds().size.y));
-
-		if (!visual.renderTexture.resize({ static_cast<unsigned int>(width), static_cast<unsigned int>(height) }))
-		{
-			std::cout << "error: failed to resize render texture" << std::endl;
-		}
-
-		visual.renderTexture.clear(sf::Color::Transparent);
-		visual.renderTexture.draw(text);
-	}
-
-	void SFMLWindow::buildImage(Object& object, CachedVisual& visual)
-	{
-		sf::Texture texture;
-
-		auto& imageFile = object.picture.file;
-
-		if (!texture.loadFromFile(imageFile))
-		{
-			throw std::runtime_error("SFML could not load the image " + imageFile);
-		}
-
-		sf::Sprite sprite(texture);
-
-		const int width = static_cast<int>(std::ceil(sprite.getLocalBounds().size.x));
-		const int height = static_cast<int>(std::ceil(sprite.getLocalBounds().size.y));
-
-		if (object.picture.flipHorizontal)
-		{
-			sprite.setTextureRect(sf::IntRect({ width, 0 }, { -width, height }));
-		}
-		else if (object.picture.flipVertical)
-		{
-			sprite.setTextureRect(sf::IntRect({ 0, height }, { width, -height }));
-		}
-
-		if (!visual.renderTexture.resize({ static_cast<unsigned int>(width), static_cast<unsigned int>(height) }))
-		{
-			std::cout << "error: failed to resize render texture" << std::endl;
-		}
-
-		visual.renderTexture.clear(sf::Color::Transparent);
-		visual.renderTexture.draw(sprite);
-	}
-
-	// A sprite of lines was already drawn, pixel by pixel, when the game loaded
-	// (see Bitmap); all that is left is to show that picture.
-	void SFMLWindow::buildLines(Object& object, CachedVisual& visual)
-	{
-		buildBitmap(object, visual, *object.bitmap);
-	}
-
-	// Shows a picture the engine drew itself: a sprite of lines, or text in
-	// the built-in font.
-	void SFMLWindow::buildBitmap(Object& object, CachedVisual& visual, const Bitmap& bitmap)
-	{
-		const auto width = static_cast<unsigned int>(bitmap.width > 0 ? bitmap.width : 1);
-		const auto height = static_cast<unsigned int>(bitmap.height > 0 ? bitmap.height : 1);
-
-		if (!visual.renderTexture.resize({ width, height }))
-		{
-			std::cout << "error: failed to resize render texture" << std::endl;
-		}
-
-		visual.renderTexture.clear(sf::Color::Transparent);
-
-		if (bitmap.rgba.empty())
-		{
-			return;
-		}
-
-		const sf::Image image(sf::Vector2u(width, height), bitmap.rgba.data());
-
-		sf::Texture texture;
-		if (!texture.loadFromImage(image))
-		{
-			std::cout << "error: SFML: failed to make a texture from the picture of '" << object.name << "'\n";
-			return;
-		}
-
-		visual.renderTexture.draw(sf::Sprite(texture));
-	}
-
-	void SFMLWindow::finalizeVisual(Object& object, CachedVisual& visual)
-	{
-		object.size.x = static_cast<float>(visual.renderTexture.getSize().x);
-		object.size.y = static_cast<float>(visual.renderTexture.getSize().y);
-		object.sizeKnown = true;
-
-		visual.renderTexture.display();
-		visual.sprite = std::make_unique<sf::Sprite>(visual.renderTexture.getTexture());
+		visual.sprite = std::make_unique<sf::Sprite>(texture);
+		const Vector2f size = object.pictureSize();
+		const sf::Vector2u made = texture.getSize();
+		visual.sprite->setScale({ size.x / static_cast<float>(made.x), size.y / static_cast<float>(made.y) });
 		visual.sprite->setPosition({ object.position.x, object.position.y });
+		visual.drawnAt = pictureScale();
 
-		object.visualDirty = false;
+		object.drawn.visualDirty = false;
 	}
 }

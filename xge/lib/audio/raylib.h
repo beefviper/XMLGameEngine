@@ -15,12 +15,8 @@
 
 namespace xge
 {
-	// The raylib Audio backend. Nothing outside this file, audio/raylib.cpp and
-	// AudioFactory::create (the one place that constructs one) ever names a
-	// raylib audio type - see audio/audio.h. raylib's audio device is its own,
-	// separate from its window (InitAudioDevice), so this works with any
-	// window backend, raylib's included. Each sound is one raylib Sound made
-	// from the engine's samples.
+	// raylib's audio device is apart from its window, so this goes with any
+	// window. Each sound is one raylib Sound of the engine's samples.
 	class RaylibAudio : public Audio
 	{
 	public:
@@ -31,7 +27,7 @@ namespace xge
 		RaylibAudio(const RaylibAudio&) = delete;
 		RaylibAudio& operator=(const RaylibAudio&) = delete;
 
-		void load(const std::vector<SoundDesc>& sounds) override;
+		void load(const std::vector<SoundDesc>& sounds, Resources& resources) override;
 		void play(const std::string& name) override;
 		void loop(const std::string& name) override;
 		void stop(const std::string& name) override;

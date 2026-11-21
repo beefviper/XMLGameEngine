@@ -19,7 +19,7 @@
   river (not on a log or a turtle, or on a turtle that has dived), is ridden
   off the side, hops into a hedge or a bay already filled, or runs out of
   time. A frog home is 50 points, and fills its bay; five home is a win.
-  Space starts and pauses, as do P and Escape.
+  Space starts; Pause pauses.
 
   How it is written:
   * Every lane of the river and the road is a group inside one group that
@@ -35,7 +35,10 @@
     run the frog's own actions: home, or lose.
   * The time is a variable of the clock that a state <timer> counts down;
     every new frog puts the clock back (<reset object="clock" />).
-  * Paused, game over and the win draw the board still underneath
+  * A lost frog <spawn>s what is left of it, flat or a splash, and <die>s;
+    that plays <once />, a skull last, and <then> counts the loss and
+    <reveal>s the next frog.
+  * Paused and over draw the board still underneath
     (<show state>).
 -->
 
@@ -48,6 +51,536 @@
     <variable name="cell">48</variable>
     <variable name="time">40</variable>
   </variables>
+  <styles>
+    <style name="banner"><size>96</size><color>color.green</color></style>
+    <style name="prompt"><size>32</size></style>
+    <style name="hud"><size>30</size></style>
+  </styles>
+  <objects>
+    <!-- a frog run over: flat, then a skull; then the next frog -->
+    <object name="splat">
+      <sprite name="flat"><bitmap from="squashed" /></sprite>
+      <sprite name="skull"><bitmap from="skull" /></sprite>
+      <animation>
+        <seconds>0.4</seconds>
+        <once />
+        <frame sprite="flat" />
+        <frame sprite="skull"><seconds>1</seconds></frame>
+        <then>
+          <dec variable="frog.lives" />
+          <reveal object="frog" />
+          <reset object="clock" />
+          <despawn />
+        </then>
+      </animation>
+      <most>1</most>
+    </object>
+    <!-- a frog in the water: rings spreading, then a skull; then the next frog -->
+    <object name="splash">
+      <sprite name="a"><bitmap from="splash-a" /></sprite>
+      <sprite name="b"><bitmap from="splash-b" /></sprite>
+      <sprite name="c"><bitmap from="splash-c" /></sprite>
+      <sprite name="skull"><bitmap from="skull" /></sprite>
+      <animation>
+        <seconds>0.2</seconds>
+        <once />
+        <frame sprite="a" />
+        <frame sprite="b" />
+        <frame sprite="c" />
+        <frame sprite="skull"><seconds>1</seconds></frame>
+        <then>
+          <dec variable="frog.lives" />
+          <reveal object="frog" />
+          <reset object="clock" />
+          <despawn />
+        </then>
+      </animation>
+      <most>1</most>
+    </object>
+  </objects>
+  <states>
+    <state name="title">
+      <objects>
+        <object name="title">
+          <sprite><text style="banner"><content>FROGGER</content></text></sprite>
+          <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
+        </object>
+        <object name="start">
+          <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
+          <position><x><centered /></x><y><centered><offset>40</offset></centered></y></position>
+        </object>
+      </objects>
+      <inputs>
+        <input button="space">
+          <push state="playing" />
+          <play sound="start" />
+        </input>
+      </inputs>
+    </state>
+    <state name="playing">
+      <objects>
+        <!-- scenery: the river, the bank, the road and the pavement -->
+        <object name="water" class="water">
+          <sprite><rectangle><width>window.right</width><height><multiply><value>5</value><value>cell</value></multiply></height><color>color.darkblue</color></rectangle></sprite>
+          <position><x>0</x><y><multiply><value>2</value><value>cell</value></multiply></y></position>
+          <collisions />
+        </object>
+        <object name="bank">
+          <sprite><rectangle><width>window.right</width><height>cell</height><color>color.purple</color></rectangle></sprite>
+          <position><x>0</x><y><multiply><value>7</value><value>cell</value></multiply></y></position>
+        </object>
+        <object name="pavement">
+          <sprite><rectangle><width>window.right</width><height>cell</height><color>color.purple</color></rectangle></sprite>
+          <position><x>0</x><y><multiply><value>13</value><value>cell</value></multiply></y></position>
+        </object>
+
+        <!-- home: five bays in a hedge -->
+        <object name="hedge" class="hazard">
+          <sprite><rectangle><width>window.right</width><height>cell</height><color>color.forestgreen</color></rectangle></sprite>
+          <position><x>0</x><y><multiply><value>1</value><value>cell</value></multiply></y></position>
+          <collisions />
+        </object>
+        <group name="pads" class="pads">
+          <columns>5</columns>
+          <rows>1</rows>
+          <padding><x>
+            <subtract>
+              <value><multiply><value>2</value><value>cell</value></multiply></value>
+              <value>40</value>
+            </subtract>
+          </x></padding>
+          <sprite name="empty"><rectangle><width>40</width><height>40</height><color>color.darkblue</color></rectangle></sprite>
+          <sprite name="home">
+            <bitmap from="pads-home" />
+          </sprite>
+          <position><x>
+            <add>
+              <value><multiply><value>2</value><value>cell</value></multiply></value>
+              <value>4</value>
+            </add>
+          </x><y><add><value><multiply><value>1</value><value>cell</value></multiply></value><value>4</value></add></y></position>
+          <collisions>
+            <collision object="frog">
+              <collision sprite="home"><trigger object="frog" action="lose" /></collision>
+              <collision sprite="empty">
+                <become sprite="home" />
+                <trigger object="frog" action="home" />
+              </collision>
+            </collision>
+          </collisions>
+        </group>
+
+        <!-- every lane of the river and the road wraps round at the sides -->
+        <group name="lanes">
+          <rows>1</rows>
+          <collisions>
+            <collision edge="horizontal"><wrap /></collision>
+          </collisions>
+
+          <!-- the river: logs, and turtles -->
+          <group name="river" class="logs">
+            <group name="logs">
+              <sprite>
+                <bitmap from="logs" />
+              </sprite>
+              <group name="logrow2">
+                <columns>3</columns>
+                <padding><x>
+                  <subtract>
+                    <value>
+                      <divide>
+                        <value><add><value>window.right</value><value>180</value></add></value>
+                        <value>3</value>
+                      </divide>
+                    </value>
+                    <value>180</value>
+                  </subtract>
+                </x></padding>
+                <position><x>20</x><y>
+                  <add>
+                    <value><multiply><value>2</value><value>cell</value></multiply></value>
+                    <value>6</value>
+                  </add>
+                </y></position>
+                <velocity><x>84</x></velocity>
+              </group>
+              <group name="logrow4">
+                <columns>2</columns>
+                <padding><x>
+                  <subtract>
+                    <value>
+                      <divide>
+                        <value><add><value>window.right</value><value>228</value></add></value>
+                        <value>2</value>
+                      </divide>
+                    </value>
+                    <value>228</value>
+                  </subtract>
+                </x></padding>
+                <sprite><bitmap from="logrow4" /></sprite>
+                <position><x>100</x><y>
+                  <add>
+                    <value><multiply><value>4</value><value>cell</value></multiply></value>
+                    <value>6</value>
+                  </add>
+                </y></position>
+                <velocity><x>120</x></velocity>
+              </group>
+              <group name="logrow5">
+                <columns>3</columns>
+                <padding><x>
+                  <subtract>
+                    <value>
+                      <divide>
+                        <value><add><value>window.right</value><value>132</value></add></value>
+                        <value>3</value>
+                      </divide>
+                    </value>
+                    <value>132</value>
+                  </subtract>
+                </x></padding>
+                <sprite><bitmap from="logrow5" /></sprite>
+                <position><x>0</x><y>
+                  <add>
+                    <value><multiply><value>5</value><value>cell</value></multiply></value>
+                    <value>6</value>
+                  </add>
+                </y></position>
+                <velocity><x>60</x></velocity>
+              </group>
+            </group>
+            <group name="turtlerow3">
+              <columns>4</columns>
+              <padding><x>
+                <subtract>
+                  <value>
+                    <divide>
+                      <value><add><value>window.right</value><value>80</value></add></value>
+                      <value>4</value>
+                    </divide>
+                  </value>
+                  <value>80</value>
+                </subtract>
+              </x></padding>
+              <sprite name="up">
+                <bitmap from="turtlerow3-up" />
+              </sprite>
+              <sprite name="under">
+                <bitmap from="turtlerow3-under" />
+              </sprite>
+              <position><x>60</x><y>
+                <add>
+                  <value><multiply><value>3</value><value>cell</value></multiply></value>
+                  <value>8</value>
+                </add>
+              </y></position>
+              <velocity><x>-96</x></velocity>
+              <collisions>
+                <collision object="frog" sprite="under"><trigger object="frog" action="drown" /></collision>
+              </collisions>
+              <timers>
+                <timer sprite="up"><after>3.5</after><become sprite="under" /></timer>
+                <timer sprite="under"><after>1.5</after><become sprite="up" /></timer>
+              </timers>
+            </group>
+            <group name="turtlerow6">
+              <columns>3</columns>
+              <padding><x>
+                <subtract>
+                  <value>
+                    <divide>
+                      <value><add><value>window.right</value><value>120</value></add></value>
+                      <value>3</value>
+                    </divide>
+                  </value>
+                  <value>120</value>
+                </subtract>
+              </x></padding>
+              <sprite>
+                <bitmap from="turtlerow6" />
+              </sprite>
+              <position><x>30</x><y>
+                <add>
+                  <value><multiply><value>6</value><value>cell</value></multiply></value>
+                  <value>8</value>
+                </add>
+              </y></position>
+              <velocity><x>-72</x></velocity>
+            </group>
+          </group>
+
+          <!-- the road: a car is 40 wide, the trucks 88 -->
+          <group name="traffic" class="hazard">
+            <sprite>
+              <bitmap from="traffic" />
+            </sprite>
+            <group name="truckrow8">
+              <columns>2</columns>
+              <padding><x>
+                <subtract>
+                  <value>
+                    <divide>
+                      <value><add><value>window.right</value><value>88</value></add></value>
+                      <value>2</value>
+                    </divide>
+                  </value>
+                  <value>88</value>
+                </subtract>
+              </x></padding>
+              <sprite>
+                <bitmap from="truckrow8" />
+              </sprite>
+              <position><x>100</x><y>
+                <add>
+                  <value><multiply><value>8</value><value>cell</value></multiply></value>
+                  <value>8</value>
+                </add>
+              </y></position>
+              <velocity><x>-78</x></velocity>
+            </group>
+            <!-- the white racing car, fast -->
+            <group name="carrow9">
+              <columns>2</columns>
+              <padding><x>
+                <subtract>
+                  <value>
+                    <divide>
+                      <value><add><value>window.right</value><value>40</value></add></value>
+                      <value>2</value>
+                    </divide>
+                  </value>
+                  <value>40</value>
+                </subtract>
+              </x></padding>
+              <sprite><bitmap><color>color.lightgrey</color></bitmap></sprite>
+              <position><x>60</x><y>
+                <add>
+                  <value><multiply><value>9</value><value>cell</value></multiply></value>
+                  <value>8</value>
+                </add>
+              </y></position>
+              <velocity><x>192</x></velocity>
+            </group>
+            <group name="carrow10">
+              <columns>4</columns>
+              <padding><x>
+                <subtract>
+                  <value>
+                    <divide>
+                      <value><add><value>window.right</value><value>40</value></add></value>
+                      <value>4</value>
+                    </divide>
+                  </value>
+                  <value>40</value>
+                </subtract>
+              </x></padding>
+              <sprite><bitmap><color>color.magenta</color></bitmap></sprite>
+              <position><x>40</x><y>
+                <add>
+                  <value><multiply><value>10</value><value>cell</value></multiply></value>
+                  <value>8</value>
+                </add>
+              </y></position>
+              <velocity><x>-96</x></velocity>
+            </group>
+            <!-- bulldozers -->
+            <group name="carrow11">
+              <columns>3</columns>
+              <padding><x>
+                <subtract>
+                  <value>
+                    <divide>
+                      <value><add><value>window.right</value><value>40</value></add></value>
+                      <value>3</value>
+                    </divide>
+                  </value>
+                  <value>40</value>
+                </subtract>
+              </x></padding>
+              <sprite><bitmap><color>color.green</color></bitmap></sprite>
+              <position><x>100</x><y>
+                <add>
+                  <value><multiply><value>11</value><value>cell</value></multiply></value>
+                  <value>8</value>
+                </add>
+              </y></position>
+              <velocity><x>72</x></velocity>
+            </group>
+            <group name="carrow12">
+              <columns>3</columns>
+              <padding><x>
+                <subtract>
+                  <value>
+                    <divide>
+                      <value><add><value>window.right</value><value>40</value></add></value>
+                      <value>3</value>
+                    </divide>
+                  </value>
+                  <value>40</value>
+                </subtract>
+              </x></padding>
+              <sprite><bitmap><color>color.yellow</color></bitmap></sprite>
+              <position><x>30</x><y>
+                <add>
+                  <value><multiply><value>12</value><value>cell</value></multiply></value>
+                  <value>8</value>
+                </add>
+              </y></position>
+              <velocity><x>-60</x></velocity>
+            </group>
+          </group>
+        </group>
+
+        <!-- the frog. Lives count down from 3; homes is how many are in. -->
+        <object name="frog" class="frog">
+          <sprite>
+            <bitmap from="frog" />
+          </sprite>
+          <position><x>
+            <add>
+              <value><multiply><value>6</value><value>cell</value></multiply></value>
+              <value>4</value>
+            </add>
+          </x><y><add><value><multiply><value>13</value><value>cell</value></multiply></value><value>8</value></add></y></position>
+          <collisions>
+            <!-- its body, not the tips of its legs: a car that only grazes them misses -->
+            <hitbox><horizontal>6</horizontal><vertical>4</vertical></hitbox>
+            <collision class="hazard" unless="pads"><trigger action="lose" /></collision>
+            <collision class="water" unless="logs"><trigger action="drown" /></collision>
+            <collision class="logs"><ride /></collision>
+            <collision edge="horizontal"><trigger action="lose" /></collision>
+          </collisions>
+          <actions>
+            <!-- out of play while what is left of it shows; then the next frog -->
+            <action name="lose">
+              <spawn object="splat" />
+              <play sound="squash" />
+              <die />
+            </action>
+            <action name="drown">
+              <spawn object="splash" />
+              <play sound="splash" />
+              <die />
+            </action>
+            <action name="home">
+              <inc variable="frog.homes" />
+              <inc variable="frog.score">
+                <add>
+                  <value>50</value>
+                  <value><multiply><value>10</value><value>clock.time</value></multiply></value>
+                </add>
+              </inc>
+              <reset />
+              <reset object="clock" />
+              <play sound="home" />
+            </action>
+            <action name="up">
+              <hop direction="up">cell</hop>
+              <play sound="hop" />
+            </action>
+            <action name="down">
+              <hop direction="down">cell</hop>
+              <play sound="hop" />
+            </action>
+            <action name="left">
+              <hop direction="left">cell</hop>
+              <play sound="hop" />
+            </action>
+            <action name="right">
+              <hop direction="right">cell</hop>
+              <play sound="hop" />
+            </action>
+          </actions>
+          <variables>
+            <variable name="lives">3</variable>
+            <variable name="homes">0</variable>
+            <variable name="score">0</variable>
+          </variables>
+        </object>
+
+        <!-- the time each frog has, counted down by the state's timer -->
+        <object name="clock">
+          <sprite><text style="hud"><content>TIME</content><number>clock.time</number><color>color.yellow</color></text></sprite>
+          <position><x><centered /></x><y><centered><divide><value>cell</value><value>2</value></divide></centered></y></position>
+          <variables>
+            <variable name="time">time</variable>
+          </variables>
+        </object>
+        <object name="score">
+          <sprite><text style="hud"><content>SCORE</content><number>frog.score</number></text></sprite>
+          <position><x>12</x><y><centered><divide><value>cell</value><value>2</value></divide></centered></y></position>
+        </object>
+        <object name="lives">
+          <sprite><text style="hud"><content>LIVES</content><number>frog.lives</number><color>color.green</color></text></sprite>
+          <position><x><right><offset>12</offset></right></x><y><centered><divide><value>cell</value><value>2</value></divide></centered></y></position>
+        </object>
+      </objects>
+      <inputs>
+        <input><button>w</button><button>up</button><trigger object="frog" action="up" /></input>
+        <input><button>s</button><button>down</button><trigger object="frog" action="down" /></input>
+        <input><button>a</button><button>left</button><trigger object="frog" action="left" /></input>
+        <input><button>d</button><button>right</button><trigger object="frog" action="right" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
+      </inputs>
+      <conditions>
+        <condition object="frog" variable="lives">
+          <atmost>0</atmost>
+          <become object="over.message" sprite="lost" />
+          <push state="over" />
+          <play sound="gameover" />
+        </condition>
+        <condition object="frog" variable="homes">
+          <atleast>5</atleast>
+          <become object="over.message" sprite="won" />
+          <push state="over" />
+          <play sound="win" />
+        </condition>
+        <condition object="clock" variable="time">
+          <atmost>0</atmost>
+          <trigger object="frog" action="lose" />
+        </condition>
+      </conditions>
+      <timers>
+        <timer>
+          <every>1</every>
+          <dec variable="clock.time" />
+        </timer>
+      </timers>
+    </state>
+    <state name="paused">
+      <objects>
+        <object name="paused">
+          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <position><x><centered /></x><y><centered /></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
+      </inputs>
+    </state>
+    <state name="over">
+      <objects>
+        <object name="message">
+          <sprite name="lost"><text style="banner"><content>GAME OVER</content><size>80</size><color>color.red</color></text></sprite>
+          <sprite name="won"><text style="banner"><content>YOU WIN</content></text></sprite>
+          <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
+        </object>
+        <object name="continue">
+          <sprite><text style="prompt"><content>spacebar to continue</content></text></sprite>
+          <position><x><centered /></x><y><centered><offset>40</offset></centered></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input button="space"><reset /></input>
+      </inputs>
+    </state>
+  </states>
   <sounds>
     <sound name="hop" wave="square">
       <volume>0.15</volume>
@@ -102,415 +635,174 @@
       <note pitch="C4" to="C3">0.7</note>
     </sound>
   </sounds>
-  <styles>
-    <style name="banner"><size>96</size><color>color.green</color></style>
-    <style name="prompt"><size>32</size></style>
-    <style name="hud"><size>30</size></style>
-  </styles>
-  <states>
-    <state name="mainmenu">
-      <objects>
-        <object name="title">
-          <sprite><text style="banner"><content>FROGGER</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
-        </object>
-        <object name="start">
-          <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 40</centered></y></position>
-        </object>
-      </objects>
-      <inputs>
-        <input button="space">
-          <push state="playing" />
-          <play sound="start" />
-        </input>
-      </inputs>
-    </state>
-    <state name="playing">
-      <objects>
-        <!-- scenery: the river, the bank, the road and the pavement -->
-        <object name="water" class="water">
-          <sprite><rectangle><width>window.right</width><height>5 * cell</height><color>color.darkblue</color></rectangle></sprite>
-          <position><x>0</x><y>2 * cell</y></position>
-          <collisions />
-        </object>
-        <object name="bank">
-          <sprite><rectangle><width>window.right</width><height>cell</height><color>color.purple</color></rectangle></sprite>
-          <position><x>0</x><y>7 * cell</y></position>
-        </object>
-        <object name="pavement">
-          <sprite><rectangle><width>window.right</width><height>cell</height><color>color.purple</color></rectangle></sprite>
-          <position><x>0</x><y>13 * cell</y></position>
-        </object>
-
-        <!-- home: five bays in a hedge -->
-        <object name="hedge" class="hazard">
-          <sprite><rectangle><width>window.right</width><height>cell</height><color>color.forestgreen</color></rectangle></sprite>
-          <position><x>0</x><y>1 * cell</y></position>
-          <collisions />
-        </object>
-        <group name="pads" class="pads">
-          <columns>5</columns>
-          <rows>1</rows>
-          <padding><x>2 * cell - 40</x></padding>
-          <sprite name="empty"><rectangle><width>40</width><height>40</height><color>color.darkblue</color></rectangle></sprite>
-          <sprite name="home">
-            <bitmap>
-              <row>.y......y.</row>
-              <row>yyy....yyy</row>
-              <row>.yy****yy.</row>
-              <row>..******..</row>
-              <row>.********.</row>
-              <row>.***yy***.</row>
-              <row>yy******yy</row>
-              <row>.y......y.</row>
-              <scale>4</scale>
-              <color>color.green</color>
-              <color char="y">color.yellow</color>
-            </bitmap>
-          </sprite>
-          <position><x>2 * cell + 4</x><y>1 * cell + 4</y></position>
-          <collisions>
-            <collision object="frog" sprite="home"><trigger object="frog" action="lose" /></collision>
-            <collision object="frog" sprite="empty">
-              <become sprite="home" />
-              <trigger object="frog" action="home" />
-            </collision>
-          </collisions>
-        </group>
-
-        <!-- every lane of the river and the road wraps round at the sides -->
-        <group name="lanes">
-          <rows>1</rows>
-          <collisions>
-            <collision edge="horizontal"><wrap /></collision>
-          </collisions>
-
-          <!-- the river: logs, and turtles -->
-          <group name="river" class="logs">
-            <group name="logs">
-              <sprite>
-                <bitmap>
-                  <row>.****************************.</row>
-                  <row>******************************</row>
-                  <row>**oo*******oo*********oo******</row>
-                  <row>*******oo********oo*******oo**</row>
-                  <row>******************************</row>
-                  <row>.****************************.</row>
-                  <scale>6</scale>
-                  <color>color.brown</color>
-                  <color char="o">color.orange</color>
-                </bitmap>
-              </sprite>
-              <group name="logrow2">
-                <columns>3</columns>
-                <padding><x>(window.right + 180) / 3 - 180</x></padding>
-                <position><x>20</x><y>2 * cell + 6</y></position>
-                <velocity><x>1.4</x></velocity>
-              </group>
-              <group name="logrow4">
-                <columns>2</columns>
-                <padding><x>(window.right + 228) / 2 - 228</x></padding>
-                <sprite><bitmap><row>.************************************.</row><row>**************************************</row><row>**oo*******oo*********oo*******oo*****</row><row>*******oo********oo*******oo*******oo*</row><row>**************************************</row><row>.************************************.</row></bitmap></sprite>
-                <position><x>100</x><y>4 * cell + 6</y></position>
-                <velocity><x>2</x></velocity>
-              </group>
-              <group name="logrow5">
-                <columns>3</columns>
-                <padding><x>(window.right + 132) / 3 - 132</x></padding>
-                <sprite><bitmap><row>.********************.</row><row>**********************</row><row>**oo*******oo*********</row><row>*******oo********oo***</row><row>**********************</row><row>.********************.</row></bitmap></sprite>
-                <position><x>0</x><y>5 * cell + 6</y></position>
-                <velocity><x>1</x></velocity>
-              </group>
-            </group>
-            <group name="turtlerow3">
-              <columns>4</columns>
-              <padding><x>(window.right + 80) / 4 - 80</x></padding>
-              <sprite name="up">
-                <bitmap>
-                  <row>....**........**....</row>
-                  <row>.gg****gg..gg****gg.</row>
-                  <row>..******....******..</row>
-                  <row>.********..********.</row>
-                  <row>.********..********.</row>
-                  <row>..******....******..</row>
-                  <row>.gg****gg..gg****gg.</row>
-                  <row>....**........**....</row>
-                  <scale>4</scale>
-                  <color>color.red</color>
-                  <color char="g">color.green</color>
-                </bitmap>
-              </sprite>
-              <sprite name="under">
-                <bitmap>
-                  <row>....................</row>
-                  <row>....................</row>
-                  <row>..******....******..</row>
-                  <row>.*......*..*......*.</row>
-                  <row>.*......*..*......*.</row>
-                  <row>..******....******..</row>
-                  <row>....................</row>
-                  <row>....................</row>
-                  <scale>4</scale>
-                  <color>color.blue</color>
-                </bitmap>
-              </sprite>
-              <position><x>60</x><y>3 * cell + 8</y></position>
-              <velocity><x>-1.6</x></velocity>
-              <collisions>
-                <collision object="frog" sprite="under"><trigger object="frog" action="drown" /></collision>
-              </collisions>
-              <timers>
-                <timer sprite="up"><after>3.5</after><become sprite="under" /></timer>
-                <timer sprite="under"><after>1.5</after><become sprite="up" /></timer>
-              </timers>
-            </group>
-            <group name="turtlerow6">
-              <columns>3</columns>
-              <padding><x>(window.right + 120) / 3 - 120</x></padding>
-              <sprite>
-                <bitmap>
-                  <row>....**........**........**....</row>
-                  <row>.gg****gg..gg****gg..gg****gg.</row>
-                  <row>..******....******....******..</row>
-                  <row>.********..********..********.</row>
-                  <row>.********..********..********.</row>
-                  <row>..******....******....******..</row>
-                  <row>.gg****gg..gg****gg..gg****gg.</row>
-                  <row>....**........**........**....</row>
-                  <scale>4</scale>
-                  <color>color.red</color>
-                  <color char="g">color.green</color>
-                </bitmap>
-              </sprite>
-              <position><x>30</x><y>6 * cell + 8</y></position>
-              <velocity><x>-1.2</x></velocity>
-            </group>
-          </group>
-
-          <!-- the road: a car is 40 wide, the trucks 88 -->
-          <group name="traffic" class="hazard">
-            <sprite>
-              <bitmap>
-                <row>..kk..kk..</row>
-                <row>**********</row>
-                <row>**ww***ww*</row>
-                <row>**********</row>
-                <row>**********</row>
-                <row>**ww***ww*</row>
-                <row>**********</row>
-                <row>..kk..kk..</row>
-                <scale>4</scale>
-                <color char="k">color.black</color>
-                <color char="w">color.white</color>
-              </bitmap>
-            </sprite>
-            <group name="truckrow8">
-              <columns>2</columns>
-              <padding><x>(window.right + 88) / 2 - 88</x></padding>
-              <sprite>
-                <bitmap>
-                  <row>.kk..kk..........kk..kk.</row>
-                  <row>****.***************....</row>
-                  <row>*ww*.***************....</row>
-                  <row>****.***************....</row>
-                  <row>****.***************....</row>
-                  <row>*ww*.***************....</row>
-                  <row>****.***************....</row>
-                  <row>.kk..kk..........kk..kk.</row>
-                  <color>color.white</color>
-                </bitmap>
-              </sprite>
-              <position><x>100</x><y>8 * cell + 8</y></position>
-              <velocity><x>-1.3</x></velocity>
-            </group>
-            <!-- the white racing car, fast -->
-            <group name="carrow9">
-              <columns>2</columns>
-              <padding><x>(window.right + 40) / 2 - 40</x></padding>
-              <sprite><bitmap><color>color.lightgrey</color></bitmap></sprite>
-              <position><x>60</x><y>9 * cell + 8</y></position>
-              <velocity><x>3.2</x></velocity>
-            </group>
-            <group name="carrow10">
-              <columns>4</columns>
-              <padding><x>(window.right + 40) / 4 - 40</x></padding>
-              <sprite><bitmap><color>color.magenta</color></bitmap></sprite>
-              <position><x>40</x><y>10 * cell + 8</y></position>
-              <velocity><x>-1.6</x></velocity>
-            </group>
-            <!-- bulldozers -->
-            <group name="carrow11">
-              <columns>3</columns>
-              <padding><x>(window.right + 40) / 3 - 40</x></padding>
-              <sprite><bitmap><color>color.green</color></bitmap></sprite>
-              <position><x>100</x><y>11 * cell + 8</y></position>
-              <velocity><x>1.2</x></velocity>
-            </group>
-            <group name="carrow12">
-              <columns>3</columns>
-              <padding><x>(window.right + 40) / 3 - 40</x></padding>
-              <sprite><bitmap><color>color.yellow</color></bitmap></sprite>
-              <position><x>30</x><y>12 * cell + 8</y></position>
-              <velocity><x>-1</x></velocity>
-            </group>
-          </group>
-        </group>
-
-        <!-- the frog. Lives count down from 3; homes is how many are in. -->
-        <object name="frog" class="frog">
-          <sprite>
-            <bitmap>
-              <row>.y......y.</row>
-              <row>yyy....yyy</row>
-              <row>.yy****yy.</row>
-              <row>..*k**k*..</row>
-              <row>.********.</row>
-              <row>.***yy***.</row>
-              <row>yy******yy</row>
-              <row>.y......y.</row>
-              <scale>4</scale>
-              <color>color.green</color>
-              <color char="y">color.yellow</color>
-              <color char="k">color.black</color>
-            </bitmap>
-          </sprite>
-          <position><x>6 * cell + 4</x><y>13 * cell + 8</y></position>
-          <collisions>
-            <collision class="hazard" unless="pads"><trigger action="lose" /></collision>
-            <collision class="water" unless="logs"><trigger action="drown" /></collision>
-            <collision class="logs"><ride /></collision>
-            <collision edge="horizontal"><trigger action="lose" /></collision>
-          </collisions>
-          <actions>
-            <action name="lose">
-              <dec variable="frog.lives" />
-              <reset />
-              <reset object="clock" />
-              <play sound="squash" />
-            </action>
-            <action name="drown">
-              <dec variable="frog.lives" />
-              <reset />
-              <reset object="clock" />
-              <play sound="splash" />
-            </action>
-            <action name="home">
-              <inc variable="frog.homes" />
-              <inc variable="frog.score">50 + 10 * clock.time</inc>
-              <reset />
-              <reset object="clock" />
-              <play sound="home" />
-            </action>
-            <action name="up">
-              <hop direction="up">cell</hop>
-              <play sound="hop" />
-            </action>
-            <action name="down">
-              <hop direction="down">cell</hop>
-              <play sound="hop" />
-            </action>
-            <action name="left">
-              <hop direction="left">cell</hop>
-              <play sound="hop" />
-            </action>
-            <action name="right">
-              <hop direction="right">cell</hop>
-              <play sound="hop" />
-            </action>
-          </actions>
-          <variables>
-            <variable name="lives">3</variable>
-            <variable name="homes">0</variable>
-            <variable name="score">0</variable>
-          </variables>
-        </object>
-
-        <!-- the time each frog has, counted down by the state's timer -->
-        <object name="clock">
-          <sprite><text style="hud"><content>TIME</content><number>clock.time</number><color>color.yellow</color></text></sprite>
-          <position><x><centered /></x><y><centered>cell / 2</centered></y></position>
-          <variables>
-            <variable name="time">time</variable>
-          </variables>
-        </object>
-        <object name="score">
-          <sprite><text style="hud"><content>SCORE</content><number>frog.score</number></text></sprite>
-          <position><x>12</x><y><centered>cell / 2</centered></y></position>
-        </object>
-        <object name="lives">
-          <sprite><text style="hud"><content>LIVES</content><number>frog.lives</number><color>color.green</color></text></sprite>
-          <position><x>window.right - 12 - lives.width</x><y><centered>cell / 2</centered></y></position>
-        </object>
-      </objects>
-      <inputs>
-        <input><button>w</button><button>up</button><trigger object="frog" action="up" /></input>
-        <input><button>s</button><button>down</button><trigger object="frog" action="down" /></input>
-        <input><button>a</button><button>left</button><trigger object="frog" action="left" /></input>
-        <input><button>d</button><button>right</button><trigger object="frog" action="right" /></input>
-        <input><button>space</button><button>p</button><button>escape</button><push state="paused" /></input>
-      </inputs>
-      <conditions>
-        <condition object="frog" variable="lives">
-          <atmost>0</atmost>
-          <push state="gameover" />
-          <play sound="gameover" />
-        </condition>
-        <condition object="frog" variable="homes">
-          <atleast>5</atleast>
-          <push state="youwin" />
-          <play sound="win" />
-        </condition>
-        <condition object="clock" variable="time">
-          <atmost>0</atmost>
-          <trigger object="frog" action="lose" />
-        </condition>
-      </conditions>
-      <timers>
-        <timer>
-          <every>1</every>
-          <dec variable="clock.time" />
-        </timer>
-      </timers>
-    </state>
-    <state name="paused">
-      <objects>
-        <object name="paused">
-          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
-          <position><x><centered /></x><y><centered /></y></position>
-        </object>
-      </objects>
-      <shows>
-        <show state="playing" />
-      </shows>
-      <inputs>
-        <input><button>space</button><button>p</button><button>escape</button><pop /></input>
-      </inputs>
-    </state>
-    <state name="gameover">
-      <objects>
-        <object name="message">
-          <sprite><text style="banner"><content>GAME OVER</content><size>80</size><color>color.red</color></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center - 60</centered></y></position>
-        </object>
-        <object name="continue">
-          <sprite><text style="prompt"><content>spacebar to continue</content></text></sprite>
-          <position><x><centered /></x><y><centered>window.height.center + 40</centered></y></position>
-        </object>
-      </objects>
-      <shows>
-        <show state="playing" />
-      </shows>
-      <inputs>
-        <input button="space"><reset /></input>
-      </inputs>
-    </state>
-    <state name="youwin" from="gameover">
-      <objects>
-        <object name="message">
-          <sprite><text style="banner"><content>YOU WIN</content></text></sprite>
-        </object>
-      </objects>
-    </state>
-  </states>
+  <pictures>
+    <bitmap name="pads-home">
+      <row>.y......y.</row>
+      <row>yyy....yyy</row>
+      <row>.yy****yy.</row>
+      <row>..******..</row>
+      <row>.********.</row>
+      <row>.***yy***.</row>
+      <row>yy******yy</row>
+      <row>.y......y.</row>
+      <scale>4</scale>
+      <color>color.green</color>
+      <color char="y">color.yellow</color>
+    </bitmap>
+    <bitmap name="logs">
+      <row>.****************************.</row>
+      <row>******************************</row>
+      <row>**oo*******oo*********oo******</row>
+      <row>*******oo********oo*******oo**</row>
+      <row>******************************</row>
+      <row>.****************************.</row>
+      <scale>6</scale>
+      <color>color.brown</color>
+      <color char="o">color.orange</color>
+    </bitmap>
+    <bitmap name="logrow4"><row>.************************************.</row><row>**************************************</row><row>**oo*******oo*********oo*******oo*****</row><row>*******oo********oo*******oo*******oo*</row><row>**************************************</row><row>.************************************.</row></bitmap>
+    <bitmap name="logrow5"><row>.********************.</row><row>**********************</row><row>**oo*******oo*********</row><row>*******oo********oo***</row><row>**********************</row><row>.********************.</row></bitmap>
+    <bitmap name="turtlerow3-up">
+      <row>....**........**....</row>
+      <row>.gg****gg..gg****gg.</row>
+      <row>..******....******..</row>
+      <row>.********..********.</row>
+      <row>.********..********.</row>
+      <row>..******....******..</row>
+      <row>.gg****gg..gg****gg.</row>
+      <row>....**........**....</row>
+      <scale>4</scale>
+      <color>color.red</color>
+      <color char="g">color.green</color>
+    </bitmap>
+    <bitmap name="turtlerow3-under">
+      <row>....................</row>
+      <row>....................</row>
+      <row>..******....******..</row>
+      <row>.*......*..*......*.</row>
+      <row>.*......*..*......*.</row>
+      <row>..******....******..</row>
+      <row>....................</row>
+      <row>....................</row>
+      <scale>4</scale>
+      <color>color.blue</color>
+    </bitmap>
+    <bitmap name="turtlerow6">
+      <row>....**........**........**....</row>
+      <row>.gg****gg..gg****gg..gg****gg.</row>
+      <row>..******....******....******..</row>
+      <row>.********..********..********.</row>
+      <row>.********..********..********.</row>
+      <row>..******....******....******..</row>
+      <row>.gg****gg..gg****gg..gg****gg.</row>
+      <row>....**........**........**....</row>
+      <scale>4</scale>
+      <color>color.red</color>
+      <color char="g">color.green</color>
+    </bitmap>
+    <bitmap name="traffic">
+      <row>..kk..kk..</row>
+      <row>**********</row>
+      <row>**ww***ww*</row>
+      <row>**********</row>
+      <row>**********</row>
+      <row>**ww***ww*</row>
+      <row>**********</row>
+      <row>..kk..kk..</row>
+      <scale>4</scale>
+      <color char="k">color.black</color>
+      <color char="w">color.white</color>
+    </bitmap>
+    <bitmap name="truckrow8">
+      <row>.kk..kk..........kk..kk.</row>
+      <row>****.***************....</row>
+      <row>*ww*.***************....</row>
+      <row>****.***************....</row>
+      <row>****.***************....</row>
+      <row>*ww*.***************....</row>
+      <row>****.***************....</row>
+      <row>.kk..kk..........kk..kk.</row>
+      <color>color.white</color>
+    </bitmap>
+    <bitmap name="frog">
+      <row>.y......y.</row>
+      <row>yyy....yyy</row>
+      <row>.yy****yy.</row>
+      <row>..*k**k*..</row>
+      <row>.********.</row>
+      <row>.***yy***.</row>
+      <row>yy******yy</row>
+      <row>.y......y.</row>
+      <scale>4</scale>
+      <color>color.green</color>
+      <color char="y">color.yellow</color>
+      <color char="k">color.black</color>
+    </bitmap>
+    <!-- a frog lost: squashed flat, or a splash in rings, and then a skull -->
+    <bitmap name="squashed">
+      <row>..........</row>
+      <row>..........</row>
+      <row>y........y</row>
+      <row>yy.****.yy</row>
+      <row>.********.</row>
+      <row>yy******yy</row>
+      <row>y.y.**.y.y</row>
+      <row>..........</row>
+      <scale>4</scale>
+      <color>color.green</color>
+      <color char="y">color.yellow</color>
+    </bitmap>
+    <bitmap name="skull">
+      <row>...****...</row>
+      <row>..******..</row>
+      <row>..*k**k*..</row>
+      <row>..******..</row>
+      <row>...*kk*...</row>
+      <row>.*.****.*.</row>
+      <row>..*....*..</row>
+      <row>.*......*.</row>
+      <scale>4</scale>
+      <color>color.white</color>
+      <color char="k">color.black</color>
+    </bitmap>
+    <bitmap name="splash-a">
+      <row>..........</row>
+      <row>..........</row>
+      <row>....bb....</row>
+      <row>...b..b...</row>
+      <row>...b..b...</row>
+      <row>....bb....</row>
+      <row>..........</row>
+      <row>..........</row>
+      <scale>4</scale>
+      <color>color.white</color>
+      <color char="b">color.cyan</color>
+    </bitmap>
+    <bitmap name="splash-b">
+      <row>..........</row>
+      <row>..bbbbbb..</row>
+      <row>.b......b.</row>
+      <row>b...bb...b</row>
+      <row>b...bb...b</row>
+      <row>.b......b.</row>
+      <row>..bbbbbb..</row>
+      <row>..........</row>
+      <scale>4</scale>
+      <color>color.white</color>
+      <color char="b">color.cyan</color>
+    </bitmap>
+    <bitmap name="splash-c">
+      <row>b..b..b..b</row>
+      <row>..........</row>
+      <row>b........b</row>
+      <row>..........</row>
+      <row>..........</row>
+      <row>b........b</row>
+      <row>..........</row>
+      <row>b..b..b..b</row>
+      <scale>4</scale>
+      <color>color.white</color>
+      <color char="b">color.cyan</color>
+    </bitmap>
+  </pictures>
 </game>

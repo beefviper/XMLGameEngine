@@ -21,7 +21,7 @@ namespace xge
 	class GameStage;
 
 	// One loaded game and the engine running it, driven from a Qt timer
-	// instead of Engine::loop(), so the application keeps its own event loop
+	// instead of Engine::run(), so the application keeps its own event loop
 	// (and the user can pause, step and edit the game between frames).
 	class GameSession : public QObject
 	{
@@ -112,8 +112,9 @@ namespace xge
 		QTimer timer;
 		QElapsedTimer clock;
 		qint64 framePeriodNs{ 16'666'667 };
+		// When the last frame was, and when the next is due.
 		qint64 lastNs{ 0 };
-		qint64 owedNs{ 0 };
+		qint64 dueNs{ 0 };
 		bool playing{ false };
 
 		// True while load() or applyOptions() is replacing the game or its

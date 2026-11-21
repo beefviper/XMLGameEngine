@@ -23,6 +23,9 @@ namespace xge
 	// against its file); nullopt goes back to a new start each time.
 	void fixRandomSeed(std::optional<unsigned int> value) noexcept;
 
+	// The seed fixRandomSeed last gave, so a caller can put it back.
+	std::optional<unsigned int> fixedRandomSeed() noexcept;
+
 	// A number from min to max (either order).
 	float randomBetween(float min, float max);
 

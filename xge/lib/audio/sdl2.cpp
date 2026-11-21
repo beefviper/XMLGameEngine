@@ -59,14 +59,14 @@ namespace xge
 		quitAudio();
 	}
 
-	void SDL2Audio::load(const std::vector<SoundDesc>& sounds)
+	void SDL2Audio::load(const std::vector<SoundDesc>& sounds, Resources& resources)
 	{
 		std::unordered_map<std::string, Voice> made;
 		for (const SoundDesc& sound : sounds)
 		{
 			Voice voice;
-			voice.samples = synthesize(sound);
-			voice.position = voice.samples.size();
+			voice.samples = resources.samples(sound);
+			voice.position = voice.samples->size();
 			made[sound.name] = std::move(voice);
 		}
 
@@ -94,11 +94,11 @@ namespace xge
 		if (found != voices.end())
 		{
 			Voice& voice = found->second;
-			if (!voice.looping || voice.position >= voice.samples.size())
+			if (!voice.looping || voice.position >= voice.samples->size())
 			{
 				voice.position = 0;
 			}
-			voice.looping = !voice.samples.empty();
+			voice.looping = !voice.samples->empty();
 		}
 		SDL_UnlockAudioDevice(device);
 	}
@@ -109,7 +109,7 @@ namespace xge
 		const auto found = voices.find(name);
 		if (found != voices.end())
 		{
-			found->second.position = found->second.samples.size();
+			found->second.position = found->second.samples->size();
 			found->second.looping = false;
 		}
 		SDL_UnlockAudioDevice(device);
@@ -120,7 +120,7 @@ namespace xge
 		SDL_LockAudioDevice(device);
 		for (auto& [name, voice] : voices)
 		{
-			voice.position = voice.samples.size();
+			voice.position = voice.samples->size();
 			voice.looping = false;
 		}
 		SDL_UnlockAudioDevice(device);
@@ -140,10 +140,10 @@ namespace xge
 
 			for (auto& [name, voice] : self->voices)
 			{
-				if (voice.position < voice.samples.size())
+				if (voice.position < voice.samples->size())
 				{
-					mixed += voice.samples[voice.position++];
-					if (voice.looping && voice.position == voice.samples.size())
+					mixed += (*voice.samples)[voice.position++];
+					if (voice.looping && voice.position == voice.samples->size())
 					{
 						voice.position = 0;
 					}
