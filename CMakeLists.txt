@@ -82,6 +82,7 @@ set(ENGINE_SOURCES
 	"xge/lib/play/collision.cpp"
 	"xge/lib/play/executor.cpp"
 	"xge/lib/window/window.cpp"
+	"xge/lib/window/factory.cpp"
 	"xge/lib/window/null.cpp"
 	"xge/lib/window/picture.cpp"
 	"xge/lib/audio/sound.cpp"

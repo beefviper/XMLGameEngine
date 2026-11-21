@@ -154,6 +154,7 @@ TEST_CASE("a generated program carries the engine's files unchanged, its reader 
 	}
 	REQUIRE(copied.count("engine/engine.cpp") == 1);
 	REQUIRE(copied.count("game/game.cpp") == 1);
+	REQUIRE(copied.count("window/window.cpp") == 1);
 	// The engine's reader comes, with the node it reads through and the tree
 	// the game is written as, but no XML library and nothing that opens a file.
 	for (const char* reader : { "xml/document.h", "xml/tree.cpp", "load/reading.cpp", "load/merge.cpp", "load/xml.cpp" })
@@ -161,7 +162,7 @@ TEST_CASE("a generated program carries the engine's files unchanged, its reader 
 		INFO(reader);
 		CHECK(copied.count(reader) == 1);
 	}
-	for (const char* left : { "load/file.cpp", "xml/document.cpp", "xml/pugixml.cpp", "xml/tinyxml2.cpp", "xml/xerces.cpp", "xml/rapidxml.cpp", "load/xsd.h", "window/window.cpp", "audio/audio.cpp", "engine/backends.cpp",
+	for (const char* left : { "load/file.cpp", "xml/document.cpp", "xml/pugixml.cpp", "xml/tinyxml2.cpp", "xml/xerces.cpp", "xml/rapidxml.cpp", "load/xsd.h", "window/factory.cpp", "audio/audio.cpp", "engine/backends.cpp",
 		"window/raylib.h", "window/sdl2.h", "window/opengl.h", "audio/raylib.h", "audio/sdl2.h", "engine/folder.h" })
 	{
 		INFO(left);

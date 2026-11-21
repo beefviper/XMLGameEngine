@@ -10,7 +10,7 @@
      which reads the game from the tree of C++ data built in (xml/tree);
      not load/file, which reads a file, the XML libraries, or the factories
      that choose among them
-     (window/window.cpp, audio/audio.cpp, engine/backends.cpp). The verbs are a file
+     (window/factory.cpp, audio/audio.cpp, engine/backends.cpp). The verbs are a file
      each (lib/verbs/, listed in its all.cpp): a new one is added here too. -->
 <engine>
   <file>lib/game/types.h</file>
@@ -174,6 +174,7 @@
   <file>lib/picture/shapes.h</file>
   <file>lib/picture/shapes.cpp</file>
   <file>lib/window/window.h</file>
+  <file>lib/window/window.cpp</file>
   <file>lib/window/sfml.h</file>
   <file>lib/window/sfml.cpp</file>
   <file>lib/engine/engine.h</file>
