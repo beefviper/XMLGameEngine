@@ -234,7 +234,7 @@ TEST_CASE("fivedice: what the computer would keep, and where a poor roll goes", 
 TEST_CASE("fivedice: a whole game against the computer comes to its end", "[fivedice]")
 {
 	Dice play(true);
-	for (int i = 0; i < 8000 && play.state() == "playing"; ++i)
+	for (int i = 0; i < 16000 && play.state() == "playing"; ++i)
 	{
 		if (play.card("player") == 1)
 		{

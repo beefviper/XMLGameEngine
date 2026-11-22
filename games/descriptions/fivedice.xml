@@ -341,24 +341,28 @@
               <condition variable="rolls"><below>3</below>
                 <trigger object="dice" action="roll" />
                 <inc variable="card.rolls" />
+                <set variable="card.idle">0</set>
+                <set variable="card.sinceroll">0</set>
                 <play sound="roll" />
               </condition>
               <!-- the roller's open boxes show what the roll would score -->
               <condition variable="player"><equal>1</equal><become object="one" sprite="open" from="waiting" /></condition>
               <condition variable="player"><equal>2</equal><become object="two" sprite="open" from="waiting" /></condition>
             </action>
-            <action name="keep1"><trigger object="dice.1" action="keep" /></action>
-            <action name="keep2"><trigger object="dice.2" action="keep" /></action>
-            <action name="keep3"><trigger object="dice.3" action="keep" /></action>
-            <action name="keep4"><trigger object="dice.4" action="keep" /></action>
-            <action name="keep5"><trigger object="dice.5" action="keep" /></action>
+            <action name="keep1"><trigger object="dice.1" action="keep" /><set variable="card.idle">0</set></action>
+            <action name="keep2"><trigger object="dice.2" action="keep" /><set variable="card.idle">0</set></action>
+            <action name="keep3"><trigger object="dice.3" action="keep" /><set variable="card.idle">0</set></action>
+            <action name="keep4"><trigger object="dice.4" action="keep" /><set variable="card.idle">0</set></action>
+            <action name="keep5"><trigger object="dice.5" action="keep" /><set variable="card.idle">0</set></action>
             <action name="up">
               <dec variable="card.at" />
+              <set variable="card.idle">0</set>
               <condition variable="at"><below>1</below><set variable="card.at">13</set></condition>
               <play sound="tick" />
             </action>
             <action name="down">
               <inc variable="card.at" />
+              <set variable="card.idle">0</set>
               <condition variable="at"><above>13</above><set variable="card.at">1</set></condition>
               <play sound="tick" />
             </action>
@@ -370,8 +374,7 @@
             <action name="next">
               <become object="one" sprite="waiting" from="open" />
               <become object="two" sprite="waiting" from="open" />
-              <!-- the computer waits for the next ready: until then the live numbers still read the turn just written -->
-              <set variable="card.ready">0</set>
+              <set variable="card.idle">0</set>
               <set variable="card.rolls">0</set>
               <set group="dice" variable="kept">0</set>
               <trigger object="dice" action="show" />
@@ -391,8 +394,9 @@
             <variable name="player">1</variable>
             <variable name="rolls">0</variable>
             <variable name="at">1</variable>
-            <!-- the computer presses a key only while ready, which comes and goes -->
-            <variable name="ready">0</variable>
+            <!-- the computer's pauses: the seconds since the last key, and since the last roll -->
+            <variable name="idle">0</variable>
+            <variable name="sinceroll">0</variable>
             <variable name="most" update="live">
               <largest>
                     <value>dice.1.same</value>
@@ -522,7 +526,7 @@
             </variable>
           </variables>
           <timers>
-            <timer><every>0.25</every><set variable="card.ready"><subtract><value>1</value><value>card.ready</value></subtract></set></timer>
+            <timer><every>0.05</every><inc variable="card.idle">0.05</inc><inc variable="card.sinceroll">0.05</inc></timer>
           </timers>
         </object>
         <object name="rolls">
@@ -710,20 +714,36 @@
         that scores most over what that box is usually worth, and writes.
       -->
       <computer>
+        <!--
+          Its pauses, as a person's: a moment before the first roll, a
+          look at each roll, a short wait between keeps, a shorter walk
+          down the card, and a moment on the box before writing. A pause
+          also lets the live numbers catch up with the key before.
+        -->
         <condition object="card" sprite="computer">
-          <condition object="card" variable="ready"><equal>1</equal>
-            <condition object="card" variable="rolls"><equal>0</equal><hold button="f6" /></condition>
+          <condition object="card" variable="rolls"><equal>0</equal>
+            <condition object="card" variable="idle"><atleast>0.8</atleast><hold button="f6" /></condition>
+          </condition>
+          <condition object="card" variable="sinceroll"><atleast>1.2</atleast>
             <condition object="card" variable="rolling"><equal>1</equal>
-              <condition object="dice.1" variable="change"><equal>1</equal><hold button="f1" /></condition>
-              <condition object="dice.2" variable="change"><equal>1</equal><hold button="f2" /></condition>
-              <condition object="dice.3" variable="change"><equal>1</equal><hold button="f3" /></condition>
-              <condition object="dice.4" variable="change"><equal>1</equal><hold button="f4" /></condition>
-              <condition object="dice.5" variable="change"><equal>1</equal><hold button="f5" /></condition>
-              <condition object="card" variable="changes"><equal>0</equal><hold button="f6" /></condition>
+              <condition object="card" variable="idle"><atleast>0.4</atleast>
+                <condition object="dice.1" variable="change"><equal>1</equal><hold button="f1" /></condition>
+                <condition object="dice.2" variable="change"><equal>1</equal><hold button="f2" /></condition>
+                <condition object="dice.3" variable="change"><equal>1</equal><hold button="f3" /></condition>
+                <condition object="dice.4" variable="change"><equal>1</equal><hold button="f4" /></condition>
+                <condition object="dice.5" variable="change"><equal>1</equal><hold button="f5" /></condition>
+              </condition>
+              <condition object="card" variable="idle"><atleast>0.6</atleast>
+                <condition object="card" variable="changes"><equal>0</equal><hold button="f6" /></condition>
+              </condition>
             </condition>
             <condition object="card" variable="writing"><equal>1</equal>
-              <condition object="two" variable="aim"><equal>1</equal><hold button="f9" /></condition>
-              <condition object="two" variable="aim" total="sum"><equal>0</equal><hold button="f8" /></condition>
+              <condition object="two" variable="aim" total="sum"><equal>0</equal>
+                <condition object="card" variable="idle"><atleast>0.25</atleast><hold button="f8" /></condition>
+              </condition>
+              <condition object="card" variable="idle"><atleast>0.8</atleast>
+                <condition object="two" variable="aim"><equal>1</equal><hold button="f9" /></condition>
+              </condition>
             </condition>
           </condition>
         </condition>
