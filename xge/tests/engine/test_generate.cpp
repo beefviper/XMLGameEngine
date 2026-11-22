@@ -322,7 +322,7 @@ TEST_CASE("windows-cpp lists every part of a game it has no words for yet, then 
 	CHECK_FALSE(fs::exists(folder.path / "out"));
 }
 
-TEST_CASE("the games windows-cpp covers: the rest stop with their list", "[generate]")
+TEST_CASE("the games windows-cpp covers: the rest stop with their list", "[.long][generate]")
 {
 	// A line here for each game it learns to write (plan A5).
 	const std::set<std::string> covered{ "pong_min" };

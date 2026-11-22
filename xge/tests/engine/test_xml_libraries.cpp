@@ -75,47 +75,47 @@ namespace
 	}
 }
 
-TEST_CASE("every XML library loads these games the same: pacman, pong, pong_min, snake, tetris", "[xml_format][backends]")
+TEST_CASE("every XML library loads these games the same: pacman, pong, pong_min, snake, tetris", "[.long][xml_format][backends]")
 {
 	for (const char* game : { "pacman", "pong", "pong_min", "snake", "tetris" }) { loadsTheSame(game); }
 }
 
-TEST_CASE("every XML library loads these games the same: mariobros, breakout, spacerace, freeway", "[xml_format][backends]")
+TEST_CASE("every XML library loads these games the same: mariobros, breakout, spacerace, freeway", "[.long][xml_format][backends]")
 {
 	for (const char* game : { "mariobros", "breakout", "spacerace", "freeway" }) { loadsTheSame(game); }
 }
 
-TEST_CASE("every XML library loads these games the same: donkeykong, kaboom, depthcharge, columns, capsules, lunarlander, puttpark", "[xml_format][backends]")
+TEST_CASE("every XML library loads these games the same: donkeykong, kaboom, depthcharge, columns, capsules, lunarlander, puttpark", "[.long][xml_format][backends]")
 {
 	for (const char* game : { "donkeykong", "kaboom", "depthcharge", "columns", "capsules", "lunarlander", "puttpark" }) { loadsTheSame(game); }
 }
 
-TEST_CASE("every XML library loads these games the same: galaxian, astrosmash, combat, tennis", "[xml_format][backends]")
+TEST_CASE("every XML library loads these games the same: galaxian, astrosmash, combat, tennis", "[.long][xml_format][backends]")
 {
 	for (const char* game : { "galaxian", "astrosmash", "combat", "tennis" }) { loadsTheSame(game); }
 }
 
-TEST_CASE("every XML library loads these games the same: qbert, spaceinvaders, spaceinvaders2, airseabattle", "[xml_format][backends]")
+TEST_CASE("every XML library loads these games the same: qbert, spaceinvaders, spaceinvaders2, airseabattle", "[.long][xml_format][backends]")
 {
 	for (const char* game : { "qbert", "spaceinvaders", "spaceinvaders2", "airseabattle" }) { loadsTheSame(game); }
 }
 
-TEST_CASE("every XML library loads these games the same: berserk, asteroids, megamania, pinball", "[xml_format][backends]")
+TEST_CASE("every XML library loads these games the same: berserk, asteroids, megamania, pinball", "[.long][xml_format][backends]")
 {
 	for (const char* game : { "berserk", "asteroids", "megamania", "pinball" }) { loadsTheSame(game); }
 }
 
-TEST_CASE("every XML library loads these games the same: pitfall, adventure, demonattack, centipede", "[xml_format][backends]")
+TEST_CASE("every XML library loads these games the same: pitfall, adventure, demonattack, centipede", "[.long][xml_format][backends]")
 {
 	for (const char* game : { "pitfall", "adventure", "demonattack", "centipede" }) { loadsTheSame(game); }
 }
 
-TEST_CASE("every XML library loads these games the same: hauntedhouse, frogger, frostbite, missilecommand", "[xml_format][backends]")
+TEST_CASE("every XML library loads these games the same: hauntedhouse, frogger, frostbite, missilecommand", "[.long][xml_format][backends]")
 {
 	for (const char* game : { "hauntedhouse", "frogger", "frostbite", "missilecommand" }) { loadsTheSame(game); }
 }
 
-TEST_CASE("every XML library loads these games the same: trickshot, fishingderby, yarsrevenge, atlantis", "[xml_format][backends]")
+TEST_CASE("every XML library loads these games the same: trickshot, fishingderby, yarsrevenge, atlantis", "[.long][xml_format][backends]")
 {
 	for (const char* game : { "trickshot", "fishingderby", "yarsrevenge", "atlantis" }) { loadsTheSame(game); }
 }

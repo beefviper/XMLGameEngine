@@ -613,18 +613,18 @@ namespace
 	}
 }
 
-TEST_CASE("every game loads with Xerces, part 1 of 3", "[cli][check]") { loadsWith(XmlBackend::Xerces, 1); }
-TEST_CASE("every game loads with Xerces, part 2 of 3", "[cli][check]") { loadsWith(XmlBackend::Xerces, 2); }
-TEST_CASE("every game loads with Xerces, part 3 of 3", "[cli][check]") { loadsWith(XmlBackend::Xerces, 3); }
-TEST_CASE("every game loads with TinyXML2, part 1 of 3", "[cli][check]") { loadsWith(XmlBackend::TinyXml2, 1); }
-TEST_CASE("every game loads with TinyXML2, part 2 of 3", "[cli][check]") { loadsWith(XmlBackend::TinyXml2, 2); }
-TEST_CASE("every game loads with TinyXML2, part 3 of 3", "[cli][check]") { loadsWith(XmlBackend::TinyXml2, 3); }
-TEST_CASE("every game loads with PugiXML, part 1 of 3", "[cli][check]") { loadsWith(XmlBackend::PugiXml, 1); }
-TEST_CASE("every game loads with PugiXML, part 2 of 3", "[cli][check]") { loadsWith(XmlBackend::PugiXml, 2); }
-TEST_CASE("every game loads with PugiXML, part 3 of 3", "[cli][check]") { loadsWith(XmlBackend::PugiXml, 3); }
-TEST_CASE("every game loads with RapidXML, part 1 of 3", "[cli][check]") { loadsWith(XmlBackend::RapidXml, 1); }
-TEST_CASE("every game loads with RapidXML, part 2 of 3", "[cli][check]") { loadsWith(XmlBackend::RapidXml, 2); }
-TEST_CASE("every game loads with RapidXML, part 3 of 3", "[cli][check]") { loadsWith(XmlBackend::RapidXml, 3); }
+TEST_CASE("every game loads with Xerces, part 1 of 3", "[.long][cli][check]") { loadsWith(XmlBackend::Xerces, 1); }
+TEST_CASE("every game loads with Xerces, part 2 of 3", "[.long][cli][check]") { loadsWith(XmlBackend::Xerces, 2); }
+TEST_CASE("every game loads with Xerces, part 3 of 3", "[.long][cli][check]") { loadsWith(XmlBackend::Xerces, 3); }
+TEST_CASE("every game loads with TinyXML2, part 1 of 3", "[.long][cli][check]") { loadsWith(XmlBackend::TinyXml2, 1); }
+TEST_CASE("every game loads with TinyXML2, part 2 of 3", "[.long][cli][check]") { loadsWith(XmlBackend::TinyXml2, 2); }
+TEST_CASE("every game loads with TinyXML2, part 3 of 3", "[.long][cli][check]") { loadsWith(XmlBackend::TinyXml2, 3); }
+TEST_CASE("every game loads with PugiXML, part 1 of 3", "[.long][cli][check]") { loadsWith(XmlBackend::PugiXml, 1); }
+TEST_CASE("every game loads with PugiXML, part 2 of 3", "[.long][cli][check]") { loadsWith(XmlBackend::PugiXml, 2); }
+TEST_CASE("every game loads with PugiXML, part 3 of 3", "[.long][cli][check]") { loadsWith(XmlBackend::PugiXml, 3); }
+TEST_CASE("every game loads with RapidXML, part 1 of 3", "[.long][cli][check]") { loadsWith(XmlBackend::RapidXml, 1); }
+TEST_CASE("every game loads with RapidXML, part 2 of 3", "[.long][cli][check]") { loadsWith(XmlBackend::RapidXml, 2); }
+TEST_CASE("every game loads with RapidXML, part 3 of 3", "[.long][cli][check]") { loadsWith(XmlBackend::RapidXml, 3); }
 
 TEST_CASE("the help options ask for the usage", "[cli]")
 {

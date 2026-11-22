@@ -1277,7 +1277,7 @@ TEST_CASE("holdem.xml: raises stop at three a round; out of chips between hands 
 	CHECK(play.get("over.winner").lookName() == "you");
 }
 
-TEST_CASE("holdem.xml: hand after hand, you calling everything, every hand ends and no chip is lost", "[cards][holdem]")
+TEST_CASE("holdem.xml: hand after hand, you calling everything, every hand ends and no chip is lost", "[.long][cards][holdem]")
 {
 	Holdem play;
 	int hands = 0;

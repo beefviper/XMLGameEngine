@@ -95,7 +95,7 @@ namespace
 	}
 }
 
-TEST_CASE("a game held as a tree of C++ data reads as its file does", "[tree]")
+TEST_CASE("a game held as a tree of C++ data reads as its file does", "[.long][tree]")
 {
 	for (const char* game : { "pong", "pacman", "klondike", "mariobros" }) { readsTheSame(game); }
 }

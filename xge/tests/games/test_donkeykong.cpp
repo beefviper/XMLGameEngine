@@ -272,7 +272,7 @@ TEST_CASE("a ladder takes him up to the next girder and back down, and nothing e
 	CHECK(play.man().footing.grounded);
 }
 
-TEST_CASE("Kong's barrel rolls down every girder to the oil drum", "[donkeykong]")
+TEST_CASE("Kong's barrel rolls down every girder to the oil drum", "[.long][donkeykong]")
 {
 	DonkeyKong play;
 	play.start();

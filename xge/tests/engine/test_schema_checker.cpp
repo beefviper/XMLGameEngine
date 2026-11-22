@@ -618,37 +618,37 @@ namespace
 	}
 }
 
-TEST_CASE("the light schema checker and Xerces agree on every game given an undeclared attribute", "[schema][checker][sweep]")
+TEST_CASE("the light schema checker and Xerces agree on every game given an undeclared attribute", "[.long][schema][checker][sweep]")
 {
 	sweep(addAttribute, 1);
 }
 
-TEST_CASE("the light schema checker and Xerces agree on every game with an element taken out", "[schema][checker][sweep]")
+TEST_CASE("the light schema checker and Xerces agree on every game with an element taken out", "[.long][schema][checker][sweep]")
 {
 	sweep(removeElement, 2);
 }
 
-TEST_CASE("the light schema checker and Xerces agree on every game with an element written twice", "[schema][checker][sweep]")
+TEST_CASE("the light schema checker and Xerces agree on every game with an element written twice", "[.long][schema][checker][sweep]")
 {
 	sweep(doubleElement, 3);
 }
 
-TEST_CASE("the light schema checker and Xerces agree on every game with an element renamed", "[schema][checker][sweep]")
+TEST_CASE("the light schema checker and Xerces agree on every game with an element renamed", "[.long][schema][checker][sweep]")
 {
 	sweep(renameElement, 4);
 }
 
-TEST_CASE("the light schema checker and Xerces agree on every game with an element moved", "[schema][checker][sweep]")
+TEST_CASE("the light schema checker and Xerces agree on every game with an element moved", "[.long][schema][checker][sweep]")
 {
 	sweep(moveElement, 5);
 }
 
-TEST_CASE("the light schema checker and Xerces agree on every game with an attribute changed", "[schema][checker][sweep]")
+TEST_CASE("the light schema checker and Xerces agree on every game with an attribute changed", "[.long][schema][checker][sweep]")
 {
 	sweep(changeAttribute, 6);
 }
 
-TEST_CASE("the light schema checker and Xerces agree on every game with a value changed", "[schema][checker][sweep]")
+TEST_CASE("the light schema checker and Xerces agree on every game with a value changed", "[.long][schema][checker][sweep]")
 {
 	sweep(changeText, 7);
 }

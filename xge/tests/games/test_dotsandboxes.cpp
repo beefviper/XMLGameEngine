@@ -298,7 +298,7 @@ TEST_CASE("dotsandboxes.xml: the computer does not draw a box's third side when 
 	CHECK(given == 0);
 }
 
-TEST_CASE("dotsandboxes.xml: a whole game against the computer comes to an end", "[dotsandboxes][think]")
+TEST_CASE("dotsandboxes.xml: a whole game against the computer comes to an end", "[.long][dotsandboxes][think]")
 {
 	Dots board(true);
 	for (int i = 0; i < 200 && board.state() == "playing"; ++i)

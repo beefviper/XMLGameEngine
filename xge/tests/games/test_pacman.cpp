@@ -352,7 +352,7 @@ TEST_CASE("pacman: the ghosts in the house come out one by one", "[pacman][hunt]
 	CHECK(middleOf(inky).y > door);
 }
 
-TEST_CASE("pacman: the ghosts scatter and chase in waves, turning round at each change", "[pacman][hunt]")
+TEST_CASE("pacman: the ghosts scatter and chase in waves, turning round at each change", "[.long][pacman][hunt]")
 {
 	PacmanPlay maze;
 	maze.onlyGhost("blinky");

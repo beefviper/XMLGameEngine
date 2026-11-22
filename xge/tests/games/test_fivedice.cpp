@@ -231,7 +231,7 @@ TEST_CASE("fivedice: what the computer would keep, and where a poor roll goes", 
 	REQUIRE(play.card("best") == -1);
 }
 
-TEST_CASE("fivedice: a whole game against the computer comes to its end", "[fivedice]")
+TEST_CASE("fivedice: a whole game against the computer comes to its end", "[.long][fivedice]")
 {
 	Dice play(true);
 	for (int i = 0; i < 16000 && play.state() == "playing"; ++i)
