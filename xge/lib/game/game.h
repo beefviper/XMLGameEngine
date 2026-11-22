@@ -247,7 +247,12 @@ namespace xge
 		const Moment& startOf(const Object& object) const noexcept { return xge::startOf(objectParts, object); }
 		// Its look of that name, its timers that follow it started over
 		// (showLookNamed); false if it has none.
-		bool showLook(Object& object, Name name) { return showLookNamed(objectParts, object, name); }
+		bool showLook(Object& object, Name name)
+		{
+			const bool shown = showLookNamed(objectParts, object, name);
+			if (shown && objectParts.boundTexts.has(object.id)) { relabel(object); }
+			return shown;
+		}
 		// How far each of its timers has counted: none for one without.
 		std::vector<Timer::Clock>* clocksOf(const Object& object) noexcept { return objectParts.clocks.find(object.id); }
 		Moment& startFor(const Object& object) { return objectParts.give(objectParts.starts, object.id); }

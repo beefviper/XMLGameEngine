@@ -69,6 +69,7 @@
     <style name="note"><size>26</size><color>color.white</color></style>
     <style name="box"><size>26</size><color>color.lightgrey</color></style>
     <style name="points"><size>26</size><color>color.white</color></style>
+    <style name="offer"><size>26</size><color>color.yellow</color></style>
     <style name="die"><scale>5</scale><color char="w">color.white</color><color char="k">color.black</color></style>
     <style name="free"><color char="w">color.white</color></style>
     <style name="kept"><color char="w">color.gold</color></style>
@@ -85,13 +86,17 @@
     <group name="boxes" class="box">
       <rows>13</rows>
       <padding><y>rowstep</y></padding>
-      <sprite><text style="points"><number>boxes.shown</number></text></sprite>
+      <!-- waiting, empty; open, what the roll would score here, on its player's turn; written, in white -->
+      <sprite name="waiting" />
+      <sprite name="open"><text style="offer"><number>self.offer</number></text></sprite>
+      <sprite name="written"><text style="points"><number>self.score</number></text></sprite>
       <position><x>onex</x><y>cardy</y></position>
       <actions>
         <action name="write">
           <condition variable="writable"><equal>1</equal>
             <copy variable="self.offer" into="self.score" />
             <set variable="self.filled">1</set>
+            <become sprite="written" />
             <trigger object="card" action="next" />
           </condition>
         </action>
@@ -114,20 +119,6 @@
               </add>
             </value>
           </multiply>
-        </variable>
-        <!-- what was written, else on its player's turn what the roll would score -->
-        <variable name="shown" update="live">
-          <add>
-            <value><multiply><value>self.filled</value><value>self.score</value></multiply></value>
-            <value>
-              <multiply>
-                <value><subtract><value>1</value><value>self.filled</value></subtract></value>
-                <value><compare><value>card.rolls</value><atleast>1</atleast></compare></value>
-                <value><compare><value>card.player</value><equal>self.side</equal></compare></value>
-                <value>self.offer</value>
-              </multiply>
-            </value>
-          </add>
         </variable>
         <variable name="writable" update="live">
           <multiply>
@@ -352,6 +343,9 @@
                 <inc variable="card.rolls" />
                 <play sound="roll" />
               </condition>
+              <!-- the roller's open boxes show what the roll would score -->
+              <condition variable="player"><equal>1</equal><become object="one" sprite="open" from="waiting" /></condition>
+              <condition variable="player"><equal>2</equal><become object="two" sprite="open" from="waiting" /></condition>
             </action>
             <action name="keep1"><trigger object="dice.1" action="keep" /></action>
             <action name="keep2"><trigger object="dice.2" action="keep" /></action>
@@ -374,6 +368,8 @@
             </action>
             <!-- a box written: the other player's turn, every die free -->
             <action name="next">
+              <become object="one" sprite="waiting" from="open" />
+              <become object="two" sprite="waiting" from="open" />
               <!-- the computer waits for the next ready: until then the live numbers still read the turn just written -->
               <set variable="card.ready">0</set>
               <set variable="card.rolls">0</set>
@@ -582,11 +578,8 @@
             <y><add><value>headingy</value><value>34</value></add></y>
           </position>
         </object>
-        <group name="one" from="boxes">
-          <sprite><text style="points"><number>one.shown</number></text></sprite>
-        </group>
+        <group name="one" from="boxes" />
         <group name="two" from="boxes">
-          <sprite><text style="points"><number>two.shown</number></text></sprite>
           <position><x>twox</x><y>cardy</y></position>
           <variables><variable name="side">2</variable></variables>
         </group>

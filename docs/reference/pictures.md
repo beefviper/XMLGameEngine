@@ -158,7 +158,7 @@ A `<text>` is pieces, in any order, then `<size>`, `<color>` and `<font>` (or a 
 | Piece | Shows |
 |---|---|
 | `<content>PONG</content>` | the words as written |
-| `<number>paddle1.score</number>` | a number; one `owner.variable` is live and redraws when it changes, anything else is worked out once |
+| `<number>paddle1.score</number>` | a number; one `owner.variable` is live and redraws when it changes (`self.score` is the object's own, also in a group's piece taken by `from=`), anything else is worked out once |
 | `<letter>entry.first</letter>` | a number as a letter, 0 is A and 25 Z, wrapping: initials are three variables |
 | `<choose><by>value</by><word>LOVE</word><word>15</word>...</choose>` | one of its words, the first for 0 (past either end, the end word), live like a number |
 
@@ -254,7 +254,14 @@ An object with several named sprites and no unnamed animation has **looks**. It 
 - **A look can count hits**: a brick `whole` then `cracked`, the second hit `<die />`.
 - **A look tells the next state something**: an end state's `winner` gets `<become object="winner" sprite="player2" />` before it is pushed.
 - `<become object="ghosts" sprite="blue" from="normal" />` changes only those showing `normal`.
-- With a `<heading>` every look is kept to turn. A text with a `<number>` or `<letter>` cannot be a look.
+- With a `<heading>` every look is kept to turn.
+- **A look can show live numbers**, each look its own, so a number changes color with its state: a box shows the roll's offer in yellow while open, its score in white once written, and nothing while it waits.
+
+```xml
+<sprite name="waiting" />
+<sprite name="open"><text style="offer"><number>self.offer</number></text></sprite>
+<sprite name="written"><text style="points"><number>self.score</number></text></sprite>
+```
 - **Looks that move.** A named `<animation name="walking">` is a look, picked by name like a sprite. The looks are the named animations in order, then the sprites, then the animations played `<once />`, so an object never starts as one of those. Animations are all named or none.
 
 ## Poses, mirror, grip and blinking

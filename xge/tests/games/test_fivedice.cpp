@@ -251,3 +251,26 @@ TEST_CASE("fivedice: a whole game against the computer comes to its end", "[five
 	REQUIRE(written == 13);
 	REQUIRE(play.of("twocard", "total") > 0);
 }
+
+TEST_CASE("fivedice: a box waits empty, shows the roll's offer while open, and its score once written", "[fivedice]")
+{
+	Dice play;
+	auto look = [&](const std::string& name) { return play.get(name).lookName().str(); };
+	auto words = [&](const std::string& name) { return play.get(name).drawn.picture->text; };
+	REQUIRE(look("one.13") == "waiting");
+	play.roll();
+	play.showing({ 1, 2, 3, 4, 6 });
+	REQUIRE(look("one.13") == "open");
+	REQUIRE(words("one.13") == "16");
+	REQUIRE(look("two.13") == "waiting");
+	// Another roll: the open box follows it.
+	play.showing({ 6, 6, 6, 6, 6 });
+	REQUIRE(words("one.13") == "30");
+	play.game.setVariable("card", "at", 13);
+	play.frames(1);
+	play.write();
+	REQUIRE(look("one.13") == "written");
+	REQUIRE(words("one.13") == "30");
+	// Off its turn the column's open boxes wait again.
+	REQUIRE(look("one.1") == "waiting");
+}

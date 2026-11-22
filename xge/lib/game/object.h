@@ -2213,9 +2213,14 @@ namespace xge
 		// A text that shows a variable (a <number> of paddle1.score): its
 		// pieces, so it is put together again when one changes (Game::relabel).
 		// A part (Parts::boundTexts); a text with none shows no variable.
+		// With looks, each look's pieces (none for one that shows no
+		// number), and `pieces` are those of `look`, the one last put
+		// together.
 		struct BoundText
 		{
 			std::vector<TextPiece> pieces;
+			std::vector<std::vector<TextPiece>> looks;
+			std::size_t look{ 0 };
 		};
 
 		// A <tether>: a line from the middle of the object `from` names to

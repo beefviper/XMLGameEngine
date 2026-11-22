@@ -1871,7 +1871,17 @@ namespace xge
 	void Game::relabel(Object& object)
 	{
 		Object::BoundText* bound = objectParts.boundTexts.find(object.id);
-		if (object.drawn.picture->kind != ShapeKind::Text || !bound)
+		if (!bound)
+		{
+			return;
+		}
+		// Another look shown: its own pieces from now on.
+		if (!bound->looks.empty() && bound->look != object.looks.shown)
+		{
+			bound->look = object.looks.shown;
+			bound->pieces = bound->look < bound->looks.size() ? bound->looks[bound->look] : std::vector<TextPiece>{};
+		}
+		if (object.drawn.picture->kind != ShapeKind::Text)
 		{
 			return;
 		}

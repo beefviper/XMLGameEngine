@@ -28,6 +28,7 @@
 - **The look as the touch happened** is taken once before the rules run, as the speed is. Before, each rule saw what the rules before it left, so games wrote rules last look first, and a look changed inside a nested touch (Centipede's turn) set off the next rule too.
 - **Edge rules too:** an edge's rules are one flat list of commands, so a `sprite=` rule is noted as where its commands start and end (`EdgeGuard`). Rejected: a list of rules per edge (every reader of the lists would change for one attribute).
 - **`<become from="look">`** changes only objects showing that look: a pellet turns hunting ghosts blue and leaves eyes as eyes.
+- **Each look may show its own live numbers.** A number's colour is its look's style, so a score card wanting offers in yellow, written scores in white and nothing in a box still to come needs three looks of one box, each live. The engine kept live pieces for one text per object, so a look could not show a number; now each look keeps its pieces and a look shown puts its own together (`BoundText::looks`). Rejected: a colour chosen by a number (data in the picture where the state belongs), and a box made of several overlaid objects.
 - With a heading each look keeps its own pictures to turn. Recolouring is a palette swap, apart from the look ([pictures](30-pictures.md)).
 
 ## Looks that move

@@ -107,10 +107,6 @@ namespace xge
 					moving.then = processCommands(writtenLook.thenCommands, here + " > <then>");
 					moving.commands = frameCommandsOf(writtenLook.frameCommands, here);
 				}
-				if (look.picture->kind == ShapeKind::Text && showsNumbers(writtenLook))
-				{
-					throw std::runtime_error(where + ": a look cannot be a text showing a <number> or a <letter>");
-				}
 				looks.push_back(std::move(look));
 			}
 
@@ -162,13 +158,28 @@ namespace xge
 			object.drawn.bitmap = own.bitmaps.front();
 		}
 
-		if (object.drawn.picture->kind == ShapeKind::Text && showsNumbers(writtenObject.sprite))
+		const auto showsLive = [](const std::vector<TextPiece>& pieces) { return std::any_of(pieces.begin(), pieces.end(), [](const TextPiece& piece) { return !piece.owner.empty(); }); };
+		if (writtenObject.looks.empty())
 		{
-			std::vector<TextPiece> pieces = textPieces(writtenObject.sprite, where, &writtenObject);
-			if (std::any_of(pieces.begin(), pieces.end(), [](const TextPiece& piece) { return !piece.owner.empty(); }))
+			if (object.drawn.picture->kind == ShapeKind::Text && showsNumbers(writtenObject.sprite))
 			{
-				parts->boundTexts.add(object.id, parts->orderOf(object.id), { std::move(pieces) });
+				std::vector<TextPiece> pieces = textPieces(writtenObject.sprite, where, &writtenObject);
+				if (showsLive(pieces)) { parts->boundTexts.add(object.id, parts->orderOf(object.id), { std::move(pieces), {}, 0 }); }
 			}
+			return;
+		}
+		// Each look that is a text showing a number keeps its own pieces.
+		std::vector<std::vector<TextPiece>> looks;
+		bool live = false;
+		for (const WrittenSprite& look : writtenObject.looks)
+		{
+			looks.push_back(look.kind == "text" && showsNumbers(look) ? textPieces(look, where + " > <sprite name=\"" + look.name + "\">", &writtenObject) : std::vector<TextPiece>{});
+			live = live || showsLive(looks.back());
+		}
+		if (live)
+		{
+			std::vector<TextPiece> shown = looks.front();
+			parts->boundTexts.add(object.id, parts->orderOf(object.id), { std::move(shown), std::move(looks), 0 });
 		}
 	}
 
