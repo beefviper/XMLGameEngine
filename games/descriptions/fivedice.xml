@@ -369,6 +369,8 @@
             </action>
             <!-- a box written: the other player's turn, every die free -->
             <action name="next">
+              <!-- the computer waits for the next ready: until then the live numbers still read the turn just written -->
+              <set variable="card.ready">0</set>
               <set variable="card.rolls">0</set>
               <set group="dice" variable="kept">0</set>
               <trigger object="dice" action="show" />

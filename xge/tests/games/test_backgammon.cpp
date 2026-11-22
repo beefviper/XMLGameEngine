@@ -92,7 +92,10 @@ namespace
 			showing(faces);
 		}
 
-		// The dice to play made to say these.
+		// The dice to play made to say these, as if rolled so. The random roll
+		// before them may have found no move and left the table stuck: once
+		// the checkers' moves have been worked out for these faces, the table
+		// looks again.
 		void showing(const std::vector<int>& faces)
 		{
 			game.holders().sendHeld(Name::of("rolled"), Name::of("used"), 0, true, {});
@@ -102,6 +105,8 @@ namespace
 				game.holders().sendItem(game.itemOf(*die).number, Name::of("used"), Name::of("rolled"));
 				game.setVariable(die->name, "worth", static_cast<float>(face));
 			}
+			frames(1);
+			if (phase() == "stuck") { game.showLook(get("table"), Name::of("moving")); }
 			frames(1);
 		}
 
