@@ -48,13 +48,18 @@
     <background>color.darkgreen</background>
   </window>
   <variables>
-    <variable name="cupy">110</variable>
+    <!-- the dice, then the card: a heading row, the six upper boxes, their sum and bonus, the seven lower boxes, the total -->
+    <variable name="cupy">40</variable>
+    <variable name="headingy">236</variable>
     <variable name="cardy">290</variable>
     <variable name="labelx">220</variable>
-    <variable name="onex">520</variable>
-    <variable name="twox">680</variable>
-    <variable name="rowstep">36</variable>
-    <variable name="bonusy">800</variable>
+    <variable name="onex">480</variable>
+    <variable name="twox">640</variable>
+    <variable name="rowstep">32</variable>
+    <variable name="uppery"><add><value>cardy</value><value><multiply><value>6</value><value>rowstep</value></multiply></value><value>8</value></add></variable>
+    <variable name="bonusy"><add><value>uppery</value><value>rowstep</value></add></variable>
+    <variable name="lowery"><add><value>bonusy</value><value>rowstep</value><value>20</value></add></variable>
+    <variable name="totaly"><add><value>lowery</value><value><multiply><value>7</value><value>rowstep</value></multiply></value><value>16</value></add></variable>
   </variables>
   <styles>
     <style name="banner"><size>80</size><color>color.yellow</color></style>
@@ -162,7 +167,7 @@
           </multiply>
         </variable>
       </variables>
-      <row number="7"><padding><y><add><value>rowstep</value><value>20</value></add></y></padding><variables><variable name="offer" update="live"><multiply><value>three.pattern</value><value>cup.worth</value></multiply></variable><variable name="par">15</variable></variables></row>
+      <row number="7"><padding><y><subtract><value>lowery</value><value><add><value>cardy</value><value><multiply><value>5</value><value>rowstep</value></multiply></value></add></value></subtract></y></padding><variables><variable name="offer" update="live"><multiply><value>three.pattern</value><value>cup.worth</value></multiply></variable><variable name="par">15</variable></variables></row>
       <row number="8"><variables><variable name="offer" update="live"><multiply><value>four.pattern</value><value>cup.worth</value></multiply></variable><variable name="par">8</variable></variables></row>
       <row number="9"><variables><variable name="offer" update="live"><multiply><value>house.pattern</value><value>25</value></multiply></variable><variable name="par">22</variable></variables></row>
       <row number="10"><variables><variable name="offer" update="live"><multiply><value>small.pattern</value><value>30</value></multiply></variable><variable name="par">26</variable></variables></row>
@@ -337,9 +342,9 @@
 
         <!-- the card: the turn, whose, the rolls this turn, the box chosen; and the computer's reckoning -->
         <object name="card">
-          <sprite name="person"><text style="note"><content>spacebar rolls</content></text></sprite>
-          <sprite name="computer"><text style="note"><content>the computer plays</content></text></sprite>
-          <position><x><centered /></x><y><add><value>cupy</value><value>110</value></add></y></position>
+          <sprite name="person"><text style="help"><content>spacebar rolls     1 to 5 keep a die     w s choose a box     e writes it</content></text></sprite>
+          <sprite name="computer"><text style="help"><content>the computer plays</content></text></sprite>
+          <position><x><centered /></x><y><add><value>cupy</value><value>142</value></add></y></position>
           <actions>
             <action name="roll">
               <condition variable="rolls"><below>3</below>
@@ -525,8 +530,8 @@
           </timers>
         </object>
         <object name="rolls">
-          <sprite><text style="note"><content>turn </content><number>card.turn</number><content> of 13     rolls </content><number>card.rolls</number><content> of 3</content></text></sprite>
-          <position><x><centered /></x><y><add><value>cupy</value><value>140</value></add></y></position>
+          <sprite><text style="note"><content>turn </content><number>card.turn</number><content> of 13          roll </content><number>card.rolls</number><content> of 3</content></text></sprite>
+          <position><x><centered /></x><y><add><value>cupy</value><value>104</value></add></y></position>
         </object>
 
         <!-- the thirteen boxes' names, then each player's column -->
@@ -541,7 +546,7 @@
           <row number="4"><sprite><text><content>fours</content></text></sprite></row>
           <row number="5"><sprite><text><content>fives</content></text></sprite></row>
           <row number="6"><sprite><text><content>sixes</content></text></sprite></row>
-          <row number="7"><sprite><text><content>three alike</content></text></sprite><padding><y><add><value>rowstep</value><value>20</value></add></y></padding></row>
+          <row number="7"><sprite><text><content>three alike</content></text></sprite><padding><y><subtract><value>lowery</value><value><add><value>cardy</value><value><multiply><value>5</value><value>rowstep</value></multiply></value></add></value></subtract></y></padding></row>
           <row number="8"><sprite><text><content>four alike</content></text></sprite></row>
           <row number="9"><sprite><text><content>full house</content></text></sprite></row>
           <row number="10"><sprite><text><content>small run</content></text></sprite></row>
@@ -549,21 +554,33 @@
           <row number="12"><sprite><text><content>five alike</content></text></sprite></row>
           <row number="13"><sprite><text><content>chance</content></text></sprite></row>
         </group>
+        <object name="upperlabel">
+          <sprite><text style="box"><content>upper</content></text></sprite>
+          <position><x>labelx</x><y>uppery</y></position>
+        </object>
         <object name="bonuslabel">
-          <sprite><text style="box"><content>bonus</content></text></sprite>
+          <sprite><text style="box"><content>bonus at 63</content></text></sprite>
           <position><x>labelx</x><y>bonusy</y></position>
         </object>
         <object name="totallabel">
-          <sprite><text style="box"><content>total</content></text></sprite>
-          <position><x>labelx</x><y><add><value>bonusy</value><value>rowstep</value></add></y></position>
+          <sprite><text style="note"><content>total</content></text></sprite>
+          <position><x>labelx</x><y>totaly</y></position>
         </object>
         <object name="onename">
-          <sprite><text style="note"><choose><by>match.players</by><word>you</word><word>player 1</word></choose></text></sprite>
-          <position><x>onex</x><y><subtract><value>cardy</value><value>40</value></subtract></y></position>
+          <sprite><text style="note"><choose><by><subtract><value>match.players</value><value>1</value></subtract></by><word>you</word><word>player 1</word></choose></text></sprite>
+          <position><x>onex</x><y>headingy</y></position>
         </object>
         <object name="twoname">
-          <sprite><text style="note"><choose><by>match.players</by><word>computer</word><word>player 2</word></choose></text></sprite>
-          <position><x>twox</x><y><subtract><value>cardy</value><value>40</value></subtract></y></position>
+          <sprite><text style="note"><choose><by><subtract><value>match.players</value><value>1</value></subtract></by><word>computer</word><word>player 2</word></choose></text></sprite>
+          <position><x>twox</x><y>headingy</y></position>
+        </object>
+        <!-- under the name of the player on turn -->
+        <object name="onturn">
+          <sprite><rectangle><width>100</width><height>3</height><color>color.yellow</color></rectangle></sprite>
+          <position>
+            <x update="live"><add><value>onex</value><value><multiply><value><subtract><value>card.player</value><value>1</value></subtract></value><value><subtract><value>twox</value><value>onex</value></subtract></value></multiply></value></add></x>
+            <y><add><value>headingy</value><value>34</value></add></y>
+          </position>
         </object>
         <group name="one" from="boxes">
           <sprite><text style="points"><number>one.shown</number></text></sprite>
@@ -573,6 +590,10 @@
           <position><x>twox</x><y>cardy</y></position>
           <variables><variable name="side">2</variable></variables>
         </group>
+        <object name="oneupper">
+          <sprite><text style="points"><number>onecard.upper</number></text></sprite>
+          <position><x>onex</x><y>uppery</y></position>
+        </object>
         <object name="onecard">
           <sprite><text style="points"><number>onecard.bonus</number></text></sprite>
           <position><x>onex</x><y>bonusy</y></position>
@@ -604,8 +625,12 @@
           </variables>
         </object>
         <object name="onecardtotal">
-          <sprite><text style="points"><number>onecard.total</number></text></sprite>
-          <position><x>onex</x><y><add><value>bonusy</value><value>rowstep</value></add></y></position>
+          <sprite><text style="note"><number>onecard.total</number></text></sprite>
+          <position><x>onex</x><y>totaly</y></position>
+        </object>
+        <object name="twoupper">
+          <sprite><text style="points"><number>twocard.upper</number></text></sprite>
+          <position><x>twox</x><y>uppery</y></position>
         </object>
         <object name="twocard">
           <sprite><text style="points"><number>twocard.bonus</number></text></sprite>
@@ -638,8 +663,8 @@
           </variables>
         </object>
         <object name="twocardtotal">
-          <sprite><text style="points"><number>twocard.total</number></text></sprite>
-          <position><x>twox</x><y><add><value>bonusy</value><value>rowstep</value></add></y></position>
+          <sprite><text style="note"><number>twocard.total</number></text></sprite>
+          <position><x>twox</x><y>totaly</y></position>
         </object>
 
         <!-- the box chosen -->
@@ -651,7 +676,7 @@
               <add>
                 <value>cardy</value>
                 <value><multiply><value><subtract><value>card.at</value><value>1</value></subtract></value><value>rowstep</value></multiply></value>
-                <value><multiply><value>20</value><value><compare><value>card.at</value><atleast>7</atleast></compare></value></multiply></value>
+                <value><multiply><value><subtract><value>lowery</value><value><add><value>cardy</value><value><multiply><value>6</value><value>rowstep</value></multiply></value></add></value></subtract></value><value><compare><value>card.at</value><atleast>7</atleast></compare></value></multiply></value>
               </add>
             </y>
           </position>
@@ -713,9 +738,14 @@
     </state>
     <state name="over">
       <objects>
+        <!-- over the dice and the turn's lines, leaving the card to read -->
+        <object name="cover">
+          <sprite><rectangle><width>900</width><height>210</height><color>color.darkgreen</color></rectangle></sprite>
+          <position><x>0</x><y>0</y></position>
+        </object>
         <object name="over">
           <sprite><text style="heading"><choose><by>over.result</by><word>you win</word><word>the computer wins</word><word>a draw</word><word>player 1 wins</word><word>player 2 wins</word><word>a draw</word></choose></text></sprite>
-          <position><x><centered /></x><y><add><value>cupy</value><value>110</value></add></y></position>
+          <position><x><centered /></x><y><add><value>cupy</value><value>20</value></add></y></position>
           <variables>
             <!-- the end: 0 the first player won, 1 the second, 2 a draw; and the words for it -->
             <variable name="winner" update="live">
@@ -734,7 +764,7 @@
         </object>
         <object name="again">
           <sprite><text style="note"><content>spacebar to play again</content></text></sprite>
-          <position><x><centered /></x><y><add><value>cupy</value><value>160</value></add></y></position>
+          <position><x><centered /></x><y><add><value>cupy</value><value>100</value></add></y></position>
         </object>
       </objects>
       <shows>
