@@ -450,7 +450,7 @@
               <content>@!#?@!</content>
             </text>
           </sprite>
-          <position><x><add><value>window.width.center</value><value>16</value></add></x><y>20</y></position>
+          <position><x><add><value><window>centerx</window></value><value>16</value></add></x><y>20</y></position>
         </object>
       </objects>
       <shows>

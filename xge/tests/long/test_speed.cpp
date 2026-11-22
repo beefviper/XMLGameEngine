@@ -39,7 +39,8 @@ TEST_CASE("Every game's load and frame times", "[.long][speed]")
 	std::vector<std::string> games;
 	for (const auto& entry : std::filesystem::directory_iterator("descriptions"))
 	{
-		if (entry.path().extension() == ".xml") { games.push_back(entry.path().stem().string()); }
+		const std::string stem = entry.path().stem().string();
+		if (entry.path().extension() == ".xml" && stem.find("_scratch") == std::string::npos) { games.push_back(stem); }
 	}
 	std::sort(games.begin(), games.end());
 

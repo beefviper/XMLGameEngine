@@ -97,7 +97,7 @@ namespace
     <objects>
       <object name="logo">
         <sprite><circle><radius>logo.radius</radius></circle></sprite>
-        <position><x><subtract><value>window.width.center</value><value>logo.radius</value></subtract></x><y><subtract><value>window.height.center</value><value>logo.radius</value></subtract></y></position>
+        <position><x><subtract><value><window>centerx</window></value><value>logo.radius</value></subtract></x><y><subtract><value><window>centery</window></value><value>logo.radius</value></subtract></y></position>
       </object>
     </objects>
     <state name="title">
@@ -139,8 +139,8 @@ namespace
 
 	// The logo is a 100-radius circle (200 x 200); the title is a text. Its
 	// position is the only place these two expressions are written in kSizes.
-	const std::string kLogoX = "<subtract><value>window.width.center</value><value>logo.radius</value></subtract>";
-	const std::string kLogoY = "<subtract><value>window.height.center</value><value>logo.radius</value></subtract>";
+	const std::string kLogoX = "<subtract><value><window>centerx</window></value><value>logo.radius</value></subtract>";
+	const std::string kLogoY = "<subtract><value><window>centery</window></value><value>logo.radius</value></subtract>";
 
 	std::vector<std::pair<std::string, std::string>> logoAt(const std::string& x, const std::string& y)
 	{

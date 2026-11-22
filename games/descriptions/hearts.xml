@@ -126,7 +126,7 @@
         <object name="northcards" class="place">
           <position><x>
             <subtract>
-              <value>window.width.center</value>
+              <value><window>centerx</window></value>
               <value><divide><value>cardwidth</value><value>2</value></divide></value>
               <value>144</value>
             </subtract>
@@ -134,7 +134,7 @@
           <holds class="card" sprite="back"><spread><x>24</x></spread><order><by variable="suit" /><by variable="worth" /></order></holds>
         </object>
         <object name="eastcards" class="place">
-          <position><x><subtract><value>window.width</value><value>cardwidth</value><value>24</value></subtract></x><y>siderow</y></position>
+          <position><x><subtract><value><window>width</window></value><value>cardwidth</value><value>24</value></subtract></x><y>siderow</y></position>
           <holds class="card" sprite="back"><spread><y>24</y></spread><order><by variable="suit" /><by variable="worth" /></order></holds>
         </object>
 
@@ -154,7 +154,7 @@
           </width><height>cardheight</height><color>forestgreen</color></rectangle></sprite>
           <position><x>
             <subtract>
-              <value>window.width.center</value>
+              <value><window>centerx</window></value>
               <value><divide><value>cardwidth</value><value>2</value></divide></value>
               <value>96</value>
             </subtract>
@@ -177,7 +177,7 @@
         </object>
         <object name="eastscore">
           <sprite><text style="note"><content>east</content><number>east.score</number><content>+</content><number>east.got</number><choose><by>east.turn</by><word /><word>to play</word></choose></text></sprite>
-          <position><x><subtract><value>window.width</value><value>200</value></subtract></x><y><subtract><value>siderow</value><value>34</value></subtract></y></position>
+          <position><x><subtract><value><window>width</window></value><value>200</value></subtract></x><y><subtract><value>siderow</value><value>34</value></subtract></y></position>
         </object>
         <object name="yourscore">
           <sprite><text style="note"><content>you</content><number>you.score</number><content>+</content><number>you.got</number><choose><by>you.turn</by><word /><word>your turn: play a card</word></choose></text></sprite>
@@ -267,12 +267,12 @@
           <member name="west"><sprite name="free" /><position><x>21</x><y><subtract><value>siderow</value><value>3</value></subtract></y></position><owns object="westcards" /><think button="space"><avoid /></think></member>
           <member name="north"><sprite name="free" /><position><x>
             <subtract>
-              <value>window.width.center</value>
+              <value><window>centerx</window></value>
               <value><divide><value>cardwidth</value><value>2</value></divide></value>
               <value>147</value>
             </subtract>
           </x><y><subtract><value>northrow</value><value>3</value></subtract></y></position><owns object="northcards" /><think button="space"><avoid /></think></member>
-          <member name="east"><sprite name="free" /><position><x><subtract><value>window.width</value><value>cardwidth</value><value>27</value></subtract></x><y><subtract><value>siderow</value><value>3</value></subtract></y></position><owns object="eastcards" /><think button="space"><avoid /></think></member>
+          <member name="east"><sprite name="free" /><position><x><subtract><value><window>width</window></value><value>cardwidth</value><value>27</value></subtract></x><y><subtract><value>siderow</value><value>3</value></subtract></y></position><owns object="eastcards" /><think button="space"><avoid /></think></member>
         </group>
       </objects>
       <!-- the cards start in the stock, shuffled and dealt thirteen to each player -->

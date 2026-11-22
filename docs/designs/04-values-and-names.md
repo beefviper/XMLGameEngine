@@ -51,7 +51,9 @@
 ## No reserved words
 
 - **Each slot says what kind of thing it holds,** so no word is taken from the game's names (the author's choice over letting a game's name win, or marking the engine's words with a character). Colours, the window and the pronouns `self`, `other` and `others` once shared the object-name space, so those names were refused.
-- **Colours:** a `<color>` or `<background>` holds a colour's bare name (`yellow`); the `color.` prefix said what the slot already did. Next: the window's numbers and the pronouns as their own operand tags.
+- **Colours:** a `<color>` or `<background>` holds a colour's bare name (`yellow`); the `color.` prefix said what the slot already did.
+- **The window:** `<window>right</window>`, a value tag and an operand like `<random>`, from a closed list (width, height, right, bottom, centerx, centery). Inside, the engine names them `@window.right`; text starting with `@` stops the load, so a game's `window` object is its own. Looked at for the middle: `middle` read by the axis it sits in (meaning from context), or no word and a divide (64 places longer); centerx and centery won.
+- Next: the pronouns as their own operand tags.
 
 ## An object's own size
 
@@ -60,7 +62,7 @@
 - **Wart:** an object's own variable `width` shadows its size (the variable wins, keeping old games working).
 - **Built: `<centered>`** puts an object's middle at a place (empty: the window's middle), so a game never writes `name.width / 2`. Nine in ten of them said `window.height.center - 60`, so `<centered><offset>-60</offset></centered>` is that far from the window's middle, right or down, a negative number the other way: a child, never a sign in text (no arithmetic in strings). Rejected: an `offset=` attribute (a number is content, not a pick).
 - **Built: the window's sides** (the author asked): `<left />`, `<right />` in an `<x>`, `<top />`, `<bottom />` in a `<y>`, put that side of the object on the window's, and an `<offset>` moves it in from that side, so `window.right - lives.width - margin` is `<right><offset>margin</offset></right>` (34 values). In from the side, not right or down, so an offset is never a name with a sign in front. Open: the sides of another object.
-- **Window names:** `window.width` and `window.height` are names beside the edges `window.right` and `window.bottom` (the same numbers), so a size reads as a size; `window.width.center` and `window.height.center` stay as cheap constants.
+- **Window measures:** `<window>width</window>` and `height` beside the edges `right` and `bottom` (the same numbers), so a size reads as a size; `centerx` and `centery` stay as cheap constants for the middle.
 
 ## Reference points and axes (idea)
 

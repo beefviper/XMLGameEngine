@@ -78,7 +78,8 @@
       | position/x | position/y | velocity/x | velocity/y
       | collisions/collision | actions/action | inputs/input | input/button
       | add | subtract | multiply | divide | sign | sine | cosine | value
-      | random | random/min | random/max | centered">
+      | random | random/min | random/max | centered
+      | value/window | x/window | y/window | width/window | height/window | min/window | max/window">
     <xsl:apply-templates select="@* | * | text()" mode="covers" />
   </xsl:template>
   <xsl:template mode="covers" match="
@@ -86,8 +87,8 @@
       | object/@name | group/@name | member/@name | action/@name | collision/@edge
       | input/@button" />
 
-  <!-- A name in a value must be one the program has: a number, the
-       window's sides, a variable of the game, or, where it starts (its
+  <!-- A name in a value must be one the program has: a number, a
+       variable of the game, or, where it starts (its
        position, velocity and variables), one of the object's own. -->
   <xsl:template mode="covers" match="text()[normalize-space(.) != ''][parent::width or parent::height or parent::x or parent::y
       or parent::value or parent::min or parent::max or parent::variable or parent::move or parent::bounce or parent::deflect]">
@@ -95,8 +96,6 @@
     <xsl:variable name="self" select="ancestor::object[1]" />
     <xsl:variable name="own" select="substring-after($text, '.')" />
     <xsl:if test="not(string(number($text)) != 'NaN'
-        or $text = 'window.width' or $text = 'window.height' or $text = 'window.left' or $text = 'window.right'
-        or $text = 'window.top' or $text = 'window.bottom'
         or /game/variables/variable[@name = $text]
         or ($self and (ancestor::position or ancestor::velocity or ancestor::variable) and (starts-with($text, concat($self/@name, '.')) or starts-with($text, 'self.')) and $self/variables/variable[@name = $own]))">
       <xsl:call-template name="gap"><xsl:with-param name="what" select="concat('the name ', $quote, $text, $quote)" /></xsl:call-template>

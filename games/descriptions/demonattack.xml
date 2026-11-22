@@ -182,12 +182,12 @@
       <objects>
         <!-- the ice planet's surface, in two bands -->
         <object name="ground">
-          <sprite><rectangle><width>window.right</width><height>ground</height><color>blue</color></rectangle></sprite>
-          <position><x>0</x><y><subtract><value>window.bottom</value><value>ground</value></subtract></y></position>
+          <sprite><rectangle><width><window>right</window></width><height>ground</height><color>blue</color></rectangle></sprite>
+          <position><x>0</x><y><subtract><value><window>bottom</window></value><value>ground</value></subtract></y></position>
         </object>
         <object name="horizon">
-          <sprite><rectangle><width>window.right</width><height>4</height><color>cyan</color></rectangle></sprite>
-          <position><x>0</x><y><subtract><value>window.bottom</value><value>ground</value></subtract></y></position>
+          <sprite><rectangle><width><window>right</window></width><height>4</height><color>cyan</color></rectangle></sprite>
+          <position><x>0</x><y><subtract><value><window>bottom</window></value><value>ground</value></subtract></y></position>
         </object>
 
         <!-- the laser cannon -->

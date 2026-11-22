@@ -121,12 +121,12 @@
     <state name="playing">
       <objects>
         <object name="sea">
-          <sprite><rectangle><width>window.right</width><height><subtract><value>window.bottom</value><value>surface</value></subtract></height><color>darkblue</color></rectangle></sprite>
+          <sprite><rectangle><width><window>right</window></width><height><subtract><value><window>bottom</window></value><value>surface</value></subtract></height><color>darkblue</color></rectangle></sprite>
           <position><x>0</x><y>surface</y></position>
         </object>
         <!-- the top of the water, where a mine that has come up goes off -->
         <object name="waterline">
-          <sprite><rectangle><width>window.right</width><height>2</height><color>cyan</color></rectangle></sprite>
+          <sprite><rectangle><width><window>right</window></width><height>2</height><color>cyan</color></rectangle></sprite>
           <position><x>0</x><y>surface</y></position>
           <collisions />
         </object>
@@ -227,7 +227,7 @@
         </object>
         <object name="ships">
           <sprite><text style="hud"><content>SHIPS </content><number>status.ships</number></text></sprite>
-          <position><x><subtract><value>window.right</value><value>140</value></subtract></x><y>margin</y></position>
+          <position><x><subtract><value><window>right</window></value><value>140</value></subtract></x><y>margin</y></position>
         </object>
       </objects>
       <music sound="sonar" />

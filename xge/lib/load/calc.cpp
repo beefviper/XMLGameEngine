@@ -33,12 +33,13 @@ namespace xge
 			return text.substr(first, last - first + 1);
 		}
 
-		// Whether the text is a name: a letter or underscore, then letters,
-		// digits, underscores and dots (window.width.center).
+		// Whether the text is a name: a letter or underscore (or the @ that
+		// starts the engine's own, @window.right), then letters, digits,
+		// underscores and dots (ship.score).
 		bool isName(const std::string& text)
 		{
-			return !text.empty() && isLetter(text[0])
-				&& std::all_of(text.begin(), text.end(), [](char c) { return isLetter(c) || isDigit(c) || c == '.'; });
+			return !text.empty() && (isLetter(text[0]) || text[0] == '@')
+				&& std::all_of(text.begin() + 1, text.end(), [](char c) { return isLetter(c) || isDigit(c) || c == '.'; });
 		}
 
 		// The text as one number (2, -130, 0.5, 1e3), or false.

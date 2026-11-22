@@ -466,7 +466,7 @@
           </sprite>
           <position><x>
             <subtract>
-              <value>window.right</value>
+              <value><window>right</window></value>
               <value>lives.width</value>
               <value><multiply><value>margin</value><value>2</value></multiply></value>
               <value>14</value>

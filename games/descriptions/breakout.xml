@@ -103,7 +103,7 @@
             <divide>
               <value>
                 <subtract>
-                  <value>window.right</value>
+                  <value><window>right</window></value>
                   <value><multiply><value>14</value><value>brick</value></multiply></value>
                   <value><multiply><value>13</value><value>gap</value></multiply></value>
                 </subtract>
@@ -145,7 +145,7 @@
         <object name="player">
           <sprite name="full"><rectangle><width>paddle</width><height>12</height><color>cyan</color></rectangle></sprite>
           <sprite name="half"><rectangle><width><divide><value>paddle</value><value>2</value></divide></width><height>12</height><color>cyan</color></rectangle></sprite>
-          <position><x><centered /></x><y><subtract><value>window.bottom</value><value>60</value></subtract></y></position>
+          <position><x><centered /></x><y><subtract><value><window>bottom</window></value><value>60</value></subtract></y></position>
           <collisions>
             <collision edge="horizontal"><stick /></collision>
           </collisions>

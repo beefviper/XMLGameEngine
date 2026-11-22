@@ -109,7 +109,7 @@
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>forestgreen</color></rectangle></sprite>
           <position><x>
             <subtract>
-              <value>window.width.center</value>
+              <value><window>centerx</window></value>
               <value>cardwidth</value>
               <value>24</value>
             </subtract>
@@ -126,7 +126,7 @@
         <!-- the discard pile: the same suit (or the suit called) or the same rank; an eight on anything, and its player names the suit -->
         <object name="discard" class="place">
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>forestgreen</color></rectangle></sprite>
-          <position><x><add><value>window.width.center</value><value>24</value></add></x><y>middle</y></position>
+          <position><x><add><value><window>centerx</window></value><value>24</value></add></x><y>middle</y></position>
           <holds class="card" sprite="face">
             <accepts>
               <any>
@@ -141,7 +141,7 @@
         <!-- the suit called after an eight, beside the pile -->
         <object name="called">
           <sprite><text style="note"><choose><by>discard.called</by><word /><word>spades</word><word>hearts</word><word>clubs</word><word>diamonds</word></choose></text></sprite>
-          <position><x><add><value>window.width.center</value><value>cardwidth</value><value>48</value></add></x><y>
+          <position><x><add><value><window>centerx</window></value><value>cardwidth</value><value>48</value></add></x><y>
             <subtract>
               <value>
                 <add>

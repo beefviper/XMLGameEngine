@@ -168,7 +168,7 @@
     <objects>
       <object name="continue">
         <sprite><text style="prompt"><content>spacebar to play</content></text></sprite>
-        <position><x><centered /></x><y><add><value>window.height.center</value><value>60</value></add></y></position>
+        <position><x><centered /></x><y><add><value><window>centery</window></value><value>60</value></add></y></position>
       </object>
     </objects>
     <state name="title">
@@ -622,7 +622,7 @@
         <object name="message">
           <sprite name="lost"><text style="banner"><content>THE HOUSE WINS</content><color>red</color></text></sprite>
           <sprite name="won"><text style="banner"><content>THE URN IS WHOLE</content><color>yellow</color></text></sprite>
-          <position><x><centered /></x><y><subtract><value>window.height.center</value><value>150</value></subtract></y></position>
+          <position><x><centered /></x><y><subtract><value><window>centery</window></value><value>150</value></subtract></y></position>
         </object>
       </objects>
       <shows>

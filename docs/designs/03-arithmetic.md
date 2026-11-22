@@ -16,7 +16,7 @@ Arithmetic (`window.width.center - ball.radius`) was the last thing hidden from 
 ## Operations
 
 - **One value tag, nested:** an operation written straight in a value, its operands `<value>`s holding a name, a number, a `<random>` or another operation. Precedence is the nesting; a chain (`a - b - c`) is one operation of three values.
-- **Chosen by the author, after the survey below: no wrapper and no operand names** (`<x><subtract><value>window.right</value><value>4</value></subtract></x>`).
+- **Chosen by the author, after the survey below: no wrapper and no operand names** (`<x><subtract><value><window>right</window></value><value>4</value></subtract></x>`).
   - It was a `<formula>` wrapper with operands named for what they are (`augend`/`addend`, `minuend`/`subtrahend`, `multiplicand`/`multiplier`, `dividend`/`divisor`): the order already says it, so they were words to learn.
   - Kept: nesting is precedence, which the author wants for turning a game into another language later.
   - Rejected: a start and steps read in order (`<value>cell</value><times>8</times><plus>16</plus>`), shorter but with no precedence.

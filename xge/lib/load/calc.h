@@ -13,7 +13,7 @@
 namespace xge
 {
 	// What a value's text holds (load/expr): one number (2, -130, 0.5, 1e3)
-	// or one name (window.right, ship.score; case does not matter). Nothing
+	// or one name (ship.score, @window.right; case does not matter). Nothing
 	// more: arithmetic is operation tags (<add>, <subtract>, ...), never
 	// hidden in a string.
 	//

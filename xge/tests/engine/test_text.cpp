@@ -221,9 +221,9 @@ TEST_CASE("<centered> puts an object's middle at the window's middle, or at the 
 		"<object name=\"box\"><sprite><rectangle><width>100</width><height>40</height></rectangle></sprite>"
 		"<position><x><centered /></x><y><centered /></y></position></object>"
 		"<object name=\"left\"><sprite><rectangle><width>20</width><height>40</height></rectangle></sprite>"
-		"<position><x><centered><divide><value>window.width.center</value><value>2</value></divide></centered></x><y>10</y></position></object>"
+		"<position><x><centered><divide><value><window>centerx</window></value><value>2</value></divide></centered></x><y>10</y></position></object>"
 		"<group name=\"row\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
-		"<position><y><centered>window.height.center</centered></y></position>"
+		"<position><y><centered><window>centery</window></centered></y></position>"
 		"<member><position><x>0</x></position></member>"
 		"<member><sprite><rectangle><height>30</height></rectangle></sprite><position><x>50</x></position></member></group>",
 		"", backend);
@@ -244,12 +244,12 @@ TEST_CASE("<centered><offset> puts an object's middle that far from the window's
 		"<object name=\"up\"><sprite><rectangle><width>100</width><height>40</height></rectangle></sprite>"
 		"<position><x><centered><offset>50</offset></centered></x><y><centered><offset>-60</offset></centered></y></position></object>"
 		"<object name=\"edge\"><sprite><rectangle><width>20</width><height>10</height></rectangle></sprite>"
-		"<position><x><subtract><value>window.width</value><value>20</value></subtract></x><y><subtract><value>window.height</value><value>10</value></subtract></y></position></object>",
+		"<position><x><subtract><value><window>width</window></value><value>20</value></subtract></x><y><subtract><value><window>height</window></value><value>10</value></subtract></y></position></object>",
 		"", backend);
 
 	CHECK(game.object("up").position.x == Approx(400 + 50 - 50));
 	CHECK(game.object("up").position.y == Approx(300 - 60 - 20));
-	// window.width and window.height are names, the same as window.right and window.bottom.
+	// <window>width</window> and height are the same numbers as right and bottom.
 	CHECK(game.object("edge").position.x == Approx(780));
 	CHECK(game.object("edge").position.y == Approx(590));
 

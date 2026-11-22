@@ -91,16 +91,16 @@
     <state name="playing">
       <objects>
         <object name="sky">
-          <sprite><rectangle><width>window.right</width><height>surface</height><color>cyan</color></rectangle></sprite>
+          <sprite><rectangle><width><window>right</window></width><height>surface</height><color>cyan</color></rectangle></sprite>
           <position><x>0</x><y>0</y></position>
         </object>
         <object name="seabed">
-          <sprite><rectangle><width>window.right</width><height>40</height><color>darkgreen</color></rectangle></sprite>
-          <position><x>0</x><y><subtract><value>window.bottom</value><value>40</value></subtract></y></position>
+          <sprite><rectangle><width><window>right</window></width><height>40</height><color>darkgreen</color></rectangle></sprite>
+          <position><x>0</x><y><subtract><value><window>bottom</window></value><value>40</value></subtract></y></position>
         </object>
         <!-- a fish brought up to the surface is landed -->
         <object name="surface">
-          <sprite><rectangle><width>window.right</width><height>4</height><color>lightgrey</color></rectangle></sprite>
+          <sprite><rectangle><width><window>right</window></width><height>4</height><color>lightgrey</color></rectangle></sprite>
           <position><x>0</x><y><subtract><value>surface</value><value>4</value></subtract></y></position>
           <collisions />
         </object>
@@ -108,7 +108,7 @@
           <sprite><rectangle><width>150</width><height>14</height><color>brown</color></rectangle></sprite>
           <position><y><subtract><value>surface</value><value>20</value></subtract></y></position>
           <member><position><x>0</x></position></member>
-          <member><position><x><subtract><value>window.right</value><value>150</value></subtract></x></position></member>
+          <member><position><x><subtract><value><window>right</window></value><value>150</value></subtract></x></position></member>
         </group>
 
         <!-- the two fishermen, each with a score, the right one flipped -->
@@ -121,14 +121,14 @@
           <member name="left"><position><x>112</x></position></member>
           <member name="right">
             <sprite><bitmap><color char="s">red</color><flip>horizontal</flip></bitmap></sprite>
-            <position><x><subtract><value>window.right</value><value>112</value><value>96</value></subtract></x></position>
+            <position><x><subtract><value><window>right</window></value><value>112</value><value>96</value></subtract></x></position>
           </member>
         </group>
         <group name="rods">
           <sprite><rectangle><width>2</width><height>2</height><color>black</color></rectangle></sprite>
           <position><y><subtract><value>surface</value><value>64</value></subtract></y></position>
           <member name="rod1"><position><x>206</x></position></member>
-          <member name="rod2"><position><x><subtract><value>window.right</value><value>208</value></subtract></x></position></member>
+          <member name="rod2"><position><x><subtract><value><window>right</window></value><value>208</value></subtract></x></position></member>
         </group>
         <object name="line1">
           <sprite><tether from="rod1" to="hook1"><thickness>2</thickness><color>black</color></tether></sprite>
@@ -140,13 +140,13 @@
         </object>
         <object name="score1">
           <sprite><text style="hud"><number>left.score</number><color>green</color></text></sprite>
-          <position><x><subtract><value>window.width.center</value><value>140</value></subtract></x><y>16</y></position>
+          <position><x><subtract><value><window>centerx</window></value><value>140</value></subtract></x><y>16</y></position>
         </object>
         <object name="score2">
           <sprite><text style="hud"><number>right.score</number><color>red</color></text></sprite>
           <position><x>
             <subtract>
-              <value><add><value>window.width.center</value><value>140</value></add></value>
+              <value><add><value><window>centerx</window></value><value>140</value></add></value>
               <value>score2.width</value>
             </subtract>
           </x><y>16</y></position>
@@ -175,7 +175,7 @@
           </actions>
           <variables><variable name="line">0</variable></variables>
           <member name="hook1"><position><x>204</x></position></member>
-          <member name="hook2"><position><x><subtract><value>window.right</value><value>213</value></subtract></x></position></member>
+          <member name="hook2"><position><x><subtract><value><window>right</window></value><value>213</value></subtract></x></position></member>
         </group>
 
         <object name="shark">
@@ -188,7 +188,7 @@
           <sprite name="turning">
             <rectangle><width>80</width><height>28</height><color>darkgrey</color></rectangle>
           </sprite>
-          <position><x><subtract><value>window.width.center</value><value>40</value></subtract></x><y><add><value>surface</value><value>25</value></add></y></position>
+          <position><x><subtract><value><window>centerx</window></value><value>40</value></subtract></x><y><add><value>surface</value><value>25</value></add></y></position>
           <velocity><x>120</x></velocity>
           <collisions>
             <collision edge="left"><bounce /><become sprite="right" /></collision>

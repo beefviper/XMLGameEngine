@@ -101,7 +101,7 @@ A group can hold groups instead of members; **an inner group takes from the one 
     <sprite><bitmap> ... </bitmap></sprite>
     <group name="logrow2">
       <columns>3</columns>
-      <padding><x>(window.right + 180) / 3 - 180</x></padding>
+      <padding><x> ... </x></padding>
       <position><x>20</x><y><add><value><multiply><value>cell</value><value>2</value></multiply></value><value>6</value></add></y></position>
       <velocity><x>1.4</x></velocity>
     </group>

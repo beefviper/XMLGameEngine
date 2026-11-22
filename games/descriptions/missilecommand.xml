@@ -61,7 +61,7 @@
     <group name="missiles" class="missile">
       <sprite><line><from><x>0</x><y>0</y></from><to><x>0</x><y>14</y></to><color>red</color><thickness>2</thickness></line></sprite>
       <position>
-        <x><random><min>margin</min><max><subtract><value>window.right</value><value>margin</value></subtract></max></random></x>
+        <x><random><min>margin</min><max><subtract><value><window>right</window></value><value>margin</value></subtract></max></random></x>
         <y><random><min><negate><value>sky</value></negate></min><max>-10</max></random></y>
       </position>
       <velocity><y>speed</y></velocity>
@@ -155,7 +155,7 @@
           </variables>
         </object>
         <object name="ground">
-          <sprite><rectangle><width>window.right</width><height><subtract><value>window.bottom</value><value>ground</value></subtract></height><color>yellow</color></rectangle></sprite>
+          <sprite><rectangle><width><window>right</window></width><height><subtract><value><window>bottom</window></value><value>ground</value></subtract></height><color>yellow</color></rectangle></sprite>
           <position><x>0</x><y>ground</y></position>
         </object>
         <!-- six cities, three either side of the base -->

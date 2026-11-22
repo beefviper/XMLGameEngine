@@ -11,8 +11,8 @@
 <xsl:stylesheet version="1.0"
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
-  <!-- $node holds the value: its text, or one operation, <random> or
-       <centered />. $self is the object the value is of (for its own
+  <!-- $node holds the value: its text, or one operation, <random>, <window>
+       or <centered />. $self is the object the value is of (for its own
        variables and size); $axis is x or y in a <position>; $nested, that
        it is inside another operation and wants brackets. -->
   <xsl:template name="value">
@@ -34,6 +34,21 @@
         <xsl:text>, </xsl:text>
         <xsl:call-template name="value"><xsl:with-param name="node" select="$tag/max" /><xsl:with-param name="self" select="$self" /></xsl:call-template>
         <xsl:text>)</xsl:text>
+      </xsl:when>
+      <xsl:when test="local-name($tag) = 'window'">
+        <xsl:variable name="measure" select="normalize-space($tag)" />
+        <xsl:choose>
+          <xsl:when test="$measure = 'width' or $measure = 'right'">windowWidth</xsl:when>
+          <xsl:when test="$measure = 'height' or $measure = 'bottom'">windowHeight</xsl:when>
+          <xsl:otherwise>
+            <xsl:if test="$nested">(</xsl:if>
+            <xsl:choose>
+              <xsl:when test="$measure = 'centerx'">windowWidth / 2</xsl:when>
+              <xsl:otherwise>windowHeight / 2</xsl:otherwise>
+            </xsl:choose>
+            <xsl:if test="$nested">)</xsl:if>
+          </xsl:otherwise>
+        </xsl:choose>
       </xsl:when>
       <xsl:when test="local-name($tag) = 'centered' and not($tag/node())">
         <!-- its middle on the window's: the window's middle less half its size -->
@@ -86,7 +101,7 @@
   </xsl:template>
 
   <!-- A number (a float when it has a point: 0.5f), a variable of the game
-       (its constant), of the window, or of the object itself (its local). -->
+       (its constant), or of the object itself (its local). -->
   <xsl:template name="name-or-number">
     <xsl:param name="text" />
     <xsl:param name="self" />
@@ -96,9 +111,6 @@
         <xsl:value-of select="$text" />
         <xsl:if test="contains($text, '.')">f</xsl:if>
       </xsl:when>
-      <xsl:when test="$text = 'window.width' or $text = 'window.right'">windowWidth</xsl:when>
-      <xsl:when test="$text = 'window.height' or $text = 'window.bottom'">windowHeight</xsl:when>
-      <xsl:when test="$text = 'window.left' or $text = 'window.top'">0</xsl:when>
       <xsl:when test="/game/variables/variable[@name = $text]">
         <xsl:call-template name="camel"><xsl:with-param name="name" select="$text" /></xsl:call-template>
       </xsl:when>

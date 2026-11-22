@@ -140,7 +140,7 @@
         </object>
         <object name="moveslabel">
           <sprite><text style="hud"><content>moves </content><number>status.moves</number></text></sprite>
-          <position><x><subtract><value>window.right</value><value>180</value></subtract></x><y>20</y></position>
+          <position><x><subtract><value><window>right</window></value><value>180</value></subtract></x><y>20</y></position>
         </object>
       </objects>
       <scenes>

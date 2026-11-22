@@ -130,15 +130,15 @@
     <state name="playing">
       <objects>
         <object name="canvas">
-          <sprite><rectangle><width>window.right</width><height>12</height><color>brown</color></rectangle></sprite>
+          <sprite><rectangle><width><window>right</window></width><height>12</height><color>brown</color></rectangle></sprite>
           <position><x>0</x><y>floor</y></position>
         </object>
         <object name="toprope">
-          <sprite><rectangle><width>window.right</width><height>3</height><color>lightgrey</color></rectangle></sprite>
+          <sprite><rectangle><width><window>right</window></width><height>3</height><color>lightgrey</color></rectangle></sprite>
           <position><x>0</x><y><subtract><value>floor</value><value>110</value></subtract></y></position>
         </object>
         <object name="lowrope">
-          <sprite><rectangle><width>window.right</width><height>3</height><color>lightgrey</color></rectangle></sprite>
+          <sprite><rectangle><width><window>right</window></width><height>3</height><color>lightgrey</color></rectangle></sprite>
           <position><x>0</x><y><subtract><value>floor</value><value>60</value></subtract></y></position>
         </object>
         <object name="boxer1" from="boxer">

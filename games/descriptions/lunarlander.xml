@@ -188,7 +188,7 @@
         </object>
         <object name="wrecked">
           <sprite><text style="line"><content>YOU JUST DESTROYED A 100 MEGABUCK LANDER</content><color>red</color></text></sprite>
-          <position><x><centered /></x><y><subtract><value>window.height.center</value><value>140</value></subtract></y></position>
+          <position><x><centered /></x><y><subtract><value><window>centery</window></value><value>140</value></subtract></y></position>
           <waiting />
           <timers>
             <timer><every>2.5</every><inc variable="lander.ready" /><die /></timer>
@@ -207,7 +207,7 @@
         </object>
         <object name="fuel">
           <sprite><text style="hud"><content>FUEL </content><number>lander.fuel</number></text></sprite>
-          <position><x><subtract><value>window.right</value><value>margin</value><value>160</value></subtract></x><y>margin</y></position>
+          <position><x><subtract><value><window>right</window></value><value>margin</value><value>160</value></subtract></x><y>margin</y></position>
         </object>
       </objects>
       <inputs>

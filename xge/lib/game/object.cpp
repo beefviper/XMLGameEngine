@@ -979,7 +979,7 @@ namespace xge
 	{
 		for (WrittenObject& object : objects)
 		{
-			const auto center = [&](WrittenValue& value, const std::string& window, const char* size)
+			const auto center = [&](WrittenValue& value, const std::string& window, const std::string& middle, const char* size)
 			{
 				if (value.kind != WrittenValue::Kind::Centered) { return; }
 				const WrittenValue own = WrittenValue::expression(object.name + "." + size);
@@ -1000,12 +1000,12 @@ namespace xge
 				else
 				{
 					// Its middle where the middle goes: that less half its size.
-					value = operationOf("subtract", { centeredMiddle(value, window + ".center"), operationOf("divide", { own, WrittenValue::expression("2") }) });
+					value = operationOf("subtract", { centeredMiddle(value, middle), operationOf("divide", { own, WrittenValue::expression("2") }) });
 				}
 				value.live = live;
 			};
-			center(object.writtenPosition.x, "window.width", "width");
-			center(object.writtenPosition.y, "window.height", "height");
+			center(object.writtenPosition.x, "@window.width", "@window.centerx", "width");
+			center(object.writtenPosition.y, "@window.height", "@window.centery", "height");
 		}
 	}
 

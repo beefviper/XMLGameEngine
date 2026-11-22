@@ -72,7 +72,7 @@ namespace
 
 	// A game with one object, `o`, whose position is x and y (each the inner
 	// XML of its element, so a value tag can be given), and the given global
-	// variables. The window is 800 by 600, so window.width.center is 400.
+	// variables. The window is 800 by 600, so <window>centerx</window> is 400.
 	std::string gameXml(const std::string& x, const std::string& y = "0", const std::string& variables = {})
 	{
 		return "<game>"
@@ -116,7 +116,7 @@ namespace
 
 	const std::string kFormula =
 		"<subtract>"
-		"<value>window.width.center</value>"
+		"<value><window>centerx</window></value>"
 		"<value><divide><value>w</value><value>2</value></divide></value>"
 		"<value>xoffset</value>"
 		"</subtract>";
@@ -336,7 +336,7 @@ TEST_CASE("a value prints as infix with its brackets", "[formulas]")
 
 	WrittenOperation subtract;
 	subtract.op = "subtract";
-	subtract.operands = { operand("window.width.center") };
+	subtract.operands = { operand("@window.centerx") };
 	WrittenOperand nested;
 	nested.value = inner;
 	subtract.operands.push_back(nested);
@@ -345,7 +345,7 @@ TEST_CASE("a value prints as infix with its brackets", "[formulas]")
 	formula.kind = WrittenValue::Kind::Formula;
 	formula.operations = std::make_shared<std::vector<WrittenOperation>>(1, subtract);
 
-	CHECK(valueText(formula) == "(window.width.center - (title.width / 2))");
+	CHECK(valueText(formula) == "(@window.centerx - (title.width / 2))");
 
 	WrittenOperation compare;
 	compare.op = "compare";

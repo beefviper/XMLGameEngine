@@ -53,17 +53,18 @@ One `<game>` root, its children in this order (the schema enforces it):
 
 ## Values
 
-Every number in a game (a position, a speed, a size, a threshold) is a **value**, written one of three ways. A value holds text or one tag, never both.
+Every number in a game (a position, a speed, a size, a threshold) is a **value**, written one of four ways. A value holds text or one tag, never both.
 
 | Form | Example |
 |---|---|
-| a number or a name | `-7`, `window.right`, `paddle.width` |
+| a number or a name | `-7`, `paddle.width` |
+| a window measure | `<window>right</window>` ([below](#names-a-value-can-use)) |
 | `<random>` | `<random><min>-7</min><max>7</max></random>` |
-| an operation | arithmetic as tags: `<subtract><value>window.right</value><value>4</value></subtract>` ([below](#arithmetic-as-tags)) |
+| an operation | arithmetic as tags: `<subtract><value><window>right</window></value><value>4</value></subtract>` ([below](#arithmetic-as-tags)) |
 
-- **Text** is one number (a sign in front allowed) or one name, nothing more. Arithmetic in text (`window.right - 4`) stops the load and shows the operation to write instead (`<subtract><value>window.right</value><value>4</value></subtract>`); so does a function call (`max(6, x)`).
+- **Text** is one number (a sign in front allowed) or one name, nothing more. Arithmetic in text (`paddle.x - 4`) stops the load and shows the operation to write instead (`<subtract><value>paddle.x</value><value>4</value></subtract>`); so does a function call (`max(6, x)`).
 - **Sides:** in an `<x>`, `<left>` and `<right>` put that side of the object on the window's side, `<top>` and `<bottom>` likewise in a `<y>`, with an optional `<offset>` measured in from the side: `<right><offset>12</offset></right>`.
-- **`<random>`** draws from min to max (either order; each end a number, a name or an operation).
+- **`<random>`** draws from min to max (either order; each end a number, a name, a window measure or an operation).
 
 ### When a value is worked out
 
@@ -80,10 +81,6 @@ A `<random>` is drawn at load and again whenever its object comes back into play
 
 | Name | Value |
 |---|---|
-| `window.top`, `window.left` | 0 |
-| `window.bottom`, `window.right` | the window's height, its width (its bottom and right edges) |
-| `window.height`, `window.width` | the same numbers, for a size |
-| `window.width.center`, `window.height.center` | half the width, half the height |
 | a game `<variable>` | its value (worked out in the order written) |
 | `object.variable` | that object's variable, wherever the object is written |
 | `object.width`, `object.height` | its size (its sprite's footprint); meant for `<position>` |
@@ -92,6 +89,18 @@ A `<random>` is drawn at load and again whenever its object comes back into play
 | `self.` before any of these | in an object's own rules, actions, timers and numbers, the object running it |
 
 An object's own `<variable>` named like a size or live number (`width`, `x`) wins over it.
+
+The window's numbers are a tag of their own, `<window>`, anywhere a value or an operand goes, so no game name is taken by them:
+
+| `<window>` | Value |
+|---|---|
+| `right`, `bottom` | its width, its height (its right and bottom edges) |
+| `width`, `height` | the same numbers, for a size |
+| `centerx`, `centery` | half the width, half the height (its middle) |
+
+```xml
+<x><subtract><value><window>right</window></value><value>4</value></subtract></x>
+```
 
 ### Values read when used
 
@@ -127,7 +136,7 @@ An operation is written straight in a value. Its operands are `<value>`s, each a
 ```xml
 <x>
   <subtract>
-    <value>window.width.center</value>
+    <value><window>centerx</window></value>
     <value><divide><value>title.width</value><value>2</value></divide></value>
   </subtract>
 </x>

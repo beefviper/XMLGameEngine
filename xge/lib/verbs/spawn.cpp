@@ -97,8 +97,8 @@ namespace xge
 			}
 			into = evaluate(value);
 		};
-		half(own.positionX, spawn.x, &spawn.centerX, "window.width.center");
-		half(own.positionY, spawn.y, &spawn.centerY, "window.height.center");
+		half(own.positionX, spawn.x, &spawn.centerX, "@window.centerx");
+		half(own.positionY, spawn.y, &spawn.centerY, "@window.centery");
 		half(own.velocityX, spawn.velocityX, nullptr, "");
 		half(own.velocityY, spawn.velocityY, nullptr, "");
 		half(own.accelerationX, spawn.accelerationX, nullptr, "");

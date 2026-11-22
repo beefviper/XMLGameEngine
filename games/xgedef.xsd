@@ -12,7 +12,7 @@
         * Everything else is the content of an element. Where the content is a
           number (valueType below) it is one number or one name, or a value tag
           that makes the number: <random><min>-7</min><max>7</max></random>, or
-          an operation such as <subtract><value>window.right</value><value>4</value></subtract>.
+          an operation such as <subtract><value><window>right</window></value><value>4</value></subtract>.
           Arithmetic written as text stops the load.
         * What an object DOES is a list of command tags (the command groups
           below): <bounce />, <inc variable="paddle1.score" />, <push state="playing" />.
@@ -79,9 +79,24 @@
     </xs:annotation>
     <xs:choice>
       <xs:element name="random" type="randomType" />
+      <xs:element name="window" type="windowMeasureType" />
       <xs:group ref="operation" />
     </xs:choice>
   </xs:group>
+
+  <xs:simpleType name="windowMeasureType">
+    <xs:annotation>
+      <xs:documentation><![CDATA[<window>: one of the window's measures, <window>right</window>: width and height, right and bottom (its edges, the same numbers), centerx and centery (its middle).]]></xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="width" />
+      <xs:enumeration value="height" />
+      <xs:enumeration value="right" />
+      <xs:enumeration value="bottom" />
+      <xs:enumeration value="centerx" />
+      <xs:enumeration value="centery" />
+    </xs:restriction>
+  </xs:simpleType>
 
   <xs:complexType name="randomType">
     <xs:annotation>
@@ -95,9 +110,10 @@
 
   <xs:complexType name="randomEndType" mixed="true">
     <xs:annotation>
-      <xs:documentation><![CDATA[An end of a <random>: text (a number or a name) or an operation, not both.]]></xs:documentation>
+      <xs:documentation><![CDATA[An end of a <random>: text (a number or a name), a <window> measure or an operation, one of them.]]></xs:documentation>
     </xs:annotation>
     <xs:choice minOccurs="0">
+      <xs:element name="window" type="windowMeasureType" />
       <xs:group ref="operation" />
     </xs:choice>
   </xs:complexType>
@@ -114,7 +130,7 @@
         subtract of three values:
           <x>
             <subtract>
-              <value>window.width.center</value>
+              <value><window>centerx</window></value>
               <value><divide><value>title.width</value><value>2</value></divide></value>
             </subtract>
           </x>
@@ -151,10 +167,11 @@
 
   <xs:complexType name="operandType" mixed="true">
     <xs:annotation>
-      <xs:documentation><![CDATA[An operand of an operation: text (a name or a number), <random> or an operation, which contains operands in turn.]]></xs:documentation>
+      <xs:documentation><![CDATA[An operand of an operation: text (a name or a number), <random>, a <window> measure or an operation, which contains operands in turn.]]></xs:documentation>
     </xs:annotation>
     <xs:choice minOccurs="0">
       <xs:element name="random" type="randomType" />
+      <xs:element name="window" type="windowMeasureType" />
       <xs:element name="add" type="addType" />
       <xs:element name="subtract" type="subtractType" />
       <xs:element name="multiply" type="multiplyType" />
@@ -2857,10 +2874,11 @@
 
   <xs:complexType name="centeredType" mixed="true">
     <xs:annotation>
-      <xs:documentation><![CDATA[<centered>: where the middle goes (a name, a number or an operation), or one <offset> from the window's middle.]]></xs:documentation>
+      <xs:documentation><![CDATA[<centered>: where the middle goes (a name, a number, a <window> measure or an operation), or one <offset> from the window's middle.]]></xs:documentation>
     </xs:annotation>
     <xs:choice minOccurs="0">
       <xs:element name="offset" type="xs:string" />
+      <xs:element name="window" type="windowMeasureType" />
       <xs:group ref="operation" />
     </xs:choice>
   </xs:complexType>

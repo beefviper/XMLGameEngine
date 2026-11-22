@@ -113,7 +113,7 @@
           </variables>
         </object>
         <object name="sea">
-          <sprite><rectangle><width>window.right</width><height><subtract><value>window.bottom</value><value>sea</value></subtract></height><color>blue</color></rectangle></sprite>
+          <sprite><rectangle><width><window>right</window></width><height><subtract><value><window>bottom</window></value><value>sea</value></subtract></height><color>blue</color></rectangle></sprite>
           <position><x>0</x><y>sea</y></position>
         </object>
         <!-- four lanes of planes going round and round the sky: they start off the side they fly in from, and one shot down comes back from there -->
@@ -147,9 +147,9 @@
             </sprite>
             <position><y>130</y></position>
             <velocity><x>-90</x></velocity>
-            <member><position><x><add><value>window.right</value><value>40</value></add></x></position></member>
-            <member><position><x><add><value>window.right</value><value>260</value></add></x></position></member>
-            <member><position><x><add><value>window.right</value><value>480</value></add></x></position></member>
+            <member><position><x><add><value><window>right</window></value><value>40</value></add></x></position></member>
+            <member><position><x><add><value><window>right</window></value><value>260</value></add></x></position></member>
+            <member><position><x><add><value><window>right</window></value><value>480</value></add></x></position></member>
           </group>
           <group name="blimps">
             <sprite>
@@ -167,8 +167,8 @@
             </sprite>
             <position><y>270</y></position>
             <velocity><x>-120</x></velocity>
-            <member><position><x><add><value>window.right</value><value>40</value></add></x></position></member>
-            <member><position><x><add><value>window.right</value><value>360</value></add></x></position></member>
+            <member><position><x><add><value><window>right</window></value><value>40</value></add></x></position></member>
+            <member><position><x><add><value><window>right</window></value><value>360</value></add></x></position></member>
           </group>
         </group>
         <!-- the two guns on the shore, pointing straight up to start with -->
@@ -193,7 +193,7 @@
                 <play sound="fire" />
               </action>
             </actions>
-            <member name="gun1"><position><x><centered><divide><value>window.width.center</value><value>2</value></divide></centered></x></position></member>
+            <member name="gun1"><position><x><centered><divide><value><window>centerx</window></value><value>2</value></divide></centered></x></position></member>
           </group>
           <group name="white">
             <sprite><bitmap><color>white</color></bitmap></sprite>
@@ -205,7 +205,7 @@
             </actions>
             <member name="gun2"><position><x><centered>
               <divide>
-                <value><multiply><value>window.width.center</value><value>3</value></multiply></value>
+                <value><multiply><value><window>centerx</window></value><value>3</value></multiply></value>
                 <value>2</value>
               </divide>
             </centered></x></position></member>

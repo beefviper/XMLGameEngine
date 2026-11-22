@@ -69,11 +69,11 @@
   <objects>
     <!-- the wall of the building, and the ledge the bomber walks along -->
     <object name="rooftop">
-      <sprite><rectangle><width>window.right</width><height>roof</height><color>darkgrey</color></rectangle></sprite>
+      <sprite><rectangle><width><window>right</window></width><height>roof</height><color>darkgrey</color></rectangle></sprite>
       <position><x>0</x><y>0</y></position>
     </object>
     <object name="ledge">
-      <sprite><rectangle><width>window.right</width><height>6</height><color>lightgrey</color></rectangle></sprite>
+      <sprite><rectangle><width><window>right</window></width><height>6</height><color>lightgrey</color></rectangle></sprite>
       <position><x>0</x><y>roof</y></position>
     </object>
     <!-- the Mad Bomber: black hat, grin and striped convict's shirt -->

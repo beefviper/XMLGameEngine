@@ -122,7 +122,7 @@
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>forestgreen</color></rectangle></sprite>
           <position><x>
             <subtract>
-              <value>window.width.center</value>
+              <value><window>centerx</window></value>
               <value>cardwidth</value>
               <value>24</value>
             </subtract>
@@ -131,13 +131,13 @@
         </object>
         <object name="discard" class="place">
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>forestgreen</color></rectangle></sprite>
-          <position><x><add><value>window.width.center</value><value>24</value></add></x><y>middle</y></position>
+          <position><x><add><value><window>centerx</window></value><value>24</value></add></x><y>middle</y></position>
           <holds class="card" sprite="face"><accepts /><picked><send>1</send></picked></holds>
         </object>
 
         <!-- north's cards, face down, and yours: laid out in melds, the deadwood counted -->
         <object name="northcards" class="place">
-          <position><x><subtract><value>window.width.center</value><value>168</value></subtract></x><y>theirs</y></position>
+          <position><x><subtract><value><window>centerx</window></value><value>168</value></subtract></x><y>theirs</y></position>
           <holds class="card" sprite="back"><spread><x>24</x></spread><score patterns="rummy"><melds /><best>10</best></score></holds>
         </object>
         <object name="mine" class="place">
@@ -156,7 +156,7 @@
         </object>
         <object name="deadwood">
           <sprite><text style="note"><content>deadwood</content><number>mine.deadwood</number></text></sprite>
-          <position><x><subtract><value>window.width</value><value>210</value></subtract></x><y><subtract><value>yours</value><value>52</value></subtract></y></position>
+          <position><x><subtract><value><window>width</window></value><value>210</value></subtract></x><y><subtract><value>yours</value><value>52</value></subtract></y></position>
         </object>
 
         <!-- how a hand ended -->

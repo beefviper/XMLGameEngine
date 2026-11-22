@@ -117,14 +117,14 @@ namespace xge
 	bool isNumber(const std::string& text);
 
 	// Whether text is a name: a letter or underscore, then letters, digits,
-	// underscores and (when dots is true) dots, like `window.width.center`.
+	// underscores and (when dots is true) dots, like `ship.score`.
 	bool isName(const std::string& text, bool dots);
 
 	// An operand of an operation is a name or a number and
 	// nothing else: anything more is an operation of its own.
 	std::string requireTerm(const std::string& text, const std::string& here);
 
-	// An operand of an operation: <value>window.width.center</value>, or an
+	// An operand of an operation: <value>ship.score</value>, a <window> measure, an
 	// operation in place of the name, or a <random>.
 	WrittenValue readFormulaOperand(const XmlNode& node, const std::string& where);
 
@@ -135,8 +135,8 @@ namespace xge
 	// Whether a tag is an operation (<add>, <clamp>, ...; not <random>).
 	bool isOperation(const std::string& tag);
 
-	// An operation written straight in a value: <x><subtract><value>window.right
-	// </value><value>4</value></subtract></x>, a value of kind Formula.
+	// An operation written straight in a value: <x><subtract><value><window>right
+	// </window></value><value>4</value></subtract></x>, a value of kind Formula.
 	WrittenValue readOperation(const XmlNode& tag, const std::string& where);
 
 	// A number, written either as an expression (the text of the element) or

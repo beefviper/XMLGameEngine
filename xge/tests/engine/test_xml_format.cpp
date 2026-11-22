@@ -138,7 +138,7 @@ namespace
 TEST_CASE("a value is an operation of operations, numbers and names", "[xml_format]")
 {
 	ObjectXml o;
-	o.x = "<add><value><multiply><value>2</value><value>3</value></multiply></value><value>window.width.center</value></add>";
+	o.x = "<add><value><multiply><value>2</value><value>3</value></multiply></value><value><window>centerx</window></value></add>";
 	o.velocityX = "<negate><value><add><value>1</value><value>1</value></add></value></negate>";
 	Loaded loaded(gameXml("<variable name=\"step\">2</variable>", objectXml(o)));
 
@@ -155,7 +155,7 @@ TEST_CASE("<random> gives a number between its two ends, and a different one eac
 		ObjectXml o;
 		o.name = "r" + std::to_string(i);
 		o.velocityX = "<random><min>-7</min><max>7</max></random>";
-		o.velocityY = "<random><min>window.width.center</min><max><subtract><value>window.width.center</value><value>10</value></subtract></max></random>"; // expressions, either order
+		o.velocityY = "<random><min><window>centerx</window></min><max><subtract><value><window>centerx</window></value><value>10</value></subtract></max></random>"; // expressions, either order
 		objects += objectXml(o);
 	}
 	objects += objectXml({}); // o, which the state shows
@@ -626,7 +626,7 @@ TEST_CASE("a condition is a test tag, then the commands it runs", "[xml_format][
 		"<conditions>"
 		"<condition class=\"paddle\" variable=\"score\"><atleast>15</atleast><push state=\"gameover\" /></condition>"
 		"<condition object=\"frog\" variable=\"lives\"><atmost>0</atmost><push state=\"a\" /><push state=\"b\" /></condition>"
-		"<condition class=\"aliens\"><remaining><divide><value>window.width.center</value><value>400</value></divide></remaining><pop /></condition>"
+		"<condition class=\"aliens\"><remaining><divide><value><window>centerx</window></value><value>400</value></divide></remaining><pop /></condition>"
 		"</conditions>";
 	// What the conditions look at.
 	ObjectXml paddle, frog, alien;

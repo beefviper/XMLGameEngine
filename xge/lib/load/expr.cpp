@@ -246,14 +246,12 @@ namespace xge
 	void Evaluator::nameNumbers(const WindowDesc& windowDesc, const std::vector<std::pair<std::string, WrittenValue>>& writtenVariables, std::map<std::string, float>& variables, std::vector<WrittenObject>& writtenObjects)
 	{
 		// the window's edges and middles, then the game's variables, as names a text reads
-		calc.constant("window.top", 0);
-		calc.constant("window.bottom", windowDesc.height);
-		calc.constant("window.left", 0);
-		calc.constant("window.right", windowDesc.width);
-		calc.constant("window.width", windowDesc.width);
-		calc.constant("window.height", windowDesc.height);
-		calc.constant("window.width.center", windowDesc.width / 2);
-		calc.constant("window.height.center", windowDesc.height / 2);
+		calc.constant("@window.bottom", windowDesc.height);
+		calc.constant("@window.right", windowDesc.width);
+		calc.constant("@window.width", windowDesc.width);
+		calc.constant("@window.height", windowDesc.height);
+		calc.constant("@window.centerx", windowDesc.width / 2);
+		calc.constant("@window.centery", windowDesc.height / 2);
 
 		// add variables from XML file to symbol table, in the order the file
 		// declares them so that one can use the ones before it
@@ -1270,7 +1268,7 @@ namespace xge
 		std::vector<std::string> dependencies;
 
 		// Every identifier in the position expressions, e.g. "title.width" or
-		// "window.width.center"; the ones that end in .width / .height and name
+		// "@window.centerx"; the ones that end in .width / .height and name
 		// an object whose size needs a backend are what this is looking for.
 		std::vector<const std::string*> positionExpressions = writtenObject.writtenPosition.x.expressions();
 		for (const std::string* yExpression : writtenObject.writtenPosition.y.expressions())
@@ -1283,7 +1281,7 @@ namespace xge
 			std::size_t i = 0;
 			while (i < positionExpression->size())
 			{
-				const auto isIdentifierChar = [](char c) { return std::isalnum(static_cast<unsigned char>(c)) || c == '_' || c == '.'; };
+				const auto isIdentifierChar = [](char c) { return std::isalnum(static_cast<unsigned char>(c)) || c == '_' || c == '.' || c == '@'; };
 				if (!isIdentifierChar((*positionExpression)[i]))
 				{
 					++i;

@@ -129,7 +129,7 @@
           <sprite name="spot" />
           <position><x>
             <subtract>
-              <value>window.width.center</value>
+              <value><window>centerx</window></value>
               <value>cardwidth</value>
               <value>4</value>
             </subtract>
@@ -145,7 +145,7 @@
           </width><height><add><value>cardheight</value><value>16</value></add></height><color>forestgreen</color></rectangle></sprite>
           <position><x>
             <subtract>
-              <value>window.width.center</value>
+              <value><window>centerx</window></value>
               <value><multiply><value>cardwidth</value><value>2.5</value></multiply></value>
               <value>32</value>
             </subtract>
@@ -156,7 +156,7 @@
           <sprite name="spot" />
           <position><x>
             <subtract>
-              <value>window.width.center</value>
+              <value><window>centerx</window></value>
               <value>cardwidth</value>
               <value>4</value>
             </subtract>

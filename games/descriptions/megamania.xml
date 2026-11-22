@@ -64,7 +64,7 @@
     <variable name="barwidth">360</variable>
     <variable name="barleft">
       <subtract>
-        <value>window.width.center</value>
+        <value><window>centerx</window></value>
         <value><divide><value>barwidth</value><value>2</value></divide></value>
       </subtract>
     </variable>
@@ -245,11 +245,11 @@
         </object>
         <object name="bar">
           <sprite><rectangle><width>barwidth</width><height>12</height><color>green</color></rectangle></sprite>
-          <position><x>barleft</x><y><subtract><value>window.bottom</value><value>24</value></subtract></y></position>
+          <position><x>barleft</x><y><subtract><value><window>bottom</window></value><value>24</value></subtract></y></position>
         </object>
         <object name="cover">
           <sprite><rectangle><width>barwidth</width><height>12</height><color>black</color></rectangle></sprite>
-          <position><x><add><value>barleft</value><value>barwidth</value></add></x><y><subtract><value>window.bottom</value><value>24</value></subtract></y></position>
+          <position><x><add><value>barleft</value><value>barwidth</value></add></x><y><subtract><value><window>bottom</window></value><value>24</value></subtract></y></position>
         </object>
 
         <object name="score">

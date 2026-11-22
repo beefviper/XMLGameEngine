@@ -7,7 +7,7 @@ Tips for changing values, objects, frames, touches, spawning and loading. Back t
 - Most numbers are worked out **once at load**. Read again while running: a timer's interval, positions using a measured text size, a command's numbers that name something live (`CmdLive`, remade by `Game::makeNow`), a condition's number (`Condition::live`).
 - `<random>` is drawn again when its object comes back into play, not when a scene is entered.
 - Variables are `float`. Anything that changes one goes through `Game::setVariable`, so bound texts and expressions see it.
-- A value's text is one number or one name (`load/calc`). Arithmetic or a function call in text stops the load: write an operation (`<subtract>`, `<smallest>`, ...). `window.width` is not a name (`window.right` is).
+- A value's text is one number or one name (`load/calc`). Arithmetic or a function call in text stops the load: write an operation (`<subtract>`, `<smallest>`, ...). The window's numbers are `<window>right</window>` (load/reading.cpp `windowMeasure`); the engine calls them `@window.right`, a name a game cannot write.
 - Live numbers are rows of `liveParts` (`game/object.cpp`); a new one is one row.
 - A new operation is a row in `operationShape` (`game/command.cpp`), a case in `evaluateOperation` (`load/expr.cpp`) and the schema types. Each `Answer` has a `late` flag for values not final while loading; keep it.
 - A text is compiled once (`Evaluator::compiled`); a name is bound into `calc` only when first read. There is no second expression system.
