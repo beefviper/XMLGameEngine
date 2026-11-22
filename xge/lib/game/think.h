@@ -44,6 +44,8 @@ namespace xge
 		std::vector<std::pair<int, int>> cells;
 		std::size_t next{};
 		float wait{};
+		// The seconds spent thinking about this move so far.
+		float thinking{};
 		bool aside{ false };
 	};
 }

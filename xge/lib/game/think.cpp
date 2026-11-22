@@ -40,9 +40,12 @@ namespace xge
 	{
 		int whole(float number) noexcept { return static_cast<int>(std::lround(number)); }
 
-		// Seconds between the picker's steps and presses, so a person can
-		// follow the computer's move.
-		constexpr float pace = 8.0f / 60.0f;
+		// Seconds a person can follow the computer's move by: a moment before
+		// it starts (less the time it took thinking), a step of the picker
+		// from cell to cell, and a moment on the cell before the press.
+		constexpr float startPause = 0.7f;
+		constexpr float pace = 0.15f;
+		constexpr float pressPause = 0.35f;
 
 		// A won or lost game, worth more than any count of pieces.
 		constexpr float decided = 1.0e6f;
@@ -985,6 +988,7 @@ namespace xge
 		cells.clear();
 		next = 0;
 		wait = 0.0f;
+		thinking = 0.0f;
 	}
 
 	void Thinker::stop()
@@ -1009,8 +1013,10 @@ namespace xge
 		if (!planned)
 		{
 			if (!job) { job = start(game, think, *picker); }
+			thinking += seconds;
 			if (!job->done) { return std::nullopt; }
 			const std::vector<std::vector<std::pair<int, int>>> best = std::move(job->best);
+			const float thought = thinking;
 			forget();
 			planned = true;
 			if (!best.empty())
@@ -1018,7 +1024,7 @@ namespace xge
 				const std::size_t pick = std::min(best.size() - 1, static_cast<std::size_t>(randomBetween(0.0f, static_cast<float>(best.size()))));
 				cells = best[pick];
 			}
-			wait = pace;
+			wait = std::max(startPause - thought, pace);
 		}
 		wait -= seconds;
 		if (wait > kTimeSlack) { return std::nullopt; }
@@ -1040,6 +1046,7 @@ namespace xge
 			const int across = column > atColumn ? 1 : column < atColumn ? -1 : 0;
 			const int down = atColumn != column ? 0 : (row > atRow ? 1 : -1);
 			game.cellMaps().putInCell(*picker, atColumn + across, atRow + down);
+			if (atColumn + across == column && atRow + down == row) { wait = pressPause; }
 			return std::nullopt;
 		}
 		++next;
