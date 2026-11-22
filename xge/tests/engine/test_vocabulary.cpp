@@ -71,9 +71,7 @@ namespace
 	// each: a game takes it up, or it goes from the schema and this list.
 	const std::map<std::string, std::string> kUnused{
 		{ "absolute", "an operation, beside sign and negate" },
-		{ "compare", "an operation: a test as 1 or 0" },
 		{ "demo", "a recorded game, and the verb that plays it: no game ships one until new ones are recorded on the real steps" },
-		{ "floor", "an operation, beside ceiling and round" },
 		{ "framerate", "a window's; 60 when left out" },
 		{ "fullscreen", "a window's whole screen; a window when left out" },
 		{ "gap", "a group's, between cells" },

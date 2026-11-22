@@ -11,23 +11,9 @@ What is next, and nothing else. The ordered tasks come first, each written to be
 
 One task at a time, top to bottom. A task's steps are done in their own order, and the tests are green after every step. Where a line says "steps 1 to 4", the rest of that task comes back further down.
 
-| # | Task | Why here |
-|---|---|---|
-| 1 | [F8](#f8-dice): dice | Waits on the hold on new games |
+Nothing is ordered now: [F9](#f9-sound-files) waits on the author, and the next task is picked from [the backlog](#backlog).
 
 **On hold:** [A5](#a5-a-game-written-out-as-if-by-hand), the stand-alone generator (the author: nice-looking generated code is a hard problem that may need several things to change at once). It stands at `pong_min` written, and `pong.xml` written by hand as the next example.
-
-What must come before what:
-
-| Task | Needs first |
-|---|---|
-| F8 | the hold on new games lifted ([open decisions](#open-decisions)) |
-
-Everything else is independent, so the author can move any line up or down.
-
-## Open decisions
-
-- **The hold on new games and genres.** New games were paused until the correctness and reduction work was done, and it is done. Whether to lift the hold now, or after the architecture block, is the author's call. Until then the additions below are chosen because several existing games want them, not to add a genre.
 
 ## Rules for every task
 
@@ -76,17 +62,6 @@ Every task has the same shape: why, then numbered steps with a box each, then th
 
 Ordered by how many existing games gain. Each ends with the docs, a game or two moved to the new word, and the limitation removed from `docs/reference/limits.md`.
 
-#### F8. Dice
-
-- **Needs** the hold on new games lifted ([open decisions](#open-decisions)).
-- **Why.** Agreed as the next board or card step. The question is whether it needs any new word at all.
-- **Steps.**
-  - [ ] **1. Try a die with today's words (S).** A test game, no engine change: an object with six looks, a variable set from a `<random>` by a command, and a `<become>` to the look for that number. **Check:** it loads and shows each face over many rolls. If it cannot be said, write down exactly which part, and stop for the author.
-  - [ ] **2. Patterns off dice (S).** A holder of five dice, scored by `<patterns>` with `<alike>` and `<run>`, as cards are. **Check:** a test with fixed rolls gets the right pattern for a pair, three alike and a run.
-  - [ ] **3. The game (M).** An original dice-and-patterns game on the key convention: five dice, keep some, roll three times, score. It is added as [AGENTS.md](../AGENTS.md#adding-a-file) says a game is. **Check:** its own test plays a whole game.
-  - [ ] **4. The author: backgammon.** Write down the words it would need (bar, bearing off, doubling) in `docs/designs/26-board-games.md`, and stop. It is built only if the author still wants it once that list is in front of them.
-- **Done when** the first three boxes are ticked.
-
 #### F9. Sound files
 
 - **Built:** a `<sound>` can be a `<path>` to an uncompressed WAV, decoded by the engine (`audio/wave.cpp`) into the same samples as notes ([sounds](reference/sounds.md#recordings), [sound](designs/33-sound.md)). What is left is the author's.
@@ -120,7 +95,7 @@ The review that started this plan argued with this list; its view is beside each
 
 | Listed | The review's view |
 |---|---|
-| **Dice**, then backgammon, agreed as the next board or card step ([cards](designs/27-cards.md)) | A dice-and-patterns game reuses `<patterns>` and `<random>` and costs little ([F8](#f8-dice)). Backgammon is a large rule set that will want board-specific words: leave it |
+| **Backgammon**, the author's call once the word list in [board games](designs/26-board-games.md#open) is read | A large rule set: a track of holders, moves by dice, the bar, bearing off, legality over both dice, the cube |
 | **Moves as timelines** (fighting games: key sequences, blocking that a fist meets first, hit-stun, rounds), the next class after tables and tracks ([tables-and-tracks](designs/25-tables-and-tracks.md)) | Animations that run once and a hitbox per frame are built (F2, done; `sparring` proves them). Stop before combos |
 | **Lookahead for action games' computers** ([board-games](designs/26-board-games.md#open)) | A research project; arcade enemies are better on their simple rules |
 | **A deck of single cards**, each its own picture and numbers ([cards](designs/27-cards.md)) | Wait until a game cannot be written without it |
@@ -168,6 +143,8 @@ Games the vocabulary cannot say yet: [near misses](designs/54-games.md#near-miss
 ## Waiting for a look on Windows
 
 What only eyes, ears or MSVC can check. Whoever lands a change that needs one adds its line; the author deletes it once seen.
+
+- **Five Dice:** the dice read well at their size, kept dice turn gold, and the card's offers are easy to follow.
 
 - **The schema's documentation in an editor (A6), not urgent (the author works mostly from the command line):** hovering `<deflect>` (or any tag) in VS Code with the XML extension shows its sentence, and completion lists show them too.
 

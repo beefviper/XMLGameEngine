@@ -131,6 +131,7 @@ add_executable(xgetest
 	"xge/tests/games/test_speedway.cpp"
 	"xge/tests/games/test_checkers.cpp"
 	"xge/tests/games/test_reversi.cpp"
+	"xge/tests/games/test_fivedice.cpp"
 	"xge/tests/games/test_inarow.cpp"
 	"xge/tests/games/test_dotsandboxes.cpp"
 	"xge/tests/engine/test_cards.cpp"

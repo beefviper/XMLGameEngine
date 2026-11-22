@@ -592,7 +592,13 @@ namespace xge
 			hand.team = writtenObject.handTeam;
 			hand.holds = writtenObject.handHolds;
 		}
-		if (writtenObject.held) { parts->items.add(object.id, order, { true, writtenObject.item.startHolder, writtenObject.item.worths, 0, 0, false }); }
+		// A card's two looks are its face and its back; with any other number
+		// of looks (a die's six faces, a token's one) every look is a face.
+		if (writtenObject.held)
+		{
+			const bool facesOnly = writtenObject.looks.size() != 2;
+			parts->items.add(object.id, order, { true, writtenObject.item.startHolder, writtenObject.item.worths, 0, 0, facesOnly });
+		}
 		if (writtenObject.takesTurns) { parts->turns.add(object.id, order, { true, writtenObject.turnsSprite, writtenObject.ownsClass }); }
 	}
 

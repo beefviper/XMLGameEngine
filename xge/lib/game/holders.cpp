@@ -83,6 +83,8 @@ namespace xge
 
 	void Holders::turnItem(Object& item, bool up)
 	{
+		// Only a card has a back to turn to.
+		if (item.looks.all().size() != 2) { return; }
 		game.itemFor(item).faceUp = up;
 		const std::size_t look = up ? 0 : 1;
 		if (item.looks.shown != look && look < item.looks.all().size()) { item.showLook(look); }
@@ -471,6 +473,25 @@ namespace xge
 	bool Holders::isWild(const HolderRule& rule, const Object& item)
 	{
 		return !rule.wildRules.empty() && acceptsBy(rule.wildRules, item, nullptr);
+	}
+
+	void Holders::itemChanged(Object& item, Name variable)
+	{
+		Object::Item& changed = game.itemFor(item);
+		if (variable == words::worth)
+		{
+			const float worth = item.variable.valueOr(words::worth, 0.0f);
+			const auto high = item.variable.find(words::high);
+			changed.worths = { worth };
+			if (high != item.variable.end() && high->second != worth) { changed.worths.push_back(high->second); }
+			std::sort(changed.worths.begin(), changed.worths.end());
+		}
+		for (Object& holder : game.getCurrentObjects())
+		{
+			if (!game.isHolder(holder)) { continue; }
+			const std::vector<int>& items = game.holderOf(holder).items;
+			if (std::find(items.begin(), items.end(), changed.number) != items.end()) { refreshHolder(holder); }
+		}
 	}
 
 	void Holders::refreshHolder(Object& holder)

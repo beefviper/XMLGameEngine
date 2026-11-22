@@ -677,6 +677,11 @@ namespace xge
 			{
 				for (const auto& command : commands)
 				{
+					if (const auto* when = std::get_if<CmdWhen>(&command))
+					{
+						if (when->body) { ownLooks(when->body->commands, self, where + " > <condition>"); }
+						continue;
+					}
 					const auto* become = std::get_if<CmdBecome>(&shapeOf(command));
 					if (!become || !become->target.empty()) { continue; }
 					if (!self)

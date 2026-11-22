@@ -13,6 +13,7 @@ namespace xge::words
 	// player shows (holder.cards, player.turn), made once.
 	inline const Name turn{ "turn" };
 	inline const Name worth{ "worth" };
+	inline const Name high{ "high" };
 	inline const Name cards{ "cards" };
 	inline const Name held{ "held" };
 	inline const Name points{ "points" };

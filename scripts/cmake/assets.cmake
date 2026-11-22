@@ -61,6 +61,7 @@ set(data_xml
 	"games/descriptions/speedway.xml"
 	"games/descriptions/checkers.xml"
 	"games/descriptions/reversi.xml"
+	"games/descriptions/fivedice.xml"
 	"games/descriptions/fourinarow.xml"
 	"games/descriptions/tictactoe.xml"
 	"games/descriptions/dotsandboxes.xml"

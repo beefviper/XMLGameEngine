@@ -55,4 +55,11 @@ Turn games on cells. Maps of cells already knew which piece is where; missing we
 - **Lookahead for action games:** play the game forward a second or two on a copy of the objects' numbers for each choice of keys, scored by goals inferred from the conditions.
 - A stronger Dots and Boxes (chains) and Reversi (corners, mobility).
 - `<onto>` for Checkers' and Reversi's cursors; draws by repetition or forty quiet moves.
+- **Backgammon would need** (dice themselves are held items, [cards](27-cards.md)):
+  - points as holders along a track, a checker moving by a die's number of points rather than a cell offset;
+  - a lone checker hit to a bar holder, which must enter first;
+  - bearing off once all of a side are home;
+  - legality over both dice (both used if they can be, doubles four times), which `<moves>` cannot say today;
+  - the doubling cube, a variable offered and taken or refused;
+  - `<think>` over chance (an expected value over rolls).
 - Halma (jumps that do not take), chess (sliding moves of any length, blocking pieces, stalemate).

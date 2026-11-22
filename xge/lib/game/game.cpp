@@ -1444,6 +1444,7 @@ namespace xge
 
 		variableIt->second = value;
 		variableChanged(owner->name, variableName, value);
+		if (itemOf(*owner).is) { itemHolders.itemChanged(*owner, variableName); }
 		return true;
 	}
 
@@ -2296,6 +2297,9 @@ namespace xge
 
 	void Game::follow(void)
 	{
+		// A live number may read a holder's score (a box offering what the
+		// dice make), so the holders changed this frame are scored first.
+		itemHolders.scoreDueHolders();
 		for (Object& object : getCurrentObjects())
 		{
 			const Object::Follows* follows = objectParts.follows.find(object.id);

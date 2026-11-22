@@ -54,6 +54,9 @@ namespace xge
 		void turnItem(Object& item, bool up);
 		void putInHolder(Object& holder, int number);
 		void refreshHolder(Object& holder);
+		// A held item's variable set while it is held (a die rolled): its
+		// worth follows a new `worth`, and its holder counts and scores again.
+		void itemChanged(Object& item, Name variable);
 		void scoreHolder(Object& holder);
 		void scoreDueHolders();
 		// Marks each scored holder whose `odds` nothing reads: no condition,

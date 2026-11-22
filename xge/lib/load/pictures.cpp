@@ -625,7 +625,7 @@ namespace xge
 				// The slot is the row's sprite, so a cell with a sprite of its
 				// own of another size sits in the middle of the place its row
 				// gives it.
-				const Picture slotPicture = buildPicture(first.cell.slot, where);
+				const Picture slotPicture = buildPicture(first.cell.slot, where, nullptr, nullptr, &first);
 				const Vector2f slot = layoutSize(slotPicture);
 
 				if (row > rows.begin()->first) { top += above + evaluate(first.cell.gapAbove, where); }
