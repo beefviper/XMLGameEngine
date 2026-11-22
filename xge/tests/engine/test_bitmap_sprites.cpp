@@ -79,7 +79,7 @@ namespace
 	std::string gameXml(const std::string& objects, const std::string& shows, int framerate = 60)
 	{
 		return "<game>"
-			"<window name=\"test\"><width>800</width><height>600</height><background>color.black</background>"
+			"<window name=\"test\"><width>800</width><height>600</height><background>black</background>"
 			"<framerate>" + std::to_string(framerate) + "</framerate></window>"
 			"<variables><variable name=\"pixel\">3</variable></variables>"
 			"<states><objects>" + objects + kOther + "</objects>"
@@ -135,9 +135,9 @@ namespace
 	// Two 2 by 2 pictures, 4 by 4 pixels at a scale of 2: a has its solid
 	// pixels at the top left and bottom right, b at the top right and bottom left.
 	const std::string kA =
-		"<sprite name=\"a\"><bitmap><row>*.</row><row>.*</row><scale>2</scale><color>color.red</color></bitmap></sprite>";
+		"<sprite name=\"a\"><bitmap><row>*.</row><row>.*</row><scale>2</scale><color>red</color></bitmap></sprite>";
 	const std::string kB =
-		"<sprite name=\"b\"><bitmap><row>.*</row><row>*.</row><scale>2</scale><color>color.red</color></bitmap></sprite>";
+		"<sprite name=\"b\"><bitmap><row>.*</row><row>*.</row><scale>2</scale><color>red</color></bitmap></sprite>";
 	const std::string kTwoFrames =
 		"<animation><seconds>0.5</seconds><frame sprite=\"a\" /><frame sprite=\"b\" /></animation>";
 
@@ -174,7 +174,7 @@ namespace
 
 TEST_CASE("a bitmap is one pixel to a character, each blown up by the scale", "[bitmap]")
 {
-	const Bitmap bitmap = rasterizeRows({ "*.", ".*" }, 3, colorFromName("color.green"));
+	const Bitmap bitmap = rasterizeRows({ "*.", ".*" }, 3, colorFromName("green"));
 
 	CHECK(bitmap.width == 6);
 	CHECK(bitmap.height == 6);
@@ -190,15 +190,15 @@ TEST_CASE("a bitmap is one pixel to a character, each blown up by the scale", "[
 	}
 
 	// Drawn in the color, and a clear pixel has no alpha.
-	CHECK(bitmap.rgba[(0 * 6 + 0) * 4 + 0] == colorFromName("color.green").r);
-	CHECK(bitmap.rgba[(0 * 6 + 0) * 4 + 1] == colorFromName("color.green").g);
+	CHECK(bitmap.rgba[(0 * 6 + 0) * 4 + 0] == colorFromName("green").r);
+	CHECK(bitmap.rgba[(0 * 6 + 0) * 4 + 1] == colorFromName("green").g);
 	CHECK(bitmap.rgba[(0 * 6 + 0) * 4 + 3] == 255);
 	CHECK(bitmap.rgba[(0 * 6 + 4) * 4 + 3] == 0);
 }
 
 TEST_CASE("a scale of 1 is the rows as they are, and rows can be all clear", "[bitmap]")
 {
-	const Bitmap bitmap = rasterizeRows({ "*.*", "..." }, 1, colorFromName("color.white"));
+	const Bitmap bitmap = rasterizeRows({ "*.*", "..." }, 1, colorFromName("white"));
 
 	CHECK(bitmap.width == 3);
 	CHECK(bitmap.height == 2);
@@ -210,7 +210,7 @@ TEST_CASE("a scale of 1 is the rows as they are, and rows can be all clear", "[b
 
 TEST_CASE("a bitmap that is not rows of equal length of periods and asterisks is refused, saying which row", "[bitmap]")
 {
-	const Color color = colorFromName("color.white");
+	const Color color = colorFromName("white");
 
 	SECTION("no rows") { CHECK_THROWS_WITH(rasterizeRows({}, 1, color), ContainsSubstring("no <row>s")); }
 	SECTION("an empty row") { CHECK_THROWS_WITH(rasterizeRows({ "*.", "" }, 1, color), ContainsSubstring("row 2") && ContainsSubstring("empty")); }
@@ -233,7 +233,7 @@ TEST_CASE("a bitmap that is not rows of equal length of periods and asterisks is
 TEST_CASE("a bitmap sprite is drawn when the game loads and has the size of its picture", "[bitmap][xml]")
 {
 	Loaded loaded{ gameXml(objectWith(
-		"<sprite><bitmap><row>.*.</row><row>***</row><scale>pixel</scale><color>color.red</color></bitmap></sprite>"),
+		"<sprite><bitmap><row>.*.</row><row>***</row><scale>pixel</scale><color>red</color></bitmap></sprite>"),
 		"<show object=\"thing\" />") };
 	const Object& thing = loaded.game.object("thing");
 
@@ -270,7 +270,7 @@ TEST_CASE("the scale and the color can be left out: one pixel to a character, wh
 
 TEST_CASE("a sprite takes a picture of the <pictures> by <bitmap from>, and what it gives changes the picture's", "[bitmap][pictures][xml]")
 {
-	const std::string pictures = "<pictures><bitmap name=\"ship\"><row>.*.</row><row>***</row><scale>pixel</scale><color>color.red</color></bitmap></pictures>";
+	const std::string pictures = "<pictures><bitmap name=\"ship\"><row>.*.</row><row>***</row><scale>pixel</scale><color>red</color></bitmap></pictures>";
 	const auto with = [&](const std::string& sprite)
 	{
 		std::string xml = gameXml(objectWith(sprite), "<show object=\"thing\" />");
@@ -288,7 +288,7 @@ TEST_CASE("a sprite takes a picture of the <pictures> by <bitmap from>, and what
 	CHECK(ship.drawn.bitmap->rgba[(0 * 9 + 4) * 4 + 1] == 0);
 
 	// Its own scale and colour over the picture's; the rows stay.
-	Loaded changed{ with("<sprite><bitmap from=\"ship\"><scale>1</scale><color>color.green</color></bitmap></sprite>") };
+	Loaded changed{ with("<sprite><bitmap from=\"ship\"><scale>1</scale><color>green</color></bitmap></sprite>") };
 	const Object& small = changed.game.object("thing");
 	REQUIRE(small.drawn.bitmap);
 	CHECK(small.drawn.bitmap->width == 3);

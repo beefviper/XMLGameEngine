@@ -60,14 +60,14 @@
     <variable name="gap">120</variable>
   </variables>
   <styles>
-    <style name="banner"><size>50</size><color>color.yellow</color></style>
+    <style name="banner"><size>50</size><color>yellow</color></style>
     <style name="prompt"><size>36</size></style>
-    <style name="help"><size>22</size><color>color.white</color></style>
+    <style name="help"><size>22</size><color>white</color></style>
   </styles>
   <objects>
     <!-- the walls a room can have, taken a member at a time -->
     <group name="walls" class="wall">
-      <sprite><rectangle><width>window.right</width><height>wall</height><color>color.yellow</color></rectangle></sprite>
+      <sprite><rectangle><width>window.right</width><height>wall</height><color>yellow</color></rectangle></sprite>
       <collisions />
       <member name="top"><position><x>0</x><y>0</y></position></member>
       <member name="bottom"><position><x>0</x><y><subtract><value>window.bottom</value><value>wall</value></subtract></y></position></member>
@@ -115,7 +115,7 @@
         <type>pixel</type>
       </collisions>
       <member name="gold" />
-      <member name="black"><sprite><bitmap><color>color.darkgrey</color></bitmap></sprite></member>
+      <member name="black"><sprite><bitmap><color>darkgrey</color></bitmap></sprite></member>
     </group>
 
     <!-- the dragons: asleep until the hero comes near, then after him -->
@@ -144,20 +144,20 @@
         </timer>
       </timers>
       <member name="yorgle">
-        <sprite name="asleep"><bitmap><color>color.orange</color></bitmap></sprite>
-        <sprite name="awake"><bitmap><color>color.yellow</color></bitmap></sprite>
+        <sprite name="asleep"><bitmap><color>orange</color></bitmap></sprite>
+        <sprite name="awake"><bitmap><color>yellow</color></bitmap></sprite>
         <position><x>420</x><y>160</y></position>
       </member>
       <member name="grundle">
-        <sprite name="asleep"><bitmap><color>color.darkgreen</color></bitmap></sprite>
-        <sprite name="awake"><bitmap><color>color.green</color></bitmap></sprite>
+        <sprite name="asleep"><bitmap><color>darkgreen</color></bitmap></sprite>
+        <sprite name="awake"><bitmap><color>green</color></bitmap></sprite>
         <position><x>460</x><y>240</y></position>
       </member>
     </group>
 
     <!-- the ways out, never drawn -->
     <object name="eastexit" class="eastside">
-      <sprite><rectangle><width>4</width><height>window.bottom</height><color>color.black</color></rectangle></sprite>
+      <sprite><rectangle><width>4</width><height>window.bottom</height><color>black</color></rectangle></sprite>
       <position><x><subtract><value>window.right</value><value>4</value></subtract></x><y>0</y></position>
       <hidden />
       <collisions>
@@ -165,7 +165,7 @@
       </collisions>
     </object>
     <object name="westexit" class="westside">
-      <sprite><rectangle><width>4</width><height>window.bottom</height><color>color.black</color></rectangle></sprite>
+      <sprite><rectangle><width>4</width><height>window.bottom</height><color>black</color></rectangle></sprite>
       <position><x>0</x><y>0</y></position>
       <hidden />
       <collisions>
@@ -174,7 +174,7 @@
     </object>
     <!-- just inside a castle's arch -->
     <object name="doorway" class="inside">
-      <sprite><rectangle><width>64</width><height>6</height><color>color.black</color></rectangle></sprite>
+      <sprite><rectangle><width>64</width><height>6</height><color>black</color></rectangle></sprite>
       <position><x><subtract><value>window.width.center</value><value>32</value></subtract></x><y>136</y></position>
       <hidden />
       <collisions>
@@ -183,7 +183,7 @@
     </object>
     <!-- the bottom of a hall -->
     <object name="doorout" class="outside">
-      <sprite><rectangle><width>gap</width><height>6</height><color>color.black</color></rectangle></sprite>
+      <sprite><rectangle><width>gap</width><height>6</height><color>black</color></rectangle></sprite>
       <position><x>
         <divide>
           <value><subtract><value>window.right</value><value>gap</value></subtract></value>
@@ -236,7 +236,7 @@
 
         <!-- the hero: walks, stops at walls, carries what he walks into -->
         <object name="hero">
-          <sprite><rectangle><width>10</width><height>10</height><color>color.orange</color></rectangle></sprite>
+          <sprite><rectangle><width>10</width><height>10</height><color>orange</color></rectangle></sprite>
           <position><x><subtract><value>window.width.center</value><value>5</value></subtract></x><y>400</y></position>
           <collisions>
             <collision edge="all"><stick /></collision>
@@ -321,7 +321,7 @@
                   <value>window.bottom</value>
                   <value><multiply><value>3</value><value>wall</value></multiply></value>
                 </subtract>
-              </height><color>color.black</color></rectangle></sprite>
+              </height><color>black</color></rectangle></sprite>
               <position><x>wall</x><y>wall</y></position>
               <hidden />
               <collisions>
@@ -348,8 +348,8 @@
             <variable name="dragonspeed">72</variable>
           </variables>
           <objects>
-            <object name="top"><sprite><rectangle><width>window.right</width><height>wall</height><color>color.green</color></rectangle></sprite></object>
-            <object name="bottom"><sprite><rectangle><width>window.right</width><height>wall</height><color>color.green</color></rectangle></sprite></object>
+            <object name="top"><sprite><rectangle><width>window.right</width><height>wall</height><color>green</color></rectangle></sprite></object>
+            <object name="bottom"><sprite><rectangle><width>window.right</width><height>wall</height><color>green</color></rectangle></sprite></object>
             <object name="westexit" />
             <object name="eastexit" />
             <object name="goldkey" class="item">
@@ -379,9 +379,9 @@
             <way name="in" scene="dungeon" />
           </ways>
           <objects>
-            <object name="top"><sprite><rectangle><width>window.right</width><height>wall</height><color>color.lightgrey</color></rectangle></sprite></object>
-            <object name="bottom"><sprite><rectangle><width>window.right</width><height>wall</height><color>color.lightgrey</color></rectangle></sprite></object>
-            <object name="east"><sprite><rectangle><width>wall</width><height>window.bottom</height><color>color.lightgrey</color></rectangle></sprite></object>
+            <object name="top"><sprite><rectangle><width>window.right</width><height>wall</height><color>lightgrey</color></rectangle></sprite></object>
+            <object name="bottom"><sprite><rectangle><width>window.right</width><height>wall</height><color>lightgrey</color></rectangle></sprite></object>
+            <object name="east"><sprite><rectangle><width>wall</width><height>window.bottom</height><color>lightgrey</color></rectangle></sprite></object>
             <object name="westexit" />
             <object name="black" />
             <object name="doorway" />
@@ -406,21 +406,21 @@
             <variable name="dragonspeed">96</variable>
           </variables>
           <objects>
-            <object name="top"><sprite><rectangle><width>window.right</width><height>wall</height><color>color.lightgrey</color></rectangle></sprite></object>
-            <object name="west"><sprite><rectangle><width>wall</width><height>window.bottom</height><color>color.lightgrey</color></rectangle></sprite></object>
-            <object name="east"><sprite><rectangle><width>wall</width><height>window.bottom</height><color>color.lightgrey</color></rectangle></sprite></object>
+            <object name="top"><sprite><rectangle><width>window.right</width><height>wall</height><color>lightgrey</color></rectangle></sprite></object>
+            <object name="west"><sprite><rectangle><width>wall</width><height>window.bottom</height><color>lightgrey</color></rectangle></sprite></object>
+            <object name="east"><sprite><rectangle><width>wall</width><height>window.bottom</height><color>lightgrey</color></rectangle></sprite></object>
             <object name="lowleft"><sprite><rectangle><width>
               <divide>
                 <value><subtract><value>window.right</value><value>gap</value></subtract></value>
                 <value>2</value>
               </divide>
-            </width><height>wall</height><color>color.lightgrey</color></rectangle></sprite></object>
+            </width><height>wall</height><color>lightgrey</color></rectangle></sprite></object>
             <object name="lowright"><sprite><rectangle><width>
               <divide>
                 <value><subtract><value>window.right</value><value>gap</value></subtract></value>
                 <value>2</value>
               </divide>
-            </width><height>wall</height><color>color.lightgrey</color></rectangle></sprite></object>
+            </width><height>wall</height><color>lightgrey</color></rectangle></sprite></object>
             <object name="doorout" />
             <!-- the chalice, flashing -->
             <object name="chalice" class="item">
@@ -478,7 +478,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite><text style="banner"><content>PAUSED</content><size>100</size><color>color.white</color></text></sprite>
+          <sprite><text style="banner"><content>PAUSED</content><size>100</size><color>white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -493,8 +493,8 @@
     <state name="over">
       <objects>
         <object name="message">
-          <sprite name="won"><text style="banner"><content>THE CHALICE IS HOME</content><color>color.magenta</color></text></sprite>
-          <sprite name="lost"><text style="banner"><content>EATEN BY A DRAGON</content><color>color.green</color></text></sprite>
+          <sprite name="won"><text style="banner"><content>THE CHALICE IS HOME</content><color>magenta</color></text></sprite>
+          <sprite name="lost"><text style="banner"><content>EATEN BY A DRAGON</content><color>green</color></text></sprite>
           <position><x><centered /></x><y><centered><offset>20</offset></centered></y></position>
         </object>
         <object name="again">
@@ -579,7 +579,7 @@
       <row>************........************</row>
       <row>************........************</row>
       <scale>8</scale>
-      <color>color.yellow</color>
+      <color>yellow</color>
     </bitmap>
     <bitmap name="dragons-asleep">
       <row>....***.</row>
@@ -598,28 +598,28 @@
     <bitmap name="goldgate">
       <row>*.*.*.*.</row><row>********</row><row>*.*.*.*.</row><row>*.*.*.*.</row><row>********</row><row>*.*.*.*.</row><row>*.*.*.*.</row><row>********</row>
       <scale>8</scale>
-      <color>color.lightgrey</color>
+      <color>lightgrey</color>
     </bitmap>
     <bitmap name="sword">
       <row>.*......</row>
       <row>********</row>
       <row>.*......</row>
       <scale>3</scale>
-      <color>color.yellow</color>
+      <color>yellow</color>
     </bitmap>
     <bitmap name="blackkey">
       <row>.***.....</row>
       <row>**.******</row>
       <row>.***..*.*</row>
       <scale>3</scale>
-      <color>color.darkgrey</color>
+      <color>darkgrey</color>
     </bitmap>
     <bitmap name="goldkey">
       <row>.***.....</row>
       <row>**.******</row>
       <row>.***..*.*</row>
       <scale>3</scale>
-      <color>color.yellow</color>
+      <color>yellow</color>
     </bitmap>
     <bitmap name="chalice-bright">
       <row>*.....*</row>
@@ -630,7 +630,7 @@
       <row>...*...</row>
       <row>.*****.</row>
       <scale>3</scale>
-      <color>color.magenta</color>
+      <color>magenta</color>
     </bitmap>
     <bitmap name="chalice-dim">
       <row>*.....*</row>
@@ -641,7 +641,7 @@
       <row>...*...</row>
       <row>.*****.</row>
       <scale>3</scale>
-      <color>color.purple</color>
+      <color>purple</color>
     </bitmap>
   </pictures>
 </game>

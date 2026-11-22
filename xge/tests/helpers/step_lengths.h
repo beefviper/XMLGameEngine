@@ -121,7 +121,7 @@ namespace played
 	inline std::string smallGame(const std::string& objects, const std::string& more = "", const std::string& inputs = "")
 	{
 		return "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
-			"<window name=\"steps\"><width>800</width><height>600</height><background>color.black</background>"
+			"<window name=\"steps\"><width>800</width><height>600</height><background>black</background>"
 			"<framerate>60</framerate></window>"
 			"<variables><variable name=\"unused\">0</variable></variables>"
 			"<states><state name=\"playing\"><objects>" + objects + "</objects>"

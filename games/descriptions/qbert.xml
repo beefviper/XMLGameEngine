@@ -67,18 +67,18 @@
     <variable name="height">10</variable>
   </variables>
   <styles>
-    <style name="banner"><size>16</size><color>color.orange</color><font>assets/pressstart2p.ttf</font></style>
-    <style name="text"><size>8</size><color>color.white</color><font>assets/pressstart2p.ttf</font></style>
+    <style name="banner"><size>16</size><color>orange</color><font>assets/pressstart2p.ttf</font></style>
+    <style name="text"><size>8</size><color>white</color><font>assets/pressstart2p.ttf</font></style>
     <style name="coily">
-      <color char="p">color.purple</color>
-      <color char="w">color.white</color>
-      <color char="k">color.black</color>
-      <color char="r">color.red</color>
+      <color char="p">purple</color>
+      <color char="w">white</color>
+      <color char="k">black</color>
+      <color char="r">red</color>
     </style>
     <style name="disc">
-      <color char="c">color.cyan</color>
-      <color char="m">color.magenta</color>
-      <color char="y">color.yellow</color>
+      <color char="c">cyan</color>
+      <color char="m">magenta</color>
+      <color char="y">yellow</color>
     </style>
   </styles>
   <keeps>
@@ -111,7 +111,7 @@
           <sprite><text style="text" /></sprite>
           <position><x><centered /></x><y><centered><offset>-12</offset></centered></y></position>
           <row number="1"><sprite><text><content>turn every cube yellow</content></text></sprite></row>
-          <row number="2"><sprite><text><content>w d s a or arrows hop</content><color>color.lightgrey</color></text></sprite></row>
+          <row number="2"><sprite><text><content>w d s a or arrows hop</content><color>lightgrey</color></text></sprite></row>
           <row number="3"><sprite><text><content>space to start</content></text></sprite><padding><y>32</y></padding></row>
         </group>
       </objects>
@@ -212,7 +212,7 @@
               <rectangle>
                 <width>12</width>
                 <height>28</height>
-                <color>color.black</color>
+                <color>black</color>
               </rectangle>
             </sprite>
             <animation name="ready">
@@ -510,7 +510,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -525,7 +525,7 @@
       <objects>
         <object name="message">
           <sprite name="won"><text style="banner"><content>PYRAMID DONE</content></text></sprite>
-          <sprite name="lost"><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>
+          <sprite name="lost"><text style="banner"><content>GAME OVER</content><color>red</color></text></sprite>
           <position><x><centered /></x><y><centered><offset>-20</offset></centered></y></position>
         </object>
       </objects>
@@ -606,9 +606,9 @@
       <row>.....lllrrr.....</row>
       <row>.......lr.......</row>
       <scale>2</scale>
-      <color>color.blue</color>
-      <color char="l">color.brown</color>
-      <color char="r">color.darkgrey</color>
+      <color>blue</color>
+      <color char="l">brown</color>
+      <color char="r">darkgrey</color>
     </bitmap>
     <bitmap name="cubes-lit">
       <row>.......**.......</row>
@@ -628,9 +628,9 @@
       <row>.....lllrrr.....</row>
       <row>.......lr.......</row>
       <scale>2</scale>
-      <color>color.yellow</color>
-      <color char="l">color.brown</color>
-      <color char="r">color.darkgrey</color>
+      <color>yellow</color>
+      <color char="l">brown</color>
+      <color char="r">darkgrey</color>
     </bitmap>
     <bitmap name="discs-spina" style="disc">
       <row>............</row>
@@ -739,9 +739,9 @@
       <row>.....o...o......</row>
       <row>....kkk..kkk....</row>
       <row>...kkkk..kkkk...</row>
-      <color char="o">color.orange</color>
-      <color char="w">color.white</color>
-      <color char="k">color.black</color>
+      <color char="o">orange</color>
+      <color char="w">white</color>
+      <color char="k">black</color>
     </bitmap>
     <bitmap name="drop-1">
       <row>................</row>
@@ -760,9 +760,9 @@
       <row>.....kkk.kk.....</row>
       <row>................</row>
       <row>................</row>
-      <color char="o">color.orange</color>
-      <color char="w">color.white</color>
-      <color char="k">color.black</color>
+      <color char="o">orange</color>
+      <color char="w">white</color>
+      <color char="k">black</color>
     </bitmap>
     <bitmap name="drop-2">
       <row>................</row>
@@ -781,9 +781,9 @@
       <row>................</row>
       <row>................</row>
       <row>................</row>
-      <color char="o">color.orange</color>
-      <color char="w">color.white</color>
-      <color char="k">color.black</color>
+      <color char="o">orange</color>
+      <color char="w">white</color>
+      <color char="k">black</color>
     </bitmap>
     <bitmap name="drop-3">
       <row>................</row>
@@ -802,9 +802,9 @@
       <row>................</row>
       <row>................</row>
       <row>................</row>
-      <color char="o">color.orange</color>
-      <color char="w">color.white</color>
-      <color char="k">color.black</color>
+      <color char="o">orange</color>
+      <color char="w">white</color>
+      <color char="k">black</color>
     </bitmap>
     <bitmap name="qbert-back">
       <row>..........okko..</row>
@@ -823,9 +823,9 @@
       <row>.....o...o......</row>
       <row>....kkk..kkk....</row>
       <row>...kkkk..kkkk...</row>
-      <color char="o">color.orange</color>
-      <color char="w">color.white</color>
-      <color char="k">color.black</color>
+      <color char="o">orange</color>
+      <color char="w">white</color>
+      <color char="k">black</color>
     </bitmap>
     <bitmap name="ball">
       <row>..****..</row>
@@ -836,8 +836,8 @@
       <row>********</row>
       <row>.******.</row>
       <row>..****..</row>
-      <color>color.red</color>
-      <color char="w">color.white</color>
+      <color>red</color>
+      <color char="w">white</color>
     </bitmap>
     <bitmap name="coily-round" style="coily">
       <row>................</row>

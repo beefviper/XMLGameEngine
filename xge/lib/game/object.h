@@ -237,7 +237,7 @@ namespace xge
 	{
 		WrittenVector2 from;
 		WrittenVector2 to;
-		std::string color;           // "" means color.white
+		std::string color;           // "" means white
 		std::optional<WrittenValue> thickness;  // when written; otherwise 1
 	};
 
@@ -246,7 +246,7 @@ namespace xge
 	struct WrittenPolygon
 	{
 		std::vector<WrittenVector2> points;
-		std::string color;           // "" means color.white
+		std::string color;           // "" means white
 	};
 
 	// An object's <sprite>, as written: one shape, a drawing made of <line>s,
@@ -325,7 +325,7 @@ namespace xge
 		WrittenValue thickness;
 
 		std::string flip;            // image: "", "horizontal" or "vertical"
-		std::string color;           // "" means color.white (or the style's)
+		std::string color;           // "" means white (or the style's)
 		std::string font;            // text: a font file; "" means the style's, or assets/tuffy.ttf
 
 		// text and bitmap: style="...", a <style> of the game's <styles>,

@@ -59,7 +59,7 @@
     <variable name="shotlife">1</variable>
   </variables>
   <styles>
-    <style name="banner"><size>110</size><color>color.white</color></style>
+    <style name="banner"><size>110</size><color>white</color></style>
     <style name="prompt"><size>40</size></style>
     <style name="hud"><size>30</size></style>
   </styles>
@@ -213,7 +213,7 @@
   <states>
     <objects>
       <object name="best">
-        <sprite><text style="hud"><number>best.score</number><color>color.lightgrey</color></text></sprite>
+        <sprite><text style="hud"><number>best.score</number><color>lightgrey</color></text></sprite>
         <position><x><centered /></x><y>margin</y></position>
         <variables><variable name="score">0</variable></variables>
       </object>
@@ -225,7 +225,7 @@
           <position><x><centered /></x><y><centered><offset>-110</offset></centered></y></position>
         </object>
         <object name="keys">
-          <sprite><text style="prompt"><content>turn a d   thrust w   fire space   hyperspace s</content><size>24</size><color>color.lightgrey</color></text></sprite>
+          <sprite><text style="prompt"><content>turn a d   thrust w   fire space   hyperspace s</content><size>24</size><color>lightgrey</color></text></sprite>
           <position><x><centered /></x><y><centered><offset>10</offset></centered></y></position>
         </object>
         <object name="start">
@@ -574,7 +574,7 @@
       <row>........................</row>
       <row>........................</row>
       <scale>2</scale>
-      <color>color.white</color>
+      <color>white</color>
     </bitmap>
     <bitmap name="wreck-b">
       <row>........................</row>
@@ -602,7 +602,7 @@
       <row>........................</row>
       <row>........................</row>
       <scale>2</scale>
-      <color>color.white</color>
+      <color>white</color>
     </bitmap>
     <bitmap name="wreck-c">
       <row>..............*.........</row>
@@ -630,7 +630,7 @@
       <row>.............**.........</row>
       <row>........................</row>
       <scale>2</scale>
-      <color>color.white</color>
+      <color>white</color>
     </bitmap>
     <bitmap name="wreck-d">
       <row>.............*..........</row>
@@ -658,7 +658,7 @@
       <row>........................</row>
       <row>............*...........</row>
       <scale>2</scale>
-      <color>color.white</color>
+      <color>white</color>
     </bitmap>
     <drawing name="mediumrock">
       <line><from><x>27</x><y>28</y></from><to><x>20</x><y>35</y></to><thickness>2</thickness></line>

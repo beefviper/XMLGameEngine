@@ -37,7 +37,7 @@
   <window name="Air-Sea Battle">
     <width>640</width>
     <height>480</height>
-    <background>color.darkblue</background>
+    <background>darkblue</background>
   </window>
   <variables>
     <variable name="margin">10</variable>
@@ -45,16 +45,16 @@
     <variable name="shellspeed">360</variable>
   </variables>
   <styles>
-    <style name="banner"><size>100</size><color>color.yellow</color></style>
-    <style name="prompt"><size>40</size><color>color.white</color></style>
-    <style name="keys"><size>22</size><color>color.yellow</color></style>
-    <style name="hud"><size>40</size><color>color.yellow</color></style>
-    <style name="outcome"><size>50</size><color>color.white</color></style>
+    <style name="banner"><size>100</size><color>yellow</color></style>
+    <style name="prompt"><size>40</size><color>white</color></style>
+    <style name="keys"><size>22</size><color>yellow</color></style>
+    <style name="hud"><size>40</size><color>yellow</color></style>
+    <style name="outcome"><size>50</size><color>white</color></style>
   </styles>
   <objects>
     <!-- each gun's shell, made when it fires: two each in the air at most -->
     <group name="shells">
-      <sprite><rectangle><width>4</width><height>4</height><color>color.yellow</color></rectangle></sprite>
+      <sprite><rectangle><width>4</width><height>4</height><color>yellow</color></rectangle></sprite>
       <velocity><y><negate><value>shellspeed</value></negate></y></velocity>
       <most>2</most>
       <collisions>
@@ -62,7 +62,7 @@
         <collision class="plane"><despawn /></collision>
       </collisions>
       <member name="shell1" />
-      <member name="shell2"><sprite><rectangle><color>color.white</color></rectangle></sprite></member>
+      <member name="shell2"><sprite><rectangle><color>white</color></rectangle></sprite></member>
     </group>
   </objects>
   <states>
@@ -93,10 +93,10 @@
           <sprite><text style="keys" /></sprite>
           <position><x><centered /></x><y><centered /></y></position>
           <row number="1"><sprite><text><content>yellow: a s d point the gun, w fires</content></text></sprite></row>
-          <row number="2"><sprite><text><content>white: left down right point, up fires</content><color>color.white</color></text></sprite></row>
+          <row number="2"><sprite><text><content>white: left down right point, up fires</content><color>white</color></text></sprite></row>
         </group>
         <object name="start">
-          <sprite><text style="prompt"><content>spacebar to start</content><color>color.yellow</color></text></sprite>
+          <sprite><text style="prompt"><content>spacebar to start</content><color>yellow</color></text></sprite>
           <position><x><centered /></x><y><centered><offset>120</offset></centered></y></position>
         </object>
       </objects>
@@ -113,7 +113,7 @@
           </variables>
         </object>
         <object name="sea">
-          <sprite><rectangle><width>window.right</width><height><subtract><value>window.bottom</value><value>sea</value></subtract></height><color>color.blue</color></rectangle></sprite>
+          <sprite><rectangle><width>window.right</width><height><subtract><value>window.bottom</value><value>sea</value></subtract></height><color>blue</color></rectangle></sprite>
           <position><x>0</x><y>sea</y></position>
         </object>
         <!-- four lanes of planes going round and round the sky: they start off the side they fly in from, and one shot down comes back from there -->
@@ -196,7 +196,7 @@
             <member name="gun1"><position><x><centered><divide><value>window.width.center</value><value>2</value></divide></centered></x></position></member>
           </group>
           <group name="white">
-            <sprite><bitmap><color>color.white</color></bitmap></sprite>
+            <sprite><bitmap><color>white</color></bitmap></sprite>
             <actions>
               <action name="fire">
                 <fire object="shell2" />
@@ -216,11 +216,11 @@
           <position><x>margin</x><y>margin</y></position>
         </object>
         <object name="clock">
-          <sprite><text style="hud"><number>status.time</number><size>32</size><color>color.lightgrey</color></text></sprite>
+          <sprite><text style="hud"><number>status.time</number><size>32</size><color>lightgrey</color></text></sprite>
           <position><x><centered /></x><y>margin</y></position>
         </object>
         <object name="score2">
-          <sprite><text style="hud"><number>gun2.score</number><color>color.white</color></text></sprite>
+          <sprite><text style="hud"><number>gun2.score</number><color>white</color></text></sprite>
           <position><x><right><offset>margin</offset></right></x><y>margin</y></position>
         </object>
       </objects>
@@ -273,7 +273,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -288,7 +288,7 @@
       <objects>
         <!-- who won, or a draw: under TIME UP -->
         <object name="outcome">
-          <sprite name="yellow"><text style="outcome"><content>YELLOW WINS</content><color>color.yellow</color></text></sprite>
+          <sprite name="yellow"><text style="outcome"><content>YELLOW WINS</content><color>yellow</color></text></sprite>
           <sprite name="white"><text style="outcome"><content>WHITE WINS</content></text></sprite>
           <sprite name="draw"><text style="outcome"><content>A DRAW</content></text></sprite>
           <position><x><centered /></x><y><centered><offset>10</offset></centered></y></position>
@@ -336,7 +336,7 @@
       <row>.**********.</row>
       <row>...**.......</row>
       <scale>3</scale>
-      <color>color.white</color>
+      <color>white</color>
     </bitmap>
     <bitmap name="bombers">
       <row>......**....</row>
@@ -346,7 +346,7 @@
       <row>.**********.</row>
       <row>.......**...</row>
       <scale>3</scale>
-      <color>color.yellow</color>
+      <color>yellow</color>
     </bitmap>
     <bitmap name="blimps">
       <row>..********..</row>
@@ -356,7 +356,7 @@
       <row>.**********.</row>
       <row>....****....</row>
       <scale>3</scale>
-      <color>color.lightgrey</color>
+      <color>lightgrey</color>
     </bitmap>
     <bitmap name="choppers">
       <row>************</row>
@@ -366,7 +366,7 @@
       <row>..*******..*</row>
       <row>...*...*....</row>
       <scale>3</scale>
-      <color>color.orange</color>
+      <color>orange</color>
     </bitmap>
     <bitmap name="guns">
       <row>....*....</row>
@@ -379,7 +379,7 @@
       <row>*********</row>
       <row>*********</row>
       <scale>3</scale>
-      <color>color.yellow</color>
+      <color>yellow</color>
     </bitmap>
   </pictures>
 </game>

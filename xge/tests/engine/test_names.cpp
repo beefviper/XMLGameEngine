@@ -130,7 +130,7 @@ TEST_CASE("a state shows what the game has, and a trigger's from= is a look it h
 		{
 			std::ofstream out(path);
 			out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
-				"<window name=\"scratch\"><width>800</width><height>600</height><background>color.black</background>"
+				"<window name=\"scratch\"><width>800</width><height>600</height><background>black</background>"
 				"<framerate>60</framerate></window>"
 				"<variables><variable name=\"unused\">0</variable></variables>"
 				"<states><state name=\"playing\"><objects>" << objects << "</objects>" << shows
@@ -201,7 +201,7 @@ TEST_CASE("a misspelt name says the line of what holds it, under every XML libra
 	const auto write = [&](const std::string& rule, const std::string& triggered, const std::string& condition, const std::string& shown)
 	{
 		std::ofstream(file) << "<game>\n"
-			"  <window name=\"lines\"><width>800</width><height>600</height><background>color.black</background><framerate>60</framerate></window><variables><variable name=\"unused\">0</variable></variables>\n"
+			"  <window name=\"lines\"><width>800</width><height>600</height><background>black</background><framerate>60</framerate></window><variables><variable name=\"unused\">0</variable></variables>\n"
 			"  <states>\n"
 			"    <state name=\"playing\">\n"
 			"      <objects>\n"

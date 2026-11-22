@@ -56,7 +56,7 @@
     <variable name="rayspeed">300</variable>
   </variables>
   <styles>
-    <style name="banner"><size>100</size><color>color.cyan</color></style>
+    <style name="banner"><size>100</size><color>cyan</color></style>
     <style name="prompt"><size>40</size></style>
     <style name="hud"><size>28</size></style>
   </styles>
@@ -164,12 +164,12 @@
     </group>
     <!-- which wave it is, at the top right -->
     <object name="label">
-      <sprite><text style="hud"><content>WAVE 1</content><color>color.green</color></text></sprite>
+      <sprite><text style="hud"><content>WAVE 1</content><color>green</color></text></sprite>
       <position><x><right><offset>margin</offset></right></x><y>margin</y></position>
     </object>
     <!-- each post's shell, made when it fires: two each in the air at most -->
     <group name="shells" class="shell">
-      <sprite><rectangle><width>4</width><height>4</height><color>color.yellow</color></rectangle></sprite>
+      <sprite><rectangle><width>4</width><height>4</height><color>yellow</color></rectangle></sprite>
       <velocity><y><negate><value>shellspeed</value></negate></y></velocity>
       <most>2</most>
       <collisions>
@@ -180,7 +180,7 @@
     </group>
     <!-- the death rays, fired from the lowest lane -->
     <object name="ray" class="ray">
-      <sprite><rectangle><width>3</width><height>16</height><color>color.magenta</color></rectangle></sprite>
+      <sprite><rectangle><width>3</width><height>16</height><color>magenta</color></rectangle></sprite>
       <velocity><y>rayspeed</y></velocity>
       <most>4</most>
       <collisions>
@@ -208,8 +208,8 @@
           <rows>2</rows>
           <padding><y>50</y></padding>
           <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
-          <row number="1"><sprite><text><content>bring down the gorgon ships before they ray the city</content><size>22</size><color>color.white</color></text></sprite></row>
-          <row number="2"><sprite><text><content>a, w and d (or the arrows) fire the left, middle and right posts</content><size>20</size><color>color.lightgrey</color></text></sprite></row>
+          <row number="1"><sprite><text><content>bring down the gorgon ships before they ray the city</content><size>22</size><color>white</color></text></sprite></row>
+          <row number="2"><sprite><text><content>a, w and d (or the arrows) fire the left, middle and right posts</content><size>20</size><color>lightgrey</color></text></sprite></row>
         </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
@@ -233,11 +233,11 @@
         </object>
 
         <object name="sea" class="ground">
-          <sprite><rectangle><width>window.right</width><height><subtract><value>window.bottom</value><value>ground</value></subtract></height><color>color.darkblue</color></rectangle></sprite>
+          <sprite><rectangle><width>window.right</width><height><subtract><value>window.bottom</value><value>ground</value></subtract></height><color>darkblue</color></rectangle></sprite>
           <position><x>0</x><y>ground</y></position>
         </object>
         <object name="surf">
-          <sprite><rectangle><width>window.right</width><height>3</height><color>color.blue</color></rectangle></sprite>
+          <sprite><rectangle><width>window.right</width><height>3</height><color>blue</color></rectangle></sprite>
           <position><x>0</x><y><add><value>ground</value><value>8</value></add></y></position>
         </object>
 
@@ -356,7 +356,7 @@
               </sprite>
             </group>
             <object name="label">
-              <sprite><text style="hud"><content>WAVE 2</content><color>color.orange</color></text></sprite>
+              <sprite><text style="hud"><content>WAVE 2</content><color>orange</color></text></sprite>
             </object>
           </objects>
         </scene>
@@ -375,7 +375,7 @@
               </sprite>
             </group>
             <object name="label">
-              <sprite><text style="hud"><content>WAVE 3</content><color>color.red</color></text></sprite>
+              <sprite><text style="hud"><content>WAVE 3</content><color>red</color></text></sprite>
             </object>
           </objects>
           <conditions>
@@ -414,7 +414,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -429,8 +429,8 @@
     <state name="over">
       <objects>
         <object name="message">
-          <sprite name="won"><text style="banner"><content>YOU WIN</content><color>color.green</color></text></sprite>
-          <sprite name="lost"><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>
+          <sprite name="won"><text style="banner"><content>YOU WIN</content><color>green</color></text></sprite>
+          <sprite name="lost"><text style="banner"><content>GAME OVER</content><color>red</color></text></sprite>
           <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
         </object>
       </objects>
@@ -470,8 +470,8 @@
       <row>.........</row>
       <row>.........</row>
       <scale>3</scale>
-      <color>color.yellow</color>
-      <color char="o">color.red</color>
+      <color>yellow</color>
+      <color char="o">red</color>
     </bitmap>
     <bitmap name="burst-b">
       <row>.........</row>
@@ -484,8 +484,8 @@
       <row>..*...*..</row>
       <row>.........</row>
       <scale>3</scale>
-      <color>color.yellow</color>
-      <color char="o">color.red</color>
+      <color>yellow</color>
+      <color char="o">red</color>
     </bitmap>
     <bitmap name="burst-c">
       <row>*...*...*</row>
@@ -498,8 +498,8 @@
       <row>.*.....*.</row>
       <row>*...*...*</row>
       <scale>3</scale>
-      <color>color.yellow</color>
-      <color char="o">color.red</color>
+      <color>yellow</color>
+      <color char="o">red</color>
     </bitmap>
     <bitmap name="burst-d">
       <row>o.......o</row>
@@ -512,8 +512,8 @@
       <row>.........</row>
       <row>o.......o</row>
       <scale>3</scale>
-      <color>color.red</color>
-      <color char="o">color.red</color>
+      <color>red</color>
+      <color char="o">red</color>
     </bitmap>
     <!-- a burst, four pictures: a flash, a ball, its pieces flying, the last sparks -->
     <bitmap name="rubble-a">
@@ -527,8 +527,8 @@
       <row>.........</row>
       <row>.........</row>
       <scale>4</scale>
-      <color>color.orange</color>
-      <color char="o">color.white</color>
+      <color>orange</color>
+      <color char="o">white</color>
     </bitmap>
     <bitmap name="rubble-b">
       <row>.........</row>
@@ -541,8 +541,8 @@
       <row>..*...*..</row>
       <row>.........</row>
       <scale>4</scale>
-      <color>color.orange</color>
-      <color char="o">color.white</color>
+      <color>orange</color>
+      <color char="o">white</color>
     </bitmap>
     <bitmap name="rubble-c">
       <row>*...*...*</row>
@@ -555,8 +555,8 @@
       <row>.*.....*.</row>
       <row>*...*...*</row>
       <scale>4</scale>
-      <color>color.orange</color>
-      <color char="o">color.white</color>
+      <color>orange</color>
+      <color char="o">white</color>
     </bitmap>
     <bitmap name="rubble-d">
       <row>o.......o</row>
@@ -569,8 +569,8 @@
       <row>.........</row>
       <row>o.......o</row>
       <scale>4</scale>
-      <color>color.white</color>
-      <color char="o">color.white</color>
+      <color>white</color>
+      <color char="o">white</color>
     </bitmap>
     <bitmap name="gorgons">
       <row>....****....</row>
@@ -579,7 +579,7 @@
       <row>.*.*.*.*.*.*</row>
       <row>..********..</row>
       <scale>3</scale>
-      <color>color.green</color>
+      <color>green</color>
     </bitmap>
     <bitmap name="domes">
       <row>....****....</row>
@@ -589,7 +589,7 @@
       <row>**.**..**.**</row>
       <row>************</row>
       <scale>3</scale>
-      <color>color.cyan</color>
+      <color>cyan</color>
     </bitmap>
     <bitmap name="towers">
       <row>...**...</row>
@@ -601,7 +601,7 @@
       <row>********</row>
       <row>********</row>
       <scale>3</scale>
-      <color>color.lightgrey</color>
+      <color>lightgrey</color>
     </bitmap>
     <bitmap name="post">
       <row>...*...</row>
@@ -611,7 +611,7 @@
       <row>.*****.</row>
       <row>*******</row>
       <scale>3</scale>
-      <color>color.yellow</color>
+      <color>yellow</color>
     </bitmap>
     <bitmap name="gorgons2">
       <row>.....**.....</row>
@@ -620,7 +620,7 @@
       <row>*...****...*</row>
       <row>.....**.....</row>
       <scale>3</scale>
-      <color>color.orange</color>
+      <color>orange</color>
     </bitmap>
     <bitmap name="gorgons3">
       <row>**........**</row>
@@ -629,7 +629,7 @@
       <row>.**.****.**.</row>
       <row>**........**</row>
       <scale>3</scale>
-      <color>color.red</color>
+      <color>red</color>
     </bitmap>
   </pictures>
 </game>

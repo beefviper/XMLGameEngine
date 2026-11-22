@@ -33,7 +33,7 @@ namespace
 		{
 			std::ofstream out(path);
 			out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
-				"<window name=\"scratch\"><width>800</width><height>600</height><background>color.black</background>"
+				"<window name=\"scratch\"><width>800</width><height>600</height><background>black</background>"
 				"<framerate>60</framerate></window>"
 				"<variables><variable name=\"unused\">0</variable></variables>"
 				"<states><state name=\"playing\"><objects>" << objects << "</objects><inputs>"
@@ -58,7 +58,7 @@ namespace
 	std::string flipper(int frames, const std::string& rules = "<collision class=\"ball\"><knock>0.5</knock></collision>")
 	{
 		return "<object name=\"flipper\" class=\"flipper\"><sprite><line><from><x>0</x><y>0</y></from><to><x>80</x><y>0</y></to>"
-			"<color>color.white</color><thickness>8</thickness></line></sprite>"
+			"<color>white</color><thickness>8</thickness></line></sprite>"
 			"<position><x>300</x><y>400</y></position><heading>30</heading><pivot><x>0</x><y>0</y></pivot>"
 			"<collisions><type>pixel</type>" + rules + "</collisions>"
 			"<actions><action name=\"flip\"><swing direction=\"counterclockwise\"><degrees>60</degrees><seconds>" + std::to_string(static_cast<float>(frames) / 60.0f) + "</seconds></swing></action></actions></object>";
@@ -67,7 +67,7 @@ namespace
 	// A ball of radius 5 with its middle at x, y, still, with a mass.
 	std::string ball(float x, float y)
 	{
-		return "<object name=\"ball\" class=\"ball\"><sprite><circle><radius>5</radius><color>color.white</color></circle></sprite>"
+		return "<object name=\"ball\" class=\"ball\"><sprite><circle><radius>5</radius><color>white</color></circle></sprite>"
 			"<position><x>" + std::to_string(x - 5.0f) + "</x><y>" + std::to_string(y - 5.0f) + "</y></position>"
 			"<mass>1</mass><collisions /></object>";
 	}
@@ -229,13 +229,13 @@ namespace
 	{
 		const float radians = degrees * 3.14159265f / 180.0f;
 		return "<object name=\"slope\" class=\"wall\"><sprite><line><from><x>0</x><y>0</y></from><to><x>200</x><y>"
-			+ std::to_string(200.0f * std::tan(radians)) + "</y></to><color>color.white</color><thickness>4</thickness></line></sprite>"
+			+ std::to_string(200.0f * std::tan(radians)) + "</y></to><color>white</color><thickness>4</thickness></line></sprite>"
 			"<position><x>200</x><y>300</y></position><collisions><type>pixel</type></collisions></object>";
 	}
 
 	std::string rubbing(float x, float y, const std::string& friction)
 	{
-		return "<object name=\"ball\" class=\"ball\"><sprite><circle><radius>5</radius><color>color.white</color></circle></sprite>"
+		return "<object name=\"ball\" class=\"ball\"><sprite><circle><radius>5</radius><color>white</color></circle></sprite>"
 			"<position><x>" + std::to_string(x - 5.0f) + "</x><y>" + std::to_string(y - 5.0f) + "</y></position>"
 			"<acceleration><x>0</x><y>720</y></acceleration>" + friction + "<mass>1</mass>"
 			"<collisions><collision class=\"wall\"><bounce>0.5</bounce></collision></collisions></object>";

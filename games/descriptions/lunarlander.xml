@@ -50,9 +50,9 @@
     <variable name="margin">20</variable>
   </variables>
   <styles>
-    <style name="banner"><size>80</size><color>color.white</color></style>
-    <style name="line"><size>28</size><color>color.white</color></style>
-    <style name="hud"><size>26</size><color>color.white</color></style>
+    <style name="banner"><size>80</size><color>white</color></style>
+    <style name="line"><size>28</size><color>white</color></style>
+    <style name="hud"><size>26</size><color>white</color></style>
   </styles>
   <objects>
     <!-- what is left of a wrecked lander, flung out and falling -->
@@ -78,10 +78,10 @@
           <sprite><text style="line" /></sprite>
           <position><x><centered /></x><y><centered><offset>-20</offset></centered></y></position>
           <row number="1"><sprite><text><content>land upright and slowly on a pad: 2X, 3X or 5X the points</content></text></sprite></row>
-          <row number="2"><sprite><text><content>left and right turn, up fires the engine</content><color>color.lightgrey</color></text></sprite></row>
+          <row number="2"><sprite><text><content>left and right turn, up fires the engine</content><color>lightgrey</color></text></sprite></row>
         </group>
         <object name="start">
-          <sprite><text style="line"><content>spacebar to start</content><size>48</size><color>color.green</color></text></sprite>
+          <sprite><text style="line"><content>spacebar to start</content><size>48</size><color>green</color></text></sprite>
           <position><x><centered /></x><y><centered><offset>110</offset></centered></y></position>
         </object>
       </objects>
@@ -97,25 +97,25 @@
         <!-- the moon: peaks and valleys with a gap for each pad; a line is measured from the object's top left -->
         <object name="terrain" class="ground">
           <sprite>
-            <line><from><x>0</x><y>120</y></from><to><x>40</x><y>80</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-            <line><from><x>40</x><y>80</y></from><to><x>70</x><y>100</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-            <line><from><x>70</x><y>100</y></from><to><x>100</x><y>40</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-            <line><from><x>100</x><y>40</y></from><to><x>130</x><y>90</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-            <line><from><x>162</x><y>90</y></from><to><x>190</x><y>150</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-            <line><from><x>190</x><y>150</y></from><to><x>230</x><y>130</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-            <line><from><x>230</x><y>130</y></from><to><x>260</x><y>170</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-            <line><from><x>340</x><y>170</y></from><to><x>370</x><y>110</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-            <line><from><x>370</x><y>110</y></from><to><x>400</x><y>60</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-            <line><from><x>400</x><y>60</y></from><to><x>430</x><y>30</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-            <line><from><x>430</x><y>30</y></from><to><x>460</x><y>80</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-            <line><from><x>460</x><y>80</y></from><to><x>490</x><y>120</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-            <line><from><x>540</x><y>120</y></from><to><x>570</x><y>160</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-            <line><from><x>570</x><y>160</y></from><to><x>610</x><y>190</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-            <line><from><x>610</x><y>190</y></from><to><x>650</x><y>140</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-            <line><from><x>650</x><y>140</y></from><to><x>690</x><y>70</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-            <line><from><x>690</x><y>70</y></from><to><x>720</x><y>100</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-            <line><from><x>720</x><y>100</y></from><to><x>760</x><y>60</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-            <line><from><x>760</x><y>60</y></from><to><x>798</x><y>110</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
+            <line><from><x>0</x><y>120</y></from><to><x>40</x><y>80</y></to><color>lightgrey</color><thickness>2</thickness></line>
+            <line><from><x>40</x><y>80</y></from><to><x>70</x><y>100</y></to><color>lightgrey</color><thickness>2</thickness></line>
+            <line><from><x>70</x><y>100</y></from><to><x>100</x><y>40</y></to><color>lightgrey</color><thickness>2</thickness></line>
+            <line><from><x>100</x><y>40</y></from><to><x>130</x><y>90</y></to><color>lightgrey</color><thickness>2</thickness></line>
+            <line><from><x>162</x><y>90</y></from><to><x>190</x><y>150</y></to><color>lightgrey</color><thickness>2</thickness></line>
+            <line><from><x>190</x><y>150</y></from><to><x>230</x><y>130</y></to><color>lightgrey</color><thickness>2</thickness></line>
+            <line><from><x>230</x><y>130</y></from><to><x>260</x><y>170</y></to><color>lightgrey</color><thickness>2</thickness></line>
+            <line><from><x>340</x><y>170</y></from><to><x>370</x><y>110</y></to><color>lightgrey</color><thickness>2</thickness></line>
+            <line><from><x>370</x><y>110</y></from><to><x>400</x><y>60</y></to><color>lightgrey</color><thickness>2</thickness></line>
+            <line><from><x>400</x><y>60</y></from><to><x>430</x><y>30</y></to><color>lightgrey</color><thickness>2</thickness></line>
+            <line><from><x>430</x><y>30</y></from><to><x>460</x><y>80</y></to><color>lightgrey</color><thickness>2</thickness></line>
+            <line><from><x>460</x><y>80</y></from><to><x>490</x><y>120</y></to><color>lightgrey</color><thickness>2</thickness></line>
+            <line><from><x>540</x><y>120</y></from><to><x>570</x><y>160</y></to><color>lightgrey</color><thickness>2</thickness></line>
+            <line><from><x>570</x><y>160</y></from><to><x>610</x><y>190</y></to><color>lightgrey</color><thickness>2</thickness></line>
+            <line><from><x>610</x><y>190</y></from><to><x>650</x><y>140</y></to><color>lightgrey</color><thickness>2</thickness></line>
+            <line><from><x>650</x><y>140</y></from><to><x>690</x><y>70</y></to><color>lightgrey</color><thickness>2</thickness></line>
+            <line><from><x>690</x><y>70</y></from><to><x>720</x><y>100</y></to><color>lightgrey</color><thickness>2</thickness></line>
+            <line><from><x>720</x><y>100</y></from><to><x>760</x><y>60</y></to><color>lightgrey</color><thickness>2</thickness></line>
+            <line><from><x>760</x><y>60</y></from><to><x>798</x><y>110</y></to><color>lightgrey</color><thickness>2</thickness></line>
           </sprite>
           <position><x>0</x><y>380</y></position>
           <collisions><type>pixel</type></collisions>
@@ -124,15 +124,15 @@
         <group name="pads" class="ground">
           <collisions><type>pixel</type></collisions>
           <member name="pad5">
-            <sprite><line><from><x>0</x><y>0</y></from><to><x>34</x><y>0</y></to><color>color.green</color><thickness>3</thickness></line></sprite>
+            <sprite><line><from><x>0</x><y>0</y></from><to><x>34</x><y>0</y></to><color>green</color><thickness>3</thickness></line></sprite>
             <position><x>129</x><y>469</y></position>
           </member>
           <member name="pad2">
-            <sprite><line><from><x>0</x><y>0</y></from><to><x>82</x><y>0</y></to><color>color.green</color><thickness>3</thickness></line></sprite>
+            <sprite><line><from><x>0</x><y>0</y></from><to><x>82</x><y>0</y></to><color>green</color><thickness>3</thickness></line></sprite>
             <position><x>259</x><y>549</y></position>
           </member>
           <member name="pad3">
-            <sprite><line><from><x>0</x><y>0</y></from><to><x>52</x><y>0</y></to><color>color.green</color><thickness>3</thickness></line></sprite>
+            <sprite><line><from><x>0</x><y>0</y></from><to><x>52</x><y>0</y></to><color>green</color><thickness>3</thickness></line></sprite>
             <position><x>489</x><y>499</y></position>
           </member>
         </group>
@@ -187,7 +187,7 @@
           </variables>
         </object>
         <object name="wrecked">
-          <sprite><text style="line"><content>YOU JUST DESTROYED A 100 MEGABUCK LANDER</content><color>color.red</color></text></sprite>
+          <sprite><text style="line"><content>YOU JUST DESTROYED A 100 MEGABUCK LANDER</content><color>red</color></text></sprite>
           <position><x><centered /></x><y><subtract><value>window.height.center</value><value>140</value></subtract></y></position>
           <waiting />
           <timers>
@@ -275,7 +275,7 @@
     <state name="landed">
       <objects>
         <object name="message">
-          <sprite><text style="banner"><content>THE EAGLE HAS LANDED</content><size>56</size><color>color.green</color></text></sprite>
+          <sprite><text style="banner"><content>THE EAGLE HAS LANDED</content><size>56</size><color>green</color></text></sprite>
           <position><x><centered /></x><y><centered><offset>-150</offset></centered></y></position>
         </object>
         <object name="points">
@@ -296,7 +296,7 @@
     <state name="over">
       <objects>
         <object name="message">
-          <sprite><text style="banner"><content>OUT OF FUEL</content><color>color.red</color></text></sprite>
+          <sprite><text style="banner"><content>OUT OF FUEL</content><color>red</color></text></sprite>
           <position><x><centered /></x><y><centered><offset>-140</offset></centered></y></position>
         </object>
         <object name="again">

@@ -20,7 +20,7 @@ namespace xge
 		std::uint8_t a{ 255 };
 	};
 
-	// "color.black" and the rest; any other name is transparent.
+	// "black" and the rest; any other name is transparent.
 	Color colorFromName(const std::string& name) noexcept;
 
 	// Whether a name is one of the colors above, and all of their names, for

@@ -41,9 +41,9 @@
     <variable name="margin">20</variable>
   </variables>
   <styles>
-    <style name="banner"><size>110</size><color>color.cyan</color></style>
-    <style name="line"><size>30</size><color>color.white</color></style>
-    <style name="hud"><size>30</size><color>color.white</color></style>
+    <style name="banner"><size>110</size><color>cyan</color></style>
+    <style name="line"><size>30</size><color>white</color></style>
+    <style name="hud"><size>30</size><color>white</color></style>
   </styles>
   <objects>
     <!-- a charge, sinking slowly; six at most in the water -->
@@ -104,7 +104,7 @@
           <sprite><text style="line" /></sprite>
           <position><x><centered /></x><y><centered><offset>-20</offset></centered></y></position>
           <row number="1"><sprite><text><content>the deeper the submarine, the more it is worth</content></text></sprite></row>
-          <row number="2"><sprite><text><content>a and d or the arrows move, space drops a pair</content><size>28</size><color>color.lightgrey</color></text></sprite></row>
+          <row number="2"><sprite><text><content>a and d or the arrows move, space drops a pair</content><size>28</size><color>lightgrey</color></text></sprite></row>
         </group>
         <object name="start">
           <sprite><text style="line"><content>spacebar to start</content><size>48</size></text></sprite>
@@ -121,12 +121,12 @@
     <state name="playing">
       <objects>
         <object name="sea">
-          <sprite><rectangle><width>window.right</width><height><subtract><value>window.bottom</value><value>surface</value></subtract></height><color>color.darkblue</color></rectangle></sprite>
+          <sprite><rectangle><width>window.right</width><height><subtract><value>window.bottom</value><value>surface</value></subtract></height><color>darkblue</color></rectangle></sprite>
           <position><x>0</x><y>surface</y></position>
         </object>
         <!-- the top of the water, where a mine that has come up goes off -->
         <object name="waterline">
-          <sprite><rectangle><width>window.right</width><height>2</height><color>color.cyan</color></rectangle></sprite>
+          <sprite><rectangle><width>window.right</width><height>2</height><color>cyan</color></rectangle></sprite>
           <position><x>0</x><y>surface</y></position>
           <collisions />
         </object>
@@ -164,7 +164,7 @@
             <member><position><x>540</x></position></member>
           </group>
           <group name="lane2">
-            <sprite><bitmap><color>color.green</color></bitmap></sprite>
+            <sprite><bitmap><color>green</color></bitmap></sprite>
             <position><y>260</y></position>
             <velocity><x>-120</x></velocity>
             <variables><variable name="worth">40</variable></variables>
@@ -173,7 +173,7 @@
             <member><position><x>680</x></position></member>
           </group>
           <group name="lane3">
-            <sprite><bitmap><color>color.orange</color></bitmap></sprite>
+            <sprite><bitmap><color>orange</color></bitmap></sprite>
             <position><y>350</y></position>
             <velocity><x>150</x></velocity>
             <variables><variable name="worth">60</variable></variables>
@@ -181,7 +181,7 @@
             <member><position><x>390</x></position></member>
           </group>
           <group name="lane4">
-            <sprite><bitmap><color>color.red</color></bitmap></sprite>
+            <sprite><bitmap><color>red</color></bitmap></sprite>
             <position><y>440</y></position>
             <velocity><x>-180</x></velocity>
             <variables><variable name="worth">80</variable></variables>
@@ -222,7 +222,7 @@
           <position><x>margin</x><y>margin</y></position>
         </object>
         <object name="clock">
-          <sprite><text style="hud"><content>TIME </content><number>status.time</number><color>color.yellow</color></text></sprite>
+          <sprite><text style="hud"><content>TIME </content><number>status.time</number><color>yellow</color></text></sprite>
           <position><x><centered /></x><y>margin</y></position>
         </object>
         <object name="ships">
@@ -258,7 +258,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -272,7 +272,7 @@
     <state name="over">
       <objects>
         <object name="message">
-          <sprite><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>
+          <sprite><text style="banner"><content>GAME OVER</content><color>red</color></text></sprite>
           <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
         </object>
         <object name="again">
@@ -329,7 +329,7 @@
       <row>****</row>
       <row>.**.</row>
       <scale>3</scale>
-      <color>color.orange</color>
+      <color>orange</color>
     </bitmap>
     <bitmap name="mine">
       <row>*.*.*</row>
@@ -338,7 +338,7 @@
       <row>.***.</row>
       <row>*.*.*</row>
       <scale>2</scale>
-      <color>color.white</color>
+      <color>white</color>
     </bitmap>
     <bitmap name="burst-flash">
       <row>.*..*..*.</row>
@@ -347,7 +347,7 @@
       <row>..*.*.*..</row>
       <row>.*..*..*.</row>
       <scale>4</scale>
-      <color>color.white</color>
+      <color>white</color>
     </bitmap>
     <bitmap name="burst-spray">
       <row>*...*...*</row>
@@ -356,7 +356,7 @@
       <row>.*.....*.</row>
       <row>*...*...*</row>
       <scale>4</scale>
-      <color>color.cyan</color>
+      <color>cyan</color>
     </bitmap>
     <bitmap name="subs">
       <row>.........**.........</row>
@@ -366,7 +366,7 @@
       <row>.******************.</row>
       <row>..****************..</row>
       <scale>3</scale>
-      <color>color.yellow</color>
+      <color>yellow</color>
     </bitmap>
     <bitmap name="ship">
       <row>..........*...................</row>
@@ -378,7 +378,7 @@
       <row>..**************************..</row>
       <row>...************************...</row>
       <scale>3</scale>
-      <color>color.lightgrey</color>
+      <color>lightgrey</color>
     </bitmap>
   </pictures>
 </game>

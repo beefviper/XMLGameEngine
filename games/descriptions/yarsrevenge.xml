@@ -51,22 +51,22 @@
     <variable name="turnround">6</variable>
   </variables>
   <styles>
-    <style name="banner"><size>90</size><color>color.green</color></style>
-    <style name="help"><size>28</size><color>color.white</color></style>
-    <style name="hud"><size>32</size><color>color.white</color></style>
+    <style name="banner"><size>90</size><color>green</color></style>
+    <style name="help"><size>28</size><color>white</color></style>
+    <style name="hud"><size>32</size><color>white</color></style>
     <style name="zone">
       <scale>20</scale>
-      <color char="r">color.red</color>
-      <color char="g">color.green</color>
-      <color char="b">color.blue</color>
-      <color char="m">color.magenta</color>
-      <color char="y">color.yellow</color>
+      <color char="r">red</color>
+      <color char="g">green</color>
+      <color char="b">blue</color>
+      <color char="m">magenta</color>
+      <color char="y">yellow</color>
     </style>
   </styles>
   <objects>
     <!-- the Zorlon cannon's blast, straight across -->
     <object name="blast">
-      <sprite><rectangle><width>24</width><height>10</height><color>color.yellow</color></rectangle></sprite>
+      <sprite><rectangle><width>24</width><height>10</height><color>yellow</color></rectangle></sprite>
       <velocity><x>480</x><y>0</y></velocity>
       <most>1</most>
       <collisions>
@@ -78,7 +78,7 @@
     </object>
     <!-- Yar's energy missile: one at a time, the way he last flew -->
     <object name="energy">
-      <sprite><rectangle><width>6</width><height>4</height><color>color.white</color></rectangle></sprite>
+      <sprite><rectangle><width>6</width><height>4</height><color>white</color></rectangle></sprite>
       <velocity><x>420</x><y>0</y></velocity>
       <most>1</most>
       <collisions>
@@ -127,7 +127,7 @@
           <sprite><text style="help" /></sprite>
           <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
           <row number="1"><sprite><text><content>eat through the shield, then fire the cannon into the qotile</content></text></sprite></row>
-          <row number="2"><sprite><text><content>w a s d or the arrows fly, space fires, pause key pauses</content><color>color.lightgrey</color></text></sprite></row>
+          <row number="2"><sprite><text><content>w a s d or the arrows fly, space fires, pause key pauses</content><color>lightgrey</color></text></sprite></row>
         </group>
         <object name="start">
           <sprite><text style="help"><content>spacebar to start</content><size>40</size></text></sprite>
@@ -197,7 +197,7 @@
           <row>..########</row>
           <row>....######</row>
           <group name="cells" char="#" class="shield">
-            <sprite><rectangle><width>11</width><height>13</height><color>color.orange</color></rectangle></sprite>
+            <sprite><rectangle><width>11</width><height>13</height><color>orange</color></rectangle></sprite>
             <velocity><x>0</x><y>sway</y></velocity>
             <collisions>
               <collision object="yar">
@@ -279,7 +279,7 @@
         </object>
         <!-- the destroyer missile: always turning toward Yar -->
         <object name="missile">
-          <sprite><rectangle><width>6</width><height>6</height><color>color.white</color></rectangle></sprite>
+          <sprite><rectangle><width>6</width><height>6</height><color>white</color></rectangle></sprite>
           <position><x>700</x><y>296</y></position>
           <velocity><x>-96</x><y>0</y></velocity>
           <seek object="yar">120</seek>
@@ -332,7 +332,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -410,7 +410,7 @@
     <state name="over">
       <objects>
         <object name="message">
-          <sprite><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>
+          <sprite><text style="banner"><content>GAME OVER</content><color>red</color></text></sprite>
           <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
         </object>
         <object name="again">
@@ -471,8 +471,8 @@
       <row>.........</row>
       <row>.........</row>
       <scale>4</scale>
-      <color>color.white</color>
-      <color char="o">color.magenta</color>
+      <color>white</color>
+      <color char="o">magenta</color>
     </bitmap>
     <bitmap name="wreck-b">
       <row>.........</row>
@@ -485,8 +485,8 @@
       <row>..*...*..</row>
       <row>.........</row>
       <scale>4</scale>
-      <color>color.white</color>
-      <color char="o">color.magenta</color>
+      <color>white</color>
+      <color char="o">magenta</color>
     </bitmap>
     <bitmap name="wreck-c">
       <row>*...*...*</row>
@@ -499,8 +499,8 @@
       <row>.*.....*.</row>
       <row>*...*...*</row>
       <scale>4</scale>
-      <color>color.white</color>
-      <color char="o">color.magenta</color>
+      <color>white</color>
+      <color char="o">magenta</color>
     </bitmap>
     <bitmap name="wreck-d">
       <row>o.......o</row>
@@ -513,8 +513,8 @@
       <row>.........</row>
       <row>o.......o</row>
       <scale>4</scale>
-      <color>color.magenta</color>
-      <color char="o">color.magenta</color>
+      <color>magenta</color>
+      <color char="o">magenta</color>
     </bitmap>
     <bitmap name="swirl-one">
       <row>..**....</row>
@@ -526,7 +526,7 @@
       <row>...**...</row>
       <row>....**..</row>
       <scale>3</scale>
-      <color>color.magenta</color>
+      <color>magenta</color>
     </bitmap>
     <bitmap name="swirl-two">
       <row>....**..</row>
@@ -538,7 +538,7 @@
       <row>...**...</row>
       <row>..**....</row>
       <scale>3</scale>
-      <color>color.magenta</color>
+      <color>magenta</color>
     </bitmap>
     <bitmap name="zone-a" style="zone">
       <row>rbgm</row>
@@ -558,7 +558,7 @@
       <row>.*.**.*.</row>
       <row>*......*</row>
       <scale>4</scale>
-      <color>color.red</color>
+      <color>red</color>
     </bitmap>
     <bitmap name="yar-up">
       <row>**....**</row>
@@ -570,8 +570,8 @@
       <row>..*..*..</row>
       <row>........</row>
       <scale>3</scale>
-      <color>color.green</color>
-      <color char="o">color.white</color>
+      <color>green</color>
+      <color char="o">white</color>
     </bitmap>
     <bitmap name="yar-down">
       <row>........</row>
@@ -583,8 +583,8 @@
       <row>**....**</row>
       <row>........</row>
       <scale>3</scale>
-      <color>color.green</color>
-      <color char="o">color.white</color>
+      <color>green</color>
+      <color char="o">white</color>
     </bitmap>
     <bitmap name="cannon">
       <row>****....</row>
@@ -592,7 +592,7 @@
       <row>********</row>
       <row>****....</row>
       <scale>4</scale>
-      <color>color.yellow</color>
+      <color>yellow</color>
     </bitmap>
   </pictures>
 </game>

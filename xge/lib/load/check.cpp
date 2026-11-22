@@ -88,7 +88,7 @@ namespace xge
 
 	}
 
-	// A color is one of the color. names; anything else would draw nothing.
+	// A color is one of the engine's color names; anything else would draw nothing.
 	void checkColor(const std::string& name, const std::string& where)
 	{
 		if (!isColorName(name))

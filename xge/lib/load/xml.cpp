@@ -1363,7 +1363,7 @@ namespace xge
 
 		// A name the engine's own words would hide. What starts a dotted
 		// name (an object, group, member, map or state) may not be one of the
-		// engine's words that start one (self.x, window.width, color.red);
+		// engine's words that start one (self.x, window.width, red);
 		// nothing may be a number. A variable is only ever after the dot, so
 		// its name may be a word (a card's color).
 		void refuseReserved(const std::string& name, const char* kind, const std::string& where, bool startsNames = true)
@@ -3327,7 +3327,7 @@ namespace xge
 			const auto background = findChild(&window, "background");
 			const auto fullscreen = findChild(&window, "fullscreen");
 			const auto framerate = findChild(&window, "framerate");
-			windowDesc.background = background ? readText(*background) : "color.black";
+			windowDesc.background = background ? readText(*background) : "black";
 			windowDesc.fullscreen = fullscreen ? "true" : "false";
 			windowDesc.framerate = framerate ? std::stoi(readText(*framerate)) : 60;
 		}

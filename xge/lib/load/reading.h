@@ -101,7 +101,7 @@ namespace xge
 
 	std::string requireAttribute(const XmlNode& node, const std::string& name, const std::string& where);
 
-	// The text of a simple element such as <color>color.red</color>.
+	// The text of a simple element such as <color>red</color>.
 	std::string readText(const XmlNode& node);
 
 	bool readBool(const XmlNode& node, const std::string& where);

@@ -402,7 +402,7 @@ namespace
 		{
 			std::ofstream out(path);
 			out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
-				"<window name=\"sheets\"><width>800</width><height>600</height><background>color.black</background></window>"
+				"<window name=\"sheets\"><width>800</width><height>600</height><background>black</background></window>"
 				"<variables><variable name=\"unused\">0</variable></variables>"
 				"<states><state name=\"playing\"><objects>" << objects << "</objects><inputs><input><button>escape</button><pop /></input></inputs></state></states>"
 				"<pictures><sheet name=\"cards\"><path>assets/cards.png</path><columns>13</columns><rows>5</rows></sheet>"
@@ -2126,12 +2126,12 @@ namespace
 		explicit Tokens(const std::string& order = "")
 		{
 			std::ofstream(path) << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
-				"<window name=\"tokens\"><width>800</width><height>600</height><background>color.black</background></window>"
+				"<window name=\"tokens\"><width>800</width><height>600</height><background>black</background></window>"
 				"<variables><variable name=\"unused\">0</variable></variables>"
 				"<states><state name=\"playing\"><objects>"
 				"<group name=\"tokens\" class=\"token\"><columns name=\"n\">3</columns><rows>1</rows>"
 				"<sprite name=\"face\"><rectangle><width>10</width><height>10</height></rectangle></sprite>"
-				"<sprite name=\"back\"><rectangle><width>10</width><height>10</height><color>color.red</color></rectangle></sprite>"
+				"<sprite name=\"back\"><rectangle><width>10</width><height>10</height><color>red</color></rectangle></sprite>"
 				"<position><x>0</x><y>0</y></position></group>"
 				"<object name=\"pile\"><sprite /><position><x>100</x><y>100</y></position><holds class=\"token\" sprite=\"back\"><top sprite=\"face\" /></holds></object>"
 				"<object name=\"out\"><sprite /><position><x>300</x><y>100</y></position><holds class=\"token\" sprite=\"back\" /></object>"

@@ -45,7 +45,7 @@
   </variables>
   <styles>
     <style name="banner"><size>160</size></style>
-    <style name="prompt"><size>48</size><color>color.lightgrey</color></style>
+    <style name="prompt"><size>48</size><color>lightgrey</color></style>
     <style name="hud"><size>128</size></style>
   </styles>
   <keeps>
@@ -92,7 +92,7 @@
           <columns>1</columns>
           <rows>18</rows>
           <padding><y>20</y></padding>
-          <sprite><rectangle><width>6</width><height>20</height><color>color.lightgrey</color></rectangle></sprite>
+          <sprite><rectangle><width>6</width><height>20</height><color>lightgrey</color></rectangle></sprite>
           <position><x><centered /></x><y>10</y></position>
         </group>
         <group name="paddles" class="paddle">

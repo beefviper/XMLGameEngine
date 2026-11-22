@@ -19,27 +19,27 @@ namespace xge
 		};
 
 		constexpr std::array<NamedColor, 19> namedColors{ {
-			{ "color.black",   { 0, 0, 0, 255 } },
-			{ "color.white",   { 255, 255, 255, 255 } },
-			{ "color.red",     { 255, 0, 0, 255 } },
-			{ "color.green",   { 0, 255, 0, 255 } },
-			{ "color.blue",    { 0, 0, 255, 255 } },
-			{ "color.yellow",  { 255, 255, 0, 255 } },
-			{ "color.magenta", { 255, 0, 255, 255 } },
-			{ "color.cyan",    { 0, 255, 255, 255 } },
+			{ "black",   { 0, 0, 0, 255 } },
+			{ "white",   { 255, 255, 255, 255 } },
+			{ "red",     { 255, 0, 0, 255 } },
+			{ "green",   { 0, 255, 0, 255 } },
+			{ "blue",    { 0, 0, 255, 255 } },
+			{ "yellow",  { 255, 255, 0, 255 } },
+			{ "magenta", { 255, 0, 255, 255 } },
+			{ "cyan",    { 0, 255, 255, 255 } },
 
 			// Muted colors for backgrounds and scenery, beside the bright ones above.
-			{ "color.grey",        { 128, 128, 128, 255 } },
-			{ "color.darkgrey",    { 64, 64, 64, 255 } },
-			{ "color.lightgrey",   { 192, 192, 192, 255 } },
-			{ "color.brown",       { 139, 69, 19, 255 } },
-			{ "color.orange",      { 255, 165, 0, 255 } },
-			{ "color.purple",      { 128, 0, 128, 255 } },
-			{ "color.darkblue",    { 0, 0, 139, 255 } },
-			{ "color.darkgreen",   { 0, 100, 0, 255 } },
-			{ "color.forestgreen", { 34, 139, 34, 255 } },
-			{ "color.gold",        { 230, 180, 30, 255 } },
-			{ "color.peach",       { 255, 214, 170, 255 } },
+			{ "grey",        { 128, 128, 128, 255 } },
+			{ "darkgrey",    { 64, 64, 64, 255 } },
+			{ "lightgrey",   { 192, 192, 192, 255 } },
+			{ "brown",       { 139, 69, 19, 255 } },
+			{ "orange",      { 255, 165, 0, 255 } },
+			{ "purple",      { 128, 0, 128, 255 } },
+			{ "darkblue",    { 0, 0, 139, 255 } },
+			{ "darkgreen",   { 0, 100, 0, 255 } },
+			{ "forestgreen", { 34, 139, 34, 255 } },
+			{ "gold",        { 230, 180, 30, 255 } },
+			{ "peach",       { 255, 214, 170, 255 } },
 		} };
 	}
 

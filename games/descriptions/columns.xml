@@ -38,10 +38,10 @@
     <variable name="panel">420</variable>
   </variables>
   <styles>
-    <style name="banner"><size>88</size><color>color.yellow</color></style>
+    <style name="banner"><size>88</size><color>yellow</color></style>
     <style name="prompt"><size>32</size></style>
-    <style name="help"><size>22</size><color>color.lightgrey</color></style>
-    <style name="label"><size>24</size><color>color.lightgrey</color></style>
+    <style name="help"><size>22</size><color>lightgrey</color></style>
+    <style name="label"><size>24</size><color>lightgrey</color></style>
     <style name="hud"><size>40</size></style>
   </styles>
   <states>
@@ -97,11 +97,11 @@
               <value><multiply><value>13</value><value>cell</value></multiply></value>
               <value>8</value>
             </add>
-          </height><color>color.darkgrey</color></rectangle></sprite>
+          </height><color>darkgrey</color></rectangle></sprite>
           <position><x><subtract><value>left</value><value>4</value></subtract></x><y><subtract><value>top</value><value>4</value></subtract></y></position>
         </object>
         <object name="well">
-          <sprite><rectangle><width><multiply><value>6</value><value>cell</value></multiply></width><height><multiply><value>13</value><value>cell</value></multiply></height><color>color.black</color></rectangle></sprite>
+          <sprite><rectangle><width><multiply><value>6</value><value>cell</value></multiply></width><height><multiply><value>13</value><value>cell</value></multiply></height><color>black</color></rectangle></sprite>
           <position><x>left</x><y>top</y></position>
         </object>
         <object name="scorelabel">
@@ -138,7 +138,7 @@
               <value><multiply><value>3</value><value>cell</value></multiply></value>
               <value>16</value>
             </add>
-          </height><color>color.darkgrey</color></rectangle></sprite>
+          </height><color>darkgrey</color></rectangle></sprite>
           <position><x><subtract><value>panel</value><value>8</value></subtract></x><y><add><value>top</value><value>332</value></add></y></position>
         </object>
         <object name="nextwell">
@@ -147,7 +147,7 @@
               <value><multiply><value>3</value><value>cell</value></multiply></value>
               <value>8</value>
             </add>
-          </height><color>color.black</color></rectangle></sprite>
+          </height><color>black</color></rectangle></sprite>
           <position><x><subtract><value>panel</value><value>4</value></subtract></x><y><add><value>top</value><value>336</value></add></y></position>
         </object>
 
@@ -176,12 +176,12 @@
                 <value>3</value>
               </subtract>
             </radius></circle></sprite>
-            <group name="red"><sprite><circle><color>color.red</color></circle></sprite></group>
-            <group name="yellow"><sprite><circle><color>color.yellow</color></circle></sprite></group>
-            <group name="orange"><sprite><circle><color>color.orange</color></circle></sprite></group>
-            <group name="green"><sprite><circle><color>color.green</color></circle></sprite></group>
-            <group name="blue"><sprite><circle><color>color.blue</color></circle></sprite></group>
-            <group name="purple"><sprite><circle><color>color.magenta</color></circle></sprite></group>
+            <group name="red"><sprite><circle><color>red</color></circle></sprite></group>
+            <group name="yellow"><sprite><circle><color>yellow</color></circle></sprite></group>
+            <group name="orange"><sprite><circle><color>orange</color></circle></sprite></group>
+            <group name="green"><sprite><circle><color>green</color></circle></sprite></group>
+            <group name="blue"><sprite><circle><color>blue</color></circle></sprite></group>
+            <group name="purple"><sprite><circle><color>magenta</color></circle></sprite></group>
           </group>
 
           <!-- the falling column of three -->
@@ -264,7 +264,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -278,7 +278,7 @@
     <state name="over">
       <objects>
         <object name="message">
-          <sprite><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>
+          <sprite><text style="banner"><content>GAME OVER</content><color>red</color></text></sprite>
           <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
         </object>
       </objects>

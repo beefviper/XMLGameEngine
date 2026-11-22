@@ -299,7 +299,7 @@ namespace
 	std::vector<std::pair<KeyCode, bool>> frame(Window& window, std::vector<Object>& objects, Bitmap* shot = nullptr)
 	{
 		std::vector<std::pair<KeyCode, bool>> keys = window.pollEvents();
-		window.clear("color.black");
+		window.clear("black");
 		for (Object& object : objects) { window.draw(object); }
 		if (shot) { *shot = window.capture(); }
 		window.display();
@@ -329,7 +329,7 @@ TEST_CASE("every window backend keeps the window contract", "[.][window]")
 			desc.width = 160.0f;
 			desc.height = 120.0f;
 			desc.scale = 1;
-			desc.background = "color.black";
+			desc.background = "black";
 			desc.fullscreen = "false";
 			desc.framerate = 60;
 			std::unique_ptr<Window> window = WindowFactory::create(desc, backend);
@@ -354,8 +354,8 @@ TEST_CASE("every window backend keeps the window contract", "[.][window]")
 					o.drawn.bitmap = resources.own(std::move(red));
 					o.drawn.picture.edit().size = { 8.0f, 8.0f };
 				}),
-				pictureAt("rectangle", 30.0f, 4.0f, [](Object& o) { o.drawn.picture.edit().kind = ShapeKind::Rectangle; o.drawn.picture.edit().size = { 10.0f, 6.0f }; o.drawn.picture.edit().color = heldNames.of("color.green"); }),
-				pictureAt("circle", 20.0f, 28.0f, [](Object& o) { o.drawn.picture.edit().kind = ShapeKind::Circle; o.drawn.picture.edit().radius = 6.0f; o.drawn.picture.edit().color = heldNames.of("color.blue"); }),
+				pictureAt("rectangle", 30.0f, 4.0f, [](Object& o) { o.drawn.picture.edit().kind = ShapeKind::Rectangle; o.drawn.picture.edit().size = { 10.0f, 6.0f }; o.drawn.picture.edit().color = heldNames.of("green"); }),
+				pictureAt("circle", 20.0f, 28.0f, [](Object& o) { o.drawn.picture.edit().kind = ShapeKind::Circle; o.drawn.picture.edit().radius = 6.0f; o.drawn.picture.edit().color = heldNames.of("blue"); }),
 			};
 			window->init(objects);
 			for (const Object& object : objects) { CHECK_FALSE(object.drawn.visualDirty); }

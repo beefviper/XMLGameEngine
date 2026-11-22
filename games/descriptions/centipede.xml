@@ -43,15 +43,15 @@
     <variable name="top">40</variable>
   </variables>
   <styles>
-    <style name="banner"><size>72</size><color>color.magenta</color></style>
+    <style name="banner"><size>72</size><color>magenta</color></style>
     <style name="prompt"><size>28</size></style>
-    <style name="help"><size>20</size><color>color.lightgrey</color></style>
+    <style name="help"><size>20</size><color>lightgrey</color></style>
     <style name="hud"><size>24</size></style>
   </styles>
   <objects>
     <!-- the wand's shot: one at a time, straight up -->
     <object name="shot" class="shot">
-      <sprite><rectangle><width>2</width><height>8</height><color>color.white</color></rectangle></sprite>
+      <sprite><rectangle><width>2</width><height>8</height><color>white</color></rectangle></sprite>
       <velocity><y>-720</y></velocity>
       <most>1</most>
       <collisions>
@@ -144,10 +144,10 @@
 
           <!-- a mushroom takes four shots, a look worn away each -->
           <group name="mushrooms" class="mushroom" char="m">
-            <sprite name="whole"><rectangle><width>cell</width><height><subtract><value>cell</value><value>2</value></subtract></height><color>color.orange</color></rectangle></sprite>
-            <sprite name="worn"><rectangle><width>cell</width><height><subtract><value>cell</value><value>6</value></subtract></height><color>color.orange</color></rectangle></sprite>
-            <sprite name="half"><rectangle><width>cell</width><height><subtract><value>cell</value><value>9</value></subtract></height><color>color.orange</color></rectangle></sprite>
-            <sprite name="stub"><rectangle><width>cell</width><height><subtract><value>cell</value><value>12</value></subtract></height><color>color.orange</color></rectangle></sprite>
+            <sprite name="whole"><rectangle><width>cell</width><height><subtract><value>cell</value><value>2</value></subtract></height><color>orange</color></rectangle></sprite>
+            <sprite name="worn"><rectangle><width>cell</width><height><subtract><value>cell</value><value>6</value></subtract></height><color>orange</color></rectangle></sprite>
+            <sprite name="half"><rectangle><width>cell</width><height><subtract><value>cell</value><value>9</value></subtract></height><color>orange</color></rectangle></sprite>
+            <sprite name="stub"><rectangle><width>cell</width><height><subtract><value>cell</value><value>12</value></subtract></height><color>orange</color></rectangle></sprite>
             <collisions>
               <collision class="shot">
                 <collision sprite="stub"><despawn /><inc variable="status.score">1</inc></collision>
@@ -161,7 +161,7 @@
           <!-- the top of the player's zone: unseen, it turns a rising head
                back down and holds the wand in -->
           <group name="line" class="line" char="-">
-            <sprite><rectangle><width>cell</width><height>cell</height><color>color.black</color></rectangle></sprite>
+            <sprite><rectangle><width>cell</width><height>cell</height><color>black</color></rectangle></sprite>
             <hidden />
             <collisions />
           </group>
@@ -218,19 +218,19 @@
                   <value><divide><value>cell</value><value>2</value></divide></value>
                   <value>1</value>
                 </subtract>
-              </radius><color>color.red</color></circle></sprite>
+              </radius><color>red</color></circle></sprite>
               <sprite name="rising"><circle><radius>
                 <subtract>
                   <value><divide><value>cell</value><value>2</value></divide></value>
                   <value>1</value>
                 </subtract>
-              </radius><color>color.magenta</color></circle></sprite>
+              </radius><color>magenta</color></circle></sprite>
               <sprite name="body"><circle><radius>
                 <subtract>
                   <value><divide><value>cell</value><value>2</value></divide></value>
                   <value>1</value>
                 </subtract>
-              </radius><color>color.green</color></circle></sprite>
+              </radius><color>green</color></circle></sprite>
             </group>
             <group name="bodies" char="o">
               <sprite name="body"><circle><radius>
@@ -238,26 +238,26 @@
                   <value><divide><value>cell</value><value>2</value></divide></value>
                   <value>1</value>
                 </subtract>
-              </radius><color>color.green</color></circle></sprite>
+              </radius><color>green</color></circle></sprite>
               <sprite name="falling"><circle><radius>
                 <subtract>
                   <value><divide><value>cell</value><value>2</value></divide></value>
                   <value>1</value>
                 </subtract>
-              </radius><color>color.red</color></circle></sprite>
+              </radius><color>red</color></circle></sprite>
               <sprite name="rising"><circle><radius>
                 <subtract>
                   <value><divide><value>cell</value><value>2</value></divide></value>
                   <value>1</value>
                 </subtract>
-              </radius><color>color.magenta</color></circle></sprite>
+              </radius><color>magenta</color></circle></sprite>
             </group>
           </group>
         </map>
 
         <!-- the wand, about the player's zone -->
         <object name="wand" class="player">
-          <sprite><rectangle><width>12</width><height>12</height><color>color.cyan</color></rectangle></sprite>
+          <sprite><rectangle><width>12</width><height>12</height><color>cyan</color></rectangle></sprite>
           <position><x>
             <add>
               <value><multiply><value>14</value><value>cell</value></multiply></value>
@@ -362,7 +362,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -376,7 +376,7 @@
     <state name="over">
       <objects>
         <object name="message">
-          <sprite><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>
+          <sprite><text style="banner"><content>GAME OVER</content><color>red</color></text></sprite>
           <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
         </object>
       </objects>
@@ -407,8 +407,8 @@
       <row>.........</row>
       <row>.........</row>
       <scale>2</scale>
-      <color>color.white</color>
-      <color char="o">color.red</color>
+      <color>white</color>
+      <color char="o">red</color>
     </bitmap>
     <bitmap name="wreck-b">
       <row>.........</row>
@@ -421,8 +421,8 @@
       <row>..*...*..</row>
       <row>.........</row>
       <scale>2</scale>
-      <color>color.white</color>
-      <color char="o">color.red</color>
+      <color>white</color>
+      <color char="o">red</color>
     </bitmap>
     <bitmap name="wreck-c">
       <row>*...*...*</row>
@@ -435,8 +435,8 @@
       <row>.*.....*.</row>
       <row>*...*...*</row>
       <scale>2</scale>
-      <color>color.white</color>
-      <color char="o">color.red</color>
+      <color>white</color>
+      <color char="o">red</color>
     </bitmap>
     <bitmap name="wreck-d">
       <row>o.......o</row>
@@ -449,8 +449,8 @@
       <row>.........</row>
       <row>o.......o</row>
       <scale>2</scale>
-      <color>color.red</color>
-      <color char="o">color.red</color>
+      <color>red</color>
+      <color char="o">red</color>
     </bitmap>
   </pictures>
 </game>

@@ -33,7 +33,7 @@
   <window name="Putt Park">
     <width>800</width>
     <height>600</height>
-    <background>color.darkgreen</background>
+    <background>darkgreen</background>
   </window>
   <variables>
     <variable name="radius">5</variable>
@@ -45,20 +45,20 @@
     <variable name="holes">6</variable>
   </variables>
   <styles>
-    <style name="banner"><size>100</size><color>color.yellow</color></style>
+    <style name="banner"><size>100</size><color>yellow</color></style>
     <style name="prompt"><size>40</size></style>
     <style name="help"><size>28</size></style>
-    <style name="hud"><size>26</size><color>color.lightgrey</color></style>
+    <style name="hud"><size>26</size><color>lightgrey</color></style>
   </styles>
   <objects>
     <!-- a round post: kicks the ball off faster than it came -->
     <object name="post" class="post">
-      <sprite><circle><radius>16</radius><color>color.red</color></circle></sprite>
+      <sprite><circle><radius>16</radius><color>red</color></circle></sprite>
       <collisions />
     </object>
     <!-- a soft cushion: takes the pace off -->
     <object name="cushion" class="cushion">
-      <sprite><rectangle><width>70</width><height>12</height><color>color.orange</color></rectangle></sprite>
+      <sprite><rectangle><width>70</width><height>12</height><color>orange</color></rectangle></sprite>
       <collisions />
     </object>
   </objects>
@@ -81,7 +81,7 @@
           <sprite><text style="help" /></sprite>
           <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
           <row number="1"><sprite><text><content>six holes, par 18: sink each in as few putts as you can</content></text></sprite></row>
-          <row number="2"><sprite><text><content>a and d or the arrows aim, hold spacebar and let go to putt</content><color>color.lightgrey</color></text></sprite></row>
+          <row number="2"><sprite><text><content>a and d or the arrows aim, hold spacebar and let go to putt</content><color>lightgrey</color></text></sprite></row>
         </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
@@ -118,12 +118,12 @@
           <position><x>480</x><y>14</y></position>
         </object>
         <object name="powershown">
-          <sprite><text style="hud"><content>POWER</content><number>arrow.power</number><color>color.yellow</color></text></sprite>
+          <sprite><text style="hud"><content>POWER</content><number>arrow.power</number><color>yellow</color></text></sprite>
           <position><x>640</x><y>14</y></position>
         </object>
 
         <object name="ball" class="ball">
-          <sprite><circle><radius>radius</radius><color>color.white</color></circle></sprite>
+          <sprite><circle><radius>radius</radius><color>white</color></circle></sprite>
           <position><x>0</x><y>0</y></position>
           <drag>green</drag>
           <collisions>
@@ -214,20 +214,20 @@
           <objects>
             <object name="course" class="wall">
               <sprite>
-                <line><from><x>120</x><y>200</y></from><to><x>680</x><y>200</y></to><color>color.brown</color><thickness>4</thickness></line>
-                <line><from><x>680</x><y>200</y></from><to><x>720</x><y>240</y></to><color>color.brown</color><thickness>4</thickness></line>
-                <line><from><x>720</x><y>240</y></from><to><x>720</x><y>360</y></to><color>color.brown</color><thickness>4</thickness></line>
-                <line><from><x>720</x><y>360</y></from><to><x>680</x><y>400</y></to><color>color.brown</color><thickness>4</thickness></line>
-                <line><from><x>680</x><y>400</y></from><to><x>120</x><y>400</y></to><color>color.brown</color><thickness>4</thickness></line>
-                <line><from><x>120</x><y>400</y></from><to><x>80</x><y>360</y></to><color>color.brown</color><thickness>4</thickness></line>
-                <line><from><x>80</x><y>360</y></from><to><x>80</x><y>240</y></to><color>color.brown</color><thickness>4</thickness></line>
-                <line><from><x>80</x><y>240</y></from><to><x>120</x><y>200</y></to><color>color.brown</color><thickness>4</thickness></line>
+                <line><from><x>120</x><y>200</y></from><to><x>680</x><y>200</y></to><color>brown</color><thickness>4</thickness></line>
+                <line><from><x>680</x><y>200</y></from><to><x>720</x><y>240</y></to><color>brown</color><thickness>4</thickness></line>
+                <line><from><x>720</x><y>240</y></from><to><x>720</x><y>360</y></to><color>brown</color><thickness>4</thickness></line>
+                <line><from><x>720</x><y>360</y></from><to><x>680</x><y>400</y></to><color>brown</color><thickness>4</thickness></line>
+                <line><from><x>680</x><y>400</y></from><to><x>120</x><y>400</y></to><color>brown</color><thickness>4</thickness></line>
+                <line><from><x>120</x><y>400</y></from><to><x>80</x><y>360</y></to><color>brown</color><thickness>4</thickness></line>
+                <line><from><x>80</x><y>360</y></from><to><x>80</x><y>240</y></to><color>brown</color><thickness>4</thickness></line>
+                <line><from><x>80</x><y>240</y></from><to><x>120</x><y>200</y></to><color>brown</color><thickness>4</thickness></line>
               </sprite>
               <position><x>0</x><y>0</y></position>
               <collisions><type>pixel</type></collisions>
             </object>
             <object name="cup" class="cup">
-              <sprite><circle><radius>8</radius><color>color.black</color></circle></sprite>
+              <sprite><circle><radius>8</radius><color>black</color></circle></sprite>
               <position><x>642</x><y>292</y></position>
               <collisions />
             </object>
@@ -263,14 +263,14 @@
           <objects>
             <object name="course">
               <sprite>
-                <line><from><x>80</x><y>90</y></from><to><x>460</x><y>90</y></to><color>color.brown</color><thickness>4</thickness></line>
-                <line><from><x>460</x><y>90</y></from><to><x>720</x><y>350</y></to><color>color.brown</color><thickness>4</thickness></line>
-                <line><from><x>720</x><y>350</y></from><to><x>720</x><y>570</y></to><color>color.brown</color><thickness>4</thickness></line>
-                <line><from><x>720</x><y>570</y></from><to><x>560</x><y>570</y></to><color>color.brown</color><thickness>4</thickness></line>
-                <line><from><x>560</x><y>570</y></from><to><x>560</x><y>430</y></to><color>color.brown</color><thickness>4</thickness></line>
-                <line><from><x>560</x><y>430</y></from><to><x>400</x><y>270</y></to><color>color.brown</color><thickness>4</thickness></line>
-                <line><from><x>400</x><y>270</y></from><to><x>80</x><y>270</y></to><color>color.brown</color><thickness>4</thickness></line>
-                <line><from><x>80</x><y>270</y></from><to><x>80</x><y>90</y></to><color>color.brown</color><thickness>4</thickness></line>
+                <line><from><x>80</x><y>90</y></from><to><x>460</x><y>90</y></to><color>brown</color><thickness>4</thickness></line>
+                <line><from><x>460</x><y>90</y></from><to><x>720</x><y>350</y></to><color>brown</color><thickness>4</thickness></line>
+                <line><from><x>720</x><y>350</y></from><to><x>720</x><y>570</y></to><color>brown</color><thickness>4</thickness></line>
+                <line><from><x>720</x><y>570</y></from><to><x>560</x><y>570</y></to><color>brown</color><thickness>4</thickness></line>
+                <line><from><x>560</x><y>570</y></from><to><x>560</x><y>430</y></to><color>brown</color><thickness>4</thickness></line>
+                <line><from><x>560</x><y>430</y></from><to><x>400</x><y>270</y></to><color>brown</color><thickness>4</thickness></line>
+                <line><from><x>400</x><y>270</y></from><to><x>80</x><y>270</y></to><color>brown</color><thickness>4</thickness></line>
+                <line><from><x>80</x><y>270</y></from><to><x>80</x><y>90</y></to><color>brown</color><thickness>4</thickness></line>
               </sprite>
             </object>
             <object name="cup"><position><x>632</x><y>502</y></position></object>
@@ -289,10 +289,10 @@
           <objects>
             <object name="course">
               <sprite>
-                <line><from><x>80</x><y>100</y></from><to><x>720</x><y>100</y></to><color>color.brown</color><thickness>4</thickness></line>
-                <line><from><x>720</x><y>100</y></from><to><x>720</x><y>560</y></to><color>color.brown</color><thickness>4</thickness></line>
-                <line><from><x>720</x><y>560</y></from><to><x>80</x><y>560</y></to><color>color.brown</color><thickness>4</thickness></line>
-                <line><from><x>80</x><y>560</y></from><to><x>80</x><y>100</y></to><color>color.brown</color><thickness>4</thickness></line>
+                <line><from><x>80</x><y>100</y></from><to><x>720</x><y>100</y></to><color>brown</color><thickness>4</thickness></line>
+                <line><from><x>720</x><y>100</y></from><to><x>720</x><y>560</y></to><color>brown</color><thickness>4</thickness></line>
+                <line><from><x>720</x><y>560</y></from><to><x>80</x><y>560</y></to><color>brown</color><thickness>4</thickness></line>
+                <line><from><x>80</x><y>560</y></from><to><x>80</x><y>100</y></to><color>brown</color><thickness>4</thickness></line>
               </sprite>
             </object>
             <object name="cup"><position><x>662</x><y>322</y></position></object>
@@ -316,13 +316,13 @@
           <objects>
             <object name="course">
               <sprite>
-                <line><from><x>400</x><y>70</y></from><to><x>730</x><y>330</y></to><color>color.brown</color><thickness>4</thickness></line>
-                <line><from><x>730</x><y>330</y></from><to><x>400</x><y>590</y></to><color>color.brown</color><thickness>4</thickness></line>
-                <line><from><x>400</x><y>590</y></from><to><x>70</x><y>330</y></to><color>color.brown</color><thickness>4</thickness></line>
-                <line><from><x>70</x><y>330</y></from><to><x>400</x><y>70</y></to><color>color.brown</color><thickness>4</thickness></line>
-                <line><from><x>350</x><y>330</y></from><to><x>450</x><y>270</y></to><color>color.brown</color><thickness>4</thickness></line>
-                <line><from><x>450</x><y>270</y></from><to><x>450</x><y>390</y></to><color>color.brown</color><thickness>4</thickness></line>
-                <line><from><x>450</x><y>390</y></from><to><x>350</x><y>330</y></to><color>color.brown</color><thickness>4</thickness></line>
+                <line><from><x>400</x><y>70</y></from><to><x>730</x><y>330</y></to><color>brown</color><thickness>4</thickness></line>
+                <line><from><x>730</x><y>330</y></from><to><x>400</x><y>590</y></to><color>brown</color><thickness>4</thickness></line>
+                <line><from><x>400</x><y>590</y></from><to><x>70</x><y>330</y></to><color>brown</color><thickness>4</thickness></line>
+                <line><from><x>70</x><y>330</y></from><to><x>400</x><y>70</y></to><color>brown</color><thickness>4</thickness></line>
+                <line><from><x>350</x><y>330</y></from><to><x>450</x><y>270</y></to><color>brown</color><thickness>4</thickness></line>
+                <line><from><x>450</x><y>270</y></from><to><x>450</x><y>390</y></to><color>brown</color><thickness>4</thickness></line>
+                <line><from><x>450</x><y>390</y></from><to><x>350</x><y>330</y></to><color>brown</color><thickness>4</thickness></line>
               </sprite>
             </object>
             <object name="cup"><position><x>642</x><y>322</y></position></object>
@@ -341,12 +341,12 @@
           <objects>
             <object name="course">
               <sprite>
-                <line><from><x>80</x><y>80</y></from><to><x>720</x><y>80</y></to><color>color.brown</color><thickness>4</thickness></line>
-                <line><from><x>720</x><y>80</y></from><to><x>720</x><y>580</y></to><color>color.brown</color><thickness>4</thickness></line>
-                <line><from><x>720</x><y>580</y></from><to><x>80</x><y>580</y></to><color>color.brown</color><thickness>4</thickness></line>
-                <line><from><x>80</x><y>580</y></from><to><x>80</x><y>80</y></to><color>color.brown</color><thickness>4</thickness></line>
-                <line><from><x>240</x><y>580</y></from><to><x>320</x><y>220</y></to><color>color.brown</color><thickness>4</thickness></line>
-                <line><from><x>480</x><y>80</y></from><to><x>400</x><y>440</y></to><color>color.brown</color><thickness>4</thickness></line>
+                <line><from><x>80</x><y>80</y></from><to><x>720</x><y>80</y></to><color>brown</color><thickness>4</thickness></line>
+                <line><from><x>720</x><y>80</y></from><to><x>720</x><y>580</y></to><color>brown</color><thickness>4</thickness></line>
+                <line><from><x>720</x><y>580</y></from><to><x>80</x><y>580</y></to><color>brown</color><thickness>4</thickness></line>
+                <line><from><x>80</x><y>580</y></from><to><x>80</x><y>80</y></to><color>brown</color><thickness>4</thickness></line>
+                <line><from><x>240</x><y>580</y></from><to><x>320</x><y>220</y></to><color>brown</color><thickness>4</thickness></line>
+                <line><from><x>480</x><y>80</y></from><to><x>400</x><y>440</y></to><color>brown</color><thickness>4</thickness></line>
               </sprite>
             </object>
             <object name="cup"><position><x>652</x><y>142</y></position></object>
@@ -365,14 +365,14 @@
           <objects>
             <object name="course">
               <sprite>
-                <line><from><x>200</x><y>80</y></from><to><x>600</x><y>80</y></to><color>color.brown</color><thickness>4</thickness></line>
-                <line><from><x>600</x><y>80</y></from><to><x>720</x><y>200</y></to><color>color.brown</color><thickness>4</thickness></line>
-                <line><from><x>720</x><y>200</y></from><to><x>720</x><y>460</y></to><color>color.brown</color><thickness>4</thickness></line>
-                <line><from><x>720</x><y>460</y></from><to><x>600</x><y>580</y></to><color>color.brown</color><thickness>4</thickness></line>
-                <line><from><x>600</x><y>580</y></from><to><x>200</x><y>580</y></to><color>color.brown</color><thickness>4</thickness></line>
-                <line><from><x>200</x><y>580</y></from><to><x>80</x><y>460</y></to><color>color.brown</color><thickness>4</thickness></line>
-                <line><from><x>80</x><y>460</y></from><to><x>80</x><y>200</y></to><color>color.brown</color><thickness>4</thickness></line>
-                <line><from><x>80</x><y>200</y></from><to><x>200</x><y>80</y></to><color>color.brown</color><thickness>4</thickness></line>
+                <line><from><x>200</x><y>80</y></from><to><x>600</x><y>80</y></to><color>brown</color><thickness>4</thickness></line>
+                <line><from><x>600</x><y>80</y></from><to><x>720</x><y>200</y></to><color>brown</color><thickness>4</thickness></line>
+                <line><from><x>720</x><y>200</y></from><to><x>720</x><y>460</y></to><color>brown</color><thickness>4</thickness></line>
+                <line><from><x>720</x><y>460</y></from><to><x>600</x><y>580</y></to><color>brown</color><thickness>4</thickness></line>
+                <line><from><x>600</x><y>580</y></from><to><x>200</x><y>580</y></to><color>brown</color><thickness>4</thickness></line>
+                <line><from><x>200</x><y>580</y></from><to><x>80</x><y>460</y></to><color>brown</color><thickness>4</thickness></line>
+                <line><from><x>80</x><y>460</y></from><to><x>80</x><y>200</y></to><color>brown</color><thickness>4</thickness></line>
+                <line><from><x>80</x><y>200</y></from><to><x>200</x><y>80</y></to><color>brown</color><thickness>4</thickness></line>
               </sprite>
             </object>
             <object name="cup"><position><x>492</x><y>322</y></position></object>
@@ -430,7 +430,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -488,7 +488,7 @@
       <row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row>
       <row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row><row>...</row>
       <scale>2</scale>
-      <color>color.yellow</color>
+      <color>yellow</color>
     </bitmap>
   </pictures>
 </game>

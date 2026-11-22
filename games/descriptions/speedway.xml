@@ -33,7 +33,7 @@
   <window name="Speedway">
     <width>800</width>
     <height>600</height>
-    <background>color.darkgrey</background>
+    <background>darkgrey</background>
   </window>
   <variables>
     <variable name="laps">3</variable>
@@ -73,10 +73,10 @@
     </path>
   </paths>
   <styles>
-    <style name="banner"><size>90</size><color>color.yellow</color></style>
+    <style name="banner"><size>90</size><color>yellow</color></style>
     <style name="prompt"><size>34</size></style>
     <style name="help"><size>24</size></style>
-    <style name="hud"><size>22</size><color>color.lightgrey</color></style>
+    <style name="hud"><size>22</size><color>lightgrey</color></style>
   </styles>
   <objects>
     <!-- What every car has: its laps, and the gates. Starting just past the
@@ -104,7 +104,7 @@
 
     <!-- a gate across the track: nothing to see but the finish line -->
     <object name="gate">
-      <sprite><rectangle><width>120</width><height>4</height><color>color.darkgrey</color></rectangle></sprite>
+      <sprite><rectangle><width>120</width><height>4</height><color>darkgrey</color></rectangle></sprite>
       <position><x>0</x><y>0</y></position>
       <collisions />
     </object>
@@ -128,7 +128,7 @@
           <sprite><text style="help" /></sprite>
           <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
           <row number="1"><sprite><text><content>three laps against each other and two computer cars: keep off the grass, mind the oil</content></text></sprite></row>
-          <row number="2"><sprite><text><content>player one w a s d, player two the arrows: up goes, down brakes, left and right steer</content><color>color.lightgrey</color></text></sprite></row>
+          <row number="2"><sprite><text><content>player one w a s d, player two the arrows: up goes, down brakes, left and right steer</content><color>lightgrey</color></text></sprite></row>
         </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
@@ -148,11 +148,11 @@
           </variables>
         </object>
         <object name="lap1shown">
-          <sprite><text style="hud"><content>PLAYER 1  LAP</content><number>p1.lap</number><content>OF 3</content><color>color.orange</color></text></sprite>
+          <sprite><text style="hud"><content>PLAYER 1  LAP</content><number>p1.lap</number><content>OF 3</content><color>orange</color></text></sprite>
           <position><x>20</x><y>10</y></position>
         </object>
         <object name="lap2shown">
-          <sprite><text style="hud"><content>PLAYER 2  LAP</content><number>p2.lap</number><content>OF 3</content><color>color.cyan</color></text></sprite>
+          <sprite><text style="hud"><content>PLAYER 2  LAP</content><number>p2.lap</number><content>OF 3</content><color>cyan</color></text></sprite>
           <position><x>560</x><y>10</y></position>
         </object>
 
@@ -177,31 +177,31 @@
           <row>#gggggggggggggggggg#</row>
           <row>####################</row>
           <group name="barriers" char="#" class="wall">
-            <sprite><rectangle><width>40</width><height>40</height><color>color.red</color></rectangle></sprite>
+            <sprite><rectangle><width>40</width><height>40</height><color>red</color></rectangle></sprite>
             <collisions />
           </group>
           <group name="grass" char="g">
-            <sprite><rectangle><width>40</width><height>40</height><color>color.forestgreen</color></rectangle></sprite>
+            <sprite><rectangle><width>40</width><height>40</height><color>forestgreen</color></rectangle></sprite>
             <surface><drag>0.14</drag><grip>0.032</grip></surface>
           </group>
           <group name="sand" char="s">
-            <sprite><rectangle><width>40</width><height>40</height><color>color.brown</color></rectangle></sprite>
+            <sprite><rectangle><width>40</width><height>40</height><color>brown</color></rectangle></sprite>
             <surface><drag>0.077</drag><grip>0.017</grip></surface>
           </group>
           <group name="oil" char="o">
-            <sprite><rectangle><width>40</width><height>40</height><color>color.black</color></rectangle></sprite>
+            <sprite><rectangle><width>40</width><height>40</height><color>black</color></rectangle></sprite>
             <surface><drag>2.3</drag><grip>0.57</grip></surface>
           </group>
         </map>
 
         <!-- the finish line, and three more gates round the loop -->
         <object name="gate1" from="gate">
-          <sprite><rectangle><width>6</width><height>120</height><color>color.white</color></rectangle></sprite>
+          <sprite><rectangle><width>6</width><height>120</height><color>white</color></rectangle></sprite>
           <position><x>380</x><y>120</y></position>
         </object>
         <object name="gate2" from="gate"><position><x>600</x><y>320</y></position></object>
         <object name="gate3" from="gate">
-          <sprite><rectangle><width>4</width><height>120</height><color>color.darkgrey</color></rectangle></sprite>
+          <sprite><rectangle><width>4</width><height>120</height><color>darkgrey</color></rectangle></sprite>
           <position><x>400</x><y>400</y></position>
         </object>
         <object name="gate4" from="gate"><position><x>80</x><y>320</y></position></object>
@@ -315,7 +315,7 @@
     <state name="ready">
       <objects>
         <object name="ready">
-          <sprite><text style="banner"><content>GET READY</content><color>color.white</color></text></sprite>
+          <sprite><text style="banner"><content>GET READY</content><color>white</color></text></sprite>
           <position><x><centered /></x><y><centered><offset>-20</offset></centered></y></position>
         </object>
       </objects>
@@ -333,7 +333,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -348,9 +348,9 @@
     <state name="over">
       <objects>
         <object name="winner">
-          <sprite name="p1"><text style="banner"><content>PLAYER 1 WINS</content><color>color.orange</color></text></sprite>
-          <sprite name="p2"><text style="banner"><content>PLAYER 2 WINS</content><color>color.cyan</color></text></sprite>
-          <sprite name="cpu"><text style="banner"><content>THE COMPUTER WINS</content><color>color.magenta</color></text></sprite>
+          <sprite name="p1"><text style="banner"><content>PLAYER 1 WINS</content><color>orange</color></text></sprite>
+          <sprite name="p2"><text style="banner"><content>PLAYER 2 WINS</content><color>cyan</color></text></sprite>
+          <sprite name="cpu"><text style="banner"><content>THE COMPUTER WINS</content><color>magenta</color></text></sprite>
           <position><x><centered /></x><y><centered><offset>-90</offset></centered></y></position>
         </object>
       </objects>
@@ -390,8 +390,8 @@
       <row>******</row>
       <row>.****.</row>
       <scale>2</scale>
-      <color>color.orange</color>
-      <color char="w">color.lightgrey</color>
+      <color>orange</color>
+      <color char="w">lightgrey</color>
     </bitmap>
     <bitmap name="p2">
       <row>.****.</row>
@@ -403,8 +403,8 @@
       <row>******</row>
       <row>.****.</row>
       <scale>2</scale>
-      <color>color.cyan</color>
-      <color char="w">color.lightgrey</color>
+      <color>cyan</color>
+      <color char="w">lightgrey</color>
     </bitmap>
     <bitmap name="cpu1">
       <row>.****.</row>
@@ -416,8 +416,8 @@
       <row>******</row>
       <row>.****.</row>
       <scale>2</scale>
-      <color>color.magenta</color>
-      <color char="w">color.lightgrey</color>
+      <color>magenta</color>
+      <color char="w">lightgrey</color>
     </bitmap>
     <bitmap name="cpu2">
       <row>.****.</row>
@@ -429,8 +429,8 @@
       <row>******</row>
       <row>.****.</row>
       <scale>2</scale>
-      <color>color.yellow</color>
-      <color char="w">color.lightgrey</color>
+      <color>yellow</color>
+      <color char="w">lightgrey</color>
     </bitmap>
   </pictures>
 </game>

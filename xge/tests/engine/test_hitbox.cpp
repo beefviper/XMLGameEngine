@@ -67,7 +67,7 @@ namespace
 		{
 			std::ofstream out(path);
 			out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
-				"<window name=\"hitbox\"><width>800</width><height>600</height><background>color.black</background>"
+				"<window name=\"hitbox\"><width>800</width><height>600</height><background>black</background>"
 				"<framerate>60</framerate></window>"
 				"<variables><variable name=\"unused\">0</variable></variables>"
 				"<states><state name=\"playing\"><objects>" << objects << "</objects>"
@@ -103,7 +103,7 @@ namespace
 
 	// 20 by 20: a top half of '*' and a bottom half of 'b'.
 	const std::string twoInks = "<bitmap><row>****</row><row>****</row><row>bbbb</row><row>bbbb</row><scale>5</scale>"
-		"<color>color.yellow</color><color char=\"b\">color.brown</color></bitmap>";
+		"<color>yellow</color><color char=\"b\">brown</color></bitmap>";
 
 	void load(const std::string& objects)
 	{
@@ -114,7 +114,7 @@ namespace
 
 TEST_CASE("a bitmap's touching pixels are those of the characters named solid, flipped and turned with it", "[hitbox]")
 {
-	const Bitmap picture = rasterizeRows({ "*b", "b*" }, 1, colorFromName("color.white"), { { 'b', colorFromName("color.brown") } }, "*");
+	const Bitmap picture = rasterizeRows({ "*b", "b*" }, 1, colorFromName("white"), { { 'b', colorFromName("brown") } }, "*");
 	CHECK(picture.solidAt(1, 0));
 	CHECK_FALSE(picture.touchesAt(1, 0));
 	CHECK(picture.touchesAt(0, 0));
@@ -124,14 +124,14 @@ TEST_CASE("a bitmap's touching pixels are those of the characters named solid, f
 	CHECK(flipped.touchesAt(1, 0));
 	CHECK_FALSE(flipped.touchesAt(0, 0));
 
-	const Bitmap turned = turnBitmap(rasterizeRows({ "**", "bb" }, 2, colorFromName("color.white"), { { 'b', colorFromName("color.brown") } }, "*"), 180.0f);
+	const Bitmap turned = turnBitmap(rasterizeRows({ "**", "bb" }, 2, colorFromName("white"), { { 'b', colorFromName("brown") } }, "*"), 180.0f);
 	const int bottom = turned.height / 2 + 1;
 	CHECK(turned.solidAt(turned.width / 2, bottom));
 	CHECK(turned.touchesAt(turned.width / 2, bottom));       // the '*'s, now at the bottom
 	CHECK_FALSE(turned.touchesAt(turned.width / 2, bottom - 2));
 
 	// Without any, every drawn pixel touches.
-	CHECK(rasterizeRows({ "*b" }, 1, colorFromName("color.white"), { { 'b', colorFromName("color.brown") } }).touchesAt(1, 0));
+	CHECK(rasterizeRows({ "*b" }, 1, colorFromName("white"), { { 'b', colorFromName("brown") } }).touchesAt(1, 0));
 }
 
 TEST_CASE("<solid char>: only those characters of a pixel-tested bitmap touch", "[hitbox]")
@@ -328,7 +328,7 @@ TEST_CASE("<frame> with <hitbox>es: a reach that touches only while that picture
 	// 20 at `bag` across that only a fist can reach.
 	const auto made = [](int bag)
 	{
-		const std::string square = "<bitmap><row>****</row><row>****</row><row>****</row><row>****</row><scale>5</scale><color>color.white</color></bitmap>";
+		const std::string square = "<bitmap><row>****</row><row>****</row><row>****</row><row>****</row><scale>5</scale><color>white</color></bitmap>";
 		return "<object name=\"boxer\"><sprite name=\"rest\">" + square + "</sprite><sprite name=\"reach\">" + square + "</sprite>"
 			"<animation name=\"jab\"><seconds>0.1</seconds><once />"
 			"<frame sprite=\"rest\" />"

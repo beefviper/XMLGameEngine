@@ -33,9 +33,9 @@
     <variable name="cell">20</variable>
   </variables>
   <styles>
-    <style name="banner"><size>88</size><color>color.green</color></style>
+    <style name="banner"><size>88</size><color>green</color></style>
     <style name="prompt"><size>32</size></style>
-    <style name="help"><size>22</size><color>color.lightgrey</color></style>
+    <style name="help"><size>22</size><color>lightgrey</color></style>
     <style name="hud"><size>28</size></style>
   </styles>
   <states>
@@ -106,10 +106,10 @@
           <row>################################</row>
 
           <group name="walls" class="wall" char="#">
-            <sprite><rectangle><width>cell</width><height>cell</height><color>color.darkgrey</color></rectangle></sprite>
+            <sprite><rectangle><width>cell</width><height>cell</height><color>darkgrey</color></rectangle></sprite>
           </group>
           <group name="body" class="body" char="o">
-            <sprite><rectangle><width><subtract><value>cell</value><value>2</value></subtract></width><height><subtract><value>cell</value><value>2</value></subtract></height><color>color.forestgreen</color></rectangle></sprite>
+            <sprite><rectangle><width><subtract><value>cell</value><value>2</value></subtract></width><height><subtract><value>cell</value><value>2</value></subtract></height><color>forestgreen</color></rectangle></sprite>
           </group>
           <group name="food" class="food" char="f">
             <sprite><circle><radius>
@@ -117,7 +117,7 @@
                 <value><divide><value>cell</value><value>2</value></divide></value>
                 <value>2</value>
               </subtract>
-            </radius><color>color.red</color></circle></sprite>
+            </radius><color>red</color></circle></sprite>
             <collisions>
               <!-- eaten: gone, so the head's step goes on, and the next comes -->
               <collision class="snake">
@@ -127,7 +127,7 @@
             </collisions>
           </group>
           <object name="head" class="snake" char="@">
-            <sprite><rectangle><width><subtract><value>cell</value><value>2</value></subtract></width><height><subtract><value>cell</value><value>2</value></subtract></height><color>color.green</color></rectangle></sprite>
+            <sprite><rectangle><width><subtract><value>cell</value><value>2</value></subtract></width><height><subtract><value>cell</value><value>2</value></subtract></height><color>green</color></rectangle></sprite>
             <facing>right</facing>
             <chain object="body" />
             <collisions>
@@ -171,7 +171,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -185,7 +185,7 @@
     <state name="over">
       <objects>
         <object name="message">
-          <sprite><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>
+          <sprite><text style="banner"><content>GAME OVER</content><color>red</color></text></sprite>
           <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
         </object>
       </objects>

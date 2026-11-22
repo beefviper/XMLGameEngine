@@ -88,15 +88,15 @@
 
   <styles>
     <style name="banner"><size>96</size></style>
-    <style name="prompt"><size>32</size><color>color.green</color></style>
-    <style name="help"><size>20</size><color>color.lightgrey</color></style>
+    <style name="prompt"><size>32</size><color>green</color></style>
+    <style name="help"><size>20</size><color>lightgrey</color></style>
     <style name="hud"><size>28</size></style>
-    <style name="player"><scale>2</scale><color>color.green</color></style>
+    <style name="player"><scale>2</scale><color>green</color></style>
   </styles>
   <objects>
     <!-- his shot: one at a time, like the arcade game -->
     <object name="bullet" class="bullet">
-      <sprite><rectangle><width>5</width><height>5</height><color>color.green</color></rectangle></sprite>
+      <sprite><rectangle><width>5</width><height>5</height><color>green</color></rectangle></sprite>
       <velocity><y>-480</y></velocity>
       <most>1</most>
       <collisions>
@@ -202,16 +202,16 @@
           </timer>
         </timers>
         <group name="red">
-          <sprite name="a"><bitmap><color>color.red</color></bitmap></sprite>
-          <sprite name="b"><bitmap><color>color.red</color></bitmap></sprite>
+          <sprite name="a"><bitmap><color>red</color></bitmap></sprite>
+          <sprite name="b"><bitmap><color>red</color></bitmap></sprite>
           <member name="r1" />
           <member name="r2" />
           <member name="r3" />
           <member name="r4" />
         </group>
         <group name="cyan">
-          <sprite name="a"><bitmap><color>color.cyan</color></bitmap></sprite>
-          <sprite name="b"><bitmap><color>color.cyan</color></bitmap></sprite>
+          <sprite name="a"><bitmap><color>cyan</color></bitmap></sprite>
+          <sprite name="b"><bitmap><color>cyan</color></bitmap></sprite>
           <member name="c1" />
           <member name="c2" />
           <member name="c3" />
@@ -219,8 +219,8 @@
           <member name="c5" />
         </group>
         <group name="green">
-          <sprite name="a"><bitmap><color>color.green</color></bitmap></sprite>
-          <sprite name="b"><bitmap><color>color.green</color></bitmap></sprite>
+          <sprite name="a"><bitmap><color>green</color></bitmap></sprite>
+          <sprite name="b"><bitmap><color>green</color></bitmap></sprite>
           <member name="g1" />
           <member name="g2" />
           <member name="g3" />
@@ -232,7 +232,7 @@
     </group>
     <!-- a robot's shot: spawned when one fires, four at most in the room -->
     <object name="robotshot" class="robotshot">
-      <sprite><rectangle><width>5</width><height>5</height><color>color.orange</color></rectangle></sprite>
+      <sprite><rectangle><width>5</width><height>5</height><color>orange</color></rectangle></sprite>
       <velocity><y>180</y></velocity>
       <most>4</most>
       <collisions>
@@ -261,7 +261,7 @@
         </subtract>
       </y></position>
       <group name="walls" class="wall">
-        <sprite><rectangle><width>margin</width><height>margin</height><color>color.blue</color></rectangle></sprite>
+        <sprite><rectangle><width>margin</width><height>margin</height><color>blue</color></rectangle></sprite>
         <collisions />
         <group name="post" char="+" />
         <group name="across" char="-"><sprite><rectangle><width><subtract><value>wide</value><value>margin</value></subtract></width></rectangle></sprite></group>
@@ -270,7 +270,7 @@
       <!-- the gaps, a class for each side, so the man knows which side to
            come in at in the next room -->
       <group name="exits">
-        <sprite><rectangle><width><subtract><value>wide</value><value>margin</value></subtract></width><height>margin</height><color>color.black</color></rectangle></sprite>
+        <sprite><rectangle><width><subtract><value>wide</value><value>margin</value></subtract></width><height>margin</height><color>black</color></rectangle></sprite>
         <hidden />
         <group name="north" char="n" class="northexit">
           <collisions><collision object="player"><reset way="north" /><enter way="north" /></collision></collisions>
@@ -298,7 +298,7 @@
           <position><x><centered /></x><y>70</y></position>
         </object>
         <object name="taunt">
-          <sprite><text><content>Chicken! Fight like a robot!</content><size>30</size><color>color.yellow</color></text></sprite>
+          <sprite><text><content>Chicken! Fight like a robot!</content><size>30</size><color>yellow</color></text></sprite>
           <position><x><centered /></x><y>205</y></position>
         </object>
         <group name="help">
@@ -412,7 +412,7 @@
              the walls, out of play until he goes through an exit; just
              inside the gap, so he touches it before the way out -->
         <group name="doors" class="wall">
-          <sprite><rectangle><width><subtract><value>wide</value><value>margin</value></subtract></width><height>margin</height><color>color.blue</color></rectangle></sprite>
+          <sprite><rectangle><width><subtract><value>wide</value><value>margin</value></subtract></width><height>margin</height><color>blue</color></rectangle></sprite>
           <waiting />
           <collisions />
           <member name="northdoor"><position><x>232</x><y>56</y></position></member>
@@ -453,11 +453,11 @@
 
         <!-- the score, and the men left -->
         <object name="score">
-          <sprite><text style="hud"><number>player.score</number><color>color.green</color></text></sprite>
+          <sprite><text style="hud"><number>player.score</number><color>green</color></text></sprite>
           <position><x>margin</x><y>margin</y></position>
         </object>
         <object name="lives">
-          <sprite><text style="hud"><number>player.lives</number><color>color.green</color></text></sprite>
+          <sprite><text style="hud"><number>player.lives</number><color>green</color></text></sprite>
           <position><x><right><offset>margin</offset></right></x><y>margin</y></position>
         </object>
         <object name="liveicon">
@@ -742,7 +742,7 @@
     <state name="over">
       <objects>
         <object name="gameover">
-          <sprite><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>
+          <sprite><text style="banner"><content>GAME OVER</content><color>red</color></text></sprite>
           <position><x><centered /></x><y>120</y></position>
         </object>
         <object name="again">
@@ -813,7 +813,7 @@
       <row>..*.*..</row>
       <row>.**.**.</row>
       <scale>2</scale>
-      <color>color.red</color>
+      <color>red</color>
     </bitmap>
     <bitmap name="zap-white">
       <row>*.***.*</row>
@@ -828,7 +828,7 @@
       <row>*.....*</row>
       <row>*.....*</row>
       <scale>2</scale>
-      <color>color.white</color>
+      <color>white</color>
     </bitmap>
     <bitmap name="zap-yellow">
       <row>..***..</row>
@@ -843,7 +843,7 @@
       <row>..*.*..</row>
       <row>.**.**.</row>
       <scale>2</scale>
-      <color>color.yellow</color>
+      <color>yellow</color>
     </bitmap>
     <bitmap name="zap-cyan">
       <row>*.***.*</row>
@@ -858,17 +858,17 @@
       <row>*.....*</row>
       <row>*.....*</row>
       <scale>2</scale>
-      <color>color.cyan</color>
+      <color>cyan</color>
     </bitmap>
     <bitmap name="robots-a">
       <row>.*****.</row><row>.*.*.*.</row><row>.*****.</row><row>..***..</row><row>*******</row><row>*.***.*</row><row>..*.*..</row><row>..*.*..</row><row>.**.**.</row>
       <scale>2</scale>
-      <color>color.yellow</color>
+      <color>yellow</color>
     </bitmap>
     <bitmap name="robots-b">
       <row>.*****.</row><row>.*.*.*.</row><row>.*****.</row><row>..***..</row><row>.*****.</row><row>*.***.*</row><row>.*...*.</row><row>.*...*.</row><row>**...**</row>
       <scale>2</scale>
-      <color>color.yellow</color>
+      <color>yellow</color>
     </bitmap>
     <bitmap name="player-down" style="player">
       <row>..***..</row><row>.*.*.*.</row><row>..***..</row><row>...*...</row><row>.*****.</row><row>*..*..*</row><row>*..*..*</row><row>..*.*..</row><row>..*.*..</row><row>..*.*..</row><row>.**.**.</row>
@@ -885,7 +885,7 @@
     <bitmap name="otto">
       <row>..*****..</row><row>.*.....*.</row><row>*.**.**.*</row><row>*.**.**.*</row><row>*.......*</row><row>*.*...*.*</row><row>*..***..*</row><row>.*.....*.</row><row>..*****..</row>
       <scale>3</scale>
-      <color>color.yellow</color>
+      <color>yellow</color>
     </bitmap>
   </pictures>
 </game>

@@ -9,7 +9,7 @@ Every game follows it, and `test_engine_input` checks it:
 - **Space** starts and plays again (never Enter); in play it jumps or fires.
 - The **Pause** key pauses and plays on, in every game (and a pad's Start). Nothing else pauses.
 - Player one plays on **W A S D**. The arrows are a second way in one-player games, and player two's keys in two-player ones.
-- Colours are `color.` names only.
+- Colours are the engine's colour names only ([colours](format.md#colours)).
 
 The tables list only keys beyond that.
 

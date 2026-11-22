@@ -40,16 +40,16 @@
     <variable name="top">104</variable>
   </variables>
   <styles>
-    <style name="banner"><size>72</size><color>color.lightgrey</color></style>
+    <style name="banner"><size>72</size><color>lightgrey</color></style>
     <style name="prompt"><size>28</size></style>
-    <style name="help"><size>20</size><color>color.lightgrey</color></style>
+    <style name="help"><size>20</size><color>lightgrey</color></style>
     <style name="hud"><size>28</size></style>
-    <style name="one"><size>32</size><color>color.cyan</color></style>
-    <style name="two"><size>32</size><color>color.green</color></style>
-    <style name="three"><size>32</size><color>color.red</color></style>
-    <style name="more"><size>32</size><color>color.magenta</color></style>
-    <style name="flag"><size>32</size><color>color.orange</color></style>
-    <style name="cursor"><scale>4</scale><color>color.yellow</color></style>
+    <style name="one"><size>32</size><color>cyan</color></style>
+    <style name="two"><size>32</size><color>green</color></style>
+    <style name="three"><size>32</size><color>red</color></style>
+    <style name="more"><size>32</size><color>magenta</color></style>
+    <style name="flag"><size>32</size><color>orange</color></style>
+    <style name="cursor"><scale>4</scale><color>yellow</color></style>
   </styles>
   <states>
     <objects>
@@ -105,7 +105,7 @@
           <rows>9</rows>
           <cells />
           <object name="mine" class="mine">
-            <sprite><circle><radius>4</radius><color>color.black</color></circle></sprite>
+            <sprite><circle><radius>4</radius><color>black</color></circle></sprite>
             <hidden />
           </object>
         </map>
@@ -125,9 +125,9 @@
           <row>#########</row>
           <row>#########</row>
           <group name="squares" class="square" char="#">
-            <sprite name="closed"><rectangle><width><subtract><value>cell</value><value>4</value></subtract></width><height><subtract><value>cell</value><value>4</value></subtract></height><color>color.grey</color></rectangle></sprite>
+            <sprite name="closed"><rectangle><width><subtract><value>cell</value><value>4</value></subtract></width><height><subtract><value>cell</value><value>4</value></subtract></height><color>grey</color></rectangle></sprite>
             <sprite name="flag"><text style="flag"><content>F</content></text></sprite>
-            <sprite name="n0"><rectangle><width><subtract><value>cell</value><value>4</value></subtract></width><height><subtract><value>cell</value><value>4</value></subtract></height><color>color.darkgrey</color></rectangle></sprite>
+            <sprite name="n0"><rectangle><width><subtract><value>cell</value><value>4</value></subtract></width><height><subtract><value>cell</value><value>4</value></subtract></height><color>darkgrey</color></rectangle></sprite>
             <sprite name="n1"><text style="one"><content>1</content></text></sprite>
             <sprite name="n2"><text style="two"><content>2</content></text></sprite>
             <sprite name="n3"><text style="three"><content>3</content></text></sprite>
@@ -136,8 +136,8 @@
             <sprite name="n6"><text style="more"><content>6</content></text></sprite>
             <sprite name="n7"><text style="more"><content>7</content></text></sprite>
             <sprite name="n8"><text style="more"><content>8</content></text></sprite>
-            <sprite name="boom"><circle><radius><divide><value>cell</value><value>3</value></divide></radius><color>color.red</color></circle></sprite>
-            <sprite name="mine"><circle><radius><divide><value>cell</value><value>4</value></divide></radius><color>color.white</color></circle></sprite>
+            <sprite name="boom"><circle><radius><divide><value>cell</value><value>3</value></divide></radius><color>red</color></circle></sprite>
+            <sprite name="mine"><circle><radius><divide><value>cell</value><value>4</value></divide></radius><color>white</color></circle></sprite>
             <actions>
               <!-- opened (by the cursor, or by a clear neighbour): only one still closed -->
               <action name="open">
@@ -248,7 +248,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -262,8 +262,8 @@
     <state name="over">
       <objects>
         <object name="message">
-          <sprite name="won"><text style="banner"><content>CLEARED</content><color>color.green</color></text></sprite>
-          <sprite name="lost"><text style="banner"><content>BOOM</content><color>color.red</color></text></sprite>
+          <sprite name="won"><text style="banner"><content>CLEARED</content><color>green</color></text></sprite>
+          <sprite name="lost"><text style="banner"><content>BOOM</content><color>red</color></text></sprite>
           <position><x><centered /></x><y><centered><subtract><value>window.bottom</value><value>30</value></subtract></centered></y></position>
         </object>
       </objects>

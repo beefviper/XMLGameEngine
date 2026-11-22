@@ -135,13 +135,13 @@ TEST_CASE("a copy's own name in any of its commands' numbers is the copy's", "[v
 TEST_CASE("a live number in a hop's arc is read as the hop is made", "[values]")
 {
 	const ScratchGame file(R"(<game>
-  <window name="t"><width>400</width><height>400</height><background>color.black</background><framerate>60</framerate></window>
+  <window name="t"><width>400</width><height>400</height><background>black</background><framerate>60</framerate></window>
   <variables><variable name="unused">0</variable></variables>
   <states>
     <state name="playing">
       <objects>
         <object name="frog">
-          <sprite><rectangle><width>10</width><height>10</height><color>color.white</color></rectangle></sprite>
+          <sprite><rectangle><width>10</width><height>10</height><color>white</color></rectangle></sprite>
           <position><x>100</x><y>300</y></position>
           <actions><action name="leap"><hop direction="up">10<seconds>1</seconds><arc>frog.h</arc></hop></action></actions>
           <variables><variable name="h">20</variable></variables>

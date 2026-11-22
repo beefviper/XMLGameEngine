@@ -72,7 +72,7 @@ namespace
 	std::string gameXml(const std::string& objects, const std::string& shows = "<show object=\"lane\" />")
 	{
 		return "<game>"
-			"<window name=\"test\"><width>800</width><height>600</height><background>color.black</background>"
+			"<window name=\"test\"><width>800</width><height>600</height><background>black</background>"
 			"<framerate>60</framerate></window>"
 			"<variables><variable name=\"row\">100</variable></variables>"
 			"<states><objects>" + objects + "</objects>"
@@ -97,7 +97,7 @@ namespace
 	// its own row, speed and shape.
 	const std::string kLane =
 		"<group name=\"lane\" class=\"logs\">"
-		"<sprite><rectangle><width>40</width><height>20</height><color>color.brown</color></rectangle></sprite>"
+		"<sprite><rectangle><width>40</width><height>20</height><color>brown</color></rectangle></sprite>"
 		"<position><y>row</y></position>"
 		"<velocity><x>-120</x><y>0</y></velocity>"
 		"<collisions><collision edge=\"horizontal\"><wrap /></collision></collisions>"
@@ -354,7 +354,7 @@ namespace
 	std::string wallWith(const std::string& changes, const std::string& rows = "2", const std::string& padding = "<padding><x>5</x><y>7</y></padding>")
 	{
 		return "<group name=\"wall\" class=\"bricks\"><columns>3</columns><rows>" + rows + "</rows>" + padding +
-			"<sprite><rectangle><width>20</width><height>10</height><color>color.red</color></rectangle></sprite>"
+			"<sprite><rectangle><width>20</width><height>10</height><color>red</color></rectangle></sprite>"
 			"<position><x>100</x><y>50</y></position><velocity><x>0</x><y>0</y></velocity>"
 			"<collisions></collisions>"
 			"<variables><variable name=\"points\">1</variable></variables>" + changes + "</group>";
@@ -394,18 +394,18 @@ TEST_CASE("a group in columns and rows is a cell for each place, named for its c
 TEST_CASE("a row, a column or a cell changes only what it gives", "[group][cells]")
 {
 	Loaded loaded{ gameXml(wallWith(
-		"<row number=\"2\"><sprite><rectangle><color>color.green</color></rectangle></sprite>"
+		"<row number=\"2\"><sprite><rectangle><color>green</color></rectangle></sprite>"
 		"<variables><variable name=\"points\">5</variable></variables></row>"
 		"<column number=\"3\"><velocity><x>120</x></velocity></column>"
-		"<cell row=\"1\" column=\"2\" name=\"boss\"><sprite><rectangle><width>30</width><height>16</height><color>color.blue</color></rectangle></sprite></cell>"),
+		"<cell row=\"1\" column=\"2\" name=\"boss\"><sprite><rectangle><width>30</width><height>16</height><color>blue</color></rectangle></sprite></cell>"),
 		kShowWall) };
 	Game& game = loaded.game;
 
 	// The row: green, worth more, the size of the group's bricks.
-	CHECK(colorOf(game.object("wall.1.2")) == "color.green");
+	CHECK(colorOf(game.object("wall.1.2")) == "green");
 	CHECK(game.object("wall.1.2").drawn.picture->size.x == 20.0f);
 	CHECK(game.object("wall.1.2").variable.at("points") == 5.0f);
-	CHECK(colorOf(game.object("wall.1.1")) == "color.red");
+	CHECK(colorOf(game.object("wall.1.1")) == "red");
 	CHECK(game.object("wall.1.1").variable.at("points") == 1.0f);
 
 	// The column moves; the rest do not.
@@ -417,7 +417,7 @@ TEST_CASE("a row, a column or a cell changes only what it gives", "[group][cells
 	CHECK(game.find("wall.2.1") == nullptr);
 	const Object& boss = game.object("boss");
 	CHECK(boss.groupName == "wall");
-	CHECK(colorOf(boss) == "color.blue");
+	CHECK(colorOf(boss) == "blue");
 	CHECK(boss.position.x == 100.0f + 25.0f - 5.0f);
 	CHECK(boss.position.y == 50.0f - 3.0f);
 
@@ -448,11 +448,11 @@ TEST_CASE("lines of text are a group in <rows> alone: one style, each line named
 		"<sprite><text style=\"help\" /></sprite>"
 		"<position><x><centered /></x><y>100</y></position>"
 		"<row number=\"1\"><sprite><text><content>first line</content></text></sprite></row>"
-		"<row number=\"2\"><sprite><text><content>second</content><color>color.red</color></text></sprite></row>"
+		"<row number=\"2\"><sprite><text><content>second</content><color>red</color></text></sprite></row>"
 		"<row number=\"3\"><sprite><text><content>third</content></text></sprite><padding><y>50</y></padding></row>"
 		"</group>";
 	std::string xml = gameXml(lines, "<show object=\"help\" />");
-	xml.replace(xml.find("<states>"), 0, "<styles><style name=\"help\"><size>20</size><color>color.white</color></style></styles>");
+	xml.replace(xml.find("<states>"), 0, "<styles><style name=\"help\"><size>20</size><color>white</color></style></styles>");
 	Loaded loaded{ xml };
 	Game& game = loaded.game;
 
@@ -461,8 +461,8 @@ TEST_CASE("lines of text are a group in <rows> alone: one style, each line named
 	CHECK(game.object("help.2").drawn.picture->text == "second");
 	CHECK(game.object("help.3").drawn.picture->text == "third");
 	CHECK(game.object("help.1").drawn.picture->textSize == 20);
-	CHECK(colorOf(game.object("help.1")) == "color.white");
-	CHECK(colorOf(game.object("help.2")) == "color.red");
+	CHECK(colorOf(game.object("help.1")) == "white");
+	CHECK(colorOf(game.object("help.2")) == "red");
 
 	// Text is measured only by a window, so lines are their padding apart, top to top.
 	CHECK(game.object("help.1").position.y == 100.0f);
@@ -478,22 +478,22 @@ TEST_CASE("lines of text are a group in <rows> alone: one style, each line named
 TEST_CASE("a row or column picks by number, several numbers, odd or even", "[group][cells]")
 {
 	Loaded loaded{ gameXml(wallWith(
-		"<row><odd /><sprite><rectangle><color>color.blue</color></rectangle></sprite></row>"
-		"<row><number>2</number><number>4</number><sprite><rectangle><color>color.green</color></rectangle></sprite></row>", "5"),
+		"<row><odd /><sprite><rectangle><color>blue</color></rectangle></sprite></row>"
+		"<row><number>2</number><number>4</number><sprite><rectangle><color>green</color></rectangle></sprite></row>", "5"),
 		kShowWall) };
 	Game& game = loaded.game;
 
-	CHECK(colorOf(game.object("wall.1.1")) == "color.blue");
-	CHECK(colorOf(game.object("wall.2.2")) == "color.green");
-	CHECK(colorOf(game.object("wall.3.3")) == "color.blue");
-	CHECK(colorOf(game.object("wall.1.4")) == "color.green");
-	CHECK(colorOf(game.object("wall.1.5")) == "color.blue");
+	CHECK(colorOf(game.object("wall.1.1")) == "blue");
+	CHECK(colorOf(game.object("wall.2.2")) == "green");
+	CHECK(colorOf(game.object("wall.3.3")) == "blue");
+	CHECK(colorOf(game.object("wall.1.4")) == "green");
+	CHECK(colorOf(game.object("wall.1.5")) == "blue");
 }
 
 TEST_CASE("a member's sprite of the same shape as its group's gives only what changes", "[group]")
 {
 	Loaded loaded{ gameXml(groupWith(
-		"<sprite><rectangle><width>40</width><height>20</height><color>color.brown</color></rectangle></sprite>" + kPosition + kVelocity + kCollisions,
+		"<sprite><rectangle><width>40</width><height>20</height><color>brown</color></rectangle></sprite>" + kPosition + kVelocity + kCollisions,
 		"<member name=\"short\"><sprite><rectangle><width>10</width></rectangle></sprite></member>"
 		"<member name=\"round\"><sprite><circle><radius>4</radius></circle></sprite></member>"), "<show object=\"lane\" />") };
 	Game& game = loaded.game;
@@ -501,17 +501,17 @@ TEST_CASE("a member's sprite of the same shape as its group's gives only what ch
 	CHECK(game.object("short").drawn.picture->kind == ShapeKind::Rectangle);
 	CHECK(game.object("short").drawn.picture->size.x == 10.0f);
 	CHECK(game.object("short").drawn.picture->size.y == 20.0f);
-	CHECK(game.object("short").drawn.picture->color == "color.brown");
+	CHECK(game.object("short").drawn.picture->color == "brown");
 	CHECK(game.object("round").drawn.picture->kind == ShapeKind::Circle);
 	CHECK(game.object("round").drawn.picture->radius == 4.0f);
-	CHECK(game.object("round").drawn.picture->color == "color.white");
+	CHECK(game.object("round").drawn.picture->color == "white");
 }
 
 TEST_CASE("a member's tether names its two ends again and keeps the rest; a member's text can choose", "[group]")
 {
 	Loaded loaded{ gameXml(
 		"<object name=\"a\">" + kSprite + kPosition + "</object><object name=\"b\">" + kSprite + kPosition + "</object>"
-		"<group name=\"lines\"><sprite><tether from=\"a\" to=\"b\"><thickness>3</thickness><color>color.red</color></tether></sprite>" + kPosition +
+		"<group name=\"lines\"><sprite><tether from=\"a\" to=\"b\"><thickness>3</thickness><color>red</color></tether></sprite>" + kPosition +
 		"<member name=\"one\" /><member name=\"two\"><sprite><tether from=\"b\" to=\"a\" /></sprite></member></group>"
 		"<group name=\"signs\"><sprite><text><content>go</content><size>10</size></text></sprite>" + kPosition +
 		"<member name=\"sign\"><sprite><text><choose><by>1</by><word>left</word><word>right</word></choose></text></sprite></member></group>",
@@ -528,7 +528,7 @@ TEST_CASE("a member's tether names its two ends again and keeps the rest; a memb
 	CHECK(game.object("sign").drawn.picture->kind == ShapeKind::Text);
 	CHECK(game.object("sign").drawn.picture->text == "right");
 	CHECK(game.object("sign").drawn.picture->textSize == 10);
-	CHECK(game.object("sign").drawn.picture->color == "color.white");
+	CHECK(game.object("sign").drawn.picture->color == "white");
 }
 
 TEST_CASE("cells that cannot be laid out, or changed two ways at once, say where", "[group][cells][errors]")
@@ -538,8 +538,8 @@ TEST_CASE("cells that cannot be laid out, or changed two ways at once, say where
 	SECTION("a row and a column that change the same thing in one cell")
 	{
 		REQUIRE_THROWS_WITH(refused(wallWith(
-			"<row number=\"1\"><sprite><rectangle><color>color.green</color></rectangle></sprite></row>"
-			"<column number=\"2\"><sprite><rectangle><color>color.blue</color></rectangle></sprite></column>")),
+			"<row number=\"1\"><sprite><rectangle><color>green</color></rectangle></sprite></row>"
+			"<column number=\"2\"><sprite><rectangle><color>blue</color></rectangle></sprite></column>")),
 			ContainsSubstring("object 'wall.2.1'") && ContainsSubstring("both change its <sprite>") && ContainsSubstring("<cell>"));
 	}
 
@@ -596,11 +596,11 @@ namespace
 	// second adds a rule of its own and another class.
 	const std::string kNested =
 		"<group name=\"lanes\" class=\"logs\">"
-		"<sprite><rectangle><width>30</width><height>10</height><color>color.brown</color></rectangle></sprite>"
+		"<sprite><rectangle><width>30</width><height>10</height><color>brown</color></rectangle></sprite>"
 		"<collisions><collision edge=\"horizontal\"><wrap /></collision></collisions>"
 		"<variables><variable name=\"weight\">3</variable></variables>"
 		"<group name=\"slow\">"
-		"<sprite><rectangle><color>color.red</color></rectangle></sprite>"
+		"<sprite><rectangle><color>red</color></rectangle></sprite>"
 		"<position><y>20</y></position><velocity><x>60</x></velocity>"
 		"<member><position><x>10</x></position></member>"
 		"<member><position><x>200</x></position></member>"
@@ -635,7 +635,7 @@ TEST_CASE("a group inside a group takes what it leaves out from the one around i
 	CHECK(slow.position.y == 20.0f);
 	CHECK(slow.velocity.x == 60.0f);
 	CHECK(measureShapeSize(slow.drawn.picture).x == 30.0f);
-	CHECK(slow.drawn.picture->color == "color.red");
+	CHECK(slow.drawn.picture->color == "red");
 	CHECK(slow.collisionsOn);
 	CHECK(slow.kind->collisionData.edges[edgeIndex(Edge::Left)].commands.size() == 1);
 	CHECK(slow.kind->collisionData.others.empty());
@@ -690,10 +690,10 @@ TEST_CASE("groups inside a group can each be laid out in cells from the outer's 
 	const std::string wall =
 		"<group name=\"wall\" class=\"bricks\">"
 		"<columns>3</columns><padding><x>5</x></padding>"
-		"<sprite name=\"whole\"><rectangle><width>20</width><height>10</height><color>color.red</color></rectangle></sprite>"
+		"<sprite name=\"whole\"><rectangle><width>20</width><height>10</height><color>red</color></rectangle></sprite>"
 		"<position><x>100</x></position>"
 		"<group name=\"top\"><rows>1</rows>"
-		"<sprite name=\"whole\"><rectangle><color>color.grey</color></rectangle></sprite>"
+		"<sprite name=\"whole\"><rectangle><color>grey</color></rectangle></sprite>"
 		"<position><y>10</y></position></group>"
 		"<group name=\"block\"><rows>2</rows><padding><y>7</y></padding>"
 		"<position><y>50</y></position>"
@@ -866,8 +866,8 @@ TEST_CASE("both schema checkers accept the games written with groups", "[group][
 
 TEST_CASE("both schema checkers take every object part on a group on a map", "[group][schema][map]")
 {
-	const Verdict verdict = judge(gameWith("descriptions/pacman.xml", "<color>color.magenta</color></bitmap></sprite>",
-		"<color>color.magenta</color></bitmap></sprite><heading>0</heading><drag>1</drag><mass>1</mass>"
+	const Verdict verdict = judge(gameWith("descriptions/pacman.xml", "<color>magenta</color></bitmap></sprite>",
+		"<color>magenta</color></bitmap></sprite><heading>0</heading><drag>1</drag><mass>1</mass>"
 		"<pull object=\"pacman\">0</pull><seek object=\"pacman\">0</seek><facing>left</facing>"));
 
 	CHECK(verdict.weakAccepts);

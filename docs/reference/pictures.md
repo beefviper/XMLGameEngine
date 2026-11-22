@@ -4,7 +4,7 @@ What an object looks like: its sprites, looks, animation and poses, and how ligh
 
 ## Sprites
 
-A `<sprite>` holds one shape. A `name` is needed only when an object has several (as [looks](#looks) or [animation](#animation) frames). A `<color>` left out is `color.white`.
+A `<sprite>` holds one shape. A `name` is needed only when an object has several (as [looks](#looks) or [animation](#animation) frames). A `<color>` left out is `white`.
 
 | Shape | Contents | Draws |
 |---|---|---|
@@ -30,7 +30,7 @@ A `<radius>`, `<width>` or `<height>` below 0, or a text `<size>` of 0 or less, 
 ```xml
 <sprite>
   <line><from><x>10</x><y>2</y></from><to><x>20</x><y>2</y></to></line>
-  <line><from><x>20</x><y>2</y></from><to><x>25</x><y>7</y></to><color>color.red</color><thickness>2</thickness></line>
+  <line><from><x>20</x><y>2</y></from><to><x>25</x><y>7</y></to><color>red</color><thickness>2</thickness></line>
 </sprite>
 ```
 
@@ -48,7 +48,7 @@ A `<radius>`, `<width>` or `<height>` below 0, or a text `<size>` of 0 or less, 
     <point><x>390</x><y>270</y></point>
     <point><x>800</x><y>445</y></point>
     <point><x>800</x><y>600</y></point>
-    <color>color.forestgreen</color>
+    <color>forestgreen</color>
   </polygon>
 </sprite>
 ```
@@ -88,13 +88,13 @@ A bitmap is written once, by name, in the game's `<pictures>` at the bottom of t
     <row>.**w*w**.</row>
     <row>*********</row>
     <scale>5</scale>
-    <color>color.green</color>             <!-- the * pixels -->
-    <color char="w">color.white</color>    <!-- the w pixels -->
+    <color>green</color>             <!-- the * pixels -->
+    <color char="w">white</color>    <!-- the w pixels -->
   </bitmap>
 </pictures>
 ```
 
-- **A take changes what it gives**: its own `<row>`s replace all the picture's, a `<scale>` or `<flip>` the picture's, a `<color>` the one of the same `char=` (or the plain one), and `style=` the picture's. `<bitmap from="invader"><color>color.red</color></bitmap>` is the same invader in red. Two sprites showing one picture take the same name. A name the pictures have not got stops the load.
+- **A take changes what it gives**: its own `<row>`s replace all the picture's, a `<scale>` or `<flip>` the picture's, a `<color>` the one of the same `char=` (or the plain one), and `style=` the picture's. `<bitmap from="invader"><color>red</color></bitmap>` is the same invader in red. Two sprites showing one picture take the same name. A name the pictures have not got stops the load.
 - A bitmap can still be written whole inside a sprite; the games keep theirs in `<pictures>`.
 
 - `.` is clear, `*` the plain `<color>`, and each `<color char="x">` names one more character.
@@ -293,7 +293,7 @@ A piece with a `<surface>` is ground that changes how a gripping thing goes:
 
 ```xml
 <group name="grass" char="g">
-  <sprite><rectangle><width>40</width><height>40</height><color>color.forestgreen</color></rectangle></sprite>
+  <sprite><rectangle><width>40</width><height>40</height><color>forestgreen</color></rectangle></sprite>
   <surface><drag>0.14</drag><grip>0.032</grip></surface>
 </group>
 ```

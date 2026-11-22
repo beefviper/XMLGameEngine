@@ -386,7 +386,7 @@ namespace xge
 				tether.thickness = static_cast<int>(std::lround(evaluate(writtenObject.sprite.thickness, where)));
 				if (tether.thickness < 1) { throw std::runtime_error(where + ": a <tether> has a <thickness> under 1"); }
 			}
-			tether.color = colorFromName(writtenObject.sprite.color.empty() ? "color.white" : writtenObject.sprite.color);
+			tether.color = colorFromName(writtenObject.sprite.color.empty() ? "white" : writtenObject.sprite.color);
 		}
 
 		if (!writtenObject.facing.empty())

@@ -40,11 +40,11 @@
   <styles>
     <style name="banner"><size>80</size></style>
     <style name="prompt"><size>32</size></style>
-    <style name="help"><size>22</size><color>color.lightgrey</color></style>
+    <style name="help"><size>22</size><color>lightgrey</color></style>
     <style name="hud"><size>32</size></style>
-    <style name="x"><scale>8</scale><color>color.red</color></style>
-    <style name="o"><scale>8</scale><color>color.cyan</color></style>
-    <style name="cursor"><scale>12</scale><color>color.yellow</color></style>
+    <style name="x"><scale>8</scale><color>red</color></style>
+    <style name="o"><scale>8</scale><color>cyan</color></style>
+    <style name="cursor"><scale>12</scale><color>yellow</color></style>
   </styles>
   <keeps>
     <keep object="options" />
@@ -71,7 +71,7 @@
     <state name="title">
       <objects>
         <object name="title">
-          <sprite><text style="banner"><content>TIC-TAC-TOE</content><color>color.red</color></text></sprite>
+          <sprite><text style="banner"><content>TIC-TAC-TOE</content><color>red</color></text></sprite>
           <position><x><centered /></x><y><centered><offset>-170</offset></centered></y></position>
         </object>
         <group name="help">
@@ -107,24 +107,24 @@
           <position><x><centered /></x><y>24</y></position>
           <turns sprite="waiting" />
           <member name="crosses">
-            <sprite name="moving"><text style="hud"><content>x to move</content><color>color.red</color></text></sprite>
+            <sprite name="moving"><text style="hud"><content>x to move</content><color>red</color></text></sprite>
             <owns class="x" />
           </member>
           <member name="noughts">
-            <sprite name="moving"><text style="hud"><content>o to move</content><color>color.cyan</color></text></sprite>
+            <sprite name="moving"><text style="hud"><content>o to move</content><color>cyan</color></text></sprite>
             <owns class="o" />
           </member>
         </group>
         <!-- the grid: lines between the squares, the board showing through -->
         <object name="lines">
-          <sprite><rectangle><width><multiply><value>square</value><value>3</value></multiply></width><height><multiply><value>square</value><value>3</value></multiply></height><color>color.darkgrey</color></rectangle></sprite>
+          <sprite><rectangle><width><multiply><value>square</value><value>3</value></multiply></width><height><multiply><value>square</value><value>3</value></multiply></height><color>darkgrey</color></rectangle></sprite>
           <position><x>left</x><y>top</y></position>
         </object>
         <group name="squares">
           <columns>3</columns>
           <rows>3</rows>
           <padding><x>6</x><y>6</y></padding>
-          <sprite><rectangle><width><subtract><value>square</value><value>6</value></subtract></width><height><subtract><value>square</value><value>6</value></subtract></height><color>color.black</color></rectangle></sprite>
+          <sprite><rectangle><width><subtract><value>square</value><value>6</value></subtract></width><height><subtract><value>square</value><value>6</value></subtract></height><color>black</color></rectangle></sprite>
           <position><x><add><value>left</value><value>3</value></add></x><y><add><value>top</value><value>3</value></add></y></position>
         </group>
 
@@ -238,9 +238,9 @@
     <state name="over">
       <objects>
         <object name="winner">
-          <sprite name="x"><text style="banner"><content>X WINS</content><color>color.red</color></text></sprite>
-          <sprite name="o"><text style="banner"><content>O WINS</content><color>color.cyan</color></text></sprite>
-          <sprite name="draw"><text style="banner"><content>A DRAW</content><color>color.yellow</color></text></sprite>
+          <sprite name="x"><text style="banner"><content>X WINS</content><color>red</color></text></sprite>
+          <sprite name="o"><text style="banner"><content>O WINS</content><color>cyan</color></text></sprite>
+          <sprite name="draw"><text style="banner"><content>A DRAW</content><color>yellow</color></text></sprite>
           <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
         </object>
       </objects>

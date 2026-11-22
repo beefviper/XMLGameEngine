@@ -45,7 +45,7 @@
   <window name="Five Dice">
     <width>900</width>
     <height>900</height>
-    <background>color.darkgreen</background>
+    <background>darkgreen</background>
   </window>
   <variables>
     <!-- the dice, then the card: a heading row, the six upper boxes, their sum and bonus, the seven lower boxes, the total -->
@@ -62,17 +62,17 @@
     <variable name="totaly"><add><value>lowery</value><value><multiply><value>7</value><value>rowstep</value></multiply></value><value>16</value></add></variable>
   </variables>
   <styles>
-    <style name="banner"><size>80</size><color>color.yellow</color></style>
-    <style name="heading"><size>48</size><color>color.yellow</color></style>
+    <style name="banner"><size>80</size><color>yellow</color></style>
+    <style name="heading"><size>48</size><color>yellow</color></style>
     <style name="prompt"><size>32</size></style>
-    <style name="help"><size>22</size><color>color.lightgrey</color></style>
-    <style name="note"><size>26</size><color>color.white</color></style>
-    <style name="box"><size>26</size><color>color.lightgrey</color></style>
-    <style name="points"><size>26</size><color>color.white</color></style>
-    <style name="offer"><size>26</size><color>color.yellow</color></style>
-    <style name="die"><scale>5</scale><color char="w">color.white</color><color char="k">color.black</color></style>
-    <style name="free"><color char="w">color.white</color></style>
-    <style name="kept"><color char="w">color.gold</color></style>
+    <style name="help"><size>22</size><color>lightgrey</color></style>
+    <style name="note"><size>26</size><color>white</color></style>
+    <style name="box"><size>26</size><color>lightgrey</color></style>
+    <style name="points"><size>26</size><color>white</color></style>
+    <style name="offer"><size>26</size><color>yellow</color></style>
+    <style name="die"><scale>5</scale><color char="w">white</color><color char="k">black</color></style>
+    <style name="free"><color char="w">white</color></style>
+    <style name="kept"><color char="w">gold</color></style>
   </styles>
   <!-- what the lower boxes ask of the dice, a set of one pattern for each -->
   <patterns name="three"><pattern name="three"><alike variable="worth">3</alike></pattern></patterns>
@@ -576,7 +576,7 @@
         </object>
         <!-- under the name of the player on turn -->
         <object name="onturn">
-          <sprite><rectangle><width>100</width><height>3</height><color>color.yellow</color></rectangle></sprite>
+          <sprite><rectangle><width>100</width><height>3</height><color>yellow</color></rectangle></sprite>
           <position>
             <x update="live"><add><value>onex</value><value><multiply><value><subtract><value>card.player</value><value>1</value></subtract></value><value><subtract><value>twox</value><value>onex</value></subtract></value></multiply></value></add></x>
             <y><add><value>headingy</value><value>34</value></add></y>
@@ -666,7 +666,7 @@
 
         <!-- the box chosen -->
         <object name="pointer">
-          <sprite><text style="points"><content>&gt;</content><color>color.yellow</color></text></sprite>
+          <sprite><text style="points"><content>&gt;</content><color>yellow</color></text></sprite>
           <position>
             <x><subtract><value>labelx</value><value>40</value></subtract></x>
             <y update="live">
@@ -753,7 +753,7 @@
       <objects>
         <!-- over the dice and the turn's lines, leaving the card to read -->
         <object name="cover">
-          <sprite><rectangle><width>900</width><height>210</height><color>color.darkgreen</color></rectangle></sprite>
+          <sprite><rectangle><width>900</width><height>210</height><color>darkgreen</color></rectangle></sprite>
           <position><x>0</x><y>0</y></position>
         </object>
         <object name="over">
@@ -790,7 +790,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>

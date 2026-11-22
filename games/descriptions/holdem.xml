@@ -54,7 +54,7 @@
   <window name="Texas Hold'em">
     <width>880</width>
     <height>840</height>
-    <background>color.darkgreen</background>
+    <background>darkgreen</background>
   </window>
   <variables>
     <variable name="cardwidth">96</variable>
@@ -64,11 +64,11 @@
     <variable name="yourrow">570</variable>
   </variables>
   <styles>
-    <style name="banner"><size>80</size><color>color.yellow</color></style>
+    <style name="banner"><size>80</size><color>yellow</color></style>
     <style name="prompt"><size>32</size></style>
-    <style name="help"><size>22</size><color>color.lightgrey</color></style>
-    <style name="note"><size>26</size><color>color.white</color></style>
-    <style name="result"><size>40</size><color>color.yellow</color></style>
+    <style name="help"><size>22</size><color>lightgrey</color></style>
+    <style name="note"><size>26</size><color>white</color></style>
+    <style name="result"><size>40</size><color>yellow</color></style>
   </styles>
   <!-- poker's hands, the lowest first; none of them: the highest cards -->
   <patterns name="poker">
@@ -142,7 +142,7 @@
               <value><multiply><value>cardwidth</value><value>5</value></multiply></value>
               <value>64</value>
             </add>
-          </width><height><add><value>cardheight</value><value>16</value></add></height><color>color.forestgreen</color></rectangle></sprite>
+          </width><height><add><value>cardheight</value><value>16</value></add></height><color>forestgreen</color></rectangle></sprite>
           <position><x>
             <subtract>
               <value>window.width.center</value>
@@ -327,7 +327,7 @@
           </variables>
           <turns sprite="wait" />
           <member name="you">
-            <sprite name="wait"><text style="note"><content>the computer is thinking</content><color>color.lightgrey</color></text></sprite>
+            <sprite name="wait"><text style="note"><content>the computer is thinking</content><color>lightgrey</color></text></sprite>
             <sprite name="done"><text style="note"><content>spacebar deals the next hand</content></text></sprite>
             <sprite name="act"><text style="note"><content>w bet or raise, spacebar check or call, x fold</content></text></sprite>
             <sprite name="callonly"><text style="note"><content>spacebar check or call, x fold</content></text></sprite>
@@ -350,9 +350,9 @@
 
         <!-- what the computer did last -->
         <object name="cpusays">
-          <sprite name="none"><text style="help"><content>.</content><color>color.darkgreen</color></text></sprite>
+          <sprite name="none"><text style="help"><content>.</content><color>darkgreen</color></text></sprite>
           <sprite name="call"><text style="help"><content>the computer checks or calls</content></text></sprite>
-          <sprite name="raise"><text style="help"><content>the computer bets</content><color>color.yellow</color></text></sprite>
+          <sprite name="raise"><text style="help"><content>the computer bets</content><color>yellow</color></text></sprite>
           <sprite name="fold"><text style="help"><content>the computer folds</content></text></sprite>
           <position><x><centered /></x><y><add><value>theirrow</value><value>cardheight</value><value>24</value></add></y></position>
         </object>
@@ -376,11 +376,11 @@
         </object>
 
         <object name="result">
-          <sprite name="none"><text style="result"><content>.</content><color>color.darkgreen</color></text></sprite>
+          <sprite name="none"><text style="result"><content>.</content><color>darkgreen</color></text></sprite>
           <sprite name="youwin"><text style="result"><content>you win the pot</content></text></sprite>
-          <sprite name="cpuwins"><text style="result"><content>the computer wins the pot</content><color>color.lightgrey</color></text></sprite>
-          <sprite name="split"><text style="result"><content>a split pot</content><color>color.white</color></text></sprite>
-          <sprite name="youfold"><text style="result"><content>you fold</content><color>color.lightgrey</color></text></sprite>
+          <sprite name="cpuwins"><text style="result"><content>the computer wins the pot</content><color>lightgrey</color></text></sprite>
+          <sprite name="split"><text style="result"><content>a split pot</content><color>white</color></text></sprite>
+          <sprite name="youfold"><text style="result"><content>you fold</content><color>lightgrey</color></text></sprite>
           <sprite name="cpufolds"><text style="result"><content>the computer folds</content></text></sprite>
           <position><x><centered /></x><y><add><value>yourrow</value><value>cardheight</value><value>30</value></add></y></position>
         </object>
@@ -550,7 +550,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>

@@ -43,10 +43,10 @@
     <variable name="seconds">136</variable>
   </variables>
   <styles>
-    <style name="banner"><size>110</size><color>color.yellow</color></style>
+    <style name="banner"><size>110</size><color>yellow</color></style>
     <style name="prompt"><size>44</size></style>
-    <style name="help"><size>32</size><color>color.lightgrey</color></style>
-    <style name="hud"><size>36</size><color>color.yellow</color></style>
+    <style name="help"><size>32</size><color>lightgrey</color></style>
+    <style name="hud"><size>36</size><color>yellow</color></style>
   </styles>
   <states>
     <state name="title">
@@ -60,7 +60,7 @@
           <padding><y>60</y></padding>
           <sprite><text style="help" /></sprite>
           <position><x><centered /></x><y><centered><offset>-20</offset></centered></y></position>
-          <row number="1"><sprite><text><content>cross the highway as often as you can</content><color>color.white</color></text></sprite></row>
+          <row number="1"><sprite><text><content>cross the highway as often as you can</content><color>white</color></text></sprite></row>
           <row number="2"><sprite><text><content>player 1: w and s    player 2: up and down</content></text></sprite></row>
         </group>
         <object name="start">
@@ -78,16 +78,16 @@
     <state name="playing">
       <objects>
         <object name="verge" class="farside">
-          <sprite><rectangle><width>window.right</width><height>cell</height><color>color.grey</color></rectangle></sprite>
+          <sprite><rectangle><width>window.right</width><height>cell</height><color>grey</color></rectangle></sprite>
           <position><x>0</x><y>0</y></position>
           <collisions />
         </object>
         <object name="road">
-          <sprite><rectangle><width>window.right</width><height><multiply><value>10</value><value>cell</value></multiply></height><color>color.darkgrey</color></rectangle></sprite>
+          <sprite><rectangle><width>window.right</width><height><multiply><value>10</value><value>cell</value></multiply></height><color>darkgrey</color></rectangle></sprite>
           <position><x>0</x><y>cell</y></position>
         </object>
         <object name="pavement">
-          <sprite><rectangle><width>window.right</width><height>cell</height><color>color.grey</color></rectangle></sprite>
+          <sprite><rectangle><width>window.right</width><height>cell</height><color>grey</color></rectangle></sprite>
           <position><x>0</x><y><multiply><value>11</value><value>cell</value></multiply></y></position>
         </object>
         <!-- the markings between the lanes, and the double line down the middle -->
@@ -95,7 +95,7 @@
           <columns>16</columns>
           <rows>9</rows>
           <padding><x>26</x><y>46</y></padding>
-          <sprite><rectangle><width>24</width><height>4</height><color>color.lightgrey</color></rectangle></sprite>
+          <sprite><rectangle><width>24</width><height>4</height><color>lightgrey</color></rectangle></sprite>
           <position><x>13</x><y>
             <subtract>
               <value><multiply><value>2</value><value>cell</value></multiply></value>
@@ -104,7 +104,7 @@
           </y></position>
         </group>
         <object name="median">
-          <sprite><rectangle><width>window.right</width><height>6</height><color>color.yellow</color></rectangle></sprite>
+          <sprite><rectangle><width>window.right</width><height>6</height><color>yellow</color></rectangle></sprite>
           <position><x>0</x><y>
             <subtract>
               <value><multiply><value>6</value><value>cell</value></multiply></value>
@@ -135,7 +135,7 @@
             <collision edge="horizontal"><wrap /></collision>
           </collisions>
           <group name="lane1">
-            <sprite><bitmap><color>color.yellow</color></bitmap></sprite>
+            <sprite><bitmap><color>yellow</color></bitmap></sprite>
             <position><x>40</x><y>
               <add>
                 <value><multiply><value>1</value><value>cell</value></multiply></value>
@@ -160,7 +160,7 @@
             <velocity><x>-90</x></velocity>
           </group>
           <group name="lane3">
-            <sprite><bitmap><color>color.green</color></bitmap></sprite>
+            <sprite><bitmap><color>green</color></bitmap></sprite>
             <position><x>220</x><y>
               <add>
                 <value><multiply><value>3</value><value>cell</value></multiply></value>
@@ -170,7 +170,7 @@
             <velocity><x>-120</x></velocity>
           </group>
           <group name="lane4">
-            <sprite><bitmap><color>color.magenta</color></bitmap></sprite>
+            <sprite><bitmap><color>magenta</color></bitmap></sprite>
             <position><x>10</x><y>
               <add>
                 <value><multiply><value>4</value><value>cell</value></multiply></value>
@@ -180,7 +180,7 @@
             <velocity><x>-150</x></velocity>
           </group>
           <group name="lane5">
-            <sprite><bitmap><color>color.cyan</color></bitmap></sprite>
+            <sprite><bitmap><color>cyan</color></bitmap></sprite>
             <position><x>130</x><y>
               <add>
                 <value><multiply><value>5</value><value>cell</value></multiply></value>
@@ -190,7 +190,7 @@
             <velocity><x>-210</x></velocity>
           </group>
           <group name="lane6">
-            <sprite><bitmap><color>color.orange</color></bitmap></sprite>
+            <sprite><bitmap><color>orange</color></bitmap></sprite>
             <position><x>60</x><y>
               <add>
                 <value><multiply><value>6</value><value>cell</value></multiply></value>
@@ -200,7 +200,7 @@
             <velocity><x>210</x></velocity>
           </group>
           <group name="lane7">
-            <sprite><bitmap><color>color.red</color></bitmap></sprite>
+            <sprite><bitmap><color>red</color></bitmap></sprite>
             <position><x>180</x><y>
               <add>
                 <value><multiply><value>7</value><value>cell</value></multiply></value>
@@ -210,7 +210,7 @@
             <velocity><x>150</x></velocity>
           </group>
           <group name="lane8">
-            <sprite><bitmap><color>color.blue</color></bitmap></sprite>
+            <sprite><bitmap><color>blue</color></bitmap></sprite>
             <position><x>0</x><y>
               <add>
                 <value><multiply><value>8</value><value>cell</value></multiply></value>
@@ -232,7 +232,7 @@
             <velocity><x>90</x></velocity>
           </group>
           <group name="lane10">
-            <sprite><bitmap><color>color.lightgrey</color></bitmap></sprite>
+            <sprite><bitmap><color>lightgrey</color></bitmap></sprite>
             <position><x>90</x><y>
               <add>
                 <value><multiply><value>10</value><value>cell</value></multiply></value>
@@ -283,7 +283,7 @@
         </group>
 
         <object name="clock">
-          <sprite><text style="hud"><number>clock.seconds</number><color>color.white</color></text></sprite>
+          <sprite><text style="hud"><number>clock.seconds</number><color>white</color></text></sprite>
           <position><x><centered /></x><y>6</y></position>
           <variables>
             <variable name="seconds">seconds</variable>
@@ -322,7 +322,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -337,7 +337,7 @@
     <state name="over">
       <objects>
         <object name="winner">
-          <sprite name="draw"><text style="banner"><content>A DRAW</content><color>color.white</color></text></sprite>
+          <sprite name="draw"><text style="banner"><content>A DRAW</content><color>white</color></text></sprite>
           <sprite name="player1"><text style="banner"><content>PLAYER 1 WINS</content><size>90</size></text></sprite>
           <sprite name="player2"><text style="banner"><content>PLAYER 2 WINS</content><size>90</size></text></sprite>
           <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
@@ -407,7 +407,7 @@
       <row>.kk......kk.</row>
       <row>.kk......kk.</row>
       <scale>4</scale>
-      <color char="k">color.black</color>
+      <color char="k">black</color>
     </bitmap>
     <bitmap name="lane2">
       <row>****************.*****</row>
@@ -418,8 +418,8 @@
       <row>.kk..kk.......kk..kk..</row>
       <row>.kk..kk.......kk..kk..</row>
       <scale>4</scale>
-      <color>color.white</color>
-      <color char="k">color.black</color>
+      <color>white</color>
+      <color char="k">black</color>
     </bitmap>
     <bitmap name="lane9"><row>****************.*****</row><row>****************.*kk**</row><row>****************.*kk**</row><row>**********************</row><row>**********************</row><row>.kk..kk.......kk..kk..</row><row>.kk..kk.......kk..kk..</row></bitmap>
     <bitmap name="chickens">
@@ -432,10 +432,10 @@
       <row>.*****..</row>
       <row>..o.o...</row>
       <scale>4</scale>
-      <color>color.yellow</color>
-      <color char="r">color.red</color>
-      <color char="k">color.black</color>
-      <color char="o">color.orange</color>
+      <color>yellow</color>
+      <color char="r">red</color>
+      <color char="k">black</color>
+      <color char="o">orange</color>
     </bitmap>
   </pictures>
 </game>

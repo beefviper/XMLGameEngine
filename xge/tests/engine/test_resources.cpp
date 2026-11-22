@@ -83,12 +83,12 @@ TEST_CASE("objects drawn alike share one picture, and a colour makes another", "
 		std::string recoloured;
 	};
 	const Kind kinds[] = {
-		{ "rows", "<bitmap><row>*.*</row><row>.*.</row><scale>2</scale><color>color.red</color></bitmap>",
-			"<bitmap><row>*.*</row><row>.*.</row><scale>2</scale><color>color.blue</color></bitmap>" },
-		{ "lines", "<line><from><x>0</x><y>0</y></from><to><x>6</x><y>4</y></to><color>color.red</color></line>",
-			"<line><from><x>0</x><y>0</y></from><to><x>6</x><y>4</y></to><color>color.blue</color></line>" },
-		{ "polygons", "<polygon><point><x>0</x><y>0</y></point><point><x>8</x><y>0</y></point><point><x>4</x><y>6</y></point><color>color.red</color></polygon>",
-			"<polygon><point><x>0</x><y>0</y></point><point><x>8</x><y>0</y></point><point><x>4</x><y>6</y></point><color>color.blue</color></polygon>" },
+		{ "rows", "<bitmap><row>*.*</row><row>.*.</row><scale>2</scale><color>red</color></bitmap>",
+			"<bitmap><row>*.*</row><row>.*.</row><scale>2</scale><color>blue</color></bitmap>" },
+		{ "lines", "<line><from><x>0</x><y>0</y></from><to><x>6</x><y>4</y></to><color>red</color></line>",
+			"<line><from><x>0</x><y>0</y></from><to><x>6</x><y>4</y></to><color>blue</color></line>" },
+		{ "polygons", "<polygon><point><x>0</x><y>0</y></point><point><x>8</x><y>0</y></point><point><x>4</x><y>6</y></point><color>red</color></polygon>",
+			"<polygon><point><x>0</x><y>0</y></point><point><x>8</x><y>0</y></point><point><x>4</x><y>6</y></point><color>blue</color></polygon>" },
 	};
 	for (const Kind& kind : kinds)
 	{
@@ -143,7 +143,7 @@ TEST_CASE("a hole makes one shield's picture its own, and a reset lets it go", "
 	for (int i = 0; i < 10; ++i) { rows += "<row>**********</row>"; }
 	const auto shield = [&](const std::string& name, int x)
 	{
-		return "<object name=\"" + name + "\"><sprite><bitmap>" + rows + "<scale>4</scale><color>color.green</color></bitmap></sprite>"
+		return "<object name=\"" + name + "\"><sprite><bitmap>" + rows + "<scale>4</scale><color>green</color></bitmap></sprite>"
 			"<position><x>" + std::to_string(x) + "</x><y>100</y></position>"
 			"<collisions><type>pixel</type><collision object=\"shot\"><hole>8</hole></collision></collisions></object>";
 	};
@@ -167,7 +167,7 @@ TEST_CASE("a hole makes one shield's picture its own, and a reset lets it go", "
 
 TEST_CASE("a window makes one texture for a picture twenty objects show", "[resources][window]")
 {
-	played::Scratch game{ alike(20, "<bitmap><row>*.*</row><row>.*.</row><scale>2</scale><color>color.red</color></bitmap>"), "" };
+	played::Scratch game{ alike(20, "<bitmap><row>*.*</row><row>.*.</row><scale>2</scale><color>red</color></bitmap>"), "" };
 	Game loaded{ game.path };
 	auto made = std::make_unique<NullWindow>();
 	NullWindow& window = *made;

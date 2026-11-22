@@ -53,7 +53,7 @@ namespace
 		line.y1 = y1;
 		line.x2 = x2;
 		line.y2 = y2;
-		line.color = colorFromName("color.white");
+		line.color = colorFromName("white");
 		line.thickness = thickness;
 		return line;
 	}
@@ -126,7 +126,7 @@ namespace
 	std::string gameXml(const std::string& objects, const std::string& shows)
 	{
 		return "<game>"
-			"<window name=\"test\"><width>800</width><height>600</height><background>color.black</background>"
+			"<window name=\"test\"><width>800</width><height>600</height><background>black</background>"
 			"<framerate>60</framerate></window>"
 			"<variables><variable name=\"g\">1800</variable></variables>"
 			"<states><objects>" + objects + "</objects>"
@@ -158,7 +158,7 @@ namespace
 	const std::string kHut =
 		"<object name=\"hut\">"
 		"<sprite>"
-		"<line><from><x>0</x><y>10</y></from><to><x>10</x><y>0</y></to><color>color.red</color></line>"
+		"<line><from><x>0</x><y>10</y></from><to><x>10</x><y>0</y></to><color>red</color></line>"
 		"<line><from><x>10</x><y>0</y></from><to><x>20</x><y>10</y></to><thickness>2</thickness></line>"
 		"</sprite>"
 		"<position><x>30</x><y>40</y></position>"
@@ -236,9 +236,9 @@ TEST_CASE("thickness widens a line to a square brush and adds to the picture's s
 TEST_CASE("a later line covers an earlier one where they meet, and a gap stays transparent", "[lines]")
 {
 	LineSegment first = segment(0, 0, 5, 0);
-	first.color = colorFromName("color.red");
+	first.color = colorFromName("red");
 	LineSegment second = segment(3, 0, 8, 0);
-	second.color = colorFromName("color.blue");
+	second.color = colorFromName("blue");
 
 	const Bitmap bitmap = rasterizeLines({ first, second });
 	const auto pixel = [&](int x, int channel) { return bitmap.rgba[static_cast<std::size_t>(x) * 4 + static_cast<std::size_t>(channel)]; };
@@ -859,7 +859,7 @@ TEST_CASE("a polygon fills the pixels whose middles lie inside its corners", "[l
 {
 	FilledPolygon square;
 	square.points = { { 2.0f, 1.0f }, { 6.0f, 1.0f }, { 6.0f, 4.0f }, { 2.0f, 4.0f } };
-	square.color = colorFromName("color.green");
+	square.color = colorFromName("green");
 	const Bitmap drawn = rasterizePolygons({ square });
 	CHECK(drawn.width == 6);
 	CHECK(drawn.height == 4);
@@ -883,7 +883,7 @@ TEST_CASE("a polygon fills the pixels whose middles lie inside its corners", "[l
 
 	// A later one covers an earlier one.
 	FilledPolygon over = square;
-	over.color = colorFromName("color.red");
+	over.color = colorFromName("red");
 	const Bitmap both = rasterizePolygons({ square, over });
 	CHECK(both.rgba[(2 * static_cast<std::size_t>(both.width) + 3) * 4] == 255);
 }

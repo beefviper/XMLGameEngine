@@ -83,15 +83,15 @@
     <variable name="knock">24</variable>
   </variables>
   <styles>
-    <style name="banner"><size>100</size><color>color.yellow</color></style>
+    <style name="banner"><size>100</size><color>yellow</color></style>
     <style name="prompt"><size>40</size></style>
     <style name="hud"><size>28</size></style>
     <style name="fire">
       <scale>2</scale>
-      <color char="r">color.red</color>
-      <color char="o">color.orange</color>
-      <color char="y">color.yellow</color>
-      <color char="k">color.brown</color>
+      <color char="r">red</color>
+      <color char="o">orange</color>
+      <color char="y">yellow</color>
+      <color char="k">brown</color>
     </style>
   </styles>
   <objects>
@@ -102,7 +102,7 @@
         <rectangle>
           <width>window.right</width>
           <height>thick</height>
-          <color>color.yellow</color>
+          <color>yellow</color>
         </rectangle>
       </sprite>
       <position><x>0</x><y>surface</y></position>
@@ -113,7 +113,7 @@
         <rectangle>
           <width>220</width>
           <height>thick</height>
-          <color>color.yellow</color>
+          <color>yellow</color>
         </rectangle>
       </sprite>
       <position><y>surface</y></position>
@@ -124,7 +124,7 @@
           <rectangle>
             <width>150</width>
             <height>thick</height>
-            <color>color.yellow</color>
+            <color>yellow</color>
           </rectangle>
         </sprite>
         <position><x>490</x></position>
@@ -135,7 +135,7 @@
         <rectangle>
           <width>314</width>
           <height>thick</height>
-          <color>color.yellow</color>
+          <color>yellow</color>
         </rectangle>
       </sprite>
       <position><y>surface</y></position>
@@ -181,7 +181,7 @@
         <rectangle>
           <width>270</width>
           <height>32</height>
-          <color>color.blue</color>
+          <color>blue</color>
         </rectangle>
       </sprite>
       <position><x>220</x><y><add><value>surface</value><value>4</value></add></y></position>
@@ -268,7 +268,7 @@
         <rectangle>
           <width>4</width>
           <height>window.bottom</height>
-          <color>color.black</color>
+          <color>black</color>
         </rectangle>
       </sprite>
       <position><x><subtract><value>window.right</value><value>4</value></subtract></x><y>0</y></position>
@@ -284,7 +284,7 @@
         <rectangle>
           <width>4</width>
           <height>window.bottom</height>
-          <color>color.black</color>
+          <color>black</color>
         </rectangle>
       </sprite>
       <position><x>0</x><y>0</y></position>
@@ -308,7 +308,7 @@
       </object>
       <!-- the best score, kept from game to game -->
       <object name="best">
-        <sprite><text style="hud"><content>BEST</content><number>best.score</number><color>color.lightgrey</color></text></sprite>
+        <sprite><text style="hud"><content>BEST</content><number>best.score</number><color>lightgrey</color></text></sprite>
         <position><x><centered /></x><y><bottom><offset>4</offset></bottom></y></position>
         <variables>
           <variable name="score">0</variable>
@@ -325,8 +325,8 @@
           <rows>2</rows>
           <padding><y>50</y></padding>
           <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
-          <row number="1"><sprite><text><content>find the four treasures before time runs out</content><size>26</size><color>color.white</color></text></sprite></row>
-          <row number="2"><sprite><text><content>a and d run, space jumps, w and s climb</content><size>22</size><color>color.lightgrey</color></text></sprite></row>
+          <row number="1"><sprite><text><content>find the four treasures before time runs out</content><size>26</size><color>white</color></text></sprite></row>
+          <row number="2"><sprite><text><content>a and d run, space jumps, w and s climb</content><size>22</size><color>lightgrey</color></text></sprite></row>
         </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
@@ -370,7 +370,7 @@
             <rectangle>
               <width>14</width>
               <height><subtract><value>surface</value><value>140</value></subtract></height>
-              <color>color.brown</color>
+              <color>brown</color>
             </rectangle>
           </sprite>
           <position><y>140</y></position>
@@ -384,7 +384,7 @@
             <rectangle>
               <width>window.right</width>
               <height>24</height>
-              <color>color.brown</color>
+              <color>brown</color>
             </rectangle>
           </sprite>
           <position><x>0</x><y><add><value>surface</value><value>thick</value></add></y></position>
@@ -394,7 +394,7 @@
             <rectangle>
               <width>window.right</width>
               <height><subtract><value>window.bottom</value><value>tunnel</value><value>thick</value></subtract></height>
-              <color>color.brown</color>
+              <color>brown</color>
             </rectangle>
           </sprite>
           <position><x>0</x><y><add><value>tunnel</value><value>thick</value></add></y></position>
@@ -404,7 +404,7 @@
             <rectangle>
               <width>window.right</width>
               <height>thick</height>
-              <color>color.darkgrey</color>
+              <color>darkgrey</color>
             </rectangle>
           </sprite>
           <position><x>0</x><y>tunnel</y></position>
@@ -486,11 +486,11 @@
           <position><x>margin</x><y>margin</y></position>
         </object>
         <object name="clock">
-          <sprite><text style="hud"><number>status.time</number><color>color.yellow</color></text></sprite>
+          <sprite><text style="hud"><number>status.time</number><color>yellow</color></text></sprite>
           <position><x><centered /></x><y>margin</y></position>
         </object>
         <object name="lives">
-          <sprite><text style="hud"><number>status.lives</number><color>color.red</color></text></sprite>
+          <sprite><text style="hud"><number>status.lives</number><color>red</color></text></sprite>
           <position><x><right><offset>margin</offset></right></x><y>margin</y></position>
         </object>
       </objects>
@@ -678,7 +678,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -692,8 +692,8 @@
     <state name="over">
       <objects>
         <object name="message">
-          <sprite name="won"><text style="banner"><content>YOU WIN</content><color>color.green</color></text></sprite>
-          <sprite name="lost"><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>
+          <sprite name="won"><text style="banner"><content>YOU WIN</content><color>green</color></text></sprite>
+          <sprite name="lost"><text style="banner"><content>GAME OVER</content><color>red</color></text></sprite>
           <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
         </object>
       </objects>
@@ -747,9 +747,9 @@
       <row>.*******ooo.</row>
       <row>...******...</row>
       <scale>3</scale>
-      <color>color.brown</color>
-      <color char="o">color.orange</color>
-      <color char="b">color.yellow</color>
+      <color>brown</color>
+      <color char="o">orange</color>
+      <color char="b">yellow</color>
     </bitmap>
     <bitmap name="tar">
       <row>...******************...</row>
@@ -757,7 +757,7 @@
       <row>.**********************.</row>
       <row>....****************....</row>
       <scale>2</scale>
-      <color>color.black</color>
+      <color>black</color>
     </bitmap>
     <bitmap name="crocs-shut">
       <row>....g..g.......</row>
@@ -765,9 +765,9 @@
       <row>ggggggggggggggg</row>
       <row>.ggggggggggggg.</row>
       <scale>2</scale>
-      <color char="g">color.darkgreen</color>
-      <color char="w">color.white</color>
-      <color char="k">color.black</color>
+      <color char="g">darkgreen</color>
+      <color char="w">white</color>
+      <color char="k">black</color>
     </bitmap>
     <bitmap name="crocs-open">
       <row>....g..g...gggg</row>
@@ -775,10 +775,10 @@
       <row>ggggggggggrrrrr</row>
       <row>.ggggggggggwwww</row>
       <scale>2</scale>
-      <color char="g">color.darkgreen</color>
-      <color char="w">color.white</color>
-      <color char="k">color.black</color>
-      <color char="r">color.red</color>
+      <color char="g">darkgreen</color>
+      <color char="w">white</color>
+      <color char="k">black</color>
+      <color char="r">red</color>
     </bitmap>
     <bitmap name="fire-high" style="fire">
       <row>...r....</row>
@@ -808,7 +808,7 @@
       <row>.********.</row>
       <row>*.*.*.*.*.</row>
       <scale>2</scale>
-      <color>color.white</color>
+      <color>white</color>
     </bitmap>
     <bitmap name="treasure">
       <row>..k**k..</row>
@@ -820,9 +820,9 @@
       <row>*****d**</row>
       <row>.**dd**.</row>
       <scale>2</scale>
-      <color>color.lightgrey</color>
-      <color char="k">color.brown</color>
-      <color char="d">color.darkgrey</color>
+      <color>lightgrey</color>
+      <color char="k">brown</color>
+      <color char="d">darkgrey</color>
     </bitmap>
     <bitmap name="canopy">
       <row>.gGgg.gG</row>
@@ -834,8 +834,8 @@
       <row>gggggGgg</row>
       <row>.ggGggg.</row>
       <scale>4</scale>
-      <color char="g">color.forestgreen</color>
-      <color char="G">color.green</color>
+      <color char="g">forestgreen</color>
+      <color char="G">green</color>
     </bitmap>
     <bitmap name="harry-gone">
       <row>........</row>
@@ -855,7 +855,7 @@
       <row>........</row>
       <row>........</row>
       <scale>2</scale>
-      <color>color.black</color>
+      <color>black</color>
     </bitmap>
     <bitmap name="harry">
       <row>...hhh..</row>
@@ -875,11 +875,11 @@
       <row>..w..w..</row>
       <row>.kk..kk.</row>
       <scale>2</scale>
-      <color char="h">color.brown</color>
-      <color char="s">color.orange</color>
-      <color char="g">color.green</color>
-      <color char="w">color.white</color>
-      <color char="k">color.darkgrey</color>
+      <color char="h">brown</color>
+      <color char="s">orange</color>
+      <color char="g">green</color>
+      <color char="w">white</color>
+      <color char="k">darkgrey</color>
     </bitmap>
     <bitmap name="treasure2">
       <row>..********</row>
@@ -888,7 +888,7 @@
       <row>*********.</row>
       <row>********..</row>
       <scale>2</scale>
-      <color>color.white</color>
+      <color>white</color>
     </bitmap>
     <bitmap name="treasure3">
       <row>..********</row>
@@ -897,7 +897,7 @@
       <row>*********.</row>
       <row>********..</row>
       <scale>2</scale>
-      <color>color.yellow</color>
+      <color>yellow</color>
     </bitmap>
     <bitmap name="treasure4">
       <row>...**...</row>
@@ -909,17 +909,17 @@
       <row>.yy..yy.</row>
       <row>...yy...</row>
       <scale>2</scale>
-      <color>color.cyan</color>
-      <color char="y">color.yellow</color>
+      <color>cyan</color>
+      <color char="y">yellow</color>
     </bitmap>
     <drawing name="ladder">
-      <line><from><x>0</x><y>0</y></from><to><x>0</x><y><subtract><value>tunnel</value><value>surface</value><value>2</value></subtract></y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-      <line><from><x>18</x><y>0</y></from><to><x>18</x><y><subtract><value>tunnel</value><value>surface</value><value>2</value></subtract></y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-      <line><from><x>0</x><y>20</y></from><to><x>18</x><y>20</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-      <line><from><x>0</x><y>44</y></from><to><x>18</x><y>44</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-      <line><from><x>0</x><y>68</y></from><to><x>18</x><y>68</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-      <line><from><x>0</x><y>92</y></from><to><x>18</x><y>92</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
-      <line><from><x>0</x><y>116</y></from><to><x>18</x><y>116</y></to><color>color.lightgrey</color><thickness>2</thickness></line>
+      <line><from><x>0</x><y>0</y></from><to><x>0</x><y><subtract><value>tunnel</value><value>surface</value><value>2</value></subtract></y></to><color>lightgrey</color><thickness>2</thickness></line>
+      <line><from><x>18</x><y>0</y></from><to><x>18</x><y><subtract><value>tunnel</value><value>surface</value><value>2</value></subtract></y></to><color>lightgrey</color><thickness>2</thickness></line>
+      <line><from><x>0</x><y>20</y></from><to><x>18</x><y>20</y></to><color>lightgrey</color><thickness>2</thickness></line>
+      <line><from><x>0</x><y>44</y></from><to><x>18</x><y>44</y></to><color>lightgrey</color><thickness>2</thickness></line>
+      <line><from><x>0</x><y>68</y></from><to><x>18</x><y>68</y></to><color>lightgrey</color><thickness>2</thickness></line>
+      <line><from><x>0</x><y>92</y></from><to><x>18</x><y>92</y></to><color>lightgrey</color><thickness>2</thickness></line>
+      <line><from><x>0</x><y>116</y></from><to><x>18</x><y>116</y></to><color>lightgrey</color><thickness>2</thickness></line>
     </drawing>
   </pictures>
 </game>

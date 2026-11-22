@@ -49,10 +49,10 @@
     <variable name="panel">400</variable>
   </variables>
   <styles>
-    <style name="banner"><size>88</size><color>color.cyan</color></style>
+    <style name="banner"><size>88</size><color>cyan</color></style>
     <style name="prompt"><size>32</size></style>
-    <style name="help"><size>22</size><color>color.lightgrey</color></style>
-    <style name="label"><size>24</size><color>color.lightgrey</color></style>
+    <style name="help"><size>22</size><color>lightgrey</color></style>
+    <style name="label"><size>24</size><color>lightgrey</color></style>
     <style name="hud"><size>40</size></style>
   </styles>
   <states>
@@ -108,11 +108,11 @@
               <value><multiply><value>20</value><value>cell</value></multiply></value>
               <value>8</value>
             </add>
-          </height><color>color.darkgrey</color></rectangle></sprite>
+          </height><color>darkgrey</color></rectangle></sprite>
           <position><x><subtract><value>left</value><value>4</value></subtract></x><y><subtract><value>top</value><value>4</value></subtract></y></position>
         </object>
         <object name="well">
-          <sprite><rectangle><width><multiply><value>10</value><value>cell</value></multiply></width><height><multiply><value>20</value><value>cell</value></multiply></height><color>color.black</color></rectangle></sprite>
+          <sprite><rectangle><width><multiply><value>10</value><value>cell</value></multiply></width><height><multiply><value>20</value><value>cell</value></multiply></height><color>black</color></rectangle></sprite>
           <position><x>left</x><y>top</y></position>
         </object>
         <object name="scorelabel">
@@ -154,7 +154,7 @@
               <value><multiply><value>2</value><value>cell</value></multiply></value>
               <value>16</value>
             </add>
-          </height><color>color.darkgrey</color></rectangle></sprite>
+          </height><color>darkgrey</color></rectangle></sprite>
           <position><x><subtract><value>panel</value><value>8</value></subtract></x><y><add><value>top</value><value>362</value></add></y></position>
         </object>
         <object name="nextwell">
@@ -168,7 +168,7 @@
               <value><multiply><value>2</value><value>cell</value></multiply></value>
               <value>8</value>
             </add>
-          </height><color>color.black</color></rectangle></sprite>
+          </height><color>black</color></rectangle></sprite>
           <position><x><subtract><value>panel</value><value>4</value></subtract></x><y><add><value>top</value><value>366</value></add></y></position>
         </object>
 
@@ -211,13 +211,13 @@
           <!-- a block of each colour, picked by its character -->
           <group name="blocks" class="block">
             <sprite><rectangle><width><subtract><value>cell</value><value>2</value></subtract></width><height><subtract><value>cell</value><value>2</value></subtract></height></rectangle></sprite>
-            <group name="cyan" char="i"><sprite><rectangle><color>color.cyan</color></rectangle></sprite></group>
-            <group name="yellow" char="o"><sprite><rectangle><color>color.yellow</color></rectangle></sprite></group>
-            <group name="magenta" char="t"><sprite><rectangle><color>color.magenta</color></rectangle></sprite></group>
-            <group name="green" char="s"><sprite><rectangle><color>color.green</color></rectangle></sprite></group>
-            <group name="red" char="z"><sprite><rectangle><color>color.red</color></rectangle></sprite></group>
-            <group name="blue" char="j"><sprite><rectangle><color>color.blue</color></rectangle></sprite></group>
-            <group name="orange" char="l"><sprite><rectangle><color>color.orange</color></rectangle></sprite></group>
+            <group name="cyan" char="i"><sprite><rectangle><color>cyan</color></rectangle></sprite></group>
+            <group name="yellow" char="o"><sprite><rectangle><color>yellow</color></rectangle></sprite></group>
+            <group name="magenta" char="t"><sprite><rectangle><color>magenta</color></rectangle></sprite></group>
+            <group name="green" char="s"><sprite><rectangle><color>green</color></rectangle></sprite></group>
+            <group name="red" char="z"><sprite><rectangle><color>red</color></rectangle></sprite></group>
+            <group name="blue" char="j"><sprite><rectangle><color>blue</color></rectangle></sprite></group>
+            <group name="orange" char="l"><sprite><rectangle><color>orange</color></rectangle></sprite></group>
           </group>
 
           <!-- the seven shapes, each in the square it turns in -->
@@ -357,7 +357,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -371,7 +371,7 @@
     <state name="over">
       <objects>
         <object name="message">
-          <sprite><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>
+          <sprite><text style="banner"><content>GAME OVER</content><color>red</color></text></sprite>
           <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
         </object>
       </objects>

@@ -52,7 +52,7 @@
     <variable name="time">40</variable>
   </variables>
   <styles>
-    <style name="banner"><size>96</size><color>color.green</color></style>
+    <style name="banner"><size>96</size><color>green</color></style>
     <style name="prompt"><size>32</size></style>
     <style name="hud"><size>30</size></style>
   </styles>
@@ -121,22 +121,22 @@
       <objects>
         <!-- scenery: the river, the bank, the road and the pavement -->
         <object name="water" class="water">
-          <sprite><rectangle><width>window.right</width><height><multiply><value>5</value><value>cell</value></multiply></height><color>color.darkblue</color></rectangle></sprite>
+          <sprite><rectangle><width>window.right</width><height><multiply><value>5</value><value>cell</value></multiply></height><color>darkblue</color></rectangle></sprite>
           <position><x>0</x><y><multiply><value>2</value><value>cell</value></multiply></y></position>
           <collisions />
         </object>
         <object name="bank">
-          <sprite><rectangle><width>window.right</width><height>cell</height><color>color.purple</color></rectangle></sprite>
+          <sprite><rectangle><width>window.right</width><height>cell</height><color>purple</color></rectangle></sprite>
           <position><x>0</x><y><multiply><value>7</value><value>cell</value></multiply></y></position>
         </object>
         <object name="pavement">
-          <sprite><rectangle><width>window.right</width><height>cell</height><color>color.purple</color></rectangle></sprite>
+          <sprite><rectangle><width>window.right</width><height>cell</height><color>purple</color></rectangle></sprite>
           <position><x>0</x><y><multiply><value>13</value><value>cell</value></multiply></y></position>
         </object>
 
         <!-- home: five bays in a hedge -->
         <object name="hedge" class="hazard">
-          <sprite><rectangle><width>window.right</width><height>cell</height><color>color.forestgreen</color></rectangle></sprite>
+          <sprite><rectangle><width>window.right</width><height>cell</height><color>forestgreen</color></rectangle></sprite>
           <position><x>0</x><y><multiply><value>1</value><value>cell</value></multiply></y></position>
           <collisions />
         </object>
@@ -149,7 +149,7 @@
               <value>40</value>
             </subtract>
           </x></padding>
-          <sprite name="empty"><rectangle><width>40</width><height>40</height><color>color.darkblue</color></rectangle></sprite>
+          <sprite name="empty"><rectangle><width>40</width><height>40</height><color>darkblue</color></rectangle></sprite>
           <sprite name="home">
             <bitmap from="pads-home" />
           </sprite>
@@ -352,7 +352,7 @@
                   <value>40</value>
                 </subtract>
               </x></padding>
-              <sprite><bitmap><color>color.lightgrey</color></bitmap></sprite>
+              <sprite><bitmap><color>lightgrey</color></bitmap></sprite>
               <position><x>60</x><y>
                 <add>
                   <value><multiply><value>9</value><value>cell</value></multiply></value>
@@ -374,7 +374,7 @@
                   <value>40</value>
                 </subtract>
               </x></padding>
-              <sprite><bitmap><color>color.magenta</color></bitmap></sprite>
+              <sprite><bitmap><color>magenta</color></bitmap></sprite>
               <position><x>40</x><y>
                 <add>
                   <value><multiply><value>10</value><value>cell</value></multiply></value>
@@ -397,7 +397,7 @@
                   <value>40</value>
                 </subtract>
               </x></padding>
-              <sprite><bitmap><color>color.green</color></bitmap></sprite>
+              <sprite><bitmap><color>green</color></bitmap></sprite>
               <position><x>100</x><y>
                 <add>
                   <value><multiply><value>11</value><value>cell</value></multiply></value>
@@ -419,7 +419,7 @@
                   <value>40</value>
                 </subtract>
               </x></padding>
-              <sprite><bitmap><color>color.yellow</color></bitmap></sprite>
+              <sprite><bitmap><color>yellow</color></bitmap></sprite>
               <position><x>30</x><y>
                 <add>
                   <value><multiply><value>12</value><value>cell</value></multiply></value>
@@ -500,7 +500,7 @@
 
         <!-- the time each frog has, counted down by the state's timer -->
         <object name="clock">
-          <sprite><text style="hud"><content>TIME</content><number>clock.time</number><color>color.yellow</color></text></sprite>
+          <sprite><text style="hud"><content>TIME</content><number>clock.time</number><color>yellow</color></text></sprite>
           <position><x><centered /></x><y><centered><divide><value>cell</value><value>2</value></divide></centered></y></position>
           <variables>
             <variable name="time">time</variable>
@@ -511,7 +511,7 @@
           <position><x>12</x><y><centered><divide><value>cell</value><value>2</value></divide></centered></y></position>
         </object>
         <object name="lives">
-          <sprite><text style="hud"><content>LIVES</content><number>frog.lives</number><color>color.green</color></text></sprite>
+          <sprite><text style="hud"><content>LIVES</content><number>frog.lives</number><color>green</color></text></sprite>
           <position><x><right><offset>12</offset></right></x><y><centered><divide><value>cell</value><value>2</value></divide></centered></y></position>
         </object>
       </objects>
@@ -550,7 +550,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -564,7 +564,7 @@
     <state name="over">
       <objects>
         <object name="message">
-          <sprite name="lost"><text style="banner"><content>GAME OVER</content><size>80</size><color>color.red</color></text></sprite>
+          <sprite name="lost"><text style="banner"><content>GAME OVER</content><size>80</size><color>red</color></text></sprite>
           <sprite name="won"><text style="banner"><content>YOU WIN</content></text></sprite>
           <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
         </object>
@@ -646,8 +646,8 @@
       <row>yy******yy</row>
       <row>.y......y.</row>
       <scale>4</scale>
-      <color>color.green</color>
-      <color char="y">color.yellow</color>
+      <color>green</color>
+      <color char="y">yellow</color>
     </bitmap>
     <bitmap name="logs">
       <row>.****************************.</row>
@@ -657,8 +657,8 @@
       <row>******************************</row>
       <row>.****************************.</row>
       <scale>6</scale>
-      <color>color.brown</color>
-      <color char="o">color.orange</color>
+      <color>brown</color>
+      <color char="o">orange</color>
     </bitmap>
     <bitmap name="logrow4"><row>.************************************.</row><row>**************************************</row><row>**oo*******oo*********oo*******oo*****</row><row>*******oo********oo*******oo*******oo*</row><row>**************************************</row><row>.************************************.</row></bitmap>
     <bitmap name="logrow5"><row>.********************.</row><row>**********************</row><row>**oo*******oo*********</row><row>*******oo********oo***</row><row>**********************</row><row>.********************.</row></bitmap>
@@ -672,8 +672,8 @@
       <row>.gg****gg..gg****gg.</row>
       <row>....**........**....</row>
       <scale>4</scale>
-      <color>color.red</color>
-      <color char="g">color.green</color>
+      <color>red</color>
+      <color char="g">green</color>
     </bitmap>
     <bitmap name="turtlerow3-under">
       <row>....................</row>
@@ -685,7 +685,7 @@
       <row>....................</row>
       <row>....................</row>
       <scale>4</scale>
-      <color>color.blue</color>
+      <color>blue</color>
     </bitmap>
     <bitmap name="turtlerow6">
       <row>....**........**........**....</row>
@@ -697,8 +697,8 @@
       <row>.gg****gg..gg****gg..gg****gg.</row>
       <row>....**........**........**....</row>
       <scale>4</scale>
-      <color>color.red</color>
-      <color char="g">color.green</color>
+      <color>red</color>
+      <color char="g">green</color>
     </bitmap>
     <bitmap name="traffic">
       <row>..kk..kk..</row>
@@ -710,8 +710,8 @@
       <row>**********</row>
       <row>..kk..kk..</row>
       <scale>4</scale>
-      <color char="k">color.black</color>
-      <color char="w">color.white</color>
+      <color char="k">black</color>
+      <color char="w">white</color>
     </bitmap>
     <bitmap name="truckrow8">
       <row>.kk..kk..........kk..kk.</row>
@@ -722,7 +722,7 @@
       <row>*ww*.***************....</row>
       <row>****.***************....</row>
       <row>.kk..kk..........kk..kk.</row>
-      <color>color.white</color>
+      <color>white</color>
     </bitmap>
     <bitmap name="frog">
       <row>.y......y.</row>
@@ -734,9 +734,9 @@
       <row>yy******yy</row>
       <row>.y......y.</row>
       <scale>4</scale>
-      <color>color.green</color>
-      <color char="y">color.yellow</color>
-      <color char="k">color.black</color>
+      <color>green</color>
+      <color char="y">yellow</color>
+      <color char="k">black</color>
     </bitmap>
     <!-- a frog lost: squashed flat, or a splash in rings, and then a skull -->
     <bitmap name="squashed">
@@ -749,8 +749,8 @@
       <row>y.y.**.y.y</row>
       <row>..........</row>
       <scale>4</scale>
-      <color>color.green</color>
-      <color char="y">color.yellow</color>
+      <color>green</color>
+      <color char="y">yellow</color>
     </bitmap>
     <bitmap name="skull">
       <row>...****...</row>
@@ -762,8 +762,8 @@
       <row>..*....*..</row>
       <row>.*......*.</row>
       <scale>4</scale>
-      <color>color.white</color>
-      <color char="k">color.black</color>
+      <color>white</color>
+      <color char="k">black</color>
     </bitmap>
     <bitmap name="splash-a">
       <row>..........</row>
@@ -775,8 +775,8 @@
       <row>..........</row>
       <row>..........</row>
       <scale>4</scale>
-      <color>color.white</color>
-      <color char="b">color.cyan</color>
+      <color>white</color>
+      <color char="b">cyan</color>
     </bitmap>
     <bitmap name="splash-b">
       <row>..........</row>
@@ -788,8 +788,8 @@
       <row>..bbbbbb..</row>
       <row>..........</row>
       <scale>4</scale>
-      <color>color.white</color>
-      <color char="b">color.cyan</color>
+      <color>white</color>
+      <color char="b">cyan</color>
     </bitmap>
     <bitmap name="splash-c">
       <row>b..b..b..b</row>
@@ -801,8 +801,8 @@
       <row>..........</row>
       <row>b..b..b..b</row>
       <scale>4</scale>
-      <color>color.white</color>
-      <color char="b">color.cyan</color>
+      <color>white</color>
+      <color char="b">cyan</color>
     </bitmap>
   </pictures>
 </game>

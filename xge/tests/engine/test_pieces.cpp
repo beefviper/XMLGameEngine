@@ -152,7 +152,7 @@ TEST_CASE("what a <fire> names comes in beside what fires it, so a copy reads it
 	{
 		std::ofstream out(path);
 		out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
-			"<window name=\"kit\"><width>800</width><height>600</height><background>color.black</background>"
+			"<window name=\"kit\"><width>800</width><height>600</height><background>black</background>"
 			"<framerate>60</framerate></window>"
 			"<variables><variable name=\"unused\">0</variable></variables><objects>" << kit << "</objects>"
 			"<states><state name=\"playing\"><objects>" << box("ship", 300, 500) << "</objects><scenes>"
@@ -187,7 +187,7 @@ TEST_CASE("a map piece is taken by a map, which gives its rows and changes what 
 	const std::string maze = "<map name=\"maze\"><tile><width>10</width><height>10</height></tile>"
 		"<position><x>100</x><y>50</y></position>"
 		"<group name=\"walls\" char=\"#\" class=\"wall\"><sprite><rectangle><width>10</width><height>10</height>"
-		"<color>color.blue</color></rectangle></sprite></group></map>";
+		"<color>blue</color></rectangle></sprite></group></map>";
 	SECTION("by its name, giving only its rows")
 	{
 		const Scratch file("<map name=\"maze\"><row>##.</row><row>#..</row></map>", "<pop />", {}, maze);
@@ -198,12 +198,12 @@ TEST_CASE("a map piece is taken by a map, which gives its rows and changes what 
 		CHECK(first.position.x == Approx(100));
 		CHECK(first.position.y == Approx(50));
 		CHECK(first.objClass == "wall");
-		CHECK(first.drawn.picture->color == "color.blue");
+		CHECK(first.drawn.picture->color == "blue");
 	}
 	SECTION("by from=, changing its place and its walls")
 	{
 		const Scratch file("<map name=\"another\" from=\"maze\"><position><y>200</y></position><row>.#</row>"
-			"<group name=\"walls\"><sprite><rectangle><width>10</width><height>10</height><color>color.red</color></rectangle></sprite></group></map>",
+			"<group name=\"walls\"><sprite><rectangle><width>10</width><height>10</height><color>red</color></rectangle></sprite></group></map>",
 			"<pop />", {}, maze);
 		Played play(file.path);
 
@@ -213,7 +213,7 @@ TEST_CASE("a map piece is taken by a map, which gives its rows and changes what 
 		CHECK(other.position.x == Approx(110));
 		CHECK(other.position.y == Approx(200));
 		CHECK(other.objClass == "wall");
-		CHECK(other.drawn.picture->color == "color.red");
+		CHECK(other.drawn.picture->color == "red");
 	}
 	SECTION("by two maps in one list, each one's pieces named under it")
 	{

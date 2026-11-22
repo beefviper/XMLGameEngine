@@ -61,14 +61,14 @@
     <variable name="panel">670</variable>
   </variables>
   <styles>
-    <style name="banner"><size>72</size><color>color.red</color></style>
+    <style name="banner"><size>72</size><color>red</color></style>
     <style name="prompt"><size>32</size></style>
-    <style name="help"><size>20</size><color>color.lightgrey</color></style>
+    <style name="help"><size>20</size><color>lightgrey</color></style>
     <style name="hud"><size>28</size></style>
     <style name="note"><size>22</size></style>
-    <style name="redpiece"><scale>3</scale><color>color.red</color><color char="d">color.brown</color></style>
-    <style name="whitepiece"><scale>3</scale><color>color.white</color><color char="d">color.lightgrey</color></style>
-    <style name="die"><scale>3</scale><color char="w">color.white</color><color char="k">color.black</color></style>
+    <style name="redpiece"><scale>3</scale><color>red</color><color char="d">brown</color></style>
+    <style name="whitepiece"><scale>3</scale><color>white</color><color char="d">lightgrey</color></style>
+    <style name="die"><scale>3</scale><color char="w">white</color><color char="k">black</color></style>
   </styles>
   <keeps>
     <keep object="score" />
@@ -132,7 +132,7 @@
           <position><x>left</x><y>30</y></position>
           <turns sprite="waiting" />
           <member name="redside">
-            <sprite name="playing"><text style="hud"><content>red to play</content><color>color.red</color></text></sprite>
+            <sprite name="playing"><text style="hud"><content>red to play</content><color>red</color></text></sprite>
             <owns class="red" />
           </member>
           <member name="whiteside">
@@ -145,7 +145,7 @@
         <object name="table">
           <sprite name="rolling"><text style="note"><content>spacebar rolls, c doubles</content></text></sprite>
           <sprite name="moving"><text style="note"><content>move a checker</content></text></sprite>
-          <sprite name="stuck"><text style="note"><content>no move: spacebar passes</content><color>color.yellow</color></text></sprite>
+          <sprite name="stuck"><text style="note"><content>no move: spacebar passes</content><color>yellow</color></text></sprite>
           <position><x>panel</x><y>110</y></position>
           <actions>
             <!-- two dice rolled, and two more of the same on doubles -->
@@ -212,17 +212,17 @@
         <!-- the board: its frame, the bar and the trays, then the points -->
         <object name="frame">
           <sprite><rectangle><width><add><value><multiply><value>tile</value><value>14</value></multiply></value><value>16</value></add></width>
-            <height><add><value><multiply><value>tile</value><value>12</value></multiply></value><value>16</value></add></height><color>color.brown</color></rectangle></sprite>
+            <height><add><value><multiply><value>tile</value><value>12</value></multiply></value><value>16</value></add></height><color>brown</color></rectangle></sprite>
           <position><x><subtract><value>left</value><value>8</value></subtract></x><y><subtract><value>top</value><value>8</value></subtract></y></position>
         </object>
         <object name="felt">
-          <sprite><rectangle><width><multiply><value>tile</value><value>14</value></multiply></width><height><multiply><value>tile</value><value>12</value></multiply></height><color>color.darkgreen</color></rectangle></sprite>
+          <sprite><rectangle><width><multiply><value>tile</value><value>14</value></multiply></width><height><multiply><value>tile</value><value>12</value></multiply></height><color>darkgreen</color></rectangle></sprite>
           <position><x>left</x><y>top</y></position>
         </object>
         <group name="dividers">
           <columns>2</columns>
           <padding><x><multiply><value>tile</value><value>7</value></multiply></x></padding>
-          <sprite><rectangle><width>tile</width><height><multiply><value>tile</value><value>12</value></multiply></height><color>color.brown</color></rectangle></sprite>
+          <sprite><rectangle><width>tile</width><height><multiply><value>tile</value><value>12</value></multiply></height><color>brown</color></rectangle></sprite>
           <position><x><add><value>left</value><value><multiply><value>tile</value><value>6</value></multiply></value></add></x><y>top</y></position>
         </group>
 
@@ -300,10 +300,10 @@
           <rows>12</rows>
           <cells><height>6</height></cells>
           <object name="movemark">
-            <sprite><circle><radius>8</radius><color>color.yellow</color></circle></sprite>
+            <sprite><circle><radius>8</radius><color>yellow</color></circle></sprite>
           </object>
           <object name="heldmark">
-            <sprite><circle><radius>5</radius><color>color.cyan</color></circle></sprite>
+            <sprite><circle><radius>5</radius><color>cyan</color></circle></sprite>
           </object>
         </map>
 
@@ -486,7 +486,7 @@
     <state name="offered">
       <objects>
         <object name="offer">
-          <sprite><text style="prompt"><content>double offered: y takes, n drops</content><color>color.yellow</color></text></sprite>
+          <sprite><text style="prompt"><content>double offered: y takes, n drops</content><color>yellow</color></text></sprite>
           <position><x><centered /></x><y>560</y></position>
         </object>
       </objects>
@@ -523,7 +523,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -568,22 +568,22 @@
   </sounds>
   <pictures>
     <!-- the points: long thin triangles from the edge of the board -->
-    <drawing name="down-light"><polygon><point><x>2</x><y>0</y></point><point><x>38</x><y>0</y></point><point><x>20</x><y>220</y></point><color>color.lightgrey</color></polygon></drawing>
-    <drawing name="down-dark"><polygon><point><x>2</x><y>0</y></point><point><x>38</x><y>0</y></point><point><x>20</x><y>220</y></point><color>color.orange</color></polygon></drawing>
-    <drawing name="up-light"><polygon><point><x>2</x><y>240</y></point><point><x>38</x><y>240</y></point><point><x>20</x><y>20</y></point><color>color.lightgrey</color></polygon></drawing>
-    <drawing name="up-dark"><polygon><point><x>2</x><y>240</y></point><point><x>38</x><y>240</y></point><point><x>20</x><y>20</y></point><color>color.orange</color></polygon></drawing>
+    <drawing name="down-light"><polygon><point><x>2</x><y>0</y></point><point><x>38</x><y>0</y></point><point><x>20</x><y>220</y></point><color>lightgrey</color></polygon></drawing>
+    <drawing name="down-dark"><polygon><point><x>2</x><y>0</y></point><point><x>38</x><y>0</y></point><point><x>20</x><y>220</y></point><color>orange</color></polygon></drawing>
+    <drawing name="up-light"><polygon><point><x>2</x><y>240</y></point><point><x>38</x><y>240</y></point><point><x>20</x><y>20</y></point><color>lightgrey</color></polygon></drawing>
+    <drawing name="up-dark"><polygon><point><x>2</x><y>240</y></point><point><x>38</x><y>240</y></point><point><x>20</x><y>20</y></point><color>orange</color></polygon></drawing>
     <!-- the cursor round a point, thin and then thick while holding a checker -->
     <drawing name="frame-free">
-      <line><from><x>1</x><y>1</y></from><to><x>39</x><y>1</y></to><color>color.yellow</color><thickness>2</thickness></line>
-      <line><from><x>39</x><y>1</y></from><to><x>39</x><y>239</y></to><color>color.yellow</color><thickness>2</thickness></line>
-      <line><from><x>39</x><y>239</y></from><to><x>1</x><y>239</y></to><color>color.yellow</color><thickness>2</thickness></line>
-      <line><from><x>1</x><y>239</y></from><to><x>1</x><y>1</y></to><color>color.yellow</color><thickness>2</thickness></line>
+      <line><from><x>1</x><y>1</y></from><to><x>39</x><y>1</y></to><color>yellow</color><thickness>2</thickness></line>
+      <line><from><x>39</x><y>1</y></from><to><x>39</x><y>239</y></to><color>yellow</color><thickness>2</thickness></line>
+      <line><from><x>39</x><y>239</y></from><to><x>1</x><y>239</y></to><color>yellow</color><thickness>2</thickness></line>
+      <line><from><x>1</x><y>239</y></from><to><x>1</x><y>1</y></to><color>yellow</color><thickness>2</thickness></line>
     </drawing>
     <drawing name="frame-held">
-      <line><from><x>2</x><y>2</y></from><to><x>38</x><y>2</y></to><color>color.yellow</color><thickness>4</thickness></line>
-      <line><from><x>38</x><y>2</y></from><to><x>38</x><y>238</y></to><color>color.yellow</color><thickness>4</thickness></line>
-      <line><from><x>38</x><y>238</y></from><to><x>2</x><y>238</y></to><color>color.yellow</color><thickness>4</thickness></line>
-      <line><from><x>2</x><y>238</y></from><to><x>2</x><y>2</y></to><color>color.yellow</color><thickness>4</thickness></line>
+      <line><from><x>2</x><y>2</y></from><to><x>38</x><y>2</y></to><color>yellow</color><thickness>4</thickness></line>
+      <line><from><x>38</x><y>2</y></from><to><x>38</x><y>238</y></to><color>yellow</color><thickness>4</thickness></line>
+      <line><from><x>38</x><y>238</y></from><to><x>2</x><y>238</y></to><color>yellow</color><thickness>4</thickness></line>
+      <line><from><x>2</x><y>238</y></from><to><x>2</x><y>2</y></to><color>yellow</color><thickness>4</thickness></line>
     </drawing>
     <bitmap name="red-checker" style="redpiece">
       <row>....*****....</row>

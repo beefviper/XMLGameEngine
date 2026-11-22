@@ -73,7 +73,7 @@ A `<group>` is several objects written once. It gives what its members share, th
 
 ```xml
 <group name="logrow3" class="logs">
-  <sprite><rectangle><width><multiply><value>cell</value><value>3</value></multiply></width><height>body</height><color>color.brown</color></rectangle></sprite>
+  <sprite><rectangle><width><multiply><value>cell</value><value>3</value></multiply></width><height>body</height><color>brown</color></rectangle></sprite>
   <position><y><multiply><value>cell</value><value>3</value></multiply></y></position>                 <!-- the row, once -->
   <velocity><x>-1</x></velocity>
   <collisions><collision edge="horizontal"><wrap /></collision></collisions>
@@ -125,10 +125,10 @@ Instead of members, a group can lay out a block: `<columns>` and `<rows>` make a
   <columns>14</columns>
   <rows>8</rows>
   <padding><x>4</x><y>4</y></padding>
-  <sprite><rectangle><width>brick</width><height>12</height><color>color.red</color></rectangle></sprite>
+  <sprite><rectangle><width>brick</width><height>12</height><color>red</color></rectangle></sprite>
   <position><x>margin</x><y>top</y></position>
-  <row><number>3</number><number>4</number><sprite><rectangle><color>color.orange</color></rectangle></sprite></row>
-  <row number="5"><sprite><rectangle><color>color.green</color></rectangle></sprite></row>
+  <row><number>3</number><number>4</number><sprite><rectangle><color>orange</color></rectangle></sprite></row>
+  <row number="5"><sprite><rectangle><color>green</color></rectangle></sprite></row>
   <cell row="1" column="7" name="boss"> ... </cell>
 </group>
 ```
@@ -159,7 +159,7 @@ Instead of members, a group can lay out a block: `<columns>` and `<rows>` make a
   <position><x><centered /></x><y><centered><offset>-90</offset></centered></y></position>
   <row number="1"><sprite><text><content>build the columns down in alternating colours,</content></text></sprite></row>
   <row number="2"><sprite><text><content>each suit up from ace to king on the foundations</content></text></sprite></row>
-  <row number="3"><sprite><text><content>w a s d or the arrows move</content><color>color.lightgrey</color></text></sprite><padding><y>40</y></padding></row>
+  <row number="3"><sprite><text><content>w a s d or the arrows move</content><color>lightgrey</color></text></sprite><padding><y>40</y></padding></row>
 </group>
 ```
 

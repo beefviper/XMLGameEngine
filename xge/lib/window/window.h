@@ -79,7 +79,7 @@ namespace xge
 		// what changed). A window with neither says nothing is there.
 		virtual Controls controls() { return {}; }
 
-		// colorName matches a sprite's color argument (e.g. "color.black") -
+		// colorName matches a sprite's color argument (e.g. "black") -
 		// see WindowDesc::background and xge::colorFromName (picture/color.h).
 		virtual void clear(const std::string& colorName) = 0;
 

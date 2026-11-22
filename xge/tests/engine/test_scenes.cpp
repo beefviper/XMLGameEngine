@@ -62,7 +62,7 @@ namespace
 	std::string gameXml(const std::string& states, const std::string& objects = {}, const std::string& variables = {}, const std::string& kit = {})
 	{
 		return "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
-			"<window name=\"scenes\"><width>800</width><height>600</height><background>color.black</background>"
+			"<window name=\"scenes\"><width>800</width><height>600</height><background>black</background>"
 			"<framerate>60</framerate></window>"
 			"<variables><variable name=\"unused\">0</variable>" + variables + "</variables>"
 			+ (kit.empty() ? std::string{} : "<objects>" + kit + "</objects>") +
@@ -695,22 +695,22 @@ TEST_CASE("mistakes with ways stop the load", "[scenes][ways][errors]")
 TEST_CASE("a state from= an earlier one is a copy of it with its own parts over it", "[scenes][states]")
 {
 	auto backend = GENERATE(XmlBackend::Xerces, XmlBackend::TinyXml2);
-	const std::string text = "<sprite><text><content>YOU WIN</content><size>40</size><color>color.green</color></text></sprite>";
+	const std::string text = "<sprite><text><content>YOU WIN</content><size>40</size><color>green</color></text></sprite>";
 	Loaded loaded(gameXml(
 		"<state name=\"youwin\"><objects><object name=\"message\">" + text + "<position><x>100</x><y>50</y></position></object></objects>"
 		"<shows><show object=\"marker\" /></shows><inputs><input button=\"space\"><reset /></input></inputs></state>"
 		"<state name=\"gameover\" from=\"youwin\"><objects>"
-		"<object name=\"message\"><sprite><text><content>GAME OVER</content><size>40</size><color>color.red</color></text></sprite></object>"
+		"<object name=\"message\"><sprite><text><content>GAME OVER</content><size>40</size><color>red</color></text></sprite></object>"
 		+ box("skull", 10, 10) + "</objects></state>"
 		"<state name=\"theend\" from=\"gameover\"><objects><object name=\"message\"><position><y>80</y></position></object></objects>"
 		"<inputs><input button=\"escape\"><pop /></input></inputs></state>"), backend);
 
 	Object& over = loaded.game.object("gameover.message");
-	CHECK(over.drawn.picture->color == "color.red");
+	CHECK(over.drawn.picture->color == "red");
 	CHECK(over.position.x == Approx(100));          // copied
 	CHECK(loaded.has("gameover.skull"));            // its own
 	Object& end = loaded.game.object("theend.message");
-	CHECK(end.drawn.picture->color == "color.red");   // a copy of a copy
+	CHECK(end.drawn.picture->color == "red");   // a copy of a copy
 	CHECK(end.position.y == Approx(80));
 	CHECK(loaded.has("theend.skull"));
 

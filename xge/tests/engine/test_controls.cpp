@@ -77,13 +77,13 @@ namespace
 	std::string gameWith(const std::string& inputs)
 	{
 		return R"(<game>
-  <window name="t"><width>200</width><height>100</height><background>color.black</background><framerate>60</framerate></window>
+  <window name="t"><width>200</width><height>100</height><background>black</background><framerate>60</framerate></window>
   <variables><variable name="unused">0</variable></variables>
   <states>
     <state name="playing">
       <objects>
         <object name="paddle">
-          <sprite><rectangle><width>40</width><height>10</height><color>color.white</color></rectangle></sprite>
+          <sprite><rectangle><width>40</width><height>10</height><color>white</color></rectangle></sprite>
           <position><x>0</x><y>0</y></position>
           <actions><action name="steer"><track /></action><action name="right"><move direction="right">120</move></action></actions>
         </object>

@@ -38,7 +38,7 @@
   <window name="Pyramid">
     <width>880</width>
     <height>840</height>
-    <background>color.darkgreen</background>
+    <background>darkgreen</background>
   </window>
   <variables>
     <variable name="cardwidth">96</variable>
@@ -49,10 +49,10 @@
     <variable name="low">660</variable>
   </variables>
   <styles>
-    <style name="banner"><size>80</size><color>color.yellow</color></style>
+    <style name="banner"><size>80</size><color>yellow</color></style>
     <style name="prompt"><size>32</size></style>
-    <style name="help"><size>22</size><color>color.lightgrey</color></style>
-    <style name="note"><size>24</size><color>color.white</color></style>
+    <style name="help"><size>22</size><color>lightgrey</color></style>
+    <style name="note"><size>24</size><color>white</color></style>
   </styles>
   <states>
     <state name="title">
@@ -96,7 +96,7 @@
           <columns>1</columns>
           <rows>1</rows>
           <padding><x><subtract><value>step</value><value>cardwidth</value></subtract></x></padding>
-          <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
+          <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>forestgreen</color></rectangle></sprite>
           <position><x>
             <subtract>
               <value>window.width.center</value>
@@ -115,7 +115,7 @@
           <columns>2</columns>
           <rows>1</rows>
           <padding><x><subtract><value>step</value><value>cardwidth</value></subtract></x></padding>
-          <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
+          <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>forestgreen</color></rectangle></sprite>
           <position><x>
             <subtract>
               <value>window.width.center</value>
@@ -134,7 +134,7 @@
           <columns>3</columns>
           <rows>1</rows>
           <padding><x><subtract><value>step</value><value>cardwidth</value></subtract></x></padding>
-          <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
+          <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>forestgreen</color></rectangle></sprite>
           <position><x>
             <subtract>
               <value>window.width.center</value>
@@ -153,7 +153,7 @@
           <columns>4</columns>
           <rows>1</rows>
           <padding><x><subtract><value>step</value><value>cardwidth</value></subtract></x></padding>
-          <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
+          <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>forestgreen</color></rectangle></sprite>
           <position><x>
             <subtract>
               <value>window.width.center</value>
@@ -172,7 +172,7 @@
           <columns>5</columns>
           <rows>1</rows>
           <padding><x><subtract><value>step</value><value>cardwidth</value></subtract></x></padding>
-          <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
+          <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>forestgreen</color></rectangle></sprite>
           <position><x>
             <subtract>
               <value>window.width.center</value>
@@ -191,7 +191,7 @@
           <columns>6</columns>
           <rows>1</rows>
           <padding><x><subtract><value>step</value><value>cardwidth</value></subtract></x></padding>
-          <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
+          <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>forestgreen</color></rectangle></sprite>
           <position><x>
             <subtract>
               <value>window.width.center</value>
@@ -210,7 +210,7 @@
           <columns>7</columns>
           <rows>1</rows>
           <padding><x><subtract><value>step</value><value>cardwidth</value></subtract></x></padding>
-          <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
+          <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>forestgreen</color></rectangle></sprite>
           <position><x>
             <subtract>
               <value>window.width.center</value>
@@ -228,25 +228,25 @@
 
         <!-- picked, the stock turns one onto the waste, and the waste over again when it is out -->
         <object name="stock" class="place">
-          <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
+          <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>forestgreen</color></rectangle></sprite>
           <position><x>56</x><y>low</y></position>
           <holds class="card" sprite="back"><picked><send into="waste">1</send><empty><send from="waste"><all /></send></empty><play sound="deal" /></picked></holds>
         </object>
         <object name="waste" class="place">
-          <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
+          <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>forestgreen</color></rectangle></sprite>
           <position><x><add><value>56</value><value>step</value><value>16</value></add></x><y>low</y></position>
           <holds class="card" sprite="face" />
         </object>
 
         <!-- the pairs taken away: what adds up to 13 -->
         <object name="pairs" class="place">
-          <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
+          <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>forestgreen</color></rectangle></sprite>
           <position><x><subtract><value>window.width</value><value>56</value><value>cardwidth</value></subtract></x><y>low</y></position>
           <holds class="card" sprite="face"><accepts><condition variable="worth" total="sum"><equal>13</equal></condition></accepts></holds>
         </object>
 
         <object name="message">
-          <sprite><text style="note"><content>pairs that make 13, kings alone</content><color>color.lightgrey</color></text></sprite>
+          <sprite><text style="note"><content>pairs that make 13, kings alone</content><color>lightgrey</color></text></sprite>
           <position><x><centered /></x><y><add><value>low</value><value>50</value></add></y></position>
         </object>
 
@@ -340,7 +340,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>white</color></text></sprite>
           <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
         </object>
         <object name="newgame">
@@ -391,16 +391,16 @@
   <pictures>
     <sheet name="cards"><path>assets/cards.png</path><columns>13</columns><rows>5</rows></sheet>
     <drawing name="handfree">
-      <line><from><x>1</x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
-      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></to><color>color.yellow</color><thickness>3</thickness></line>
-      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></to><color>color.yellow</color><thickness>3</thickness></line>
-      <line><from><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
+      <line><from><x>1</x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></to><color>yellow</color><thickness>3</thickness></line>
+      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></to><color>yellow</color><thickness>3</thickness></line>
+      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></to><color>yellow</color><thickness>3</thickness></line>
+      <line><from><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y>1</y></to><color>yellow</color><thickness>3</thickness></line>
     </drawing>
     <drawing name="handheld">
-      <line><from><x>1</x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></to><color>color.cyan</color><thickness>3</thickness></line>
-      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></to><color>color.cyan</color><thickness>3</thickness></line>
-      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></to><color>color.cyan</color><thickness>3</thickness></line>
-      <line><from><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y>1</y></to><color>color.cyan</color><thickness>3</thickness></line>
+      <line><from><x>1</x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></to><color>cyan</color><thickness>3</thickness></line>
+      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></to><color>cyan</color><thickness>3</thickness></line>
+      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></to><color>cyan</color><thickness>3</thickness></line>
+      <line><from><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y>1</y></to><color>cyan</color><thickness>3</thickness></line>
     </drawing>
   </pictures>
 </game>

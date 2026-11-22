@@ -104,7 +104,7 @@ namespace
 		const std::string& moreStates = {})
 	{
 		return "<game>"
-			"<window name=\"test\"><width>800</width><height>600</height><background>color.black</background>"
+			"<window name=\"test\"><width>800</width><height>600</height><background>black</background>"
 			"<framerate>60</framerate></window>"
 			"<variables>" + (variables.empty() ? std::string("<variable name=\"unused\">0</variable>") : variables) + "</variables>"
 			"<states><objects>" + objects + "</objects>"
@@ -212,7 +212,7 @@ TEST_CASE("a window's background, fullscreen and framerate, and a <collisions>' 
 	ObjectXml none;
 	none.name = "none";
 	std::string bare = gameXml("", objectXml({}) + objectXml(on) + objectXml(none));
-	for (const std::string tag : { "<background>color.black</background>", "", "<framerate>60</framerate>" })
+	for (const std::string tag : { "<background>black</background>", "", "<framerate>60</framerate>" })
 	{
 		bare.erase(bare.find(tag), tag.size());
 	}
@@ -221,7 +221,7 @@ TEST_CASE("a window's background, fullscreen and framerate, and a <collisions>' 
 
 	Loaded loaded(bare, "xge_test_defaults.xml");
 	const WindowDesc& window = loaded.game.getWindowDesc();
-	CHECK(window.background == "color.black");
+	CHECK(window.background == "black");
 	CHECK(window.fullscreen == "false");
 	CHECK(window.framerate == 60);
 
@@ -460,15 +460,15 @@ TEST_CASE("a mistake the schema lets through stops the load, saying what to writ
 		CHECK_THAT(error, ContainsSubstring("The keys are: a, b, c"));
 	}
 
-	SECTION("a color that is not a color. name")
+	SECTION("a color that is not one of the engine's names")
 	{
 		ObjectXml o;
-		o.sprite = "<circle><radius>5</radius><color>white</color></circle>";
-		CHECK_THAT(errorOf(gameXml("", objectXml(o))), ContainsSubstring("there is no color named 'white'") && ContainsSubstring("color.white"));
+		o.sprite = "<circle><radius>5</radius><color>color.white</color></circle>";
+		CHECK_THAT(errorOf(gameXml("", objectXml(o))), ContainsSubstring("there is no color named 'color.white'"));
 
 		ObjectXml typo;
-		typo.sprite = "<circle><radius>5</radius><color>color.gren</color></circle>";
-		CHECK_THAT(errorOf(gameXml("", objectXml(typo))), ContainsSubstring("(did you mean 'color.green'?)"));
+		typo.sprite = "<circle><radius>5</radius><color>gren</color></circle>";
+		CHECK_THAT(errorOf(gameXml("", objectXml(typo))), ContainsSubstring("(did you mean 'green'?)"));
 	}
 
 	SECTION("a command where the engine does nothing with it")
@@ -546,7 +546,7 @@ TEST_CASE("sprites: each shape's parts", "[xml_format][sprite]")
 
 	objects += objectXml({}); // o, which the state shows
 	ObjectXml circle; circle.name = "circle";
-	circle.sprite = "<circle><radius>4</radius><color>color.red</color></circle>";
+	circle.sprite = "<circle><radius>4</radius><color>red</color></circle>";
 	objects += objectXml(circle);
 
 	ObjectXml rectangle; rectangle.name = "rectangle";
@@ -554,7 +554,7 @@ TEST_CASE("sprites: each shape's parts", "[xml_format][sprite]")
 	objects += objectXml(rectangle);
 
 	ObjectXml label; label.name = "label";
-	label.sprite = "<text><content>HELLO</content><size>32</size><color>color.blue</color></text>";
+	label.sprite = "<text><content>HELLO</content><size>32</size><color>blue</color></text>";
 	objects += objectXml(label);
 
 	ObjectXml image; image.name = "image";
@@ -566,12 +566,12 @@ TEST_CASE("sprites: each shape's parts", "[xml_format][sprite]")
 
 	CHECK(game.object("circle").drawn.picture->kind == ShapeKind::Circle);
 	CHECK(game.object("circle").drawn.picture->radius == 4.0f);
-	CHECK(game.object("circle").drawn.picture->color == "color.red");
+	CHECK(game.object("circle").drawn.picture->color == "red");
 	CHECK(game.object("rectangle").drawn.picture->size == Vector2f{ 30.0f, 6.0f });
-	CHECK(game.object("rectangle").drawn.picture->color == "color.white"); // no <color>: white
+	CHECK(game.object("rectangle").drawn.picture->color == "white"); // no <color>: white
 	CHECK(game.object("label").drawn.picture->text == "HELLO");
 	CHECK(game.object("label").drawn.picture->textSize == 32);
-	CHECK(game.object("label").drawn.picture->color == "color.blue");
+	CHECK(game.object("label").drawn.picture->color == "blue");
 	CHECK(game.object("image").drawn.picture->file == "assets/paddle.jpg");
 	CHECK(game.object("image").drawn.picture->flipHorizontal);
 	CHECK(game.object("circle").drawn.picture->kind == ShapeKind::Circle);
@@ -608,7 +608,7 @@ TEST_CASE("a text's <number> stays live only when it is a lone owner.variable", 
 TEST_CASE("a shape with a part missing says which", "[xml_format][errors]")
 {
 	ObjectXml noRadius;
-	noRadius.sprite = "<circle><color>color.red</color></circle>";
+	noRadius.sprite = "<circle><color>red</color></circle>";
 	REQUIRE_THROWS_WITH(Loaded(gameXml("", objectXml(noRadius))), ContainsSubstring("circle: unexpected element <color>, expected <radius>"));
 
 	ObjectXml noLabel;

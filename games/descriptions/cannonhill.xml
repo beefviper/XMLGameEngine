@@ -40,7 +40,7 @@
   <window name="Cannon Hill">
     <width>800</width>
     <height>600</height>
-    <background>color.darkblue</background>
+    <background>darkblue</background>
   </window>
   <variables>
     <!-- how far the barrel's tip is from its middle, and how fast a full charge goes -->
@@ -59,10 +59,10 @@
     <variable name="points">3</variable>
   </variables>
   <styles>
-    <style name="banner"><size>90</size><color>color.yellow</color></style>
+    <style name="banner"><size>90</size><color>yellow</color></style>
     <style name="prompt"><size>34</size></style>
     <style name="help"><size>24</size></style>
-    <style name="hud"><size>22</size><color>color.lightgrey</color></style>
+    <style name="hud"><size>22</size><color>lightgrey</color></style>
   </styles>
   <objects>
     <!-- A barrel: two pixels' worth of bars above its middle, clear below, so
@@ -185,7 +185,7 @@
 
     <!-- a shell: lands on the hill or a cannon and leaves a blast, or flies off a side -->
     <object name="shell" class="shell">
-      <sprite><circle><radius>3</radius><color>color.white</color></circle></sprite>
+      <sprite><circle><radius>3</radius><color>white</color></circle></sprite>
       <most>1</most>
       <collisions>
         <collision class="ground">
@@ -213,7 +213,7 @@
 
     <!-- the flash of a landing, for a moment -->
     <object name="blast" class="blast">
-      <sprite><circle><radius>crater</radius><color>color.orange</color></circle></sprite>
+      <sprite><circle><radius>crater</radius><color>orange</color></circle></sprite>
       <timers>
         <timer><after>0.25</after><despawn /></timer>
       </timers>
@@ -247,7 +247,7 @@
           <sprite><text style="help" /></sprite>
           <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
           <row number="1"><sprite><text><content>two players take turns: land a shell by the other cannon, first to three</content></text></sprite></row>
-          <row number="2"><sprite><text><content>w and s or up and down aim, hold spacebar and let go to fire; mind the wind</content><color>color.lightgrey</color></text></sprite></row>
+          <row number="2"><sprite><text><content>w and s or up and down aim, hold spacebar and let go to fire; mind the wind</content><color>lightgrey</color></text></sprite></row>
         </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
@@ -280,7 +280,7 @@
         </object>
 
         <object name="score1shown">
-          <sprite><text style="hud"><content>PLAYER 1</content><number>table.score1</number><color>color.orange</color></text></sprite>
+          <sprite><text style="hud"><content>PLAYER 1</content><number>table.score1</number><color>orange</color></text></sprite>
           <position><x>20</x><y>12</y></position>
         </object>
         <object name="angle1shown">
@@ -292,7 +292,7 @@
           <position><x>20</x><y>66</y></position>
         </object>
         <object name="score2shown">
-          <sprite><text style="hud"><content>PLAYER 2</content><number>table.score2</number><color>color.cyan</color></text></sprite>
+          <sprite><text style="hud"><content>PLAYER 2</content><number>table.score2</number><color>cyan</color></text></sprite>
           <position><x>590</x><y>12</y></position>
         </object>
         <object name="angle2shown">
@@ -304,7 +304,7 @@
           <position><x>590</x><y>66</y></position>
         </object>
         <object name="windshown">
-          <sprite><text style="hud"><content>WIND</content><number>table.wind</number><color>color.white</color></text></sprite>
+          <sprite><text style="hud"><content>WIND</content><number>table.wind</number><color>white</color></text></sprite>
           <position><x><centered /></x><y>12</y></position>
         </object>
 
@@ -359,7 +359,7 @@
                   <point><x>740</x><y>430</y></point>
                   <point><x>800</x><y>445</y></point>
                   <point><x>800</x><y>600</y></point>
-                  <color>color.forestgreen</color>
+                  <color>forestgreen</color>
                 </polygon>
               </sprite>
               <position><x>0</x><y>0</y></position>
@@ -447,7 +447,7 @@
                   <point><x>720</x><y>390</y></point>
                   <point><x>800</x><y>420</y></point>
                   <point><x>800</x><y>600</y></point>
-                  <color>color.forestgreen</color>
+                  <color>forestgreen</color>
                 </polygon>
               </sprite>
             </object>
@@ -482,7 +482,7 @@
                   <point><x>740</x><y>390</y></point>
                   <point><x>800</x><y>410</y></point>
                   <point><x>800</x><y>600</y></point>
-                  <color>color.forestgreen</color>
+                  <color>forestgreen</color>
                 </polygon>
               </sprite>
             </object>
@@ -547,8 +547,8 @@
     <state name="point">
       <objects>
         <object name="pointshown">
-          <sprite name="one"><text style="banner"><content>POINT TO PLAYER 1</content><color>color.orange</color></text></sprite>
-          <sprite name="two"><text style="banner"><content>POINT TO PLAYER 2</content><color>color.cyan</color></text></sprite>
+          <sprite name="one"><text style="banner"><content>POINT TO PLAYER 1</content><color>orange</color></text></sprite>
+          <sprite name="two"><text style="banner"><content>POINT TO PLAYER 2</content><color>cyan</color></text></sprite>
           <position><x><centered /></x><y><centered><offset>-120</offset></centered></y></position>
         </object>
       </objects>
@@ -566,7 +566,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -581,8 +581,8 @@
     <state name="over">
       <objects>
         <object name="winner">
-          <sprite name="one"><text style="banner"><content>PLAYER 1 WINS</content><color>color.orange</color></text></sprite>
-          <sprite name="two"><text style="banner"><content>PLAYER 2 WINS</content><color>color.cyan</color></text></sprite>
+          <sprite name="one"><text style="banner"><content>PLAYER 1 WINS</content><color>orange</color></text></sprite>
+          <sprite name="two"><text style="banner"><content>PLAYER 2 WINS</content><color>cyan</color></text></sprite>
           <position><x><centered /></x><y><centered><offset>-90</offset></centered></y></position>
         </object>
       </objects>
@@ -611,13 +611,13 @@
       <row>**</row><row>**</row><row>**</row><row>**</row><row>**</row><row>**</row><row>**</row><row>**</row>
       <row>..</row><row>..</row><row>..</row><row>..</row><row>..</row><row>..</row><row>..</row><row>..</row>
       <scale>2</scale>
-      <color>color.grey</color>
+      <color>grey</color>
     </bitmap>
     <bitmap name="barrel-ready">
       <row>**</row><row>**</row><row>**</row><row>**</row><row>**</row><row>**</row><row>**</row><row>**</row>
       <row>..</row><row>..</row><row>..</row><row>..</row><row>..</row><row>..</row><row>..</row><row>..</row>
       <scale>2</scale>
-      <color>color.yellow</color>
+      <color>yellow</color>
     </bitmap>
     <bitmap name="cannon">
       <row>...****...</row>
@@ -632,7 +632,7 @@
       <row>**********</row>
       <row>**********</row>
       <scale>2</scale>
-      <color>color.orange</color>
+      <color>orange</color>
     </bitmap>
     <bitmap name="cannon2">
       <row>...****...</row>
@@ -640,7 +640,7 @@
       <row>**********</row>
       <row>**********</row>
       <scale>2</scale>
-      <color>color.cyan</color>
+      <color>cyan</color>
     </bitmap>
   </pictures>
 </game>

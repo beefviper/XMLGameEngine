@@ -23,7 +23,7 @@
 - **Problem:** there were two ways to repeat things. A `<grid>` made identical cells; a group listed members. Breakout was six groups, each a whole grid, to change one colour.
 - **Chosen:** a group may have `<columns>`, `<rows>` and `<padding>` instead of members (`bricks.5.3`: column, then row). `<row number>`, `<column number>` and `<cell row column>` change what they pick, from the general to the particular. Breakout's bricks went from 104 lines to 29.
 - **Picking:** `number="2"` picks one; several are a `<number>` each; `<odd />`, `<even />`.
-- **A sprite that changes one thing gives only that** (`<rectangle><color>color.orange</color></rectangle>`); another shape must be complete. This partial-sprite merge is what later made nesting possible.
+- **A sprite that changes one thing gives only that** (`<rectangle><color>orange</color></rectangle>`); another shape must be complete. This partial-sprite merge is what later made nesting possible.
 - **The gap is `<padding>`**, not `<x><inc>3</inc></x>`: a verb inside a value would break the format's one rule.
 - **A row and a column changing the same thing in one cell is an error**, not "the later wins". A `<cell>` beats both.
 - **A cell knows its place:** its `column` and `row` are variables of its own, and `<columns name>`/`<rows name>` add a second name. This began as the card engine's suit and rank; made general, a pack is just a grid group and a card game names the axes it reads.

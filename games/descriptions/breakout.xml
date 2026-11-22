@@ -41,9 +41,9 @@
     <variable name="step">480</variable>
   </variables>
   <styles>
-    <style name="banner"><size>100</size><color>color.orange</color></style>
+    <style name="banner"><size>100</size><color>orange</color></style>
     <style name="prompt"><size>36</size></style>
-    <style name="help"><size>26</size><color>color.lightgrey</color></style>
+    <style name="help"><size>26</size><color>lightgrey</color></style>
     <style name="hud"><size>64</size></style>
   </styles>
   <states>
@@ -118,33 +118,33 @@
             </collision>
           </collisions>
           <group name="red">
-            <sprite><rectangle><color>color.red</color></rectangle></sprite>
+            <sprite><rectangle><color>red</color></rectangle></sprite>
             <position><y>top</y></position>
             <collisions><collision object="ball"><play sound="red" /></collision></collisions>
             <variables><variable name="worth">7</variable></variables>
           </group>
           <group name="orange">
-            <sprite><rectangle><color>color.orange</color></rectangle></sprite>
+            <sprite><rectangle><color>orange</color></rectangle></sprite>
             <position><y><add><value>top</value><value><multiply><value>2</value><value>line</value></multiply></value></add></y></position>
             <collisions><collision object="ball"><play sound="orange" /></collision></collisions>
             <variables><variable name="worth">5</variable></variables>
           </group>
           <group name="green">
-            <sprite><rectangle><color>color.green</color></rectangle></sprite>
+            <sprite><rectangle><color>green</color></rectangle></sprite>
             <position><y><add><value>top</value><value><multiply><value>4</value><value>line</value></multiply></value></add></y></position>
             <collisions><collision object="ball"><play sound="green" /></collision></collisions>
             <variables><variable name="worth">3</variable></variables>
           </group>
           <group name="yellow">
-            <sprite><rectangle><color>color.yellow</color></rectangle></sprite>
+            <sprite><rectangle><color>yellow</color></rectangle></sprite>
             <position><y><add><value>top</value><value><multiply><value>6</value><value>line</value></multiply></value></add></y></position>
             <collisions><collision object="ball"><play sound="yellow" /></collision></collisions>
             <variables><variable name="worth">1</variable></variables>
           </group>
         </group>
         <object name="player">
-          <sprite name="full"><rectangle><width>paddle</width><height>12</height><color>color.cyan</color></rectangle></sprite>
-          <sprite name="half"><rectangle><width><divide><value>paddle</value><value>2</value></divide></width><height>12</height><color>color.cyan</color></rectangle></sprite>
+          <sprite name="full"><rectangle><width>paddle</width><height>12</height><color>cyan</color></rectangle></sprite>
+          <sprite name="half"><rectangle><width><divide><value>paddle</value><value>2</value></divide></width><height>12</height><color>cyan</color></rectangle></sprite>
           <position><x><centered /></x><y><subtract><value>window.bottom</value><value>60</value></subtract></y></position>
           <collisions>
             <collision edge="horizontal"><stick /></collision>
@@ -242,7 +242,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -256,8 +256,8 @@
     <state name="over">
       <objects>
         <object name="message">
-          <sprite name="won"><text style="banner"><content>YOU WIN</content><color>color.green</color></text></sprite>
-          <sprite name="lost"><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>
+          <sprite name="won"><text style="banner"><content>YOU WIN</content><color>green</color></text></sprite>
+          <sprite name="lost"><text style="banner"><content>GAME OVER</content><color>red</color></text></sprite>
           <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
         </object>
       </objects>

@@ -40,7 +40,7 @@ namespace
 		{
 			std::ofstream out(path);
 			out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
-				"<window name=\"text\"><width>800</width><height>600</height><background>color.black</background>"
+				"<window name=\"text\"><width>800</width><height>600</height><background>black</background>"
 				"<framerate>60</framerate></window>"
 				"<variables><variable name=\"big\">90</variable></variables>"
 				<< styles << "<states><objects>" << objects << "</objects>"
@@ -62,7 +62,7 @@ namespace
 		return Game(readGame(file.path.string(), backend));
 	}
 
-	const std::string kStyles = "<styles><style name=\"title\"><size>big</size><color>color.red</color></style>"
+	const std::string kStyles = "<styles><style name=\"title\"><size>big</size><color>red</color></style>"
 		"<style name=\"plain\"><size>20</size></style></styles>";
 }
 
@@ -77,10 +77,10 @@ TEST_CASE("a text takes the size and color it leaves out from its style", "[text
 
 	const Picture& heading = game.object("heading").drawn.picture;
 	CHECK(heading.textSize == 90);   // the style's size, a game variable
-	CHECK(heading.color == "color.red");
+	CHECK(heading.color == "red");
 	CHECK(game.object("smaller").drawn.picture->textSize == 30); // its own size wins
-	CHECK(game.object("smaller").drawn.picture->color == "color.red");
-	CHECK(game.object("note").drawn.picture->color == "color.white");           // a style with no color: white
+	CHECK(game.object("smaller").drawn.picture->color == "red");
+	CHECK(game.object("note").drawn.picture->color == "white");           // a style with no color: white
 }
 
 TEST_CASE("a style that is not there, or a text with no size at all, stops the load", "[text]")
@@ -98,7 +98,7 @@ TEST_CASE("a style that is not there, or a text with no size at all, stops the l
 	SECTION("a style with no size, for a text with none")
 	{
 		REQUIRE_THROWS_WITH(load("<object name=\"heading\"><sprite><text style=\"bare\"><content>HI</content></text></sprite>"
-			"<position><x>0</x><y>0</y></position></object>", "<styles><style name=\"bare\"><color>color.red</color></style></styles>"),
+			"<position><x>0</x><y>0</y></position></object>", "<styles><style name=\"bare\"><color>red</color></style></styles>"),
 			ContainsSubstring("needs a <size>"));
 	}
 }
@@ -106,12 +106,12 @@ TEST_CASE("a style that is not there, or a text with no size at all, stops the l
 TEST_CASE("a bitmap takes the scale and colors it leaves out from its style", "[text]")
 {
 	auto backend = GENERATE(XmlBackend::Xerces, XmlBackend::TinyXml2);
-	const std::string styles = "<styles><style name=\"wood\"><scale>2</scale><color>color.red</color>"
-		"<color char=\"b\">color.blue</color><color char=\"g\">color.green</color></style></styles>";
+	const std::string styles = "<styles><style name=\"wood\"><scale>2</scale><color>red</color>"
+		"<color char=\"b\">blue</color><color char=\"g\">green</color></style></styles>";
 	Game game = load(
 		"<object name=\"plain\"><sprite><bitmap style=\"wood\"><row>*bg</row></bitmap></sprite><position><x>0</x><y>0</y></position></object>"
 		"<object name=\"own\"><sprite><bitmap style=\"wood\"><row>*bg</row><scale>1</scale>"
-		"<color>color.white</color><color char=\"b\">color.black</color></bitmap></sprite><position><x>0</x><y>0</y></position></object>",
+		"<color>white</color><color char=\"b\">black</color></bitmap></sprite><position><x>0</x><y>0</y></position></object>",
 		styles, backend);
 
 	// The pixel at (x, 0) of an object's picture: red, green, blue.
@@ -158,13 +158,13 @@ TEST_CASE("a text's font file is its own <font>, its style's, or the standard on
 
 TEST_CASE("<become style> puts another style's colors on an object's bitmaps, and a reset the first", "[text]")
 {
-	const std::string styles = "<styles><style name=\"green\"><color>color.green</color>"
-		"<color char=\"b\">color.blue</color><color char=\"w\">color.white</color></style>"
-		"<style name=\"angry\"><color>color.red</color><color char=\"b\">color.yellow</color><color char=\"w\">color.black</color></style></styles>";
+	const std::string styles = "<styles><style name=\"green\"><color>green</color>"
+		"<color char=\"b\">blue</color><color char=\"w\">white</color></style>"
+		"<style name=\"angry\"><color>red</color><color char=\"b\">yellow</color><color char=\"w\">black</color></style></styles>";
 	Written file(
 		"<object name=\"thing\">"
 		"<sprite name=\"a\"><bitmap style=\"green\"><row>*bw</row></bitmap></sprite>"
-		"<sprite name=\"b\"><bitmap style=\"green\"><row>*bw</row><color char=\"w\">color.grey</color></bitmap></sprite>"
+		"<sprite name=\"b\"><bitmap style=\"green\"><row>*bw</row><color char=\"w\">grey</color></bitmap></sprite>"
 		"<position><x>0</x><y>0</y></position>"
 		"<timers><timer><after>0.5</after><become sprite=\"b\" style=\"angry\" /><become object=\"lamp\" style=\"angry\" /></timer></timers></object>"
 		"<object name=\"lamp\"><sprite><bitmap style=\"green\"><row>*</row></bitmap></sprite><position><x>0</x><y>0</y></position></object>",

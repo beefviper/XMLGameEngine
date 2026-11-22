@@ -39,7 +39,7 @@
   <window name="Combat">
     <width>640</width>
     <height>480</height>
-    <background>color.darkgreen</background>
+    <background>darkgreen</background>
   </window>
   <variables>
     <variable name="margin">10</variable>
@@ -49,16 +49,16 @@
     <variable name="shellspeed">360</variable>
   </variables>
   <styles>
-    <style name="banner"><size>100</size><color>color.yellow</color></style>
-    <style name="prompt"><size>40</size><color>color.white</color></style>
-    <style name="keys"><size>22</size><color>color.yellow</color></style>
-    <style name="hud"><size>40</size><color>color.yellow</color></style>
+    <style name="banner"><size>100</size><color>yellow</color></style>
+    <style name="prompt"><size>40</size><color>white</color></style>
+    <style name="keys"><size>22</size><color>yellow</color></style>
+    <style name="hud"><size>40</size><color>yellow</color></style>
   </styles>
   <objects>
     <!-- one shell each, there once fired, one in the air at a time; a hit
          scores for the tank that fired it -->
     <object name="shell" class="shell">
-      <sprite><rectangle><width>4</width><height>4</height><color>color.yellow</color></rectangle></sprite>
+      <sprite><rectangle><width>4</width><height>4</height><color>yellow</color></rectangle></sprite>
       <velocity><y><negate><value>shellspeed</value></negate></y></velocity>
       <mass>1</mass>
       <most>1</most>
@@ -71,7 +71,7 @@
       <collisions><collision class="tank"><inc variable="tank1.hits" /><despawn /></collision></collisions>
     </object>
     <object name="shell2" from="shell">
-      <sprite><rectangle><width>4</width><height>4</height><color>color.cyan</color></rectangle></sprite>
+      <sprite><rectangle><width>4</width><height>4</height><color>cyan</color></rectangle></sprite>
       <collisions><collision class="tank"><inc variable="tank2.hits" /><despawn /></collision></collisions>
     </object>
   </objects>
@@ -92,7 +92,7 @@
           <sprite><text style="keys" /></sprite>
           <position><x><centered /></x><y><centered /></y></position>
           <row number="1"><sprite><text><content>yellow: w s drive, a d turn, f fires</content></text></sprite></row>
-          <row number="2"><sprite><text><content>blue: arrows drive and turn, right shift fires</content><color>color.cyan</color></text></sprite></row>
+          <row number="2"><sprite><text><content>blue: arrows drive and turn, right shift fires</content><color>cyan</color></text></sprite></row>
         </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
@@ -107,7 +107,7 @@
       <objects>
         <!-- the field: a bar in the middle, the same either side, and a beam across each end -->
         <group name="walls" class="wall">
-          <sprite><rectangle><width>20</width><height>100</height><color>color.orange</color></rectangle></sprite>
+          <sprite><rectangle><width>20</width><height>100</height><color>orange</color></rectangle></sprite>
           <collisions />
           <member><sprite><rectangle><height>140</height></rectangle></sprite><position><x>310</x><y>170</y></position></member>
           <member><position><x>150</x><y>60</y></position></member>
@@ -156,7 +156,7 @@
             <member name="tank1" />
           </group>
           <group name="blue">
-            <sprite><bitmap><color>color.cyan</color></bitmap></sprite>
+            <sprite><bitmap><color>cyan</color></bitmap></sprite>
             <position><x><centered><subtract><value>window.right</value><value>60</value></subtract></centered></x><y><centered /></y></position>
             <heading>270</heading>
             <actions><action name="fire"><fire object="shell2" /><play sound="fire" /></action></actions>
@@ -168,7 +168,7 @@
           <position><x><subtract><value>window.width.center</value><value>80</value></subtract></x><y>margin</y></position>
         </object>
         <object name="score2">
-          <sprite><text style="hud"><number>tank2.hits</number><color>color.cyan</color></text></sprite>
+          <sprite><text style="hud"><number>tank2.hits</number><color>cyan</color></text></sprite>
           <position><x>
             <subtract>
               <value><add><value>window.width.center</value><value>80</value></add></value>
@@ -197,7 +197,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -211,9 +211,9 @@
     <state name="over">
       <objects>
         <object name="winner">
-          <sprite name="draw"><text style="banner"><content>A DRAW</content><color>color.white</color></text></sprite>
+          <sprite name="draw"><text style="banner"><content>A DRAW</content><color>white</color></text></sprite>
           <sprite name="yellow"><text style="banner"><content>YELLOW WINS</content><size>90</size></text></sprite>
-          <sprite name="blue"><text style="banner"><content>BLUE WINS</content><size>90</size><color>color.cyan</color></text></sprite>
+          <sprite name="blue"><text style="banner"><content>BLUE WINS</content><size>90</size><color>cyan</color></text></sprite>
           <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
         </object>
         <object name="again">
@@ -270,7 +270,7 @@
       <row>**.......**</row>
       <row>**.......**</row>
       <scale>3</scale>
-      <color>color.yellow</color>
+      <color>yellow</color>
     </bitmap>
   </pictures>
 </game>

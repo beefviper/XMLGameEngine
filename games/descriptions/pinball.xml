@@ -41,7 +41,7 @@
   <window name="Pinball">
     <width>600</width>
     <height>640</height>
-    <background>color.darkblue</background>
+    <background>darkblue</background>
   </window>
   <variables>
     <variable name="radius">6</variable>
@@ -53,16 +53,16 @@
     <variable name="balls">3</variable>
   </variables>
   <styles>
-    <style name="banner"><size>80</size><color>color.yellow</color></style>
+    <style name="banner"><size>80</size><color>yellow</color></style>
     <style name="prompt"><size>34</size></style>
     <style name="help"><size>24</size></style>
-    <style name="hud"><size>22</size><color>color.lightgrey</color></style>
+    <style name="hud"><size>22</size><color>lightgrey</color></style>
   </styles>
   <objects>
     <!-- a round bumper: kicks the ball off faster than it came, and lights -->
     <object name="bumper" class="bumper">
-      <sprite name="dark"><circle><radius>18</radius><color>color.red</color></circle></sprite>
-      <sprite name="lit"><circle><radius>18</radius><color>color.white</color></circle></sprite>
+      <sprite name="dark"><circle><radius>18</radius><color>red</color></circle></sprite>
+      <sprite name="lit"><circle><radius>18</radius><color>white</color></circle></sprite>
       <collisions>
         <collision class="ball">
           <become sprite="lit" />
@@ -76,10 +76,10 @@
     </object>
     <!-- a rollover lane at the top: the ball goes over it and lights it -->
     <object name="lane" class="lane">
-      <sprite name="dark"><rectangle><width>8</width><height>20</height><color>color.darkgrey</color></rectangle></sprite>
-      <sprite name="lit"><rectangle><width>8</width><height>20</height><color>color.yellow</color></rectangle></sprite>
+      <sprite name="dark"><rectangle><width>8</width><height>20</height><color>darkgrey</color></rectangle></sprite>
+      <sprite name="lit"><rectangle><width>8</width><height>20</height><color>yellow</color></rectangle></sprite>
       <!-- just won the bonus: white for a moment, then dark again -->
-      <sprite name="flash"><rectangle><width>8</width><height>20</height><color>color.white</color></rectangle></sprite>
+      <sprite name="flash"><rectangle><width>8</width><height>20</height><color>white</color></rectangle></sprite>
       <collisions>
         <collision class="ball" sprite="dark">
           <become sprite="lit" />
@@ -95,7 +95,7 @@
     <!-- a flipper: a bar hinged at one end, knocking the ball by the speed it swings at -->
     <object name="flipper" class="flipper">
       <sprite>
-        <line><from><x>0</x><y>0</y></from><to><x>70</x><y>0</y></to><color>color.yellow</color><thickness>10</thickness></line>
+        <line><from><x>0</x><y>0</y></from><to><x>70</x><y>0</y></to><color>yellow</color><thickness>10</thickness></line>
       </sprite>
       <collisions>
         <type>pixel</type>
@@ -122,7 +122,7 @@
           <sprite><text style="help" /></sprite>
           <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
           <row number="1"><sprite><text><content>three balls: light the three lanes for a bonus</content></text></sprite></row>
-          <row number="2"><sprite><text><content>a and d or the arrows flip, hold spacebar and let go to shoot</content><color>color.lightgrey</color></text></sprite></row>
+          <row number="2"><sprite><text><content>a and d or the arrows flip, hold spacebar and let go to shoot</content><color>lightgrey</color></text></sprite></row>
         </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
@@ -149,7 +149,7 @@
           <position><x>490</x><y>40</y></position>
         </object>
         <object name="scorenumber">
-          <sprite><text style="hud"><number>table.score</number><color>color.white</color></text></sprite>
+          <sprite><text style="hud"><number>table.score</number><color>white</color></text></sprite>
           <position><x>490</x><y>70</y></position>
         </object>
         <object name="ballsshown">
@@ -157,7 +157,7 @@
           <position><x>490</x><y>130</y></position>
         </object>
         <object name="powershown">
-          <sprite><text style="hud"><content>PULL</content><number>plunger.power</number><color>color.yellow</color></text></sprite>
+          <sprite><text style="hud"><content>PULL</content><number>plunger.power</number><color>yellow</color></text></sprite>
           <position><x>490</x><y>190</y></position>
         </object>
 
@@ -165,16 +165,16 @@
              the right, and the slopes down to the flippers. -->
         <object name="walls" class="wall">
           <sprite>
-            <line><from><x>20</x><y>640</y></from><to><x>20</x><y>120</y></to><color>color.lightgrey</color><thickness>4</thickness></line>
-            <line><from><x>20</x><y>120</y></from><to><x>60</x><y>50</y></to><color>color.lightgrey</color><thickness>4</thickness></line>
-            <line><from><x>60</x><y>50</y></from><to><x>140</x><y>20</y></to><color>color.lightgrey</color><thickness>4</thickness></line>
-            <line><from><x>140</x><y>20</y></from><to><x>340</x><y>20</y></to><color>color.lightgrey</color><thickness>4</thickness></line>
-            <line><from><x>340</x><y>20</y></from><to><x>420</x><y>50</y></to><color>color.lightgrey</color><thickness>4</thickness></line>
-            <line><from><x>420</x><y>50</y></from><to><x>460</x><y>120</y></to><color>color.lightgrey</color><thickness>4</thickness></line>
-            <line><from><x>460</x><y>120</y></from><to><x>460</x><y>640</y></to><color>color.lightgrey</color><thickness>4</thickness></line>
-            <line><from><x>430</x><y>200</y></from><to><x>430</x><y>640</y></to><color>color.lightgrey</color><thickness>4</thickness></line>
-            <line><from><x>20</x><y>450</y></from><to><x>141</x><y>537</y></to><color>color.lightgrey</color><thickness>4</thickness></line>
-            <line><from><x>430</x><y>450</y></from><to><x>305</x><y>537</y></to><color>color.lightgrey</color><thickness>4</thickness></line>
+            <line><from><x>20</x><y>640</y></from><to><x>20</x><y>120</y></to><color>lightgrey</color><thickness>4</thickness></line>
+            <line><from><x>20</x><y>120</y></from><to><x>60</x><y>50</y></to><color>lightgrey</color><thickness>4</thickness></line>
+            <line><from><x>60</x><y>50</y></from><to><x>140</x><y>20</y></to><color>lightgrey</color><thickness>4</thickness></line>
+            <line><from><x>140</x><y>20</y></from><to><x>340</x><y>20</y></to><color>lightgrey</color><thickness>4</thickness></line>
+            <line><from><x>340</x><y>20</y></from><to><x>420</x><y>50</y></to><color>lightgrey</color><thickness>4</thickness></line>
+            <line><from><x>420</x><y>50</y></from><to><x>460</x><y>120</y></to><color>lightgrey</color><thickness>4</thickness></line>
+            <line><from><x>460</x><y>120</y></from><to><x>460</x><y>640</y></to><color>lightgrey</color><thickness>4</thickness></line>
+            <line><from><x>430</x><y>200</y></from><to><x>430</x><y>640</y></to><color>lightgrey</color><thickness>4</thickness></line>
+            <line><from><x>20</x><y>450</y></from><to><x>141</x><y>537</y></to><color>lightgrey</color><thickness>4</thickness></line>
+            <line><from><x>430</x><y>450</y></from><to><x>305</x><y>537</y></to><color>lightgrey</color><thickness>4</thickness></line>
           </sprite>
           <position><x>0</x><y>0</y></position>
           <collisions><type>pixel</type></collisions>
@@ -183,8 +183,8 @@
         <!-- the slingshots above the flippers -->
         <object name="slings" class="sling">
           <sprite>
-            <line><from><x>70</x><y>380</y></from><to><x>115</x><y>460</y></to><color>color.orange</color><thickness>6</thickness></line>
-            <line><from><x>380</x><y>380</y></from><to><x>335</x><y>460</y></to><color>color.orange</color><thickness>6</thickness></line>
+            <line><from><x>70</x><y>380</y></from><to><x>115</x><y>460</y></to><color>orange</color><thickness>6</thickness></line>
+            <line><from><x>380</x><y>380</y></from><to><x>335</x><y>460</y></to><color>orange</color><thickness>6</thickness></line>
           </sprite>
           <position><x>0</x><y>0</y></position>
           <collisions><type>pixel</type></collisions>
@@ -220,8 +220,8 @@
         <!-- The plunger at the foot of the lane: pulled back while Space is
              held, it shoots the ball sitting on it when let go. -->
         <object name="plunger" class="plunger">
-          <sprite name="empty"><rectangle><width>24</width><height>40</height><color>color.grey</color></rectangle></sprite>
-          <sprite name="loaded"><rectangle><width>24</width><height>40</height><color>color.lightgrey</color></rectangle></sprite>
+          <sprite name="empty"><rectangle><width>24</width><height>40</height><color>grey</color></rectangle></sprite>
+          <sprite name="loaded"><rectangle><width>24</width><height>40</height><color>lightgrey</color></rectangle></sprite>
           <position><x>433</x><y>plungerTop</y></position>
           <collisions />
           <actions>
@@ -255,7 +255,7 @@
         </object>
 
         <object name="ball" class="ball">
-          <sprite><circle><radius>radius</radius><color>color.white</color></circle></sprite>
+          <sprite><circle><radius>radius</radius><color>white</color></circle></sprite>
           <position><x><subtract><value>laneX</value><value>radius</value></subtract></x><y>
             <subtract>
               <value>plungerTop</value>
@@ -326,7 +326,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>

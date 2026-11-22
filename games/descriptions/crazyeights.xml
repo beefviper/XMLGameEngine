@@ -41,7 +41,7 @@
   <window name="Crazy Eights">
     <width>880</width>
     <height>840</height>
-    <background>color.darkgreen</background>
+    <background>darkgreen</background>
   </window>
   <variables>
     <variable name="cardwidth">96</variable>
@@ -52,10 +52,10 @@
     <variable name="yours">580</variable>
   </variables>
   <styles>
-    <style name="banner"><size>80</size><color>color.yellow</color></style>
+    <style name="banner"><size>80</size><color>yellow</color></style>
     <style name="prompt"><size>32</size></style>
-    <style name="help"><size>22</size><color>color.lightgrey</color></style>
-    <style name="note"><size>26</size><color>color.white</color></style>
+    <style name="help"><size>22</size><color>lightgrey</color></style>
+    <style name="note"><size>26</size><color>white</color></style>
   </styles>
   <states>
     <state name="title">
@@ -96,7 +96,7 @@
 
         <!-- the computer's cards, face down along the top -->
         <object name="theirs" class="place">
-          <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.darkgreen</color></rectangle></sprite>
+          <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>darkgreen</color></rectangle></sprite>
           <position><x>left</x><y>theirs</y></position>
           <holds class="card" sprite="back">
             <spread><x>40</x><width>768</width></spread>
@@ -106,7 +106,7 @@
 
         <!-- the stock: picked from, it sends one to the player's own cards; empty, the discard pile but its top comes back -->
         <object name="stock" class="place">
-          <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
+          <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>forestgreen</color></rectangle></sprite>
           <position><x>
             <subtract>
               <value>window.width.center</value>
@@ -125,7 +125,7 @@
 
         <!-- the discard pile: the same suit (or the suit called) or the same rank; an eight on anything, and its player names the suit -->
         <object name="discard" class="place">
-          <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
+          <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>forestgreen</color></rectangle></sprite>
           <position><x><add><value>window.width.center</value><value>24</value></add></x><y>middle</y></position>
           <holds class="card" sprite="face">
             <accepts>
@@ -160,13 +160,13 @@
           <position><x>left</x><y><add><value>middle</value><value>cardheight</value><value>40</value></add></y></position>
         </object>
         <object name="calling">
-          <sprite><text style="note"><choose><by>discard.calling</by><word /><word>an eight: its player names a suit, pointing at a card of it</word></choose><color>color.cyan</color></text></sprite>
+          <sprite><text style="note"><choose><by>discard.calling</by><word /><word>an eight: its player names a suit, pointing at a card of it</word></choose><color>cyan</color></text></sprite>
           <position><x>left</x><y><add><value>middle</value><value>cardheight</value><value>76</value></add></y></position>
         </object>
 
         <!-- your cards, face up along the bottom, in suit and rank order -->
         <object name="mine" class="place">
-          <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.darkgreen</color></rectangle></sprite>
+          <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>darkgreen</color></rectangle></sprite>
           <position><x>left</x><y>yours</y></position>
           <holds class="card" sprite="face">
             <spread><x>56</x><width>768</width></spread>
@@ -255,7 +255,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>white</color></text></sprite>
           <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
         </object>
         <object name="newdeal">
@@ -311,28 +311,28 @@
   <pictures>
     <sheet name="cards"><path>assets/cards.png</path><columns>13</columns><rows>5</rows></sheet>
     <drawing name="playersfree">
-      <line><from><x>1</x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
-      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></to><color>color.yellow</color><thickness>3</thickness></line>
-      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></to><color>color.yellow</color><thickness>3</thickness></line>
-      <line><from><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
+      <line><from><x>1</x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></to><color>yellow</color><thickness>3</thickness></line>
+      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></to><color>yellow</color><thickness>3</thickness></line>
+      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></to><color>yellow</color><thickness>3</thickness></line>
+      <line><from><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y>1</y></to><color>yellow</color><thickness>3</thickness></line>
     </drawing>
     <drawing name="playerscalling">
-      <line><from><x>1</x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></to><color>color.cyan</color><thickness>3</thickness></line>
-      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></to><color>color.cyan</color><thickness>3</thickness></line>
-      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></to><color>color.cyan</color><thickness>3</thickness></line>
-      <line><from><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y>1</y></to><color>color.cyan</color><thickness>3</thickness></line>
+      <line><from><x>1</x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></to><color>cyan</color><thickness>3</thickness></line>
+      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></to><color>cyan</color><thickness>3</thickness></line>
+      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></to><color>cyan</color><thickness>3</thickness></line>
+      <line><from><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y>1</y></to><color>cyan</color><thickness>3</thickness></line>
     </drawing>
     <drawing name="playerswaiting">
-      <line><from><x>1</x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></to><color>color.darkgreen</color><thickness>3</thickness></line>
-      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></to><color>color.darkgreen</color><thickness>3</thickness></line>
-      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></to><color>color.darkgreen</color><thickness>3</thickness></line>
-      <line><from><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y>1</y></to><color>color.darkgreen</color><thickness>3</thickness></line>
+      <line><from><x>1</x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></to><color>darkgreen</color><thickness>3</thickness></line>
+      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></to><color>darkgreen</color><thickness>3</thickness></line>
+      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></to><color>darkgreen</color><thickness>3</thickness></line>
+      <line><from><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y>1</y></to><color>darkgreen</color><thickness>3</thickness></line>
     </drawing>
     <drawing name="computerfree">
-      <line><from><x>1</x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></to><color>color.lightgrey</color><thickness>3</thickness></line>
-      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></to><color>color.lightgrey</color><thickness>3</thickness></line>
-      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></to><color>color.lightgrey</color><thickness>3</thickness></line>
-      <line><from><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y>1</y></to><color>color.lightgrey</color><thickness>3</thickness></line>
+      <line><from><x>1</x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></to><color>lightgrey</color><thickness>3</thickness></line>
+      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></to><color>lightgrey</color><thickness>3</thickness></line>
+      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></to><color>lightgrey</color><thickness>3</thickness></line>
+      <line><from><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y>1</y></to><color>lightgrey</color><thickness>3</thickness></line>
     </drawing>
   </pictures>
 </game>

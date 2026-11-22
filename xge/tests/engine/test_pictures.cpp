@@ -64,7 +64,7 @@ namespace
 
 			{
 				std::ofstream out(file.path);
-				out << "<game><window name=\"pictures\"><width>800</width><height>600</height><background>color.black</background>"
+				out << "<game><window name=\"pictures\"><width>800</width><height>600</height><background>black</background>"
 					"<framerate>60</framerate></window><variables><variable name=\"unused\">0</variable></variables>"
 					"<states><objects>" + objects + "</objects><state name=\"s\"><shows>" + shows + "</shows>"
 					"<inputs><input button=\"space\"><pop /></input></inputs></state></states></game>";
@@ -112,7 +112,7 @@ TEST_CASE("a <bitmap> and an <svg> are drawn, then flipped", "[pictures][flip][x
 	Pictures pictures({
 		"<bitmap>" + kRows + "</bitmap>",
 		"<bitmap>" + kRows + "<flip>horizontal</flip></bitmap>",
-		"<bitmap>" + kRows + "<scale>2</scale><color>color.red</color><flip>vertical</flip></bitmap>",
+		"<bitmap>" + kRows + "<scale>2</scale><color>red</color><flip>vertical</flip></bitmap>",
 		"<svg>" + kSvg + "</svg>",
 		"<svg>" + kSvg + "<flip>vertical</flip></svg>",
 	});
@@ -120,7 +120,7 @@ TEST_CASE("a <bitmap> and an <svg> are drawn, then flipped", "[pictures][flip][x
 	const Bitmap& plain = *pictures.object(1).drawn.bitmap;
 	CHECK(samePixels(*pictures.object(2).drawn.bitmap, flipBitmap(plain, true, false)));
 
-	const Bitmap red = rasterizeRows({ "*..", "*..", "***" }, 2, colorFromName("color.red"));
+	const Bitmap red = rasterizeRows({ "*..", "*..", "***" }, 2, colorFromName("red"));
 	CHECK(samePixels(*pictures.object(3).drawn.bitmap, flipBitmap(red, false, true)));
 
 	const Bitmap& sheet = *pictures.object(4).drawn.bitmap;
@@ -153,7 +153,7 @@ TEST_CASE("with a heading, every kind of picture is drawn once, flipped, and tur
 	}
 
 	// The kept bitmap is the flipped one.
-	const Bitmap rows = rasterizeRows({ "*..", "*..", "***" }, 3, colorFromName("color.white"));
+	const Bitmap rows = rasterizeRows({ "*..", "*..", "***" }, 3, colorFromName("white"));
 	CHECK(samePixels(*pictures.object(1).drawn.turnables.front()->picture, flipBitmap(rows, true, false)));
 
 	// Lines are kept as lines, and drawn again at the heading.

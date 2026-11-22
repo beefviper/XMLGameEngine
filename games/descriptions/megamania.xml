@@ -70,15 +70,15 @@
     </variable>
   </variables>
   <styles>
-    <style name="banner"><size>100</size><color>color.orange</color></style>
-    <style name="line"><size>24</size><color>color.white</color></style>
+    <style name="banner"><size>100</size><color>orange</color></style>
+    <style name="line"><size>24</size><color>white</color></style>
     <style name="prompt"><size>40</size></style>
-    <style name="hud"><size>28</size><color>color.yellow</color></style>
+    <style name="hud"><size>28</size><color>yellow</color></style>
   </styles>
   <objects>
     <!-- one shot at a time, steered with the blaster -->
     <object name="laser" class="laser">
-      <sprite><rectangle><width>3</width><height>14</height><color>color.cyan</color></rectangle></sprite>
+      <sprite><rectangle><width>3</width><height>14</height><color>cyan</color></rectangle></sprite>
       <position><x update="live"><add><value>player.x</value><value>16.5</value></add></x><y>0</y></position>
       <velocity><y>-540</y></velocity>
       <most>1</most>
@@ -117,7 +117,7 @@
     </group>
     <!-- a bomb: six at most -->
     <object name="bomb" class="bomb">
-      <sprite><rectangle><width>4</width><height>10</height><color>color.red</color></rectangle></sprite>
+      <sprite><rectangle><width>4</width><height>10</height><color>red</color></rectangle></sprite>
       <velocity><y>240</y></velocity>
       <most>6</most>
       <collisions>
@@ -188,7 +188,7 @@
           <sprite><text style="line" /></sprite>
           <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
           <row number="1"><sprite><text><content>shoot every wave before your energy runs out</content></text></sprite></row>
-          <row number="2"><sprite><text><content>a and d (or the arrows) slide, space fires</content><color>color.lightgrey</color></text></sprite></row>
+          <row number="2"><sprite><text><content>a and d (or the arrows) slide, space fires</content><color>lightgrey</color></text></sprite></row>
         </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
@@ -244,11 +244,11 @@
           </timers>
         </object>
         <object name="bar">
-          <sprite><rectangle><width>barwidth</width><height>12</height><color>color.green</color></rectangle></sprite>
+          <sprite><rectangle><width>barwidth</width><height>12</height><color>green</color></rectangle></sprite>
           <position><x>barleft</x><y><subtract><value>window.bottom</value><value>24</value></subtract></y></position>
         </object>
         <object name="cover">
-          <sprite><rectangle><width>barwidth</width><height>12</height><color>color.black</color></rectangle></sprite>
+          <sprite><rectangle><width>barwidth</width><height>12</height><color>black</color></rectangle></sprite>
           <position><x><add><value>barleft</value><value>barwidth</value></add></x><y><subtract><value>window.bottom</value><value>24</value></subtract></y></position>
         </object>
 
@@ -257,7 +257,7 @@
           <position><x>margin</x><y>margin</y></position>
         </object>
         <object name="lives">
-          <sprite><text style="hud"><number>player.lives</number><color>color.red</color></text></sprite>
+          <sprite><text style="hud"><number>player.lives</number><color>red</color></text></sprite>
           <position><x><right><offset>margin</offset></right></x><y>margin</y></position>
         </object>
       </objects>
@@ -449,7 +449,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -464,8 +464,8 @@
     <state name="over">
       <objects>
         <object name="message">
-          <sprite name="won"><text style="banner"><content>YOU WIN</content><color>color.green</color></text></sprite>
-          <sprite name="lost"><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>
+          <sprite name="won"><text style="banner"><content>YOU WIN</content><color>green</color></text></sprite>
+          <sprite name="lost"><text style="banner"><content>GAME OVER</content><color>red</color></text></sprite>
           <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
         </object>
       </objects>
@@ -504,8 +504,8 @@
       <row>.........</row>
       <row>.........</row>
       <scale>3</scale>
-      <color>color.yellow</color>
-      <color char="o">color.red</color>
+      <color>yellow</color>
+      <color char="o">red</color>
     </bitmap>
     <bitmap name="burst-b">
       <row>.........</row>
@@ -518,8 +518,8 @@
       <row>..*...*..</row>
       <row>.........</row>
       <scale>3</scale>
-      <color>color.yellow</color>
-      <color char="o">color.red</color>
+      <color>yellow</color>
+      <color char="o">red</color>
     </bitmap>
     <bitmap name="burst-c">
       <row>*...*...*</row>
@@ -532,8 +532,8 @@
       <row>.*.....*.</row>
       <row>*...*...*</row>
       <scale>3</scale>
-      <color>color.yellow</color>
-      <color char="o">color.red</color>
+      <color>yellow</color>
+      <color char="o">red</color>
     </bitmap>
     <bitmap name="burst-d">
       <row>o.......o</row>
@@ -546,8 +546,8 @@
       <row>.........</row>
       <row>o.......o</row>
       <scale>3</scale>
-      <color>color.red</color>
-      <color char="o">color.red</color>
+      <color>red</color>
+      <color char="o">red</color>
     </bitmap>
     <bitmap name="wave1">
       <row>..******..</row>
@@ -557,7 +557,7 @@
       <row>**********</row>
       <row>.********.</row>
       <scale>3</scale>
-      <color>color.orange</color>
+      <color>orange</color>
     </bitmap>
     <bitmap name="player">
       <row>.....**.....</row>
@@ -568,7 +568,7 @@
       <row>************</row>
       <row>**...**...**</row>
       <scale>3</scale>
-      <color>color.lightgrey</color>
+      <color>lightgrey</color>
     </bitmap>
     <bitmap name="wave2">
       <row>..****..</row>
@@ -579,7 +579,7 @@
       <row>.******.</row>
       <row>..****..</row>
       <scale>3</scale>
-      <color>color.yellow</color>
+      <color>yellow</color>
     </bitmap>
     <bitmap name="wave3">
       <row>*..*..*..*</row>
@@ -588,7 +588,7 @@
       <row>.********.</row>
       <row>*.*....*.*</row>
       <scale>3</scale>
-      <color>color.green</color>
+      <color>green</color>
     </bitmap>
     <bitmap name="wave4">
       <row>..****..</row>
@@ -599,7 +599,7 @@
       <row>.*.**.*.</row>
       <row>..****..</row>
       <scale>3</scale>
-      <color>color.lightgrey</color>
+      <color>lightgrey</color>
     </bitmap>
     <bitmap name="wave5">
       <row>....*....</row>
@@ -610,7 +610,7 @@
       <row>...***...</row>
       <row>....*....</row>
       <scale>3</scale>
-      <color>color.cyan</color>
+      <color>cyan</color>
     </bitmap>
     <bitmap name="wave6">
       <row>....******</row>
@@ -620,7 +620,7 @@
       <row>**********</row>
       <row>**********</row>
       <scale>3</scale>
-      <color>color.lightgrey</color>
+      <color>lightgrey</color>
     </bitmap>
     <bitmap name="wave7">
       <row>**......**</row>
@@ -629,7 +629,7 @@
       <row>****..****</row>
       <row>**......**</row>
       <scale>3</scale>
-      <color>color.magenta</color>
+      <color>magenta</color>
     </bitmap>
     <bitmap name="wave8">
       <row>*********</row>
@@ -640,7 +640,7 @@
       <row>*.*****.*</row>
       <row>*********</row>
       <scale>3</scale>
-      <color>color.white</color>
+      <color>white</color>
     </bitmap>
   </pictures>
 </game>

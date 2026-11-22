@@ -3580,7 +3580,7 @@
               </xs:element>
               <xs:element name="background" type="xs:string" minOccurs="0">
                 <xs:annotation>
-                  <xs:documentation>left out: color.black, a window and 60; fullscreen: the whole screen</xs:documentation>
+                  <xs:documentation>left out: black, a window and 60; fullscreen: the whole screen</xs:documentation>
                 </xs:annotation>
               </xs:element>
               <xs:element name="fullscreen" type="emptyType" minOccurs="0" />

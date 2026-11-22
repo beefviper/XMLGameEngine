@@ -188,7 +188,7 @@ TEST_CASE("a reader's message ends with the line of the tag it is about", "[xml_
 	const auto write = [&](const std::string& sprite, const std::string& onSpace, bool schema = false)
 	{
 		std::ofstream(file) << (schema ? "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">\n" : "<game>\n") <<
-			"  <window name=\"lines\"><width>800</width><height>600</height><background>color.black</background><framerate>60</framerate></window><variables><variable name=\"unused\">0</variable></variables>\n"
+			"  <window name=\"lines\"><width>800</width><height>600</height><background>black</background><framerate>60</framerate></window><variables><variable name=\"unused\">0</variable></variables>\n"
 			"  <states>\n"
 			"    <state name=\"playing\">\n"
 			"      <objects>\n"

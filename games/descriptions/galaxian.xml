@@ -162,15 +162,15 @@
     </path>
   </paths>
   <styles>
-    <style name="banner"><size>96</size><color>color.yellow</color></style>
-    <style name="prompt"><size>36</size><color>color.white</color></style>
-    <style name="hud"><size>36</size><color>color.white</color></style>
-    <style name="letter"><size>60</size><color>color.cyan</color></style>
+    <style name="banner"><size>96</size><color>yellow</color></style>
+    <style name="prompt"><size>36</size><color>white</color></style>
+    <style name="hud"><size>36</size><color>white</color></style>
+    <style name="letter"><size>60</size><color>cyan</color></style>
   </styles>
   <objects>
     <!-- the ship's shot: one at a time, straight up -->
     <object name="shot" class="projectile">
-      <sprite><rectangle><width>3</width><height>12</height><color>color.white</color></rectangle></sprite>
+      <sprite><rectangle><width>3</width><height>12</height><color>white</color></rectangle></sprite>
       <velocity><y>-600</y></velocity>
       <most>1</most>
       <collisions>
@@ -180,7 +180,7 @@
     </object>
     <!-- an alien's bomb, dropped by divers: six at most -->
     <object name="bomb" class="bomb">
-      <sprite><rectangle><width>3</width><height>9</height><color>color.yellow</color></rectangle></sprite>
+      <sprite><rectangle><width>3</width><height>9</height><color>yellow</color></rectangle></sprite>
       <velocity><y>360</y></velocity>
       <most>6</most>
       <collisions>
@@ -265,13 +265,13 @@
           <collisions>
             <collision edge="bottom"><wrap /></collision>
           </collisions>
-          <group name="redstars" char="r"><sprite name="on"><bitmap><color>color.red</color></bitmap></sprite></group>
+          <group name="redstars" char="r"><sprite name="on"><bitmap><color>red</color></bitmap></sprite></group>
           <group name="bluestars" char="b">
-            <sprite name="on"><bitmap><color>color.cyan</color></bitmap></sprite>
+            <sprite name="on"><bitmap><color>cyan</color></bitmap></sprite>
             <animation><seconds>0.3</seconds><frame sprite="on" /><frame sprite="off" /></animation>
           </group>
           <group name="yellowstars" char="y">
-            <sprite name="on"><bitmap><color>color.yellow</color></bitmap></sprite>
+            <sprite name="on"><bitmap><color>yellow</color></bitmap></sprite>
             <animation><seconds>0.5</seconds><frame sprite="off" /><frame sprite="on" /><frame sprite="on" /></animation>
           </group>
           <group name="whitestars" char="w" />
@@ -279,7 +279,7 @@
       </map>
       <!-- the best score, at the top in the middle on the title and in play -->
       <object name="best">
-        <sprite><text style="hud"><number>best.score</number><color>color.red</color></text></sprite>
+        <sprite><text style="hud"><number>best.score</number><color>red</color></text></sprite>
         <position><x><centered /></x><y>margin</y></position>
         <variables><variable name="score">0</variable></variables>
       </object>
@@ -292,7 +292,7 @@
             <letter>table.third</letter>
             <number>table.score</number>
             <size>28</size>
-            <color>color.cyan</color>
+            <color>cyan</color>
           </text>
         </sprite>
         <position><x><subtract><value>window.width.center</value><value>60</value></subtract></x></position>
@@ -325,7 +325,7 @@
       </group>
       <!-- a score for the table, and the initials it is given -->
       <object name="entry">
-        <sprite><text style="letter"><content>NEW BEST</content><color>color.yellow</color></text></sprite>
+        <sprite><text style="letter"><content>NEW BEST</content><color>yellow</color></text></sprite>
         <position><x><centered /></x><y>120</y></position>
         <variables>
           <variable name="first">0</variable>
@@ -356,7 +356,7 @@
         </x><y>300</y></position>
       </object>
       <object name="howto">
-        <sprite><text><content>w and s, or up and down, change the letter; space for the next</content><size>18</size><color>color.lightgrey</color></text></sprite>
+        <sprite><text><content>w and s, or up and down, change the letter; space for the next</content><size>18</size><color>lightgrey</color></text></sprite>
         <position><x><centered /></x><y>440</y></position>
       </object>
     </objects>
@@ -370,8 +370,8 @@
           <rows>2</rows>
           <padding><y>35</y></padding>
           <position><x><centered /></x><y><centered><offset>-150</offset></centered></y></position>
-          <row number="1"><sprite><text><content>blue 30  purple 40  red 50  flagship 60</content><size>26</size><color>color.white</color></text></sprite></row>
-          <row number="2"><sprite><text><content>a and d, or the arrows, to move; space to fire; pause key to pause</content><size>20</size><color>color.lightgrey</color></text></sprite></row>
+          <row number="1"><sprite><text><content>blue 30  purple 40  red 50  flagship 60</content><size>26</size><color>white</color></text></sprite></row>
+          <row number="2"><sprite><text><content>a and d, or the arrows, to move; space to fire; pause key to pause</content><size>20</size><color>lightgrey</color></text></sprite></row>
         </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start, 2 for two players</content><size>32</size></text></sprite>
@@ -444,7 +444,7 @@
           <position><x>margin</x><y>margin</y></position>
         </object>
         <object name="lives">
-          <sprite><text style="hud"><number>ship.lives</number><color>color.cyan</color></text></sprite>
+          <sprite><text style="hud"><number>ship.lives</number><color>cyan</color></text></sprite>
           <position><x><right><offset>margin</offset></right></x><y>margin</y></position>
         </object>
       </objects>
@@ -622,7 +622,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -636,7 +636,7 @@
     <state name="over">
       <objects>
         <object name="gameover">
-          <sprite><text style="banner"><content>GAME OVER</content><size>80</size><color>color.red</color></text></sprite>
+          <sprite><text style="banner"><content>GAME OVER</content><size>80</size><color>red</color></text></sprite>
           <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
         </object>
         <object name="again">
@@ -684,7 +684,7 @@
     <state name="player2" from="player1">
       <objects>
         <object name="whose">
-          <sprite><text style="banner"><content>PLAYER 2</content><size>80</size><color>color.cyan</color></text></sprite>
+          <sprite><text style="banner"><content>PLAYER 2</content><size>80</size><color>cyan</color></text></sprite>
         </object>
       </objects>
     </state>
@@ -692,7 +692,7 @@
     <state name="initial1">
       <objects>
         <object name="cursor">
-          <sprite><rectangle><width>36</width><height>4</height><color>color.yellow</color></rectangle></sprite>
+          <sprite><rectangle><width>36</width><height>4</height><color>yellow</color></rectangle></sprite>
           <position><x>letters</x><y>375</y></position>
         </object>
       </objects>
@@ -786,8 +786,8 @@
       <row>.........</row>
       <row>.........</row>
       <scale>pixel</scale>
-      <color>color.yellow</color>
-      <color char="o">color.white</color>
+      <color>yellow</color>
+      <color char="o">white</color>
     </bitmap>
     <bitmap name="burst-b">
       <row>.........</row>
@@ -800,8 +800,8 @@
       <row>..*...*..</row>
       <row>.........</row>
       <scale>pixel</scale>
-      <color>color.yellow</color>
-      <color char="o">color.red</color>
+      <color>yellow</color>
+      <color char="o">red</color>
     </bitmap>
     <bitmap name="burst-c">
       <row>*...*...*</row>
@@ -814,8 +814,8 @@
       <row>.*.....*.</row>
       <row>*...*...*</row>
       <scale>pixel</scale>
-      <color>color.yellow</color>
-      <color char="o">color.red</color>
+      <color>yellow</color>
+      <color char="o">red</color>
     </bitmap>
     <bitmap name="burst-d">
       <row>o.......o</row>
@@ -828,8 +828,8 @@
       <row>.........</row>
       <row>o.......o</row>
       <scale>pixel</scale>
-      <color>color.red</color>
-      <color char="o">color.red</color>
+      <color>red</color>
+      <color char="o">red</color>
     </bitmap>
     <bitmap name="stars-on"><row>*</row><scale>2</scale></bitmap>
     <bitmap name="stars-off"><row>.</row><scale>2</scale></bitmap>
@@ -842,8 +842,8 @@
       <row>*****.*****</row>
       <row>**.......**</row>
       <scale>pixel</scale>
-      <color>color.cyan</color>
-      <color char="r">color.red</color>
+      <color>cyan</color>
+      <color char="r">red</color>
     </bitmap>
     <bitmap name="flagships">
       <row>...*...*...</row>
@@ -855,8 +855,8 @@
       <row>*.*.....*.*</row>
       <row>...**.**...</row>
       <scale>pixel</scale>
-      <color>color.yellow</color>
-      <color char="r">color.red</color>
+      <color>yellow</color>
+      <color char="r">red</color>
     </bitmap>
     <bitmap name="escorts">
       <row>...*...*...</row>
@@ -868,8 +868,8 @@
       <row>...*...*...</row>
       <row>..*.....*..</row>
       <scale>pixel</scale>
-      <color>color.red</color>
-      <color char="b">color.cyan</color>
+      <color>red</color>
+      <color char="b">cyan</color>
     </bitmap>
     <bitmap name="purples">
       <row>..*.....*..</row>
@@ -881,8 +881,8 @@
       <row>*.*.....*.*</row>
       <row>...**.**...</row>
       <scale>pixel</scale>
-      <color>color.magenta</color>
-      <color char="b">color.cyan</color>
+      <color>magenta</color>
+      <color char="b">cyan</color>
     </bitmap>
     <bitmap name="blues">
       <row>....*.*....</row>
@@ -894,8 +894,8 @@
       <row>..*.....*..</row>
       <row>.*.......*.</row>
       <scale>pixel</scale>
-      <color>color.cyan</color>
-      <color char="y">color.yellow</color>
+      <color>cyan</color>
+      <color char="y">yellow</color>
     </bitmap>
   </pictures>
 </game>

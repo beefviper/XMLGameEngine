@@ -177,7 +177,7 @@ Names are dotted, and every dot means "inside":
 |---|---|---|
 | `<width>`, `<height>` | required | the game's size in pixels, plain whole numbers, 1 or more |
 | `<scale>` | 1 | each game pixel drawn this many window pixels across. Mario Bros. is 256 by 224 at `<scale>3</scale>`. The mouse is read back in game pixels |
-| `<background>` | `color.black` | a [colour](#colours) |
+| `<background>` | `black` | a [colour](#colours) |
 | `<fullscreen />` | a window | the whole screen |
 | `<framerate>` | 60 | the most frames a second, 1 or more. Each frame plays the time that passed, so the game's speed does not change with it; a slow game keeps 60 and steps on a timer |
 
@@ -199,11 +199,11 @@ A style is a named look taken by `<text style="...">` or `<bitmap style="...">`.
 
 ```xml
 <styles>
-  <style name="banner"><size>64</size><color>color.red</color><font>assets/pressstart2p.ttf</font></style>
+  <style name="banner"><size>64</size><color>red</color><font>assets/pressstart2p.ttf</font></style>
   <style name="mario">
     <scale>3</scale>
-    <color>color.red</color>              <!-- the * pixels -->
-    <color char="b">color.blue</color>    <!-- each b pixel -->
+    <color>red</color>              <!-- the * pixels -->
+    <color char="b">blue</color>    <!-- each b pixel -->
   </style>
 </styles>
 ```
@@ -230,4 +230,4 @@ Mario Bros.' pests are drawn once per kind; one that gets up by itself does `<be
 
 ## Colours
 
-Every colour is written `color.<name>`: `black`, `white`, `red`, `green`, `blue`, `yellow`, `magenta`, `cyan`, and the muted `grey`, `darkgrey`, `lightgrey`, `brown`, `orange`, `purple`, `darkblue`, `darkgreen`, `forestgreen`, `gold`, `peach` (`picture/color.cpp`). Any other name stops the load.
+A colour slot (`<color>`, `<background>`) holds a colour's name, nothing before it: `black`, `white`, `red`, `green`, `blue`, `yellow`, `magenta`, `cyan`, and the muted `grey`, `darkgrey`, `lightgrey`, `brown`, `orange`, `purple`, `darkblue`, `darkgreen`, `forestgreen`, `gold`, `peach` (`picture/color.cpp`). Any other name stops the load.

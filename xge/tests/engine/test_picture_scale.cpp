@@ -32,7 +32,7 @@ namespace
 		object.drawn.picture.edit().kind = ShapeKind::Text;
 		object.drawn.picture.edit().text = words;
 		object.drawn.picture.edit().textSize = size;
-		object.drawn.picture.edit().color = heldNames.of("color.white");
+		object.drawn.picture.edit().color = heldNames.of("white");
 		return object;
 	}
 
@@ -71,7 +71,7 @@ TEST_CASE("a circle and a rectangle are drawn by the engine, at any scale", "[pi
 	Object ball;
 	ball.drawn.picture.edit().kind = ShapeKind::Circle;
 	ball.drawn.picture.edit().radius = 5.0f;
-	ball.drawn.picture.edit().color = heldNames.of("color.red");
+	ball.drawn.picture.edit().color = heldNames.of("red");
 
 	const Bitmap small = shownAt(ball, 1.0f);
 	CHECK(small.width == 10);
@@ -84,7 +84,7 @@ TEST_CASE("a circle and a rectangle are drawn by the engine, at any scale", "[pi
 	Object paddle;
 	paddle.drawn.picture.edit().kind = ShapeKind::Rectangle;
 	paddle.drawn.picture.edit().size = { 10.0f, 50.0f };
-	paddle.drawn.picture.edit().color = heldNames.of("color.white");
+	paddle.drawn.picture.edit().color = heldNames.of("white");
 	const Bitmap tall = shownAt(paddle, 2.0f);
 	CHECK(tall.width == 20);
 	CHECK(tall.height == 100);

@@ -32,7 +32,7 @@ namespace xge
 	// for a message about one the game does not have.
 	std::vector<std::string> objectNames(const std::vector<Object>& objects);
 
-	// A color is one of the color. names; anything else would draw nothing.
+	// A color is one of the engine's color names; anything else would draw nothing.
 	void checkColor(const std::string& name, const std::string& where);
 
 	// Which objects can fly each path: those a <follow> anywhere sends

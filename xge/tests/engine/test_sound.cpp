@@ -96,7 +96,7 @@ namespace
 	std::string gameWithSounds(const std::string& sounds, const std::string& onSpace = "<pop />")
 	{
 		return "<game>"
-			"<window name=\"test\"><width>800</width><height>600</height><background>color.black</background>"
+			"<window name=\"test\"><width>800</width><height>600</height><background>black</background>"
 			"<framerate>60</framerate></window>"
 			"<variables><variable name=\"beat\">0.25</variable></variables>"
 			"<states><objects><object name=\"o\"><sprite><circle><radius>5</radius></circle></sprite>"
@@ -804,7 +804,7 @@ namespace
 	std::string marcher(const std::string& animation)
 	{
 		return "<game>"
-			"<window name=\"test\"><width>800</width><height>600</height><background>color.black</background>"
+			"<window name=\"test\"><width>800</width><height>600</height><background>black</background>"
 			"<framerate>60</framerate></window>"
 			"<variables><variable name=\"unused\">0</variable></variables>"
 			"<states><state name=\"playing\"><objects><object name=\"marcher\">"

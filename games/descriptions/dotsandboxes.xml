@@ -51,9 +51,9 @@
   <styles>
     <style name="banner"><size>80</size></style>
     <style name="prompt"><size>32</size></style>
-    <style name="help"><size>22</size><color>color.lightgrey</color></style>
+    <style name="help"><size>22</size><color>lightgrey</color></style>
     <style name="hud"><size>32</size></style>
-    <style name="cursor"><scale>4</scale><color>color.yellow</color></style>
+    <style name="cursor"><scale>4</scale><color>yellow</color></style>
   </styles>
   <states>
     <objects>
@@ -77,7 +77,7 @@
     <state name="title">
       <objects>
         <object name="title">
-          <sprite><text style="banner"><content>DOTS AND BOXES</content><color>color.cyan</color></text></sprite>
+          <sprite><text style="banner"><content>DOTS AND BOXES</content><color>cyan</color></text></sprite>
           <position><x><centered /></x><y><centered><offset>-170</offset></centered></y></position>
         </object>
         <group name="help">
@@ -109,17 +109,17 @@
           <position><x><centered /></x><y>24</y></position>
           <turns sprite="waiting" />
           <member name="reds">
-            <sprite name="moving"><text style="hud"><content>red to move</content><color>color.red</color></text></sprite>
+            <sprite name="moving"><text style="hud"><content>red to move</content><color>red</color></text></sprite>
             <owns class="redline" />
           </member>
           <member name="blues">
-            <sprite name="moving"><text style="hud"><content>blue to move</content><color>color.cyan</color></text></sprite>
-            <sprite name="thinking"><text style="hud"><content>blue is thinking</content><color>color.cyan</color></text></sprite>
+            <sprite name="moving"><text style="hud"><content>blue to move</content><color>cyan</color></text></sprite>
+            <sprite name="thinking"><text style="hud"><content>blue is thinking</content><color>cyan</color></text></sprite>
             <owns class="blueline" />
           </member>
         </group>
         <object name="redscore">
-          <sprite><text style="hud"><content>red </content><number>score.red</number><color>color.red</color></text></sprite>
+          <sprite><text style="hud"><content>red </content><number>score.red</number><color>red</color></text></sprite>
           <position><x>
             <add>
               <value>left</value>
@@ -129,7 +129,7 @@
           </x><y><add><value>top</value><value>20</value></add></y></position>
         </object>
         <object name="bluescore">
-          <sprite><text style="hud"><content>blue </content><number>score.blue</number><color>color.cyan</color></text></sprite>
+          <sprite><text style="hud"><content>blue </content><number>score.blue</number><color>cyan</color></text></sprite>
           <position><x>
             <add>
               <value>left</value>
@@ -156,7 +156,7 @@
           <row>ohohohohoho</row>
 
           <group name="dots" char="o" class="dot">
-            <sprite><circle><radius>5</radius><color>color.white</color></circle></sprite>
+            <sprite><circle><radius>5</radius><color>white</color></circle></sprite>
           </group>
           <!-- where a line can go, faint -->
           <group name="hslots" char="h" class="hslot">
@@ -165,7 +165,7 @@
                 <value><multiply><value>square</value><value>2</value></multiply></value>
                 <value>20</value>
               </subtract>
-            </width><height>2</height><color>color.darkgrey</color></rectangle></sprite>
+            </width><height>2</height><color>darkgrey</color></rectangle></sprite>
           </group>
           <group name="vslots" char="v" class="vslot">
             <sprite><rectangle><width>2</width><height>
@@ -173,27 +173,27 @@
                 <value><multiply><value>square</value><value>2</value></multiply></value>
                 <value>20</value>
               </subtract>
-            </height><color>color.darkgrey</color></rectangle></sprite>
+            </height><color>darkgrey</color></rectangle></sprite>
           </group>
           <group name="boxes" char="b" class="box">
-            <sprite><rectangle><width>4</width><height>4</height><color>color.black</color></rectangle></sprite>
+            <sprite><rectangle><width>4</width><height>4</height><color>black</color></rectangle></sprite>
           </group>
           <!-- a line drawn on its place, in the colour of who drew it; one that
                walls in a box claims it in that colour -->
           <object name="redacross" class="redline">
-            <sprite><rectangle><width><multiply><value>square</value><value>2</value></multiply></width><height>6</height><color>color.red</color></rectangle></sprite>
+            <sprite><rectangle><width><multiply><value>square</value><value>2</value></multiply></width><height>6</height><color>red</color></rectangle></sprite>
             <moves><on class="hslot" /><close class="box" object="redbox" /></moves>
           </object>
           <object name="reddown" class="redline">
-            <sprite><rectangle><width>6</width><height><multiply><value>square</value><value>2</value></multiply></height><color>color.red</color></rectangle></sprite>
+            <sprite><rectangle><width>6</width><height><multiply><value>square</value><value>2</value></multiply></height><color>red</color></rectangle></sprite>
             <moves><on class="vslot" /><close class="box" object="redbox" /></moves>
           </object>
           <object name="blueacross" class="blueline">
-            <sprite><rectangle><width><multiply><value>square</value><value>2</value></multiply></width><height>6</height><color>color.cyan</color></rectangle></sprite>
+            <sprite><rectangle><width><multiply><value>square</value><value>2</value></multiply></width><height>6</height><color>cyan</color></rectangle></sprite>
             <moves><on class="hslot" /><close class="box" object="bluebox" /></moves>
           </object>
           <object name="bluedown" class="blueline">
-            <sprite><rectangle><width>6</width><height><multiply><value>square</value><value>2</value></multiply></height><color>color.cyan</color></rectangle></sprite>
+            <sprite><rectangle><width>6</width><height><multiply><value>square</value><value>2</value></multiply></height><color>cyan</color></rectangle></sprite>
             <moves><on class="vslot" /><close class="box" object="bluebox" /></moves>
           </object>
           <!-- a box claimed -->
@@ -208,7 +208,7 @@
                 <value><multiply><value>square</value><value>2</value></multiply></value>
                 <value>14</value>
               </subtract>
-            </height><color>color.red</color></rectangle></sprite>
+            </height><color>red</color></rectangle></sprite>
           </object>
           <object name="bluebox" class="bluebox">
             <sprite><rectangle><width>
@@ -221,7 +221,7 @@
                 <value><multiply><value>square</value><value>2</value></multiply></value>
                 <value>14</value>
               </subtract>
-            </height><color>color.cyan</color></rectangle></sprite>
+            </height><color>cyan</color></rectangle></sprite>
           </object>
         </map>
 
@@ -233,7 +233,7 @@
           <rows>11</rows>
           <cells />
           <object name="lastmark">
-            <sprite><circle><radius>5</radius><color>color.yellow</color></circle></sprite>
+            <sprite><circle><radius>5</radius><color>yellow</color></circle></sprite>
           </object>
         </map>
 
@@ -345,8 +345,8 @@
     <state name="over">
       <objects>
         <object name="winner">
-          <sprite name="red"><text style="banner"><content>RED WINS</content><color>color.red</color></text></sprite>
-          <sprite name="blue"><text style="banner"><content>BLUE WINS</content><color>color.cyan</color></text></sprite>
+          <sprite name="red"><text style="banner"><content>RED WINS</content><color>red</color></text></sprite>
+          <sprite name="blue"><text style="banner"><content>BLUE WINS</content><color>cyan</color></text></sprite>
           <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
         </object>
       </objects>

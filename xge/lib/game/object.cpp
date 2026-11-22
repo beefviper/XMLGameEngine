@@ -1015,7 +1015,7 @@ namespace xge
 		sprite.kind = "rectangle";
 		sprite.width = WrittenValue::expression("0");
 		sprite.height = WrittenValue::expression("0");
-		sprite.color = "color.black";
+		sprite.color = "black";
 		return sprite;
 	}
 

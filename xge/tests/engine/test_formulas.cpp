@@ -76,7 +76,7 @@ namespace
 	std::string gameXml(const std::string& x, const std::string& y = "0", const std::string& variables = {})
 	{
 		return "<game>"
-			"<window name=\"test\"><width>800</width><height>600</height><background>color.black</background>"
+			"<window name=\"test\"><width>800</width><height>600</height><background>black</background>"
 			"<framerate>60</framerate></window>"
 			"<variables>" + (variables.empty() ? std::string("<variable name=\"unused\">0</variable>") : variables) + "</variables>"
 			"<states><objects><object name=\"o\"><sprite><circle><radius>5</radius></circle></sprite>"
@@ -561,7 +561,7 @@ namespace
 	std::string gameWithObject(const std::string& name, const std::string& sprite, const std::string& x, const std::string& more = {})
 	{
 		return "<game>"
-			"<window name=\"test\"><width>800</width><height>600</height><background>color.black</background>"
+			"<window name=\"test\"><width>800</width><height>600</height><background>black</background>"
 			"<framerate>60</framerate></window>"
 			"<variables><variable name=\"zero\">0</variable></variables>"
 			"<states><objects><object name=\"" + name + "\"><sprite>" + sprite + "</sprite>"
@@ -695,7 +695,7 @@ TEST_CASE("a divisor that is 0 only because it is not known yet is not refused a
 	// a text reads 0 until a window has measured it. Neither is a mistake.
 	const std::string xml =
 		"<game>"
-		"<window name=\"test\"><width>800</width><height>600</height><background>color.black</background>"
+		"<window name=\"test\"><width>800</width><height>600</height><background>black</background>"
 		"<framerate>60</framerate></window>"
 		"<variables><variable name=\"unused\">0</variable></variables>"
 		"<states><objects>"

@@ -66,23 +66,23 @@
     <variable name="top">80</variable>
   </variables>
   <styles>
-    <style name="banner"><size>80</size><color>color.red</color></style>
+    <style name="banner"><size>80</size><color>red</color></style>
     <style name="prompt"><size>32</size></style>
-    <style name="help"><size>22</size><color>color.lightgrey</color></style>
+    <style name="help"><size>22</size><color>lightgrey</color></style>
     <style name="hud"><size>32</size></style>
     <style name="redpiece">
       <scale>4</scale>
-      <color>color.red</color>
-      <color char="d">color.brown</color>
-      <color char="y">color.yellow</color>
+      <color>red</color>
+      <color char="d">brown</color>
+      <color char="y">yellow</color>
     </style>
     <style name="whitepiece">
       <scale>4</scale>
-      <color>color.white</color>
-      <color char="d">color.lightgrey</color>
-      <color char="y">color.yellow</color>
+      <color>white</color>
+      <color char="d">lightgrey</color>
+      <color char="y">yellow</color>
     </style>
-    <style name="cursor"><scale>6</scale><color>color.yellow</color></style>
+    <style name="cursor"><scale>6</scale><color>yellow</color></style>
     <style name="option"><size>22</size></style>
   </styles>
   <keeps>
@@ -153,7 +153,7 @@
           <position><x><centered /></x><y>24</y></position>
           <turns sprite="waiting" />
           <member name="reds">
-            <sprite name="moving"><text style="hud"><content>red to move</content><color>color.red</color></text></sprite>
+            <sprite name="moving"><text style="hud"><content>red to move</content><color>red</color></text></sprite>
             <owns class="red" />
           </member>
           <member name="whites">
@@ -172,7 +172,7 @@
               <value><multiply><value>square</value><value>8</value></multiply></value>
               <value>16</value>
             </add>
-          </height><color>color.brown</color></rectangle></sprite>
+          </height><color>brown</color></rectangle></sprite>
           <position><x><subtract><value>left</value><value>8</value></subtract></x><y><subtract><value>top</value><value>8</value></subtract></y></position>
         </object>
         <object name="squares">
@@ -267,10 +267,10 @@
             </sprite>
           </object>
           <object name="movemark">
-            <sprite><circle><radius>9</radius><color>color.yellow</color></circle></sprite>
+            <sprite><circle><radius>9</radius><color>yellow</color></circle></sprite>
           </object>
           <object name="movablemark">
-            <sprite><circle><radius>6</radius><color>color.cyan</color></circle></sprite>
+            <sprite><circle><radius>6</radius><color>cyan</color></circle></sprite>
           </object>
           <object name="lastmark">
             <sprite>
@@ -394,7 +394,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -408,8 +408,8 @@
     <state name="over">
       <objects>
         <object name="winner">
-          <sprite name="red"><text style="banner"><content>RED WINS</content><color>color.red</color></text></sprite>
-          <sprite name="white"><text style="banner"><content>WHITE WINS</content><color>color.white</color></text></sprite>
+          <sprite name="red"><text style="banner"><content>RED WINS</content><color>red</color></text></sprite>
+          <sprite name="white"><text style="banner"><content>WHITE WINS</content><color>white</color></text></sprite>
           <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
         </object>
       </objects>
@@ -443,8 +443,8 @@
       <row>l*l*l*l*</row>
       <row>*l*l*l*l</row>
       <scale>square</scale>
-      <color>color.darkgreen</color>
-      <color char="l">color.lightgrey</color>
+      <color>darkgreen</color>
+      <color char="l">lightgrey</color>
     </bitmap>
     <bitmap name="red-man" style="redpiece">
       <row>....*****....</row>
@@ -534,7 +534,7 @@
       <row>*........*</row>
       <row>**......**</row>
       <scale>6</scale>
-      <color>color.orange</color>
+      <color>orange</color>
     </bitmap>
     <bitmap name="cursor-free" style="cursor">
       <row>**********</row>

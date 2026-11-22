@@ -48,7 +48,7 @@
   <window name="Kaboom!">
     <width>800</width>
     <height>600</height>
-    <background>color.forestgreen</background>
+    <background>forestgreen</background>
   </window>
   <variables>
     <variable name="step">540</variable>
@@ -56,24 +56,24 @@
     <variable name="roof">104</variable>
   </variables>
   <styles>
-    <style name="banner"><size>128</size><color>color.red</color></style>
+    <style name="banner"><size>128</size><color>red</color></style>
     <style name="prompt"><size>48</size></style>
     <style name="help"><size>34</size></style>
-    <style name="hud"><size>30</size><color>color.yellow</color></style>
+    <style name="hud"><size>30</size><color>yellow</color></style>
     <style name="bucket">
       <scale>5</scale>
-      <color>color.cyan</color>
-      <color char="b">color.blue</color>
+      <color>cyan</color>
+      <color char="b">blue</color>
     </style>
   </styles>
   <objects>
     <!-- the wall of the building, and the ledge the bomber walks along -->
     <object name="rooftop">
-      <sprite><rectangle><width>window.right</width><height>roof</height><color>color.darkgrey</color></rectangle></sprite>
+      <sprite><rectangle><width>window.right</width><height>roof</height><color>darkgrey</color></rectangle></sprite>
       <position><x>0</x><y>0</y></position>
     </object>
     <object name="ledge">
-      <sprite><rectangle><width>window.right</width><height>6</height><color>color.lightgrey</color></rectangle></sprite>
+      <sprite><rectangle><width>window.right</width><height>6</height><color>lightgrey</color></rectangle></sprite>
       <position><x>0</x><y>roof</y></position>
     </object>
     <!-- the Mad Bomber: black hat, grin and striped convict's shirt -->
@@ -146,7 +146,7 @@
           <sprite><text style="help" /></sprite>
           <position><x><centered /></x><y><centered><offset>-10</offset></centered></y></position>
           <row number="1"><sprite><text><content>the mad bomber drops them; catch every one</content></text></sprite></row>
-          <row number="2"><sprite><text><content>a and d, the arrows or the mouse move the buckets</content><size>30</size><color>color.lightgrey</color></text></sprite></row>
+          <row number="2"><sprite><text><content>a and d, the arrows or the mouse move the buckets</content><size>30</size><color>lightgrey</color></text></sprite></row>
         </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
@@ -189,7 +189,7 @@
           </variables>
         </object>
         <object name="score">
-          <sprite><text style="hud"><content>SCORE</content><number>bucket.score</number><color>color.white</color></text></sprite>
+          <sprite><text style="hud"><content>SCORE</content><number>bucket.score</number><color>white</color></text></sprite>
           <position><x>margin</x><y>12</y></position>
         </object>
       </objects>
@@ -329,7 +329,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -343,7 +343,7 @@
     <state name="over">
       <objects>
         <object name="message">
-          <sprite name="won"><text style="banner"><content>YOU WIN</content><color>color.yellow</color></text></sprite>
+          <sprite name="won"><text style="banner"><content>YOU WIN</content><color>yellow</color></text></sprite>
           <sprite name="lost"><text style="banner"><content>GAME OVER</content></text></sprite>
           <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
         </object>
@@ -402,9 +402,9 @@
       <row>..********..</row>
       <row>...kk..kk...</row>
       <scale>4</scale>
-      <color>color.white</color>
-      <color char="k">color.black</color>
-      <color char="f">color.orange</color>
+      <color>white</color>
+      <color char="k">black</color>
+      <color char="f">orange</color>
     </bitmap>
     <bitmap name="bomb-fizz">
       <row>....y.</row>
@@ -414,9 +414,9 @@
       <row>kkkkk.</row>
       <row>.kkk..</row>
       <scale>4</scale>
-      <color char="y">color.yellow</color>
-      <color char="o">color.lightgrey</color>
-      <color char="k">color.black</color>
+      <color char="y">yellow</color>
+      <color char="o">lightgrey</color>
+      <color char="k">black</color>
     </bitmap>
     <bitmap name="bomb-spark">
       <row>...y.y</row>
@@ -426,9 +426,9 @@
       <row>kkkkk.</row>
       <row>.kkk..</row>
       <scale>4</scale>
-      <color char="y">color.red</color>
-      <color char="o">color.lightgrey</color>
-      <color char="k">color.black</color>
+      <color char="y">red</color>
+      <color char="o">lightgrey</color>
+      <color char="k">black</color>
     </bitmap>
     <bitmap name="bucket-three" style="bucket">
       <row>bbbbbbbbbbbbbbbbbbbbbb</row>

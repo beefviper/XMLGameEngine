@@ -50,19 +50,19 @@
   <styles>
     <style name="banner"><size>80</size></style>
     <style name="prompt"><size>32</size></style>
-    <style name="help"><size>22</size><color>color.lightgrey</color></style>
+    <style name="help"><size>22</size><color>lightgrey</color></style>
     <style name="hud"><size>32</size></style>
     <style name="blackdisc">
       <scale>4</scale>
-      <color>color.black</color>
-      <color char="d">color.darkgrey</color>
+      <color>black</color>
+      <color char="d">darkgrey</color>
     </style>
     <style name="whitedisc">
       <scale>4</scale>
-      <color>color.white</color>
-      <color char="d">color.lightgrey</color>
+      <color>white</color>
+      <color char="d">lightgrey</color>
     </style>
-    <style name="cursor"><scale>6</scale><color>color.yellow</color></style>
+    <style name="cursor"><scale>6</scale><color>yellow</color></style>
   </styles>
   <keeps>
     <keep object="options" />
@@ -170,7 +170,7 @@
               <value><multiply><value>square</value><value>8</value></multiply></value>
               <value>2</value>
             </add>
-          </height><color>color.black</color></rectangle></sprite>
+          </height><color>black</color></rectangle></sprite>
           <position><x><subtract><value>left</value><value>1</value></subtract></x><y><subtract><value>top</value><value>1</value></subtract></y></position>
         </object>
         <!-- the squares, a line between them -->
@@ -178,7 +178,7 @@
           <columns>8</columns>
           <rows>8</rows>
           <padding><x>2</x><y>2</y></padding>
-          <sprite><rectangle><width><subtract><value>square</value><value>2</value></subtract></width><height><subtract><value>square</value><value>2</value></subtract></height><color>color.darkgreen</color></rectangle></sprite>
+          <sprite><rectangle><width><subtract><value>square</value><value>2</value></subtract></width><height><subtract><value>square</value><value>2</value></subtract></height><color>darkgreen</color></rectangle></sprite>
           <position><x><add><value>left</value><value>1</value></add></x><y><add><value>top</value><value>1</value></add></y></position>
         </group>
 
@@ -221,7 +221,7 @@
           <rows>8</rows>
           <cells />
           <object name="putmark">
-            <sprite><circle><radius>7</radius><color>color.yellow</color></circle></sprite>
+            <sprite><circle><radius>7</radius><color>yellow</color></circle></sprite>
           </object>
           <object name="lastmark">
             <sprite>
@@ -349,9 +349,9 @@
     <state name="over">
       <objects>
         <object name="winner">
-          <sprite name="black"><text style="banner"><content>BLACK WINS</content><color>color.yellow</color></text></sprite>
-          <sprite name="white"><text style="banner"><content>WHITE WINS</content><color>color.yellow</color></text></sprite>
-          <sprite name="draw"><text style="banner"><content>A DRAW</content><color>color.yellow</color></text></sprite>
+          <sprite name="black"><text style="banner"><content>BLACK WINS</content><color>yellow</color></text></sprite>
+          <sprite name="white"><text style="banner"><content>WHITE WINS</content><color>yellow</color></text></sprite>
+          <sprite name="draw"><text style="banner"><content>A DRAW</content><color>yellow</color></text></sprite>
           <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
         </object>
       </objects>
@@ -417,7 +417,7 @@
       <row>*........*</row>
       <row>**......**</row>
       <scale>6</scale>
-      <color>color.orange</color>
+      <color>orange</color>
     </bitmap>
     <bitmap name="cursor" style="cursor">
       <row>**********</row>

@@ -28,7 +28,7 @@ namespace
 	{
 		std::string rows;
 		for (int i = 0; i < 10; ++i) { rows += "<row>**********</row>"; }
-		return "<object name=\"wall\"><sprite><bitmap>" + rows + "<scale>4</scale><color>color.green</color></bitmap></sprite>"
+		return "<object name=\"wall\"><sprite><bitmap>" + rows + "<scale>4</scale><color>green</color></bitmap></sprite>"
 			"<position><x>100</x><y>100</y></position>" + extra + "<collisions><type>pixel</type>" + rule + "</collisions></object>";
 	}
 
@@ -157,7 +157,7 @@ TEST_CASE("a sprite of <polygon>s is filled, tested by its pixels, and holed whe
 {
 	const std::string hill = "<object name=\"hill\" class=\"ground\"><sprite><polygon>"
 		"<point><x>0</x><y>100</y></point><point><x>50</x><y>40</y></point><point><x>100</x><y>100</y></point>"
-		"<color>color.green</color></polygon></sprite>"
+		"<color>green</color></polygon></sprite>"
 		"<position><x>100</x><y>100</y></position>"
 		"<collisions><type>pixel</type><collision class=\"shell\"><hole>8</hole></collision></collisions></object>";
 	const std::string shell = box("shell", 148, 100, "<velocity><x>0</x><y>180</y></velocity><collisions>"

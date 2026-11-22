@@ -73,7 +73,7 @@ namespace
 		{
 			std::ofstream out(path);
 			out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
-				"<window name=\"live\"><width>800</width><height>600</height><background>color.black</background>"
+				"<window name=\"live\"><width>800</width><height>600</height><background>black</background>"
 				"<framerate>60</framerate></window>"
 				"<variables><variable name=\"unused\">0</variable></variables>"
 				<< (kit.empty() ? std::string{} : "<objects>" + kit + "</objects>") <<
@@ -198,7 +198,7 @@ TEST_CASE("touch.x and the other numbers of a touch are gone: no name reads them
 TEST_CASE("a <tether> is drawn from one object's middle to another's, wherever they go", "[live]")
 {
 	const Scratch file(box("rod", 100, 100) + box("hook", 300, 200, "<velocity><x>0</x><y>120</y></velocity>")
-		+ "<object name=\"line\"><sprite><tether from=\"rod\" to=\"hook\"><thickness>2</thickness><color>color.red</color></tether></sprite>"
+		+ "<object name=\"line\"><sprite><tether from=\"rod\" to=\"hook\"><thickness>2</thickness><color>red</color></tether></sprite>"
 		"<position><x>0</x><y>0</y></position></object>", "<pop />");
 	Played play(file.path);
 
@@ -392,7 +392,7 @@ TEST_CASE("a named timer's time left is a number of its object: whole seconds, r
 	const Scratch file(box("bomb", 100, 50, "<variables><variable name=\"bangs\">0</variable><variable name=\"read\">0</variable></variables>"
 		"<timers><timer name=\"fuse\"><after>3</after><inc variable=\"bomb.bangs\" /></timer>"
 		"<timer name=\"tick\"><every>0.5</every></timer></timers>")
-		+ "<object name=\"clock\"><sprite><text><content>LEFT</content><number>bomb.fuse</number><size>16</size><color>color.white</color></text></sprite>"
+		+ "<object name=\"clock\"><sprite><text><content>LEFT</content><number>bomb.fuse</number><size>16</size><color>white</color></text></sprite>"
 		"<position><x>0</x><y>0</y></position></object>",
 		"<set variable=\"bomb.read\"><multiply><value>bomb.fuse</value><value>10</value></multiply></set>");
 	Played play(file.path);

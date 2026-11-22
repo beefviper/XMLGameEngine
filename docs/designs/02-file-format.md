@@ -18,7 +18,7 @@
 
 ## Attributes name, content computes
 
-Reached by removing a small scripting language that had grown inside attribute strings (`src="shape.circle(r,'color.white')"`, `action="inc('p.score');reset()"`).
+Reached by removing a small scripting language that had grown inside attribute strings (`src="shape.circle(r,'white')"`, `action="inc('p.score');reset()"`).
 
 - **An attribute names or picks** something (`name`, `class`, `object`, `edge`, `direction`, `pitch`...). Everything else is element content; a command list is an ordered list of tags.
 - Why: XSD cannot validate inside a string, XSLT sees opaque text, and `;` hides sequencing that document order shows.

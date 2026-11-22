@@ -72,14 +72,14 @@
     <variable name="goal">3</variable>
   </variables>
   <styles>
-    <style name="banner"><size>48</size><color>color.red</color><font>assets/pressstart2p.ttf</font></style>
+    <style name="banner"><size>48</size><color>red</color><font>assets/pressstart2p.ttf</font></style>
     <style name="prompt"><size>24</size><font>assets/pressstart2p.ttf</font></style>
     <style name="help"><size>16</size><font>assets/pressstart2p.ttf</font></style>
     <style name="hud"><size>24</size><font>assets/pressstart2p.ttf</font></style>
     <style name="wood">
       <scale>2</scale>
-      <color>color.orange</color>
-      <color char="b">color.brown</color>
+      <color>orange</color>
+      <color char="b">brown</color>
     </style>
   </styles>
   <objects>
@@ -262,7 +262,7 @@
           <sprite><text style="help" /></sprite>
           <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
           <row number="1"><sprite><text><content>how high can you get?</content></text></sprite></row>
-          <row number="2"><sprite><text><content>a d walk, w s climb (or arrows), space jumps</content><color>color.lightgrey</color></text></sprite></row>
+          <row number="2"><sprite><text><content>a d walk, w s climb (or arrows), space jumps</content><color>lightgrey</color></text></sprite></row>
         </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
@@ -309,7 +309,7 @@
         </group>
         <!-- the tops of the ladders a barrel may go down -->
         <group name="laddertops" class="laddertop">
-          <sprite><rectangle><width>2</width><height>6</height><color>color.black</color></rectangle></sprite>
+          <sprite><rectangle><width>2</width><height>6</height><color>black</color></rectangle></sprite>
           <hidden />
           <collisions />
           <member><position><x>519</x><y>558</y></position></member>
@@ -513,11 +513,11 @@
           <position><x>margin</x><y>margin</y></position>
         </object>
         <object name="bonus">
-          <sprite><text style="hud"><content>BONUS</content><number>man.bonus</number><color>color.cyan</color></text></sprite>
+          <sprite><text style="hud"><content>BONUS</content><number>man.bonus</number><color>cyan</color></text></sprite>
           <position><x><right><offset>margin</offset></right></x><y><add><value>margin</value><value>36</value></add></y></position>
         </object>
         <object name="lives">
-          <sprite><text style="hud"><content>LIVES</content><number>man.lives</number><color>color.red</color></text></sprite>
+          <sprite><text style="hud"><content>LIVES</content><number>man.lives</number><color>red</color></text></sprite>
           <position><x><right><offset>margin</offset></right></x><y>margin</y></position>
         </object>
       </objects>
@@ -622,7 +622,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -636,7 +636,7 @@
     <state name="over">
       <objects>
         <object name="message">
-          <sprite name="won"><text style="banner"><content>YOU WIN</content><color>color.green</color></text></sprite>
+          <sprite name="won"><text style="banner"><content>YOU WIN</content><color>green</color></text></sprite>
           <sprite name="lost"><text style="banner"><content>GAME OVER</content></text></sprite>
           <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
         </object>
@@ -774,10 +774,10 @@
       <row>*owwwwwo*.</row>
       <row>.*ooooo*..</row>
       <scale>2</scale>
-      <color>color.yellow</color>
-      <color char="o">color.orange</color>
-      <color char="w">color.white</color>
-      <color char="k">color.black</color>
+      <color>yellow</color>
+      <color char="o">orange</color>
+      <color char="w">white</color>
+      <color char="k">black</color>
     </bitmap>
     <bitmap name="fireball-b">
       <row>.....*....</row>
@@ -791,10 +791,10 @@
       <row>.*owwwwwo*</row>
       <row>..*ooooo*.</row>
       <scale>2</scale>
-      <color>color.yellow</color>
-      <color char="o">color.orange</color>
-      <color char="w">color.white</color>
-      <color char="k">color.black</color>
+      <color>yellow</color>
+      <color char="o">orange</color>
+      <color char="w">white</color>
+      <color char="k">black</color>
     </bitmap>
     <bitmap name="ladders">
       <row>*........*</row>
@@ -802,7 +802,7 @@
       <row>**********</row>
       <row>*........*</row>
       <scale>2</scale>
-      <color>color.cyan</color>
+      <color>cyan</color>
     </bitmap>
     <bitmap name="girders">
       <row>********</row>
@@ -812,7 +812,7 @@
       <row>..*..*..</row>
       <row>********</row>
       <scale>2</scale>
-      <color>color.red</color>
+      <color>red</color>
     </bitmap>
     <bitmap name="oil">
       <row>...r.....r..r..</row>
@@ -834,10 +834,10 @@
       <row>***************</row>
       <row>wwwwwwwwwwwwwww</row>
       <scale>2</scale>
-      <color>color.blue</color>
-      <color char="w">color.white</color>
-      <color char="r">color.red</color>
-      <color char="y">color.yellow</color>
+      <color>blue</color>
+      <color char="w">white</color>
+      <color char="r">red</color>
+      <color char="y">yellow</color>
     </bitmap>
     <bitmap name="kong">
       <row>........*******........</row>
@@ -861,9 +861,9 @@
       <row>....******...******....</row>
       <row>...ooooo.......ooooo...</row>
       <scale>3</scale>
-      <color>color.brown</color>
-      <color char="o">color.orange</color>
-      <color char="w">color.white</color>
+      <color>brown</color>
+      <color char="o">orange</color>
+      <color char="w">white</color>
     </bitmap>
     <bitmap name="pauline">
       <row>..kkkkk...</row>
@@ -883,9 +883,9 @@
       <row>..s...s...</row>
       <row>.ss..ss...</row>
       <scale>2</scale>
-      <color>color.magenta</color>
-      <color char="k">color.brown</color>
-      <color char="s">color.orange</color>
+      <color>magenta</color>
+      <color char="k">brown</color>
+      <color char="s">orange</color>
     </bitmap>
     <bitmap name="hammer" style="wood">
       <row>.******.</row>
@@ -917,10 +917,10 @@
       <row>.kkk...kkk..</row>
       <row>kkkk...kkkk.</row>
       <scale>2</scale>
-      <color>color.red</color>
-      <color char="b">color.blue</color>
-      <color char="s">color.orange</color>
-      <color char="k">color.brown</color>
+      <color>red</color>
+      <color char="b">blue</color>
+      <color char="s">orange</color>
+      <color char="k">brown</color>
     </bitmap>
     <bitmap name="man-hammer">
       <row>.........ooo</row>
@@ -940,11 +940,11 @@
       <row>.kkk...kkk..</row>
       <row>kkkk...kkkk.</row>
       <scale>2</scale>
-      <color>color.red</color>
-      <color char="b">color.blue</color>
-      <color char="s">color.orange</color>
-      <color char="k">color.brown</color>
-      <color char="o">color.orange</color>
+      <color>red</color>
+      <color char="b">blue</color>
+      <color char="s">orange</color>
+      <color char="k">brown</color>
+      <color char="o">orange</color>
     </bitmap>
     <bitmap name="fall-a">
       <row>.....*****......</row>
@@ -964,10 +964,10 @@
       <row>...kkk...kkk....</row>
       <row>..kkkk...kkkk...</row>
       <scale>2</scale>
-      <color>color.red</color>
-      <color char="b">color.blue</color>
-      <color char="s">color.orange</color>
-      <color char="k">color.brown</color>
+      <color>red</color>
+      <color char="b">blue</color>
+      <color char="s">orange</color>
+      <color char="k">brown</color>
     </bitmap>
     <bitmap name="fall-b">
       <row>................</row>
@@ -987,10 +987,10 @@
       <row>................</row>
       <row>................</row>
       <scale>2</scale>
-      <color>color.red</color>
-      <color char="b">color.blue</color>
-      <color char="s">color.orange</color>
-      <color char="k">color.brown</color>
+      <color>red</color>
+      <color char="b">blue</color>
+      <color char="s">orange</color>
+      <color char="k">brown</color>
     </bitmap>
     <bitmap name="fall-c">
       <row>...kkkk...kkkk..</row>
@@ -1010,10 +1010,10 @@
       <row>...*********....</row>
       <row>......*****.....</row>
       <scale>2</scale>
-      <color>color.red</color>
-      <color char="b">color.blue</color>
-      <color char="s">color.orange</color>
-      <color char="k">color.brown</color>
+      <color>red</color>
+      <color char="b">blue</color>
+      <color char="s">orange</color>
+      <color char="k">brown</color>
     </bitmap>
     <bitmap name="fall-d">
       <row>................</row>
@@ -1033,10 +1033,10 @@
       <row>................</row>
       <row>................</row>
       <scale>2</scale>
-      <color>color.red</color>
-      <color char="b">color.blue</color>
-      <color char="s">color.orange</color>
-      <color char="k">color.brown</color>
+      <color>red</color>
+      <color char="b">blue</color>
+      <color char="s">orange</color>
+      <color char="k">brown</color>
     </bitmap>
     <bitmap name="fall-flat">
       <row>................</row>
@@ -1056,10 +1056,10 @@
       <row>...kk..bbsss.*kk</row>
       <row>........bsss...k</row>
       <scale>2</scale>
-      <color>color.red</color>
-      <color char="b">color.blue</color>
-      <color char="s">color.orange</color>
-      <color char="k">color.brown</color>
+      <color>red</color>
+      <color char="b">blue</color>
+      <color char="s">orange</color>
+      <color char="k">brown</color>
     </bitmap>
     <bitmap name="fall-halo">
       <row>.yyyy...........</row>
@@ -1079,11 +1079,11 @@
       <row>...kk..bbsss.*kk</row>
       <row>........bsss...k</row>
       <scale>2</scale>
-      <color>color.red</color>
-      <color char="b">color.blue</color>
-      <color char="s">color.orange</color>
-      <color char="k">color.brown</color>
-      <color char="y">color.gold</color>
+      <color>red</color>
+      <color char="b">blue</color>
+      <color char="s">orange</color>
+      <color char="k">brown</color>
+      <color char="y">gold</color>
     </bitmap>
 
   </pictures>

@@ -252,9 +252,9 @@ TEST_CASE("each wave's missiles fall at its own speed and in its own color, and 
 {
 	MissileCommand play;
 	const struct { const char* scene; float speed; const char* color; } waves[] = {
-		{ "wave1", 48.0f, "color.red" },
-		{ "wave2", 66.0f, "color.magenta" },
-		{ "wave3", 84.0f, "color.green" },
+		{ "wave1", 48.0f, "red" },
+		{ "wave2", 66.0f, "magenta" },
+		{ "wave3", 84.0f, "green" },
 	};
 	for (const auto& wave : waves)
 	{

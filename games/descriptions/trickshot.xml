@@ -34,7 +34,7 @@
   <window name="Trick Shot">
     <width>800</width>
     <height>600</height>
-    <background>color.darkgreen</background>
+    <background>darkgreen</background>
   </window>
   <variables>
     <variable name="ball">12</variable>
@@ -46,10 +46,10 @@
     <variable name="margin">60</variable>
   </variables>
   <styles>
-    <style name="banner"><size>110</size><color>color.yellow</color></style>
+    <style name="banner"><size>110</size><color>yellow</color></style>
     <style name="prompt"><size>40</size></style>
     <style name="help"><size>28</size></style>
-    <style name="hud"><size>32</size><color>color.lightgrey</color></style>
+    <style name="hud"><size>32</size><color>lightgrey</color></style>
   </styles>
   <states>
     <objects>
@@ -70,7 +70,7 @@
           <sprite><text style="help" /></sprite>
           <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
           <row number="1"><sprite><text><content>push the white ball, sink all six in two minutes</content></text></sprite></row>
-          <row number="2"><sprite><text><content>w a s d or the arrows move the cue</content><color>color.lightgrey</color></text></sprite></row>
+          <row number="2"><sprite><text><content>w a s d or the arrows move the cue</content><color>lightgrey</color></text></sprite></row>
         </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
@@ -84,7 +84,7 @@
     <state name="playing">
       <objects>
         <group name="cushions" class="cushion">
-          <sprite><rectangle><width>window.right</width><height>rail</height><color>color.brown</color></rectangle></sprite>
+          <sprite><rectangle><width>window.right</width><height>rail</height><color>brown</color></rectangle></sprite>
           <collisions />
           <member><position><x>0</x><y>0</y></position></member>
           <member><position><x>0</x><y><subtract><value>window.bottom</value><value>rail</value></subtract></y></position></member>
@@ -93,7 +93,7 @@
         </group>
         <!-- the six pockets: the corners and the middle of the long sides -->
         <group name="pockets" class="pocket">
-          <sprite><circle><radius>pocket</radius><color>color.black</color></circle></sprite>
+          <sprite><circle><radius>pocket</radius><color>black</color></circle></sprite>
           <collisions />
           <member><position><x><subtract><value>rail</value><value>pocket</value></subtract></x><y><subtract><value>rail</value><value>pocket</value></subtract></y></position></member>
           <member><position><x><centered /></x><y><subtract><value>rail</value><value>pocket</value></subtract></y></position></member>
@@ -117,7 +117,7 @@
           <position><x><right><offset>margin</offset></right></x><y><add><value>rail</value><value>4</value></add></y></position>
         </object>
         <group name="balls" class="ball">
-          <sprite><circle><radius>ball</radius><color>color.white</color></circle></sprite>
+          <sprite><circle><radius>ball</radius><color>white</color></circle></sprite>
           <drag>cloth</drag>
           <mass>1</mass>
           <collisions>
@@ -142,7 +142,7 @@
           </group>
           <!-- six in a triangle, the point towards the white ball -->
           <group name="rack">
-            <sprite><circle><color>color.red</color></circle></sprite>
+            <sprite><circle><color>red</color></circle></sprite>
             <collisions>
               <collision class="pocket">
                 <inc variable="player.score" />
@@ -151,16 +151,16 @@
               </collision>
             </collisions>
             <member><position><x>500</x><y>288</y></position></member>
-            <member><sprite><circle><color>color.yellow</color></circle></sprite><position><x>521</x><y>276</y></position></member>
-            <member><sprite><circle><color>color.blue</color></circle></sprite><position><x>521</x><y>300</y></position></member>
-            <member><sprite><circle><color>color.orange</color></circle></sprite><position><x>542</x><y>264</y></position></member>
-            <member><sprite><circle><color>color.black</color></circle></sprite><position><x>542</x><y>288</y></position></member>
-            <member><sprite><circle><color>color.purple</color></circle></sprite><position><x>542</x><y>312</y></position></member>
+            <member><sprite><circle><color>yellow</color></circle></sprite><position><x>521</x><y>276</y></position></member>
+            <member><sprite><circle><color>blue</color></circle></sprite><position><x>521</x><y>300</y></position></member>
+            <member><sprite><circle><color>orange</color></circle></sprite><position><x>542</x><y>264</y></position></member>
+            <member><sprite><circle><color>black</color></circle></sprite><position><x>542</x><y>288</y></position></member>
+            <member><sprite><circle><color>purple</color></circle></sprite><position><x>542</x><y>312</y></position></member>
           </group>
         </group>
         <!-- the cue tip: no mass, so it knocks the white ball and is not knocked back -->
         <object name="cue">
-          <sprite><circle><radius>tip</radius><color>color.lightgrey</color></circle></sprite>
+          <sprite><circle><radius>tip</radius><color>lightgrey</color></circle></sprite>
           <position><x>150</x><y>293</y></position>
           <collisions>
             <collision edge="all"><stick /></collision>
@@ -203,7 +203,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -218,7 +218,7 @@
       <objects>
         <object name="message">
           <sprite name="won"><text style="banner"><content>TABLE CLEARED</content><size>80</size></text></sprite>
-          <sprite name="lost"><text style="banner"><content>TIME UP</content><color>color.red</color></text></sprite>
+          <sprite name="lost"><text style="banner"><content>TIME UP</content><color>red</color></text></sprite>
           <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
         </object>
       </objects>

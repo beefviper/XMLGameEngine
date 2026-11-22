@@ -115,7 +115,7 @@
           <position><x><centered /></x><y><centered><offset>-80</offset></centered></y></position>
         </object>
         <object name="help">
-          <sprite><text style="prompt"><content>a d step, w jab, s guard; arrows for player 2</content><size>20</size><color>color.lightgrey</color></text></sprite>
+          <sprite><text style="prompt"><content>a d step, w jab, s guard; arrows for player 2</content><size>20</size><color>lightgrey</color></text></sprite>
           <position><x><centered /></x><y><centered><offset>0</offset></centered></y></position>
         </object>
         <object name="start">
@@ -130,15 +130,15 @@
     <state name="playing">
       <objects>
         <object name="canvas">
-          <sprite><rectangle><width>window.right</width><height>12</height><color>color.brown</color></rectangle></sprite>
+          <sprite><rectangle><width>window.right</width><height>12</height><color>brown</color></rectangle></sprite>
           <position><x>0</x><y>floor</y></position>
         </object>
         <object name="toprope">
-          <sprite><rectangle><width>window.right</width><height>3</height><color>color.lightgrey</color></rectangle></sprite>
+          <sprite><rectangle><width>window.right</width><height>3</height><color>lightgrey</color></rectangle></sprite>
           <position><x>0</x><y><subtract><value>floor</value><value>110</value></subtract></y></position>
         </object>
         <object name="lowrope">
-          <sprite><rectangle><width>window.right</width><height>3</height><color>color.lightgrey</color></rectangle></sprite>
+          <sprite><rectangle><width>window.right</width><height>3</height><color>lightgrey</color></rectangle></sprite>
           <position><x>0</x><y><subtract><value>floor</value><value>60</value></subtract></y></position>
         </object>
         <object name="boxer1" from="boxer">
@@ -149,10 +149,10 @@
           </collisions>
         </object>
         <object name="boxer2" from="boxer">
-          <sprite name="guard"><bitmap from="guard"><color char="t">color.green</color><flip>horizontal</flip></bitmap></sprite>
-          <sprite name="reach"><bitmap from="reach"><color char="t">color.green</color><flip>horizontal</flip></bitmap></sprite>
-          <sprite name="block"><bitmap from="block"><color char="t">color.green</color><flip>horizontal</flip></bitmap></sprite>
-          <sprite name="hurt"><bitmap from="hurt"><color char="t">color.green</color><flip>horizontal</flip></bitmap></sprite>
+          <sprite name="guard"><bitmap from="guard"><color char="t">green</color><flip>horizontal</flip></bitmap></sprite>
+          <sprite name="reach"><bitmap from="reach"><color char="t">green</color><flip>horizontal</flip></bitmap></sprite>
+          <sprite name="block"><bitmap from="block"><color char="t">green</color><flip>horizontal</flip></bitmap></sprite>
+          <sprite name="hurt"><bitmap from="hurt"><color char="t">green</color><flip>horizontal</flip></bitmap></sprite>
           <!-- his jab: the fist out past his left side -->
           <animation name="jab">
             <seconds>0.06</seconds>
@@ -175,11 +175,11 @@
           </collisions>
         </object>
         <object name="score1">
-          <sprite><text style="hud"><number>boxer1.points</number><color>color.red</color></text></sprite>
+          <sprite><text style="hud"><number>boxer1.points</number><color>red</color></text></sprite>
           <position><x>40</x><y>30</y></position>
         </object>
         <object name="score2">
-          <sprite><text style="hud"><number>boxer2.points</number><color>color.green</color></text></sprite>
+          <sprite><text style="hud"><number>boxer2.points</number><color>green</color></text></sprite>
           <position><x><right><offset>40</offset></right></x><y>30</y></position>
         </object>
       </objects>
@@ -289,9 +289,9 @@
       <row>.ss..ss.........</row>
       <row>sss..sss........</row>
       <scale>4</scale>
-      <color char="s">color.peach</color>
-      <color char="g">color.red</color>
-      <color char="t">color.blue</color>
+      <color char="s">peach</color>
+      <color char="g">red</color>
+      <color char="t">blue</color>
     </bitmap>
     <bitmap name="reach">
       <row>..ssss..........</row>
@@ -315,9 +315,9 @@
       <row>.ss..ss.........</row>
       <row>sss..sss........</row>
       <scale>4</scale>
-      <color char="s">color.peach</color>
-      <color char="g">color.red</color>
-      <color char="t">color.blue</color>
+      <color char="s">peach</color>
+      <color char="g">red</color>
+      <color char="t">blue</color>
     </bitmap>
     <bitmap name="block">
       <row>..ssss.ggg......</row>
@@ -341,9 +341,9 @@
       <row>.ss..ss.........</row>
       <row>sss..sss........</row>
       <scale>4</scale>
-      <color char="s">color.peach</color>
-      <color char="g">color.red</color>
-      <color char="t">color.blue</color>
+      <color char="s">peach</color>
+      <color char="g">red</color>
+      <color char="t">blue</color>
     </bitmap>
     <bitmap name="hurt">
       <row>ssss............</row>
@@ -367,9 +367,9 @@
       <row>.ss..ss.........</row>
       <row>sss..sss........</row>
       <scale>4</scale>
-      <color char="s">color.peach</color>
-      <color char="g">color.red</color>
-      <color char="t">color.blue</color>
+      <color char="s">peach</color>
+      <color char="g">red</color>
+      <color char="t">blue</color>
     </bitmap>
   </pictures>
 </game>

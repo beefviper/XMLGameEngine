@@ -88,59 +88,59 @@
     <variable name="ground">208</variable>
   </variables>
   <styles>
-    <style name="banner"><size>16</size><color>color.red</color><font>assets/pressstart2p.ttf</font></style>
+    <style name="banner"><size>16</size><color>red</color><font>assets/pressstart2p.ttf</font></style>
     <style name="text"><size>8</size><font>assets/pressstart2p.ttf</font></style>
     <style name="mario">
-      <color char="r">color.red</color>
-      <color char="b">color.blue</color>
-      <color char="s">color.orange</color>
-      <color char="k">color.brown</color>
-      <color char="y">color.yellow</color>
+      <color char="r">red</color>
+      <color char="b">blue</color>
+      <color char="s">orange</color>
+      <color char="k">brown</color>
+      <color char="y">yellow</color>
     </style>
     <!-- Luigi: Mario's pictures, green where Mario's are red -->
     <style name="luigi">
-      <color char="r">color.green</color>
+      <color char="r">green</color>
     </style>
     <style name="creeper">
-      <color char="G">color.darkgreen</color>
-      <color char="g">color.green</color>
-      <color char="o">color.orange</color>
-      <color char="w">color.white</color>
+      <color char="G">darkgreen</color>
+      <color char="g">green</color>
+      <color char="o">orange</color>
+      <color char="w">white</color>
     </style>
     <style name="sidestepper">
-      <color char="C">color.red</color>
-      <color char="c">color.orange</color>
-      <color char="e">color.white</color>
+      <color char="C">red</color>
+      <color char="c">orange</color>
+      <color char="e">white</color>
     </style>
     <style name="fly">
-      <color char="F">color.grey</color>
-      <color char="f">color.lightgrey</color>
-      <color char="e">color.red</color>
+      <color char="F">grey</color>
+      <color char="f">lightgrey</color>
+      <color char="e">red</color>
     </style>
     <!-- a pest that got up by itself: the same pictures in other colours,
          the first time and the second (every kind's characters in one) -->
     <style name="angry">
-      <color char="G">color.brown</color>
-      <color char="g">color.red</color>
-      <color char="C">color.purple</color>
-      <color char="c">color.magenta</color>
-      <color char="F">color.brown</color>
+      <color char="G">brown</color>
+      <color char="g">red</color>
+      <color char="C">purple</color>
+      <color char="c">magenta</color>
+      <color char="F">brown</color>
     </style>
     <style name="furious">
-      <color char="G">color.darkblue</color>
-      <color char="g">color.blue</color>
-      <color char="C">color.darkblue</color>
-      <color char="c">color.cyan</color>
-      <color char="F">color.darkblue</color>
+      <color char="G">darkblue</color>
+      <color char="g">blue</color>
+      <color char="C">darkblue</color>
+      <color char="c">cyan</color>
+      <color char="F">darkblue</color>
     </style>
     <style name="coin">
-      <color char="y">color.orange</color>
-      <color char="Y">color.yellow</color>
+      <color char="y">orange</color>
+      <color char="Y">yellow</color>
     </style>
     <style name="pow">
-      <color>color.cyan</color>
-      <color char="b">color.blue</color>
-      <color char="w">color.darkblue</color>
+      <color>cyan</color>
+      <color char="b">blue</color>
+      <color char="w">darkblue</color>
     </style>
   </styles>
   <objects>
@@ -610,7 +610,7 @@
           <position><x><centered /></x><y><centered><offset>-12</offset></centered></y></position>
           <row number="1"><sprite><text><content>bump a shellcreeper from below</content></text></sprite></row>
           <row number="2"><sprite><text><content>then kick it off</content></text></sprite></row>
-          <row number="3"><sprite><text><content>a d walk, w or space jumps</content><color>color.lightgrey</color></text></sprite><padding><y>20</y></padding></row>
+          <row number="3"><sprite><text><content>a d walk, w or space jumps</content><color>lightgrey</color></text></sprite><padding><y>20</y></padding></row>
           <row number="4"><sprite><text><content>space 1 player  2 two</content></text></sprite><padding><y>28</y></padding></row>
         </group>
       </objects>
@@ -751,7 +751,7 @@
           <position><x>8</x><y>4</y></position>
         </object>
         <object name="lives">
-          <sprite><text style="text"><content>M x</content><number>mario.lives</number><color>color.red</color></text></sprite>
+          <sprite><text style="text"><content>M x</content><number>mario.lives</number><color>red</color></text></sprite>
           <position><x>8</x><y>14</y></position>
         </object>
         <object name="score2">
@@ -760,7 +760,7 @@
           <waiting />
         </object>
         <object name="lives2">
-          <sprite><text style="text"><content>L x</content><number>luigi.lives</number><color>color.green</color></text></sprite>
+          <sprite><text style="text"><content>L x</content><number>luigi.lives</number><color>green</color></text></sprite>
           <position><x><right><offset>8</offset></right></x><y>14</y></position>
           <waiting />
         </object>
@@ -1117,7 +1117,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -1131,7 +1131,7 @@
     <state name="over">
       <objects>
         <object name="message">
-          <sprite name="won"><text style="banner"><content>YOU WIN</content><color>color.green</color></text></sprite>
+          <sprite name="won"><text style="banner"><content>YOU WIN</content><color>green</color></text></sprite>
           <sprite name="lost"><text style="banner"><content>GAME OVER</content></text></sprite>
           <position><x><centered /></x><y><centered><offset>-20</offset></centered></y></position>
         </object>
@@ -1562,7 +1562,7 @@
       <row>**.*****.****.**</row>
       <row>****************</row>
       <row>.*.*.*.*.*.*.*.*</row>
-      <color>color.blue</color>
+      <color>blue</color>
     </bitmap>
     <bitmap name="ground">
       <row>****************</row>
@@ -1581,7 +1581,7 @@
       <row>******.*******.*</row>
       <row>****************</row>
       <row>****************</row>
-      <color>color.orange</color>
+      <color>orange</color>
     </bitmap>
     <bitmap name="pow-three" style="pow">
       <row>bbbbbbbbbbbbbbbb</row>
@@ -1639,8 +1639,8 @@
       <row>..................gGGGGg</row>
       <row>..................gGGGGg</row>
       <row>..................gggggg</row>
-      <color char="g">color.green</color>
-      <color char="G">color.darkgreen</color>
+      <color char="g">green</color>
+      <color char="G">darkgreen</color>
     </bitmap>
   </pictures>
 </game>

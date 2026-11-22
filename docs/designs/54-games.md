@@ -90,7 +90,7 @@ Lanes are groups inside one `lanes` group that gives the `<wrap />`; each lays i
 
 The author asked another AI to write three games (Berserk, Demon Attack, Frostbite) from `xgedef.xsd` alone. All three passed the schema and loaded; none could be played. Every error was something the schema accepts where the engine does nothing:
 
-- colours like `white` or `#00ff00` (a colour is a `color.` name);
+- colours like `#00ff00` (a colour is one of the engine's names);
 - key names the engine lacks (`button="fire"`);
 - `<move>` or `<fire>` in an `<input>`, `<inc>` in a condition, `<reset object>` in a collision (the last since allowed);
 - a variable with no owner (`<inc variable="score">`);

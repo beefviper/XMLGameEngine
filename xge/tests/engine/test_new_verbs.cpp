@@ -112,8 +112,8 @@ TEST_CASE("the new commands print the way they are written", "[new_verbs][comman
 TEST_CASE("the new colors are named, opaque, and different from each other", "[new_verbs][colors]")
 {
 	const char* names[] = {
-		"color.grey", "color.darkgrey", "color.lightgrey", "color.brown", "color.orange",
-		"color.purple", "color.darkblue", "color.darkgreen", "color.forestgreen",
+		"grey", "darkgrey", "lightgrey", "brown", "orange",
+		"purple", "darkblue", "darkgreen", "forestgreen",
 	};
 
 	for (const char* name : names)
@@ -122,14 +122,14 @@ TEST_CASE("the new colors are named, opaque, and different from each other", "[n
 		CHECK(colorFromName(name).a == 255);
 	}
 
-	const Color darkgreen = colorFromName("color.darkgreen");
-	const Color forestgreen = colorFromName("color.forestgreen");
-	const Color green = colorFromName("color.green");
+	const Color darkgreen = colorFromName("darkgreen");
+	const Color forestgreen = colorFromName("forestgreen");
+	const Color green = colorFromName("green");
 	CHECK((darkgreen.r != forestgreen.r || darkgreen.g != forestgreen.g || darkgreen.b != forestgreen.b));
 	CHECK(forestgreen.g < green.g); // the frog is the brightest green there is
 
 	// A name nobody knows is still see-through, as before.
-	CHECK(colorFromName("color.chartreuse").a == 0);
+	CHECK(colorFromName("chartreuse").a == 0);
 }
 
 namespace

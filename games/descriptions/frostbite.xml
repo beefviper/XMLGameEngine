@@ -47,7 +47,7 @@
   <window name="Frostbite">
     <width>800</width>
     <height>600</height>
-    <background>color.darkblue</background>
+    <background>darkblue</background>
   </window>
   <variables>
     <variable name="shore">125</variable>
@@ -60,19 +60,19 @@
     <variable name="margin">10</variable>
   </variables>
   <styles>
-    <style name="banner"><size>110</size><color>color.cyan</color></style>
+    <style name="banner"><size>110</size><color>cyan</color></style>
     <style name="prompt"><size>40</size></style>
     <style name="help"><size>30</size></style>
-    <style name="hud"><size>26</size><color>color.darkblue</color></style>
+    <style name="hud"><size>26</size><color>darkblue</color></style>
   </styles>
   <objects>
     <!-- the snowy shore along the top; below it all is water -->
     <object name="snow">
-      <sprite><rectangle><width>window.right</width><height>shore</height><color>color.white</color></rectangle></sprite>
+      <sprite><rectangle><width>window.right</width><height>shore</height><color>white</color></rectangle></sprite>
       <position><x>0</x><y>0</y></position>
     </object>
     <object name="water" class="water">
-      <sprite><rectangle><width>window.right</width><height><subtract><value>window.bottom</value><value>shore</value></subtract></height><color>color.darkblue</color></rectangle></sprite>
+      <sprite><rectangle><width>window.right</width><height><subtract><value>window.bottom</value><value>shore</value></subtract></height><color>darkblue</color></rectangle></sprite>
       <position><x>0</x><y>shore</y></position>
       <collisions />
     </object>
@@ -153,7 +153,7 @@
       <columns>4</columns>
       <rows>1</rows>
       <padding><x>2</x></padding>
-      <sprite><rectangle><width>30</width><height>14</height><color>color.lightgrey</color></rectangle></sprite>
+      <sprite><rectangle><width>30</width><height>14</height><color>lightgrey</color></rectangle></sprite>
       <waiting />
       <group name="course1"><position><x>igloox</x><y><subtract><value>iglooground</value><value>14</value></subtract></y></position></group>
       <group name="course2"><position><x>igloox</x><y><subtract><value>iglooground</value><value>30</value></subtract></y></position></group>
@@ -162,7 +162,7 @@
     </group>
     <!-- the door, which appears once the igloo is finished -->
     <object name="door" class="door">
-      <sprite><rectangle><width>24</width><height>30</height><color>color.black</color></rectangle></sprite>
+      <sprite><rectangle><width>24</width><height>30</height><color>black</color></rectangle></sprite>
       <position><x><add><value>igloox</value><value>51</value></add></x><y><subtract><value>iglooground</value><value>30</value></subtract></y></position>
       <waiting />
       <collisions />
@@ -181,7 +181,7 @@
           <sprite><text style="help" /></sprite>
           <position><x><centered /></x><y>320</y></position>
           <row number="1"><sprite><text><content>land on white ice to build the igloo, then walk in</content></text></sprite></row>
-          <row number="2"><sprite><text><content>w and s jump, a and d walk</content><color>color.lightgrey</color></text></sprite></row>
+          <row number="2"><sprite><text><content>w and s jump, a and d walk</content><color>lightgrey</color></text></sprite></row>
         </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
@@ -326,7 +326,7 @@
           <position><x>230</x><y>margin</y></position>
         </object>
         <object name="degrees">
-          <sprite><text style="hud"><number>thermometer.degrees</number><color>color.red</color></text></sprite>
+          <sprite><text style="hud"><number>thermometer.degrees</number><color>red</color></text></sprite>
           <position><x><subtract><value>window.right</value><value>120</value></subtract></x><y>margin</y></position>
         </object>
       </objects>
@@ -501,7 +501,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>white</color></text></sprite>
           <position><x><centered /></x><y>250</y></position>
         </object>
       </objects>
@@ -515,7 +515,7 @@
     <state name="over">
       <objects>
         <object name="message">
-          <sprite name="won"><text style="banner"><content>HOME AND WARM</content><size>90</size><color>color.yellow</color></text></sprite>
+          <sprite name="won"><text style="banner"><content>HOME AND WARM</content><size>90</size><color>yellow</color></text></sprite>
           <sprite name="lost"><text style="banner"><content>FROZEN SOLID</content><size>90</size></text></sprite>
           <position><x><centered /></x><y>230</y></position>
         </object>
@@ -585,9 +585,9 @@
       <row>******</row>
       <row>f.**.f</row>
       <scale>4</scale>
-      <color>color.orange</color>
-      <color char="b">color.brown</color>
-      <color char="f">color.yellow</color>
+      <color>orange</color>
+      <color char="b">brown</color>
+      <color char="f">yellow</color>
     </bitmap>
     <bitmap name="sink-2">
       <row>......</row>
@@ -601,9 +601,9 @@
       <row>.ffff.</row>
       <row>..ff..</row>
       <scale>4</scale>
-      <color>color.orange</color>
-      <color char="b">color.brown</color>
-      <color char="f">color.yellow</color>
+      <color>orange</color>
+      <color char="b">brown</color>
+      <color char="f">yellow</color>
     </bitmap>
     <bitmap name="sink-3">
       <row>......</row>
@@ -617,9 +617,9 @@
       <row>..bb..</row>
       <row>.bbbb.</row>
       <scale>4</scale>
-      <color>color.orange</color>
-      <color char="b">color.brown</color>
-      <color char="f">color.yellow</color>
+      <color>orange</color>
+      <color char="b">brown</color>
+      <color char="f">yellow</color>
     </bitmap>
     <bitmap name="sink-4">
       <row>......</row>
@@ -633,9 +633,9 @@
       <row>......</row>
       <row>......</row>
       <scale>4</scale>
-      <color>color.orange</color>
-      <color char="b">color.brown</color>
-      <color char="f">color.yellow</color>
+      <color>orange</color>
+      <color char="b">brown</color>
+      <color char="f">yellow</color>
     </bitmap>
     <bitmap name="frozen-a">
       <row>..bb...</row>
@@ -649,9 +649,9 @@
       <row>.b..b..</row>
       <row>bb..bb.</row>
       <scale>4</scale>
-      <color>color.cyan</color>
-      <color char="b">color.blue</color>
-      <color char="f">color.white</color>
+      <color>cyan</color>
+      <color char="b">blue</color>
+      <color char="f">white</color>
     </bitmap>
     <bitmap name="frozen-b">
       <row>...bb..</row>
@@ -665,9 +665,9 @@
       <row>..b..b.</row>
       <row>.bb..bb</row>
       <scale>4</scale>
-      <color>color.cyan</color>
-      <color char="b">color.blue</color>
-      <color char="f">color.white</color>
+      <color>cyan</color>
+      <color char="b">blue</color>
+      <color char="f">white</color>
     </bitmap>
     <bitmap name="ice-white">
       <row>.******..******..*****.</row>
@@ -675,8 +675,8 @@
       <row>ccccccc.ccccccc.ccccccc</row>
       <row>.ccccc...ccccc...ccccc.</row>
       <scale>5</scale>
-      <color>color.white</color>
-      <color char="c">color.cyan</color>
+      <color>white</color>
+      <color char="c">cyan</color>
     </bitmap>
     <bitmap name="ice-blue">
       <row>.******..******..*****.</row>
@@ -684,8 +684,8 @@
       <row>ccccccc.ccccccc.ccccccc</row>
       <row>.ccccc...ccccc...ccccc.</row>
       <scale>5</scale>
-      <color>color.blue</color>
-      <color char="c">color.darkblue</color>
+      <color>blue</color>
+      <color char="c">darkblue</color>
     </bitmap>
     <bitmap name="thermometer">
       <row>.ww.</row>
@@ -695,8 +695,8 @@
       <row>****</row>
       <row>****</row>
       <scale>4</scale>
-      <color>color.red</color>
-      <color char="w">color.lightgrey</color>
+      <color>red</color>
+      <color char="w">lightgrey</color>
     </bitmap>
     <bitmap name="geese-up">
       <row>*......*</row>
@@ -704,8 +704,8 @@
       <row>..****o.</row>
       <row>...**...</row>
       <scale>4</scale>
-      <color>color.lightgrey</color>
-      <color char="o">color.orange</color>
+      <color>lightgrey</color>
+      <color char="o">orange</color>
     </bitmap>
     <bitmap name="geese-down">
       <row>........</row>
@@ -713,16 +713,16 @@
       <row>.*.**.*.</row>
       <row>*......*</row>
       <scale>4</scale>
-      <color>color.lightgrey</color>
-      <color char="o">color.orange</color>
+      <color>lightgrey</color>
+      <color char="o">orange</color>
     </bitmap>
     <bitmap name="fish">
       <row>.***..*</row>
       <row>*k*****</row>
       <row>.***..*</row>
       <scale>4</scale>
-      <color>color.green</color>
-      <color char="k">color.black</color>
+      <color>green</color>
+      <color char="k">black</color>
     </bitmap>
     <bitmap name="bailey">
       <row>..bb..</row>
@@ -736,9 +736,9 @@
       <row>.b..b.</row>
       <row>bb..bb</row>
       <scale>4</scale>
-      <color>color.orange</color>
-      <color char="b">color.brown</color>
-      <color char="f">color.yellow</color>
+      <color>orange</color>
+      <color char="b">brown</color>
+      <color char="f">yellow</color>
     </bitmap>
   </pictures>
 </game>

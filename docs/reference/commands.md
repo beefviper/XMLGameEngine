@@ -167,6 +167,6 @@ there is no key named 'spcae' (did you mean 'space'?)
 - a `<show object=>` that names no object or group, and a `<trigger from=>` that is no look of what it names (a condition's or a rule's `sprite=` was already checked);
 - a holder's `<by variable=>`, `<counts variable=>`, `<wild variable=>` or `<accepts>` condition, or a cell check's `<alike variable=>`, naming a variable no object has;
 - an object, group, member, map or state called `self`, `other`, `others`, `window` or `color` (the words a dotted name can start with), or anything called by a number. A variable or a sound may be called a word (a card's `color`).
-- a key the engine does not have, a colour that is not a `color.` name;
+- a key the engine does not have, a colour that is not one of the engine's names;
 - a command where it does nothing (a `<move>` in an `<input>`), listing what can go there;
 - an `<inc>` or `<dec>` of a variable no object has.

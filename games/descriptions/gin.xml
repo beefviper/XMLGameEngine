@@ -59,7 +59,7 @@
   <window name="Gin Rummy">
     <width>880</width>
     <height>840</height>
-    <background>color.darkgreen</background>
+    <background>darkgreen</background>
   </window>
   <variables>
     <variable name="cardwidth">96</variable>
@@ -69,10 +69,10 @@
     <variable name="yours">640</variable>
   </variables>
   <styles>
-    <style name="banner"><size>80</size><color>color.yellow</color></style>
+    <style name="banner"><size>80</size><color>yellow</color></style>
     <style name="prompt"><size>32</size></style>
-    <style name="help"><size>22</size><color>color.lightgrey</color></style>
-    <style name="note"><size>24</size><color>color.white</color></style>
+    <style name="help"><size>22</size><color>lightgrey</color></style>
+    <style name="note"><size>24</size><color>white</color></style>
   </styles>
   <!-- what melds: a set of three or four of a rank, a run of three or more of a suit -->
   <patterns name="rummy">
@@ -119,7 +119,7 @@
 
         <!-- the stock and the discard pile: picked, each sends its top card to the player's own -->
         <object name="stock" class="place">
-          <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
+          <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>forestgreen</color></rectangle></sprite>
           <position><x>
             <subtract>
               <value>window.width.center</value>
@@ -130,7 +130,7 @@
           <holds class="card" sprite="back"><picked><send>1</send></picked></holds>
         </object>
         <object name="discard" class="place">
-          <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>color.forestgreen</color></rectangle></sprite>
+          <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>forestgreen</color></rectangle></sprite>
           <position><x><add><value>window.width.center</value><value>24</value></add></x><y>middle</y></position>
           <holds class="card" sprite="face"><accepts /><picked><send>1</send></picked></holds>
         </object>
@@ -151,7 +151,7 @@
           <position><x><centered /></x><y><add><value>theirs</value><value>cardheight</value><value>8</value></add></y></position>
         </object>
         <object name="yourscore">
-          <sprite><text style="note"><content>you</content><number>you.score</number><choose><by>you.turn</by><word /><word>your turn: draw, then discard; k knocks</word></choose><color>color.yellow</color></text></sprite>
+          <sprite><text style="note"><content>you</content><number>you.score</number><choose><by>you.turn</by><word /><word>your turn: draw, then discard; k knocks</word></choose><color>yellow</color></text></sprite>
           <position><x>56</x><y><subtract><value>yours</value><value>52</value></subtract></y></position>
         </object>
         <object name="deadwood">
@@ -162,14 +162,14 @@
         <!-- how a hand ended -->
         <object name="message">
           <sprite name="none" />
-          <sprite name="yougin"><text style="note"><content>gin! the hand is yours: spacebar deals</content><color>color.cyan</color></text></sprite>
-          <sprite name="youknock"><text style="note"><content>you knock and win the hand: spacebar deals</content><color>color.yellow</color></text></sprite>
+          <sprite name="yougin"><text style="note"><content>gin! the hand is yours: spacebar deals</content><color>cyan</color></text></sprite>
+          <sprite name="youknock"><text style="note"><content>you knock and win the hand: spacebar deals</content><color>yellow</color></text></sprite>
           <sprite name="youcut"><text style="note"><content>north undercuts your knock: spacebar deals</content></text></sprite>
           <sprite name="northgin"><text style="note"><content>north goes gin: spacebar deals</content></text></sprite>
           <sprite name="northknock"><text style="note"><content>north knocks and wins the hand: spacebar deals</content></text></sprite>
-          <sprite name="northcut"><text style="note"><content>you undercut north's knock: spacebar deals</content><color>color.yellow</color></text></sprite>
+          <sprite name="northcut"><text style="note"><content>you undercut north's knock: spacebar deals</content><color>yellow</color></text></sprite>
           <sprite name="void"><text style="note"><content>the stock is out: no score. spacebar deals</content></text></sprite>
-          <sprite name="dealing"><text style="note"><content>shuffling</content><color>color.lightgrey</color></text></sprite>
+          <sprite name="dealing"><text style="note"><content>shuffling</content><color>lightgrey</color></text></sprite>
           <position><x><centered /></x><y><add><value>middle</value><value>cardheight</value><value>30</value></add></y></position>
         </object>
 
@@ -395,7 +395,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>white</color></text></sprite>
           <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
         </object>
         <object name="newgame">
@@ -452,16 +452,16 @@
   <pictures>
     <sheet name="cards"><path>assets/cards.png</path><columns>13</columns><rows>5</rows></sheet>
     <drawing name="playersdraw">
-      <line><from><x>1</x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
-      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></to><color>color.yellow</color><thickness>3</thickness></line>
-      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></to><color>color.yellow</color><thickness>3</thickness></line>
-      <line><from><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
+      <line><from><x>1</x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></to><color>yellow</color><thickness>3</thickness></line>
+      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></to><color>yellow</color><thickness>3</thickness></line>
+      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></to><color>yellow</color><thickness>3</thickness></line>
+      <line><from><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y>1</y></to><color>yellow</color><thickness>3</thickness></line>
     </drawing>
     <drawing name="playersdiscard">
-      <line><from><x>1</x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
-      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></to><color>color.yellow</color><thickness>3</thickness></line>
-      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></to><color>color.yellow</color><thickness>3</thickness></line>
-      <line><from><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y>1</y></to><color>color.yellow</color><thickness>3</thickness></line>
+      <line><from><x>1</x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></to><color>yellow</color><thickness>3</thickness></line>
+      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y>1</y></from><to><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></to><color>yellow</color><thickness>3</thickness></line>
+      <line><from><x><add><value>cardwidth</value><value>5</value></add></x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></to><color>yellow</color><thickness>3</thickness></line>
+      <line><from><x>1</x><y><add><value>cardheight</value><value>5</value></add></y></from><to><x>1</x><y>1</y></to><color>yellow</color><thickness>3</thickness></line>
     </drawing>
   </pictures>
 </game>

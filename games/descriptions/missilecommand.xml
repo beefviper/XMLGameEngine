@@ -52,14 +52,14 @@
     <variable name="sky">600</variable>
   </variables>
   <styles>
-    <style name="banner"><size>100</size><color>color.red</color></style>
-    <style name="prompt"><size>40</size><color>color.white</color></style>
-    <style name="hud"><size>24</size><color>color.lightgrey</color></style>
+    <style name="banner"><size>100</size><color>red</color></style>
+    <style name="prompt"><size>40</size><color>white</color></style>
+    <style name="hud"><size>24</size><color>lightgrey</color></style>
   </styles>
   <objects>
     <!-- the missiles: streaks that start somewhere above the sky and make for the nearest city, at the wave's speed -->
     <group name="missiles" class="missile">
-      <sprite><line><from><x>0</x><y>0</y></from><to><x>0</x><y>14</y></to><color>color.red</color><thickness>2</thickness></line></sprite>
+      <sprite><line><from><x>0</x><y>0</y></from><to><x>0</x><y>14</y></to><color>red</color><thickness>2</thickness></line></sprite>
       <position>
         <x><random><min>margin</min><max><subtract><value>window.right</value><value>margin</value></subtract></max></random></x>
         <y><random><min><negate><value>sky</value></negate></min><max>-10</max></random></y>
@@ -155,7 +155,7 @@
           </variables>
         </object>
         <object name="ground">
-          <sprite><rectangle><width>window.right</width><height><subtract><value>window.bottom</value><value>ground</value></subtract></height><color>color.yellow</color></rectangle></sprite>
+          <sprite><rectangle><width>window.right</width><height><subtract><value>window.bottom</value><value>ground</value></subtract></height><color>yellow</color></rectangle></sprite>
           <position><x>0</x><y>ground</y></position>
         </object>
         <!-- six cities, three either side of the base -->
@@ -191,9 +191,9 @@
           </timers>
         </object>
         <!-- the counter-missiles' trails, back to the base -->
-        <object name="trail1"><sprite><tether from="base" to="abm.1"><color>color.blue</color></tether></sprite><position><x>0</x><y>0</y></position></object>
-        <object name="trail2"><sprite><tether from="base" to="abm.2"><color>color.blue</color></tether></sprite><position><x>0</x><y>0</y></position></object>
-        <object name="trail3"><sprite><tether from="base" to="abm.3"><color>color.blue</color></tether></sprite><position><x>0</x><y>0</y></position></object>
+        <object name="trail1"><sprite><tether from="base" to="abm.1"><color>blue</color></tether></sprite><position><x>0</x><y>0</y></position></object>
+        <object name="trail2"><sprite><tether from="base" to="abm.2"><color>blue</color></tether></sprite><position><x>0</x><y>0</y></position></object>
+        <object name="trail3"><sprite><tether from="base" to="abm.3"><color>blue</color></tether></sprite><position><x>0</x><y>0</y></position></object>
         <!-- the sight the player steers -->
         <object name="sight">
           <sprite>
@@ -211,7 +211,7 @@
           </actions>
         </object>
         <object name="score">
-          <sprite><text style="hud"><number>status.score</number><size>28</size><color>color.red</color></text></sprite>
+          <sprite><text style="hud"><number>status.score</number><size>28</size><color>red</color></text></sprite>
           <position><x>margin</x><y>margin</y></position>
         </object>
         <object name="label">
@@ -253,7 +253,7 @@
           </variables>
           <objects>
             <group name="missiles">
-              <sprite><line><from><x>0</x><y>0</y></from><to><x>0</x><y>14</y></to><color>color.magenta</color><thickness>2</thickness></line></sprite>
+              <sprite><line><from><x>0</x><y>0</y></from><to><x>0</x><y>14</y></to><color>magenta</color><thickness>2</thickness></line></sprite>
             </group>
             <group name="more"><ready /></group>
           </objects>
@@ -267,7 +267,7 @@
           </variables>
           <objects>
             <group name="missiles">
-              <sprite><line><from><x>0</x><y>0</y></from><to><x>0</x><y>14</y></to><color>color.green</color><thickness>2</thickness></line></sprite>
+              <sprite><line><from><x>0</x><y>0</y></from><to><x>0</x><y>14</y></to><color>green</color><thickness>2</thickness></line></sprite>
             </group>
             <group name="most"><ready /></group>
           </objects>
@@ -303,7 +303,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -318,7 +318,7 @@
     <state name="over">
       <objects>
         <object name="message">
-          <sprite name="won"><text style="banner"><content>YOU WIN</content><color>color.green</color></text></sprite>
+          <sprite name="won"><text style="banner"><content>YOU WIN</content><color>green</color></text></sprite>
           <sprite name="lost"><text style="banner"><content>THE END</content></text></sprite>
           <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
         </object>
@@ -373,7 +373,7 @@
       <row>.........</row>
       <row>.........</row>
       <scale>6</scale>
-      <color>color.white</color>
+      <color>white</color>
     </bitmap>
     <bitmap name="burst-middle">
       <row>.........</row>
@@ -386,8 +386,8 @@
       <row>...***...</row>
       <row>.........</row>
       <scale>6</scale>
-      <color>color.orange</color>
-      <color char="o">color.yellow</color>
+      <color>orange</color>
+      <color char="o">yellow</color>
     </bitmap>
     <bitmap name="burst-full">
       <row>...***...</row>
@@ -400,8 +400,8 @@
       <row>.*******.</row>
       <row>...***...</row>
       <scale>6</scale>
-      <color>color.red</color>
-      <color char="o">color.magenta</color>
+      <color>red</color>
+      <color char="o">magenta</color>
     </bitmap>
     <bitmap name="cities">
       <row>....*.........</row>
@@ -412,7 +412,7 @@
       <row>**************</row>
       <row>**************</row>
       <scale>2</scale>
-      <color>color.cyan</color>
+      <color>cyan</color>
     </bitmap>
     <bitmap name="base">
       <row>.....**.....</row>

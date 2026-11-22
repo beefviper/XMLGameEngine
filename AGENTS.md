@@ -38,7 +38,7 @@ The programs make `games/` their working directory, so paths in a game file (`as
 - **Names over comments.** A comment that says what a better name would say goes, and the name is fixed. One-line landmarks over a section or a function stay, and so does a short "why" the code cannot say. No history in comments: that is git's.
 - **The format's one rule:** an attribute names or picks something; everything else is element content. No data is hidden in a string.
 - **A new verb** is added only when a game cannot be said without it, and names a behavior, never a game.
-- **Games share one key convention** ([the shipped games](docs/reference/games.md#the-key-convention)), and colors are `color.` names only.
+- **Games share one key convention** ([the shipped games](docs/reference/games.md#the-key-convention)), and colors are the engine's color names only.
 - **This repository is public:** nothing personal goes in it ([privacy](docs/agents/readme.md#privacy)).
 - Be direct; the author prefers clear pushback to hedging.
 

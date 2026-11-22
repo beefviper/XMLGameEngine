@@ -49,13 +49,13 @@
     <variable name="slant">60</variable>
   </variables>
   <styles>
-    <style name="banner"><size>120</size><color>color.orange</color></style>
-    <style name="line"><size>32</size><color>color.white</color></style>
-    <style name="hud"><size>40</size><color>color.white</color></style>
+    <style name="banner"><size>120</size><color>orange</color></style>
+    <style name="line"><size>32</size><color>white</color></style>
+    <style name="hud"><size>40</size><color>white</color></style>
   </styles>
   <objects>
     <object name="shot" class="projectile">
-      <sprite><rectangle><width>4</width><height>16</height><color>color.white</color></rectangle></sprite>
+      <sprite><rectangle><width>4</width><height>16</height><color>white</color></rectangle></sprite>
       <velocity><y>-660</y></velocity>
       <most>1</most>
       <collisions>
@@ -154,7 +154,7 @@
           <sprite><text style="line" /></sprite>
           <position><x><centered /></x><y><centered><offset>-30</offset></centered></y></position>
           <row number="1"><sprite><text><content>big rocks 10, small rocks 20, spinners 40</content></text></sprite></row>
-          <row number="2"><sprite><text><content>a and d, or the arrow keys, to move; space to fire</content><size>26</size><color>color.lightgrey</color></text></sprite></row>
+          <row number="2"><sprite><text><content>a and d, or the arrow keys, to move; space to fire</content><size>26</size><color>lightgrey</color></text></sprite></row>
         </group>
         <object name="start">
           <sprite><text style="line"><content>spacebar to start</content><size>48</size></text></sprite>
@@ -168,7 +168,7 @@
     <state name="playing">
       <objects>
         <object name="ground" class="ground">
-          <sprite><rectangle><width>window.right</width><height>ground</height><color>color.darkgrey</color></rectangle></sprite>
+          <sprite><rectangle><width>window.right</width><height>ground</height><color>darkgrey</color></rectangle></sprite>
           <position><x>0</x><y><subtract><value>window.bottom</value><value>ground</value></subtract></y></position>
           <collisions />
         </object>
@@ -303,11 +303,11 @@
           <position><x>margin</x><y>margin</y></position>
         </object>
         <object name="peak">
-          <sprite><text style="hud"><content>PEAK </content><number>ship.peak</number><size>28</size><color>color.lightgrey</color></text></sprite>
+          <sprite><text style="hud"><content>PEAK </content><number>ship.peak</number><size>28</size><color>lightgrey</color></text></sprite>
           <position><x><centered /></x><y><add><value>margin</value><value>6</value></add></y></position>
         </object>
         <object name="lives">
-          <sprite><text style="hud"><number>ship.lives</number><color>color.cyan</color></text></sprite>
+          <sprite><text style="hud"><number>ship.lives</number><color>cyan</color></text></sprite>
           <position><x><right><offset>margin</offset></right></x><y>margin</y></position>
         </object>
       </objects>
@@ -334,7 +334,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -348,7 +348,7 @@
     <state name="over">
       <objects>
         <object name="message">
-          <sprite><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>
+          <sprite><text style="banner"><content>GAME OVER</content><color>red</color></text></sprite>
           <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
         </object>
         <object name="again">
@@ -403,8 +403,8 @@
       <row>.........</row>
       <row>.........</row>
       <scale>3</scale>
-      <color>color.yellow</color>
-      <color char="o">color.orange</color>
+      <color>yellow</color>
+      <color char="o">orange</color>
     </bitmap>
     <bitmap name="burst-b">
       <row>.........</row>
@@ -417,8 +417,8 @@
       <row>..*...*..</row>
       <row>.........</row>
       <scale>3</scale>
-      <color>color.yellow</color>
-      <color char="o">color.orange</color>
+      <color>yellow</color>
+      <color char="o">orange</color>
     </bitmap>
     <bitmap name="burst-c">
       <row>*...*...*</row>
@@ -431,8 +431,8 @@
       <row>.*.....*.</row>
       <row>*...*...*</row>
       <scale>3</scale>
-      <color>color.yellow</color>
-      <color char="o">color.orange</color>
+      <color>yellow</color>
+      <color char="o">orange</color>
     </bitmap>
     <bitmap name="burst-d">
       <row>o.......o</row>
@@ -445,15 +445,15 @@
       <row>.........</row>
       <row>o.......o</row>
       <scale>3</scale>
-      <color>color.orange</color>
-      <color char="o">color.orange</color>
+      <color>orange</color>
+      <color char="o">orange</color>
     </bitmap>
     <bitmap name="chip">
       <row>.**.</row>
       <row>****</row>
       <row>.**.</row>
       <scale>5</scale>
-      <color>color.yellow</color>
+      <color>yellow</color>
     </bitmap>
     <bitmap name="boulders">
       <row>..****..</row>
@@ -463,14 +463,14 @@
       <row>.******.</row>
       <row>..***...</row>
       <scale>5</scale>
-      <color>color.lightgrey</color>
+      <color>lightgrey</color>
     </bitmap>
     <bitmap name="pebbles">
       <row>.**.</row>
       <row>****</row>
       <row>***.</row>
       <scale>5</scale>
-      <color>color.orange</color>
+      <color>orange</color>
     </bitmap>
     <bitmap name="spinners-a">
       <row>*...*</row>
@@ -479,7 +479,7 @@
       <row>.*.*.</row>
       <row>*...*</row>
       <scale>4</scale>
-      <color>color.magenta</color>
+      <color>magenta</color>
     </bitmap>
     <bitmap name="spinners-b">
       <row>..*..</row>
@@ -488,7 +488,7 @@
       <row>..*..</row>
       <row>..*..</row>
       <scale>4</scale>
-      <color>color.magenta</color>
+      <color>magenta</color>
     </bitmap>
     <bitmap name="ship">
       <row>.....**.....</row>
@@ -497,7 +497,7 @@
       <row>.**********.</row>
       <row>************</row>
       <scale>5</scale>
-      <color>color.cyan</color>
+      <color>cyan</color>
     </bitmap>
   </pictures>
 </game>

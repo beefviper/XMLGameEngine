@@ -59,7 +59,7 @@ namespace
 	std::string gameXml(const std::string& objects, const std::string& states, const std::string& keys = {}, const std::string& pieces = {})
 	{
 		return "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
-			"<window name=\"verbs\"><width>800</width><height>600</height><background>color.black</background>"
+			"<window name=\"verbs\"><width>800</width><height>600</height><background>black</background>"
 			"<framerate>60</framerate></window>"
 			"<variables><variable name=\"unused\">0</variable></variables>"
 			+ (pieces.empty() ? std::string() : "<objects>" + pieces + "</objects>") +
@@ -446,7 +446,7 @@ TEST_CASE("mistakes in the new tags are turned away when the game loads, saying 
 	const auto fails = [](const std::string& objects, const std::string& states, const std::string& expected)
 	{
 		INFO(objects << states);
-		const std::string xml = "<game><window name=\"verbs\"><width>800</width><height>600</height><background>color.black</background>"
+		const std::string xml = "<game><window name=\"verbs\"><width>800</width><height>600</height><background>black</background>"
 			"<framerate>60</framerate></window><variables><variable name=\"unused\">0</variable></variables>"
 			"<states><objects>" + objects + "</objects>" + states + "</states></game>";
 		ScratchFile scratch{ std::filesystem::temp_directory_path() / scratchName("xge_verbs_errors.xml") };
@@ -484,8 +484,8 @@ TEST_CASE("mistakes in the new tags are turned away when the game loads, saying 
 TEST_CASE("an object with several named sprites can <become> each of them, and a reset brings back the first", "[looks]")
 {
 	const std::string lamp = "<object name=\"lamp\" class=\"lamp\">"
-		"<sprite name=\"off\"><rectangle><width>10</width><height>10</height><color>color.grey</color></rectangle></sprite>"
-		"<sprite name=\"on\"><rectangle><width>10</width><height>10</height><color>color.yellow</color></rectangle></sprite>"
+		"<sprite name=\"off\"><rectangle><width>10</width><height>10</height><color>grey</color></rectangle></sprite>"
+		"<sprite name=\"on\"><rectangle><width>10</width><height>10</height><color>yellow</color></rectangle></sprite>"
 		"<position><x>100</x><y>100</y></position><velocity><x>0</x><y>0</y></velocity>"
 		"<collisions>"
 		"<collision class=\"ball\" sprite=\"off\"><become sprite=\"on\" /><inc variable=\"lamp.lit\" /></collision>"
@@ -497,12 +497,12 @@ TEST_CASE("an object with several named sprites can <become> each of them, and a
 
 	Object& lamp1 = loaded.game.object("lamp");
 	CHECK(lamp1.lookName() == "off");
-	CHECK(lamp1.drawn.picture->color == "color.grey");
+	CHECK(lamp1.drawn.picture->color == "grey");
 
 	// The ball runs into it: the rule runs while it is off, and turns it on.
 	loaded.frames(40);
 	CHECK(lamp1.lookName() == "on");
-	CHECK(lamp1.drawn.picture->color == "color.yellow");
+	CHECK(lamp1.drawn.picture->color == "yellow");
 	CHECK(loaded.variable("lamp", "lit") == 1); // once: the rule is for an unlit lamp
 
 	// A key in a state can name it; a reset brings back the first look.
@@ -520,8 +520,8 @@ TEST_CASE("an edge rule with sprite= runs only while the object shows that look,
 	// second takes it out. The cracked rule is first, so the hit that cracks
 	// it is not also the one that takes it out.
 	const std::string puck = "<object name=\"puck\">"
-		"<sprite name=\"whole\"><rectangle><width>10</width><height>10</height><color>color.grey</color></rectangle></sprite>"
-		"<sprite name=\"cracked\"><rectangle><width>10</width><height>10</height><color>color.darkgrey</color></rectangle></sprite>"
+		"<sprite name=\"whole\"><rectangle><width>10</width><height>10</height><color>grey</color></rectangle></sprite>"
+		"<sprite name=\"cracked\"><rectangle><width>10</width><height>10</height><color>darkgrey</color></rectangle></sprite>"
 		"<position><x>20</x><y>100</y></position><velocity><x>-240</x><y>0</y></velocity>"
 		"<collisions>"
 		"<collision edge=\"left\" sprite=\"cracked\"><die /></collision>"
@@ -644,7 +644,7 @@ TEST_CASE("looks and reveals that name nothing are turned away when the game loa
 	const auto fails = [](const std::string& objects, const std::string& states, const std::string& expected)
 	{
 		INFO(objects << states);
-		const std::string xml = "<game><window name=\"verbs\"><width>800</width><height>600</height><background>color.black</background>"
+		const std::string xml = "<game><window name=\"verbs\"><width>800</width><height>600</height><background>black</background>"
 			"<framerate>60</framerate></window><variables><variable name=\"unused\">0</variable></variables>"
 			"<states><objects>" + objects + "</objects>" + states + "</states></game>";
 		ScratchFile scratch{ std::filesystem::temp_directory_path() / scratchName("xge_verbs_errors.xml") };
@@ -790,12 +790,12 @@ TEST_CASE("<copy> puts one variable's number into another, and <keeps> passes ob
 	// A score, a best kept from game to game, and a row of two lamps kept too.
 	const std::string objects = box("player", 0, 0, 10, 10, "<off />", {}, "<variables><variable name=\"score\">0</variable></variables>")
 		+ box("best", 0, 20, 10, 10, "<off />", {}, "<variables><variable name=\"score\">0</variable></variables>")
-		+ "<object name=\"shown\"><sprite><text><number>best.score</number><size>20</size><color>color.white</color></text></sprite>"
+		+ "<object name=\"shown\"><sprite><text><number>best.score</number><size>20</size><color>white</color></text></sprite>"
 		  "<position><x>0</x><y>40</y></position></object>"
 		+ "<group name=\"lamps\"><sprite><rectangle><width>5</width><height>5</height></rectangle></sprite>"
 		  "<position><x>0</x><y>60</y></position><member><position><x>0</x></position></member><member><position><x>10</x></position></member></group>";
 	const std::string xml = "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
-		"<window name=\"verbs\"><width>800</width><height>600</height><background>color.black</background>"
+		"<window name=\"verbs\"><width>800</width><height>600</height><background>black</background>"
 		"<framerate>60</framerate></window>"
 		"<variables><variable name=\"unused\">0</variable></variables>"
 		"<keeps><keep object=\"best\" /><keep object=\"lamps\" /></keeps>"
@@ -842,7 +842,7 @@ TEST_CASE("a <copy> or <keep> that names nothing is turned away when the game lo
 	const auto fails = [](const std::string& keeps, const std::string& inputs, const std::string& expected)
 	{
 		INFO(keeps << inputs);
-		const std::string xml = "<game><window name=\"verbs\"><width>800</width><height>600</height><background>color.black</background>"
+		const std::string xml = "<game><window name=\"verbs\"><width>800</width><height>600</height><background>black</background>"
 			"<framerate>60</framerate></window><variables><variable name=\"unused\">0</variable></variables>"
 			+ keeps + "<states><objects>" + box("o", 0, 0, 1, 1, "<off />", {}, "<variables><variable name=\"score\">0</variable></variables>")
 			+ "</objects>" + state("playing", { "o" }, inputs) + "</states></game>";

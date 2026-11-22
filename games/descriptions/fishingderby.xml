@@ -42,7 +42,7 @@
   <window name="Fishing Derby">
     <width>800</width>
     <height>600</height>
-    <background>color.blue</background>
+    <background>blue</background>
   </window>
   <variables>
     <variable name="surface">170</variable>
@@ -50,15 +50,15 @@
     <variable name="goal">99</variable>
   </variables>
   <styles>
-    <style name="banner"><size>90</size><color>color.yellow</color></style>
+    <style name="banner"><size>90</size><color>yellow</color></style>
     <style name="prompt"><size>36</size></style>
     <style name="help"><size>26</size></style>
     <style name="hud"><size>40</size></style>
     <style name="shark">
       <scale>4</scale>
-      <color>color.darkgrey</color>
-      <color char="w">color.lightgrey</color>
-      <color char="k">color.black</color>
+      <color>darkgrey</color>
+      <color char="w">lightgrey</color>
+      <color char="k">black</color>
     </style>
   </styles>
   <states>
@@ -74,7 +74,7 @@
           <sprite><text style="help" /></sprite>
           <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
           <row number="1"><sprite><text><content>hook a fish, reel it up past the shark, first to 99 pounds</content></text></sprite></row>
-          <row number="2"><sprite><text><content>w a s d or the arrows move your hook</content><color>color.lightgrey</color></text></sprite></row>
+          <row number="2"><sprite><text><content>w a s d or the arrows move your hook</content><color>lightgrey</color></text></sprite></row>
         </group>
         <object name="start">
           <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
@@ -91,21 +91,21 @@
     <state name="playing">
       <objects>
         <object name="sky">
-          <sprite><rectangle><width>window.right</width><height>surface</height><color>color.cyan</color></rectangle></sprite>
+          <sprite><rectangle><width>window.right</width><height>surface</height><color>cyan</color></rectangle></sprite>
           <position><x>0</x><y>0</y></position>
         </object>
         <object name="seabed">
-          <sprite><rectangle><width>window.right</width><height>40</height><color>color.darkgreen</color></rectangle></sprite>
+          <sprite><rectangle><width>window.right</width><height>40</height><color>darkgreen</color></rectangle></sprite>
           <position><x>0</x><y><subtract><value>window.bottom</value><value>40</value></subtract></y></position>
         </object>
         <!-- a fish brought up to the surface is landed -->
         <object name="surface">
-          <sprite><rectangle><width>window.right</width><height>4</height><color>color.lightgrey</color></rectangle></sprite>
+          <sprite><rectangle><width>window.right</width><height>4</height><color>lightgrey</color></rectangle></sprite>
           <position><x>0</x><y><subtract><value>surface</value><value>4</value></subtract></y></position>
           <collisions />
         </object>
         <group name="piers">
-          <sprite><rectangle><width>150</width><height>14</height><color>color.brown</color></rectangle></sprite>
+          <sprite><rectangle><width>150</width><height>14</height><color>brown</color></rectangle></sprite>
           <position><y><subtract><value>surface</value><value>20</value></subtract></y></position>
           <member><position><x>0</x></position></member>
           <member><position><x><subtract><value>window.right</value><value>150</value></subtract></x></position></member>
@@ -120,30 +120,30 @@
           <variables><variable name="score">0</variable></variables>
           <member name="left"><position><x>112</x></position></member>
           <member name="right">
-            <sprite><bitmap><color char="s">color.red</color><flip>horizontal</flip></bitmap></sprite>
+            <sprite><bitmap><color char="s">red</color><flip>horizontal</flip></bitmap></sprite>
             <position><x><subtract><value>window.right</value><value>112</value><value>96</value></subtract></x></position>
           </member>
         </group>
         <group name="rods">
-          <sprite><rectangle><width>2</width><height>2</height><color>color.black</color></rectangle></sprite>
+          <sprite><rectangle><width>2</width><height>2</height><color>black</color></rectangle></sprite>
           <position><y><subtract><value>surface</value><value>64</value></subtract></y></position>
           <member name="rod1"><position><x>206</x></position></member>
           <member name="rod2"><position><x><subtract><value>window.right</value><value>208</value></subtract></x></position></member>
         </group>
         <object name="line1">
-          <sprite><tether from="rod1" to="hook1"><thickness>2</thickness><color>color.black</color></tether></sprite>
+          <sprite><tether from="rod1" to="hook1"><thickness>2</thickness><color>black</color></tether></sprite>
           <position><x>0</x><y>0</y></position>
         </object>
         <object name="line2">
-          <sprite><tether from="rod2" to="hook2"><thickness>2</thickness><color>color.black</color></tether></sprite>
+          <sprite><tether from="rod2" to="hook2"><thickness>2</thickness><color>black</color></tether></sprite>
           <position><x>0</x><y>0</y></position>
         </object>
         <object name="score1">
-          <sprite><text style="hud"><number>left.score</number><color>color.green</color></text></sprite>
+          <sprite><text style="hud"><number>left.score</number><color>green</color></text></sprite>
           <position><x><subtract><value>window.width.center</value><value>140</value></subtract></x><y>16</y></position>
         </object>
         <object name="score2">
-          <sprite><text style="hud"><number>right.score</number><color>color.red</color></text></sprite>
+          <sprite><text style="hud"><number>right.score</number><color>red</color></text></sprite>
           <position><x>
             <subtract>
               <value><add><value>window.width.center</value><value>140</value></add></value>
@@ -186,7 +186,7 @@
             <bitmap from="shark-left" />
           </sprite>
           <sprite name="turning">
-            <rectangle><width>80</width><height>28</height><color>color.darkgrey</color></rectangle>
+            <rectangle><width>80</width><height>28</height><color>darkgrey</color></rectangle>
           </sprite>
           <position><x><subtract><value>window.width.center</value><value>40</value></subtract></x><y><add><value>surface</value><value>25</value></add></y></position>
           <velocity><x>120</x></velocity>
@@ -276,15 +276,15 @@
             <member><position><x>120</x><y><add><value>surface</value><value>150</value></add></y></position><velocity><x>72</x></velocity></member>
           </group>
           <group name="perch">
-            <sprite name="right"><bitmap><color>color.orange</color></bitmap></sprite>
-            <sprite name="left"><bitmap><color>color.orange</color></bitmap></sprite>
+            <sprite name="right"><bitmap><color>orange</color></bitmap></sprite>
+            <sprite name="left"><bitmap><color>orange</color></bitmap></sprite>
             <variables><variable name="worth">4</variable></variables>
             <member><position><x>600</x><y><add><value>surface</value><value>200</value></add></y></position><velocity><x>84</x></velocity></member>
             <member><position><x>250</x><y><add><value>surface</value><value>250</value></add></y></position><velocity><x>96</x></velocity></member>
           </group>
           <group name="cod">
-            <sprite name="right"><bitmap><color>color.magenta</color></bitmap></sprite>
-            <sprite name="left"><bitmap><color>color.magenta</color></bitmap></sprite>
+            <sprite name="right"><bitmap><color>magenta</color></bitmap></sprite>
+            <sprite name="left"><bitmap><color>magenta</color></bitmap></sprite>
             <variables><variable name="worth">6</variable></variables>
             <member><position><x>40</x><y><add><value>surface</value><value>300</value></add></y></position><velocity><x>108</x></velocity></member>
             <member><position><x>500</x><y><add><value>surface</value><value>350</value></add></y></position><velocity><x>120</x></velocity></member>
@@ -340,7 +340,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -355,7 +355,7 @@
       <objects>
         <object name="winner">
           <sprite name="you"><text style="banner"><content>YOU WIN</content></text></sprite>
-          <sprite name="computer"><text style="banner"><content>THE COMPUTER WINS</content><size>70</size><color>color.red</color></text></sprite>
+          <sprite name="computer"><text style="banner"><content>THE COMPUTER WINS</content><size>70</size><color>red</color></text></sprite>
           <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
         </object>
         <object name="again">
@@ -405,18 +405,18 @@
     <bitmap name="fishermen">
       <row>......................**</row><row>....................**..</row><row>..................**....</row><row>.....hhh........**......</row><row>...hhhhhhh....**........</row><row>....ffkff...**..........</row><row>.....fff..**............</row><row>....sssss*..............</row><row>...sssssss..............</row><row>...sss.sss..............</row><row>...ppppppppp............</row><row>..........pp............</row><row>..........pp............</row><row>.........bbb............</row>
       <scale>4</scale>
-      <color>color.black</color>
-      <color char="h">color.brown</color>
-      <color char="f">color.orange</color>
-      <color char="k">color.black</color>
-      <color char="s">color.green</color>
-      <color char="p">color.darkblue</color>
-      <color char="b">color.darkgrey</color>
+      <color>black</color>
+      <color char="h">brown</color>
+      <color char="f">orange</color>
+      <color char="k">black</color>
+      <color char="s">green</color>
+      <color char="p">darkblue</color>
+      <color char="b">darkgrey</color>
     </bitmap>
     <bitmap name="hooks">
       <row>..*</row><row>..*</row><row>*.*</row><row>***</row>
       <scale>3</scale>
-      <color>color.white</color>
+      <color>white</color>
     </bitmap>
     <bitmap name="shark-right" style="shark">
       <row>..........*.........</row><row>.........**.........</row><row>*.......*******.....</row><row>***.**************..</row><row>****************k***</row><row>***.wwwwwwwwwwwww*..</row><row>*.......**....**....</row>
@@ -428,14 +428,14 @@
     <bitmap name="fish-right">
       <row>*....****.</row><row>**.******.</row><row>*******k**</row><row>**.*******</row><row>*....****.</row>
       <scale>4</scale>
-      <color>color.yellow</color>
-      <color char="k">color.black</color>
+      <color>yellow</color>
+      <color char="k">black</color>
     </bitmap>
     <bitmap name="fish-left">
       <row>*....****.</row><row>**.******.</row><row>*******k**</row><row>**.*******</row><row>*....****.</row>
       <scale>4</scale>
-      <color>color.yellow</color>
-      <color char="k">color.black</color>
+      <color>yellow</color>
+      <color char="k">black</color>
       <flip>horizontal</flip>
     </bitmap>
   </pictures>

@@ -110,7 +110,7 @@
     </path>
   </paths>
   <styles>
-    <style name="banner"><size>32</size><color>color.yellow</color><font>assets/pressstart2p.ttf</font></style>
+    <style name="banner"><size>32</size><color>yellow</color><font>assets/pressstart2p.ttf</font></style>
     <style name="prompt"><size>16</size><font>assets/pressstart2p.ttf</font></style>
     <style name="hud"><size>16</size><font>assets/pressstart2p.ttf</font></style>
   </styles>
@@ -155,14 +155,14 @@
           <sprite>
             <text style="prompt">
               <content>BLINKY</content>
-              <color>color.red</color>
+              <color>red</color>
             </text>
           </sprite>
           <position><x><centered /></x></position>
           <member><position><y>200</y></position></member>
-          <member><sprite><text><content>PINKY</content><color>color.magenta</color></text></sprite><position><y>235</y></position></member>
-          <member><sprite><text><content>INKY</content><color>color.cyan</color></text></sprite><position><y>270</y></position></member>
-          <member><sprite><text><content>CLYDE</content><color>color.orange</color></text></sprite><position><y>305</y></position></member>
+          <member><sprite><text><content>PINKY</content><color>magenta</color></text></sprite><position><y>235</y></position></member>
+          <member><sprite><text><content>INKY</content><color>cyan</color></text></sprite><position><y>270</y></position></member>
+          <member><sprite><text><content>CLYDE</content><color>orange</color></text></sprite><position><y>305</y></position></member>
         </group>
         <object name="points">
           <sprite>
@@ -277,7 +277,7 @@
         </object>
         <!-- the corners the ghosts scatter to, off the maze -->
         <group name="corners">
-          <sprite><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
+          <sprite><rectangle><width>1</width><height>1</height><color>black</color></rectangle></sprite>
           <hidden />
           <member name="topright"><position><x><multiply><value>25</value><value>tile</value></multiply></x><y>0</y></position></member>
           <member name="topleft"><position><x><multiply><value>2</value><value>tile</value></multiply></x><y>0</y></position></member>
@@ -360,7 +360,7 @@
             </group>
             <!-- the door of the ghost house: a wall piece of its own class, in pink -->
             <group name="door" char="=" class="door">
-              <sprite><bitmap><color>color.magenta</color></bitmap></sprite>
+              <sprite><bitmap><color>magenta</color></bitmap></sprite>
             </group>
           </group>
           <!-- the dots, and the power pellets, which flash -->
@@ -370,7 +370,7 @@
                 <rectangle>
                   <width>4</width>
                   <height>4</height>
-                  <color>color.orange</color>
+                  <color>orange</color>
                 </rectangle>
               </sprite>
               <collisions>
@@ -412,12 +412,12 @@
           </group>
           <!-- the tunnel at the sides, where a ghost goes at half speed -->
           <group name="tunnel" char="t" class="tunnel">
-            <sprite><rectangle><width>1</width><height>1</height><color>color.black</color></rectangle></sprite>
+            <sprite><rectangle><width>1</width><height>1</height><color>black</color></rectangle></sprite>
             <hidden />
           </group>
           <!-- what the eyes of an eaten ghost make for, inside the ghost house -->
           <object name="pen" char="h">
-            <sprite><rectangle><width>4</width><height>4</height><color>color.black</color></rectangle></sprite>
+            <sprite><rectangle><width>4</width><height>4</height><color>black</color></rectangle></sprite>
             <hidden />
             <collisions />
           </object>
@@ -578,7 +578,7 @@
             </group>
             <!-- Pinky makes for four tiles in front of him -->
             <group name="pinky" char="P">
-              <sprite name="normal"><bitmap><color>color.magenta</color></bitmap></sprite>
+              <sprite name="normal"><bitmap><color>magenta</color></bitmap></sprite>
               <actions>
                 <action name="out"><follow path="pinkyout" /></action>
                 <action name="scatter"><hunt object="topleft">status.pace</hunt></action>
@@ -593,7 +593,7 @@
             </group>
             <!-- Inky closes in from the other side to Blinky -->
             <group name="inky" char="I">
-              <sprite name="normal"><bitmap><color>color.cyan</color></bitmap></sprite>
+              <sprite name="normal"><bitmap><color>cyan</color></bitmap></sprite>
               <actions>
                 <action name="out"><follow path="inkyout" /></action>
                 <action name="scatter"><hunt object="bottomright">status.pace</hunt></action>
@@ -602,7 +602,7 @@
             </group>
             <!-- Clyde backs off to his corner when he gets near -->
             <group name="clyde" char="C">
-              <sprite name="normal"><bitmap><color>color.orange</color></bitmap></sprite>
+              <sprite name="normal"><bitmap><color>orange</color></bitmap></sprite>
               <actions>
                 <action name="out"><follow path="clydeout" /></action>
                 <action name="scatter"><hunt object="bottomleft">status.pace</hunt></action>
@@ -632,7 +632,7 @@
             <text style="hud">
               <content>LIVES</content>
               <number>status.lives</number>
-              <color>color.yellow</color>
+              <color>yellow</color>
             </text>
           </sprite>
           <position><x><multiply><value>2</value><value>tile</value></multiply></x><y><subtract><value>window.bottom</value><value>24</value></subtract></y></position>
@@ -804,7 +804,7 @@
           <sprite>
             <text style="prompt">
               <content>READY!</content>
-              <color>color.yellow</color>
+              <color>yellow</color>
             </text>
           </sprite>
           <position><x><centered /></x><y><centered>
@@ -849,7 +849,7 @@
           <sprite>
             <text style="banner">
               <content>PAUSED</content>
-              <color>color.white</color>
+              <color>white</color>
             </text>
           </sprite>
           <position><x><centered /></x><y><centered /></y></position>
@@ -870,7 +870,7 @@
           <sprite>
             <text style="prompt">
               <content>GAME  OVER</content>
-              <color>color.red</color>
+              <color>red</color>
             </text>
           </sprite>
           <position><x><centered /></x><y><centered>
@@ -1031,7 +1031,7 @@
       <row>..*********..</row>
       <row>...*******...</row>
       <scale>2</scale>
-      <color>color.yellow</color>
+      <color>yellow</color>
     </bitmap>
     <bitmap name="dying-2">
       <row>.............</row>
@@ -1048,7 +1048,7 @@
       <row>..*********..</row>
       <row>...*******...</row>
       <scale>2</scale>
-      <color>color.yellow</color>
+      <color>yellow</color>
     </bitmap>
     <bitmap name="dying-3">
       <row>.............</row>
@@ -1065,7 +1065,7 @@
       <row>..*********..</row>
       <row>...*******...</row>
       <scale>2</scale>
-      <color>color.yellow</color>
+      <color>yellow</color>
     </bitmap>
     <bitmap name="dying-4">
       <row>.............</row>
@@ -1082,7 +1082,7 @@
       <row>....*****....</row>
       <row>...*******...</row>
       <scale>2</scale>
-      <color>color.yellow</color>
+      <color>yellow</color>
     </bitmap>
     <bitmap name="dying-5">
       <row>.............</row>
@@ -1099,7 +1099,7 @@
       <row>......*......</row>
       <row>......*......</row>
       <scale>2</scale>
-      <color>color.yellow</color>
+      <color>yellow</color>
     </bitmap>
     <bitmap name="dying-pop">
       <row>.............</row>
@@ -1116,7 +1116,7 @@
       <row>.............</row>
       <row>.............</row>
       <scale>2</scale>
-      <color>color.yellow</color>
+      <color>yellow</color>
     </bitmap>
     <bitmap name="walls">
       <row>........</row>
@@ -1128,7 +1128,7 @@
       <row>........</row>
       <row>........</row>
       <scale>2</scale>
-      <color>color.blue</color>
+      <color>blue</color>
     </bitmap>
     <bitmap name="down">
     <row>...**...</row>
@@ -1240,7 +1240,7 @@
       <row>.******.</row>
       <row>..****..</row>
       <scale>2</scale>
-      <color>color.orange</color>
+      <color>orange</color>
     </bitmap>
     <bitmap name="pellets-dim">
       <row>........</row>
@@ -1267,9 +1267,9 @@
       <row>.****..*****</row>
       <row>..**....***.</row>
       <scale>2</scale>
-      <color>color.red</color>
-      <color char="w">color.white</color>
-      <color char="g">color.brown</color>
+      <color>red</color>
+      <color char="w">white</color>
+      <color char="g">brown</color>
     </bitmap>
     <bitmap name="pacman-closed">
       <row>....*****....</row>
@@ -1286,7 +1286,7 @@
       <row>..*********..</row>
       <row>....*****....</row>
       <scale>2</scale>
-      <color>color.yellow</color>
+      <color>yellow</color>
     </bitmap>
     <bitmap name="pacman-half">
       <row>.............</row>
@@ -1303,7 +1303,7 @@
       <row>..*********..</row>
       <row>....*****....</row>
       <scale>2</scale>
-      <color>color.yellow</color>
+      <color>yellow</color>
     </bitmap>
     <bitmap name="pacman-open">
       <row>.............</row>
@@ -1320,7 +1320,7 @@
       <row>..*********..</row>
       <row>....*****....</row>
       <scale>2</scale>
-      <color>color.yellow</color>
+      <color>yellow</color>
     </bitmap>
     <bitmap name="ghosts-normal">
       <row>.....****.....</row>
@@ -1338,9 +1338,9 @@
       <row>**.***..***.**</row>
       <row>*...**..**...*</row>
       <scale>2</scale>
-      <color>color.red</color>
-      <color char="w">color.white</color>
-      <color char="b">color.darkblue</color>
+      <color>red</color>
+      <color char="w">white</color>
+      <color char="b">darkblue</color>
     </bitmap>
     <bitmap name="ghosts-blue">
       <row>.....****.....</row>
@@ -1358,8 +1358,8 @@
       <row>**.***..***.**</row>
       <row>*...**..**...*</row>
       <scale>2</scale>
-      <color>color.blue</color>
-      <color char="w">color.white</color>
+      <color>blue</color>
+      <color char="w">white</color>
     </bitmap>
     <bitmap name="ghosts-eyes">
       <row>..............</row>
@@ -1377,9 +1377,9 @@
       <row>..............</row>
       <row>..............</row>
       <scale>2</scale>
-      <color>color.white</color>
-      <color char="w">color.white</color>
-      <color char="b">color.darkblue</color>
+      <color>white</color>
+      <color char="w">white</color>
+      <color char="b">darkblue</color>
     </bitmap>
   </pictures>
 </game>

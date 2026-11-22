@@ -39,11 +39,11 @@
     <variable name="top">140</variable>
   </variables>
   <styles>
-    <style name="banner"><size>80</size><color>color.orange</color></style>
+    <style name="banner"><size>80</size><color>orange</color></style>
     <style name="prompt"><size>30</size></style>
-    <style name="help"><size>20</size><color>color.lightgrey</color></style>
+    <style name="help"><size>20</size><color>lightgrey</color></style>
     <style name="hud"><size>30</size></style>
-    <style name="number"><size>40</size><color>color.white</color></style>
+    <style name="number"><size>40</size><color>white</color></style>
   </styles>
   <states>
     <objects>
@@ -110,7 +110,7 @@
           <row>....</row>
           <row>....</row>
           <group name="square" char=".">
-            <sprite><rectangle><width><subtract><value>cell</value><value>8</value></subtract></width><height><subtract><value>cell</value><value>8</value></subtract></height><color>color.darkgrey</color></rectangle></sprite>
+            <sprite><rectangle><width><subtract><value>cell</value><value>8</value></subtract></width><height><subtract><value>cell</value><value>8</value></subtract></height><color>darkgrey</color></rectangle></sprite>
           </group>
         </map>
         <!-- the numbers -->
@@ -181,7 +181,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -195,8 +195,8 @@
     <state name="over">
       <objects>
         <object name="message">
-          <sprite name="won"><text style="banner"><content>2048!</content><color>color.gold</color></text></sprite>
-          <sprite name="lost"><text style="banner"><content>NO MOVES</content><color>color.red</color></text></sprite>
+          <sprite name="won"><text style="banner"><content>2048!</content><color>gold</color></text></sprite>
+          <sprite name="lost"><text style="banner"><content>NO MOVES</content><color>red</color></text></sprite>
           <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
         </object>
       </objects>

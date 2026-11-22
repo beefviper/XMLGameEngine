@@ -73,7 +73,7 @@ namespace xge
 		return value;
 	}
 
-	// The text of a simple element such as <color>color.red</color>.
+	// The text of a simple element such as <color>red</color>.
 	std::string readText(const XmlNode& node)
 	{
 		return trim(node.getText());

@@ -34,7 +34,7 @@ namespace invaders_fixture
   <window name="Space Invaders">
     <width>1024</width>
     <height>768</height>
-    <background>color.black</background>
+    <background>black</background>
     
     <framerate>60</framerate>
   </window>
@@ -140,7 +140,7 @@ namespace invaders_fixture
           <text>
             <content>SPACE INVADERS</content>
             <size>110</size>
-            <color>color.green</color>
+            <color>green</color>
           </text>
         </sprite>
         <position>
@@ -160,7 +160,7 @@ namespace invaders_fixture
           <text>
             <content>YOU WIN</content>
             <size>128</size>
-            <color>color.green</color>
+            <color>green</color>
           </text>
         </sprite>
         <position>
@@ -180,7 +180,7 @@ namespace invaders_fixture
           <text>
             <content>spacebar to continue</content>
             <size>48</size>
-            <color>color.white</color>
+            <color>white</color>
           </text>
         </sprite>
         <position>
@@ -200,7 +200,7 @@ namespace invaders_fixture
           <text>
             <content>settings</content>
             <size>128</size>
-            <color>color.white</color>
+            <color>white</color>
           </text>
         </sprite>
         <position>
@@ -220,7 +220,7 @@ namespace invaders_fixture
           <text>
             <content>paused</content>
             <size>128</size>
-            <color>color.white</color>
+            <color>white</color>
           </text>
         </sprite>
         <position>

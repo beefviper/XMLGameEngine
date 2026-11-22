@@ -203,7 +203,7 @@ namespace xge
 	Picture Evaluator::buildPicture(const WrittenSprite& sprite, const std::string& where,
 		PictureId* bitmap, std::shared_ptr<const Turnable>* turnable, const WrittenObject* self)
 	{
-		const std::string color = sprite.color.empty() ? "color.white" : sprite.color;
+		const std::string color = sprite.color.empty() ? "white" : sprite.color;
 		checkColor(color, where);
 		Picture picture;
 		picture.color = Name::of(color);
@@ -345,8 +345,8 @@ namespace xge
 				segment.y1 = evaluate(writtenLine.from.y, where);
 				segment.x2 = evaluate(writtenLine.to.x, where);
 				segment.y2 = evaluate(writtenLine.to.y, where);
-				checkColor(writtenLine.color.empty() ? "color.white" : writtenLine.color, where + " > <line>");
-				segment.color = colorFromName(writtenLine.color.empty() ? "color.white" : writtenLine.color);
+				checkColor(writtenLine.color.empty() ? "white" : writtenLine.color, where + " > <line>");
+				segment.color = colorFromName(writtenLine.color.empty() ? "white" : writtenLine.color);
 				if (writtenLine.thickness) { segment.thickness = static_cast<int>(std::lround(evaluate(*writtenLine.thickness, where))); }
 				if (segment.thickness < 1) { throw std::invalid_argument("a <line> has a <thickness> under 1"); }
 				kept->lines.push_back(segment);
@@ -375,8 +375,8 @@ namespace xge
 				{
 					polygon.points.emplace_back(evaluate(point.x, where), evaluate(point.y, where));
 				}
-				checkColor(writtenPolygon.color.empty() ? "color.white" : writtenPolygon.color, where + " > <polygon>");
-				polygon.color = colorFromName(writtenPolygon.color.empty() ? "color.white" : writtenPolygon.color);
+				checkColor(writtenPolygon.color.empty() ? "white" : writtenPolygon.color, where + " > <polygon>");
+				polygon.color = colorFromName(writtenPolygon.color.empty() ? "white" : writtenPolygon.color);
 				polygons.push_back(std::move(polygon));
 			}
 			std::string key = "polygons";

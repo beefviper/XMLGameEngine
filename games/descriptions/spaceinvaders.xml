@@ -54,9 +54,9 @@
     <variable name="shieldtop">540</variable>
   </variables>
   <styles>
-    <style name="banner"><size>128</size><color>color.green</color></style>
-    <style name="hud"><size>36</size><color>color.white</color></style>
-    <style name="prompt"><size>48</size><color>color.white</color></style>
+    <style name="banner"><size>128</size><color>green</color></style>
+    <style name="hud"><size>36</size><color>white</color></style>
+    <style name="prompt"><size>48</size><color>white</color></style>
   </styles>
   <objects>
     <object name="bullet" class="projectile">
@@ -187,7 +187,7 @@
           </collisions>
         </group>
         <object name="ground" class="ground">
-          <sprite><rectangle><width>window.right</width><height>3</height><color>color.green</color></rectangle></sprite>
+          <sprite><rectangle><width>window.right</width><height>3</height><color>green</color></rectangle></sprite>
           <position><x>0</x><y><subtract><value>window.bottom</value><value>30</value></subtract></y></position>
         </object>
         <!-- the mystery ship: across the top now and then, 50 to 200 points -->
@@ -284,7 +284,7 @@
           <position><x>20</x><y>10</y></position>
         </object>
         <object name="lives">
-          <sprite><text style="hud"><number>player.lives</number><size>24</size><color>color.green</color></text></sprite>
+          <sprite><text style="hud"><number>player.lives</number><size>24</size><color>green</color></text></sprite>
           <position><x>20</x><y><subtract><value>window.bottom</value><value>27</value></subtract></y></position>
         </object>
       </objects>
@@ -343,7 +343,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite><text style="banner"><content>paused</content><color>color.white</color></text></sprite>
+          <sprite><text style="banner"><content>paused</content><color>white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -387,7 +387,7 @@
     <state name="over">
       <objects>
         <object name="message">
-          <sprite name="lost"><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>
+          <sprite name="lost"><text style="banner"><content>GAME OVER</content><color>red</color></text></sprite>
           <sprite name="won"><text style="banner"><content>YOU WIN</content></text></sprite>
           <position><x><centered /></x><y><subtract><value>window.height.center</value><value>150</value></subtract></y></position>
         </object>
@@ -442,7 +442,7 @@
       <row>***********</row>
       <row>***********</row>
       <scale>pixel</scale>
-      <color>color.green</color>
+      <color>green</color>
     </bitmap>
     <bitmap name="wreck-a">
       <row>...*...*...</row>
@@ -453,7 +453,7 @@
       <row>*.*******.*</row>
       <row>*****.*****</row>
       <scale>pixel</scale>
-      <color>color.green</color>
+      <color>green</color>
     </bitmap>
     <bitmap name="wreck-b">
       <row>*....*....*</row>
@@ -464,7 +464,7 @@
       <row>..*******..</row>
       <row>***.***.***</row>
       <scale>pixel</scale>
-      <color>color.green</color>
+      <color>green</color>
     </bitmap>
     <bitmap name="shields">
       <row>....**************....</row>
@@ -484,7 +484,7 @@
       <row>*****............*****</row>
       <row>*****............*****</row>
       <scale>4</scale>
-      <color>color.green</color>
+      <color>green</color>
     </bitmap>
     <bitmap name="ufo">
       <row>.....******.....</row>
@@ -495,7 +495,7 @@
       <row>..***..**..***..</row>
       <row>...*........*...</row>
       <scale><subtract><value>pixel</value><value>1</value></subtract></scale>
-      <color>color.red</color>
+      <color>red</color>
     </bitmap>
     <bitmap name="aliens-a">
       <row>....***....</row>
@@ -507,7 +507,7 @@
       <row>..*..*..*..</row>
       <row>...*.*.*...</row>
       <scale>pixel</scale>
-      <color>color.magenta</color>
+      <color>magenta</color>
     </bitmap>
     <bitmap name="aliens-b">
       <row>....***....</row>
@@ -519,7 +519,7 @@
       <row>.*...*...*.</row>
       <row>..*.....*..</row>
       <scale>pixel</scale>
-      <color>color.magenta</color>
+      <color>magenta</color>
     </bitmap>
     <bitmap name="aliens-row2-a">
       <row>..*.....*..</row>
@@ -530,7 +530,7 @@
       <row>*.*******.*</row>
       <row>*.*.....*.*</row>
       <row>...**.**...</row>
-      <color>color.cyan</color>
+      <color>cyan</color>
     </bitmap>
     <bitmap name="aliens-row2-b">
       <row>..*.....*..</row>
@@ -541,7 +541,7 @@
       <row>.*********.</row>
       <row>..*.....*..</row>
       <row>.*.......*.</row>
-      <color>color.cyan</color>
+      <color>cyan</color>
     </bitmap>
     <bitmap name="aliens-row4-a">
       <row>...*****...</row>
@@ -552,7 +552,7 @@
       <row>...**.**...</row>
       <row>..**...**..</row>
       <row>***.....***</row>
-      <color>color.white</color>
+      <color>white</color>
     </bitmap>
     <bitmap name="aliens-row4-b">
       <row>...*****...</row>
@@ -563,7 +563,7 @@
       <row>..***.***..</row>
       <row>.**.....**.</row>
       <row>..**...**..</row>
-      <color>color.white</color>
+      <color>white</color>
     </bitmap>
   </pictures>
 </game>

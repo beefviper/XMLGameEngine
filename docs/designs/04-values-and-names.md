@@ -48,6 +48,11 @@
 
 - Idea: a small `Value` variant (int, float, bool, string); references as `{handle, variable}` resolved after the first pass.
 
+## No reserved words
+
+- **Each slot says what kind of thing it holds,** so no word is taken from the game's names (the author's choice over letting a game's name win, or marking the engine's words with a character). Colours, the window and the pronouns `self`, `other` and `others` once shared the object-name space, so those names were refused.
+- **Colours:** a `<color>` or `<background>` holds a colour's bare name (`yellow`); the `color.` prefix said what the slot already did. Next: the window's numbers and the pronouns as their own operand tags.
+
 ## An object's own size
 
 - Centring a text needs a width only a backend can measure; games used hand-tuned offsets that broke on any wording change.

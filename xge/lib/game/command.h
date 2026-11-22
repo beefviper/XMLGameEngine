@@ -50,7 +50,7 @@ namespace xge
 		ShapeKind kind{ ShapeKind::Unknown };
 		Vector2f size{};             // a rectangle's, or a Line's drawing's
 		float radius{};              // a circle's
-		Name color;                  // a circle's, rectangle's or text's color. name
+		Name color;                  // a circle's, rectangle's or text's color name
 		std::string text;            // a text's words as shown now
 		int textSize{};              // a text's size in pixels
 		Name font;                   // a text's font file; empty: the standard one (textFontFile)

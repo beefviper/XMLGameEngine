@@ -32,7 +32,7 @@
   <window name="Capsules">
     <width>640</width>
     <height>640</height>
-    <background>color.darkblue</background>
+    <background>darkblue</background>
   </window>
   <variables>
     <variable name="cell">32</variable>
@@ -41,29 +41,29 @@
     <variable name="panel">400</variable>
   </variables>
   <styles>
-    <style name="banner"><size>80</size><color>color.yellow</color></style>
+    <style name="banner"><size>80</size><color>yellow</color></style>
     <style name="prompt"><size>32</size></style>
-    <style name="help"><size>22</size><color>color.lightgrey</color></style>
-    <style name="label"><size>24</size><color>color.lightgrey</color></style>
+    <style name="help"><size>22</size><color>lightgrey</color></style>
+    <style name="label"><size>24</size><color>lightgrey</color></style>
     <style name="hud"><size>36</size></style>
     <style name="pill">
       <scale>2</scale>
-      <color char="k">color.black</color>
-      <color char="w">color.white</color>
+      <color char="k">black</color>
+      <color char="w">white</color>
     </style>
     <style name="germ">
       <scale>2</scale>
-      <color char="k">color.black</color>
-      <color char="w">color.white</color>
+      <color char="k">black</color>
+      <color char="w">white</color>
     </style>
     <style name="doctor">
       <scale>3</scale>
-      <color char="k">color.black</color>
-      <color char="w">color.white</color>
-      <color char="g">color.lightgrey</color>
-      <color char="r">color.red</color>
-      <color char="c">color.cyan</color>
-      <color char="y">color.yellow</color>
+      <color char="k">black</color>
+      <color char="w">white</color>
+      <color char="g">lightgrey</color>
+      <color char="r">red</color>
+      <color char="c">cyan</color>
+      <color char="y">yellow</color>
     </style>
   </styles>
   <states>
@@ -122,7 +122,7 @@
               <value><multiply><value>16</value><value>cell</value></multiply></value>
               <value>16</value>
             </add>
-          </height><color>color.lightgrey</color></rectangle></sprite>
+          </height><color>lightgrey</color></rectangle></sprite>
           <position><x><subtract><value>left</value><value>8</value></subtract></x><y><subtract><value>top</value><value>8</value></subtract></y></position>
         </object>
         <object name="neck">
@@ -131,7 +131,7 @@
               <value><multiply><value>2</value><value>cell</value></multiply></value>
               <value>16</value>
             </add>
-          </width><height>40</height><color>color.lightgrey</color></rectangle></sprite>
+          </width><height>40</height><color>lightgrey</color></rectangle></sprite>
           <position><x>
             <subtract>
               <value>
@@ -145,11 +145,11 @@
           </x><y><subtract><value>top</value><value>40</value></subtract></y></position>
         </object>
         <object name="inside">
-          <sprite><rectangle><width><multiply><value>8</value><value>cell</value></multiply></width><height><multiply><value>16</value><value>cell</value></multiply></height><color>color.black</color></rectangle></sprite>
+          <sprite><rectangle><width><multiply><value>8</value><value>cell</value></multiply></width><height><multiply><value>16</value><value>cell</value></multiply></height><color>black</color></rectangle></sprite>
           <position><x>left</x><y>top</y></position>
         </object>
         <object name="mouth">
-          <sprite><rectangle><width><multiply><value>2</value><value>cell</value></multiply></width><height>40</height><color>color.black</color></rectangle></sprite>
+          <sprite><rectangle><width><multiply><value>2</value><value>cell</value></multiply></width><height>40</height><color>black</color></rectangle></sprite>
           <position><x>
             <add>
               <value>left</value>
@@ -237,27 +237,27 @@
               <down sprite="opendown" />
             </joins>
             <group name="red">
-              <sprite name="alone"><bitmap><color>color.red</color><color char="d">color.brown</color></bitmap></sprite>
-              <sprite name="openleft"><bitmap><color>color.red</color><color char="d">color.brown</color></bitmap></sprite>
-              <sprite name="openright"><bitmap><color>color.red</color><color char="d">color.brown</color></bitmap></sprite>
-              <sprite name="openup"><bitmap><color>color.red</color><color char="d">color.brown</color></bitmap></sprite>
-              <sprite name="opendown"><bitmap><color>color.red</color><color char="d">color.brown</color></bitmap></sprite>
+              <sprite name="alone"><bitmap><color>red</color><color char="d">brown</color></bitmap></sprite>
+              <sprite name="openleft"><bitmap><color>red</color><color char="d">brown</color></bitmap></sprite>
+              <sprite name="openright"><bitmap><color>red</color><color char="d">brown</color></bitmap></sprite>
+              <sprite name="openup"><bitmap><color>red</color><color char="d">brown</color></bitmap></sprite>
+              <sprite name="opendown"><bitmap><color>red</color><color char="d">brown</color></bitmap></sprite>
               <variables><variable name="hue">1</variable></variables>
             </group>
             <group name="yellow">
-              <sprite name="alone"><bitmap><color>color.yellow</color><color char="d">color.orange</color></bitmap></sprite>
-              <sprite name="openleft"><bitmap><color>color.yellow</color><color char="d">color.orange</color></bitmap></sprite>
-              <sprite name="openright"><bitmap><color>color.yellow</color><color char="d">color.orange</color></bitmap></sprite>
-              <sprite name="openup"><bitmap><color>color.yellow</color><color char="d">color.orange</color></bitmap></sprite>
-              <sprite name="opendown"><bitmap><color>color.yellow</color><color char="d">color.orange</color></bitmap></sprite>
+              <sprite name="alone"><bitmap><color>yellow</color><color char="d">orange</color></bitmap></sprite>
+              <sprite name="openleft"><bitmap><color>yellow</color><color char="d">orange</color></bitmap></sprite>
+              <sprite name="openright"><bitmap><color>yellow</color><color char="d">orange</color></bitmap></sprite>
+              <sprite name="openup"><bitmap><color>yellow</color><color char="d">orange</color></bitmap></sprite>
+              <sprite name="opendown"><bitmap><color>yellow</color><color char="d">orange</color></bitmap></sprite>
               <variables><variable name="hue">2</variable></variables>
             </group>
             <group name="blue">
-              <sprite name="alone"><bitmap><color>color.cyan</color><color char="d">color.blue</color></bitmap></sprite>
-              <sprite name="openleft"><bitmap><color>color.cyan</color><color char="d">color.blue</color></bitmap></sprite>
-              <sprite name="openright"><bitmap><color>color.cyan</color><color char="d">color.blue</color></bitmap></sprite>
-              <sprite name="openup"><bitmap><color>color.cyan</color><color char="d">color.blue</color></bitmap></sprite>
-              <sprite name="opendown"><bitmap><color>color.cyan</color><color char="d">color.blue</color></bitmap></sprite>
+              <sprite name="alone"><bitmap><color>cyan</color><color char="d">blue</color></bitmap></sprite>
+              <sprite name="openleft"><bitmap><color>cyan</color><color char="d">blue</color></bitmap></sprite>
+              <sprite name="openright"><bitmap><color>cyan</color><color char="d">blue</color></bitmap></sprite>
+              <sprite name="openup"><bitmap><color>cyan</color><color char="d">blue</color></bitmap></sprite>
+              <sprite name="opendown"><bitmap><color>cyan</color><color char="d">blue</color></bitmap></sprite>
               <variables><variable name="hue">3</variable></variables>
             </group>
           </group>
@@ -276,18 +276,18 @@
               <frame sprite="germb" />
             </animation>
             <group name="redgerm">
-              <sprite name="germa"><bitmap><color>color.red</color></bitmap></sprite>
-              <sprite name="germb"><bitmap><color>color.red</color></bitmap></sprite>
+              <sprite name="germa"><bitmap><color>red</color></bitmap></sprite>
+              <sprite name="germb"><bitmap><color>red</color></bitmap></sprite>
               <variables><variable name="hue">1</variable></variables>
             </group>
             <group name="yellowgerm">
-              <sprite name="germa"><bitmap><color>color.yellow</color></bitmap></sprite>
-              <sprite name="germb"><bitmap><color>color.yellow</color></bitmap></sprite>
+              <sprite name="germa"><bitmap><color>yellow</color></bitmap></sprite>
+              <sprite name="germb"><bitmap><color>yellow</color></bitmap></sprite>
               <variables><variable name="hue">2</variable></variables>
             </group>
             <group name="bluegerm">
-              <sprite name="germa"><bitmap><color>color.cyan</color></bitmap></sprite>
-              <sprite name="germb"><bitmap><color>color.cyan</color></bitmap></sprite>
+              <sprite name="germa"><bitmap><color>cyan</color></bitmap></sprite>
+              <sprite name="germb"><bitmap><color>cyan</color></bitmap></sprite>
               <variables><variable name="hue">3</variable></variables>
             </group>
           </group>
@@ -397,7 +397,7 @@
     <state name="paused">
       <objects>
         <object name="paused">
-          <sprite><text style="banner"><content>PAUSED</content><color>color.white</color></text></sprite>
+          <sprite><text style="banner"><content>PAUSED</content><color>white</color></text></sprite>
           <position><x><centered /></x><y><centered /></y></position>
         </object>
       </objects>
@@ -411,7 +411,7 @@
     <state name="over">
       <objects>
         <object name="message">
-          <sprite><text style="banner"><content>GAME OVER</content><color>color.red</color></text></sprite>
+          <sprite><text style="banner"><content>GAME OVER</content><color>red</color></text></sprite>
           <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
         </object>
       </objects>

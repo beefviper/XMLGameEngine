@@ -429,7 +429,7 @@ namespace
 		for (const std::string& row : rows) { map += "<row>" + row + "</row>"; }
 		const auto gem = [](const std::string& name, const std::string& character, const std::string& color)
 		{
-			return "<group name=\"" + name + "\" class=\"gem\" char=\"" + character + "\"><sprite><circle><radius>4</radius><color>color." + color + "</color></circle></sprite></group>";
+			return "<group name=\"" + name + "\" class=\"gem\" char=\"" + character + "\"><sprite><circle><radius>4</radius><color>" + color + "</color></circle></sprite></group>";
 		};
 		return map + gem("red", "r", "red") + gem("green", "g", "green") + gem("blue", "b", "blue")
 			+ "<group name=\"pieces\" class=\"falling\">"
@@ -530,8 +530,8 @@ TEST_CASE("A group of groups picking one character is any of them in a shape", "
 	const std::string objects = "<map name=\"field\"><tile><width>10</width><height>10</height></tile><position><x>0</x><y>0</y></position>"
 		"<columns>3</columns><rows>9</rows><cells />"
 		"<group name=\"jewels\" class=\"jewel\" char=\"j\"><sprite><circle><radius>4</radius></circle></sprite>"
-		"<group name=\"red\"><sprite><circle><color>color.red</color></circle></sprite></group>"
-		"<group name=\"blue\"><sprite><circle><color>color.blue</color></circle></sprite></group></group>"
+		"<group name=\"red\"><sprite><circle><color>red</color></circle></sprite></group>"
+		"<group name=\"blue\"><sprite><circle><color>blue</color></circle></sprite></group></group>"
 		"<group name=\"pieces\"><group name=\"column\"><shape><row>j</row><row>j</row><row>j</row></shape></group></group></map>";
 	played::Scratch file(objects, "<spawn object=\"pieces\"><column>2</column><row>1</row></spawn>");
 	Played play(file.path);

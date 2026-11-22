@@ -32,7 +32,7 @@ namespace
 		{
 			std::ofstream out(path);
 			out << "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
-				"<window name=\"scratch\"><width>800</width><height>600</height><background>color.black</background>"
+				"<window name=\"scratch\"><width>800</width><height>600</height><background>black</background>"
 				"<framerate>60</framerate></window>"
 				"<variables><variable name=\"unused\">0</variable></variables>"
 				"<states>" << states << "</states></game>";
@@ -53,7 +53,7 @@ namespace
 	// screen's edges the same.
 	std::string ball(float x, float y, float vx, float vy, const std::string& bounce)
 	{
-		return "<object name=\"ball\"><sprite><circle><radius>5</radius><color>color.white</color></circle></sprite>"
+		return "<object name=\"ball\"><sprite><circle><radius>5</radius><color>white</color></circle></sprite>"
 			"<position><x>" + std::to_string(x) + "</x><y>" + std::to_string(y) + "</y></position>"
 			"<velocity><x>" + std::to_string(vx) + "</x><y>" + std::to_string(vy) + "</y></velocity>"
 			"<collisions><collision class=\"wall\">" + bounce + "</collision><collision edge=\"all\">" + bounce + "</collision></collisions></object>";
@@ -70,7 +70,7 @@ TEST_CASE("a ball falling onto a slope drawn as a line goes off along the way it
 	// A line falling to the right at 45 degrees, tested by its pixels; the
 	// ball comes straight down onto it from above.
 	const std::string slope = "<object name=\"slope\" class=\"wall\"><sprite><line><from><x>0</x><y>0</y></from><to><x>100</x><y>100</y></to>"
-		"<color>color.white</color><thickness>3</thickness></line></sprite><position><x>300</x><y>300</y></position>"
+		"<color>white</color><thickness>3</thickness></line></sprite><position><x>300</x><y>300</y></position>"
 		"<collisions><type>pixel</type></collisions></object>";
 	Written file(playing(slope + ball(345.0f, 290.0f, 0.0f, 240.0f, "<bounce />")));
 	Played play(file.path);
@@ -129,7 +129,7 @@ TEST_CASE("a bounce off a ball meets it round: off at an angle when it is hit of
 {
 	// A still round post below and to the left of a falling ball's line:
 	// the ball comes off to the right, not straight back up.
-	const std::string post = "<object name=\"post\" class=\"wall\"><sprite><circle><radius>10</radius><color>color.white</color></circle></sprite>"
+	const std::string post = "<object name=\"post\" class=\"wall\"><sprite><circle><radius>10</radius><color>white</color></circle></sprite>"
 		"<position><x>340</x><y>400</y></position><collisions /></object>";
 	Written file(playing(post + ball(352.0f, 300.0f, 0.0f, 240.0f, "<bounce />")));
 	Played play(file.path);

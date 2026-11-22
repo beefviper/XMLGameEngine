@@ -160,7 +160,7 @@ namespace
 	std::string mapGame(const std::string& objects)
 	{
 		return R"(<game>
-  <window name="t"><width>200</width><height>200</height><background>color.black</background><framerate>60</framerate></window>
+  <window name="t"><width>200</width><height>200</height><background>black</background><framerate>60</framerate></window>
   <variables><variable name="tile">10</variable></variables>
   <states>
     <state name="playing">
@@ -173,8 +173,8 @@ namespace
 </game>)";
 	}
 
-	const std::string kWallSprite = "<sprite><rectangle><width>10</width><height>10</height><color>color.blue</color></rectangle></sprite>";
-	const std::string kDotSprite = "<sprite><rectangle><width>2</width><height>2</height><color>color.white</color></rectangle></sprite>";
+	const std::string kWallSprite = "<sprite><rectangle><width>10</width><height>10</height><color>blue</color></rectangle></sprite>";
+	const std::string kDotSprite = "<sprite><rectangle><width>2</width><height>2</height><color>white</color></rectangle></sprite>";
 }
 
 TEST_CASE("pacman: the map puts every piece on its tile", "[pacman][map]")

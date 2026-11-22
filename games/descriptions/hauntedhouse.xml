@@ -62,8 +62,8 @@
     <variable name="match">260</variable>
   </variables>
   <styles>
-    <style name="banner"><size>90</size><color>color.orange</color></style>
-    <style name="hud"><size>28</size><color>color.lightgrey</color></style>
+    <style name="banner"><size>90</size><color>orange</color></style>
+    <style name="hud"><size>28</size><color>lightgrey</color></style>
     <style name="prompt"><size>40</size></style>
   </styles>
   <objects>
@@ -116,7 +116,7 @@
     </object>
     <!-- a locked door: opens to the eyes while the key is by them -->
     <object name="door" class="door">
-      <sprite><rectangle><width><divide><value>tile</value><value>4</value></divide></width><height>tile</height><color>color.cyan</color></rectangle></sprite>
+      <sprite><rectangle><width><divide><value>tile</value><value>4</value></divide></width><height>tile</height><color>cyan</color></rectangle></sprite>
       <position><x>0</x><y>0</y></position>
       <dark>unseen</dark>
       <collisions>
@@ -158,7 +158,7 @@
       <tile><width>tile</width><height>tile</height></tile>
       <position><x>0</x><y>tile</y></position>
       <group name="walls" char="#" class="wall">
-        <sprite><rectangle><width>tile</width><height>tile</height><color>color.purple</color></rectangle></sprite>
+        <sprite><rectangle><width>tile</width><height>tile</height><color>purple</color></rectangle></sprite>
         <dark>unlit</dark>
         <collisions />
       </group>
@@ -316,7 +316,7 @@
               </group>
               <!-- the door to the outside, where the urn must come -->
               <object name="entrance" char="E">
-                <sprite><rectangle><width>tile</width><height><divide><value>tile</value><value>4</value></divide></height><color>color.brown</color></rectangle></sprite>
+                <sprite><rectangle><width>tile</width><height><divide><value>tile</value><value>4</value></divide></height><color>brown</color></rectangle></sprite>
               </object>
               <!-- the master key: opens a locked door by touching it -->
               <object name="key" char="k" class="key">
@@ -363,7 +363,7 @@
               <row>#        ##        #</row>
               <row>#    #         #   #</row>
               <row>####################</row>
-              <group name="walls"><sprite><rectangle><width>tile</width><height>tile</height><color>color.blue</color></rectangle></sprite></group>
+              <group name="walls"><sprite><rectangle><width>tile</width><height>tile</height><color>blue</color></rectangle></sprite></group>
               <group name="upstairs" char="^" class="up">
                 <sprite><bitmap from="upstairs" /></sprite>
                 <dark>unlit</dark>
@@ -439,7 +439,7 @@
               <row>#      #       #   #</row>
               <row>#      #       #   #</row>
               <row>####################</row>
-              <group name="walls"><sprite><rectangle><width>tile</width><height>tile</height><color>color.forestgreen</color></rectangle></sprite></group>
+              <group name="walls"><sprite><rectangle><width>tile</width><height>tile</height><color>forestgreen</color></rectangle></sprite></group>
               <group name="upstairs" char="^" class="up">
                 <sprite><bitmap from="stairs" /></sprite>
                 <dark>unlit</dark>
@@ -515,7 +515,7 @@
               <row>#                  #</row>
               <row>#   #     ##     # #</row>
               <row>####################</row>
-              <group name="walls"><sprite><rectangle><width>tile</width><height>tile</height><color>color.red</color></rectangle></sprite></group>
+              <group name="walls"><sprite><rectangle><width>tile</width><height>tile</height><color>red</color></rectangle></sprite></group>
               <group name="downstairs" char="v" class="down">
                 <sprite><bitmap from="downstairs" /></sprite>
                 <dark>unlit</dark>
@@ -523,7 +523,7 @@
               </group>
             </map>
             <object name="door">
-              <sprite><rectangle><width>tile</width><height><divide><value>tile</value><value>4</value></divide></height><color>color.cyan</color></rectangle></sprite>
+              <sprite><rectangle><width>tile</width><height><divide><value>tile</value><value>4</value></divide></height><color>cyan</color></rectangle></sprite>
               <position><x><multiply><value>tile</value><value>9</value></multiply></x><y>
                 <add>
                   <value><multiply><value>tile</value><value>7</value></multiply></value>
@@ -620,8 +620,8 @@
     <state name="over">
       <objects>
         <object name="message">
-          <sprite name="lost"><text style="banner"><content>THE HOUSE WINS</content><color>color.red</color></text></sprite>
-          <sprite name="won"><text style="banner"><content>THE URN IS WHOLE</content><color>color.yellow</color></text></sprite>
+          <sprite name="lost"><text style="banner"><content>THE HOUSE WINS</content><color>red</color></text></sprite>
+          <sprite name="won"><text style="banner"><content>THE URN IS WHOLE</content><color>yellow</color></text></sprite>
           <position><x><centered /></x><y><subtract><value>window.height.center</value><value>150</value></subtract></y></position>
         </object>
       </objects>
@@ -669,12 +669,12 @@
     <bitmap name="spider">
       <row>*.*..*.*</row><row>.******.</row><row>********</row><row>.******.</row><row>*.*..*.*</row>
       <scale>3</scale>
-      <color>color.orange</color>
+      <color>orange</color>
     </bitmap>
     <bitmap name="bat">
       <row>*......*</row><row>**.**.**</row><row>.******.</row><row>...**...</row>
       <scale>3</scale>
-      <color>color.magenta</color>
+      <color>magenta</color>
     </bitmap>
     <bitmap name="ghost">
       <row>..****..</row><row>.******.</row><row>**.**.**</row><row>********</row><row>********</row><row>*.*..*.*</row>
@@ -683,7 +683,7 @@
     <bitmap name="urn">
       <row>.****.</row><row>******</row><row>.****.</row><row>..**..</row><row>.****.</row>
       <scale>3</scale>
-      <color>color.yellow</color>
+      <color>yellow</color>
     </bitmap>
     <bitmap name="player">
       <row>**..**</row><row>*.**.*</row><row>**..**</row>
@@ -696,16 +696,16 @@
     <bitmap name="player-red">
       <row>**..**</row><row>*.**.*</row><row>**..**</row>
       <scale>3</scale>
-      <color>color.red</color>
+      <color>red</color>
     </bitmap>
-    <bitmap name="stairs"><row>...*</row><row>..**</row><row>.***</row><row>****</row><scale>8</scale><color>color.brown</color></bitmap>
+    <bitmap name="stairs"><row>...*</row><row>..**</row><row>.***</row><row>****</row><scale>8</scale><color>brown</color></bitmap>
     <bitmap name="key">
       <row>.**.....</row><row>*..*****</row><row>.**..*.*</row>
       <scale>3</scale>
-      <color>color.cyan</color>
+      <color>cyan</color>
     </bitmap>
-    <bitmap name="upstairs"><row>*...</row><row>**..</row><row>***.</row><row>****</row><scale>8</scale><color>color.brown</color></bitmap>
-    <bitmap name="downstairs"><row>****</row><row>.***</row><row>..**</row><row>...*</row><scale>8</scale><color>color.brown</color></bitmap>
-    <bitmap name="downstairs2"><row>****</row><row>***.</row><row>**..</row><row>*...</row><scale>8</scale><color>color.brown</color></bitmap>
+    <bitmap name="upstairs"><row>*...</row><row>**..</row><row>***.</row><row>****</row><scale>8</scale><color>brown</color></bitmap>
+    <bitmap name="downstairs"><row>****</row><row>.***</row><row>..**</row><row>...*</row><scale>8</scale><color>brown</color></bitmap>
+    <bitmap name="downstairs2"><row>****</row><row>***.</row><row>**..</row><row>*...</row><scale>8</scale><color>brown</color></bitmap>
   </pictures>
 </game>

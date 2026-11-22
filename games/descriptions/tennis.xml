@@ -41,7 +41,7 @@
   <window name="Tennis">
     <width>800</width>
     <height>600</height>
-    <background>color.forestgreen</background>
+    <background>forestgreen</background>
   </window>
   <variables>
     <variable name="step">180</variable>
@@ -52,9 +52,9 @@
     <variable name="set">6</variable>
   </variables>
   <styles>
-    <style name="banner"><size>110</size><color>color.white</color></style>
-    <style name="score"><size>32</size><color>color.white</color></style>
-    <style name="prompt"><size>40</size><color>color.white</color></style>
+    <style name="banner"><size>110</size><color>white</color></style>
+    <style name="score"><size>32</size><color>white</color></style>
+    <style name="prompt"><size>40</size><color>white</color></style>
   </styles>
   <states>
     <objects>
@@ -93,7 +93,7 @@
           <position><x>150</x><y>80</y></position>
         </object>
         <object name="net">
-          <sprite><rectangle><width>540</width><height>4</height><color>color.lightgrey</color></rectangle></sprite>
+          <sprite><rectangle><width>540</width><height>4</height><color>lightgrey</color></rectangle></sprite>
           <position><x>130</x><y>298</y></position>
         </object>
         <!-- the players: a person with a racket; the far one is the computer's -->
@@ -115,20 +115,20 @@
             <variable name="games">0</variable>
           </variables>
           <member name="cpu">
-            <sprite><bitmap><color>color.cyan</color></bitmap></sprite>
+            <sprite><bitmap><color>cyan</color></bitmap></sprite>
             <position><x>385</x><y>50</y></position>
           </member>
           <member name="player"><position><x>385</x><y>520</y></position></member>
         </group>
         <!-- the ball's shadow, on the court under it; written before the ball, so drawn under it -->
         <object name="shadow">
-          <sprite><circle><radius>6</radius><color>color.darkgreen</color></circle></sprite>
+          <sprite><circle><radius>6</radius><color>darkgreen</color></circle></sprite>
           <position><x>0</x><y>0</y></position>
           <shadow object="ball" />
         </object>
         <!-- served from the far end toward the player, falling from high up -->
         <object name="ball">
-          <sprite><circle><radius>6</radius><color>color.yellow</color></circle></sprite>
+          <sprite><circle><radius>6</radius><color>yellow</color></circle></sprite>
           <position><x>394</x><y>90</y></position>
           <velocity><x><random><min>-90</min><max>90</max></random></x><y>180</y></velocity>
           <altitude>
@@ -287,8 +287,8 @@
     <state name="over">
       <objects>
         <object name="message">
-          <sprite name="lost"><text style="banner"><content>SET, CPU</content><color>color.red</color></text></sprite>
-          <sprite name="won"><text style="banner"><content>SET, YOU</content><color>color.yellow</color></text></sprite>
+          <sprite name="lost"><text style="banner"><content>SET, CPU</content><color>red</color></text></sprite>
+          <sprite name="won"><text style="banner"><content>SET, YOU</content><color>yellow</color></text></sprite>
           <position><x><centered /></x><y><subtract><value>window.height.center</value><value>150</value></subtract></y></position>
         </object>
       </objects>
@@ -319,8 +319,8 @@
       <row>..*..*....</row>
       <row>.**..**...</row>
       <scale>3</scale>
-      <color>color.orange</color>
-      <color char="r">color.white</color>
+      <color>orange</color>
+      <color char="r">white</color>
     </bitmap>
   </pictures>
 </game>
