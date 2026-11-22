@@ -178,7 +178,7 @@ TEST_CASE("fivedice: a written box ends the turn, the players take turns, and fu
 	REQUIRE(play.of("over", "result") == 5); // two players, a draw
 }
 
-TEST_CASE("fivedice: the computer keeps the most common number and writes its turn", "[fivedice]")
+TEST_CASE("fivedice: the computer plays its turn, and a person's keys wait", "[fivedice]")
 {
 	Dice play(true);
 	REQUIRE(play.get("card").lookName() == "person");
@@ -194,12 +194,6 @@ TEST_CASE("fivedice: the computer keeps the most common number and writes its tu
 	play.roll();
 	REQUIRE(play.card("rolls") == 0);
 
-	// What it would keep: the number most dice show, two or more.
-	play.showing({ 4, 2, 4, 6, 1 });
-	REQUIRE(play.of("dice.1", "want") == 1);
-	REQUIRE(play.of("dice.2", "want") == 0);
-	REQUIRE(play.of("dice.3", "want") == 1);
-
 	for (int i = 0; i < 2000 && play.card("player") == 2; ++i) { play.frames(1); }
 	REQUIRE(play.card("player") == 1);
 	REQUIRE(play.card("turn") == 2);
@@ -207,6 +201,34 @@ TEST_CASE("fivedice: the computer keeps the most common number and writes its tu
 	for (int row = 1; row <= 13; ++row) { written += static_cast<int>(play.box(row, "filled", "two")); }
 	REQUIRE(written == 1);
 	REQUIRE(play.get("card").lookName() == "person");
+}
+
+TEST_CASE("fivedice: what the computer would keep, and where a poor roll goes", "[fivedice]")
+{
+	Dice play;
+	play.roll();
+	// What it would keep: the number most dice show, two or more.
+	play.showing({ 4, 2, 4, 6, 1 });
+	play.frames(2);
+	REQUIRE(play.of("dice.1", "want") == 1);
+	REQUIRE(play.of("dice.2", "want") == 0);
+	REQUIRE(play.of("dice.3", "want") == 1);
+	// A run of four: one of each of its numbers, the second 3 let go.
+	play.showing({ 3, 5, 3, 2, 4 });
+	play.frames(2);
+	REQUIRE(play.card("run") == 2);
+	REQUIRE(play.of("dice.1", "want") == 1);
+	REQUIRE(play.of("dice.2", "want") == 1);
+	REQUIRE(play.of("dice.3", "want") == 0);
+	REQUIRE(play.of("dice.4", "want") == 1);
+	REQUIRE(play.of("dice.5", "want") == 1);
+	// A poor last roll goes where it loses least: twos (4, one under its par of 5), not a run box at 0.
+	play.showing({ 2, 2, 5, 5, 3 });
+	play.frames(2);
+	REQUIRE(play.box(2, "pick", "two") == -1);
+	REQUIRE(play.box(10, "pick", "two") == -26);
+	REQUIRE(play.box(1, "pick", "two") == -2);
+	REQUIRE(play.card("best") == -1);
 }
 
 TEST_CASE("fivedice: a whole game against the computer comes to its end", "[fivedice]")

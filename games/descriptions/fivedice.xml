@@ -35,8 +35,10 @@
   * The computer is <computer> conditions holding keys of its own (F1 to
     F9), answered only while the card shows its `computer` look, as a
     person's are only while it shows `person`. Live numbers say what it
-    wants: each die's `want` (it shows the number most dice show), and
-    each box's `pick`, what it would score less what it is usually worth.
+    wants: each die's `want` (it shows the number most dice show, or is
+    one of a run of four), and each box's `pick`, what it would score
+    less its `par`, what it usually earns in a game; so a poor roll goes
+    where it loses least.
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
@@ -130,14 +132,27 @@
             <value><compare><value>card.player</value><equal>self.side</equal></compare></value>
           </multiply>
         </variable>
-        <!-- for the computer: what a box would score less what it is usually worth (a written box far below) -->
-        <variable name="par" update="live"><multiply><value>self.row</value><value>3</value></multiply></variable>
+        <!--
+          For the computer: what a box would score less what it usually
+          earns in a game (its par), so a bad roll goes where it loses
+          least. An upper box scoring three of its number or more counts 6
+          more while the bonus is still to win; a written box is far below.
+        -->
+        <variable name="par" update="live"><subtract><value><multiply><value>self.row</value><value>3</value></multiply></value><value>1</value></subtract></variable>
         <variable name="pick" update="live">
-          <subtract>
+          <add>
             <value>self.offer</value>
-            <value>self.par</value>
-            <value><multiply><value>self.filled</value><value>1000</value></multiply></value>
-          </subtract>
+            <value><multiply><value>-1</value><value>self.par</value></multiply></value>
+            <value>
+              <multiply>
+                <value>6</value>
+                <value><compare><value>self.row</value><atmost>6</atmost></compare></value>
+                <value><compare><value>self.offer</value><atleast><multiply><value>self.row</value><value>3</value></multiply></atleast></compare></value>
+                <value><compare><value>twocard.upper</value><below>63</below></compare></value>
+              </multiply>
+            </value>
+            <value><multiply><value>self.filled</value><value>-1000</value></multiply></value>
+          </add>
         </variable>
         <!-- the computer's box: the one pointed at, if none is better -->
         <variable name="aim" update="live">
@@ -148,11 +163,11 @@
         </variable>
       </variables>
       <row number="7"><padding><y><add><value>rowstep</value><value>20</value></add></y></padding><variables><variable name="offer" update="live"><multiply><value>three.pattern</value><value>cup.worth</value></multiply></variable><variable name="par">15</variable></variables></row>
-      <row number="8"><variables><variable name="offer" update="live"><multiply><value>four.pattern</value><value>cup.worth</value></multiply></variable><variable name="par">10</variable></variables></row>
-      <row number="9"><variables><variable name="offer" update="live"><multiply><value>house.pattern</value><value>25</value></multiply></variable><variable name="par">0</variable></variables></row>
-      <row number="10"><variables><variable name="offer" update="live"><multiply><value>small.pattern</value><value>30</value></multiply></variable><variable name="par">0</variable></variables></row>
-      <row number="11"><variables><variable name="offer" update="live"><multiply><value>large.pattern</value><value>40</value></multiply></variable><variable name="par">0</variable></variables></row>
-      <row number="12"><variables><variable name="offer" update="live"><multiply><value>five.pattern</value><value>50</value></multiply></variable><variable name="par">5</variable></variables></row>
+      <row number="8"><variables><variable name="offer" update="live"><multiply><value>four.pattern</value><value>cup.worth</value></multiply></variable><variable name="par">8</variable></variables></row>
+      <row number="9"><variables><variable name="offer" update="live"><multiply><value>house.pattern</value><value>25</value></multiply></variable><variable name="par">22</variable></variables></row>
+      <row number="10"><variables><variable name="offer" update="live"><multiply><value>small.pattern</value><value>30</value></multiply></variable><variable name="par">26</variable></variables></row>
+      <row number="11"><variables><variable name="offer" update="live"><multiply><value>large.pattern</value><value>40</value></multiply></variable><variable name="par">28</variable></variables></row>
+      <row number="12"><variables><variable name="offer" update="live"><multiply><value>five.pattern</value><value>50</value></multiply></variable><variable name="par">15</variable></variables></row>
       <row number="13"><variables><variable name="offer" update="live">cup.worth</variable><variable name="par">22</variable></variables></row>
     </group>
   </objects>
@@ -241,11 +256,38 @@
                     <value><compare><value>dice.5.worth</value><equal>self.worth</equal></compare></value>
                   </add>
             </variable>
-            <variable name="want" update="live">
+            <!-- alike: the number most dice show, two or more; or for a run, one die of each of its numbers -->
+            <variable name="alike" update="live">
               <multiply>
                 <value><compare><value>self.same</value><atleast>card.most</atleast></compare></value>
                 <value><compare><value>card.most</value><atleast>2</atleast></compare></value>
               </multiply>
+            </variable>
+            <variable name="inrun" update="live">
+              <multiply>
+                <value><compare><value>self.worth</value><atleast>card.run</atleast></compare></value>
+                <value><compare><value>self.worth</value><atmost><add><value>card.run</value><value>3</value></add></atmost></compare></value>
+                <value>
+                  <compare>
+                    <value>
+                      <add>
+                    <value><multiply><value><compare><value>dice.1.worth</value><equal>self.worth</equal></compare></value><value><compare><value>1</value><below>self.column</below></compare></value></multiply></value>
+                    <value><multiply><value><compare><value>dice.2.worth</value><equal>self.worth</equal></compare></value><value><compare><value>2</value><below>self.column</below></compare></value></multiply></value>
+                    <value><multiply><value><compare><value>dice.3.worth</value><equal>self.worth</equal></compare></value><value><compare><value>3</value><below>self.column</below></compare></value></multiply></value>
+                    <value><multiply><value><compare><value>dice.4.worth</value><equal>self.worth</equal></compare></value><value><compare><value>4</value><below>self.column</below></compare></value></multiply></value>
+                    <value><multiply><value><compare><value>dice.5.worth</value><equal>self.worth</equal></compare></value><value><compare><value>5</value><below>self.column</below></compare></value></multiply></value>
+                      </add>
+                    </value>
+                    <equal>0</equal>
+                  </compare>
+                </value>
+              </multiply>
+            </variable>
+            <variable name="want" update="live">
+              <add>
+                <value><multiply><value>card.runs</value><value>self.inrun</value></multiply></value>
+                <value><multiply><value><subtract><value>1</value><value>card.runs</value></subtract></value><value>self.alike</value></multiply></value>
+              </add>
             </variable>
             <variable name="change" update="live"><subtract><value>1</value><value><compare><value>self.kept</value><equal>self.want</equal></compare></value></subtract></variable>
           </variables>
@@ -357,6 +399,76 @@
                     <value>dice.5.same</value>
                   </largest>
             </variable>
+            <variable name="n1" update="live">
+              <add>
+                <value><compare><value>dice.1.worth</value><equal>1</equal></compare></value>
+                <value><compare><value>dice.2.worth</value><equal>1</equal></compare></value>
+                <value><compare><value>dice.3.worth</value><equal>1</equal></compare></value>
+                <value><compare><value>dice.4.worth</value><equal>1</equal></compare></value>
+                <value><compare><value>dice.5.worth</value><equal>1</equal></compare></value>
+              </add>
+            </variable>
+            <variable name="n2" update="live">
+              <add>
+                <value><compare><value>dice.1.worth</value><equal>2</equal></compare></value>
+                <value><compare><value>dice.2.worth</value><equal>2</equal></compare></value>
+                <value><compare><value>dice.3.worth</value><equal>2</equal></compare></value>
+                <value><compare><value>dice.4.worth</value><equal>2</equal></compare></value>
+                <value><compare><value>dice.5.worth</value><equal>2</equal></compare></value>
+              </add>
+            </variable>
+            <variable name="n3" update="live">
+              <add>
+                <value><compare><value>dice.1.worth</value><equal>3</equal></compare></value>
+                <value><compare><value>dice.2.worth</value><equal>3</equal></compare></value>
+                <value><compare><value>dice.3.worth</value><equal>3</equal></compare></value>
+                <value><compare><value>dice.4.worth</value><equal>3</equal></compare></value>
+                <value><compare><value>dice.5.worth</value><equal>3</equal></compare></value>
+              </add>
+            </variable>
+            <variable name="n4" update="live">
+              <add>
+                <value><compare><value>dice.1.worth</value><equal>4</equal></compare></value>
+                <value><compare><value>dice.2.worth</value><equal>4</equal></compare></value>
+                <value><compare><value>dice.3.worth</value><equal>4</equal></compare></value>
+                <value><compare><value>dice.4.worth</value><equal>4</equal></compare></value>
+                <value><compare><value>dice.5.worth</value><equal>4</equal></compare></value>
+              </add>
+            </variable>
+            <variable name="n5" update="live">
+              <add>
+                <value><compare><value>dice.1.worth</value><equal>5</equal></compare></value>
+                <value><compare><value>dice.2.worth</value><equal>5</equal></compare></value>
+                <value><compare><value>dice.3.worth</value><equal>5</equal></compare></value>
+                <value><compare><value>dice.4.worth</value><equal>5</equal></compare></value>
+                <value><compare><value>dice.5.worth</value><equal>5</equal></compare></value>
+              </add>
+            </variable>
+            <variable name="n6" update="live">
+              <add>
+                <value><compare><value>dice.1.worth</value><equal>6</equal></compare></value>
+                <value><compare><value>dice.2.worth</value><equal>6</equal></compare></value>
+                <value><compare><value>dice.3.worth</value><equal>6</equal></compare></value>
+                <value><compare><value>dice.4.worth</value><equal>6</equal></compare></value>
+                <value><compare><value>dice.5.worth</value><equal>6</equal></compare></value>
+              </add>
+            </variable>
+            <!-- a run of four among the dice: the number it starts from (the highest such), else 0 -->
+            <variable name="run" update="live">
+              <largest>
+                <value><multiply><value><compare><value>card.n1</value><atleast>1</atleast></compare></value><value><compare><value>card.n2</value><atleast>1</atleast></compare></value><value><compare><value>card.n3</value><atleast>1</atleast></compare></value><value><compare><value>card.n4</value><atleast>1</atleast></compare></value></multiply></value>
+                <value><multiply><value>2</value><value><multiply><value><compare><value>card.n2</value><atleast>1</atleast></compare></value><value><compare><value>card.n3</value><atleast>1</atleast></compare></value><value><compare><value>card.n4</value><atleast>1</atleast></compare></value><value><compare><value>card.n5</value><atleast>1</atleast></compare></value></multiply></value></multiply></value>
+                <value><multiply><value>3</value><value><multiply><value><compare><value>card.n3</value><atleast>1</atleast></compare></value><value><compare><value>card.n4</value><atleast>1</atleast></compare></value><value><compare><value>card.n5</value><atleast>1</atleast></compare></value><value><compare><value>card.n6</value><atleast>1</atleast></compare></value></multiply></value></multiply></value>
+              </largest>
+            </variable>
+            <!-- keeping a run: one is there, no number shows three times, and a run box is open -->
+            <variable name="runs" update="live">
+              <multiply>
+                <value><compare><value>card.run</value><atleast>1</atleast></compare></value>
+                <value><compare><value>card.most</value><atmost>2</atmost></compare></value>
+                <value><compare><value><add><value>two.10.filled</value><value>two.11.filled</value></add></value><atmost>1</atmost></compare></value>
+              </multiply>
+            </variable>
             <variable name="changes" update="live">
               <add>
                     <value>dice.1.change</value>
@@ -372,6 +484,7 @@
                 <value><multiply><value>five.pattern</value><value><subtract><value>1</value><value>two.12.filled</value></subtract></value></multiply></value>
                 <value><multiply><value>large.pattern</value><value><subtract><value>1</value><value>two.11.filled</value></subtract></value></multiply></value>
                 <value><multiply><value>house.pattern</value><value><subtract><value>1</value><value>two.9.filled</value></subtract></value></multiply></value>
+                <value><multiply><value>small.pattern</value><value><subtract><value>1</value><value>two.10.filled</value></subtract></value><value>two.11.filled</value></multiply></value>
               </add>
             </variable>
             <variable name="rolling" update="live">
