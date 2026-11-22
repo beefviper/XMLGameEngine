@@ -125,7 +125,7 @@ TEST_CASE("an <altitude> is not below the ground, and only what has one has one 
 TEST_CASE("tennis.xml: the player hits a low ball back over the net, and the computer returns it", "[altitude][tennis]")
 {
 	Played play("descriptions/tennis.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	REQUIRE(play.state() == "playing");
 
 	// The serve comes down toward the player; stand where it will be.
@@ -158,7 +158,7 @@ TEST_CASE("tennis.xml: the player hits a low ball back over the net, and the com
 TEST_CASE("tennis.xml: a ball let past is a point, said in words, and four take the game", "[altitude][tennis][choose]")
 {
 	Played play("descriptions/tennis.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	Object& player = play.get("player");
 	CHECK(play.get("playerscore").drawn.picture->text == "YOU 0 LOVE");
 

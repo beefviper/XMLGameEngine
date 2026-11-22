@@ -31,7 +31,7 @@ The tables list only keys beyond that.
 | `astrosmash` | A/D, Space fires | rocks that split, spinners, a spare base each 1,000 |
 | `asteroids` | Left/Right turn, Up thrusts, Space fires, Down hyperspace | headings, rocks that break, two saucers, a flame [pose](pictures.md#poses-mirror-grip-and-blinking), the best score kept |
 | `demonattack` | A/D, Space fires | three waves of demons that fire back and split |
-| `galaxian` | A/D, Space fires; 2 on the title | [paths](timers.md#paths), a swaying fleet, escorts, [alternating games](states.md#alternating-games), a top five |
+| `galaxian` | A/D, Space fires; title 1 or 2 players, taking turns | [paths](timers.md#paths), a swaying fleet, escorts, [alternating games](states.md#alternating-games), a top five |
 | `megamania` | A/D, Space fires | eight wrapping waves; energy as a [timer's time left](timers.md#time-left) |
 | `atlantis` | A, W, D fire the three posts | waves whose named timers and conditions [`from=`](states.md#scenes) replaces |
 | `missilecommand` | W A S D move the sight, Space launches | `<aim>`, counter-missiles trailing a [`<tether>`](pictures.md#sprites), waves as scenes |
@@ -49,8 +49,8 @@ The tables list only keys beyond that.
 | `frostbite` | W/S hop rows, A/D walk | timed [`<hop>`](commands.md#moving), looks that turn the floes, three nights |
 | `combat` | W/S drive, A/D turn, F or Left Shift fires; Up/Down, Left/Right, Right Shift or Right Control | two tanks; a hit [knocks](collisions.md#knocks) the tank back |
 | `airseabattle` | A S D point, W fires; Left Down Right, Up | two guns, four lanes of planes, 2:16 |
-| `fishingderby` | W A S D move the hook | tethers for lines, values [read when used](format.md#values-read-when-used), a computer fisherman |
-| `tennis` | W A S D walk | an [altitude](pictures.md#height-and-shadows) and a shadow, a computer at the far end, points said in words |
+| `fishingderby` | W A S D move the hook; title 1 plays the computer, 2 two players on the arrows | tethers for lines, values [read when used](format.md#values-read-when-used), a computer fisherman in seat 2 |
+| `tennis` | W A S D walk; title 1 plays the computer, 2 two players on the arrows | an [altitude](pictures.md#height-and-shadows) and a shadow, a computer in seat 2 at the far end, points said in words |
 | `sparring` | A/D step, W jabs, S guards; Left/Right, Up, Down | two boxers; a jab's middle [frame holds the fist](collisions.md#how-a-touch-is-found), scored by the one hit's `by="fist"` rules, a guard by his look |
 | `trickshot` | W A S D move the cue tip | pool: balls that [`<knock>`](collisions.md#knocks), slowed by `<drag>` |
 
@@ -59,7 +59,7 @@ The tables list only keys beyond that.
 | Game | Keys | Shows |
 |---|---|---|
 | `donkeykong` | A/D walk, W/S climb, Space jumps | sloping girders, ladders, barrels that sometimes take one, fireballs |
-| `mariobros` | A/D walk, W or Space jumps; 2 on the title for Luigi on the arrows | a knock through a floor, [`<poses>`](pictures.md#poses-mirror-grip-and-blinking), a window [`<scale>`](format.md#window), [palette swaps](format.md#palette-swap), six phases |
+| `mariobros` | A/D walk, W or Space jumps; title 1 one player, 2 for Luigi on the arrows | a knock through a floor, [`<poses>`](pictures.md#poses-mirror-grip-and-blinking), a window [`<scale>`](format.md#window), [palette swaps](format.md#palette-swap), six phases |
 | `pitfall` | A/D run, Space jumps, W/S climb | screens built from [pieces](objects.md#pieces-and-from), logs, tar, crocodiles |
 | `berserk` | W A S D walk and face, Space fires | rooms as [maps](maps.md), robots that line up and fire, Evil Otto |
 | `adventure` | W A S D walk, Space drops | five rooms, [`<carry />`](commands.md#touching), dragons that wake |

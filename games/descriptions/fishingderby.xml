@@ -13,9 +13,9 @@
   the surface, turning when he likes, and eats any fish on a line he meets,
   a little faster after every fish landed. The first to 99 pounds wins.
 
-  You fish from the left pier: W A S D or the arrows move the hook. The
-  computer fishes from the right, on I J K L. Pause pauses;
-  Space starts and plays again.
+  You fish from the left pier: W A S D move the hook. On the title 1 has
+  the computer fish from the right, and 2 a second player on the arrows.
+  Pause pauses; Space plays again.
 
   How it is written:
   * The fishermen, their rod tips and their hooks are each one <group> of
@@ -33,9 +33,10 @@
     the start of its row.
   * Fish and shark have a look for each way they swim, changed at the edges;
     the shark's random turn swaps them by way of a third look.
-  * The computer's <computer> holds K and J or L to take its hook down to a
-    cod while it is free (it takes whatever bites on the way), and I to reel
-    in while the shark is not near.
+  * The right pier is seat 2. The computer's <computer seat="2"> holds Down
+    and Left or Right to take its hook down to a cod while it is free (it
+    takes whatever bites on the way), and Up to reel in while the shark is
+    not near.
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
@@ -74,15 +75,23 @@
           <sprite><text style="help" /></sprite>
           <position><x><centered /></x><y><centered><offset>-40</offset></centered></y></position>
           <row number="1"><sprite><text><content>hook a fish, reel it up past the shark, first to 99 pounds</content></text></sprite></row>
-          <row number="2"><sprite><text><content>w a s d or the arrows move your hook</content><color>lightgrey</color></text></sprite></row>
+          <row number="2"><sprite><text><content>w a s d move your hook, the arrows the second player's</content><color>lightgrey</color></text></sprite></row>
         </group>
         <object name="start">
-          <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
+          <sprite><text style="prompt"><content>1 player against the computer, 2 for two players</content></text></sprite>
           <position><x><centered /></x><y><centered><offset>110</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
-        <input button="space">
+        <input>
+          <button>num1</button><button>numpad1</button>
+          <people>1</people>
+          <push state="playing" />
+          <play sound="start" />
+        </input>
+        <input>
+          <button>num2</button><button>numpad2</button>
+          <people>2</people>
           <push state="playing" />
           <play sound="start" />
         </input>
@@ -292,15 +301,19 @@
         </group>
       </objects>
       <inputs>
-        <input><button>w</button><button>up</button><trigger object="hook1" action="up" /></input>
-        <input><button>s</button><button>down</button><trigger object="hook1" action="down" /></input>
-        <input><button>a</button><button>left</button><trigger object="hook1" action="left" /></input>
-        <input><button>d</button><button>right</button><trigger object="hook1" action="right" /></input>
-        <!-- the right pier's keys: the computer's, or a second player's -->
-        <input button="i"><trigger object="hook2" action="up" /></input>
-        <input button="k"><trigger object="hook2" action="down" /></input>
-        <input button="j"><trigger object="hook2" action="left" /></input>
-        <input button="l"><trigger object="hook2" action="right" /></input>
+        <seat number="1">
+          <input button="w"><trigger object="hook1" action="up" /></input>
+          <input button="s"><trigger object="hook1" action="down" /></input>
+          <input button="a"><trigger object="hook1" action="left" /></input>
+          <input button="d"><trigger object="hook1" action="right" /></input>
+        </seat>
+        <!-- the right pier: the computer's, or a second player's -->
+        <seat number="2">
+          <input button="up"><trigger object="hook2" action="up" /></input>
+          <input button="down"><trigger object="hook2" action="down" /></input>
+          <input button="left"><trigger object="hook2" action="left" /></input>
+          <input button="right"><trigger object="hook2" action="right" /></input>
+        </seat>
         <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
@@ -318,21 +331,21 @@
         </condition>
       </conditions>
       <!-- the computer takes its hook down to the second cod while it is free, and reels in a bite while the shark is not near -->
-      <computer>
+      <computer seat="2">
         <condition object="hook2" variable="line"><equal>0</equal>
           <condition object="hook2" variable="y"><below>cod.2.y</below>
-            <hold button="k" />
+            <hold button="down" />
           </condition>
           <condition object="hook2" variable="x"><below>cod.2.x</below>
-            <hold button="l" />
+            <hold button="right" />
           </condition>
           <condition object="hook2" variable="x"><above>cod.2.x</above>
-            <hold button="j" />
+            <hold button="left" />
           </condition>
         </condition>
         <condition object="hook2" variable="line"><atleast>1</atleast>
           <condition object="hook2" distance="shark"><above>200</above>
-            <hold button="i" />
+            <hold button="up" />
           </condition>
         </condition>
       </computer>

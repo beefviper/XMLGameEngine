@@ -27,7 +27,7 @@ namespace
 
 	struct Mario : Played
 	{
-		explicit Mario(KeyCode start = KeyCode::Space) : Played("descriptions/mariobros.xml")
+		explicit Mario(KeyCode start = KeyCode::Num1) : Played("descriptions/mariobros.xml")
 		{
 			tap(start);
 			REQUIRE(state() == "playing");

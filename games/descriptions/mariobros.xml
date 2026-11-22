@@ -32,8 +32,9 @@
   * TEST YOUR SKILL!: ten coins on the floors and twenty seconds to catch
     them.
 
-  Space starts one player, 2 starts two. Mario: A and D walk, W or Space
-  jumps. Luigi: the left and right arrows walk, Up jumps. Pause pauses.
+  1 starts one player, 2 starts two. Mario: A and D walk, W or Space
+  jumps. Luigi, seat 2: the left and right arrows walk, Up jumps. Pause
+  pauses.
 
   How it is written:
   * Mario and Luigi are one piece, the brother, taken twice; Luigi
@@ -611,18 +612,22 @@
           <row number="1"><sprite><text><content>bump a shellcreeper from below</content></text></sprite></row>
           <row number="2"><sprite><text><content>then kick it off</content></text></sprite></row>
           <row number="3"><sprite><text><content>a d walk, w or space jumps</content><color>lightgrey</color></text></sprite><padding><y>20</y></padding></row>
-          <row number="4"><sprite><text><content>space 1 player  2 two</content></text></sprite><padding><y>28</y></padding></row>
+          <row number="4"><sprite><text><content>1 player  2 two</content></text></sprite><padding><y>28</y></padding></row>
         </group>
       </objects>
       <shows>
         <show object="best" />
       </shows>
       <inputs>
-        <input button="space">
+        <input>
+          <button>num1</button><button>numpad1</button>
+          <people>1</people>
           <play sound="start" />
           <push state="playing" />
         </input>
-        <input button="num2">
+        <input>
+          <button>num2</button><button>numpad2</button>
+          <people>2</people>
           <set variable="players.count">2</set>
           <play sound="start" />
           <push state="playing" />
@@ -989,12 +994,16 @@
         <show object="best" />
       </shows>
       <inputs>
-        <input button="a"><trigger object="mario" action="left" /></input>
-        <input button="d"><trigger object="mario" action="right" /></input>
-        <input><button>w</button><button>space</button><trigger object="mario" action="jump" /></input>
-        <input button="left"><trigger object="luigi" action="left" /></input>
-        <input button="right"><trigger object="luigi" action="right" /></input>
-        <input button="up"><trigger object="luigi" action="jump" /></input>
+        <seat number="1">
+          <input button="a"><trigger object="mario" action="left" /></input>
+          <input button="d"><trigger object="mario" action="right" /></input>
+          <input><button>w</button><button>space</button><trigger object="mario" action="jump" /></input>
+        </seat>
+        <seat number="2">
+          <input button="left"><trigger object="luigi" action="left" /></input>
+          <input button="right"><trigger object="luigi" action="right" /></input>
+          <input button="up"><trigger object="luigi" action="jump" /></input>
+        </seat>
         <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>

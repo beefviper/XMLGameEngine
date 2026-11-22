@@ -157,7 +157,7 @@ TEST_CASE("Mario's jump goes as high and is in the air as long at every step len
 	// pull (per frame in this game), so the time is not rounded to a step.
 	const auto jump = [](Played& play, Pacer& pacer, bool height)
 	{
-		play.tap(KeyCode::Space);
+		play.tap(KeyCode::Num1);
 		REQUIRE(play.state() == "playing");
 		xge::Object& mario = play.get("mario");
 		mario.position.x = 100.0f;

@@ -417,7 +417,7 @@ TEST_CASE("galaxian.xml loads with every XML library, so both schema checkers ta
 TEST_CASE("the fleet flies in on its paths, one behind another, and settles into formation", "[galaxian]")
 {
 	Play play("descriptions/galaxian.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	CHECK(play.state() == "playing");
 
 	// The first frame sends all six rows off from where their paths start;
@@ -438,7 +438,7 @@ TEST_CASE("the fleet flies in on its paths, one behind another, and settles into
 TEST_CASE("a diver weaves down, drops bombs, goes off the bottom and comes back to its place from the top", "[galaxian]")
 {
 	Play play("descriptions/galaxian.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	play.frames(400);
 
 	// The ship, far to the right, is out of play so nothing hits it; the
@@ -486,7 +486,7 @@ TEST_CASE("a diver weaves down, drops bombs, goes off the bottom and comes back 
 TEST_CASE("the formation sways from side to side, and a diver comes home to where its place has gone", "[galaxian]")
 {
 	Play play("descriptions/galaxian.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	play.frames(400);
 
 	Object& alien = play.object("blues1.1.1");
@@ -507,7 +507,7 @@ TEST_CASE("the formation sways from side to side, and a diver comes home to wher
 TEST_CASE("a flagship dives with the two escorts nearest it, and a diver shot pays more", "[galaxian]")
 {
 	Play play("descriptions/galaxian.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	play.frames(400);
 
 	Object& flagship = play.object("flagships.1.1");
@@ -542,7 +542,7 @@ TEST_CASE("a flagship dives with the two escorts nearest it, and a diver shot pa
 TEST_CASE("a shot alien scores, and when the fleet is down the next one flies in", "[galaxian]")
 {
 	Play play("descriptions/galaxian.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	play.frames(400);
 
 	Object& alien = play.object("blues3.5.1");
@@ -569,7 +569,7 @@ TEST_CASE("a shot alien scores, and when the fleet is down the next one flies in
 TEST_CASE("a hit ship bursts, out of play, and only then is it lost", "[galaxian]")
 {
 	Play play("descriptions/galaxian.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	play.frames(130);
 	REQUIRE(play.state() == "playing");
 	Object& ship = play.object("ship");
@@ -602,7 +602,7 @@ TEST_CASE("the fleet is the playing state's scene, and the ship and its shot are
 	CHECK(play.object("shot").name == "playing.shot");
 	CHECK(play.object("title").name == "title.title");
 	CHECK_FALSE(play.game.isShown(play.object("ship")));
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	CHECK(play.game.isShown(play.object("ship")));
 	CHECK(play.game.isShown(play.object("flagships.1.1")));
 }
@@ -610,7 +610,7 @@ TEST_CASE("the fleet is the playing state's scene, and the ship and its shot are
 TEST_CASE("paused, the fleet is drawn still underneath and stops where it is", "[galaxian]")
 {
 	Play play("descriptions/galaxian.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	play.frames(30);
 
 	Object& alien = play.object("blues1.1.1");
@@ -636,7 +636,7 @@ TEST_CASE("the best score follows the score up, and a new game keeps it", "[gala
 	Object& best = play.object("best");
 	CHECK(best.kept);
 	CHECK(play.game.isShown(best)); // on the title
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	CHECK(play.game.isShown(best));
 
 	Object& ship = play.object("ship");
@@ -657,7 +657,7 @@ TEST_CASE("the best score follows the score up, and a new game keeps it", "[gala
 	CHECK(best.drawn.picture->text == "240");
 
 	// A lower score leaves it alone; a higher one moves it on.
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	ship.variable.at("score") = 100.0f;
 	play.frames(1);
 	CHECK(best.variable.at("score") == 240.0f);
@@ -676,7 +676,7 @@ TEST_CASE("a game above the fifth best asks for initials and takes its place in 
 
 	const auto playTo = [&](float score)
 	{
-		play.tap(KeyCode::Space);
+		play.tap(KeyCode::Num1);
 		REQUIRE(play.state() == "playing");
 		play.object("ship").variable.at("score") = score;
 		play.object("ship").variable.at("lives") = 0.0f;
@@ -833,7 +833,7 @@ TEST_CASE("two players take turns, each with a game of their own", "[galaxian][t
 TEST_CASE("one player: <pass /> does nothing and <out /> lets what follows run", "[galaxian][turns]")
 {
 	Play play("descriptions/galaxian.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	Object& ship = play.object("ship");
 	ship.variable.at("score") = 10.0f;
 	play.game.addTo({ "ship", "lost" });
@@ -855,12 +855,12 @@ TEST_CASE("one player: <pass /> does nothing and <out /> lets what follows run",
 TEST_CASE("a demo given to Galaxian plays to its end, or until a key is pressed, and the title comes back", "[galaxian][demo]")
 {
 	// The game ships with none (the author: new ones are recorded later);
-	// one given to it, Space then Left held.
+	// one given to it, 1 then Left held.
 	WrittenDemo demo;
 	demo.recorded = true;
 	demo.seed = 20261016;
 	demo.seconds = 5;
-	demo.keys = { { "space", true, 0.5 }, { "space", false, 0.567 }, { "left", true, 3.333 }, { "left", false, 4.333 } };
+	demo.keys = { { "num1", true, 0.5 }, { "num1", false, 0.567 }, { "left", true, 3.333 }, { "left", false, 4.333 } };
 	const auto given = [&]
 	{
 		GameData data = readGame("descriptions/galaxian.xml");
@@ -876,7 +876,7 @@ TEST_CASE("a demo given to Galaxian plays to its end, or until a key is pressed,
 	CHECK(play.state() == "title"); // a new game, from the start
 	CHECK(play.object("best").variable.at("score") == 70.0f); // kept
 
-	// The recording presses Space, and then plays.
+	// The recording presses 1, and then plays.
 	play.frames(40);
 	CHECK(play.state() == "playing");
 	const float startX = play.object("ship").position.x;
@@ -912,7 +912,7 @@ TEST_CASE("a game recorded plays back the same as it was played", "[galaxian][de
 {
 	Play played("descriptions/galaxian.xml");
 	played.engine.record();
-	played.tap(KeyCode::Space);
+	played.tap(KeyCode::Num1);
 	played.frames(150);
 	played.engine.handleKeyPressed(KeyCode::Left);
 	played.frames(40);
@@ -941,7 +941,7 @@ TEST_CASE("a game recorded plays back the same as it was played", "[galaxian][de
 	CHECK(demo.recorded);
 	CHECK(demo.seconds == Approx(469.0 / 60));
 	REQUIRE(demo.keys.size() == 17);
-	CHECK(demo.keys[0].button == "space");
+	CHECK(demo.keys[0].button == "num1");
 	CHECK(demo.keys[0].pressed);
 	CHECK(demo.keys[0].seconds == 0);
 	CHECK(demo.keys[2].button == "left");
@@ -1008,7 +1008,7 @@ TEST_CASE("a key held when the turn passes does not keep moving that player's sh
 TEST_CASE("no alien is drawn in its place before it has flown in, at the start or in a new fleet", "[galaxian]")
 {
 	Play play("descriptions/galaxian.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	for (int fleet = 0; fleet < 2; ++fleet)
 	{
 		std::set<std::string> flown;

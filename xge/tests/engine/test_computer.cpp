@@ -133,7 +133,7 @@ TEST_CASE("a condition can test where an object is and how it goes, against a nu
 TEST_CASE("tennis.xml: the computer walks its racket under the ball", "[computer][tennis]")
 {
 	Played play("descriptions/tennis.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	Object& ball = play.get("ball");
 	Object& cpu = play.get("cpu");
 	ball.position.x = 200;

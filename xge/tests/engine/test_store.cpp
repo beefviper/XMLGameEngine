@@ -225,7 +225,7 @@ TEST_CASE("a path under way is a part of only the objects flying one", "[store][
 		CHECK(pong.game.parts().onPaths.size() == 0);
 	}
 	played::Played galaxian("descriptions/galaxian.xml");
-	galaxian.tap(KeyCode::Space);
+	galaxian.tap(KeyCode::Num1);
 	galaxian.frames(2);
 	CHECK(galaxian.game.parts().onPaths.size() > 0);
 	CHECK(galaxian.game.parts().onPaths.size() < galaxian.game.getCurrentObjects().size());

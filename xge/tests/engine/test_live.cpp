@@ -306,7 +306,7 @@ TEST_CASE("an object out of play does not act on a key", "[live]")
 TEST_CASE("fishingderby.xml: a fish that bites is claimed by that hook, landed for its worth, and back in its row", "[live][fishingderby]")
 {
 	Played play("descriptions/fishingderby.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	REQUIRE(play.state() == "playing");
 
 	// Keep the shark well away, and put the hook just over the first cod.
@@ -341,7 +341,7 @@ TEST_CASE("fishingderby.xml: a fish that bites is claimed by that hook, landed f
 TEST_CASE("fishingderby.xml: a hook on its way up takes no second fish, and the shark eats the one on it", "[live][fishingderby]")
 {
 	Played play("descriptions/fishingderby.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	play.get("shark").position = { 700, 195 };
 	play.get("shark").velocity = { 0, 0 };
 
@@ -376,7 +376,7 @@ TEST_CASE("fishingderby.xml: a hook on its way up takes no second fish, and the 
 TEST_CASE("fishingderby.xml: the computer takes its hook down and lands what bites", "[live][fishingderby]")
 {
 	Played play("descriptions/fishingderby.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	play.get("shark").velocity = { 0, 0 };
 	play.get("shark").position = { 0, 195 };
 	const float startY = play.get("hook2").position.y;

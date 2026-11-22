@@ -8,10 +8,11 @@
   from above, and the ball flies: it is drawn higher the higher it is, with
   its shadow under it on the court, and it bounces where it lands. Walk into
   the ball to hit it back, but only when it is low enough to reach. The
-  computer plays the far end. Points go love, 15, 30, 40 and game, with
+  computer plays the far end, or a second person. Points go love, 15, 30, 40 and game, with
   deuce and advantage; six games take the set and the match.
 
-  W A S D or the arrow keys walk, Space starts and plays again, Pause pauses.
+  W A S D walk. On the title 1 plays the computer and 2 is for two players,
+  the second on the arrows; Space plays again, Pause pauses.
 
   How it is written:
   * The two players are one group: the picture, a person and a white
@@ -26,9 +27,9 @@
     a ball over a player's head goes past. A hit sends it back up (rise) and
     toward the other end, more to one side the further from the middle of
     the racket it was hit (values read as the rule runs).
-  * The far player is the computer's: a <computer> in the playing state
-    holds J or L down while the ball is to one side of it, the keys a second
-    player would use, so a person could play that end instead.
+  * The far player is seat 2's: a <computer seat="2"> holds Left or Right
+    down while the ball is to one side of it, the keys a second player
+    would use, and lets the second player have them after <people>2.
   * The score is words: a <choose> shows LOVE, 15, 30, 40 or AD from the
     points. Conditions in conditions say who takes the game: four
     points with the other on 30 or less, or five, after four all has gone
@@ -59,7 +60,7 @@
   <states>
     <objects>
       <object name="continue">
-        <sprite><text style="prompt"><content>spacebar to play</content></text></sprite>
+        <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>
         <position><x><centered /></x><y><add><value><window><y><center /></y></window></value><value>60</value></add></y></position>
       </object>
     </objects>
@@ -69,12 +70,14 @@
           <sprite><text style="banner"><content>TENNIS</content></text></sprite>
           <position><x><centered /></x><y><centered><offset>-80</offset></centered></y></position>
         </object>
+        <object name="start">
+          <sprite><text style="prompt"><content>1 player against the computer, 2 for two players</content></text></sprite>
+          <position><x><centered /></x><y><add><value><window><y><center /></y></window></value><value>60</value></add></y></position>
+        </object>
       </objects>
-      <shows>
-        <show object="continue" />
-      </shows>
       <inputs>
-        <input button="space"><push state="playing" /></input>
+        <input><button>num1</button><button>numpad1</button><people>1</people><push state="playing" /></input>
+        <input><button>num2</button><button>numpad2</button><people>2</people><push state="playing" /></input>
       </inputs>
     </state>
     <state name="playing">
@@ -210,14 +213,20 @@
         </object>
       </objects>
       <inputs>
+        <seat number="1">
+          <input button="w"><trigger object="player" action="up" /></input>
+          <input button="s"><trigger object="player" action="down" /></input>
+          <input button="a"><trigger object="player" action="left" /></input>
+          <input button="d"><trigger object="player" action="right" /></input>
+        </seat>
+        <!-- the far end: the computer's, or a second player's -->
+        <seat number="2">
+          <input button="up"><trigger object="cpu" action="up" /></input>
+          <input button="down"><trigger object="cpu" action="down" /></input>
+          <input button="left"><trigger object="cpu" action="left" /></input>
+          <input button="right"><trigger object="cpu" action="right" /></input>
+        </seat>
         <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
-        <input><button>w</button><button>up</button><trigger object="player" action="up" /></input>
-        <input><button>s</button><button>down</button><trigger object="player" action="down" /></input>
-        <input><button>a</button><button>left</button><trigger object="player" action="left" /></input>
-        <input><button>d</button><button>right</button><trigger object="player" action="right" /></input>
-        <!-- the far end's keys: the computer's, or a second player's -->
-        <input button="j"><trigger object="cpu" action="left" /></input>
-        <input button="l"><trigger object="cpu" action="right" /></input>
       </inputs>
       <conditions>
         <condition object="player" variable="games">
@@ -259,14 +268,14 @@
         </condition>
       </conditions>
       <!-- the computer keeps its racket under the ball -->
-      <computer>
+      <computer seat="2">
         <condition object="cpu" variable="x">
           <below>ball.x</below>
-          <hold button="l" />
+          <hold button="right" />
         </condition>
         <condition object="cpu" variable="x">
           <above>ball.x</above>
-          <hold button="j" />
+          <hold button="left" />
         </condition>
       </computer>
     </state>

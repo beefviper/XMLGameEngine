@@ -301,7 +301,7 @@ namespace
 	{
 		Mario() : Played("descriptions/mariobros.xml")
 		{
-			tap(KeyCode::Space);
+			tap(KeyCode::Num1);
 			REQUIRE(state() == "playing");
 			// One let out early, onto the low left floor; the others are still
 			// in their pipe when the tests are done.
@@ -424,7 +424,7 @@ TEST_CASE("mariobros.xml: the POW block turns over every shellcreeper on its fee
 TEST_CASE("mariobros.xml: the shellcreepers come out of the top pipes, fall floor by floor and go back in at the bottom", "[mariobros]")
 {
 	Played play("descriptions/mariobros.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	play.get("mario").isVisible = false;     // out of their way
 	play.get("mario").collisionsOn = false;
 	Object& first = play.get("phase1.shellcreepers.1");
@@ -527,7 +527,7 @@ TEST_CASE("mariobros.xml: the POW leaves a shellcreeper in the air alone, and tw
 
 	// Two on their feet walking at each other on one floor turn round.
 	Played meet("descriptions/mariobros.xml");
-	meet.tap(KeyCode::Space);
+	meet.tap(KeyCode::Num1);
 	meet.get("mario").position.x = 200.0f;
 	Object& one = meet.get("phase1.shellcreepers.3");
 	Object& two = meet.get("phase1.shellcreepers.4");
