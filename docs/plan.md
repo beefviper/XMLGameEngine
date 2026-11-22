@@ -135,7 +135,7 @@ Games the vocabulary cannot say yet: [near misses](designs/54-games.md#near-miss
 ### Code
 
 - **Controllers** (the author's idea, not next): a layer that can drive any part of the engine. The keyboard, a demo and the computer are each a controller; the computer presses virtual keys, so neither game writers nor players need to know how it gives its input. `<think>` belongs to the computer's controller, since it is what decides which inputs the computer sends. A demo controller may also drive the step itself (delta time), which makes a demo simple to describe and exact to replay; played in a window at another rate it must still keep to real time.
-  - **What it should let go:** the keys bound only for the computer to press (Hold'em's F9 to F12, Pong's); `<computer>` blocks in a state's rules, with `<think>` and `<hold>` moving to the controller; the rule that people's keys do not reach the picker on the computer's turn (`Players::answersPicker`), since each player has its own controller; and the demo's own player (`Engine::playRecording` splitting steps at key times), if a demo drives the step.
+  - **What it should let go:** the keys bound only for the computer to press (Hold'em's F9 to F12, Five Dice's F1 to F9, Pong's); `<computer>` blocks in a state's rules, with `<think>` and `<hold>` moving to the controller; the rule that people's keys do not reach the picker on the computer's turn (`Players::answersPicker`), since each player has its own controller; and the demo's own player (`Engine::playRecording` splitting steps at key times), if a demo drives the step.
 - **xgegui's Qt window on Windows** (the author, after DT5): slow and uneven on some games, docked more than popped out, while SFML2 and SDL2 play them smoothly. On Linux every game draws a frame in under 1.5 ms. Left for now; a readout of step, draw and paint times would show where it goes.
 
 - `Engine::handleKeyPressed`/`handleKeyReleased` are public only because the tests and `played.h` press keys through them; a test seam would let them go private.
@@ -146,7 +146,7 @@ Games the vocabulary cannot say yet: [near misses](designs/54-games.md#near-miss
 What only eyes, ears or MSVC can check. Whoever lands a change that needs one adds its line; the author deletes it once seen.
 
 - **Backgammon:** the stacks read well, the cursor frames a point, and a hit checker shows on the bar; the computer's turn is easy to follow.
-- **Five Dice:** the dice read well at their size, kept dice turn gold, and the card's offers are easy to follow.
+- **Five Dice:** the dice read well at their size, kept dice turn gold, the card's offers are easy to follow, and the two columns and the computer's turn read well.
 
 - **The schema's documentation in an editor (A6), not urgent (the author works mostly from the command line):** hovering `<deflect>` (or any tag) in VS Code with the XML extension shows its sentence, and completion lists show them too.
 
