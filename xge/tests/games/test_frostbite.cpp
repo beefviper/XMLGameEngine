@@ -52,7 +52,7 @@ namespace
 		// test is about Bailey and not about where a floe has drifted to.
 		void startStill()
 		{
-			tap(KeyCode::Space);
+			tap(KeyCode::Num1);
 			REQUIRE(state() == "playing");
 			for (auto& object : game.getCurrentObjects())
 			{
@@ -222,7 +222,7 @@ TEST_CASE("up from the shore goes nowhere", "[frostbite]")
 TEST_CASE("Bailey rides a floe, and a goose pushes him", "[frostbite]")
 {
 	Frostbite play;
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	play.standAbove("night1.row1.1.1");
 	play.game.object("night1.row1.1.1").position.x = play.bailey().position.x - 40.0f;
 	play.jump(KeyCode::S);
@@ -376,7 +376,7 @@ TEST_CASE("no lives left is game over, and Space starts over with the ice white 
 TEST_CASE("paused, the shore and the ice are drawn still and nothing drifts", "[frostbite]")
 {
 	Frostbite play;
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	REQUIRE(play.state() == "playing");
 	Object& floe = play.game.object("night1.row1.1.1");
 	const float floeAt = floe.position.x;

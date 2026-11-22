@@ -61,7 +61,7 @@ namespace
 
 		void start()
 		{
-			tap(KeyCode::Space);
+			tap(KeyCode::Num1);
 			REQUIRE(state() == "playing");
 			REQUIRE(screen() == "playing.screen1");
 			frames(5);

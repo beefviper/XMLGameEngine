@@ -157,12 +157,12 @@
           <row number="2"><sprite><text><content>a and d, or the arrow keys, to move; space to fire</content><size>26</size><color>lightgrey</color></text></sprite></row>
         </group>
         <object name="start">
-          <sprite><text style="line"><content>spacebar to start</content><size>48</size></text></sprite>
+          <sprite><text style="line"><content>1 to start</content><size>48</size></text></sprite>
           <position><x><centered /></x><y><centered><offset>130</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
-        <input button="space"><push state="playing" /><play sound="start" /></input>
+        <input><button>num1</button><button>numpad1</button><push state="playing" /><play sound="start" /></input>
       </inputs>
     </state>
     <state name="playing">

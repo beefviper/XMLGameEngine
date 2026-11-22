@@ -117,7 +117,7 @@ namespace
 	{
 		House() : Played("descriptions/hauntedhouse.xml")
 		{
-			tap(KeyCode::Space);
+			tap(KeyCode::Num1);
 			frames(1);
 		}
 

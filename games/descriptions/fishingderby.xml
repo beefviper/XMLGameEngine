@@ -367,9 +367,10 @@
     <state name="over">
       <objects>
         <object name="winner">
-          <sprite name="you"><text style="banner"><content>YOU WIN</content></text></sprite>
-          <sprite name="computer"><text style="banner"><content>THE COMPUTER WINS</content><size>70</size><color>red</color></text></sprite>
+          <sprite name="you"><text style="banner"><choose><by>winner.versus</by><word>YOU WIN</word><word>PLAYER 1 WINS</word></choose></text></sprite>
+          <sprite name="computer"><text style="banner"><choose><by>winner.versus</by><word>THE COMPUTER WINS</word><word>PLAYER 2 WINS</word></choose><size>70</size><color>red</color></text></sprite>
           <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
+          <variables><variable name="versus" update="live"><subtract><value><people /></value><value>1</value></subtract></variable></variables>
         </object>
         <object name="again">
           <sprite><text style="prompt"><content>spacebar to play again</content></text></sprite>

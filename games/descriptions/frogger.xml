@@ -19,7 +19,7 @@
   river (not on a log or a turtle, or on a turtle that has dived), is ridden
   off the side, hops into a hedge or a bay already filled, or runs out of
   time. A frog home is 50 points, and fills its bay; five home is a win.
-  Space starts; Pause pauses.
+  1 starts; Pause pauses.
 
   How it is written:
   * Every lane of the river and the road is a group inside one group that
@@ -106,12 +106,12 @@
           <position><x><centered /></x><y><centered><offset>-60</offset></centered></y></position>
         </object>
         <object name="start">
-          <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
+          <sprite><text style="prompt"><content>1 to start</content></text></sprite>
           <position><x><centered /></x><y><centered><offset>40</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
-        <input button="space">
+        <input><button>num1</button><button>numpad1</button>
           <push state="playing" />
           <play sound="start" />
         </input>

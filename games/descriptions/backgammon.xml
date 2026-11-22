@@ -109,7 +109,7 @@
           <padding><y>30</y></padding>
           <sprite><text style="help" /></sprite>
           <position><x><centered /></x><y><centered><offset>-80</offset></centered></y></position>
-          <row number="1"><sprite><text><content>you are red and move first; spacebar plays the computer, 2 two players</content></text></sprite></row>
+          <row number="1"><sprite><text><content>you are red and move first; 1 plays the computer, 2 two players</content></text></sprite></row>
           <row number="2"><sprite><text><content>spacebar rolls, then picks up a checker and puts it down</content></text></sprite></row>
           <row number="3"><sprite><text><content>w a s d or the arrows move along the points, x or backspace puts back</content></text></sprite></row>
           <row number="4"><sprite><text><content>c before rolling offers to double: y takes, n drops</content></text></sprite></row>

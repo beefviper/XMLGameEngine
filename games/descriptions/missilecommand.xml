@@ -135,12 +135,12 @@
           <position><x><centered /></x><y><centered /></y></position>
         </object>
         <object name="start">
-          <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
+          <sprite><text style="prompt"><content>1 to start</content></text></sprite>
           <position><x><centered /></x><y><centered><offset>100</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
-        <input button="space"><push state="playing" /><play sound="wave" /></input>
+        <input><button>num1</button><button>numpad1</button><push state="playing" /><play sound="wave" /></input>
       </inputs>
     </state>
 

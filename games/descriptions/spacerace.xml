@@ -10,8 +10,8 @@
   back for another go. The clock is the bar down the middle, sinking out of
   sight; when it is gone, the most points win.
 
-  Player 1 is W and S, player 2 the up and down arrows; Space starts
-  and plays again, Pause pauses.
+  Player 1 is W and S, player 2 the up and down arrows; 1 starts,
+  Space plays again, Pause pauses.
 
   How it is written:
   * The rockets are one group: the picture, the moves, the rules (a point
@@ -54,12 +54,12 @@
           <position><x><centered /></x><y><centered><offset>10</offset></centered></y></position>
         </object>
         <object name="start">
-          <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
+          <sprite><text style="prompt"><content>1 to start</content></text></sprite>
           <position><x><centered /></x><y><centered><offset>90</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
-        <input button="space"><push state="playing" /></input>
+        <input><button>num1</button><button>numpad1</button><button>num2</button><button>numpad2</button><push state="playing" /></input>
       </inputs>
     </state>
     <state name="playing">

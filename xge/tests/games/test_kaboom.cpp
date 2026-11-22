@@ -349,8 +349,8 @@ TEST_CASE("space starts a new game from the end screen with everything back", "[
 	measure(game);
 	Engine engine(game, std::make_unique<NullWindow>());
 
-	engine.handleKeyPressed(KeyCode::Space);
-	engine.handleKeyReleased(KeyCode::Space);
+	engine.handleKeyPressed(KeyCode::Num1);
+	engine.handleKeyReleased(KeyCode::Num1);
 	REQUIRE(game.getCurrentState().name == "playing");
 
 	game.object("bucket").variable.at("score") = 10;
@@ -380,8 +380,8 @@ TEST_CASE("the keys carry on from wave to wave, and Pause pauses over the game d
 	Engine engine(game, std::make_unique<NullWindow>());
 	Object& bucket = game.object("bucket");
 
-	engine.handleKeyPressed(KeyCode::Space);
-	engine.handleKeyReleased(KeyCode::Space);
+	engine.handleKeyPressed(KeyCode::Num1);
+	engine.handleKeyReleased(KeyCode::Num1);
 	REQUIRE(game.getCurrentState().name == "playing");
 
 	const float startX = bucket.position.x;

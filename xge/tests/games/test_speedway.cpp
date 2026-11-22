@@ -25,7 +25,7 @@ namespace
 	{
 		Race() : Played("descriptions/speedway.xml")
 		{
-			tap(KeyCode::Space);
+			tap(KeyCode::Num1);
 			// the moment on the grid
 			frames(100);
 		}

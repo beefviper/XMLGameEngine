@@ -11,7 +11,7 @@
   pocket costs a point and comes back to its spot.
 
   W A S D or the arrows move the cue tip (two at once go diagonally), Pause
-  pauses, Space starts and plays again.
+  pauses, 1 starts, Space plays again.
 
   It is the game <knock> and <mass> were made for:
   * Every ball has a <mass>, so a knock moves it. Ball against ball is
@@ -73,12 +73,12 @@
           <row number="2"><sprite><text><content>w a s d or the arrows move the cue</content><color>lightgrey</color></text></sprite></row>
         </group>
         <object name="start">
-          <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
+          <sprite><text style="prompt"><content>1 to start</content></text></sprite>
           <position><x><centered /></x><y><centered><offset>110</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
-        <input button="space"><push state="playing" /></input>
+        <input><button>num1</button><button>numpad1</button><push state="playing" /></input>
       </inputs>
     </state>
     <state name="playing">

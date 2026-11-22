@@ -131,7 +131,7 @@ Games the vocabulary cannot say yet: [near misses](designs/54-games.md#near-miss
 
 ### Code
 
-- **Controllers** (the author's idea): [seats](reference/input.md#seats) are built; a person or the computer plays each, and the computer presses its seat's keys. Left: Hold'em's own computer keys (F9 to F12, now in seat 2), pads following the seat, and a demo driving the step itself (delta time) so a demo is simple to describe and exact to replay, letting go of `Engine::playRecording` splitting steps at key times; played in a window at another rate it must still keep to real time.
+- **Controllers** (the author's idea): [seats](reference/input.md#seats) are built; a person or the computer plays each, and the computer presses its seat's keys. Left: pads following the seat, and a demo driving the step itself (delta time) so a demo is simple to describe and exact to replay, letting go of `Engine::playRecording` splitting steps at key times; played in a window at another rate it must still keep to real time.
 - **xgegui's Qt window on Windows** (the author, after DT5): slow and uneven on some games, docked more than popped out, while SFML2 and SDL2 play them smoothly. On Linux every game draws a frame in under 1.5 ms. Left for now; a readout of step, draw and paint times would show where it goes.
 
 - `Engine::handleKeyPressed`/`handleKeyReleased` are public only because the tests and `played.h` press keys through them; a test seam would let them go private.

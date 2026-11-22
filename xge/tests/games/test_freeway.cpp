@@ -325,7 +325,7 @@ TEST_CASE("the keys drive the right chicken through the whole game", "[freeway][
 	measure(game);
 	Engine engine(game, std::make_unique<NullWindow>());
 
-	engine.handleKeyPressed(KeyCode::Space); // title -> playing
+	engine.handleKeyPressed(KeyCode::Num1); // title -> playing
 	REQUIRE(game.getCurrentState().name == "playing");
 	for (auto& object : game.getCurrentObjects())
 	{

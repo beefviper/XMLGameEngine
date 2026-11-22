@@ -9,7 +9,7 @@
   walls send the ball off at their angle, round posts kick it away faster
   than it came, soft cushions take the pace off it. Par for the park is 18.
 
-  A and D or the arrows aim, Space held then let go putts, Pause pauses, Space starts and plays again.
+  A and D or the arrows aim, Space held then let go putts, Pause pauses, 1 starts, Space plays again.
 
   It is the game the first stage of tables and tracks was made for:
   * The walls of each hole are one picture of <line>s, tested by its pixels,
@@ -84,12 +84,12 @@
           <row number="2"><sprite><text><content>a and d or the arrows aim, hold spacebar and let go to putt</content><color>lightgrey</color></text></sprite></row>
         </group>
         <object name="start">
-          <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
+          <sprite><text style="prompt"><content>1 to start</content></text></sprite>
           <position><x><centered /></x><y><centered><offset>110</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
-        <input button="space"><push state="playing" /></input>
+        <input><button>num1</button><button>numpad1</button><push state="playing" /></input>
       </inputs>
     </state>
 

@@ -25,7 +25,7 @@ namespace
 	{
 		Park() : Played("descriptions/puttpark.xml")
 		{
-			tap(KeyCode::Space);
+			tap(KeyCode::Num1);
 			frames(3);
 		}
 

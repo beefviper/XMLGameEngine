@@ -45,6 +45,9 @@ namespace xge
 		Evaluator(const Evaluator&) = delete;
 		Evaluator& operator=(const Evaluator&) = delete;
 
+		// <people />, how many people play, as texts read it (@people).
+		void seatPeople(int count) noexcept { *people = static_cast<float>(count); }
+
 		// Loading is over: from now on a division by 0 warns instead of
 		// throwing (evaluateOperation), and the sheets' pictures, held while
 		// their cells were cut, are let go.
@@ -353,6 +356,8 @@ namespace xge
 		// Each is under its name as a text reads it (Calc::nameOf), and goes
 		// into calc the first time a text reads it.
 		std::unordered_map<std::string, float> liveNumbers;
+		// On the heap, so a text compiled to read it still can after a move.
+		std::unique_ptr<float> people = std::make_unique<float>(1.0f);
 		// How many of them have gone into calc so far; one that goes in while
 		// the game runs is first given its number by whenLiveRead.
 		std::size_t liveRead = 0;

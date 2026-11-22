@@ -70,4 +70,4 @@ A small whole game is in the [root readme](../readme.md#a-whole-game). Run a gam
 | players | `turns` on a group, `pass` (`member=`), a member's `think`, `owns` (`object=` or `class=`) and `team`, live `turn` and `person`, `current` (`players.current.score`) | [players as a group](reference/states.md#players-as-a-group) |
 | patterns and tricks | `patterns` (`alike`, `run`), melds, tricks | [patterns](reference/cards.md#patterns), [tricks](reference/cards.md#tricks) |
 | computer | `computer` (`seat=`), `hold`, `think` | [computer players](reference/states.md#computer-players) |
-| seats | `seat` (`number=`, `from=`) in `inputs`, `people` | [seats](reference/input.md#seats) |
+| seats | `seat` (`number=`, `from=`) in `inputs`, `people` (a command, and empty a value) | [seats](reference/input.md#seats) |

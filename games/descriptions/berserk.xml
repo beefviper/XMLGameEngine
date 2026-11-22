@@ -310,12 +310,12 @@
           <row number="2"><sprite><text><content>The walls are electrified: leave by any gap. Pause pauses.</content></text></sprite></row>
         </group>
         <object name="start">
-          <sprite><text style="prompt"><content>Press Space to start</content></text></sprite>
+          <sprite><text style="prompt"><content>Press 1 to start</content></text></sprite>
           <position><x><centered /></x><y>380</y></position>
         </object>
       </objects>
       <inputs>
-        <input button="space"><push state="playing" /></input>
+        <input><button>num1</button><button>numpad1</button><push state="playing" /></input>
       </inputs>
     </state>
 

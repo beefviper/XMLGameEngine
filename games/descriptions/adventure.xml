@@ -20,7 +20,7 @@
         castle  =====  field  =====  blackcastle
 
   W A S D or the arrow keys walk, Space puts down what is carried, Pause
-  pauses, Space starts.
+  pauses, 1 starts.
 
   How it is written:
   * The rooms are the <scenes> of the playing state, and the hero and the
@@ -212,12 +212,12 @@
           <row number="2"><sprite><text><content>w a s d or arrows walk, space puts down</content></text></sprite></row>
         </group>
         <object name="start">
-          <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
+          <sprite><text style="prompt"><content>1 to start</content></text></sprite>
           <position><x><centered /></x><y><centered><offset>100</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
-        <input button="space">
+        <input><button>num1</button><button>numpad1</button>
           <push state="playing" />
           <play sound="start" />
         </input>

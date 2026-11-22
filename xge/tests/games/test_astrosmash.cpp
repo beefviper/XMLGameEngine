@@ -424,9 +424,9 @@ TEST_CASE("the keys play the game through the engine", "[astrosmash][engine_inpu
 	Object& ship = game.object("ship");
 
 	CHECK(game.getCurrentState().name == "title");
-	engine.handleKeyPressed(KeyCode::Space); // space starts the game
+	engine.handleKeyPressed(KeyCode::Num1); // space starts the game
 	REQUIRE(game.getCurrentState().name == "playing");
-	engine.handleKeyReleased(KeyCode::Space);
+	engine.handleKeyReleased(KeyCode::Num1);
 	game.settleSpawns();
 	CHECK(copies::count(game, "shot") == 0);
 

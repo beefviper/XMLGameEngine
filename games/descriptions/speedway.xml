@@ -11,8 +11,8 @@
   three laps wins.
 
   Player one drives with W A S D, player two with the arrows: up goes, down
-  brakes and backs, left and right steer. Pause pauses, Space starts
-  and plays again.
+  brakes and backs, left and right steer. Pause pauses, 1 starts,
+  Space plays again.
 
   It is the game the fourth stage of tables and tracks was made for:
   * A car has a <heading>, held <thrust> and <turn>, <drag> for its top
@@ -131,12 +131,12 @@
           <row number="2"><sprite><text><content>player one w a s d, player two the arrows: up goes, down brakes, left and right steer</content><color>lightgrey</color></text></sprite></row>
         </group>
         <object name="start">
-          <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
+          <sprite><text style="prompt"><content>1 to start</content></text></sprite>
           <position><x><centered /></x><y><centered><offset>110</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
-        <input button="space"><push state="playing" /></input>
+        <input><button>num1</button><button>numpad1</button><button>num2</button><button>numpad2</button><push state="playing" /></input>
       </inputs>
     </state>
 

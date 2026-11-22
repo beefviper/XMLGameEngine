@@ -25,7 +25,7 @@ using played::Played;
 TEST_CASE("spaceinvaders.xml: a press of fire while the bullet is in flight makes no sound", "[refused]")
 {
 	Played play("descriptions/spaceinvaders.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	REQUIRE(play.state() == "playing");
 	play.frames(1);
 	(void)play.game.sounds().takeRequests();
@@ -44,7 +44,7 @@ TEST_CASE("spaceinvaders.xml: a press of fire while the bullet is in flight make
 TEST_CASE("qbert.xml: a key pressed in the air changes neither Q*bert's look nor makes a sound", "[refused][qbert]")
 {
 	Played play("descriptions/qbert.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	REQUIRE(play.state() == "playing");
 	play.frames(1);
 	(void)play.game.sounds().takeRequests();

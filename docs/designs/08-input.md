@@ -45,9 +45,11 @@ Built by a state change count compared in `Engine::syncHeldKeysToState()` after 
 
 - **Wanted:** the computer plays a person's side without keys of its own, and the other person's keys do nothing against it, with no rules gating them. Before, Pong's computer held F11 and F12, and Up and Down ran actions that tested `players` first.
 - **Chosen:** inputs sit in numbered `<seat>`s, `<people>N</people>` gives seats 1 to N to people, and `<computer seat>` presses the rest virtually. The engine refuses a keyboard press in a computer's seat and a computer's press in a person's, at the one place keys come in (`Engine::handleKeyPressed`).
+- **Words by who plays:** `<people />` is a value, so Tennis and Fishing Derby say YOU and THE COMPUTER against the computer and PLAYER 1 and PLAYER 2 between people, by `<choose>` on a live variable holding it (a text's `<by>` reads only a name). A value tag, not a name, as the engine's own things are ([no reserved names](04-values-and-names.md)).
 - **Looked at:** a toggle key on the title for person or computer in seat 2. Not needed yet: 1 and 2 on the title say it.
 - **Turns:** a players group member's seat is its number, already its seat at a trick, so a turn game says nothing new. Its keys sit in seat 1 and in seat 2 `from="1"`, and answer the seat on turn. This replaced the rule that a person's keys miss a picker while a `<think>` condition holds (`answersPicker`).
-- **Open:** Hold'em's computer still has keys of its own (F9 to F12, in seat 2): giving it yours needs it to wear your looks, and the deal key belongs to nobody's turn. Pads following the seat; demos playing on their own fixed steps.
+- **Hold'em** has no computer keys left: both players wear the same choice looks (act, callonly, allin), set by one group action on whoever is on turn, so your keys trigger `players` and the computer presses them in seat 2. The end of a hand gives you the turn, so Space deals as your own key. No F-keys remain in any game.
+- **Open:** pads following the seat; demos playing on their own fixed steps.
 
 ## Mouse and pads
 
@@ -64,6 +66,7 @@ Built by a state change count compared in `Engine::syncHeldKeysToState()` after 
 - The shipped games' key convention is in [the shipped games](../reference/games.md#the-key-convention), enforced by `test_engine_input`.
 - **One pause key:** the Pause key (and a pad's Start) pauses and plays on in every game, and nothing else does.
   - Before, games paused on Space, P or Escape in eighteen mixtures, Space only where it did not fire.
-  - The author's call: one key, the one named for it; Space is left to start, play again, and jump or fire.
+  - The author's call: one key, the one named for it; Space is left to play again, and jump or fire.
   - All five window libraries read Pause; P was the fallback had one not.
   - Open: a laptop without a Pause key pauses with the pad or not at all.
+- **1 starts every game** (the author): the arcade's one player button, beside 2 for two players where a game has them, so the title key says how many play.

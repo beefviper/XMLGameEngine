@@ -11,7 +11,7 @@
   side it scores and starts again at the bottom. When the clock runs out the
   one with more crossings wins. The five lanes on top drive left, the five
   below right, faster towards the middle, as on the cartridge. Player 1 is W
-  and S, player 2 the up and down arrows; Space starts;
+  and S, player 2 the up and down arrows; 1 starts;
   Pause pauses.
 
   On a grid of 50 pixel cells, 12 rows down: row 0 is the far side (and the
@@ -64,12 +64,12 @@
           <row number="2"><sprite><text><content>player 1: w and s    player 2: up and down</content></text></sprite></row>
         </group>
         <object name="start">
-          <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
+          <sprite><text style="prompt"><content>1 to start</content></text></sprite>
           <position><x><centered /></x><y><centered><offset>150</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
-        <input button="space">
+        <input><button>num1</button><button>numpad1</button><button>num2</button><button>numpad2</button>
           <push state="playing" />
           <play sound="start" />
         </input>

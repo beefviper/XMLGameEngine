@@ -124,7 +124,7 @@ TEST_CASE("Asteroids' ship goes as far after a second of thrust at every step le
 {
 	agreeAtEveryRate("descriptions/asteroids.xml", "pixels gone in 3 seconds after 1 second of thrust", 0.05, true, [](Played& play, Pacer& pacer)
 	{
-		play.tap(KeyCode::Space);
+		play.tap(KeyCode::Num1);
 		REQUIRE(play.state() == "playing");
 		xge::Object& ship = play.get("ship");
 		ship.collisionsOn = false;
@@ -212,7 +212,7 @@ TEST_CASE("Snake's head has gone as many cells after 2.45 seconds at every step 
 	// makes at 22.
 	agreeAtEveryRate("descriptions/snake.xml", "cells gone", 0.0, false, [](Played& play, Pacer& pacer)
 	{
-		play.tap(KeyCode::Space);
+		play.tap(KeyCode::Num1);
 		REQUIRE(play.state() == "playing");
 		const float from = play.get("head").position.x;
 		pacer.advance(2.45);
@@ -224,7 +224,7 @@ TEST_CASE("Pinball's ball goes as high from a full plunger at every step length"
 {
 	agreeAtEveryRate("descriptions/pinball.xml", "pixels the ball rises", 0.05, true, [](Played& play, Pacer& pacer)
 	{
-		play.tap(KeyCode::Space);
+		play.tap(KeyCode::Num1);
 		pacer.advance(0.05);
 		play.engine.handleKeyPressed(KeyCode::Space);
 		pacer.advance(1.5);

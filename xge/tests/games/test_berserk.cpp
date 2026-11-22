@@ -178,7 +178,7 @@ namespace
 		// Starts the game and holds the robots still.
 		void begin(bool freezeThem = true)
 		{
-			tap(KeyCode::Space);
+			tap(KeyCode::Num1);
 			if (freezeThem) { freezeRobots(); }
 		}
 

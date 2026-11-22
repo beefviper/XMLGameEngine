@@ -13,7 +13,7 @@
   comes; three lives.
 
   W A S D or the arrows move the wand about its zone, Space fires. Pause pauses;
-  Space starts and plays again.
+  1 starts, Space plays again.
 
   How it is written:
   * The field is a <map> of <cells />: m a mushroom, o the centipede's
@@ -79,12 +79,12 @@
           <position><x><centered /></x><y><centered /></y></position>
         </object>
         <object name="start">
-          <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
+          <sprite><text style="prompt"><content>1 to start</content></text></sprite>
           <position><x><centered /></x><y><centered><offset>80</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
-        <input><button>space</button><button>pad1.start</button><push state="playing" /></input>
+        <input><button>num1</button><button>numpad1</button><button>pad1.start</button><push state="playing" /></input>
       </inputs>
     </state>
     <state name="playing">

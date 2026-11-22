@@ -559,8 +559,8 @@ TEST_CASE("Lunar Lander: the engine hums while thrust is held, and stops when le
 	AudioLog log;
 	Engine engine(game, std::make_unique<NullWindow>(), std::make_unique<RecordingAudio>(log));
 
-	engine.handleKeyPressed(KeyCode::Space);
-	engine.handleKeyReleased(KeyCode::Space);
+	engine.handleKeyPressed(KeyCode::Num1);
+	engine.handleKeyReleased(KeyCode::Num1);
 	engine.input(); engine.update(xge::kSixtieth);
 	REQUIRE(game.getCurrentState().name == "playing");
 
@@ -624,8 +624,8 @@ TEST_CASE("Asteroids: the heartbeat plays in play, and the ship's engine hums wh
 	AudioLog log;
 	Engine engine(game, std::make_unique<NullWindow>(), std::make_unique<RecordingAudio>(log));
 
-	engine.handleKeyPressed(KeyCode::Space);
-	engine.handleKeyReleased(KeyCode::Space);
+	engine.handleKeyPressed(KeyCode::Num1);
+	engine.handleKeyReleased(KeyCode::Num1);
 	engine.input(); engine.update(xge::kSixtieth);
 	REQUIRE(game.getCurrentState().name == "playing");
 	CHECK(log.looped == std::vector<std::string>{ "beat" });
@@ -867,8 +867,8 @@ TEST_CASE("Pac-Man's music: the opening tune plays over READY!, the siren loops 
 	CHECK(log.looped.empty()); // the title is quiet
 
 	// Space: play, with READY! over it and the opening tune; no siren yet.
-	engine.handleKeyPressed(KeyCode::Space);
-	engine.handleKeyReleased(KeyCode::Space);
+	engine.handleKeyPressed(KeyCode::Num1);
+	engine.handleKeyReleased(KeyCode::Num1);
 	engine.input(); engine.update(xge::kSixtieth);
 	REQUIRE(game.getCurrentState().name == "ready");
 	CHECK(log.played == std::vector<std::string>{ "start" });

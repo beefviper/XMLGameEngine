@@ -252,6 +252,7 @@ namespace xge
 		calc.constant("@window.height", windowDesc.height);
 		calc.constant("@window.centerx", windowDesc.width / 2);
 		calc.constant("@window.centery", windowDesc.height / 2);
+		calc.variable("@people", *people);
 
 		// add variables from XML file to symbol table, in the order the file
 		// declares them so that one can use the ones before it

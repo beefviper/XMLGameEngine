@@ -9,8 +9,8 @@
   brick is worth 1, green 3, orange 5 and red 7. Three balls; clear the wall
   and a second one is built, clear that too and you win.
 
-  A and D, the arrow keys, the mouse or a pad move the paddle; Space starts
-  and plays again, Pause pauses.
+  A and D, the arrow keys, the mouse or a pad move the paddle; 1 starts,
+  Space plays again, Pause pauses.
 
   How it is written:
   * The wall is a group of four groups, a colour each: the wall gives the
@@ -68,12 +68,12 @@
           <row number="2"><sprite><text><content>a and d, the arrows or the mouse move the paddle</content></text></sprite></row>
         </group>
         <object name="start">
-          <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
+          <sprite><text style="prompt"><content>1 to start</content></text></sprite>
           <position><x><centered /></x><y><centered><offset>120</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
-        <input><button>space</button><button>pad1.start</button><push state="playing" /></input>
+        <input><button>num1</button><button>numpad1</button><button>pad1.start</button><push state="playing" /></input>
       </inputs>
     </state>
     <state name="playing">

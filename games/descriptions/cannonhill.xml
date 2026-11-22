@@ -12,7 +12,7 @@
   three points wins.
 
   W and S or Up and Down raise and lower the barrel, Space held then let go
-  fires, Pause pauses, Space starts and plays again.
+  fires, Pause pauses, 1 starts, Space plays again.
 
   It is the game the second stage of tables and tracks was made for:
   * The hill is one <polygon>: its corners, filled. Its collisions are by
@@ -250,12 +250,12 @@
           <row number="2"><sprite><text><content>w and s or up and down aim, hold spacebar and let go to fire; mind the wind</content><color>lightgrey</color></text></sprite></row>
         </group>
         <object name="start">
-          <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
+          <sprite><text style="prompt"><content>1 to start</content></text></sprite>
           <position><x><centered /></x><y><centered><offset>110</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
-        <input button="space"><push state="playing" /></input>
+        <input><button>num1</button><button>numpad1</button><button>num2</button><button>numpad2</button><push state="playing" /></input>
       </inputs>
     </state>
 

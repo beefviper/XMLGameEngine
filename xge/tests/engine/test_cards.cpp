@@ -39,7 +39,7 @@ namespace
 	{
 		Table() : Played("descriptions/klondike.xml")
 		{
-			tap(KeyCode::Space);
+			tap(KeyCode::Num1);
 			frames(2);
 		}
 
@@ -540,7 +540,7 @@ TEST_CASE("klondike.xml: placing rules are conditions on the arriving card again
 TEST_CASE("a pack cut from a sheet: a face for each suit and rank, one back for all", "[cards][sheets]")
 {
 	Played hearts("descriptions/hearts.xml");
-	hearts.tap(KeyCode::Space);
+	hearts.tap(KeyCode::Num1);
 	hearts.frames(2);
 	Object& ace = *hearts.game.holders().itemAt(1);
 	REQUIRE(ace.looks.all().size() == 2);
@@ -590,7 +590,7 @@ TEST_CASE("klondike.xml: the pack is a group whose cells cut their own faces fro
 {
 	Table table;
 	Played hearts("descriptions/hearts.xml");
-	hearts.tap(KeyCode::Space);
+	hearts.tap(KeyCode::Num1);
 	hearts.frames(2);
 	// Card 22 is the 9 of hearts in both: row 2, column 9.
 	Object& nine = table.item(cardOf(table, "hearts", "9"));
@@ -628,7 +628,7 @@ namespace
 	{
 		Eights() : Played("descriptions/crazyeights.xml")
 		{
-			tap(KeyCode::Space);
+			tap(KeyCode::Num1);
 			frames(2);
 		}
 
@@ -909,7 +909,7 @@ namespace
 	{
 		Twentyone() : Played("descriptions/blackjack.xml")
 		{
-			tap(KeyCode::Space);
+			tap(KeyCode::Num1);
 			frames(2);
 		}
 
@@ -1065,7 +1065,7 @@ namespace
 	{
 		Holdem() : Played("descriptions/holdem.xml")
 		{
-			tap(KeyCode::Space);
+			tap(KeyCode::Num1);
 			frames(2);
 		}
 
@@ -1124,8 +1124,9 @@ namespace
 			{
 				frames(1);
 				const std::string look = get("you").lookName();
-				if (look != "wait" && get("you").variable.at("turn") == 1.0f) { return; }
 				if (hand() != "betting") { frames(2); return; }
+				// The computer's own press of the same key let go first.
+				if (look != "wait" && get("you").variable.at("turn") == 1.0f) { frames(1); return; }
 			}
 		}
 	};
@@ -1277,6 +1278,29 @@ TEST_CASE("holdem.xml: raises stop at three a round; out of chips between hands 
 	CHECK(play.get("over.winner").lookName() == "you");
 }
 
+TEST_CASE("holdem.xml: the computer plays on your keys, on its turn only; after a hand Space is yours to deal", "[cards][holdem][seats]")
+{
+	Holdem play;
+	play.deal({ "A hearts", "2 clubs", "K hearts", "7 diamonds", "Q hearts", "J hearts", "10 hearts", "3 spades", "4 clubs" });
+	play.press(KeyCode::Space);
+	REQUIRE(play.get("cpu").variable.at("turn") == 1.0f);
+	// Its turn: your keys do nothing.
+	play.press(KeyCode::W);
+	play.press(KeyCode::X);
+	CHECK(play.table("raises") == 0.0f);
+	CHECK(play.hand() == "betting");
+	// It checks with Space, as you would.
+	play.untilYou();
+	CHECK(play.street() == "flop");
+	CHECK(play.get("cpusays").lookName() == "call");
+
+	play.press(KeyCode::X);
+	REQUIRE(play.hand() == "done");
+	CHECK(play.get("you").variable.at("turn") == 1.0f);
+	play.press(KeyCode::Space);
+	CHECK(play.hand() == "dealing");
+}
+
 TEST_CASE("holdem.xml: hand after hand, you calling everything, every hand ends and no chip is lost", "[.long][cards][holdem]")
 {
 	Holdem play;
@@ -1326,7 +1350,7 @@ namespace
 	{
 		explicit Tricks(const std::string& file) : Played(file)
 		{
-			tap(KeyCode::Space);
+			tap(KeyCode::Num1);
 			frames(2);
 		}
 
@@ -1766,7 +1790,7 @@ namespace
 	{
 		explicit Gin(const std::vector<std::string>& top) : Played("descriptions/gin.xml")
 		{
-			tap(KeyCode::Space);
+			tap(KeyCode::Num1);
 			frames(1);
 			// Dealt a card a round to you and north, then one turned up.
 			const auto part = [&](std::size_t from, std::size_t count)
@@ -1972,7 +1996,7 @@ namespace
 	{
 		Pyramid() : Played("descriptions/pyramid.xml")
 		{
-			tap(KeyCode::Space);
+			tap(KeyCode::Num1);
 			frames(2);
 		}
 

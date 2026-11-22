@@ -193,6 +193,26 @@ TEST_CASE("<people>2</people> gives seat 2 to a person, and the computer stops",
 	CHECK(play.get("two").velocity.x == Approx(-120));
 }
 
+TEST_CASE("tennis.xml: the set's banner says YOU and CPU against the computer, PLAYER 1 and 2 between people", "[computer][tennis][seats]")
+{
+	const auto banner = [](KeyCode start, const char* winner)
+	{
+		Played play("descriptions/tennis.xml");
+		play.tap(start);
+		play.frames(1);
+		play.game.setVariable(winner, "games", 6.0f);
+		play.frames(2);
+		REQUIRE(play.state() == "over");
+		return std::make_pair(play.get("over.message").drawn.picture->text, play.get("playing.cpuscore").drawn.picture->text);
+	};
+	CHECK(banner(KeyCode::Num1, "player").first == "SET, YOU");
+	CHECK(banner(KeyCode::Num1, "cpu").first == "SET, CPU");
+	CHECK_THAT(banner(KeyCode::Num1, "cpu").second, ContainsSubstring("CPU"));
+	CHECK(banner(KeyCode::Num2, "player").first == "SET, PLAYER 1");
+	CHECK(banner(KeyCode::Num2, "cpu").first == "SET, PLAYER 2");
+	CHECK_THAT(banner(KeyCode::Num2, "cpu").second, ContainsSubstring("P2"));
+}
+
 TEST_CASE("a seated computer may hold only its own seat's keys", "[computer][seats]")
 {
 	const Written file(seated("<computer seat=\"2\"><condition object=\"two\" variable=\"x\"><below>600</below><hold button=\"a\" /></condition></computer>"));

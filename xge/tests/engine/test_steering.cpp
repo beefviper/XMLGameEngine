@@ -344,7 +344,7 @@ TEST_CASE("<track path> puts the object that far along the path a control moves 
 TEST_CASE("yarsrevenge.xml: the missile homes on Yar, and the neutral zone keeps him safe", "[steering][yarsrevenge]")
 {
 	Played play("descriptions/yarsrevenge.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	REQUIRE(play.state() == "playing");
 
 	// The missile turns toward Yar, wherever he is.
@@ -382,7 +382,7 @@ TEST_CASE("yarsrevenge.xml: the missile homes on Yar, and the neutral zone keeps
 TEST_CASE("yarsrevenge.xml: the shield and the Qotile go up and down together", "[steering][yarsrevenge]")
 {
 	Played play("descriptions/yarsrevenge.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	play.get("missile").position = { 10, 10 };
 	const Object& qotile = play.get("qotile");
 	const Object& cell = play.get("cells.1");
@@ -403,7 +403,7 @@ TEST_CASE("yarsrevenge.xml: the shield and the Qotile go up and down together", 
 TEST_CASE("yarsrevenge.xml: a bite brings the cannon level with Yar, and its blast takes the Qotile", "[steering][yarsrevenge]")
 {
 	Played play("descriptions/yarsrevenge.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	play.get("missile").position = { 10, 10 };
 
 	// With no cannon, Space fires only Yar's energy missile.
@@ -453,7 +453,7 @@ TEST_CASE("yarsrevenge.xml: a bite brings the cannon level with Yar, and its bla
 TEST_CASE("yarsrevenge.xml: the Swirl leaves the Qotile and flies at where Yar is", "[steering][yarsrevenge]")
 {
 	Played play("descriptions/yarsrevenge.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	// The Swirls there are: none until the Qotile spawns one.
 	const auto swirls = [&]()
 	{

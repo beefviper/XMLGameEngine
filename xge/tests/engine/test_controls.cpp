@@ -145,8 +145,8 @@ TEST_CASE("a pad's stick pushed past halfway is its direction", "[controls]")
 	Engine engine(game, std::make_unique<NullWindow>());
 	Object& bucket = game.object("bucket");
 	engine.handleControls(Controls{});
-	engine.handleKeyPressed(KeyCode::Space);
-	engine.handleKeyReleased(KeyCode::Space);
+	engine.handleKeyPressed(KeyCode::Num1);
+	engine.handleKeyReleased(KeyCode::Num1);
 	REQUIRE(game.getCurrentState().name == "playing");
 
 	// Kaboom also tracks pad1.x as a paddle; the stick held right moves the
@@ -171,8 +171,8 @@ TEST_CASE("the mouse moves Kaboom's bucket across the window as the paddle did",
 
 	// Resting where it was when the game started, the mouse moves nothing.
 	engine.handleControls(mouseAt(30.0f, 300.0f));
-	engine.handleKeyPressed(KeyCode::Space);
-	engine.handleKeyReleased(KeyCode::Space);
+	engine.handleKeyPressed(KeyCode::Num1);
+	engine.handleKeyReleased(KeyCode::Num1);
 	REQUIRE(game.getCurrentState().name == "playing");
 	engine.handleControls(mouseAt(30.0f, 300.0f));
 	CHECK(bucket.position.x == start);

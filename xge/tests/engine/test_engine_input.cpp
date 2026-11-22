@@ -65,7 +65,7 @@ TEST_CASE("a held key stops driving the player while a state without it is up, a
 	Engine engine(game, std::make_unique<NullWindow>());
 	Object& player = game.object("player");
 
-	tap(engine, KeyCode::Space); // title -> playing
+	tap(engine, KeyCode::Num1); // title -> playing
 
 	engine.handleKeyPressed(KeyCode::Left);
 	REQUIRE(player.velocity.x == -kStep);
@@ -88,7 +88,7 @@ TEST_CASE("a key pressed in a state that does not bind it starts driving the pla
 	Engine engine(game, std::make_unique<NullWindow>());
 	Object& player = game.object("player");
 
-	tap(engine, KeyCode::Space); // title -> playing
+	tap(engine, KeyCode::Num1); // title -> playing
 	tap(engine, KeyCode::Pause); // pause
 
 	engine.handleKeyPressed(KeyCode::Left); // no Left binding in "paused"
@@ -107,7 +107,7 @@ TEST_CASE("releasing a key while paused leaves the player stopped after unpausin
 	Engine engine(game, std::make_unique<NullWindow>());
 	Object& player = game.object("player");
 
-	tap(engine, KeyCode::Space); // title -> playing
+	tap(engine, KeyCode::Num1); // title -> playing
 
 	engine.handleKeyPressed(KeyCode::Left);
 	tap(engine, KeyCode::Pause); // pause
@@ -123,7 +123,7 @@ TEST_CASE("a key pressed and released while paused never moves the player", "[en
 	Engine engine(game, std::make_unique<NullWindow>());
 	Object& player = game.object("player");
 
-	tap(engine, KeyCode::Space); // title -> playing
+	tap(engine, KeyCode::Num1); // title -> playing
 	tap(engine, KeyCode::Pause); // pause
 
 	tap(engine, KeyCode::Left);
@@ -139,10 +139,10 @@ TEST_CASE("holding a state-changing key through the change does not trigger it a
 
 	// Space is bound to a state change in title and in the end screen. Held
 	// down, it must take title to playing once, and do nothing more.
-	engine.handleKeyPressed(KeyCode::Space);
+	engine.handleKeyPressed(KeyCode::Num1);
 	CHECK(game.getCurrentState().name == "playing");
 
-	engine.handleKeyReleased(KeyCode::Space);
+	engine.handleKeyReleased(KeyCode::Num1);
 	CHECK(game.getCurrentState().name == "playing");
 }
 
@@ -152,7 +152,7 @@ TEST_CASE("an ordinary press and release in one state is unchanged", "[engine_in
 	Engine engine(game, std::make_unique<NullWindow>());
 	Object& player = game.object("player");
 
-	tap(engine, KeyCode::Space); // title -> playing
+	tap(engine, KeyCode::Num1); // title -> playing
 
 	engine.handleKeyPressed(KeyCode::Right);
 	CHECK(player.velocity.x == kStep);
@@ -164,7 +164,7 @@ TEST_CASE("a held fire key does not shoot again when its state returns", "[engin
 {
 	Game game{ "descriptions/spaceinvaders.xml" };
 	Engine engine(game, std::make_unique<NullWindow>());
-	tap(engine, KeyCode::Space); // title -> playing
+	tap(engine, KeyCode::Num1); // title -> playing
 
 	engine.handleKeyPressed(KeyCode::Space); // fire
 	game.settleSpawns();
@@ -186,12 +186,12 @@ TEST_CASE("the key that starts Space Invaders does not also fire a shot", "[engi
 	Engine engine(game, std::make_unique<NullWindow>());
 	// Space starts the game from the menu and fires in play. Held down through
 	// the change, it must only start the game.
-	engine.handleKeyPressed(KeyCode::Space);
+	engine.handleKeyPressed(KeyCode::Num1);
 	CHECK(game.getCurrentState().name == "playing");
 	game.settleSpawns();
 	CHECK(copies::count(game, "bullet") == 0);
 
-	engine.handleKeyReleased(KeyCode::Space);
+	engine.handleKeyReleased(KeyCode::Num1);
 	game.settleSpawns();
 	CHECK(copies::count(game, "bullet") == 0);
 }
@@ -203,20 +203,20 @@ TEST_CASE("a key pressed while pumped is dropped, and one let go is let go", "[e
 	ScriptedWindow& window = *scripted;
 	Engine engine(game, std::move(scripted));
 
-	// Space starts the game from the menu. Pressed while the game is paused,
+	// 1 starts the game from the menu. Pressed while the game is paused,
 	// it must not start it when the game runs again.
-	window.queued = { { KeyCode::Space, true }, { KeyCode::Space, false } };
+	window.queued = { { KeyCode::Num1, true }, { KeyCode::Num1, false } };
 	engine.pump();
 	engine.input(); engine.update(xge::kSixtieth);
 	CHECK(game.getCurrentState().name != "playing");
 
 	// Held when the game paused and let go meanwhile: not still held after.
-	window.queued = { { KeyCode::Space, true } };
+	window.queued = { { KeyCode::Num1, true } };
 	engine.input();
-	window.queued = { { KeyCode::Space, false } };
+	window.queued = { { KeyCode::Num1, false } };
 	engine.pump();
 	engine.input();
-	window.queued = { { KeyCode::Space, true } };
+	window.queued = { { KeyCode::Num1, true } };
 	engine.input(); engine.update(xge::kSixtieth);
 	CHECK(game.getCurrentState().name == "playing");
 }
@@ -236,10 +236,10 @@ TEST_CASE("the engine knows when its window has been closed", "[engine_input]")
 
 TEST_CASE("every shipped game follows the shared key conventions", "[engine_input]")
 {
-	// Space starts and plays again (never Enter), the Pause key (or the pad's
+	// 1 starts, Space plays again (never Enter), the Pause key (or the pad's
 	// Start) pauses and plays on, and player one is on W, A, S and D (never Z;
 	// Q turns or cycles back beside E). A game of one screen (pong_min) has
-	// nothing for Space to do.
+	// nothing for 1 or Space to do.
 	int checked = 0;
 	for (const auto& entry : std::filesystem::directory_iterator("descriptions"))
 	{
@@ -261,6 +261,7 @@ TEST_CASE("every shipped game follows the shared key conventions", "[engine_inpu
 		CHECK_FALSE(names("z"));
 		const bool oneScreen = text.find("<state ") == text.rfind("<state ");
 		CHECK((oneScreen || names("space")));
+		CHECK((oneScreen || names("num1")));
 		// P and Escape pause nothing: the one pause key is Pause.
 		CHECK_FALSE(names("p"));
 		CHECK_FALSE(names("escape"));
@@ -284,7 +285,7 @@ TEST_CASE("Pac-Man sets off left as READY! ends, or the way a key held through i
 	{
 		Game game{ "descriptions/pacman.xml" };
 		Engine engine(game, std::make_unique<NullWindow>());
-		tap(engine, KeyCode::Space); // title -> playing, under READY!
+		tap(engine, KeyCode::Num1); // title -> playing, under READY!
 		if (holdRight) { engine.handleKeyPressed(KeyCode::D); }
 		engine.input(); engine.update(xge::kSixtieth);
 		CHECK(game.getCurrentState().name == "ready");

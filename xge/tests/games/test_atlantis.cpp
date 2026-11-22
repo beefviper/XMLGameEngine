@@ -281,8 +281,8 @@ TEST_CASE("the city gone is game over, and space plays again with everything bac
 	measure(game);
 	Engine engine(game, std::make_unique<NullWindow>());
 
-	engine.handleKeyPressed(KeyCode::Space);
-	engine.handleKeyReleased(KeyCode::Space);
+	engine.handleKeyPressed(KeyCode::Num1);
+	engine.handleKeyReleased(KeyCode::Num1);
 	REQUIRE(game.getCurrentState().name == "playing");
 
 	for (auto& object : game.getCurrentObjects())
@@ -310,8 +310,8 @@ TEST_CASE("the keys fire the posts, and Pause pauses over the city drawn still",
 	Game game{ "descriptions/atlantis.xml" };
 	measure(game);
 	Engine engine(game, std::make_unique<NullWindow>());
-	engine.handleKeyPressed(KeyCode::Space);
-	engine.handleKeyReleased(KeyCode::Space);
+	engine.handleKeyPressed(KeyCode::Num1);
+	engine.handleKeyReleased(KeyCode::Num1);
 	REQUIRE(game.getCurrentState().name == "playing");
 
 	engine.handleKeyPressed(KeyCode::A);

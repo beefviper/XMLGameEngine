@@ -26,7 +26,7 @@ namespace
 	{
 		Hunt() : Played("descriptions/depthcharge.xml")
 		{
-			tap(KeyCode::Space);
+			tap(KeyCode::Num1);
 			REQUIRE(state() == "playing");
 		}
 
@@ -170,7 +170,7 @@ TEST_CASE("a mine laid by a submarine rises, and one under the destroyer costs a
 	CHECK(laid > 0);
 }
 
-TEST_CASE("the hunt ends when the clock runs out or the ships are gone, and Space starts again", "[depthcharge]")
+TEST_CASE("the hunt ends when the clock runs out or the ships are gone, Space goes back to the title, and 1 starts again", "[depthcharge]")
 {
 	Hunt hunt;
 	hunt.frames(120);
@@ -186,7 +186,7 @@ TEST_CASE("the hunt ends when the clock runs out or the ships are gone, and Spac
 	CHECK(hunt.status("ships") == 3.0f);
 	CHECK(hunt.status("time") == 90.0f);
 
-	hunt.tap(KeyCode::Space);
+	hunt.tap(KeyCode::Num1);
 	hunt.get("status").variable.at("time") = 1;
 	hunt.frames(61);
 	CHECK(hunt.state() == "over");

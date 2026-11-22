@@ -15,7 +15,7 @@
 
   W or Up hops up and right, D or Right down and right, S or Down down and
   left, A or Left up and left (the four diagonals, as the arcade's stick
-  was turned). Space starts and plays again; Pause pauses.
+  was turned). 1 starts, Space plays again; Pause pauses.
 
   It is the game diagonal hops were made for:
   * Each key is a <hop direction="down-right"> with an <x> across and a <y>
@@ -112,14 +112,14 @@
           <position><x><centered /></x><y><centered><offset>-12</offset></centered></y></position>
           <row number="1"><sprite><text><content>turn every cube yellow</content></text></sprite></row>
           <row number="2"><sprite><text><content>w d s a or arrows hop</content><color>lightgrey</color></text></sprite></row>
-          <row number="3"><sprite><text><content>space to start</content></text></sprite><padding><y>32</y></padding></row>
+          <row number="3"><sprite><text><content>1 to start</content></text></sprite><padding><y>32</y></padding></row>
         </group>
       </objects>
       <shows>
         <show object="best" />
       </shows>
       <inputs>
-        <input button="space">
+        <input><button>num1</button><button>numpad1</button>
           <push state="playing" />
         </input>
       </inputs>

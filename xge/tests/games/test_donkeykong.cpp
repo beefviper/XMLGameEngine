@@ -62,7 +62,7 @@ namespace
 		// Starts a game, with Kong's first barrel a long way off.
 		void start()
 		{
-			tap(KeyCode::Space);
+			tap(KeyCode::Num1);
 			REQUIRE(state() == "playing");
 			kong().variable.at("wait") = 1000.0f;
 			game.clocksOf(kong())->at(0).counting = true; game.clocksOf(kong())->at(0).secondsLeft = 1000.0;

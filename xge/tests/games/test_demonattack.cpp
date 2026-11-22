@@ -127,7 +127,7 @@ TEST_CASE("demonattack.xml loads a cannon, a shot and three waves of demons", "[
 TEST_CASE("the cannon slides on A and D and the arrows", "[demonattack]")
 {
 	Play play("descriptions/demonattack.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	CHECK(play.state() == "playing");
 	CHECK(play.wave() == "playing.wave1");
 
@@ -147,7 +147,7 @@ TEST_CASE("the cannon slides on A and D and the arrows", "[demonattack]")
 TEST_CASE("a shot kills a flapping demon and scores thirty, and the last one moves on to the second wave", "[demonattack]")
 {
 	Play play("descriptions/demonattack.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	play.freeze("wave1");
 
 	shoot(play, "playing.wave1.demons.1");
@@ -163,7 +163,7 @@ TEST_CASE("a shot kills a flapping demon and scores thirty, and the last one mov
 TEST_CASE("the shot follows the cannon as it flies", "[demonattack]")
 {
 	Play play("descriptions/demonattack.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	play.freeze("wave1");
 
 	Object& player = play.object("player");
@@ -181,7 +181,7 @@ TEST_CASE("the shot follows the cannon as it flies", "[demonattack]")
 TEST_CASE("a demon of the second wave splits in two small ones, which score when shot", "[demonattack]")
 {
 	Play play("descriptions/demonattack.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	clearWave(play, "wave1");
 	REQUIRE(play.wave() == "playing.wave2");
 
@@ -211,7 +211,7 @@ TEST_CASE("a demon of the second wave splits in two small ones, which score when
 TEST_CASE("a big demon of the third wave takes two shots", "[demonattack]")
 {
 	Play play("descriptions/demonattack.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	clearWave(play, "wave1");
 	clearWave(play, "wave2");
 	REQUIRE(play.wave() == "playing.wave3");
@@ -233,7 +233,7 @@ TEST_CASE("a big demon of the third wave takes two shots", "[demonattack]")
 TEST_CASE("a demon on the cannon costs a life, and three is game over", "[demonattack]")
 {
 	Play play("descriptions/demonattack.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	play.freeze("wave1");
 
 	Object& player = play.object("player");
@@ -262,7 +262,7 @@ TEST_CASE("a demon on the cannon costs a life, and three is game over", "[demona
 TEST_CASE("the demons drop bombs on the cannon, and a hit costs a life", "[demonattack]")
 {
 	Play play("descriptions/demonattack.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	Object& player = play.object("player");
 
 	// Wait for a bomb, then put the cannon under it.
@@ -287,7 +287,7 @@ TEST_CASE("the demons drop bombs on the cannon, and a hit costs a life", "[demon
 TEST_CASE("only the wave being played runs: the later waves wait where they start, at their own speeds", "[demonattack][scenes]")
 {
 	Play play("descriptions/demonattack.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 
 	Object& waiting = play.object("playing.wave2.demons.1");
 	const float x = waiting.position.x;
@@ -315,7 +315,7 @@ TEST_CASE("only the wave being played runs: the later waves wait where they star
 TEST_CASE("paused, the wave is drawn still underneath and nothing moves", "[demonattack][scenes]")
 {
 	Play play("descriptions/demonattack.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	play.frames(30);
 
 	play.tap(KeyCode::Pause);

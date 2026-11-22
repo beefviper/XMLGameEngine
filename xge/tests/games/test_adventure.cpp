@@ -74,7 +74,7 @@ namespace
 		// Into the first room, with the dragons gone unless a test wants them.
 		void start(bool withDragons = false)
 		{
-			tap(KeyCode::Space);
+			tap(KeyCode::Num1);
 			REQUIRE(state() == "playing");
 			if (!withDragons)
 			{

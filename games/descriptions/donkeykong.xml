@@ -16,7 +16,7 @@
   the climb again, with Kong throwing faster; let it run out and a life is
   lost. Save her three times to win. The high score is kept.
 
-  A and D (or the arrows) walk, W and S climb, Space starts and jumps, Pause
+  A and D (or the arrows) walk, W and S climb, 1 starts, Space jumps, Pause
   pauses.
 
   It is the game the standing verbs were made for:
@@ -265,7 +265,7 @@
           <row number="2"><sprite><text><content>a d walk, w s climb (or arrows), space jumps</content><color>lightgrey</color></text></sprite></row>
         </group>
         <object name="start">
-          <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
+          <sprite><text style="prompt"><content>1 to start</content></text></sprite>
           <position><x><centered /></x><y><centered><offset>120</offset></centered></y></position>
         </object>
       </objects>
@@ -273,7 +273,7 @@
         <show object="best" />
       </shows>
       <inputs>
-        <input button="space">
+        <input><button>num1</button><button>numpad1</button>
           <push state="playing" />
         </input>
       </inputs>

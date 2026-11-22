@@ -39,7 +39,7 @@ namespace
 TEST_CASE("Crates: the worker shoves a crate along, and a crate on its spot finishes the room", "[puzzles][crates]")
 {
 	Played play("descriptions/crates.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	play.frames(1);
 	REQUIRE(play.state() == "playing");
 
@@ -65,7 +65,7 @@ TEST_CASE("Crates: the worker shoves a crate along, and a crate on its spot fini
 TEST_CASE("Crates: a crate against a wall stays, and so does the worker", "[puzzles][crates]")
 {
 	Played play("descriptions/crates.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	play.frames(1);
 	Object& worker = inRoom(play, "room1", "worker");
 	for (int i = 0; i < 6; ++i) { play.tap(KeyCode::A); play.frames(1); }
@@ -83,7 +83,7 @@ TEST_CASE("Crates: a crate against a wall stays, and so does the worker", "[puzz
 TEST_CASE("Crates: <undo /> takes back moves one at a time, the count with them", "[puzzles][crates][undo]")
 {
 	Played play("descriptions/crates.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	play.frames(1);
 	Object& worker = inRoom(play, "room1", "worker");
 	play.tap(KeyCode::D); play.frames(1);
@@ -107,7 +107,7 @@ TEST_CASE("Crates: <undo /> takes back moves one at a time, the count with them"
 TEST_CASE("Crates: every room can be finished, and the last one wins the game", "[puzzles][crates]")
 {
 	Played play("descriptions/crates.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	play.frames(1);
 	// Each room's shortest answer, found by a search over its rows.
 	const std::string answers[] = { "rrr", "luuldduurrrrdd", "uuruldrrrurrdulldrrdru", "luulrddlluulurdrrrrrurd" };
@@ -142,7 +142,7 @@ namespace
 TEST_CASE("Doubles: two numbers to begin, and a slide that moves brings a new one", "[puzzles][doubles]")
 {
 	Played play("descriptions/doubles.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	play.frames(2);
 	REQUIRE(numbers(play).size() == 2);
 	// Some way moves something: four tries, the board grows by one each time it did.
@@ -262,7 +262,7 @@ namespace
 TEST_CASE("Minefield: ten mines are laid, and an opened square counts the mines round it", "[puzzles][minefield]")
 {
 	Played play("descriptions/minefield.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	play.frames(12);
 	REQUIRE(play.state() == "playing");
 	Field before(play);
@@ -311,7 +311,7 @@ TEST_CASE("Minefield: ten mines are laid, and an opened square counts the mines 
 TEST_CASE("Minefield: a flag goes on and off, and a flagged square does not open", "[puzzles][minefield]")
 {
 	Played play("descriptions/minefield.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	play.frames(12);
 	play.tap(KeyCode::F);
 	play.frames(1);
@@ -331,7 +331,7 @@ TEST_CASE("Minefield: a flag goes on and off, and a flagged square does not open
 TEST_CASE("Doubles: every number shows its value, and slides only add equal ones", "[puzzles][doubles]")
 {
 	Played play("descriptions/doubles.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	play.frames(2);
 	const KeyCode keys[] = { KeyCode::A, KeyCode::W, KeyCode::D, KeyCode::S, KeyCode::A, KeyCode::A, KeyCode::S, KeyCode::D };
 	for (int turn = 0; turn < 120 && play.state() == "playing"; ++turn)

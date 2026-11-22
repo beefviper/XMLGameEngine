@@ -124,7 +124,7 @@ TEST_CASE("a <hole> is cut only in a picture that stays as it is", "[hole]")
 TEST_CASE("spaceinvaders.xml: shots wear holes in a shield until they pass through it", "[hole][spaceinvaders]")
 {
 	Played play("descriptions/spaceinvaders.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	REQUIRE(play.state() == "playing");
 
 	// Four shields, none of them hit yet; the second stands over x 349 to 437.

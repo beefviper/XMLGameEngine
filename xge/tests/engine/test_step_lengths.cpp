@@ -256,7 +256,7 @@ TEST_CASE("Cannon Hill's charge after a second of Space held is the same, howeve
 	// Three quarters a sixtieth of a second: 45 in a second.
 	const auto hold = [](Played& play)
 	{
-		play.tap(xge::KeyCode::Space);
+		play.tap(xge::KeyCode::Num1);
 		play.frames(3);
 		play.engine.handleKeyPressed(xge::KeyCode::Space);
 	};

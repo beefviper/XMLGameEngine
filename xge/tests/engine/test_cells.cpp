@@ -291,7 +291,7 @@ TEST_CASE("Tetris plays: a shape comes in, falls, lands and the next comes", "[c
 {
 	Played play("descriptions/tetris.xml");
 	CHECK(play.state() == "title");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	play.frames(2);
 	CHECK(play.state() == "playing");
 
@@ -313,7 +313,7 @@ TEST_CASE("Tetris plays: a shape comes in, falls, lands and the next comes", "[c
 TEST_CASE("Tetris deals from a bag of seven: every seven shapes are the seven, and an empty bag is shuffled again", "[cells][tetris][holders]")
 {
 	Played play("descriptions/tetris.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	play.frames(2);
 	const Object& bag = play.get("playing.bag");
 	// One falling and one waiting are out of the bag.
@@ -338,7 +338,7 @@ TEST_CASE("Tetris deals from a bag of seven: every seven shapes are the seven, a
 TEST_CASE("Tetris turns clockwise on W, Up, E or X and counterclockwise on Q", "[cells][tetris]")
 {
 	Played play("descriptions/tetris.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	play.frames(2);
 	const std::vector<std::pair<KeyCode, int>> turns{ { KeyCode::W, 1 }, { KeyCode::E, 2 }, { KeyCode::Up, 3 }, { KeyCode::X, 0 }, { KeyCode::Q, 3 }, { KeyCode::Q, 2 } };
 	for (const auto& [key, quarter] : turns)
@@ -353,7 +353,7 @@ TEST_CASE("Tetris turns clockwise on W, Up, E or X and counterclockwise on Q", "
 TEST_CASE("Tetris shows the next shape in its box, still, and sends it in when one lands", "[cells][tetris]")
 {
 	Played play("descriptions/tetris.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	play.frames(2);
 
 	// The next shape: on the box's map, away from the well it was written on.
@@ -397,7 +397,7 @@ TEST_CASE("Tetris shows the next shape in its box, still, and sends it in when o
 TEST_CASE("Tetris is over when the next shape has no room to come in", "[cells][tetris]")
 {
 	Played play("descriptions/tetris.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	play.frames(2);
 
 	// Dropped straight down each time, the shapes pile up in the middle
@@ -555,7 +555,7 @@ TEST_CASE("A group of groups picking one character is any of them in a shape", "
 TEST_CASE("Columns plays: a column comes in, cycles, lands and the next comes", "[cells][columns]")
 {
 	Played play("descriptions/columns.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	play.frames(2);
 	CHECK(play.state() == "playing");
 
@@ -712,7 +712,7 @@ TEST_CASE("A head stepping into a wall or its own body is refused, and touches i
 TEST_CASE("Snake plays: it goes, eats the food in its way and dies on the wall", "[cells][snake]")
 {
 	Played play("descriptions/snake.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	play.frames(2);
 	CHECK(play.state() == "playing");
 
@@ -735,7 +735,7 @@ TEST_CASE("Snake plays: it goes, eats the food in its way and dies on the wall",
 TEST_CASE("Centipede plays: the wand's shot wears the mushroom above it away", "[cells][centipede]")
 {
 	Played play("descriptions/centipede.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	play.frames(2);
 	CHECK(play.state() == "playing");
 
@@ -766,7 +766,7 @@ TEST_CASE("Centipede plays: the wand's shot wears the mushroom above it away", "
 TEST_CASE("Centipede plays: the wand keeps to its zone, and slides along the top of it", "[cells][centipede]")
 {
 	Played play("descriptions/centipede.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	play.frames(2);
 	Object& wand = play.get("playing.wand");
 	const float zoneTop = play.get("playing.field.line.1").position.y + 16.0f;
@@ -792,7 +792,7 @@ TEST_CASE("Centipede plays: the wand keeps to its zone, and slides along the top
 TEST_CASE("Centipede: a head rising meets the zone's line and winds back down a row", "[cells][centipede]")
 {
 	Played play("descriptions/centipede.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	play.frames(2);
 	// The wand out of the way, the centipede reaches the bottom and winds back up, never
 	// over the zone's top row (27, under the line).
@@ -812,7 +812,7 @@ TEST_CASE("Centipede: a head rising meets the zone's line and winds back down a 
 TEST_CASE("Centipede plays: a head that meets the wand bursts it, everything standing still, then a life is gone", "[cells][centipede]")
 {
 	Played play("descriptions/centipede.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	play.frames(2);
 	const auto lives = [&] { return play.get("status").variable.at("lives"); };
 	for (int f = 0; f < 60 * 120 && play.state() == "playing"; ++f) { play.frames(1); }
@@ -829,7 +829,7 @@ TEST_CASE("Centipede plays: a head that meets the wand bursts it, everything sta
 TEST_CASE("Centipede plays: the shot goes up whichever way the wand last moved, and another follows", "[cells][centipede]")
 {
 	Played play("descriptions/centipede.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	play.frames(2);
 	const auto shot = [&]() -> const Object*
 	{
@@ -1087,7 +1087,7 @@ TEST_CASE("Settled, a capsule's halves stay joined: they fall together, and only
 TEST_CASE("Capsules plays: germs come in low in the bottle, a capsule falls, and Doc holds the next", "[cells][capsules]")
 {
 	Played play("descriptions/capsules.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	play.frames(30);
 	CHECK(play.state() == "playing");
 	Object& status = play.get("playing.status");

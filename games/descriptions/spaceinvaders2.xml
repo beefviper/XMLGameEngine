@@ -209,7 +209,7 @@
         <show object="best" />
       </shows>
       <inputs>
-        <input button="space"><push state="playing" /></input>
+        <input><button>num1</button><button>numpad1</button><push state="playing" /></input>
       </inputs>
     </state>
     <state name="playing">

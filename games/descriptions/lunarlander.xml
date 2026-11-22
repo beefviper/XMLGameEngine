@@ -81,12 +81,12 @@
           <row number="2"><sprite><text><content>left and right turn, up fires the engine</content><color>lightgrey</color></text></sprite></row>
         </group>
         <object name="start">
-          <sprite><text style="line"><content>spacebar to start</content><size>48</size><color>green</color></text></sprite>
+          <sprite><text style="line"><content>1 to start</content><size>48</size><color>green</color></text></sprite>
           <position><x><centered /></x><y><centered><offset>110</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
-        <input button="space">
+        <input><button>num1</button><button>numpad1</button>
           <push state="playing" />
           <play sound="start" />
         </input>

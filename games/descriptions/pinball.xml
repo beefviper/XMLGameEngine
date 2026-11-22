@@ -10,7 +10,7 @@
   top (light all three for a bonus). Three balls.
 
   A or Left works the left flipper, D or Right the right one, Space held then
-  let go shoots, Pause pauses, Space starts and plays again.
+  let go shoots, Pause pauses, 1 starts, Space plays again.
 
   It is the game the third stage of tables and tracks was made for:
   * A flipper is a <line> turned about its <pivot>, the hinge at one end:
@@ -125,12 +125,12 @@
           <row number="2"><sprite><text><content>a and d or the arrows flip, hold spacebar and let go to shoot</content><color>lightgrey</color></text></sprite></row>
         </group>
         <object name="start">
-          <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
+          <sprite><text style="prompt"><content>1 to start</content></text></sprite>
           <position><x><centered /></x><y><centered><offset>110</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
-        <input button="space"><push state="playing" /></input>
+        <input><button>num1</button><button>numpad1</button><push state="playing" /></input>
       </inputs>
     </state>
 

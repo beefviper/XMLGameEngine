@@ -2451,6 +2451,8 @@ namespace xge
 	void Game::seatPeople(int count)
 	{
 		people = count;
+		expr.seatPeople(count);
+		relabelAll();
 		parts().turns.each([&](ObjectId, Object::Turns& member) { member.person = personSeat(member.seat) ? 1.0f : 0.0f; });
 	}
 

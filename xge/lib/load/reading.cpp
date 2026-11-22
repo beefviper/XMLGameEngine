@@ -129,11 +129,16 @@ namespace xge
 		return "@" + tag.getName() + "." + text;
 	}
 
-	// A tag that is one name the engine gives: a window measure or a
-	// pronoun's variable. Empty for any other tag.
+	// A tag that is one name the engine gives: a window measure, how many
+	// people play (<people />) or a pronoun's variable. Empty for any other tag.
 	static std::string engineName(const XmlNode& tag, const std::string& where)
 	{
 		if (tag.getName() == "window") { return windowMeasure(tag, where); }
+		if (tag.getName() == "people")
+		{
+			if (tag.getFirstChild() || !readText(tag).empty()) { fail(where + " > <people>", "is empty as a value: <people />, how many people play"); }
+			return "@people";
+		}
 		if (isPronoun(tag.getName())) { return pronounVariable(tag, where); }
 		return {};
 	}

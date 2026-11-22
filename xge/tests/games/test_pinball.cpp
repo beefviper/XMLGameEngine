@@ -25,7 +25,7 @@ namespace
 	{
 		Table() : Played("descriptions/pinball.xml")
 		{
-			tap(KeyCode::Space);
+			tap(KeyCode::Num1);
 			frames(3);
 		}
 

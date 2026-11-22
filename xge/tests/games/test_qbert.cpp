@@ -25,7 +25,7 @@ namespace
 	{
 		Qbert() : Played("descriptions/qbert.xml")
 		{
-			tap(KeyCode::Space);
+			tap(KeyCode::Num1);
 			REQUIRE(state() == "playing");
 			for (const char* enemy : { "ball", "coily" })
 			{
@@ -94,7 +94,7 @@ TEST_CASE("qbert.xml: going left he is drawn the other way round", "[qbert][mirr
 TEST_CASE("qbert.xml: a hop down a diagonal lights the cube landed on, and one off the pyramid costs a life", "[qbert]")
 {
 	Played play("descriptions/qbert.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	REQUIRE(play.state() == "playing");
 
 	// The red ball and Coily out of the way, where their hops go nowhere.
@@ -159,7 +159,7 @@ TEST_CASE("qbert.xml: a hop down a diagonal lights the cube landed on, and one o
 TEST_CASE("qbert.xml: Coily hatches on the bottom row and hunts Q*bert a hop at a time", "[qbert]")
 {
 	Played play("descriptions/qbert.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	REQUIRE(play.state() == "playing");
 	play.get("ball").position = { 232, 210 };
 	play.game.startFor(play.get("ball")).position = { 232, 210 };
@@ -199,7 +199,7 @@ TEST_CASE("qbert.xml: Coily hatches on the bottom row and hunts Q*bert a hop at 
 TEST_CASE("qbert.xml: a disc carries Q*bert back to the top once, and Coily chasing him falls off", "[qbert]")
 {
 	Played play("descriptions/qbert.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	REQUIRE(play.state() == "playing");
 	for (const char* enemy : { "ball", "coily" })
 	{

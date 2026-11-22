@@ -11,8 +11,8 @@
   cannons. Squids score 30, crabs 20, octopuses 10, the mystery ship 50 to
   200. The best score is kept.
 
-  A and D or the arrows move, Space fires, Pause pauses, Space starts
-  and plays again.
+  A and D or the arrows move, Space fires, Pause pauses, 1 starts,
+  Space plays again.
 
   How it is written:
   * The ship and the aliens are <bitmap>s, `pixel` (5) real pixels to a
@@ -167,7 +167,7 @@
         <show object="best" />
       </shows>
       <inputs>
-        <input button="space"><push state="playing" /></input>
+        <input><button>num1</button><button>numpad1</button><push state="playing" /></input>
       </inputs>
     </state>
     <state name="playing">

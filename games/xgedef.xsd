@@ -80,6 +80,7 @@
     <xs:choice>
       <xs:element name="random" type="randomType" />
       <xs:element name="window" type="windowMeasureType" />
+      <xs:element name="people" type="emptyType" />
       <xs:element name="self" type="xs:NMTOKEN" />
       <xs:element name="other" type="xs:NMTOKEN" />
       <xs:element name="others" type="xs:NMTOKEN" />
@@ -144,6 +145,7 @@
     </xs:annotation>
     <xs:choice minOccurs="0">
       <xs:element name="window" type="windowMeasureType" />
+      <xs:element name="people" type="emptyType" />
       <xs:element name="self" type="xs:NMTOKEN" />
       <xs:element name="other" type="xs:NMTOKEN" />
       <xs:element name="others" type="xs:NMTOKEN" />
@@ -205,6 +207,7 @@
     <xs:choice minOccurs="0">
       <xs:element name="random" type="randomType" />
       <xs:element name="window" type="windowMeasureType" />
+      <xs:element name="people" type="emptyType" />
       <xs:element name="self" type="xs:NMTOKEN" />
       <xs:element name="other" type="xs:NMTOKEN" />
       <xs:element name="others" type="xs:NMTOKEN" />
@@ -2961,6 +2964,7 @@
     <xs:choice minOccurs="0">
       <xs:element name="offset" type="xs:string" />
       <xs:element name="window" type="windowMeasureType" />
+      <xs:element name="people" type="emptyType" />
       <xs:element name="self" type="xs:NMTOKEN" />
       <xs:element name="other" type="xs:NMTOKEN" />
       <xs:element name="others" type="xs:NMTOKEN" />

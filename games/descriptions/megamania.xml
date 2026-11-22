@@ -191,12 +191,12 @@
           <row number="2"><sprite><text><content>a and d (or the arrows) slide, space fires</content><color>lightgrey</color></text></sprite></row>
         </group>
         <object name="start">
-          <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
+          <sprite><text style="prompt"><content>1 to start</content></text></sprite>
           <position><x><centered /></x><y><centered><offset>110</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
-        <input button="space"><push state="playing" /><play sound="wave" /></input>
+        <input><button>num1</button><button>numpad1</button><push state="playing" /><play sound="wave" /></input>
       </inputs>
     </state>
 

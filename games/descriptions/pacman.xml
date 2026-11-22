@@ -14,7 +14,7 @@
   life, and a life is won at 10,000 points; with none left it is game over.
   The high score is kept.
 
-  W A S D or the arrows steer; Space starts and plays again, Pause pauses.
+  W A S D or the arrows steer; 1 starts, Space plays again, Pause pauses.
 
   How it is written:
   * The maze is a <map>: each <row> is a row of tiles, a character a tile, so
@@ -175,7 +175,7 @@
         <object name="start">
           <sprite>
             <text style="prompt">
-              <content>spacebar to start</content>
+              <content>1 to start</content>
             </text>
           </sprite>
           <position><x><centered /></x><y>440</y></position>
@@ -186,7 +186,7 @@
         <show object="highlabel" />
       </shows>
       <inputs>
-        <input><button>space</button><button>pad1.start</button>
+        <input><button>num1</button><button>numpad1</button><button>pad1.start</button>
           <push state="playing" />
           <push state="ready" />
         </input>

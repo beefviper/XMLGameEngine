@@ -189,7 +189,7 @@ TEST_CASE("a held hop key hops once, and a state change never repeats it", "[fro
 	Object& frog = game.object("frog");
 	const float startY = frog.position.y;
 
-	engine.handleKeyPressed(KeyCode::Space); // title -> playing
+	engine.handleKeyPressed(KeyCode::Num1); // title -> playing
 	REQUIRE(game.getCurrentState().name == "playing");
 
 	engine.handleKeyPressed(KeyCode::Up);

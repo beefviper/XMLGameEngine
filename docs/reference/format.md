@@ -103,6 +103,15 @@ The window's numbers are a tag, `<window>`, anywhere a value or an operand goes,
 <x><subtract><value><window><right /></window></value><value>4</value></subtract></x>
 ```
 
+**`<people />`** is a value too: how many people play, as the last [`<people>N</people>`](input.md#seats) said (1 at first). A text's `<by>` reads a name, so a win screen keeps it in a live variable and picks its words by that:
+
+```xml
+<object name="winner">
+  <sprite name="you"><text><choose><by>winner.versus</by><word>YOU WIN</word><word>PLAYER 1 WINS</word></choose></text></sprite>
+  <variables><variable name="versus" update="live"><subtract><value><people /></value><value>1</value></subtract></variable></variables>
+</object>
+```
+
 ### Pronouns
 
 What the engine provides is a tag; text is only the game's own names and numbers. So the object running a rule, action, timer or number is `<self>`, a value tag holding one of its variables or live numbers; `<other>` is the one a rule touched ([collisions](collisions.md#rules)) and `<others>` the rest a condition matched ([states](states.md#conditions-in-conditions)):

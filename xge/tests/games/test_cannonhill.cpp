@@ -27,7 +27,7 @@ namespace
 	{
 		Duel() : Played("descriptions/cannonhill.xml")
 		{
-			tap(KeyCode::Space);
+			tap(KeyCode::Num1);
 			frames(3);
 		}
 

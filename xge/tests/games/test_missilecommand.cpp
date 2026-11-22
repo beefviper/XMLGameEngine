@@ -66,7 +66,7 @@ namespace
 
 		void start()
 		{
-			tap(KeyCode::Space);
+			tap(KeyCode::Num1);
 			REQUIRE(state() == "playing");
 			REQUIRE(wave() == "playing.wave1");
 		}

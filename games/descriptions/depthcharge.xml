@@ -107,12 +107,12 @@
           <row number="2"><sprite><text><content>a and d or the arrows move, space drops a pair</content><size>28</size><color>lightgrey</color></text></sprite></row>
         </group>
         <object name="start">
-          <sprite><text style="line"><content>spacebar to start</content><size>48</size></text></sprite>
+          <sprite><text style="line"><content>1 to start</content><size>48</size></text></sprite>
           <position><x><centered /></x><y><centered><offset>130</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
-        <input button="space">
+        <input><button>num1</button><button>numpad1</button>
           <push state="playing" />
           <play sound="start" />
         </input>

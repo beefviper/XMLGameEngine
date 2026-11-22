@@ -224,7 +224,7 @@ TEST_CASE("a mass is more than 0, and a knock's bounce 0 up to 1", "[knock]")
 TEST_CASE("trickshot.xml: the white ball straight into the rack stops, and the rack takes it on", "[knock][trickshot]")
 {
 	Played play("descriptions/trickshot.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 	REQUIRE(play.state() == "playing");
 
 	Object& white = play.get("cueball");
@@ -260,7 +260,7 @@ TEST_CASE("trickshot.xml: the white ball straight into the rack stops, and the r
 TEST_CASE("trickshot.xml: the cue tip has no mass, so it sends the white ball off at twice its speed", "[knock][trickshot]")
 {
 	Played play("descriptions/trickshot.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 
 	play.engine.handleKeyPressed(KeyCode::D);
 	float fastest = 0.0f;
@@ -277,7 +277,7 @@ TEST_CASE("trickshot.xml: the cue tip has no mass, so it sends the white ball of
 TEST_CASE("trickshot.xml: a ball in a pocket scores, and the white one there comes back", "[knock][trickshot]")
 {
 	Played play("descriptions/trickshot.xml");
-	play.tap(KeyCode::Space);
+	play.tap(KeyCode::Num1);
 
 	Object& ball = play.get("rack.4");
 	ball.position = { 100, 100 };
