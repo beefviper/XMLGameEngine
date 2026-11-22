@@ -418,9 +418,10 @@ namespace xge
 	{
 		requireWindow();
 
+		// A key let go meanwhile is let go; one pressed is not pressed.
 		for (const auto& event : window->pollEvents())
 		{
-			pumpedKeys.push_back(event);
+			if (!event.second) { pumpedKeys.push_back(event); }
 		}
 	}
 

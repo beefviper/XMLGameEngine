@@ -309,6 +309,8 @@ namespace xge
 			return;
 		}
 
+		// Keys pressed while paused are dropped, not played now.
+		engine->pump();
 		playing = true;
 		lastNs = clock.nsecsElapsed();
 		fpsStartNs = lastNs;
@@ -369,6 +371,7 @@ namespace xge
 
 	void GameSession::step()
 	{
+		if (engine && !changing) { engine->pump(); }
 		tick();
 	}
 

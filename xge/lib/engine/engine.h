@@ -119,9 +119,9 @@ namespace xge
 
 		// Lets the window deal with its own events (move, resize, close)
 		// without playing a frame: for a front end that has paused the game
-		// but keeps its window alive. The keys it reports are held back and
-		// handled by the next input(), so none is lost or reaches the game
-		// while it is not running.
+		// but keeps its window alive. A key pressed meanwhile is dropped, so
+		// it never reaches the game; one let go is held back for the next
+		// input(), so a key held when the game paused is not left down.
 		void pump(void);
 
 		// A key going down or up, as the window reports it; public so the
@@ -147,7 +147,7 @@ namespace xge
 		// When the window's pictures are drawn again at its size (render).
 		SettledFit settledFit;
 
-		// Key changes pump() took from the window that input() has not handled yet.
+		// Keys let go while pumped that input() has not handled yet.
 		std::vector<std::pair<KeyCode, bool>> pumpedKeys;
 
 		// Which keys are down; a repeated press of a held key is not a new one.

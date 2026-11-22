@@ -196,19 +196,27 @@ TEST_CASE("the key that starts Space Invaders does not also fire a shot", "[engi
 	CHECK(copies::count(game, "bullet") == 0);
 }
 
-TEST_CASE("keys read by pump() wait for the next step", "[engine_input]")
+TEST_CASE("a key pressed while pumped is dropped, and one let go is let go", "[engine_input]")
 {
 	Game game{ "descriptions/breakout.xml" };
 	auto scripted = std::make_unique<ScriptedWindow>();
 	ScriptedWindow& window = *scripted;
 	Engine engine(game, std::move(scripted));
 
-	// Space starts the game from the menu. Read while the game is paused, it
-	// must neither start it nor be lost.
+	// Space starts the game from the menu. Pressed while the game is paused,
+	// it must not start it when the game runs again.
 	window.queued = { { KeyCode::Space, true }, { KeyCode::Space, false } };
 	engine.pump();
+	engine.input(); engine.update(xge::kSixtieth);
 	CHECK(game.getCurrentState().name != "playing");
 
+	// Held when the game paused and let go meanwhile: not still held after.
+	window.queued = { { KeyCode::Space, true } };
+	engine.input();
+	window.queued = { { KeyCode::Space, false } };
+	engine.pump();
+	engine.input();
+	window.queued = { { KeyCode::Space, true } };
 	engine.input(); engine.update(xge::kSixtieth);
 	CHECK(game.getCurrentState().name == "playing");
 }

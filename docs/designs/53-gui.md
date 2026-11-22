@@ -7,7 +7,7 @@
 - Options were embedding a library's window (SFML and SDL2 can adopt a Qt handle; raylib cannot) or one more `Window` that draws the picture itself. **Built:** `QtWindow` draws every object with QPainter into an image, shown by `GameView`, an ordinary widget. It lives in `xge/gui/` so the library needs no Qt.
 - **One window or two.** Embedding every library in the main window was built first and **removed**: two users of OpenGL on one thread went wrong (Qt trusts its own record of the current context), giving noise, blank frames and a crash on Windows. **Chosen:** one window by default, drawn by Qt, controls on the right; or two, the game in its own window opened by the chosen library exactly as `xgecli` does. Closing the game window folds it back.
 - **Qt uses no OpenGL at all** (no `QOpenGLWidget`), so it cannot fight a library's context. Price: the Qt renderer does not wait for vertical blank. Do not bring one back without a guard around every library call.
-- `Engine::pump()` handles a library window's events while paused, or Windows calls it "not responding".
+- `Engine::pump()` handles a library window's events while paused, or Windows calls it "not responding". Presses read then are dropped, and Play and Step pump first so the Qt view's queue is dropped too: a press made while paused started the game on Play, and a paused game should take no keys. Releases are kept, so a key held as the game paused is not left down.
 
 ## Size
 

@@ -61,7 +61,7 @@ An object is **in play** when it is not out of play (`<waiting />`, dead, despaw
 - **A build has some, not all**: SFML 3 and Xerces by default; `-DXGE_WITH_<NAME>=ON` adds one, `-DXGE_ALL_BACKENDS=ON` or `-DBUILD_TESTING=ON` all (Direct3D only on Windows). A library's code compiles only behind `XGE_WITH_<NAME>`. Each factory says what it has (`available()`, `availableBackends()`, `defaultBackend()`, `name()`); `create()` of one not built throws, naming those that are.
 - **Pictures** are drawn by the engine, so a window library mostly shows bitmaps; only circles and rectangles are its own.
 - **Sound** is made by the engine (`synthesize()`, `audio/sound.h`), so it is the same whichever library plays it. `Game` never makes a noise: `<play>` asks, and `Engine` hands the frame's sounds to its `Audio`. Window and sound libraries are chosen apart; any goes with any.
-- `Engine::replaceWindow()` swaps the window of a running game (the old destroyed first), `Engine::replaceAudio()` the sound, `Engine::silence()` stops what plays, `Engine::pump()` keeps a paused window responsive.
+- `Engine::replaceWindow()` swaps the window of a running game (the old destroyed first), `Engine::replaceAudio()` the sound, `Engine::silence()` stops what plays, `Engine::pump()` keeps a paused window responsive, dropping the keys pressed meanwhile.
 
 ### What a window must do
 

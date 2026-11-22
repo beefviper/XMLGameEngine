@@ -76,7 +76,7 @@ An object has `sprite=` when it shows a named look. A run that throws still clos
 The Qt 6 application, built only when Qt is found.
 
 - `xgegui pong` opens a game; with none, a file dialog in `games/descriptions/`.
-- The game is drawn beside a tree of its data, which can be edited while it runs. Play, Pause, Step and Reset drive it; Options picks the video, XML and sound libraries.
+- The game is drawn beside a tree of its data, which can be edited while it runs. Play, Pause, Step and Reset drive it; Options picks the video, XML and sound libraries. A key pressed while paused is dropped: Play or Step does not play it.
 - A game that will not load is shown as a message, and the program carries on.
 - The game is drawn as large as fits, keeping its proportions. A bar under it shows the defined size, its scale and the percent shown, with smaller, 100% and bigger buttons.
 - One window or two: the game can have its own window, opened by the chosen library.
