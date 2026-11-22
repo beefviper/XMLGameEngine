@@ -24,7 +24,7 @@ namespace
 		// Two players at the keyboard, unless against the computer.
 		explicit Dice(bool computer = false) : Played("descriptions/fivedice.xml")
 		{
-			tap(computer ? KeyCode::Space : KeyCode::Num2);
+			tap(computer ? KeyCode::Num1 : KeyCode::Num2);
 			frames(2);
 		}
 

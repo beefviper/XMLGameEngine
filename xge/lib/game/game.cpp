@@ -2448,13 +2448,34 @@ namespace xge
 		if (found != state.scenes.end()) { checkConditionList(found->conditions); }
 	}
 
+	void Game::seatPeople(int count)
+	{
+		people = count;
+		parts().turns.each([&](ObjectId, Object::Turns& member) { member.person = personSeat(member.seat) ? 1.0f : 0.0f; });
+	}
+
+	// Each players group member's seat is its number in the group.
+	static bool seatsAnswer(const std::vector<int>& seats, int onTurn, bool person, int people)
+	{
+		const bool turnsHere = std::find(seats.begin(), seats.end(), onTurn) != seats.end();
+		const int seat = turnsHere ? onTurn : seats.front();
+		return (seat <= people) == person;
+	}
+
 	bool Game::seatAnswers(KeyCode key, bool byComputer) const
 	{
 		const State& state = currentState.top();
 		const auto seats = state.seats.find(key);
 		if (seats == state.seats.end()) { return true; }
-		const int seat = seats->second.front();
-		return personSeat(seat) != byComputer;
+		return seatsAnswer(seats->second, playerGroups.seatOnTurn(), !byComputer, people);
+	}
+
+	bool Game::seatAnswers(Axis axis) const
+	{
+		const State& state = currentState.top();
+		const auto seats = state.axisSeats.find(axis);
+		if (seats == state.axisSeats.end()) { return true; }
+		return seatsAnswer(seats->second, playerGroups.seatOnTurn(), true, people);
 	}
 
 	std::set<KeyCode> Game::computerButtons(std::set<KeyCode>& taps, float seconds)
@@ -2470,6 +2491,7 @@ namespace xge
 			if (const auto key = thinker.think(*this, each, seconds)) { taps.insert(*key); }
 		};
 		const State& state = currentState.top();
+		// A computer in a seat plays while no person has it.
 		const bool seatTaken = state.computerSeat != 0 && personSeat(state.computerSeat);
 		for (const Condition& condition : state.computer)
 		{

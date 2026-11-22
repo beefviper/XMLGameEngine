@@ -47,7 +47,7 @@ namespace
 		// Two players at the keyboard, unless against the computer.
 		explicit Board(bool computer = false) : Played("descriptions/backgammon.xml")
 		{
-			tap(computer ? KeyCode::Space : KeyCode::Num2);
+			tap(computer ? KeyCode::Num1 : KeyCode::Num2);
 			frames(2);
 		}
 

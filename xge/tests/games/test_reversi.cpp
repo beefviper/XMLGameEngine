@@ -32,7 +32,7 @@ namespace
 		// Two players at the keyboard, or (computer) black against it.
 		explicit Board(bool computer = false) : Played("descriptions/reversi.xml")
 		{
-			tap(computer ? KeyCode::Space : KeyCode::Num2);
+			tap(computer ? KeyCode::Num1 : KeyCode::Num2);
 			frames(2);
 		}
 

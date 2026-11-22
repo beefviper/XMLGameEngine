@@ -2735,7 +2735,8 @@ namespace xge
 			std::array<std::map<std::string, std::vector<WrittenCommand>>, keyMoments.size()> buttons;
 			std::map<std::string, std::vector<WrittenCommand>> axes;
 			std::map<std::string, std::vector<int>> seats;     // a button's seats
-			std::map<int, std::vector<std::string>> seatKeys;  // a seat's buttons
+			std::map<std::string, std::vector<int>> axisSeats; // a pointing control's seats
+			std::map<int, std::vector<std::string>> seatKeys;  // a seat's buttons and controls
 		};
 
 		// The names a node gives one way or the other: one by an attribute
@@ -2787,10 +2788,10 @@ namespace xge
 			{
 				const int from = seatNumber("from");
 				if (!out.seatKeys.count(from) || from == number) { fail(here, "from=\"" + std::to_string(from) + "\" is no seat written before it"); }
-				for (const std::string& button : std::vector<std::string>(out.seatKeys[from]))
+				for (const std::string& name : std::vector<std::string>(out.seatKeys[from]))
 				{
-					out.seats[button].push_back(number);
-					out.seatKeys[number].push_back(button);
+					(out.axes.count(name) ? out.axisSeats : out.seats)[name].push_back(number);
+					out.seatKeys[number].push_back(name);
 				}
 			}
 			readInputs(node, here, out, number);
@@ -2823,6 +2824,11 @@ namespace xge
 					if (!on.empty()) { fail(where + " > <input axis=\"" + axis + "\">", "on=\"" + on + "\" is for a button; a control that points runs as it moves"); }
 					if (out.axes.count(axis)) { fail(where + " > <input axis=\"" + axis + "\">", "binds axis '" + axis + "' again: this state's <inputs> already has it"); }
 					out.axes[axis] = readCommands(input->getFirstChild(), where + " > <input axis=\"" + axis + "\">");
+					if (seat != 0)
+					{
+						out.axisSeats[axis].push_back(seat);
+						out.seatKeys[seat].push_back(axis);
+					}
 					continue;
 				}
 
@@ -3290,7 +3296,12 @@ namespace xge
 						else { writtenState.seats.erase(button); }
 					}
 				}
-				for (auto& [axis, commands] : own.axes) { writtenState.axes[axis] = std::move(commands); }
+				for (auto& [axis, commands] : own.axes)
+				{
+					writtenState.axes[axis] = std::move(commands);
+					if (const auto seats = own.axisSeats.find(axis); seats != own.axisSeats.end()) { writtenState.axisSeats[axis] = seats->second; }
+					else { writtenState.axisSeats.erase(axis); }
+				}
 			}
 			writtenState = finishState(children, where, std::move(writtenState));
 

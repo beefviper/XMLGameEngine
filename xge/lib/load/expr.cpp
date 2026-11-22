@@ -512,10 +512,10 @@ namespace xge
 					const auto* hold = std::get_if<CmdHold>(&shapeOf(command));
 					if (!hold) { continue; }
 					const auto seats = state.seats.find(hold->button);
-					if (seats == state.seats.end() || std::find(seats->second.begin(), seats->second.end(), state.computerSeat) == seats->second.end())
+					if (seats != state.seats.end() && std::find(seats->second.begin(), seats->second.end(), state.computerSeat) == seats->second.end())
 					{
 						throw std::runtime_error(where + " > <computer seat=\"" + std::to_string(state.computerSeat) + "\"> > <hold button=\"" + keyCodeToString(hold->button)
-							+ "\">: that is no key of seat " + std::to_string(state.computerSeat) + "; the computer presses only the keys of the seat it plays");
+							+ "\">: that is another seat's key; the computer presses the keys of the seat it plays, and everyone's");
 					}
 				}
 			}
@@ -560,6 +560,7 @@ namespace xge
 						+ didYouMean(name, axisNames()) + ". The controls are: " + listOf(axisNames()));
 				}
 				state.axes[axis] = processCommands(commands, where);
+				if (const auto seats = writtenState.axisSeats.find(name); seats != writtenState.axisSeats.end()) { state.axisSeats[axis] = seats->second; }
 			}
 
 			for (auto& writtenCondition : flattened(writtenState.conditions))

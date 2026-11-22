@@ -44,8 +44,8 @@
   * You and the computer are a players group that takes <turns>: the
     actions are written once, on the group, by self; each passes the
     turn, and a new street gives it to whoever acts first with
-    <pass member="table.first">. Your keys trigger you, the computer's
-    (F9 to F12) trigger it, each only on its turn. The computer's play
+    <pass member="table.first">. Your keys trigger you; the computer's
+    (F9 to F12) trigger it, in seat 2, so the keyboard cannot press them. The computer's play
     is four <computer> conditions on its odds against the price of a
     call.
 -->
@@ -391,6 +391,13 @@
         <order group="stock"><random /></order>
       </starts>
       <inputs>
+        <!-- the computer's keys, in a seat nobody else has -->
+        <seat number="2">
+          <input><button>f9</button><trigger object="cpu" action="allin" /></input>
+          <input><button>f10</button><trigger object="cpu" action="fold" /></input>
+          <input><button>f11</button><trigger object="cpu" action="call" /></input>
+          <input><button>f12</button><trigger object="cpu" action="raise" /></input>
+        </seat>
         <input><button>w</button><button>up</button><button>pad1.up</button><trigger object="you" action="raise" from="act" /></input>
         <input>
           <button>space</button><button>pad1.a</button>
@@ -405,11 +412,6 @@
           <trigger object="you" action="fold" from="callonly" />
           <trigger object="you" action="fold" from="allin" />
         </input>
-        <!-- the computer's keys -->
-        <input><button>f9</button><trigger object="cpu" action="allin" /></input>
-        <input><button>f10</button><trigger object="cpu" action="fold" /></input>
-        <input><button>f11</button><trigger object="cpu" action="call" /></input>
-        <input><button>f12</button><trigger object="cpu" action="raise" /></input>
         <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
@@ -478,7 +480,7 @@
         </condition>
       </conditions>
       <!-- the computer, on its turn after a moment's thought: raise with good odds, call when the odds beat the price, else fold -->
-      <computer>
+      <computer seat="2">
         <condition object="hand" sprite="betting">
           <condition object="cpu" variable="turn"><equal>1</equal>
             <condition object="cpu" variable="ready"><equal>1</equal>

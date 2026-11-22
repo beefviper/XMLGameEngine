@@ -32,7 +32,7 @@ namespace
 		// Two players at the keyboard, or (computer) red against it.
 		explicit Board(bool computer = false) : Played("descriptions/checkers.xml")
 		{
-			tap(computer ? KeyCode::Space : KeyCode::Num2);
+			tap(computer ? KeyCode::Num1 : KeyCode::Num2);
 			frames(2);
 		}
 
@@ -299,7 +299,7 @@ TEST_CASE("checkers.xml: a side with no move on its turn has lost", "[checkers]"
 TEST_CASE("checkers.xml: against the computer, white answers red's move", "[checkers][think]")
 {
 	Board board(true);
-	REQUIRE(board.get("match").variable.at("players") == 1.0f);
+	REQUIRE_FALSE(board.game.personSeat(2));
 	board.space(3, 6);
 	board.space(4, 5);
 	REQUIRE(board.turn() == 2.0f);
@@ -351,7 +351,7 @@ TEST_CASE("checkers.xml: the computer takes, and finishes a run of jumps to win"
 TEST_CASE("checkers.xml: with two players the computer leaves white alone", "[checkers][think]")
 {
 	Board board;
-	REQUIRE(board.get("match").variable.at("players") == 2.0f);
+	REQUIRE(board.game.personSeat(2));
 	board.space(3, 6);
 	board.space(4, 5);
 	board.frames(300);

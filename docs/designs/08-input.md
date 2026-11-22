@@ -46,7 +46,8 @@ Built by a state change count compared in `Engine::syncHeldKeysToState()` after 
 - **Wanted:** the computer plays a person's side without keys of its own, and the other person's keys do nothing against it, with no rules gating them. Before, Pong's computer held F11 and F12, and Up and Down ran actions that tested `players` first.
 - **Chosen:** inputs sit in numbered `<seat>`s, `<people>N</people>` gives seats 1 to N to people, and `<computer seat>` presses the rest virtually. The engine refuses a keyboard press in a computer's seat and a computer's press in a person's, at the one place keys come in (`Engine::handleKeyPressed`).
 - **Looked at:** a toggle key on the title for person or computer in seat 2. Not needed yet: 1 and 2 on the title say it.
-- **Open:** turn games, whose players group members name their seat; pads following the seat; demos playing on their own fixed steps.
+- **Turns:** a players group member's seat is its number, already its seat at a trick, so a turn game says nothing new. Its keys sit in seat 1 and in seat 2 `from="1"`, and answer the seat on turn. This replaced the rule that a person's keys miss a picker while a `<think>` condition holds (`answersPicker`).
+- **Open:** Hold'em's computer still has keys of its own (F9 to F12, in seat 2): giving it yours needs it to wear your looks, and the deal key belongs to nobody's turn. Pads following the seat; demos playing on their own fixed steps.
 
 ## Mouse and pads
 

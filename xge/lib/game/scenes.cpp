@@ -532,7 +532,12 @@ namespace xge
 					else { made.seats.erase(button); }
 				}
 			}
-			for (const auto& [axis, commands] : state.axes) { made.axes[axis] = commands; }
+			for (const auto& [axis, commands] : state.axes)
+			{
+				made.axes[axis] = commands;
+				if (const auto seats = state.axisSeats.find(axis); seats != state.axisSeats.end()) { made.axisSeats[axis] = seats->second; }
+				else { made.axisSeats.erase(axis); }
+			}
 			made.conditions = mergedByName(earlier->conditions, state.conditions);
 			made.computer = mergedByName(earlier->computer, state.computer);
 			if (!state.computer.empty()) { made.computerSeat = state.computerSeat; }

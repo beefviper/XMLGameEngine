@@ -248,6 +248,7 @@ Board games, card games and any game whose players share one world (Cannon Hill'
 
 - **The members take turns in the order written**, the first first. Live **`turn`** on each is 1 on its turn, else 0 (`you.turn`). `sprite=`: the look a member shows off its turn; the one whose turn comes shows its first look.
 - **Keys reach only the member on its turn.** A `<trigger object="players">` (and a pointing control) goes to that one alone, and to a member with a `<think>` only as the computer presses for it, so a person's keys never play the computer's member. A trigger run by a rule or condition is not held back.
+- **A member's seat is its number.** Keys in [seats](input.md#seats) that share them (`<seat number="2" from="1" />`) answer the seat of the member on its turn, so on the turn of a seat no person has, only the computer's presses count. Live **`person`** on each member is 1 while a person has its seat, else 0 (`blues.person`).
 - **`<pass />`** in a member's action hands the turn to the next, round to the first, and ends what the press would still do. It is refused while a holder waits for a [wild card's call](cards.md#holders).
 - **`<pass object="players" member="N" />`**, from anywhere (a condition, the table's action), gives the turn to member N, counted from 1 in the order written, or to nobody with 0 (a full trick while it shows). `member=` is a number or a name for one (`trick.winner`, `table.first`). A member's number is also its seat, so a trick's `winner` names a member.
 - **When the turn changes**, the computer waits a moment before it plays, and the game's conditions see the change first.
@@ -257,7 +258,7 @@ Board games, card games and any game whose players share one world (Cannon Hill'
 - **`<owns object>`**: the holder of its own, a player's cards ([holders](cards.md#holders)).
 - **`<owns class>`**: the pieces of a [board game](boards.md) that are this player's (`<owns class="x" />`). [`<put />`](boards.md#the-picker), `<pick />`, a `<think>` and the marks `<movable>` and `<put>` that leave out `class=` take the class of the member on its turn, so one cursor serves every player.
 - **A look given while it waits stays**: a member that comes onto its turn showing its off-turn look shows its first; one given another look meanwhile (Reversi's "again") keeps it.
-- **Played by `<computer>` conditions.** A member with no `<think>` answers any press on its turn, so a `<computer>` condition on its live `turn` can play it by holding keys whose inputs trigger it (Hold'em's F9 to F12 on `cpu`).
+- **Played by `<computer>` conditions.** A member with no `<think>` answers any press on its turn, so a `<computer seat>` condition on its live `turn` can play it by holding its seat's keys (Five Dice).
 - **`<team>`** on a member: its side; partners share one, and a computer's `<think>` lets a partner's winning card stand (Spades).
 
 ## Alternating games
@@ -299,7 +300,7 @@ A game's `<demo>`, after `<states>`, is a recorded game: the random seed, how lo
 
 A state's `<computer>` is a player the game plays itself, pressing the state's keys as a person would: conditions whose commands are `<hold button>`s. **Every** condition is tested every frame; the keys of those that hold are held, the rest let go.
 
-`<computer seat="2">` plays [seat](input.md#seats) 2's keys, and only while no person has that seat: after `<people>2</people>` it stops, and the keyboard has the seat back. It may hold only its seat's keys.
+`<computer seat="2">` plays [seat](input.md#seats) 2's keys, and only while no person has that seat: after `<people>2</people>` it stops, and the keyboard has the seat back. It may hold its seat's keys and everyone's, never another seat's.
 
 ```xml
 <computer seat="2">
@@ -315,21 +316,19 @@ A condition can hold conditions, so a mode the title sets (`level`) is written o
 For a [board game](boards.md), a condition may hold a `<think>` instead of `<hold>`s:
 
 ```xml
-<computer>
-  <condition object="match" variable="players"><equal>1</equal>
-    <condition object="whites" variable="turn"><equal>1</equal>
-      <think object="cursor" button="space">
-        <depth>4</depth>
-        <worth sprite="king">3</worth>
-      </think>
-    </condition>
+<computer seat="2">
+  <condition object="whites" variable="turn"><equal>1</equal>
+    <think object="cursor" button="space">
+      <depth>4</depth>
+      <worth sprite="king">3</worth>
+    </think>
   </condition>
 </computer>
 ```
 
 - **It searches.** It copies the board and plays out every move, each side in turn, `<depth>` moves deep (default 4, 1 to 9), by the pieces' own `<moves>`.
 - **What it wants is inferred**: its pieces less the other side's, each 1 or its look's `<worth>`; a side with no move loses (or passes, in games of puts); a `<line>` check of the board is a win for whoever makes it; a put that `<close>`s keeps the turn. Equal moves are chosen at random.
-- **It plays as a person would**: it walks the picker `object=` to each cell of its move and taps `button=` there: 0.7 seconds before it starts (less the time it spent thinking), 0.15 a step, 0.35 on a cell before the tap. While its condition holds, a person's keys and pointer do not reach that picker, so one cursor and one key serve both sides. With no `class=` it plays the pieces the member on its turn [owns](#players-as-a-group).
+- **It plays as a person would**: it walks the picker `object=` to each cell of its move and taps `button=` there: 0.7 seconds before it starts (less the time it spent thinking), 0.15 a step, 0.35 on a cell before the tap. One cursor and one set of keys serve both sides: the keys sit in seat 1 and seat 2 alike, and on the computer's turn they answer only its presses. With no `class=` it plays the pieces the member on its turn [owns](#players-as-a-group).
 - **It thinks beside the game.** In a window the search runs on a thread of its own, so the game keeps drawing; one no longer wanted is stopped. With no window (the tests) it searches in the frame, so a run is the same every time.
 - **On a hand of cards** (`object=` a hand with its own pile, no `class=`), it [plays cards](cards.md#the-computer).
 - **Along a [route](boards.md#along-a-route)** it plays the turn's dice: of every way to use them that the rules allow, the one leaving it furthest ahead in the race, with more points held and fewer lone pieces the other's rolls can hit. With nothing to move it presses its button where the picker is, so the same key rolls or passes.

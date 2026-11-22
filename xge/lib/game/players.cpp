@@ -140,6 +140,19 @@ namespace xge
 		game.holders().layOutItems();
 	}
 
+	int Players::seatOnTurn() const
+	{
+		int seat = -1;
+		for (const Object& object : game.getCurrentObjects())
+		{
+			if (!game.turnsOf(object).takes || !object.exists) { continue; }
+			seat = 0;
+			const auto onIt = object.variable.find(words::turn);
+			if (onIt != object.variable.end() && onIt->second != 0.0f) { return game.turnsOf(object).seat; }
+		}
+		return seat;
+	}
+
 	Name Players::turnClass()
 	{
 		for (const Object& object : game.getCurrentObjects())
@@ -149,22 +162,6 @@ namespace xge
 			if (onIt != object.variable.end() && onIt->second != 0.0f) { return game.turnsOf(object).ownsClass; }
 		}
 		return {};
-	}
-
-	bool Players::answersPicker(const Object& picker)
-	{
-		if (computerPresses || !game.hasState()) { return true; }
-		const auto picks = [&](const CmdThink& think) { return game.fullName(think.picker) == picker.name; };
-		for (const Condition& condition : game.getCurrentState().computer)
-		{
-			const bool thinks = std::any_of(condition.commands.begin(), condition.commands.end(), [&](const Command& command)
-				{
-					const auto* think = std::get_if<CmdThink>(&shapeOf(command));
-					return think && picks(*think);
-				});
-			if (thinks && game.holds(condition)) { return false; }
-		}
-		return true;
 	}
 
 	Name Players::turnOwner(Name owner)

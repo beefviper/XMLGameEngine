@@ -708,6 +708,7 @@ namespace xge
 			{
 				continue;
 			}
+			if (!game.seatAnswers(axis)) { continue; }
 			for (const auto& command : commands)
 			{
 				commandExecutor.executeAxis(command, axis, axes[index]);

@@ -53,10 +53,9 @@ namespace xge
 		// The pieces (<owns class=>) of the player on its turn, in a board
 		// game played by a group that takes turns; empty when there is none.
 		Name turnClass();
-		// Whether a press reaches `picker` now: while the computer thinks for
-		// it (a <think object=> whose condition holds now), only the
-		// computer's presses do.
-		bool answersPicker(const Object& picker);
+		// The seat of the member on its turn: its number in its group (0:
+		// nobody's turn; -1: no group here takes turns).
+		int seatOnTurn() const;
 		// The engine says while it presses the computer's keys.
 		void pressingForComputer(bool pressing) noexcept { computerPresses = pressing; }
 		// Back to the first member's turn, the rest showing their

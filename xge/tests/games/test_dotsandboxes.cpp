@@ -32,7 +32,7 @@ namespace
 		// Two players at the keyboard, or red against the computer.
 		explicit Dots(bool computer = false) : Played("descriptions/dotsandboxes.xml")
 		{
-			tap(computer ? KeyCode::Space : KeyCode::Num2);
+			tap(computer ? KeyCode::Num1 : KeyCode::Num2);
 			frames(2);
 		}
 
@@ -254,7 +254,7 @@ TEST_CASE("dotsandboxes.xml: the computer takes a box it is given, and goes agai
 	board.draw(3, 2);
 	board.draw(10, 11);
 	REQUIRE(board.turn() == 1.0f);
-	board.game.setVariable("match", "players", 1.0f);
+	board.game.seatPeople(1);
 	// Red draws far away; blue (the computer) closes the box, then draws again.
 	board.draw(10, 1);
 	board.untilRed();

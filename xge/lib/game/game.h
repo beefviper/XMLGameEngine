@@ -454,12 +454,16 @@ namespace xge
 		bool takeDemoRequest(void) noexcept { return std::exchange(demoAsked, false); }
 
 		// <people>N</people>: the first N seats are people's, the others the
-		// computer's. One until a title says otherwise.
-		void seatPeople(int count) noexcept { people = count; }
+		// computer's. One until a title says otherwise. A players group
+		// member's live `person` says whether its seat is a person's.
+		void seatPeople(int count);
 		bool personSeat(int seat) const noexcept { return seat <= people; }
 		// Whether a press of `key` counts now, from a person or (byComputer)
-		// from the computer: a key in a seat is that seat's player's alone.
+		// from the computer: a key in a seat is that seat's player's alone;
+		// in several (a seat from= another), the seat of the players group
+		// member on its turn. A pointing control is only a person's.
 		bool seatAnswers(KeyCode key, bool byComputer) const;
+		bool seatAnswers(Axis axis) const;
 
 		// Whether the game <keeps> anything.
 		bool keepsAnything(void) const noexcept;

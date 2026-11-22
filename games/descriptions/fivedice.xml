@@ -15,7 +15,7 @@
   that does not make a box scores 0 there. Thirteen turns each fill the
   cards.
 
-  On the title, Space plays the computer and 2 two players. Space rolls, 1
+  On the title, 1 plays the computer and 2 two players. Space rolls, 1
   to 5 keep or free a die, W and S (or the arrows) choose a box, E writes
   the roll in it. Pause pauses.
 
@@ -32,10 +32,12 @@
   * Kept dice wear the gold `kept` style.
   * A player's column of boxes is a piece, taken once for each; a box is
     written only on its own player's turn.
-  * The computer is <computer> conditions holding keys of its own (F1 to
-    F9), answered only while the card shows its `computer` look, as a
-    person's are only while it shows `person`. Live numbers say what it
-    wants: each die's `want` (it shows the number most dice show, or is
+  * The players are a group that takes <turns>, unseen, passed with the
+    card's turn; the keys are seat 1's and seat 2's alike, so they answer
+    the player on its turn. The computer plays seat 2 while nobody has it
+    (the second's live `person` is 0): <computer> conditions holding the
+    same keys while the card shows its `computer` look. Live numbers say
+    what it wants: each die's `want` (it shows the number most dice show, or is
     one of a run of four), and each box's `pick`, what it would score
     less its `par`, what it usually earns in a game; so a poor roll goes
     where it loses least.
@@ -167,16 +169,7 @@
       <row number="13"><variables><variable name="offer" update="live">cup.worth</variable><variable name="par">22</variable></variables></row>
     </group>
   </objects>
-  <keeps>
-    <keep object="match" />
-  </keeps>
   <states>
-    <objects>
-      <!-- one player against the computer, or two -->
-      <object name="match">
-        <variables><variable name="players">1</variable></variables>
-      </object>
-    </objects>
     <state name="title">
       <objects>
         <object name="title">
@@ -191,20 +184,28 @@
           <row number="1"><sprite><text><content>roll five dice up to three times a turn, keeping any you like,</content></text></sprite></row>
           <row number="2"><sprite><text><content>then write the roll in one of thirteen boxes. the fuller card wins</content></text></sprite></row>
           <row number="3"><sprite><text><content>spacebar rolls, 1 to 5 keep a die, w s choose a box, e writes it</content></text></sprite><padding><y>40</y></padding></row>
-          <row number="4"><sprite><text><content>spacebar plays the computer, 2 two players</content></text></sprite></row>
+          <row number="4"><sprite><text><content>1 plays the computer, 2 two players</content></text></sprite></row>
         </group>
         <object name="start">
-          <sprite><text style="prompt"><content>spacebar to start</content></text></sprite>
+          <sprite><text style="prompt"><content>1 player against the computer, 2 for two players</content></text></sprite>
           <position><x><centered /></x><y><centered><offset>170</offset></centered></y></position>
         </object>
       </objects>
       <inputs>
-        <input><button>space</button><button>pad1.start</button><set variable="match.players">1</set><push state="playing" /></input>
-        <input><button>num2</button><set variable="match.players">2</set><push state="playing" /></input>
+        <input><button>num1</button><button>numpad1</button><button>pad1.start</button><people>1</people><push state="playing" /></input>
+        <input><button>num2</button><button>numpad2</button><people>2</people><push state="playing" /></input>
       </inputs>
     </state>
     <state name="playing">
       <objects>
+        <!-- the players, taking turns with the card: seat 1 and seat 2 -->
+        <group name="players">
+          <sprite name="unseen" />
+          <position><x>0</x><y>0</y></position>
+          <turns />
+          <member name="first" />
+          <member name="second" />
+        </group>
         <!-- the five dice: a die is worth its number, and shows it -->
         <group name="dice" class="die">
           <columns>5</columns>
@@ -383,10 +384,11 @@
               <become sprite="person" />
               <condition variable="player"><equal>2</equal><trigger object="card" action="seat" /></condition>
               <play sound="write" />
+              <pass object="players" />
             </action>
-            <!-- the second seat: the computer's, playing alone -->
+            <!-- the second seat: the computer's while nobody has it -->
             <action name="seat">
-              <condition object="match" variable="players"><equal>1</equal><become sprite="computer" /></condition>
+              <condition object="second" variable="person"><equal>0</equal><become sprite="computer" /></condition>
             </action>
           </actions>
           <variables>
@@ -397,6 +399,8 @@
             <!-- the computer's pauses: the seconds since the last key, and since the last roll -->
             <variable name="idle">0</variable>
             <variable name="sinceroll">0</variable>
+            <!-- 1 while a person has the second seat -->
+            <variable name="seated" update="live">second.person</variable>
             <variable name="most" update="live">
               <largest>
                     <value>dice.1.same</value>
@@ -567,11 +571,11 @@
           <position><x>labelx</x><y>totaly</y></position>
         </object>
         <object name="onename">
-          <sprite><text style="note"><choose><by><subtract><value>match.players</value><value>1</value></subtract></by><word>you</word><word>player 1</word></choose></text></sprite>
+          <sprite><text style="note"><choose><by>card.seated</by><word>you</word><word>player 1</word></choose></text></sprite>
           <position><x>onex</x><y>headingy</y></position>
         </object>
         <object name="twoname">
-          <sprite><text style="note"><choose><by><subtract><value>match.players</value><value>1</value></subtract></by><word>computer</word><word>player 2</word></choose></text></sprite>
+          <sprite><text style="note"><choose><by>card.seated</by><word>computer</word><word>player 2</word></choose></text></sprite>
           <position><x>twox</x><y>headingy</y></position>
         </object>
         <!-- under the name of the player on turn -->
@@ -683,25 +687,19 @@
         <send from="dice" into="cup"><all /></send>
       </starts>
       <inputs>
-        <!-- a person's keys, on a person's turn -->
-        <input><button>space</button><button>pad1.a</button><trigger object="card" action="roll" from="person" /></input>
-        <input><button>num1</button><trigger object="card" action="keep1" from="person" /></input>
-        <input><button>num2</button><trigger object="card" action="keep2" from="person" /></input>
-        <input><button>num3</button><trigger object="card" action="keep3" from="person" /></input>
-        <input><button>num4</button><trigger object="card" action="keep4" from="person" /></input>
-        <input><button>num5</button><trigger object="card" action="keep5" from="person" /></input>
-        <input><button>w</button><button>up</button><button>pad1.up</button><trigger object="card" action="up" from="person" /></input>
-        <input><button>s</button><button>down</button><button>pad1.down</button><trigger object="card" action="down" from="person" /></input>
-        <input><button>e</button><button>pad1.b</button><trigger object="card" action="write" from="person" /></input>
-        <!-- the computer's keys, on its turn -->
-        <input button="f1"><trigger object="card" action="keep1" from="computer" /></input>
-        <input button="f2"><trigger object="card" action="keep2" from="computer" /></input>
-        <input button="f3"><trigger object="card" action="keep3" from="computer" /></input>
-        <input button="f4"><trigger object="card" action="keep4" from="computer" /></input>
-        <input button="f5"><trigger object="card" action="keep5" from="computer" /></input>
-        <input button="f6"><trigger object="card" action="roll" from="computer" /></input>
-        <input button="f8"><trigger object="card" action="down" from="computer" /></input>
-        <input button="f9"><trigger object="card" action="write" from="computer" /></input>
+        <!-- one set of keys, for whichever player is on its turn -->
+        <seat number="1">
+          <input><button>space</button><button>pad1.a</button><trigger object="card" action="roll" /></input>
+          <input><button>num1</button><trigger object="card" action="keep1" /></input>
+          <input><button>num2</button><trigger object="card" action="keep2" /></input>
+          <input><button>num3</button><trigger object="card" action="keep3" /></input>
+          <input><button>num4</button><trigger object="card" action="keep4" /></input>
+          <input><button>num5</button><trigger object="card" action="keep5" /></input>
+          <input><button>w</button><button>up</button><button>pad1.up</button><trigger object="card" action="up" /></input>
+          <input><button>s</button><button>down</button><button>pad1.down</button><trigger object="card" action="down" /></input>
+          <input><button>e</button><button>pad1.b</button><trigger object="card" action="write" /></input>
+        </seat>
+        <seat number="2" from="1" />
         <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
@@ -713,7 +711,7 @@
         roll makes a big box still open; then it walks down to the open box
         that scores most over what that box is usually worth, and writes.
       -->
-      <computer>
+      <computer seat="2">
         <!--
           Its pauses, as a person's: a moment before the first roll, a
           look at each roll, a short wait between keeps, a shorter walk
@@ -722,27 +720,27 @@
         -->
         <condition object="card" sprite="computer">
           <condition object="card" variable="rolls"><equal>0</equal>
-            <condition object="card" variable="idle"><atleast>0.8</atleast><hold button="f6" /></condition>
+            <condition object="card" variable="idle"><atleast>0.8</atleast><hold button="space" /></condition>
           </condition>
           <condition object="card" variable="sinceroll"><atleast>1.2</atleast>
             <condition object="card" variable="rolling"><equal>1</equal>
               <condition object="card" variable="idle"><atleast>0.4</atleast>
-                <condition object="dice.1" variable="change"><equal>1</equal><hold button="f1" /></condition>
-                <condition object="dice.2" variable="change"><equal>1</equal><hold button="f2" /></condition>
-                <condition object="dice.3" variable="change"><equal>1</equal><hold button="f3" /></condition>
-                <condition object="dice.4" variable="change"><equal>1</equal><hold button="f4" /></condition>
-                <condition object="dice.5" variable="change"><equal>1</equal><hold button="f5" /></condition>
+                <condition object="dice.1" variable="change"><equal>1</equal><hold button="num1" /></condition>
+                <condition object="dice.2" variable="change"><equal>1</equal><hold button="num2" /></condition>
+                <condition object="dice.3" variable="change"><equal>1</equal><hold button="num3" /></condition>
+                <condition object="dice.4" variable="change"><equal>1</equal><hold button="num4" /></condition>
+                <condition object="dice.5" variable="change"><equal>1</equal><hold button="num5" /></condition>
               </condition>
               <condition object="card" variable="idle"><atleast>0.6</atleast>
-                <condition object="card" variable="changes"><equal>0</equal><hold button="f6" /></condition>
+                <condition object="card" variable="changes"><equal>0</equal><hold button="space" /></condition>
               </condition>
             </condition>
             <condition object="card" variable="writing"><equal>1</equal>
               <condition object="two" variable="aim" total="sum"><equal>0</equal>
-                <condition object="card" variable="idle"><atleast>0.25</atleast><hold button="f8" /></condition>
+                <condition object="card" variable="idle"><atleast>0.25</atleast><hold button="s" /></condition>
               </condition>
               <condition object="card" variable="idle"><atleast>0.8</atleast>
-                <condition object="two" variable="aim"><equal>1</equal><hold button="f9" /></condition>
+                <condition object="two" variable="aim"><equal>1</equal><hold button="e" /></condition>
               </condition>
             </condition>
           </condition>
@@ -770,7 +768,7 @@
             <variable name="result" update="live">
               <add>
                 <value>over.winner</value>
-                <value><multiply><value>3</value><value><subtract><value>match.players</value><value>1</value></subtract></value></multiply></value>
+                <value><multiply><value>3</value><value>card.seated</value></multiply></value>
               </add>
             </variable>
           </variables>

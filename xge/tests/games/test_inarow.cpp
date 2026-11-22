@@ -28,7 +28,7 @@ namespace
 		// Two players at the keyboard, or one against the computer.
 		Grid(const std::string& file, bool computer) : Played("descriptions/" + file + ".xml")
 		{
-			tap(computer ? KeyCode::Space : KeyCode::Num2);
+			tap(computer ? KeyCode::Num1 : KeyCode::Num2);
 			frames(2);
 		}
 
@@ -165,7 +165,7 @@ TEST_CASE("fourinarow.xml: the computer blocks three, and takes its own four", "
 	block.drop(1);
 	block.drop(2);
 	block.drop(2);
-	block.game.setVariable("match", "players", 1.0f);
+	block.game.seatPeople(1);
 	block.drop(3);
 	block.untilFirst();
 	CHECK(block.at(4, 6) == "yellow");
@@ -179,7 +179,7 @@ TEST_CASE("fourinarow.xml: the computer blocks three, and takes its own four", "
 	win.drop(2);
 	win.drop(6);
 	win.drop(3);
-	win.game.setVariable("match", "players", 1.0f);
+	win.game.seatPeople(1);
 	win.drop(5);
 	win.untilFirst();
 	win.frames(1);

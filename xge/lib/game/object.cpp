@@ -456,6 +456,14 @@ namespace xge
 		bool hasPlace(const Parts& parts, const Object& object) { return parts.cells.has(object.id); }
 		bool isHolder(const Parts& parts, const Object& object) { return parts.holders.has(object.id); }
 		bool hasMoves(const Parts& parts, const Object& object) { return parts.moves.has(object.id); }
+		bool takesTurns(const Parts& parts, const Object& object) { return parts.turns.has(object.id); }
+		float& personNumber(Parts& parts, Object& object)
+		{
+			if (Object::Turns* turns = parts.turns.find(object.id)) { return turns->person; }
+			thread_local float none;
+			none = 0.0f;
+			return none;
+		}
 		float& alongNumber(Parts& parts, Object& object)
 		{
 			if (Object::Moves* moves = parts.moves.find(object.id)) { return moves->along; }
@@ -489,6 +497,7 @@ namespace xge
 			{ "row", [](Parts& p, Object& o) -> float& { return placeNumber(p, o, &Object::Cells::Place::row); }, false, hasPlace },
 			{ "moves", [](Parts& p, Object& o) -> float& { return movesNumber(p, o); }, true, hasMoves },
 			{ "along", [](Parts& p, Object& o) -> float& { return alongNumber(p, o); }, true, hasMoves },
+			{ "person", [](Parts& p, Object& o) -> float& { return personNumber(p, o); }, true, takesTurns },
 			{ "cards", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::itemCount); }, true, isHolder },
 			{ "held", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::itemCount); }, true, isHolder },
 			{ "calling", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::calling); }, true, isHolder },

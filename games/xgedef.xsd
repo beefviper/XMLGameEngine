@@ -2836,7 +2836,7 @@
     </xs:sequence>
     <xs:attribute name="seat" type="seatNumberType" use="optional">
       <xs:annotation>
-        <xs:documentation>the seat it plays, pressing only that seat's keys, while no person has it; left out, it plays always</xs:documentation>
+        <xs:documentation>the seat it plays, pressing that seat's keys and everyone's, while no person has it; left out, it plays always</xs:documentation>
       </xs:annotation>
     </xs:attribute>
   </xs:complexType>

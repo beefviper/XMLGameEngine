@@ -626,7 +626,7 @@ namespace xge
 			const bool facesOnly = writtenObject.looks.size() != 2;
 			parts->items.add(object.id, order, { true, writtenObject.item.startHolder, writtenObject.item.worths, 0, 0, facesOnly });
 		}
-		if (writtenObject.takesTurns) { parts->turns.add(object.id, order, { true, writtenObject.turnsSprite, writtenObject.ownsClass }); }
+		if (writtenObject.takesTurns) { parts->turns.add(object.id, order, { true, writtenObject.turnsSprite, writtenObject.ownsClass, writtenObject.handSeat, writtenObject.handSeat <= 1 ? 1.0f : 0.0f }); }
 	}
 
 	// makeObject's mirror, grip, timers' looks, its tile on a map, a

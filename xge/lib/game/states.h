@@ -67,8 +67,10 @@ namespace xge
 		std::map<std::string, std::vector<WrittenCommand>> holding;
 		std::map<std::string, std::vector<WrittenCommand>> letGo;
 		std::map<std::string, std::vector<WrittenCommand>> axes;  // <input axis="mouse.x">
-		// <seat number="2">: the seats a button is in (none: everyone's).
+		// <seat number="2">: the seats a button or a pointing control is in
+		// (none: everyone's).
 		std::map<std::string, std::vector<int>> seats;
+		std::map<std::string, std::vector<int>> axisSeats;
 
 		// The three, in the order of keyMoments.
 		std::array<std::map<std::string, std::vector<WrittenCommand>>*, 3> keyMaps() { return { &input, &holding, &letGo }; }
@@ -129,9 +131,10 @@ namespace xge
 		std::map<KeyCode, std::vector<Command>> holding;  // on="hold": every frame while down
 		std::map<KeyCode, std::vector<Command>> letGo;    // on="release": once, let go
 		std::map<Axis, std::vector<Command>> axes;  // <input axis="mouse.x">: run as the control moves
-		// The seats a key is in (WrittenState::seats): only that seat's
-		// player, a person or the computer, presses it.
+		// The seats a key or a pointing control is in (WrittenState::seats):
+		// only that seat's player, a person or the computer, presses it.
 		std::map<KeyCode, std::vector<int>> seats;
+		std::map<Axis, std::vector<int>> axisSeats;
 
 		// The three, in the order of keyMoments.
 		std::array<std::map<KeyCode, std::vector<Command>>*, 3> keyMaps() { return { &input, &holding, &letGo }; }

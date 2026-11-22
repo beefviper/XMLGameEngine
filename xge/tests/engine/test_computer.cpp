@@ -196,5 +196,5 @@ TEST_CASE("<people>2</people> gives seat 2 to a person, and the computer stops",
 TEST_CASE("a seated computer may hold only its own seat's keys", "[computer][seats]")
 {
 	const Written file(seated("<computer seat=\"2\"><condition object=\"two\" variable=\"x\"><below>600</below><hold button=\"a\" /></condition></computer>"));
-	CHECK_THROWS_WITH(Played(file.path), ContainsSubstring("that is no key of seat 2"));
+	CHECK_THROWS_WITH(Played(file.path), ContainsSubstring("that is another seat's key"));
 }

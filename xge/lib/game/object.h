@@ -1602,6 +1602,8 @@ namespace xge
 			bool takes{ false };
 			Name sprite;
 			Name ownsClass;
+			int seat{};     // its number in its group, from 1
+			float person{}; // live: 1 while a person has its seat, else 0 (the computer's)
 		};
 
 		// Drawn after everything with a smaller one; 0 keeps the file's order
