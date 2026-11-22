@@ -168,6 +168,11 @@ namespace xge
 		// sent to its start and the worth used sent on.
 		std::vector<PieceMoveTo> routeMoves(Object& piece);
 		void placeAlong(Object& piece, const PieceMoveTo& move);
+		// <think> for pieces that go along a route (game/routes.cpp): the
+		// cells of the best move now, the piece's and where it goes, for
+		// the whole turn's dice; empty when none can move. False when the
+		// class walks no route.
+		bool routePlan(Name objClass, std::vector<std::pair<int, int>>& cells);
 		// Pieces sharing a cell of several tiles, laid in its tiles from the
 		// end at the board's nearer edge (closer together when they are
 		// more than its tiles); at the end of every frame.

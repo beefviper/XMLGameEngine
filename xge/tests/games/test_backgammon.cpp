@@ -44,9 +44,10 @@ namespace
 
 	struct Board : Played
 	{
-		Board() : Played("descriptions/backgammon.xml")
+		// Two players at the keyboard, unless against the computer.
+		explicit Board(bool computer = false) : Played("descriptions/backgammon.xml")
 		{
-			tap(KeyCode::Space);
+			tap(computer ? KeyCode::Space : KeyCode::Num2);
 			frames(2);
 		}
 
@@ -88,6 +89,12 @@ namespace
 		{
 			tap(KeyCode::Space);
 			frames(1);
+			showing(faces);
+		}
+
+		// The dice to play made to say these.
+		void showing(const std::vector<int>& faces)
+		{
 			game.holders().sendHeld(Name::of("rolled"), Name::of("used"), 0, true, {});
 			for (const int face : faces)
 			{
@@ -334,4 +341,45 @@ TEST_CASE("backgammon: the cube doubled and taken, then doubled and dropped", "[
 	REQUIRE(play.state() == "over");
 	REQUIRE(play.get("match").variable.at("winner") == 1);
 	REQUIRE(play.get("score").variable.at("white") == 2);
+}
+
+TEST_CASE("backgammon: the computer plays white's turn, rolling, moving and passing it back", "[backgammon]")
+{
+	Board play(true);
+	play.roll({ 3, 1 });
+	play.move(redPoint(17), redPoint(20));
+	play.move(redPoint(19), redPoint(20));
+	REQUIRE(play.turnOf("whiteside"));
+
+	const auto whereWhite = [&]
+	{
+		std::vector<Cell> cells;
+		for (Object* piece : play.side("white")) { cells.emplace_back(whole(play.game.place(*piece).column), whole(play.game.place(*piece).row)); }
+		std::sort(cells.begin(), cells.end());
+		return cells;
+	};
+	const std::vector<Cell> before = whereWhite();
+	for (int i = 0; i < 1200 && !play.turnOf("redside"); ++i) { play.frames(1); }
+	REQUIRE(play.turnOf("redside"));
+	REQUIRE(play.phase() == "rolling");
+	REQUIRE(whereWhite() != before);
+}
+
+TEST_CASE("backgammon: the computer's move hits a lone checker", "[backgammon]")
+{
+	Board play;
+	// Without the red checker there, white's best three is from its 8.
+	play.arrange("red", { redPoint(12) }, kRedTray);
+	play.arrange("white", { whitePoint(8), whitePoint(10) }, kWhiteTray);
+	play.showing({ 3 });
+	std::vector<std::pair<int, int>> cells;
+	REQUIRE(play.game.cellMaps().routePlan(Name::of("white"), cells));
+	REQUIRE(cells.size() == 2);
+	REQUIRE(cells[0] == whitePoint(10));
+	REQUIRE(cells[1] == whitePoint(13));
+
+	// With nothing rolled there is nothing to move.
+	play.showing({});
+	REQUIRE(play.game.cellMaps().routePlan(Name::of("white"), cells));
+	REQUIRE(cells.empty());
 }

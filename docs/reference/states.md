@@ -330,5 +330,6 @@ For a [board game](boards.md), a condition may hold a `<think>` instead of `<hol
 - **It plays as a person would**: it walks the picker `object=` to each cell of its move and taps `button=` there, eight frames apart. While its condition holds, a person's keys and pointer do not reach that picker, so one cursor and one key serve both sides. With no `class=` it plays the pieces the member on its turn [owns](#players-as-a-group).
 - **It thinks beside the game.** In a window the search runs on a thread of its own, so the game keeps drawing; one no longer wanted is stopped. With no window (the tests) it searches in the frame, so a run is the same every time.
 - **On a hand of cards** (`object=` a hand with its own pile, no `class=`), it [plays cards](cards.md#the-computer).
+- **Along a [route](boards.md#along-a-route)** it plays the turn's dice: of every way to use them that the rules allow, the one leaving it furthest ahead in the race, with more points held and fewer lone pieces the other's rolls can hit. With nothing to move it presses its button where the picker is, so the same key rolls or passes.
 
 A `<hold>` or `<think>` anywhere else, or any other command in a `<computer>`, stops the load.

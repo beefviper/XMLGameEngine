@@ -1,6 +1,6 @@
 # Board games
 
-**Status:** Built: Checkers with a computer, marks, put back and the mouse; Reversi, Four in a Row, Tic-Tac-Toe, Dots and Boxes; Backgammon for two. Open: other board games, lookahead for action games. Reference: [board games](../reference/boards.md), [thinking](../reference/states.md#thinking).
+**Status:** Built: Checkers with a computer, marks, put back and the mouse; Reversi, Four in a Row, Tic-Tac-Toe, Dots and Boxes; Backgammon, against the computer or for two. Open: other board games, lookahead for action games. Reference: [board games](../reference/boards.md), [thinking](../reference/states.md#thinking).
 
 ## What we looked for
 
@@ -58,6 +58,7 @@ Turn games on cells. Maps of cells already knew which piece is where; missing we
 - **Made cheaper:** boards seen are remembered by a key of their pieces; a move is dropped once plainly worse than the best; closing moves first; the free-place counts read one snapshot (`CellsStill`). In games of claims, a **quiet** put (touching nothing) is searched once and its fellows count as equal; used only for claims, not for lines, where corners and edges differ.
 - **It thinks beside the game:** in a window the search runs on a thread on a copied board, so the player's move is drawn first. With no window it runs in the frame, so tests replay the same.
 - A piece put in the same frame was once missed from the copied board, and Tic-Tac-Toe's smart level could lose; fixed.
+- **Along a route** (backgammon) the search is of the turn, not of moves ahead: every way to play the dice that uses as many as the rules want, each final board weighed for the race (pips still to go, the other's counted again for a hit), points held (more in the home six), and each lone piece by how many of the other's 36 rolls hit it times what it would lose. The other's rolls are averaged by a table of how many rolls reach each distance, not by searching its moves: cheap, and enough to play sensibly. Asked for no move (dice not rolled, or none fits) it presses the button where it is, which rolls or passes.
 - Pong's levels are plain `<computer>` conditions with no search; a paddle at the top must not reach a corner-to-corner ball.
 
 ## Open
@@ -65,5 +66,5 @@ Turn games on cells. Maps of cells already knew which piece is where; missing we
 - **Lookahead for action games:** play the game forward a second or two on a copy of the objects' numbers for each choice of keys, scored by goals inferred from the conditions.
 - A stronger Dots and Boxes (chains) and Reversi (corners, mobility).
 - `<onto>` for Checkers' and Reversi's cursors; draws by repetition or forty quiet moves.
-- **A computer for Backgammon:** `<think>` over chance, an expected value over the 21 rolls.
+- Backgammon's computer: doubling (it never doubles, and takes every double), and looking a roll deeper.
 - Halma (jumps that do not take), chess (sliding moves of any length, blocking pieces, stalemate).

@@ -788,6 +788,16 @@ namespace xge
 		auto made = std::make_shared<ThinkJob>();
 		made->think = think;
 		made->pickerRow = whole(game.place(picker).row);
+		// Pieces along a route (a race with dice): the best move of the
+		// turn's dice; with none to make, the button where the picker is
+		// (it rolls, or passes).
+		if (std::vector<std::pair<int, int>> route; game.cellMaps().routePlan(think.objClass, route))
+		{
+			if (route.empty()) { route.emplace_back(whole(game.place(picker).column), whole(game.place(picker).row)); }
+			made->best.push_back(std::move(route));
+			made->done = true;
+			return made;
+		}
 		Board& board = made->board;
 		board.parts = &game.parts();
 		// The board: the map of cells its pieces are on (the first piece of

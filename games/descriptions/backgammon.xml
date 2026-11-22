@@ -4,7 +4,8 @@
 <!-- date: Nov 22, 2026 -->
 
 <!--
-  Backgammon, for two at one keyboard. Red and white each have fifteen
+  Backgammon, against the computer (white) or for two at one keyboard.
+  Red and white each have fifteen
   checkers and race them round the board in opposite ways, red along the
   bottom from the right, then back along the top; white the other way.
   Each turn a player rolls two dice and moves a checker as far as each
@@ -18,7 +19,8 @@
   has borne off none, three (a backgammon) when the loser also still has
   one on the bar or in the winner's last six points, times the cube.
 
-  Space rolls; then W A S D or the arrows move the cursor along the
+  On the title, Space plays the computer and 2 two players. Space rolls;
+  then W A S D or the arrows move the cursor along the
   points, Space picks up a checker and puts it down, X or Backspace puts
   it back. Before rolling, C offers to double: the other player takes
   (Y), or drops (N) and loses what the cube says. Pause pauses. The
@@ -40,6 +42,11 @@
     loser's along says whether it is a gammon or a backgammon.
   * The table's looks are the turn's phases: rolling, moving, and stuck
     (dice left but no move: Space passes).
+  * The computer is a <think> on the cursor while it is white's turn. For
+    pieces along a route it weighs every way to play the dice: the race,
+    the points it makes, and each lone checker by how many of red's rolls
+    would hit it. With nothing to move it presses Space: it rolls, or
+    passes. It never doubles, and takes every double offered.
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
@@ -65,6 +72,7 @@
   </styles>
   <keeps>
     <keep object="score" />
+    <keep object="match" />
   </keeps>
   <states>
     <objects>
@@ -75,9 +83,10 @@
           <variable name="white">0</variable>
         </variables>
       </object>
-      <!-- who won the last game (0 red, 1 white) and how many points -->
+      <!-- who won the last game (0 red, 1 white) and how many points; one player against the computer, or two -->
       <object name="match">
         <variables>
+          <variable name="players">1</variable>
           <variable name="winner">0</variable>
           <variable name="won">0</variable>
         </variables>
@@ -98,7 +107,7 @@
           <padding><y>30</y></padding>
           <sprite><text style="help" /></sprite>
           <position><x><centered /></x><y><centered><offset>-80</offset></centered></y></position>
-          <row number="1"><sprite><text><content>two players at one keyboard, red first</content></text></sprite></row>
+          <row number="1"><sprite><text><content>you are red and move first; spacebar plays the computer, 2 two players</content></text></sprite></row>
           <row number="2"><sprite><text><content>spacebar rolls, then picks up a checker and puts it down</content></text></sprite></row>
           <row number="3"><sprite><text><content>w a s d or the arrows move along the points, x or backspace puts back</content></text></sprite></row>
           <row number="4"><sprite><text><content>c before rolling offers to double: y takes, n drops</content></text></sprite></row>
@@ -110,7 +119,8 @@
         </object>
       </objects>
       <inputs>
-        <input><button>space</button><button>pad1.start</button><push state="playing" /></input>
+        <input><button>space</button><button>pad1.start</button><set variable="match.players">1</set><push state="playing" /></input>
+        <input><button>num2</button><set variable="match.players">2</set><push state="playing" /></input>
       </inputs>
     </state>
     <state name="playing">
@@ -464,6 +474,14 @@
           </condition>
         </condition>
       </conditions>
+      <!-- the computer plays white -->
+      <computer>
+        <condition object="match" variable="players"><equal>1</equal>
+          <condition object="whiteside" variable="turn"><equal>1</equal>
+            <think object="cursor" button="space" />
+          </condition>
+        </condition>
+      </computer>
     </state>
     <state name="offered">
       <objects>
@@ -495,6 +513,12 @@
         </input>
         <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
+      <!-- the computer takes every double -->
+      <computer>
+        <condition object="match" variable="players"><equal>1</equal>
+          <condition object="whiteside" variable="turn"><equal>0</equal><hold button="y" /></condition>
+        </condition>
+      </computer>
     </state>
     <state name="paused">
       <objects>
