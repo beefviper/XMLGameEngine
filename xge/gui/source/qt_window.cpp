@@ -11,6 +11,8 @@
 #include <QColor>
 #include <QPainter>
 
+#include <algorithm>
+#include <cmath>
 #include <memory>
 
 namespace xge
@@ -72,15 +74,11 @@ namespace xge
 
 	void QtWindow::clear(const std::string& colorName)
 	{
-		// A painter still open from a frame that never reached display() has
-		// to end before the picture is touched.
-		framePainter.reset();
-
 		// The frame is drawn at the pictures' scale, in the game's pixels.
 		view.setFrameScale(pictureScale());
-		view.frame().fill(toQColor(colorName));
-		framePainter = std::make_unique<QPainter>(&view.frame());
-		framePainter->scale(view.frameScale(), view.frameScale());
+		frame.background = toQColor(colorName);
+		frame.scale = view.frameScale();
+		frame.placed.clear();
 	}
 
 	void QtWindow::draw(Object& object)
@@ -92,25 +90,46 @@ namespace xge
 			build(object, visual);
 		}
 
-		// Stretched over the object's size in the game's pixels: smoothed
-		// for a text or a shape, hard edged for a bitmap.
+		// The screen pixels it covers: its size in the game's pixels at the
+		// frame's scale.
+		const double scale = frame.scale;
 		const Vector2f size = object.pictureSize();
-		const QRectF where(object.position.x, object.position.y, size.x, size.y);
-		if (framePainter)
+		const int left = static_cast<int>(std::lround(static_cast<double>(object.position.x) * scale));
+		const int top = static_cast<int>(std::lround(static_cast<double>(object.position.y) * scale));
+		const int right = static_cast<int>(std::lround(static_cast<double>(object.position.x + size.x) * scale));
+		const int bottom = static_cast<int>(std::lround(static_cast<double>(object.position.y + size.y) * scale));
+		const QRect where(left, top, std::max(right - left, 1), std::max(bottom - top, 1));
+
+		// Drawn as it is when it is that size already; else stretched once,
+		// smoothed for a text or a shape, hard edged for a bitmap, and kept.
+		if (visual.image.size() == where.size())
 		{
-			framePainter->setRenderHint(QPainter::SmoothPixmapTransform, object.drawnAtScale());
-			framePainter->drawImage(where, visual.image);
+			frame.placed.push_back({ visual.image, where });
 			return;
 		}
-		QPainter painter(&view.frame());
-		painter.scale(view.frameScale(), view.frameScale());
-		painter.setRenderHint(QPainter::SmoothPixmapTransform, object.drawnAtScale());
-		painter.drawImage(where, visual.image);
+		if (visual.sized.size() != where.size() || visual.sizedFrom != visual.image.cacheKey())
+		{
+			visual.sized = visual.image.scaled(where.size(), Qt::IgnoreAspectRatio, object.drawnAtScale() ? Qt::SmoothTransformation : Qt::FastTransformation);
+			visual.sizedFrom = visual.image.cacheKey();
+		}
+		frame.placed.push_back({ visual.sized, where });
 	}
 
 	void QtWindow::display()
 	{
-		framePainter.reset();
+		if (frame == painted)
+		{
+			return;
+		}
+		QImage& picture = view.frame();
+		picture.fill(frame.background);
+		QPainter painter(&picture);
+		for (const Placed& each : frame.placed)
+		{
+			painter.drawImage(each.where.topLeft(), each.image);
+		}
+		painter.end();
+		painted = frame;
 		view.present();
 	}
 
