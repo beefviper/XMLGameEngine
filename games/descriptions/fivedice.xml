@@ -112,11 +112,6 @@
               </condition>
               <trigger action="show" />
             </action>
-            <!-- a new turn: no die kept -->
-            <action name="free">
-              <set variable="self.kept">0</set>
-              <trigger action="show" />
-            </action>
             <action name="show">
               <condition variable="worth"><equal>1</equal><become sprite="one" /></condition>
               <condition variable="worth"><equal>2</equal><become sprite="two" /></condition>
@@ -200,7 +195,8 @@
             <action name="next">
               <inc variable="card.turn" />
               <set variable="card.rolls">0</set>
-              <trigger object="dice" action="free" />
+              <set group="dice" variable="kept">0</set>
+              <trigger object="dice" action="show" />
               <play sound="write" />
             </action>
           </actions>

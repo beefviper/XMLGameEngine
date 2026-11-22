@@ -115,7 +115,7 @@ TEST_CASE("<set> puts a value into where an object is, or into every member of a
 	const Scratch file(box("ball", 100, 50)
 		+ "<group name=\"row\"><sprite><rectangle><width>4</width><height>4</height></rectangle></sprite>"
 		"<member><position><x>0</x><y>300</y></position></member><member><position><x>20</x><y>300</y></position></member></group>",
-		"<set variable=\"ball.x\">400</set><set variable=\"row.y\"><divide><value>ball.x</value><value>2</value></divide></set><set variable=\"row.velocity.x\">-60</set>");
+		"<set variable=\"ball.x\">400</set><set group=\"row\" variable=\"y\"><divide><value>ball.x</value><value>2</value></divide></set><set group=\"row\" variable=\"velocity.x\">-60</set>");
 	Played play(file.path);
 
 	play.tap(KeyCode::Space);
@@ -123,6 +123,31 @@ TEST_CASE("<set> puts a value into where an object is, or into every member of a
 	CHECK(play.get("row.1").position.y == Approx(200));
 	CHECK(play.get("row.2").position.y == Approx(200));
 	CHECK(play.get("row.2").velocity.x == Approx(-60));
+}
+
+TEST_CASE("<set group=> gives every member's variable the value; a group in variable= does not load", "[live]")
+{
+	const std::string row = "<group name=\"row\"><sprite><rectangle><width>4</width><height>4</height></rectangle></sprite>"
+		"<variables><variable name=\"kept\">1</variable></variables>"
+		"<member><position><x>0</x><y>300</y></position></member><member><position><x>20</x><y>300</y></position></member></group>";
+	{
+		const Scratch file(row, "<set group=\"row\" variable=\"kept\">0</set>");
+		Played play(file.path);
+		play.tap(KeyCode::Space);
+		CHECK(play.get("row.1").variable.at("kept") == 0);
+		CHECK(play.get("row.2").variable.at("kept") == 0);
+	}
+	const auto load = [](const std::string& objects, const std::string& onSpace)
+	{
+		const Scratch file(objects, onSpace);
+		Game game(file.path);
+	};
+	CHECK_THROWS_WITH(load(row, "<set variable=\"row.kept\">0</set>"), ContainsSubstring("'playing.row' is a group"));
+	CHECK_THROWS_WITH(load(row, "<inc variable=\"row.kept\" />"), ContainsSubstring("'playing.row' is a group"));
+	CHECK_THROWS_WITH(load(row, "<set variable=\"row.x\">0</set>"), ContainsSubstring("'playing.row' is a group"));
+	CHECK_THROWS_WITH(load(row, "<set variable=\"row.current.kept\">0</set>"), ContainsSubstring("is no group that takes <turns />"));
+	CHECK_THROWS_WITH(load(row, "<set group=\"row\" variable=\"lost\">0</set>"), ContainsSubstring("has no variable named 'lost'"));
+	CHECK_NOTHROW(load(row, "<set variable=\"row.2.kept\">0</set>"));
 }
 
 TEST_CASE("where things are is only known while the game runs, and <set> names something there is", "[live]")

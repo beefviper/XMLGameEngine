@@ -107,12 +107,12 @@ An object out of play does nothing when its action is pressed or triggered; lett
 |---|---|
 | `<inc variable="ship.score" />`, `<inc variable="ship.score">self.worth</inc>` | adds 1, or the amount |
 | `<dec variable="frog.lives" />` | takes 1, or the amount, off; may go below 0 |
-| `<set variable="target">value</set>` | an object's variable or a live number (`x`, `y`, `velocity.x`, `velocity.y`, `heading`, `altitude`, `rise`, `light`, `blink`). A group's name sets every member |
+| `<set variable="target">value</set>`, `<set group="dice" variable="kept">0</set>` | an object's variable or a live number (`x`, `y`, `velocity.x`, `velocity.y`, `heading`, `altitude`, `rise`, `light`, `blink`). With `group=`, every member's: `variable=` is then the members' own name for it |
 | `<copy variable="ship.score" into="best.score" />` | the second takes the first's number now |
 | `<count class="black" into="score.black" />` | how many of that class are in play; with [`<here />` or `<around>`](maps.md#pushing-merging-and-counting), how many in those cells |
 | `<rank variable="entry.score" into="table" />` | the entry takes its place in a [table of the best](states.md#a-table-of-the-best) |
 
-The variable must belong to an object; one no object has stops the load.
+The variable must belong to an object; one no object has stops the load. So does a group's name in `variable=` (`dice.kept`), since it cannot say which member: name one (`dice.2.kept`, `self.kept`, `players.current.score` for the [player on its turn](states.md#players-as-a-group)), or set them all with `group=`.
 
 ## Look and sound
 

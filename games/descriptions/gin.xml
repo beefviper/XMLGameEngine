@@ -236,7 +236,7 @@
               <pick class="card" />
               <place into="discard" />
               <play sound="card" />
-              <set variable="players.discarded">1</set>
+              <set variable="self.discarded">1</set>
               <become object="table" sprite="drawing" />
               <pass />
             </action>

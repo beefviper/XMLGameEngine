@@ -4,6 +4,7 @@
 // date: Oct 29, 2026
 
 #include "load/check.h"
+#include "game/words.h"
 
 #include "picture/color.h"
 #include "engine/keys.h"
@@ -286,6 +287,37 @@ namespace xge
 		}
 	}
 
+	bool isGroup(const std::vector<Object>& objects, const std::string& name)
+	{
+		return std::none_of(objects.begin(), objects.end(), [&](const Object& object) { return object.name == name; })
+			&& std::any_of(objects.begin(), objects.end(), [&](const Object& object) { return object.inGroup(name); });
+	}
+
+	void refuseGroupOwner(const Checking& checking, const std::string& owner, const std::string& tag)
+	{
+		if (!isGroup(checking.objects, owner)) { return; }
+		throw std::runtime_error(checking.where + ": " + tag + ": '" + owner + "' is a group, and a variable belongs to one object of it."
+			" Name one member, or " + owner + ".current for the one on its turn; <set group=\"" + owner + "\"> sets every member's");
+	}
+
+	const Object* currentMember(const Checking& checking, const std::string& owner, const std::string& tag)
+	{
+		const std::string ending = "." + words::current.str();
+		if (owner.size() <= ending.size() || owner.compare(owner.size() - ending.size(), ending.size(), ending) != 0) { return nullptr; }
+		const std::string group = owner.substr(0, owner.size() - ending.size());
+		const std::vector<Object>& objects = checking.objects;
+		const auto member = std::find_if(objects.begin(), objects.end(), [&](const Object& object)
+			{
+				const Object::Turns* turns = checking.parts.turns.find(object.id);
+				return object.inGroup(group) && turns && turns->takes;
+			});
+		if (member == objects.end())
+		{
+			throw std::runtime_error(checking.where + ": " + tag + ": '" + owner + "' is the member on its turn, and '" + group + "' is no group that takes <turns />");
+		}
+		return &*member;
+	}
+
 	void checkVariable(const Checking& checking, const VariableName& target, const std::string& tag)
 	{
 		const std::vector<Object>& objects = checking.objects;
@@ -296,7 +328,12 @@ namespace xge
 				+ ". A variable that changes belongs to an object; the game's own <variables> are fixed numbers");
 		}
 		const std::string& ownerName = target.owner;
-		const Object* owner = findObject(objects, ownerName);
+		const Object* owner = currentMember(checking, ownerName, tag);
+		if (!owner)
+		{
+			refuseGroupOwner(checking, ownerName, tag);
+			owner = findObject(objects, ownerName);
+		}
 		if (!owner)
 		{
 			throw std::runtime_error(where + ": " + tag + ": there is no object named '" + ownerName + "'" + didYouMean(ownerName, objectNames(objects)) + otherOutOfPlace(ownerName)

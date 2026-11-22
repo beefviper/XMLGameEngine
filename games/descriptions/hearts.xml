@@ -333,7 +333,7 @@
         <!-- then taken: the taker's turn, its points to the taker, its cards to the stock -->
         <condition object="table" sprite="taking">
           <pass object="players" member="trick.winner" />
-          <inc variable="players.got">trick.points</inc>
+          <inc variable="players.current.got">trick.points</inc>
           <send from="trick" into="stock"><all /></send>
           <inc variable="table.tricks">1</inc>
           <become object="table" sprite="playing" />

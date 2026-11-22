@@ -48,7 +48,7 @@ A state is a **mode**: menu, play, pause, game over. It says what is shown, whic
 - A member may give its own `<variables>`, `<owns>` and `<think>`: the same take-and-change rule as sprites.
 - **Board games on it:** each member `<owns class>` its pieces, so one cursor and class-less `<put />`, `<pick />`, `<think>` and marks play for the member on its turn. A `<computer>` `<think>` walking the picker keeps people's keys and pointer off it while its condition holds, and taps its key, so a person's next press is never lost. Rejected: a cursor per player (two of everything again).
 - **A member played by `<computer>` conditions** (Hold'em) has no `<think>`, so it answers any press on its turn; its own keys (F9 to F12) trigger it by name. Shared actions written once on the group say "the other" by a condition on each member's `turn`; a word for the other player stays open.
-- A verb naming the group changes the member on its turn; `class=` still means every member.
+- A verb naming the group changes the member on its turn; `class=` still means every member. A verb's variable says `players.current` for that member, never the group's bare name ([a variable names one member](06-groups.md#groups)).
 - Off its turn a member shows `<turns sprite>`; the one whose turn comes shows its first look, unless it was given another while it waited (Reversi's "again", set before the `<pass>`).
 - Kept apart: arcade `<alternate><player state>`, where each player has a world of their own.
 - `<pass object member>` gives the turn to a member by number, or nobody (0): a trick's winner leads, the first leader goes round. Numbers, not names, because the trick's `winner` is a seat number and seats are the members' order; a name would need a string value.

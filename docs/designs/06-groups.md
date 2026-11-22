@@ -8,6 +8,7 @@
 - **Chosen: a `<group>` beside `<object>`, with one rule: whatever a member leaves out it takes from its group.** Then it must be complete like an object. Position and velocity can come in halves (the group gives `<y>`, each member `<x>`).
 - A member may give its own sprites, animation, position and velocity, never collisions, actions, variables or timers: members act alike, and one that acts differently is an object beside the group.
 - **Members are ordinary objects.** A group is read as one written object per member; the engine remembers only `groupName`. The group's name means every member wherever a name is taken.
+- **A variable names one member.** `variable="dice.kept"` once set a single die quietly (the first, or the player on its turn), so Five Dice kept its holds across turns. Now a group there stops the load: a member is named (`dice.2.kept`, `self.kept`, `players.current.score` for the one on its turn), or `<set group="dice" variable="kept">` sets every member's. The author wanted which members to be said, not guessed; `group=` was his. A range of members, or some by a test, is open until a game needs it.
 - Frogger and Space Race got about 30% smaller.
 
 | Option | Verdict |

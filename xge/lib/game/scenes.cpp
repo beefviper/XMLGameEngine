@@ -5,6 +5,7 @@
 
 #include "game/scenes.h"
 
+#include "game/words.h"
 #include "load/spelling.h"
 #include "verbs/verb.h"
 
@@ -131,7 +132,14 @@ namespace xge
 
 				const auto dot = target.rfind('.');
 				if (dot == std::string::npos) { return whole; }
-				return object(target.substr(0, dot), context) + target.substr(dot);
+				// players.current.score: the group found as any is.
+				const std::string owner = target.substr(0, dot);
+				const std::string current = "." + words::current.str();
+				if (owner.size() > current.size() && owner.compare(owner.size() - current.size(), current.size(), current) == 0)
+				{
+					return object(owner.substr(0, owner.size() - current.size()), context) + current + target.substr(dot);
+				}
+				return object(owner, context) + target.substr(dot);
 			}
 
 			// An expression with every name in it written out: owner.variable,

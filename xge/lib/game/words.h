@@ -12,6 +12,7 @@ namespace xge::words
 	// The names the engine itself gives: live numbers a holder, a hand or a
 	// player shows (holder.cards, player.turn), made once.
 	inline const Name turn{ "turn" };
+	inline const Name current{ "current" };
 	inline const Name worth{ "worth" };
 	inline const Name high{ "high" };
 	inline const Name cards{ "cards" };

@@ -75,6 +75,14 @@ namespace xge
 	// The variable a command names: owner.variable, the variable after the
 	// last dot (the owner may be a path).
 	void checkVariable(const Checking& checking, const VariableName& target, const std::string& tag);
+	// Whether a name is a group's and no object's.
+	bool isGroup(const std::vector<Object>& objects, const std::string& name);
+	// A variable's owner that is a group, not one object: refused, since
+	// which member is meant cannot be told.
+	void refuseGroupOwner(const Checking& checking, const std::string& owner, const std::string& tag);
+	// For players.current, a member of players (which must take turns);
+	// null for any other name.
+	const Object* currentMember(const Checking& checking, const std::string& owner, const std::string& tag);
 	// A command writing what its object follows (update="live"): it would
 	// be undone at the end of the frame, so it is a mistake.
 	void refuseFollowed(const Checking& checking, const VariableName& target, const std::string& tag);

@@ -395,7 +395,7 @@
         </condition>
         <condition class="aliens" total="count">
           <atmost>pace.next</atmost>
-          <set variable="aliens.velocity.x"><multiply><value>aliens.1.1.velocity.x</value><value>1.3</value></multiply></set>
+          <set group="aliens" variable="velocity.x"><multiply><value>aliens.1.1.velocity.x</value><value>1.3</value></multiply></set>
           <set variable="pace.next"><divide><value>pace.next</value><value>2</value></divide></set>
         </condition>
         <condition object="player" variable="score">

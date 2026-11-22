@@ -233,28 +233,28 @@
         <!-- four all is deuce again: forty all -->
         <condition object="player" variable="points"><atleast>4</atleast>
           <condition object="cpu" variable="points"><atleast>4</atleast>
-            <set variable="players.points">3</set>
+            <set group="players" variable="points">3</set>
           </condition>
         </condition>
         <!-- four points against thirty or less, or five (after advantage), take the game -->
         <condition object="player" variable="points"><atleast>5</atleast>
           <inc variable="player.games" />
-          <set variable="players.points">0</set>
+          <set group="players" variable="points">0</set>
         </condition>
         <condition object="player" variable="points"><atleast>4</atleast>
           <condition object="cpu" variable="points"><atmost>2</atmost>
             <inc variable="player.games" />
-            <set variable="players.points">0</set>
+            <set group="players" variable="points">0</set>
           </condition>
         </condition>
         <condition object="cpu" variable="points"><atleast>5</atleast>
           <inc variable="cpu.games" />
-          <set variable="players.points">0</set>
+          <set group="players" variable="points">0</set>
         </condition>
         <condition object="cpu" variable="points"><atleast>4</atleast>
           <condition object="player" variable="points"><atmost>2</atmost>
             <inc variable="cpu.games" />
-            <set variable="players.points">0</set>
+            <set group="players" variable="points">0</set>
           </condition>
         </condition>
       </conditions>

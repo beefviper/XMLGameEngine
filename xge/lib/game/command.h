@@ -672,6 +672,8 @@ namespace xge
 	{
 		VariableName target;
 		float value{};
+		// group=: the target's owner is a group, and each member takes it.
+		bool everyMember{ false };
 	};
 
 	// <spawn object="shots"> with a <count>, a <position>, a <velocity> and
@@ -1125,7 +1127,7 @@ namespace xge
 	struct WrittenDec { std::optional<WrittenValue> by; static auto values(auto& own) { return std::tie(own.by); } };
 
 	// <set variable="...">N</set>: what it is set to.
-	struct WrittenSet { WrittenValue value; static auto values(auto& own) { return std::tie(own.value); } };
+	struct WrittenSet { WrittenValue value; bool everyMember{ false }; static auto values(auto& own) { return std::tie(own.value); } };
 
 	// <jump>N</jump>: how high.
 	struct WrittenJump { WrittenValue height; static auto values(auto& own) { return std::tie(own.height); } };

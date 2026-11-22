@@ -47,7 +47,7 @@ namespace xge
 		bool passPlayers(Object& member);
 		// <pass member=>: the turn of the group's member of that number
 		// (from 1; 0: nobody's turn). And the owner a verb's variable names:
-		// a group that takes turns means the member on its turn.
+		// players.current is the member of players on its turn.
 		bool passPlayersTo(Name group, int number);
 		Name turnOwner(Name owner);
 		// The pieces (<owns class=>) of the player on its turn, in a board

@@ -251,7 +251,7 @@ Board games, card games and any game whose players share one world (Cannon Hill'
 - **`<pass />`** in a member's action hands the turn to the next, round to the first, and ends what the press would still do. It is refused while a holder waits for a [wild card's call](cards.md#holders).
 - **`<pass object="players" member="N" />`**, from anywhere (a condition, the table's action), gives the turn to member N, counted from 1 in the order written, or to nobody with 0 (a full trick while it shows). `member=` is a number or a name for one (`trick.winner`, `table.first`). A member's number is also its seat, so a trick's `winner` names a member.
 - **When the turn changes**, the computer waits a moment before it plays, and the game's conditions see the change first.
-- **A group variable in a verb** (`<inc variable="players.got">trick.points</inc>`) is the member on its turn.
+- **`players.current`** names the member on its turn in a verb's variable: `<inc variable="players.current.got">trick.points</inc>`. The group's name alone (`players.got`) stops the load.
 - **A member's `<think button>`**: the computer plays it on its turn, pointing as it thinks best and pressing that key (`<depth>`, `<avoid />` and `<worth>`s as a [computer's](#computer-players)). No `<computer>` condition is needed.
 - **A verb naming the group** (`<become object="players" sprite="calling" />`) changes the member on its turn.
 - **`<owns object>`**: the holder of its own, a player's cards ([holders](cards.md#holders)).

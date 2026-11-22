@@ -169,8 +169,11 @@ namespace xge
 
 	Name Players::turnOwner(Name owner)
 	{
-		if (!anyTurns || !takesTurns(owner)) { return owner; }
-		const Object* on = onTurn(owner);
+		if (!anyTurns) { return owner; }
+		static const std::string ending = "." + words::current.str();
+		const std::string& written = owner.str();
+		if (written.size() <= ending.size() || written.compare(written.size() - ending.size(), ending.size(), ending) != 0) { return owner; }
+		const Object* on = onTurn(Name::of(std::string_view(written).substr(0, written.size() - ending.size())));
 		return on ? on->name : owner;
 	}
 }

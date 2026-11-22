@@ -1398,6 +1398,11 @@
       <xs:group ref="valueTag" minOccurs="0" />
     </xs:sequence>
     <xs:attribute name="variable" type="xs:NMTOKEN" use="required" />
+    <xs:attribute name="group" type="xs:NMTOKEN">
+      <xs:annotation>
+        <xs:documentation>group: every member of this group takes the value; variable= is then the members' variable alone (kept)</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
   </xs:complexType>
 
   <xs:complexType name="spawnType">
@@ -1807,9 +1812,10 @@
       <xs:element name="set" type="setType">
         <xs:annotation>
           <xs:documentation>
-            set: the variable (owner.variable), or owner.x, owner.y,
-            owner.velocity.x, owner.velocity.y or owner.heading, takes the
-            value, worked out as it runs
+            set: the variable (owner.variable; players.current.score for
+            the member on its turn), or owner.x, owner.y, owner.velocity.x,
+            owner.velocity.y or owner.heading, takes the value, worked out
+            as it runs; with group=, every member's variable does
           </xs:documentation>
         </xs:annotation>
       </xs:element>

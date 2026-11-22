@@ -21,7 +21,16 @@ namespace xge
 	static void readSet(const XmlNode& node, const std::string& where, WrittenCommand& command)
 	{
 		requireAttribute(node, "variable", where);
-		command.own = WrittenSet{ readValue(node, where) };
+		const std::string group = node.getAttribute("group");
+		if (!group.empty())
+		{
+			if (command.variable.find('.') != std::string::npos && liveNumberPart(group + "." + command.variable) != command.variable)
+			{
+				fail(where, "<set group=\"" + group + "\" variable=\"" + command.variable + "\">: with group=, variable= names the members' variable alone (variable=\"kept\")");
+			}
+			command.variable = group + "." + command.variable;
+		}
+		command.own = WrittenSet{ readValue(node, where), !group.empty() };
 	}
 
 	static Command makeSet(const WrittenCommand& written, const ValueEvaluator& evaluate)
@@ -31,7 +40,8 @@ namespace xge
 		const std::string part = liveNumberPart(written.variable);
 		VariableName target = part.empty() ? VariableName::of(written.variable)
 			: VariableName{ written.variable.substr(0, written.variable.size() - part.size() - 1), part };
-		return CmdSet{ std::move(target), evaluate(ownOf<WrittenSet>(written).value) };
+		const WrittenSet& set = ownOf<WrittenSet>(written);
+		return CmdSet{ std::move(target), evaluate(set.value), set.everyMember };
 	}
 
 	static void checkSet(const CmdSet& set, const Checking& checking)
@@ -39,6 +49,20 @@ namespace xge
 		// A variable of an object's, or one of the numbers every object has
 		// (where it is, how it is going, its heading).
 		const std::vector<Object>& objects = checking.objects;
+		if (set.everyMember)
+		{
+			const std::string& group = set.target.owner;
+			const std::string tag = "<set group=\"" + group + "\" variable=\"" + set.target.variable + "\">";
+			if (!isGroup(objects, group))
+			{
+				throw std::runtime_error(checking.where + ": " + tag + ": there is no group named '" + group + "'" + didYouMean(group, objectNames(objects)));
+			}
+			for (const Object& member : objects)
+			{
+				if (member.inGroup(group)) { checkSet(CmdSet{ VariableName{ member.name, set.target.variable }, set.value }, checking); }
+			}
+			return;
+		}
 		const std::string tag = "<set variable=\"" + (set.target.variable.empty() ? set.target.owner.str() : set.target.written()) + "\">";
 		refuseFollowed(checking, set.target, tag);
 		const std::string part = liveNumberPart(set.target.written());
@@ -50,6 +74,7 @@ namespace xge
 		}
 
 		const std::string& owner = set.target.owner;
+		refuseGroupOwner(checking, owner, tag);
 		const Object* found = findObject(objects, owner);
 		if (!found)
 		{
@@ -68,13 +93,22 @@ namespace xge
 
 	static bool runSet(const CmdSet& set, const Doer& doer)
 	{
-		doer.game().setNumber(set.target, set.value);
+		Game& game = doer.game();
+		if (!set.everyMember)
+		{
+			game.setNumber(set.target, set.value);
+			return true;
+		}
+		for (const Object& member : game.getCurrentObjects())
+		{
+			if (member.inGroup(set.target.owner)) { game.setNumber(VariableName{ member.name, set.target.variable }, set.value); }
+		}
 		return true;
 	}
 
 	static void printSet(std::ostream& o, const CmdSet& set)
 	{
-		o << "set(" << set.target.written() << ", " << set.value << ")";
+		o << "set(" << (set.everyMember ? "every " : "") << set.target.written() << ", " << set.value << ")";
 	}
 
 	extern const Verb setVerb;
