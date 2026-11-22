@@ -6,7 +6,7 @@
 
 Every game follows it, and `test_engine_input` checks it:
 
-- **Space** starts and plays again (never Enter); in play it jumps or fires.
+- **Space** starts and plays again (never Enter); in play it jumps or fires. Where a game can be played by one or two people, the title starts on **1** or **2** instead, how many [people](input.md#seats) play, and Space only plays again.
 - The **Pause** key pauses and plays on, in every game (and a pad's Start). Nothing else pauses.
 - Player one plays on **W A S D**. The arrows are a second way in one-player games, and player two's keys in two-player ones.
 - Colours are the engine's colour names only ([colours](format.md#colours)).
@@ -17,7 +17,7 @@ The tables list only keys beyond that.
 
 | Game | Keys | Shows |
 |---|---|---|
-| `pong` | W/S; on the title Space plays the computer (A/D easy or smart), 2 two players on Up/Down | [`<deflect>`](commands.md#touching) off the paddles, a [computer](states.md#computer-players) of two levels on keys of its own (F11, F12), so Up and Down do nothing against it |
+| `pong` | W/S; on the title 1 plays the computer (A/D easy or smart), 2 two players on Up/Down | [`<deflect>`](commands.md#touching) off the paddles, a [computer](states.md#computer-players) of two levels in [seat](input.md#seats) 2, so Up and Down do nothing against it |
 | `pong_min` | W/S, Up/Down | two paddles and a ball, nothing else; the game [`--generate`](programs.md#generating-a-program) was grown on; `windows-cpp` writes it as `games/prototypes/pong_min/` has it |
 | `breakout` | A/D, the mouse | eight rows of bricks as one group, a half paddle at the top, the mouse by [`<track />`](input.md#pointing-controls) |
 | `spacerace` | W/S, Up/Down | two rockets through drifting debris, the most crossings in a minute |

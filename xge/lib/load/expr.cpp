@@ -499,6 +499,29 @@ namespace xge
 		}
 	}
 
+	namespace
+	{
+		// A computer that plays a seat presses only that seat's keys.
+		void refuseKeysOfOthers(const State& state, const std::string& where)
+		{
+			if (state.computerSeat == 0) { return; }
+			for (const Condition& condition : state.computer)
+			{
+				for (const Command& command : condition.commands)
+				{
+					const auto* hold = std::get_if<CmdHold>(&shapeOf(command));
+					if (!hold) { continue; }
+					const auto seats = state.seats.find(hold->button);
+					if (seats == state.seats.end() || std::find(seats->second.begin(), seats->second.end(), state.computerSeat) == seats->second.end())
+					{
+						throw std::runtime_error(where + " > <computer seat=\"" + std::to_string(state.computerSeat) + "\"> > <hold button=\"" + keyCodeToString(hold->button)
+							+ "\">: that is no key of seat " + std::to_string(state.computerSeat) + "; the computer presses only the keys of the seat it plays");
+					}
+				}
+			}
+		}
+	}
+
 	// init's states: each one's inputs, conditions, timers and scenes.
 	void Evaluator::makeStates(std::vector<WrittenState>& writtenStates, std::vector<State>& states, const std::vector<Object>& objects)
 	{
@@ -526,6 +549,7 @@ namespace xge
 					(*state.keyMaps()[moment])[key] = processCommands(writtenAction.second, where);
 				}
 			}
+			for (const auto& [button, seats] : writtenState.seats) { state.seats[keyCodeFromString(button)] = seats; }
 
 			for (auto& [name, commands] : writtenState.axes)
 			{
@@ -546,6 +570,8 @@ namespace xge
 			{
 				state.computer.push_back(makeCondition(writtenCondition, where + " > <computer>", where, writtenState.name, objects));
 			}
+			state.computerSeat = writtenState.computerSeat;
+			refuseKeysOfOthers(state, where);
 
 			state.timers = processTimers(writtenState.timers, where);
 

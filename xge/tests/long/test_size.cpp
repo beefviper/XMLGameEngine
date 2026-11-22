@@ -124,8 +124,9 @@ TEST_CASE("The size of the engine's things", "[.long][size]")
 		xge::Engine engine{ game, std::move(counting) };
 
 		// Started, and played a little, so what is made on the way is counted.
-		engine.handleKeyPressed(xge::KeyCode::Space);
-		engine.handleKeyReleased(xge::KeyCode::Space);
+		const xge::KeyCode start = name == "pong" ? xge::KeyCode::Num1 : xge::KeyCode::Space;
+		engine.handleKeyPressed(start);
+		engine.handleKeyReleased(start);
 		for (int frame = 0; frame < 600; ++frame) { engine.input(); engine.update(xge::kSixtieth); engine.render(); }
 
 		Pictures pictures;

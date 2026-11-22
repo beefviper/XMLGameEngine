@@ -67,6 +67,8 @@ namespace xge
 		std::map<std::string, std::vector<WrittenCommand>> holding;
 		std::map<std::string, std::vector<WrittenCommand>> letGo;
 		std::map<std::string, std::vector<WrittenCommand>> axes;  // <input axis="mouse.x">
+		// <seat number="2">: the seats a button is in (none: everyone's).
+		std::map<std::string, std::vector<int>> seats;
 
 		// The three, in the order of keyMoments.
 		std::array<std::map<std::string, std::vector<WrittenCommand>>*, 3> keyMaps() { return { &input, &holding, &letGo }; }
@@ -77,6 +79,7 @@ namespace xge
 		// <computer>: conditions whose commands are only <hold>s, every one
 		// tested every frame; see State::computer.
 		std::vector<WrittenCondition> computer;
+		int computerSeat{ 0 }; // <computer seat="2">; 0: it plays always
 
 		// <starts>: what is done when it begins and on a full reset, where
 		// each held member starts (placed by load/expr.cpp).
@@ -126,6 +129,9 @@ namespace xge
 		std::map<KeyCode, std::vector<Command>> holding;  // on="hold": every frame while down
 		std::map<KeyCode, std::vector<Command>> letGo;    // on="release": once, let go
 		std::map<Axis, std::vector<Command>> axes;  // <input axis="mouse.x">: run as the control moves
+		// The seats a key is in (WrittenState::seats): only that seat's
+		// player, a person or the computer, presses it.
+		std::map<KeyCode, std::vector<int>> seats;
 
 		// The three, in the order of keyMoments.
 		std::array<std::map<KeyCode, std::vector<Command>>*, 3> keyMaps() { return { &input, &holding, &letGo }; }
@@ -138,6 +144,9 @@ namespace xge
 		// held down, the rest let go, as keys a player presses: see
 		// Game::computerButtons and Engine::step.
 		std::vector<Condition> computer;
+		// The seat it plays (<computer seat="2">), only while no person has
+		// it; 0 for one that always plays.
+		int computerSeat{ 0 };
 
 		// The states drawn still underneath it (WrittenState::showStates).
 		std::vector<Name> showStates;

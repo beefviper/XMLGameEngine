@@ -453,6 +453,14 @@ namespace xge
 		void requestDemo(void) noexcept { demoAsked = true; }
 		bool takeDemoRequest(void) noexcept { return std::exchange(demoAsked, false); }
 
+		// <people>N</people>: the first N seats are people's, the others the
+		// computer's. One until a title says otherwise.
+		void seatPeople(int count) noexcept { people = count; }
+		bool personSeat(int seat) const noexcept { return seat <= people; }
+		// Whether a press of `key` counts now, from a person or (byComputer)
+		// from the computer: a key in a seat is that seat's player's alone.
+		bool seatAnswers(KeyCode key, bool byComputer) const;
+
 		// Whether the game <keeps> anything.
 		bool keepsAnything(void) const noexcept;
 
@@ -709,6 +717,7 @@ namespace xge
 		unsigned long resets = 0;
 		WrittenDemo demo;
 		bool demoAsked = false;
+		int people = 1;
 		float stepSeconds = kSixtieth;
 
 		// FrameRules: what the game file says, asked by playOneFrame.

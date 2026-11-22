@@ -297,16 +297,18 @@ A game's `<demo>`, after `<states>`, is a recorded game: the random seed, how lo
 
 ## Computer players
 
-A state's `<computer>` is a player the game plays itself, pressing the state's keys as a person would: conditions whose commands are `<hold button>`s. **Every** condition is tested every frame; the keys of those that hold are held, the rest let go. Give it keys of its own (Pong's F11 and F12) where a person's keys for the same thing should do nothing while it plays.
+A state's `<computer>` is a player the game plays itself, pressing the state's keys as a person would: conditions whose commands are `<hold button>`s. **Every** condition is tested every frame; the keys of those that hold are held, the rest let go.
+
+`<computer seat="2">` plays [seat](input.md#seats) 2's keys, and only while no person has that seat: after `<people>2</people>` it stops, and the keyboard has the seat back. It may hold only its seat's keys.
 
 ```xml
-<computer>
+<computer seat="2">
   <condition object="cpu" variable="x"><below>ball.x</below><hold button="l" /></condition>
   <condition object="cpu" variable="x"><above>ball.x</above><hold button="j" /></condition>
 </computer>
 ```
 
-A condition can hold conditions, so a mode the title sets (`players`, `level`) is written once above what it governs, and one state serves one player and two: Pong's levels are each a condition holding its two moves. Since every one that holds counts, one holding conditions has no buttons of its own.
+A condition can hold conditions, so a mode the title sets (`level`) is written once above what it governs: Pong's levels are each a condition holding its two moves. Since every one that holds counts, one holding conditions has no buttons of its own.
 
 ### Thinking
 

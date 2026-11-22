@@ -137,6 +137,7 @@
   <file>lib/verbs/pass.cpp</file>
   <file>lib/verbs/out.cpp</file>
   <file>lib/verbs/demo.cpp</file>
+  <file>lib/verbs/people.cpp</file>
   <file>lib/verbs/undo.cpp</file>
   <file>lib/verbs/settle.cpp</file>
   <file>lib/verbs/slide.cpp</file>

@@ -2448,6 +2448,15 @@ namespace xge
 		if (found != state.scenes.end()) { checkConditionList(found->conditions); }
 	}
 
+	bool Game::seatAnswers(KeyCode key, bool byComputer) const
+	{
+		const State& state = currentState.top();
+		const auto seats = state.seats.find(key);
+		if (seats == state.seats.end()) { return true; }
+		const int seat = seats->second.front();
+		return personSeat(seat) != byComputer;
+	}
+
 	std::set<KeyCode> Game::computerButtons(std::set<KeyCode>& taps, float seconds)
 	{
 		std::set<KeyCode> held;
@@ -2460,9 +2469,11 @@ namespace xge
 			if (each.objClass.empty()) { each.objClass = playerGroups.turnClass(); }
 			if (const auto key = thinker.think(*this, each, seconds)) { taps.insert(*key); }
 		};
-		for (const Condition& condition : currentState.top().computer)
+		const State& state = currentState.top();
+		const bool seatTaken = state.computerSeat != 0 && personSeat(state.computerSeat);
+		for (const Condition& condition : state.computer)
 		{
-			if (!holds(condition)) { continue; }
+			if (seatTaken || !holds(condition)) { continue; }
 			for (const Command& command : condition.commands)
 			{
 				if (const auto* hold = std::get_if<CmdHold>(&shapeOf(command))) { held.insert(hold->button); }

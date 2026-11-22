@@ -288,6 +288,10 @@ namespace xge
 	// recording ends, and then a new game again. See Engine.
 	struct CmdDemo {};
 
+	// <people>2</people> - the first that many seats are people's, the rest
+	// the computer's where a state's <computer seat> plays them.
+	struct CmdPeople { int count{ 1 }; };
+
 	// <pass /> - the turn passes to the next player still in: this player's
 	// game is put away as it is, theirs comes back. See Game::passTurn.
 	// By a member of a group that takes turns, the next member's turn; with
@@ -892,7 +896,7 @@ namespace xge
 
 	using Command = std::variant<
 		CmdBounce, CmdStick, CmdReset, CmdDie, CmdWrap, CmdRide, CmdCarry, CmdDrop, CmdTrack, CmdDeflect, CmdKnock, CmdHole, CmdReverse,
-		CmdMove, CmdHop, CmdHuntHop, CmdLand, CmdJump, CmdClimb, CmdChase, CmdGo, CmdHunt, CmdWander, CmdAim, CmdThrustAcross, CmdTurn, CmdThrust, CmdSwing, CmdStop, CmdIncrement, CmdDecrement, CmdCopy, CmdRank, CmdAlternate, CmdPass, CmdOut, CmdDemo, CmdPushState, CmdPopState,
+		CmdMove, CmdHop, CmdHuntHop, CmdLand, CmdJump, CmdClimb, CmdChase, CmdGo, CmdHunt, CmdWander, CmdAim, CmdThrustAcross, CmdTurn, CmdThrust, CmdSwing, CmdStop, CmdIncrement, CmdDecrement, CmdCopy, CmdRank, CmdAlternate, CmdPass, CmdOut, CmdDemo, CmdPeople, CmdPushState, CmdPopState,
 		CmdFire, CmdTriggerAction, CmdResetObject, CmdPlay, CmdSilence, CmdBecome, CmdReveal, CmdFollow, CmdShift, CmdEnterScene, CmdResetScene, CmdSet, CmdSpawn, CmdSend, CmdDespawn, CmdHold, CmdSettle, CmdSlide, CmdClear, CmdCollapse, CmdFall, CmdCycle, CmdGrow, CmdSplit, CmdThrough, CmdShove, CmdMerge, CmdUndo, CmdWhen, CmdPick, CmdPlace, CmdPut, CmdOrder, CmdCount, CmdThink, CmdCall, CmdLive>;
 
 	struct LoadedCommand
@@ -1234,10 +1238,13 @@ namespace xge
 	// <count class="..." into="..."><here /> or <around /></count>.
 	struct WrittenCount { CellPlace cells; static auto values(auto&) { return std::tie(); } };
 
+	// <people>2</people>: how many seats people take.
+	struct WrittenPeople { int count{ 1 }; static auto values(auto&) { return std::tie(); } };
+
 	using WrittenOwn = std::variant<std::monostate, WrittenBounce, WrittenHop, WrittenSpawn,
 		WrittenInc, WrittenDec, WrittenSet, WrittenJump, WrittenKnock, WrittenPass, WrittenReveal, WrittenGo, WrittenWander, WrittenClimb,
 		WrittenFollow, WrittenMove, WrittenTurn, WrittenThrust, WrittenDeflect, WrittenHole, WrittenSwing, WrittenChase, WrittenAim, WrittenShift,
-		WrittenHunt, WrittenSend, WrittenPick, WrittenThink, WrittenHold, WrittenAlternate, WrittenTrack, WrittenTrigger, WrittenCount>;
+		WrittenHunt, WrittenSend, WrittenPick, WrittenThink, WrittenHold, WrittenAlternate, WrittenTrack, WrittenTrigger, WrittenCount, WrittenPeople>;
 
 	// Each number among a verb's own parts that was written: a WrittenValue, or
 	// an optional one, or pair, that holds something.

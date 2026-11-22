@@ -473,6 +473,12 @@ namespace xge
 			recordedSoFar.keys.push_back({ keyCodeToString(key), true, recordedSoFar.seconds });
 		}
 
+		// A seat's key is its player's alone: a person's, or the computer's.
+		if (!game.seatAnswers(key, computerPressing))
+		{
+			return;
+		}
+
 		// Held keys repeat as press events on some backends; only the first
 		// one counts.
 		if (!heldKeys.press(key))

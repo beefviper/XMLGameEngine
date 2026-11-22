@@ -2112,6 +2112,11 @@
           <xs:documentation><![CDATA[demo: the game's recorded <demo> plays, until a key is pressed]]></xs:documentation>
         </xs:annotation>
       </xs:element>
+      <xs:element name="people" type="seatNumberType">
+        <xs:annotation>
+          <xs:documentation><![CDATA[people: how many seats people take, from the first; the computer plays any other a <computer seat> is written for]]></xs:documentation>
+        </xs:annotation>
+      </xs:element>
       <xs:element name="undo" type="emptyType">
         <xs:annotation>
           <xs:documentation>undo: the pieces on cells and every object's numbers back as before the last press that moved a piece; refused when there is none</xs:documentation>
@@ -2829,6 +2834,33 @@
     <xs:sequence>
       <xs:element name="condition" type="computerConditionType" maxOccurs="unbounded" />
     </xs:sequence>
+    <xs:attribute name="seat" type="seatNumberType" use="optional">
+      <xs:annotation>
+        <xs:documentation>the seat it plays, pressing only that seat's keys, while no person has it; left out, it plays always</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+
+  <xs:simpleType name="seatNumberType">
+    <xs:restriction base="xs:positiveInteger">
+      <xs:maxInclusive value="4" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="seatType">
+    <xs:annotation>
+      <xs:documentation><![CDATA[
+        seat: the keys of one player, a person's or the computer's. Only that
+        player presses them: the title's <people> says how many seats are
+        people's, from the first, and a <computer seat> plays one of the rest.
+        from= another seat: the same inputs (players taking turns at one keyboard).
+      ]]></xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="input" type="inputType" minOccurs="0" maxOccurs="unbounded" />
+    </xs:sequence>
+    <xs:attribute name="number" type="seatNumberType" use="required" />
+    <xs:attribute name="from" type="seatNumberType" use="optional" />
   </xs:complexType>
 
   <xs:group name="timerHead">
@@ -3842,6 +3874,7 @@
                       </xs:annotation>
                       <xs:complexType>
                         <xs:sequence>
+                          <xs:element name="seat" type="seatType" minOccurs="0" maxOccurs="4" />
                           <xs:element name="input" type="inputType" minOccurs="0" maxOccurs="unbounded" />
                         </xs:sequence>
                       </xs:complexType>

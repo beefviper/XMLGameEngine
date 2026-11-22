@@ -141,3 +141,60 @@ TEST_CASE("tennis.xml: the computer walks its racket under the ball", "[computer
 	play.frames(120);
 	CHECK(std::abs(cpu.position.x - ball.position.x) <= 3.0f);
 }
+
+namespace
+{
+	// Two bats, each in its own seat, the second played by the computer
+	// while nobody has it; 2 seats a second person.
+	std::string seated(const std::string& computer)
+	{
+		const std::string moves = "<actions><action name=\"left\"><move direction=\"left\">120</move></action>"
+			"<action name=\"right\"><move direction=\"right\">120</move></action></actions>";
+		return "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
+			"<window name=\"seats\"><width>800</width><height>600</height><background>black</background>"
+			"<framerate>60</framerate></window>"
+			"<variables><variable name=\"unused\">0</variable></variables><states><state name=\"playing\"><objects>"
+			+ box("one", 300, 100, moves) + box("two", 300, 500, moves) + "</objects><inputs>"
+			"<seat number=\"1\"><input button=\"a\"><trigger object=\"one\" action=\"left\" /></input></seat>"
+			"<seat number=\"2\"><input button=\"j\"><trigger object=\"two\" action=\"left\" /></input>"
+			"<input button=\"l\"><trigger object=\"two\" action=\"right\" /></input></seat>"
+			"<input button=\"num2\"><people>2</people></input>"
+			"</inputs>" + computer + "</state></states></game>";
+	}
+	const std::string goesRight = "<computer seat=\"2\"><condition object=\"two\" variable=\"x\"><below>600</below><hold button=\"l\" /></condition></computer>";
+}
+
+TEST_CASE("a seat nobody has is the computer's: its keys do nothing from the keyboard", "[computer][seats]")
+{
+	const Written file(seated(goesRight));
+	Played play(file.path);
+	play.frames(1);
+	CHECK(play.get("two").velocity.x == Approx(120));
+
+	// The keyboard's j is refused; seat 1's a is the person's.
+	play.engine.handleKeyPressed(KeyCode::J);
+	play.engine.handleKeyPressed(KeyCode::A);
+	play.frames(1);
+	CHECK(play.get("two").velocity.x == Approx(120));
+	CHECK(play.get("one").velocity.x == Approx(-120));
+}
+
+TEST_CASE("<people>2</people> gives seat 2 to a person, and the computer stops", "[computer][seats]")
+{
+	const Written file(seated(goesRight));
+	Played play(file.path);
+	play.tap(KeyCode::Num2);
+	play.frames(1);
+	CHECK(play.game.personSeat(2));
+	CHECK(play.get("two").velocity.x == Approx(0));
+
+	play.engine.handleKeyPressed(KeyCode::J);
+	play.frames(1);
+	CHECK(play.get("two").velocity.x == Approx(-120));
+}
+
+TEST_CASE("a seated computer may hold only its own seat's keys", "[computer][seats]")
+{
+	const Written file(seated("<computer seat=\"2\"><condition object=\"two\" variable=\"x\"><below>600</below><hold button=\"a\" /></condition></computer>"));
+	CHECK_THROWS_WITH(Played(file.path), ContainsSubstring("that is no key of seat 2"));
+}

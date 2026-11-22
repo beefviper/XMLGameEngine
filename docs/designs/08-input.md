@@ -41,6 +41,13 @@ Built by a state change count compared in `Engine::syncHeldKeysToState()` after 
   - Looked at first and rejected: nesting a key's triggers under the looks they answer, which made nothing shorter.
   - Open: an `<otherwise>` in actions, rules and timers.
 
+## Seats
+
+- **Wanted:** the computer plays a person's side without keys of its own, and the other person's keys do nothing against it, with no rules gating them. Before, Pong's computer held F11 and F12, and Up and Down ran actions that tested `players` first.
+- **Chosen:** inputs sit in numbered `<seat>`s, `<people>N</people>` gives seats 1 to N to people, and `<computer seat>` presses the rest virtually. The engine refuses a keyboard press in a computer's seat and a computer's press in a person's, at the one place keys come in (`Engine::handleKeyPressed`).
+- **Looked at:** a toggle key on the title for person or computer in seat 2. Not needed yet: 1 and 2 on the title say it.
+- **Open:** turn games, whose players group members name their seat; pads following the seat; demos playing on their own fixed steps.
+
 ## Mouse and pads
 
 - **Buttons are keys** (`mouse.left`, `pad1.a`), so binding, held keys and sets all apply. A pad's d-pad and stick past halfway are the same four directions.

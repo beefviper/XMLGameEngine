@@ -422,7 +422,7 @@ TEST_CASE("keys plays back what record recorded and ends the same", "[cli][frame
 		Engine engine(game, WindowBackend::None, AudioBackend::None);
 		engine.record();
 		const std::vector<std::pair<int, std::pair<KeyCode, bool>>> keys = {
-			{ 10, { KeyCode::Space, true } }, { 14, { KeyCode::Space, false } },
+			{ 10, { KeyCode::Num1, true } }, { 14, { KeyCode::Num1, false } },
 			{ 60, { KeyCode::W, true } }, { 200, { KeyCode::W, false } },
 			{ 250, { KeyCode::S, true } }, { 420, { KeyCode::S, false } },
 			{ 450, { KeyCode::W, true } }, { 590, { KeyCode::W, false } },
@@ -521,8 +521,8 @@ TEST_CASE("describe writes the state and every object in play as XML", "[cli][du
 {
 	Game game{ readGame("descriptions/pong.xml", XmlBackend::TinyXml2) };
 	Engine engine(game, WindowBackend::None, AudioBackend::None);
-	engine.handleKeyPressed(KeyCode::Space);
-	engine.handleKeyReleased(KeyCode::Space);
+	engine.handleKeyPressed(KeyCode::Num1);
+	engine.handleKeyReleased(KeyCode::Num1);
 	for (int frame = 0; frame < 60; ++frame) { engine.input(); engine.update(xge::kSixtieth); }
 
 	std::ostringstream out;

@@ -69,4 +69,5 @@ A small whole game is in the [root readme](../readme.md#a-whole-game). Run a gam
 | holders | a pack's `columns name` and `rows name`, `holds`, `spread`, `accepts` (`condition` with `top`, `any`, `wild`, `empty`), `carry`, `top` (and live `top.` a variable), `order`, `counts`, `trick`, `score`, `picked`, `owns`, `starts`, `distribute`; in actions `send from into`, `order group`, `distribute`, `pick` (`most`), a holder's `become` | [holders](reference/cards.md#holders) |
 | players | `turns` on a group, `pass` (`member=`), a member's `think`, `owns` (`object=` or `class=`) and `team`, live `turn`, `current` (`players.current.score`) | [players as a group](reference/states.md#players-as-a-group) |
 | patterns and tricks | `patterns` (`alike`, `run`), melds, tricks | [patterns](reference/cards.md#patterns), [tricks](reference/cards.md#tricks) |
-| computer | `computer`, `hold`, `think` | [computer players](reference/states.md#computer-players) |
+| computer | `computer` (`seat=`), `hold`, `think` | [computer players](reference/states.md#computer-players) |
+| seats | `seat` (`number=`, `from=`) in `inputs`, `people` | [seats](reference/input.md#seats) |

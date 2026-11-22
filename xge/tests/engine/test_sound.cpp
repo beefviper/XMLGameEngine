@@ -415,9 +415,9 @@ TEST_CASE("Engine loads the game's sounds into its Audio and plays what each fra
 
 	CHECK(log.loaded == std::vector<std::string>{ "paddle", "wall", "score" });
 
-	// Space on the main menu starts the game; the ball off the top wall asks for its blip.
-	engine.handleKeyPressed(KeyCode::Space);
-	engine.handleKeyReleased(KeyCode::Space);
+	// 1 on the main menu starts the game; the ball off the top wall asks for its blip.
+	engine.handleKeyPressed(KeyCode::Num1);
+	engine.handleKeyReleased(KeyCode::Num1);
 	engine.input(); engine.update(xge::kSixtieth);
 	Object& ball = game.object("ball");
 	ball.position = { 600, -1 };

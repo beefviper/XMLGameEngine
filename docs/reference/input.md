@@ -34,6 +34,27 @@ So remapping a key is one edit in one state, a key can do different things in di
   ```
 - **Keys several states share** come with a state [`from=`](states.md#a-state-from-another) another: its own inputs go over the copied ones, key by key.
 
+## Seats
+
+**A seat is one player's keys.** A state's `<inputs>` puts each player's inputs in a `<seat number>` (1 to 4); inputs outside any seat are everyone's (pause, the title's choices).
+
+```xml
+<inputs>
+  <seat number="1">
+    <input button="w"><trigger object="paddle1" action="up" /></input>
+  </seat>
+  <seat number="2">
+    <input button="up"><trigger object="paddle2" action="up" /></input>
+  </seat>
+  <input button="pause"><push state="paused" /></input>
+</inputs>
+```
+
+- **`<people>N</people>`** (a command, 1 to 4, at first 1) says how many people play: seats 1 to N are theirs, the rest are the [computer's](states.md#computer-players).
+- **A seat nobody has answers no key from the keyboard**, so the second player's keys do nothing against the computer, with no rule saying so.
+- A seat may take another's inputs with `from=` an earlier seat, and add or change its own.
+- A state [from another](states.md#a-state-from-another) takes its seats too, key by key.
+
 ## A key's three moments
 
 `on=` picks which moment an `<input>` answers:

@@ -525,11 +525,17 @@ namespace xge
 			add(made.showStates, state.showStates);
 			for (std::size_t moment = 0; moment < keyMoments.size(); ++moment)
 			{
-				for (const auto& [button, commands] : *state.keyMaps()[moment]) { (*made.keyMaps()[moment])[button] = commands; }
+				for (const auto& [button, commands] : *state.keyMaps()[moment])
+				{
+					(*made.keyMaps()[moment])[button] = commands;
+					if (const auto seats = state.seats.find(button); seats != state.seats.end()) { made.seats[button] = seats->second; }
+					else { made.seats.erase(button); }
+				}
 			}
 			for (const auto& [axis, commands] : state.axes) { made.axes[axis] = commands; }
 			made.conditions = mergedByName(earlier->conditions, state.conditions);
 			made.computer = mergedByName(earlier->computer, state.computer);
+			if (!state.computer.empty()) { made.computerSeat = state.computerSeat; }
 			made.timers = mergedByName(earlier->timers, state.timers);
 			if (!state.music.empty()) { made.music = state.music; }
 			made.scenes = std::move(state.scenes);

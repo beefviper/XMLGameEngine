@@ -2734,6 +2734,8 @@ namespace xge
 		{
 			std::array<std::map<std::string, std::vector<WrittenCommand>>, keyMoments.size()> buttons;
 			std::map<std::string, std::vector<WrittenCommand>> axes;
+			std::map<std::string, std::vector<int>> seats;     // a button's seats
+			std::map<int, std::vector<std::string>> seatKeys;  // a seat's buttons
 		};
 
 		// The names a node gives one way or the other: one by an attribute
@@ -2765,14 +2767,49 @@ namespace xge
 			return names;
 		}
 
+		// <seat number="2">: the inputs of that seat; from="1", the same
+		// inputs as seat 1 (players taking turns at one keyboard).
+		void readInputs(const XmlNode& node, const std::string& where, KeyBindings& out, int seat = 0);
+
+		void readSeat(const XmlNode& node, const std::string& where, KeyBindings& out)
+		{
+			const auto seatNumber = [&](const std::string& attribute) -> int
+			{
+				const std::string text = node.getAttribute(attribute);
+				if (text != "1" && text != "2" && text != "3" && text != "4") { fail(where + " > <seat>", attribute + "=\"" + text + "\": a seat is 1 to 4"); }
+				return text[0] - '0';
+			};
+			const int number = seatNumber("number");
+			const std::string here = where + " > <seat number=\"" + std::to_string(number) + "\">";
+			if (out.seatKeys.count(number)) { fail(here, "is written twice in these inputs"); }
+			out.seatKeys[number];
+			if (!node.getAttribute("from").empty())
+			{
+				const int from = seatNumber("from");
+				if (!out.seatKeys.count(from) || from == number) { fail(here, "from=\"" + std::to_string(from) + "\" is no seat written before it"); }
+				for (const std::string& button : std::vector<std::string>(out.seatKeys[from]))
+				{
+					out.seats[button].push_back(number);
+					out.seatKeys[number].push_back(button);
+				}
+			}
+			readInputs(node, here, out, number);
+		}
+
 		// The <input>s of a state's <inputs>: a key
 		// (button="a"), or several, a <button> each, or a control that points
-		// (axis="mouse.x"), and the commands each one runs. One given twice
-		// keeps the later binding.
-		void readInputs(const XmlNode& node, const std::string& where, KeyBindings& out)
+		// (axis="mouse.x"), and the commands each one runs; and its <seat>s,
+		// each holding inputs of its own.
+		void readInputs(const XmlNode& node, const std::string& where, KeyBindings& out, int seat)
 		{
 			for (std::unique_ptr<XmlNode> input = node.getFirstChild(); input != nullptr; input = input->getNextSibling())
 			{
+				if (input->getName() == "seat")
+				{
+					if (seat != 0) { fail(where, "holds a <seat>; seats are not one inside another"); }
+					readSeat(*input, where, out);
+					continue;
+				}
 				std::unique_ptr<XmlNode> commandsStart;
 				const std::vector<std::string> buttons = namesGiven(*input, "button", where + " > <input>", &commandsStart);
 				const std::string axis = input->getAttribute("axis");
@@ -2799,6 +2836,8 @@ namespace xge
 				{
 					if (to.count(button)) { fail(where + " > <input " + written + ">", "binds '" + button + "' again: this state's <inputs> already has it" + (on.empty() ? std::string() : " on=\"" + on + "\"")); }
 					to[button] = commands;
+					if (seat != 0 && !out.seats.count(button)) { out.seatKeys[seat].push_back(button); }
+					if (seat != 0 && std::find(out.seats[button].begin(), out.seats[button].end(), seat) == out.seats[button].end()) { out.seats[button].push_back(seat); }
 				}
 			}
 		}
@@ -3131,6 +3170,12 @@ namespace xge
 			}
 			if (const XmlNode* computer = children.find("computer"))
 			{
+				writtenState.computerSeat = 0;
+				if (const std::string seat = computer->getAttribute("seat"); !seat.empty())
+				{
+					if (seat != "1" && seat != "2" && seat != "3" && seat != "4") { fail(where + " > <computer>", "seat=\"" + seat + "\": a seat is 1 to 4"); }
+					writtenState.computerSeat = seat[0] - '0';
+				}
 				readConditions(*computer, where + " > <computer>", writtenState.computer);
 				// Every one that holds holds its buttons, so one holding conditions has no "otherwise".
 				const std::function<void(const std::vector<WrittenCondition>&)> plain = [&](const std::vector<WrittenCondition>& list)
@@ -3238,7 +3283,12 @@ namespace xge
 				readInputs(*inputs, where + " > <inputs>", own);
 				for (std::size_t moment = 0; moment < keyMoments.size(); ++moment)
 				{
-					for (auto& [button, commands] : own.buttons[moment]) { (*writtenState.keyMaps()[moment])[button] = std::move(commands); }
+					for (auto& [button, commands] : own.buttons[moment])
+					{
+						(*writtenState.keyMaps()[moment])[button] = std::move(commands);
+						if (const auto seats = own.seats.find(button); seats != own.seats.end()) { writtenState.seats[button] = seats->second; }
+						else { writtenState.seats.erase(button); }
+					}
 				}
 				for (auto& [axis, commands] : own.axes) { writtenState.axes[axis] = std::move(commands); }
 			}

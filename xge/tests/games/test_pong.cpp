@@ -113,7 +113,7 @@ TEST_CASE("each state of Pong has the objects it shows", "[pong][scenes]")
 	CHECK_FALSE(pong.shown("ball"));
 	CHECK_FALSE(pong.still("ball"));
 
-	pong.tap(KeyCode::Space);
+	pong.tap(KeyCode::Num1);
 	REQUIRE(pong.state() == "playing");
 	for (const char* name : { "ball", "paddle1", "paddle2", "score1", "score2", "net.1.1" })
 	{
@@ -127,7 +127,7 @@ TEST_CASE("each state of Pong has the objects it shows", "[pong][scenes]")
 TEST_CASE("paused, Pong draws the game still underneath, and Pause plays on", "[pong][scenes][shows]")
 {
 	Pong pong;
-	pong.tap(KeyCode::Space);
+	pong.tap(KeyCode::Num1);
 	pong.frames(10);
 
 	pong.tap(KeyCode::Pause);
@@ -153,7 +153,7 @@ TEST_CASE("paused, Pong draws the game still underneath, and Pause plays on", "[
 TEST_CASE("at eleven, game over is written over the game still, and Space starts again", "[pong][scenes][shows]")
 {
 	Pong pong;
-	pong.tap(KeyCode::Space);
+	pong.tap(KeyCode::Num1);
 	pong.object("paddle2").variable.at("score") = 11;
 	pong.frames(1);
 	REQUIRE(pong.state() == "over");
@@ -180,7 +180,7 @@ TEST_CASE("the ball is drawn as big as its own variable says", "[pong]")
 TEST_CASE("the fourth and the twelfth hit make Pong's ball faster, and a point serves it at its first speed", "[pong]")
 {
 	Pong pong;
-	pong.tap(KeyCode::Space);
+	pong.tap(KeyCode::Num1);
 	Object& ball = pong.object("ball");
 	const Object& paddle1 = pong.object("paddle1");
 	const auto speed = [&] { return std::hypot(ball.velocity.x, ball.velocity.y); };
@@ -207,13 +207,13 @@ TEST_CASE("the fourth and the twelfth hit make Pong's ball faster, and a point s
 	CHECK(ball.variable.at("hits") == 0);
 }
 
-TEST_CASE("Space plays the computer, which keeps the right paddle under the ball; 2 is two players", "[pong][computer]")
+TEST_CASE("1 plays the computer, which keeps the right paddle under the ball; 2 is two players", "[pong][computer]")
 {
 	{
 		Pong pong;
-		pong.tap(KeyCode::Space);
+		pong.tap(KeyCode::Num1);
 		REQUIRE(pong.state() == "playing");
-		CHECK(pong.object("computer").variable.at("players") == 1);
+		CHECK_FALSE(pong.game.personSeat(2));
 		Object& ball = pong.object("ball");
 		ball.position = { 600.0f, 600.0f };
 		ball.velocity = { 180.0f, 0.0f };
@@ -224,7 +224,7 @@ TEST_CASE("Space plays the computer, which keeps the right paddle under the ball
 		Pong pong;
 		pong.tap(KeyCode::Num2);
 		REQUIRE(pong.state() == "playing");
-		CHECK(pong.object("computer").variable.at("players") == 2);
+		CHECK(pong.game.personSeat(2));
 		const float y = pong.object("paddle2").position.y;
 		Object& ball = pong.object("ball");
 		ball.position = { 600.0f, 600.0f };
@@ -234,9 +234,9 @@ TEST_CASE("Space plays the computer, which keeps the right paddle under the ball
 	}
 }
 
-TEST_CASE("the second player's Up and Down do nothing while the computer plays the right paddle", "[pong][computer]")
+TEST_CASE("seat 2's Up and Down do nothing from the keyboard while the computer has the seat", "[pong][computer]")
 {
-	for (const KeyCode start : { KeyCode::Space, KeyCode::Num2 })
+	for (const KeyCode start : { KeyCode::Num1, KeyCode::Num2 })
 	{
 		Pong pong;
 		pong.tap(start);
@@ -252,15 +252,13 @@ TEST_CASE("the second player's Up and Down do nothing while the computer plays t
 		pong.frames(10);
 		pong.engine.handleKeyReleased(KeyCode::Up);
 		pong.frames(1);
-		if (start == KeyCode::Space) { CHECK(pong.object("paddle2").position.y == y); }
+		if (start == KeyCode::Num1) { CHECK(pong.object("paddle2").position.y == y); }
 		else { CHECK(pong.object("paddle2").position.y < y - 20.0f); }
 	}
 }
 
 TEST_CASE("for two players, the right paddle stops when Up or Down is let go", "[pong]")
 {
-	// Its moves are in a <condition> in the action: letting go lets go of
-	// what the condition holds (it once went on to the wall).
 	Pong pong;
 	pong.tap(KeyCode::Num2);
 	REQUIRE(pong.state() == "playing");
@@ -277,7 +275,7 @@ TEST_CASE("for two players, the right paddle stops when Up or Down is let go", "
 TEST_CASE("Pong's easy computer is beaten by a ball from the top corner to the bottom one, once it is fast", "[pong][computer]")
 {
 	Pong pong;
-	pong.tap(KeyCode::Space);
+	pong.tap(KeyCode::Num1);
 	// At the first speed it gets there; at the fourth hit's it does not.
 	pong.paddleAt(0.0f);
 	CHECK(pong.returns(fromTop, toBottomCorner, 540.0f));
@@ -291,7 +289,7 @@ TEST_CASE("Pong's smart computer goes back to the middle, and is beaten only by 
 	pong.tap(KeyCode::A);
 	pong.tap(KeyCode::D);
 	CHECK(pong.object("computer").lookName() == "smart");
-	pong.tap(KeyCode::Space);
+	pong.tap(KeyCode::Num1);
 	REQUIRE(pong.object("computer").variable.at("level") == 2);
 
 	// The ball going away: back to the middle.
@@ -313,7 +311,7 @@ TEST_CASE("Pong's computer choice is kept from one game to the next", "[pong][co
 {
 	Pong pong;
 	pong.tap(KeyCode::D);
-	pong.tap(KeyCode::Space);
+	pong.tap(KeyCode::Num1);
 	pong.game.setVariable("paddle1", "score", 11.0f);
 	pong.frames(2);
 	REQUIRE(pong.state() == "over");
@@ -321,4 +319,14 @@ TEST_CASE("Pong's computer choice is kept from one game to the next", "[pong][co
 	CHECK(pong.state() == "title");
 	CHECK(pong.object("computer").variable.at("level") == 2);
 	CHECK(pong.object("computer").lookName() == "smart");
+}
+
+TEST_CASE("Space does not start Pong from the title: 1 and 2 say how many play", "[pong]")
+{
+	Pong pong;
+	pong.tap(KeyCode::Space);
+	CHECK(pong.state() == "title");
+	pong.tap(KeyCode::Numpad2);
+	CHECK(pong.state() == "playing");
+	CHECK(pong.game.personSeat(2));
 }
