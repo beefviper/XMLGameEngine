@@ -248,7 +248,7 @@
         <!-- an eight laid: the player on its turn names a suit -->
         <condition object="discard" variable="calling">
           <equal>1</equal>
-          <become object="players" sprite="calling" from="free" />
+          <become object="players.current" sprite="calling" from="free" />
         </condition>
       </conditions>
     </state>

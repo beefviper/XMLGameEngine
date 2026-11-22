@@ -1582,11 +1582,10 @@ namespace xge
 	void Game::become(Name target, Name sprite, Name from, Name style)
 	{
 		bool handChanged = false;
+		const Name named = playerGroups.turnOwner(target);
 		for (auto& object : objects)
 		{
-			// A group of players taking turns: the one on its turn.
-			const bool offTurn = turnsOf(object).takes && object.inGroup(target) && object.variable[words::turn] == 0.0f;
-			if (object.named(target) && !offTurn && (from.empty() || object.lookName() == from))
+			if (object.named(named) && (from.empty() || object.lookName() == from))
 			{
 				const Name before = isHand(object) ? object.lookName() : Name();
 				// A holder given a look of what it holds, not its own: what

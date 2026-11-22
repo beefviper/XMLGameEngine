@@ -94,6 +94,12 @@ namespace xge
 			std::string object(const std::string& name, const Context& context, bool quiet = false) const
 			{
 				if (name.empty()) { return name; }
+				// players.current: the group found as any is.
+				const std::string current = "." + words::current.str();
+				if (name.size() > current.size() && name.compare(name.size() - current.size(), current.size(), current) == 0)
+				{
+					return object(name.substr(0, name.size() - current.size()), context, quiet) + current;
+				}
 				if (!context.scene.empty() && all.count(context.scene + "." + name)) { return context.scene + "." + name; }
 				if (!context.state.empty() && all.count(context.state + "." + name)) { return context.state + "." + name; }
 				if (all.count(name)) { return name; }
@@ -132,14 +138,7 @@ namespace xge
 
 				const auto dot = target.rfind('.');
 				if (dot == std::string::npos) { return whole; }
-				// players.current.score: the group found as any is.
-				const std::string owner = target.substr(0, dot);
-				const std::string current = "." + words::current.str();
-				if (owner.size() > current.size() && owner.compare(owner.size() - current.size(), current.size(), current) == 0)
-				{
-					return object(owner.substr(0, owner.size() - current.size()), context) + current + target.substr(dot);
-				}
-				return object(owner, context) + target.substr(dot);
+				return object(target.substr(0, dot), context) + target.substr(dot);
 			}
 
 			// An expression with every name in it written out: owner.variable,

@@ -253,7 +253,7 @@ Board games, card games and any game whose players share one world (Cannon Hill'
 - **When the turn changes**, the computer waits a moment before it plays, and the game's conditions see the change first.
 - **`players.current`** names the member on its turn in a verb's variable: `<inc variable="players.current.got">trick.points</inc>`. The group's name alone (`players.got`) stops the load.
 - **A member's `<think button>`**: the computer plays it on its turn, pointing as it thinks best and pressing that key (`<depth>`, `<avoid />` and `<worth>`s as a [computer's](#computer-players)). No `<computer>` condition is needed.
-- **A verb naming the group** (`<become object="players" sprite="calling" />`) changes the member on its turn.
+- **A verb naming the group** (`<become object="players" />`) changes every member, as for any group; `object="players.current"` changes the one on its turn (`<become object="players.current" sprite="calling" />`). A key's `<trigger object="players">` still reaches only the member on its turn, since no other answers keys.
 - **`<owns object>`**: the holder of its own, a player's cards ([holders](cards.md#holders)).
 - **`<owns class>`**: the pieces of a [board game](boards.md) that are this player's (`<owns class="x" />`). [`<put />`](boards.md#the-picker), `<pick />`, a `<think>` and the marks `<movable>` and `<put>` that leave out `class=` take the class of the member on its turn, so one cursor serves every player.
 - **A look given while it waits stays**: a member that comes onto its turn showing its off-turn look shows its first; one given another look meanwhile (Reversi's "again") keeps it.

@@ -5,6 +5,7 @@
 
 #include "verbs/verb.h"
 #include "game/game.h"
+#include "game/words.h"
 #include "load/check.h"
 #include "load/reading.h"
 
@@ -34,10 +35,14 @@ namespace xge
 		// own looks, without: checked with the object, in load/check.cpp.)
 		if (become.target.empty()) { return; }
 		const std::vector<Object>& objects = checking.objects;
+		// players.current: whichever member it is, so each is checked.
+		const std::string tag = "<become object=\"" + become.target + "\">";
+		const std::string target = currentMember(checking, become.target, tag)
+			? become.target.str().substr(0, become.target.size() - words::current.size() - 1) : become.target.str();
 		bool any = false;
 		for (const Object& object : objects)
 		{
-			if (!object.named(become.target)) { continue; }
+			if (!object.named(target)) { continue; }
 			any = true;
 			if (!become.style.empty()) { wantPalette(checking, object, become.style); }
 			const auto hasLook = [&](const Object& of) { return std::any_of(of.looks.all().begin(), of.looks.all().end(), [&](const Object::Look& look) { return look.name == become.sprite; }); };
