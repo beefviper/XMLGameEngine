@@ -142,7 +142,7 @@ namespace xge
 	// Whether a tag is an operation (<add>, <clamp>, ...; not <random>).
 	bool isOperation(const std::string& tag);
 
-	// An operation written straight in a value: <x><subtract><value><window>right
+	// An operation written straight in a value: <x><subtract><value><window><right />
 	// </window></value><value>4</value></subtract></x>, a value of kind Formula.
 	WrittenValue readOperation(const XmlNode& tag, const std::string& where);
 

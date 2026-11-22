@@ -58,9 +58,9 @@ Every number in a game (a position, a speed, a size, a threshold) is a **value**
 | Form | Example |
 |---|---|
 | a number or a name | `-7`, `paddle.width` |
-| a window measure | `<window>right</window>` ([below](#names-a-value-can-use)) |
+| a window measure | `<window><right /></window>` ([below](#the-windows-numbers)) |
 | `<random>` | `<random><min>-7</min><max>7</max></random>` |
-| an operation | arithmetic as tags: `<subtract><value><window>right</window></value><value>4</value></subtract>` ([below](#arithmetic-as-tags)) |
+| an operation | arithmetic as tags: `<subtract><value><window><right /></window></value><value>4</value></subtract>` ([below](#arithmetic-as-tags)) |
 
 - **Text** is one number (a sign in front allowed) or one name, nothing more. Arithmetic in text (`paddle.x - 4`) stops the load and shows the operation to write instead (`<subtract><value>paddle.x</value><value>4</value></subtract>`); so does a function call (`max(6, x)`).
 - **Sides:** in an `<x>`, `<left>` and `<right>` put that side of the object on the window's side, `<top>` and `<bottom>` likewise in a `<y>`, with an optional `<offset>` measured in from the side: `<right><offset>12</offset></right>`.
@@ -89,6 +89,20 @@ A `<random>` is drawn at load and again whenever its object comes back into play
 
 An object's own `<variable>` named like a size or live number (`width`, `x`) wins over it.
 
+### The window's numbers
+
+The window's numbers are a tag, `<window>`, anywhere a value or an operand goes, holding which one:
+
+| `<window>` holds | Value |
+|---|---|
+| `<right />`, `<bottom />` | its width, its height (its right and bottom edges) |
+| `<width />`, `<height />` | the same numbers, for a size |
+| `<x><center /></x>`, `<y><center /></y>` | half the width, half the height (its middle) |
+
+```xml
+<x><subtract><value><window><right /></window></value><value>4</value></subtract></x>
+```
+
 ### Pronouns
 
 What the engine provides is a tag; text is only the game's own names and numbers. So the object running a rule, action, timer or number is `<self>`, a value tag holding one of its variables or live numbers; `<other>` is the one a rule touched ([collisions](collisions.md#rules)) and `<others>` the rest a condition matched ([states](states.md#conditions-in-conditions)):
@@ -102,18 +116,6 @@ What the engine provides is a tag; text is only the game's own names and numbers
 - **`who=`** on a command or condition says whose its `variable=` and `into=` are, or, naming neither, which object it is about (`<reset who="other" />`). It takes only `self`, `other` or `others`.
 - **`as=`** on a `<become>` takes the look named after that object.
 - `self.score` in text is the object called `self`: every name is the game's.
-
-The window's numbers are a tag of their own, `<window>`, anywhere a value or an operand goes, so no game name is taken by them:
-
-| `<window>` | Value |
-|---|---|
-| `right`, `bottom` | its width, its height (its right and bottom edges) |
-| `width`, `height` | the same numbers, for a size |
-| `centerx`, `centery` | half the width, half the height (its middle) |
-
-```xml
-<x><subtract><value><window>right</window></value><value>4</value></subtract></x>
-```
 
 ### Values read when used
 
@@ -149,7 +151,7 @@ An operation is written straight in a value. Its operands are `<value>`s, each a
 ```xml
 <x>
   <subtract>
-    <value><window>centerx</window></value>
+    <value><window><x><center /></x></window></value>
     <value><divide><value>title.width</value><value>2</value></divide></value>
   </subtract>
 </x>

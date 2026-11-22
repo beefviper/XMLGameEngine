@@ -60,7 +60,7 @@
     <objects>
       <object name="continue">
         <sprite><text style="prompt"><content>spacebar to play</content></text></sprite>
-        <position><x><centered /></x><y><add><value><window>centery</window></value><value>60</value></add></y></position>
+        <position><x><centered /></x><y><add><value><window><y><center /></y></window></value><value>60</value></add></y></position>
       </object>
     </objects>
     <state name="title">
@@ -206,7 +206,7 @@
               <choose><by>player.points</by><word>LOVE</word><word>15</word><word>30</word><word>40</word><word>AD</word></choose>
             </text>
           </sprite>
-          <position><x>10</x><y><subtract><value><window>bottom</window></value><value>50</value></subtract></y></position>
+          <position><x>10</x><y><subtract><value><window><bottom /></window></value><value>50</value></subtract></y></position>
         </object>
       </objects>
       <inputs>
@@ -289,7 +289,7 @@
         <object name="message">
           <sprite name="lost"><text style="banner"><content>SET, CPU</content><color>red</color></text></sprite>
           <sprite name="won"><text style="banner"><content>SET, YOU</content><color>yellow</color></text></sprite>
-          <position><x><centered /></x><y><subtract><value><window>centery</window></value><value>150</value></subtract></y></position>
+          <position><x><centered /></x><y><subtract><value><window><y><center /></y></window></value><value>150</value></subtract></y></position>
         </object>
       </objects>
       <shows>

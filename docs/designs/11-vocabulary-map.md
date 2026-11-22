@@ -14,7 +14,7 @@ The vocabulary grew one game at a time (a word is added only when a real game ca
 | Verbs | commands | `move`, `bounce`, `fire`, `inc`, `become`, `push` ([commands](../reference/commands.md)) |
 | Adjectives | properties of a noun | `velocity`, `heading`, `drag`, `mass`, `grip`, `light`, `type`, `hitbox` |
 | Prepositions | who, when, where | `edge=`, `class=`, `object=`, `side=`, `unless=`, `from=`, `into=` |
-| Pronouns | names that point | `ball.radius`, `<window>right</window>`, `aliens.3.2`, `self.`, `touch.`, `energy.level` |
+| Pronouns | names that point | `ball.radius`, `<window><right /></window>`, `aliens.3.2`, `self.`, `touch.`, `energy.level` |
 | Adverbs | how, how much, how long | `every`, `after`, `seconds`, `burn`, a verb's amount |
 | Values | numbers | a number or a name, sides (`<left>`, `<right>`, ...), `<random>`, operation tags (`<add>`, `<clamp>`, ...) |
 

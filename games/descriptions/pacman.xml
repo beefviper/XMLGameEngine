@@ -281,8 +281,8 @@
           <hidden />
           <member name="topright"><position><x><multiply><value>25</value><value>tile</value></multiply></x><y>0</y></position></member>
           <member name="topleft"><position><x><multiply><value>2</value><value>tile</value></multiply></x><y>0</y></position></member>
-          <member name="bottomright"><position><x><multiply><value>27</value><value>tile</value></multiply></x><y><subtract><value><window>bottom</window></value><value>1</value></subtract></y></position></member>
-          <member name="bottomleft"><position><x>0</x><y><subtract><value><window>bottom</window></value><value>1</value></subtract></y></position></member>
+          <member name="bottomright"><position><x><multiply><value>27</value><value>tile</value></multiply></x><y><subtract><value><window><bottom /></window></value><value>1</value></subtract></y></position></member>
+          <member name="bottomleft"><position><x>0</x><y><subtract><value><window><bottom /></window></value><value>1</value></subtract></y></position></member>
         </group>
         <map name="maze">
           <tile>
@@ -635,7 +635,7 @@
               <color>yellow</color>
             </text>
           </sprite>
-          <position><x><multiply><value>2</value><value>tile</value></multiply></x><y><subtract><value><window>bottom</window></value><value>24</value></subtract></y></position>
+          <position><x><multiply><value>2</value><value>tile</value></multiply></x><y><subtract><value><window><bottom /></window></value><value>24</value></subtract></y></position>
         </object>
       </objects>
       <!-- the schedule, in order -->

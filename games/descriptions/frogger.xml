@@ -121,22 +121,22 @@
       <objects>
         <!-- scenery: the river, the bank, the road and the pavement -->
         <object name="water" class="water">
-          <sprite><rectangle><width><window>right</window></width><height><multiply><value>5</value><value>cell</value></multiply></height><color>darkblue</color></rectangle></sprite>
+          <sprite><rectangle><width><window><right /></window></width><height><multiply><value>5</value><value>cell</value></multiply></height><color>darkblue</color></rectangle></sprite>
           <position><x>0</x><y><multiply><value>2</value><value>cell</value></multiply></y></position>
           <collisions />
         </object>
         <object name="bank">
-          <sprite><rectangle><width><window>right</window></width><height>cell</height><color>purple</color></rectangle></sprite>
+          <sprite><rectangle><width><window><right /></window></width><height>cell</height><color>purple</color></rectangle></sprite>
           <position><x>0</x><y><multiply><value>7</value><value>cell</value></multiply></y></position>
         </object>
         <object name="pavement">
-          <sprite><rectangle><width><window>right</window></width><height>cell</height><color>purple</color></rectangle></sprite>
+          <sprite><rectangle><width><window><right /></window></width><height>cell</height><color>purple</color></rectangle></sprite>
           <position><x>0</x><y><multiply><value>13</value><value>cell</value></multiply></y></position>
         </object>
 
         <!-- home: five bays in a hedge -->
         <object name="hedge" class="hazard">
-          <sprite><rectangle><width><window>right</window></width><height>cell</height><color>forestgreen</color></rectangle></sprite>
+          <sprite><rectangle><width><window><right /></window></width><height>cell</height><color>forestgreen</color></rectangle></sprite>
           <position><x>0</x><y><multiply><value>1</value><value>cell</value></multiply></y></position>
           <collisions />
         </object>
@@ -189,7 +189,7 @@
                   <subtract>
                     <value>
                       <divide>
-                        <value><add><value><window>right</window></value><value>180</value></add></value>
+                        <value><add><value><window><right /></window></value><value>180</value></add></value>
                         <value>3</value>
                       </divide>
                     </value>
@@ -210,7 +210,7 @@
                   <subtract>
                     <value>
                       <divide>
-                        <value><add><value><window>right</window></value><value>228</value></add></value>
+                        <value><add><value><window><right /></window></value><value>228</value></add></value>
                         <value>2</value>
                       </divide>
                     </value>
@@ -232,7 +232,7 @@
                   <subtract>
                     <value>
                       <divide>
-                        <value><add><value><window>right</window></value><value>132</value></add></value>
+                        <value><add><value><window><right /></window></value><value>132</value></add></value>
                         <value>3</value>
                       </divide>
                     </value>
@@ -255,7 +255,7 @@
                 <subtract>
                   <value>
                     <divide>
-                      <value><add><value><window>right</window></value><value>80</value></add></value>
+                      <value><add><value><window><right /></window></value><value>80</value></add></value>
                       <value>4</value>
                     </divide>
                   </value>
@@ -289,7 +289,7 @@
                 <subtract>
                   <value>
                     <divide>
-                      <value><add><value><window>right</window></value><value>120</value></add></value>
+                      <value><add><value><window><right /></window></value><value>120</value></add></value>
                       <value>3</value>
                     </divide>
                   </value>
@@ -320,7 +320,7 @@
                 <subtract>
                   <value>
                     <divide>
-                      <value><add><value><window>right</window></value><value>88</value></add></value>
+                      <value><add><value><window><right /></window></value><value>88</value></add></value>
                       <value>2</value>
                     </divide>
                   </value>
@@ -345,7 +345,7 @@
                 <subtract>
                   <value>
                     <divide>
-                      <value><add><value><window>right</window></value><value>40</value></add></value>
+                      <value><add><value><window><right /></window></value><value>40</value></add></value>
                       <value>2</value>
                     </divide>
                   </value>
@@ -367,7 +367,7 @@
                 <subtract>
                   <value>
                     <divide>
-                      <value><add><value><window>right</window></value><value>40</value></add></value>
+                      <value><add><value><window><right /></window></value><value>40</value></add></value>
                       <value>4</value>
                     </divide>
                   </value>
@@ -390,7 +390,7 @@
                 <subtract>
                   <value>
                     <divide>
-                      <value><add><value><window>right</window></value><value>40</value></add></value>
+                      <value><add><value><window><right /></window></value><value>40</value></add></value>
                       <value>3</value>
                     </divide>
                   </value>
@@ -412,7 +412,7 @@
                 <subtract>
                   <value>
                     <divide>
-                      <value><add><value><window>right</window></value><value>40</value></add></value>
+                      <value><add><value><window><right /></window></value><value>40</value></add></value>
                       <value>3</value>
                     </divide>
                   </value>

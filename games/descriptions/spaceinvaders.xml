@@ -111,7 +111,7 @@
         </sprite>
         <position><x><centered /></x><y>
           <subtract>
-            <value><window>bottom</window></value>
+            <value><window><bottom /></window></value>
             <value><multiply><value>player.height</value><value>2</value></multiply></value>
           </subtract>
         </y></position>
@@ -148,7 +148,7 @@
       </object>
       <object name="continue">
         <sprite><text style="prompt"><content>spacebar to continue</content></text></sprite>
-        <position><x><centered /></x><y><add><value><window>centery</window></value><value>60</value></add></y></position>
+        <position><x><centered /></x><y><add><value><window><y><center /></y></window></value><value>60</value></add></y></position>
       </object>
     </objects>
     <state name="title">
@@ -159,7 +159,7 @@
         </object>
         <object name="table">
           <sprite><text style="hud"><content>squid 30   crab 20   octopus 10   mystery ?</content><size>28</size></text></sprite>
-          <position><x><centered /></x><y><add><value><window>centery</window></value><value>20</value></add></y></position>
+          <position><x><centered /></x><y><add><value><window><y><center /></y></window></value><value>20</value></add></y></position>
         </object>
       </objects>
       <shows>
@@ -187,8 +187,8 @@
           </collisions>
         </group>
         <object name="ground" class="ground">
-          <sprite><rectangle><width><window>right</window></width><height>3</height><color>green</color></rectangle></sprite>
-          <position><x>0</x><y><subtract><value><window>bottom</window></value><value>30</value></subtract></y></position>
+          <sprite><rectangle><width><window><right /></window></width><height>3</height><color>green</color></rectangle></sprite>
+          <position><x>0</x><y><subtract><value><window><bottom /></window></value><value>30</value></subtract></y></position>
         </object>
         <!-- the mystery ship: across the top now and then, 50 to 200 points -->
         <object name="ufo" class="ufo">
@@ -285,7 +285,7 @@
         </object>
         <object name="lives">
           <sprite><text style="hud"><number>player.lives</number><size>24</size><color>green</color></text></sprite>
-          <position><x>20</x><y><subtract><value><window>bottom</window></value><value>27</value></subtract></y></position>
+          <position><x>20</x><y><subtract><value><window><bottom /></window></value><value>27</value></subtract></y></position>
         </object>
       </objects>
       <shows>
@@ -389,7 +389,7 @@
         <object name="message">
           <sprite name="lost"><text style="banner"><content>GAME OVER</content><color>red</color></text></sprite>
           <sprite name="won"><text style="banner"><content>YOU WIN</content></text></sprite>
-          <position><x><centered /></x><y><subtract><value><window>centery</window></value><value>150</value></subtract></y></position>
+          <position><x><centered /></x><y><subtract><value><window><y><center /></y></window></value><value>150</value></subtract></y></position>
         </object>
       </objects>
       <shows>

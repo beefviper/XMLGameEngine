@@ -264,7 +264,7 @@
         <object name="message">
           <sprite name="won"><text style="banner"><content>CLEARED</content><color>green</color></text></sprite>
           <sprite name="lost"><text style="banner"><content>BOOM</content><color>red</color></text></sprite>
-          <position><x><centered /></x><y><centered><subtract><value><window>bottom</window></value><value>30</value></subtract></centered></y></position>
+          <position><x><centered /></x><y><centered><subtract><value><window><bottom /></window></value><value>30</value></subtract></centered></y></position>
         </object>
       </objects>
       <shows>

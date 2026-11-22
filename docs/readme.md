@@ -54,7 +54,7 @@ A small whole game is in the [root readme](../readme.md#a-whole-game). Run a gam
 | touching | `bounce`, `deflect`, `knock`, `stick`, `wrap`, `ride`, `carry`, `hole` | [touching](reference/commands.md#touching), [knocks](reference/collisions.md#knocks) |
 | in and out of play | `die`, `reveal`, `fire`, `drop`, `spawn` (`member`), `despawn`, `reset`; `waiting` (`ready`), `hidden` on an object | [in and out of play](reference/commands.md#in-and-out-of-play), [spawn](reference/objects.md#spawn-and-despawn) |
 | places | `centered` (`offset`), `left`, `right`, `top`, `bottom` (`offset` in from the side) in a position | [objects](reference/objects.md#parts-of-an-object) |
-| the window | `window` (`width`, `height`, `right`, `bottom`, `centerx`, `centery`) in a value | [names a value can use](reference/format.md#names-a-value-can-use) |
+| the window | `window` (`width`, `height`, `right`, `bottom`, `x` or `y` with `center`) in a value | [the window's numbers](reference/format.md#the-windows-numbers) |
 | pronouns | `self`, `other`, `others` in a value; `who=`, and `as=` on a `become` | [pronouns](reference/format.md#pronouns) |
 | sight | `sees` (`past`) in a condition, `past` in a `light` | [conditions](reference/states.md#conditions), [light and dark](reference/pictures.md#light-and-dark) |
 | hitboxes | `hitbox` (`name=`, picked by a rule's `hitbox=` and `by=`) with `all`, `horizontal`, `vertical`, `top`, `bottom`, `left`, `right` (in from the picture's sides), or a `rectangle` or `circle` and `position` | [how a touch is found](reference/collisions.md#how-a-touch-is-found) |

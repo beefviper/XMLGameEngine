@@ -100,7 +100,7 @@
     <object name="path" class="ground">
       <sprite>
         <rectangle>
-          <width><window>right</window></width>
+          <width><window><right /></window></width>
           <height>thick</height>
           <color>yellow</color>
         </rectangle>
@@ -267,11 +267,11 @@
       <sprite>
         <rectangle>
           <width>4</width>
-          <height><window>bottom</window></height>
+          <height><window><bottom /></window></height>
           <color>black</color>
         </rectangle>
       </sprite>
-      <position><x><subtract><value><window>right</window></value><value>4</value></subtract></x><y>0</y></position>
+      <position><x><subtract><value><window><right /></window></value><value>4</value></subtract></x><y>0</y></position>
       <hidden />
       <collisions>
         <collision object="harry">
@@ -283,7 +283,7 @@
       <sprite>
         <rectangle>
           <width>4</width>
-          <height><window>bottom</window></height>
+          <height><window><bottom /></window></height>
           <color>black</color>
         </rectangle>
       </sprite>
@@ -382,7 +382,7 @@
         <object name="earth">
           <sprite>
             <rectangle>
-              <width><window>right</window></width>
+              <width><window><right /></window></width>
               <height>24</height>
               <color>brown</color>
             </rectangle>
@@ -392,8 +392,8 @@
         <object name="bedrock">
           <sprite>
             <rectangle>
-              <width><window>right</window></width>
-              <height><subtract><value><window>bottom</window></value><value>tunnel</value><value>thick</value></subtract></height>
+              <width><window><right /></window></width>
+              <height><subtract><value><window><bottom /></window></value><value>tunnel</value><value>thick</value></subtract></height>
               <color>brown</color>
             </rectangle>
           </sprite>
@@ -402,7 +402,7 @@
         <object name="tunnelfloor" class="ground">
           <sprite>
             <rectangle>
-              <width><window>right</window></width>
+              <width><window><right /></window></width>
               <height>thick</height>
               <color>darkgrey</color>
             </rectangle>
@@ -425,7 +425,7 @@
             <collision class="eastside">
               <move direction="left">
                 <subtract>
-                  <value><window>right</window></value>
+                  <value><window><right /></window></value>
                   <value><multiply><value>2</value><value>harry.width</value></multiply></value>
                 </subtract>
               </move>
@@ -433,7 +433,7 @@
             <collision class="westside">
               <move direction="right">
                 <subtract>
-                  <value><window>right</window></value>
+                  <value><window><right /></window></value>
                   <value><multiply><value>2</value><value>harry.width</value></multiply></value>
                 </subtract>
               </move>

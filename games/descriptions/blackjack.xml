@@ -99,7 +99,7 @@
         <!-- the stock, top right -->
         <object name="stock" class="place">
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>forestgreen</color></rectangle></sprite>
-          <position><x><subtract><value><window>width</window></value><value>cardwidth</value><value>40</value></subtract></x><y>dealerrow</y></position>
+          <position><x><subtract><value><window><width /></window></value><value>cardwidth</value><value>40</value></subtract></x><y>dealerrow</y></position>
           <holds class="card" sprite="back" />
         </object>
 
@@ -197,7 +197,7 @@
 
         <object name="money">
           <sprite><text style="note"><content>chips </content><number>table.bank</number><content>    bet </content><number>table.bet</number></text></sprite>
-          <position><x><centered /></x><y><subtract><value><window>height</window></value><value>60</value></subtract></y></position>
+          <position><x><centered /></x><y><subtract><value><window><height /></window></value><value>60</value></subtract></y></position>
         </object>
       </objects>
       <!-- the pack into the stock, shuffled -->

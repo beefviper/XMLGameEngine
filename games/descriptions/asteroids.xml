@@ -162,7 +162,7 @@
     </object>
     <!-- the two saucers: they cross now and then, wandering up and down and shooting; a rock that meets one breaks it -->
     <group name="ufos" class="hazard">
-      <position><x>-30</x><y><random><min>80</min><max><subtract><value><window>bottom</window></value><value>80</value></subtract></max></random></y></position>
+      <position><x>-30</x><y><random><min>80</min><max><subtract><value><window><bottom /></window></value><value>80</value></subtract></max></random></y></position>
       <waiting />
       <collisions>
         <type>pixel</type>
@@ -283,8 +283,8 @@
               <play sound="shoot" />
             </action>
             <action name="hyperspace">
-              <set variable="ship.x"><random><min>margin</min><max><subtract><value><window>right</window></value><value>60</value></subtract></max></random></set>
-              <set variable="ship.y"><random><min>margin</min><max><subtract><value><window>bottom</window></value><value>60</value></subtract></max></random></set>
+              <set variable="ship.x"><random><min>margin</min><max><subtract><value><window><right /></window></value><value>60</value></subtract></max></random></set>
+              <set variable="ship.y"><random><min>margin</min><max><subtract><value><window><bottom /></window></value><value>60</value></subtract></max></random></set>
             </action>
           </actions>
           <variables>
@@ -311,21 +311,21 @@
               </collision>
             </collisions>
             <member>
-              <position><x><random><min>0</min><max><window>right</window></max></random></x></position>
+              <position><x><random><min>0</min><max><window><right /></window></max></random></x></position>
               <velocity><x><random><min>36</min><max>72</max></random></x><y><random><min>-48</min><max>48</max></random></y></velocity>
             </member>
             <member>
               <sprite><drawing from="bigrockB" /></sprite>
-              <position><x><subtract><value><window>right</window></value><value>60</value></subtract></x><y><random><min>0</min><max><window>bottom</window></max></random></y></position>
+              <position><x><subtract><value><window><right /></window></value><value>60</value></subtract></x><y><random><min>0</min><max><window><bottom /></window></max></random></y></position>
               <velocity><x><random><min>-48</min><max>48</max></random></x><y><random><min>36</min><max>72</max></random></y></velocity>
             </member>
             <member>
               <sprite><drawing from="bigrockC" /></sprite>
-              <position><x><random><min>0</min><max><window>right</window></max></random></x><y><subtract><value><window>bottom</window></value><value>60</value></subtract></y></position>
+              <position><x><random><min>0</min><max><window><right /></window></max></random></x><y><subtract><value><window><bottom /></window></value><value>60</value></subtract></y></position>
               <velocity><x><random><min>-72</min><max>-36</max></random></x><y><random><min>-48</min><max>48</max></random></y></velocity>
             </member>
             <member>
-              <position><y><random><min>0</min><max><window>bottom</window></max></random></y></position>
+              <position><y><random><min>0</min><max><window><bottom /></window></max></random></y></position>
               <velocity><x><random><min>-48</min><max>48</max></random></x><y><random><min>-72</min><max>-36</max></random></y></velocity>
             </member>
           </group>
@@ -362,7 +362,7 @@
         </object>
         <!-- Where a ship that was hit comes back: in play while it waits, ready two seconds on. -->
         <object name="centre">
-          <position><x><window>centerx</window></x><y><window>centery</window></y></position>
+          <position><x><window><x><center /></x></window></x><y><window><y><center /></y></window></y></position>
           <waiting />
           <variables><variable name="ready">0</variable></variables>
           <timers>

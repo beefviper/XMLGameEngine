@@ -39,14 +39,14 @@
         <xsl:call-template name="camel"><xsl:with-param name="name" select="normalize-space($tag)" /></xsl:call-template>
       </xsl:when>
       <xsl:when test="local-name($tag) = 'window'">
-        <xsl:variable name="measure" select="normalize-space($tag)" />
+        <xsl:variable name="measure" select="local-name($tag/*)" />
         <xsl:choose>
           <xsl:when test="$measure = 'width' or $measure = 'right'">windowWidth</xsl:when>
           <xsl:when test="$measure = 'height' or $measure = 'bottom'">windowHeight</xsl:when>
           <xsl:otherwise>
             <xsl:if test="$nested">(</xsl:if>
             <xsl:choose>
-              <xsl:when test="$measure = 'centerx'">windowWidth / 2</xsl:when>
+              <xsl:when test="$measure = 'x'">windowWidth / 2</xsl:when>
               <xsl:otherwise>windowHeight / 2</xsl:otherwise>
             </xsl:choose>
             <xsl:if test="$nested">)</xsl:if>

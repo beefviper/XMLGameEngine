@@ -233,11 +233,11 @@
         </object>
 
         <object name="sea" class="ground">
-          <sprite><rectangle><width><window>right</window></width><height><subtract><value><window>bottom</window></value><value>ground</value></subtract></height><color>darkblue</color></rectangle></sprite>
+          <sprite><rectangle><width><window><right /></window></width><height><subtract><value><window><bottom /></window></value><value>ground</value></subtract></height><color>darkblue</color></rectangle></sprite>
           <position><x>0</x><y>ground</y></position>
         </object>
         <object name="surf">
-          <sprite><rectangle><width><window>right</window></width><height>3</height><color>blue</color></rectangle></sprite>
+          <sprite><rectangle><width><window><right /></window></width><height>3</height><color>blue</color></rectangle></sprite>
           <position><x>0</x><y><add><value>ground</value><value>8</value></add></y></position>
         </object>
 

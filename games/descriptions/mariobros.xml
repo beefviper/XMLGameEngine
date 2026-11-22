@@ -295,7 +295,7 @@
         <collision object="ground">
           <any>
             <condition variable="x"><atmost>2</atmost></condition>
-            <condition variable="x"><atleast><subtract><value><window>right</window></value><value>18</value></subtract></atleast></condition>
+            <condition variable="x"><atleast><subtract><value><window><right /></window></value><value>18</value></subtract></atleast></condition>
           </any>
           <reset />
         </collision>
@@ -549,7 +549,7 @@
         <collision object="ground">
           <any>
             <condition variable="x"><atmost>2</atmost></condition>
-            <condition variable="x"><atleast><subtract><value><window>right</window></value><value>14</value></subtract></atleast></condition>
+            <condition variable="x"><atleast><subtract><value><window><right /></window></value><value>14</value></subtract></atleast></condition>
           </any>
           <despawn />
         </collision>
@@ -651,7 +651,7 @@
             <position><x>0</x><y>low</y></position>
           </group>
           <group name="lowright">
-            <position><x><subtract><value><window>right</window></value><value>96</value></subtract></x><y>low</y></position>
+            <position><x><subtract><value><window><right /></window></value><value>96</value></subtract></x><y>low</y></position>
           </group>
           <group name="middle">
             <columns>8</columns>
@@ -663,13 +663,13 @@
           </group>
           <group name="midright">
             <columns>2</columns>
-            <position><x><subtract><value><window>right</window></value><value>32</value></subtract></x><y>middle</y></position>
+            <position><x><subtract><value><window><right /></window></value><value>32</value></subtract></x><y>middle</y></position>
           </group>
           <group name="topleft">
             <position><x>0</x><y>top</y></position>
           </group>
           <group name="topright">
-            <position><x><subtract><value><window>right</window></value><value>96</value></subtract></x><y>top</y></position>
+            <position><x><subtract><value><window><right /></window></value><value>96</value></subtract></x><y>top</y></position>
           </group>
         </group>
         <!-- POW: bumped from below, every pest on a floor goes over;
@@ -684,7 +684,7 @@
           <sprite name="one">
             <bitmap from="pow-one" />
           </sprite>
-          <position><x><subtract><value><window>centerx</window></value><value>8</value></subtract></x><y>low</y></position>
+          <position><x><subtract><value><window><x><center /></x></window></value><value>8</value></subtract></x><y>low</y></position>
           <collisions>
             <!-- each bump: everything on the floors flipped, and the block a look smaller -->
             <collision class="brother" side="bottom">
@@ -711,7 +711,7 @@
             <member><position><x>0</x></position></member>
             <member>
               <sprite><bitmap><flip>horizontal</flip></bitmap></sprite>
-              <position><x><subtract><value><window>right</window></value><value>24</value></subtract></x></position>
+              <position><x><subtract><value><window><right /></window></value><value>24</value></subtract></x></position>
             </member>
           </group>
           <group name="drains">
@@ -719,16 +719,16 @@
             <member><position><x>0</x></position></member>
             <member>
               <sprite><bitmap><flip>horizontal</flip></bitmap></sprite>
-              <position><x><subtract><value><window>right</window></value><value>24</value></subtract></x></position>
+              <position><x><subtract><value><window><right /></window></value><value>24</value></subtract></x></position>
             </member>
           </group>
         </group>
         <object name="mario" from="brother">
-          <position><x><subtract><value><window>centerx</window></value><value>40</value></subtract></x></position>
+          <position><x><subtract><value><window><x><center /></x></window></value><value>40</value></subtract></x></position>
         </object>
         <!-- in play only for two players -->
         <object name="luigi" from="brother">
-          <position><x><add><value><window>centerx</window></value><value>28</value></add></x></position>
+          <position><x><add><value><window><x><center /></x></window></value><value>28</value></add></x></position>
           <waiting />
           <variables>
             <variable name="lives">0</variable>
@@ -779,12 +779,12 @@
             <group name="shellcreepers">
               <member />
               <member>
-                <position><x><subtract><value><window>right</window></value><value>18</value></subtract></x></position>
+                <position><x><subtract><value><window><right /></window></value><value>18</value></subtract></x></position>
                 <velocity><x><subtract><value>0</value><value>crawl</value></subtract></x></velocity>
               </member>
               <member />
               <member>
-                <position><x><subtract><value><window>right</window></value><value>18</value></subtract></x></position>
+                <position><x><subtract><value><window><right /></window></value><value>18</value></subtract></x></position>
                 <velocity><x><subtract><value>0</value><value>crawl</value></subtract></x></velocity>
               </member>
             </group>
@@ -813,17 +813,17 @@
             <group name="shellcreepers">
               <member />
               <member>
-                <position><x><subtract><value><window>right</window></value><value>18</value></subtract></x></position>
+                <position><x><subtract><value><window><right /></window></value><value>18</value></subtract></x></position>
                 <velocity><x><subtract><value>0</value><value>crawl</value></subtract></x></velocity>
               </member>
               <member />
               <member>
-                <position><x><subtract><value><window>right</window></value><value>18</value></subtract></x></position>
+                <position><x><subtract><value><window><right /></window></value><value>18</value></subtract></x></position>
                 <velocity><x><subtract><value>0</value><value>crawl</value></subtract></x></velocity>
               </member>
               <member />
               <member>
-                <position><x><subtract><value><window>right</window></value><value>18</value></subtract></x></position>
+                <position><x><subtract><value><window><right /></window></value><value>18</value></subtract></x></position>
                 <velocity><x><subtract><value>0</value><value>crawl</value></subtract></x></velocity>
               </member>
             </group>
@@ -874,14 +874,14 @@
               </collisions>
               <member><position><x>20</x><y><subtract><value>top</value><value>22</value></subtract></y></position></member>
               <member><position><x>60</x><y><subtract><value>top</value><value>22</value></subtract></y></position></member>
-              <member><position><x><subtract><value><window>right</window></value><value>28</value></subtract></x><y><subtract><value>top</value><value>22</value></subtract></y></position></member>
-              <member><position><x><subtract><value><window>right</window></value><value>68</value></subtract></x><y><subtract><value>top</value><value>22</value></subtract></y></position></member>
+              <member><position><x><subtract><value><window><right /></window></value><value>28</value></subtract></x><y><subtract><value>top</value><value>22</value></subtract></y></position></member>
+              <member><position><x><subtract><value><window><right /></window></value><value>68</value></subtract></x><y><subtract><value>top</value><value>22</value></subtract></y></position></member>
               <member><position><x>16</x><y><subtract><value>middle</value><value>22</value></subtract></y></position></member>
-              <member><position><x><subtract><value><window>centerx</window></value><value>4</value></subtract></x><y><subtract><value>middle</value><value>22</value></subtract></y></position></member>
-              <member><position><x><subtract><value><window>right</window></value><value>24</value></subtract></x><y><subtract><value>middle</value><value>22</value></subtract></y></position></member>
+              <member><position><x><subtract><value><window><x><center /></x></window></value><value>4</value></subtract></x><y><subtract><value>middle</value><value>22</value></subtract></y></position></member>
+              <member><position><x><subtract><value><window><right /></window></value><value>24</value></subtract></x><y><subtract><value>middle</value><value>22</value></subtract></y></position></member>
               <member><position><x>40</x><y><subtract><value>low</value><value>22</value></subtract></y></position></member>
-              <member><position><x><subtract><value><window>right</window></value><value>48</value></subtract></x><y><subtract><value>low</value><value>22</value></subtract></y></position></member>
-              <member><position><x><subtract><value><window>centerx</window></value><value>4</value></subtract></x><y><subtract><value>ground</value><value>22</value></subtract></y></position></member>
+              <member><position><x><subtract><value><window><right /></window></value><value>48</value></subtract></x><y><subtract><value>low</value><value>22</value></subtract></y></position></member>
+              <member><position><x><subtract><value><window><x><center /></x></window></value><value>4</value></subtract></x><y><subtract><value>ground</value><value>22</value></subtract></y></position></member>
             </group>
           </objects>
           <conditions>
@@ -904,12 +904,12 @@
             <group name="sidesteppers">
               <member />
               <member>
-                <position><x><subtract><value><window>right</window></value><value>18</value></subtract></x></position>
+                <position><x><subtract><value><window><right /></window></value><value>18</value></subtract></x></position>
                 <velocity><x><subtract><value>0</value><value>crawl</value></subtract></x></velocity>
               </member>
               <member />
               <member>
-                <position><x><subtract><value><window>right</window></value><value>18</value></subtract></x></position>
+                <position><x><subtract><value><window><right /></window></value><value>18</value></subtract></x></position>
                 <velocity><x><subtract><value>0</value><value>crawl</value></subtract></x></velocity>
               </member>
             </group>
@@ -939,7 +939,7 @@
             <group name="shellcreepers">
               <member />
               <member>
-                <position><x><subtract><value><window>right</window></value><value>18</value></subtract></x></position>
+                <position><x><subtract><value><window><right /></window></value><value>18</value></subtract></x></position>
                 <velocity><x><subtract><value>0</value><value>crawl</value></subtract></x></velocity>
               </member>
             </group>
@@ -960,12 +960,12 @@
             <group name="fighterflies">
               <member />
               <member>
-                <position><x><subtract><value><window>right</window></value><value>18</value></subtract></x></position>
+                <position><x><subtract><value><window><right /></window></value><value>18</value></subtract></x></position>
                 <velocity><x><subtract><value>0</value><value>crawl</value></subtract></x></velocity>
               </member>
               <member />
               <member>
-                <position><x><subtract><value><window>right</window></value><value>18</value></subtract></x></position>
+                <position><x><subtract><value><window><right /></window></value><value>18</value></subtract></x></position>
                 <velocity><x><subtract><value>0</value><value>crawl</value></subtract></x></velocity>
               </member>
             </group>

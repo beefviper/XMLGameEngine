@@ -78,16 +78,16 @@
     <state name="playing">
       <objects>
         <object name="verge" class="farside">
-          <sprite><rectangle><width><window>right</window></width><height>cell</height><color>grey</color></rectangle></sprite>
+          <sprite><rectangle><width><window><right /></window></width><height>cell</height><color>grey</color></rectangle></sprite>
           <position><x>0</x><y>0</y></position>
           <collisions />
         </object>
         <object name="road">
-          <sprite><rectangle><width><window>right</window></width><height><multiply><value>10</value><value>cell</value></multiply></height><color>darkgrey</color></rectangle></sprite>
+          <sprite><rectangle><width><window><right /></window></width><height><multiply><value>10</value><value>cell</value></multiply></height><color>darkgrey</color></rectangle></sprite>
           <position><x>0</x><y>cell</y></position>
         </object>
         <object name="pavement">
-          <sprite><rectangle><width><window>right</window></width><height>cell</height><color>grey</color></rectangle></sprite>
+          <sprite><rectangle><width><window><right /></window></width><height>cell</height><color>grey</color></rectangle></sprite>
           <position><x>0</x><y><multiply><value>11</value><value>cell</value></multiply></y></position>
         </object>
         <!-- the markings between the lanes, and the double line down the middle -->
@@ -104,7 +104,7 @@
           </y></position>
         </group>
         <object name="median">
-          <sprite><rectangle><width><window>right</window></width><height>6</height><color>yellow</color></rectangle></sprite>
+          <sprite><rectangle><width><window><right /></window></width><height>6</height><color>yellow</color></rectangle></sprite>
           <position><x>0</x><y>
             <subtract>
               <value><multiply><value>6</value><value>cell</value></multiply></value>

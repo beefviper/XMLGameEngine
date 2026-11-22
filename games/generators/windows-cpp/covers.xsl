@@ -79,7 +79,8 @@
       | collisions/collision | actions/action | inputs/input | input/button
       | add | subtract | multiply | divide | sign | sine | cosine | value
       | random | random/min | random/max | centered
-      | value/window | x/window | y/window | width/window | height/window | min/window | max/window">
+      | value/window | x/window | y/window | width/window | height/window | min/window | max/window
+      | window/right | window/bottom | window/x | window/y | window/x/center | window/y/center">
     <xsl:apply-templates select="@* | * | text()" mode="covers" />
   </xsl:template>
   <xsl:template mode="covers" match="

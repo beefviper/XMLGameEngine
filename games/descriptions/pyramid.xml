@@ -99,7 +99,7 @@
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>forestgreen</color></rectangle></sprite>
           <position><x>
             <subtract>
-              <value><window>centerx</window></value>
+              <value><window><x><center /></x></window></value>
               <value><divide><value>cardwidth</value><value>2</value></divide></value>
               <value>
                 <divide>
@@ -118,7 +118,7 @@
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>forestgreen</color></rectangle></sprite>
           <position><x>
             <subtract>
-              <value><window>centerx</window></value>
+              <value><window><x><center /></x></window></value>
               <value><divide><value>cardwidth</value><value>2</value></divide></value>
               <value>
                 <divide>
@@ -137,7 +137,7 @@
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>forestgreen</color></rectangle></sprite>
           <position><x>
             <subtract>
-              <value><window>centerx</window></value>
+              <value><window><x><center /></x></window></value>
               <value><divide><value>cardwidth</value><value>2</value></divide></value>
               <value>
                 <divide>
@@ -156,7 +156,7 @@
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>forestgreen</color></rectangle></sprite>
           <position><x>
             <subtract>
-              <value><window>centerx</window></value>
+              <value><window><x><center /></x></window></value>
               <value><divide><value>cardwidth</value><value>2</value></divide></value>
               <value>
                 <divide>
@@ -175,7 +175,7 @@
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>forestgreen</color></rectangle></sprite>
           <position><x>
             <subtract>
-              <value><window>centerx</window></value>
+              <value><window><x><center /></x></window></value>
               <value><divide><value>cardwidth</value><value>2</value></divide></value>
               <value>
                 <divide>
@@ -194,7 +194,7 @@
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>forestgreen</color></rectangle></sprite>
           <position><x>
             <subtract>
-              <value><window>centerx</window></value>
+              <value><window><x><center /></x></window></value>
               <value><divide><value>cardwidth</value><value>2</value></divide></value>
               <value>
                 <divide>
@@ -213,7 +213,7 @@
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>forestgreen</color></rectangle></sprite>
           <position><x>
             <subtract>
-              <value><window>centerx</window></value>
+              <value><window><x><center /></x></window></value>
               <value><divide><value>cardwidth</value><value>2</value></divide></value>
               <value>
                 <divide>
@@ -241,7 +241,7 @@
         <!-- the pairs taken away: what adds up to 13 -->
         <object name="pairs" class="place">
           <sprite><rectangle><width>cardwidth</width><height>cardheight</height><color>forestgreen</color></rectangle></sprite>
-          <position><x><subtract><value><window>width</window></value><value>56</value><value>cardwidth</value></subtract></x><y>low</y></position>
+          <position><x><subtract><value><window><width /></window></value><value>56</value><value>cardwidth</value></subtract></x><y>low</y></position>
           <holds class="card" sprite="face"><accepts><condition variable="worth" total="sum"><equal>13</equal></condition></accepts></holds>
         </object>
 
@@ -256,7 +256,7 @@
           <sprite name="held"><drawing from="handheld" /></sprite>
           <position><x>
             <subtract>
-              <value><window>centerx</window></value>
+              <value><window><x><center /></x></window></value>
               <value><divide><value>cardwidth</value><value>2</value></divide></value>
               <value>3</value>
             </subtract>

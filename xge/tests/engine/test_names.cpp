@@ -204,6 +204,9 @@ TEST_CASE("every name is the game's: self, other, window and color are objects l
 
 	// The engine's own names start with an @, which no text of a game can.
 	CHECK_THAT(errorOf(played::box("o", 0, 0, "<variables><variable name=\"w\">@window.right</variable></variables>")), ContainsSubstring("\"@window.right\" is not a name or a number"));
+	// The window holds a tag, never text (the schema says so first).
+	CHECK_FALSE(errorOf(played::box("o", 0, 0, "<variables><variable name=\"w\"><window>right</window></variable></variables>")).empty());
+	CHECK(errorOf(played::box("o", 0, 0, "<variables><variable name=\"w\"><window><x><center /></x></window></variable></variables>")).empty());
 	// who= takes only a pronoun (the schema says so first).
 	CHECK_FALSE(errorOf(played::box("o", 0, 0, "<actions><action name=\"a\"><inc who=\"me\" variable=\"n\" /></action></actions>")).empty());
 }

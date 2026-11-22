@@ -72,7 +72,7 @@ namespace
 
 	// A game with one object, `o`, whose position is x and y (each the inner
 	// XML of its element, so a value tag can be given), and the given global
-	// variables. The window is 800 by 600, so <window>centerx</window> is 400.
+	// variables. The window is 800 by 600, so <window><x><center /></x></window> is 400.
 	std::string gameXml(const std::string& x, const std::string& y = "0", const std::string& variables = {})
 	{
 		return "<game>"
@@ -116,7 +116,7 @@ namespace
 
 	const std::string kFormula =
 		"<subtract>"
-		"<value><window>centerx</window></value>"
+		"<value><window><x><center /></x></window></value>"
 		"<value><divide><value>w</value><value>2</value></divide></value>"
 		"<value>xoffset</value>"
 		"</subtract>";

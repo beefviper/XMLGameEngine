@@ -168,8 +168,8 @@
     <state name="playing">
       <objects>
         <object name="ground" class="ground">
-          <sprite><rectangle><width><window>right</window></width><height>ground</height><color>darkgrey</color></rectangle></sprite>
-          <position><x>0</x><y><subtract><value><window>bottom</window></value><value>ground</value></subtract></y></position>
+          <sprite><rectangle><width><window><right /></window></width><height>ground</height><color>darkgrey</color></rectangle></sprite>
+          <position><x>0</x><y><subtract><value><window><bottom /></window></value><value>ground</value></subtract></y></position>
           <collisions />
         </object>
         <!-- the falling rocks: four big and four small, falling at a slant from

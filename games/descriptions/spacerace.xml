@@ -66,11 +66,11 @@
       <objects>
         <!-- the clock: a bar down the middle that sinks out of sight in a minute -->
         <object name="clock">
-          <sprite><rectangle><width>4</width><height><window>bottom</window></height></rectangle></sprite>
+          <sprite><rectangle><width>4</width><height><window><bottom /></window></height></rectangle></sprite>
           <position><x><centered /></x><y>0</y></position>
           <velocity><y>
             <divide>
-              <value><window>bottom</window></value>
+              <value><window><bottom /></window></value>
               <value>seconds</value>
             </divide>
           </y></velocity>
@@ -82,7 +82,7 @@
             <subtract>
               <value>
                 <divide>
-                  <value><add><value><window>right</window></value><value>8</value></add></value>
+                  <value><add><value><window><right /></window></value><value>8</value></add></value>
                   <value>8</value>
                 </divide>
               </value>
@@ -123,19 +123,19 @@
           <variables>
             <variable name="score">0</variable>
           </variables>
-          <member name="rocket1"><position><x><centered><divide><value><window>right</window></value><value>4</value></divide></centered></x><y><subtract><value><window>bottom</window></value><value>21</value><value>margin</value></subtract></y></position></member>
+          <member name="rocket1"><position><x><centered><divide><value><window><right /></window></value><value>4</value></divide></centered></x><y><subtract><value><window><bottom /></window></value><value>21</value><value>margin</value></subtract></y></position></member>
           <member name="rocket2"><position><x><centered>
             <divide>
-              <value><multiply><value><window>right</window></value><value>3</value></multiply></value>
+              <value><multiply><value><window><right /></window></value><value>3</value></multiply></value>
               <value>4</value>
             </divide>
-          </centered></x><y><subtract><value><window>bottom</window></value><value>21</value><value>margin</value></subtract></y></position></member>
+          </centered></x><y><subtract><value><window><bottom /></window></value><value>21</value><value>margin</value></subtract></y></position></member>
         </group>
         <object name="score1">
           <sprite><text style="hud"><number>rocket1.score</number></text></sprite>
           <position><x>
             <subtract>
-              <value><divide><value><window>right</window></value><value>4</value></divide></value>
+              <value><divide><value><window><right /></window></value><value>4</value></divide></value>
               <value>60</value>
               <value>score1.width</value>
             </subtract>
@@ -147,7 +147,7 @@
             <add>
               <value>
                 <divide>
-                  <value><multiply><value><window>right</window></value><value>3</value></multiply></value>
+                  <value><multiply><value><window><right /></window></value><value>3</value></multiply></value>
                   <value>4</value>
                 </divide>
               </value>
@@ -165,7 +165,7 @@
       </inputs>
       <conditions>
         <condition object="clock" variable="y">
-          <atleast><window>bottom</window></atleast>
+          <atleast><window><bottom /></window></atleast>
           <push state="over" />
           <play sound="end" />
         </condition>

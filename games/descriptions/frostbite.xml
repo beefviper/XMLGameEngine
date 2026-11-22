@@ -68,11 +68,11 @@
   <objects>
     <!-- the snowy shore along the top; below it all is water -->
     <object name="snow">
-      <sprite><rectangle><width><window>right</window></width><height>shore</height><color>white</color></rectangle></sprite>
+      <sprite><rectangle><width><window><right /></window></width><height>shore</height><color>white</color></rectangle></sprite>
       <position><x>0</x><y>0</y></position>
     </object>
     <object name="water" class="water">
-      <sprite><rectangle><width><window>right</window></width><height><subtract><value><window>bottom</window></value><value>shore</value></subtract></height><color>darkblue</color></rectangle></sprite>
+      <sprite><rectangle><width><window><right /></window></width><height><subtract><value><window><bottom /></window></value><value>shore</value></subtract></height><color>darkblue</color></rectangle></sprite>
       <position><x>0</x><y>shore</y></position>
       <collisions />
     </object>
@@ -84,7 +84,7 @@
         <subtract>
           <value>
             <divide>
-              <value><add><value><window>right</window></value><value>115</value></add></value>
+              <value><add><value><window><right /></window></value><value>115</value></add></value>
               <value>3</value>
             </divide>
           </value>
@@ -199,7 +199,7 @@
           <sprite>
             <bitmap from="thermometer" />
           </sprite>
-          <position><x><subtract><value><window>right</window></value><value>150</value></subtract></x><y><add><value>margin</value><value>4</value></add></y></position>
+          <position><x><subtract><value><window><right /></window></value><value>150</value></subtract></x><y><add><value>margin</value><value>4</value></add></y></position>
           <variables>
             <variable name="degrees">45</variable>
           </variables>
@@ -327,7 +327,7 @@
         </object>
         <object name="degrees">
           <sprite><text style="hud"><number>thermometer.degrees</number><color>red</color></text></sprite>
-          <position><x><subtract><value><window>right</window></value><value>120</value></subtract></x><y>margin</y></position>
+          <position><x><subtract><value><window><right /></window></value><value>120</value></subtract></x><y>margin</y></position>
         </object>
       </objects>
       <scenes>

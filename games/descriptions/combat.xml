@@ -157,7 +157,7 @@
           </group>
           <group name="blue">
             <sprite><bitmap><color>cyan</color></bitmap></sprite>
-            <position><x><centered><subtract><value><window>right</window></value><value>60</value></subtract></centered></x><y><centered /></y></position>
+            <position><x><centered><subtract><value><window><right /></window></value><value>60</value></subtract></centered></x><y><centered /></y></position>
             <heading>270</heading>
             <actions><action name="fire"><fire object="shell2" /><play sound="fire" /></action></actions>
             <member name="tank2" />
@@ -165,13 +165,13 @@
         </group>
         <object name="score1">
           <sprite><text style="hud"><number>tank1.hits</number></text></sprite>
-          <position><x><subtract><value><window>centerx</window></value><value>80</value></subtract></x><y>margin</y></position>
+          <position><x><subtract><value><window><x><center /></x></window></value><value>80</value></subtract></x><y>margin</y></position>
         </object>
         <object name="score2">
           <sprite><text style="hud"><number>tank2.hits</number><color>cyan</color></text></sprite>
           <position><x>
             <subtract>
-              <value><add><value><window>centerx</window></value><value>80</value></add></value>
+              <value><add><value><window><x><center /></x></window></value><value>80</value></add></value>
               <value>score2.width</value>
             </subtract>
           </x><y>margin</y></position>

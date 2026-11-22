@@ -89,17 +89,27 @@ namespace xge
 	}
 
 
-	// <window>right</window>: one of the window's measures, as the name the
+	// <window><right /></window>: one of the window's measures, as the name the
 	// engine gives it, which starts with an @ so no name in a game is it.
+	// <window><x><center /></x></window>: its middle across (in a <y>, down).
 	static std::string windowMeasure(const XmlNode& tag, const std::string& where)
 	{
-		static const std::set<std::string> measures{ "width", "height", "right", "bottom", "centerx", "centery" };
-		const std::string text = readText(tag);
-		if (tag.getFirstChild() || !measures.count(text))
+		static const std::set<std::string> measures{ "width", "height", "right", "bottom" };
+		const std::string here = where + " > <window>";
+		const char* const wanted = "holds one of the window's measures: <width />, <height />, <right />, <bottom />, or its middle, <x><center /></x> or <y><center /></y>";
+		const std::unique_ptr<XmlNode> measure = tag.getFirstChild();
+		if (!measure || measure->getNextSibling() || !readText(tag).empty() || !readText(*measure).empty()) { fail(here, wanted); }
+		const std::string name = measure->getName();
+		if (measures.count(name) && !measure->getFirstChild()) { return "@window." + name; }
+		if (name == "x" || name == "y")
 		{
-			fail(where + " > <window>", "names one of the window's measures: width, height, right, bottom, centerx or centery");
+			const std::unique_ptr<XmlNode> center = measure->getFirstChild();
+			if (center && center->getName() == "center" && !center->getNextSibling() && !center->getFirstChild())
+			{
+				return name == "x" ? "@window.centerx" : "@window.centery";
+			}
 		}
-		return "@window." + text;
+		fail(here, wanted);
 	}
 
 	bool isPronoun(const std::string& word)

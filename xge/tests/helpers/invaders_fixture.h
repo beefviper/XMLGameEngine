@@ -77,8 +77,8 @@ namespace invaders_fixture
           </rectangle>
         </sprite>
         <position>
-          <x><window>centerx</window></x>
-          <y><subtract><value><window>bottom</window></value><value><multiply><value>height</value><value>2</value></multiply></value></subtract></y>
+          <x><window><x><center /></x></window></x>
+          <y><subtract><value><window><bottom /></window></value><value><multiply><value>height</value><value>2</value></multiply></value></subtract></y>
         </position>
         <velocity>
           <x>0</x>
@@ -144,8 +144,8 @@ namespace invaders_fixture
           </text>
         </sprite>
         <position>
-          <x><subtract><value><window>centerx</window></value><value><divide><value>title.width</value><value>2</value></divide></value></subtract></x>
-          <y><subtract><value><window>centery</window></value><value><divide><value>title.height</value><value>2</value></divide></value><value>100</value></subtract></y>
+          <x><subtract><value><window><x><center /></x></window></value><value><divide><value>title.width</value><value>2</value></divide></value></subtract></x>
+          <y><subtract><value><window><y><center /></y></window></value><value><divide><value>title.height</value><value>2</value></divide></value><value>100</value></subtract></y>
         </position>
         <velocity>
           <x>0</x>
@@ -164,8 +164,8 @@ namespace invaders_fixture
           </text>
         </sprite>
         <position>
-          <x><subtract><value><window>centerx</window></value><value><divide><value>youwin.width</value><value>2</value></divide></value></subtract></x>
-          <y><subtract><value><window>centery</window></value><value>150</value></subtract></y>
+          <x><subtract><value><window><x><center /></x></window></value><value><divide><value>youwin.width</value><value>2</value></divide></value></subtract></x>
+          <y><subtract><value><window><y><center /></y></window></value><value>150</value></subtract></y>
         </position>
         <velocity>
           <x>0</x>
@@ -184,8 +184,8 @@ namespace invaders_fixture
           </text>
         </sprite>
         <position>
-          <x><subtract><value><window>centerx</window></value><value><divide><value>continue.width</value><value>2</value></divide></value></subtract></x>
-          <y><add><value><window>centery</window></value><value>60</value></add></y>
+          <x><subtract><value><window><x><center /></x></window></value><value><divide><value>continue.width</value><value>2</value></divide></value></subtract></x>
+          <y><add><value><window><y><center /></y></window></value><value>60</value></add></y>
         </position>
         <velocity>
           <x>0</x>
@@ -204,8 +204,8 @@ namespace invaders_fixture
           </text>
         </sprite>
         <position>
-          <x><subtract><value><window>centerx</window></value><value><divide><value>settings.width</value><value>2</value></divide></value></subtract></x>
-          <y><subtract><value><window>centery</window></value><value><divide><value>settings.height</value><value>2</value></divide></value></subtract></y>
+          <x><subtract><value><window><x><center /></x></window></value><value><divide><value>settings.width</value><value>2</value></divide></value></subtract></x>
+          <y><subtract><value><window><y><center /></y></window></value><value><divide><value>settings.height</value><value>2</value></divide></value></subtract></y>
         </position>
         <velocity>
           <x>0</x>
@@ -224,8 +224,8 @@ namespace invaders_fixture
           </text>
         </sprite>
         <position>
-          <x><subtract><value><window>centerx</window></value><value><divide><value>paused.width</value><value>2</value></divide></value></subtract></x>
-          <y><subtract><value><window>centery</window></value><value><divide><value>paused.height</value><value>2</value></divide></value></subtract></y>
+          <x><subtract><value><window><x><center /></x></window></value><value><divide><value>paused.width</value><value>2</value></divide></value></subtract></x>
+          <y><subtract><value><window><y><center /></y></window></value><value><divide><value>paused.height</value><value>2</value></divide></value></subtract></y>
         </position>
         <velocity>
           <x>0</x>

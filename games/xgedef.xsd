@@ -12,7 +12,7 @@
         * Everything else is the content of an element. Where the content is a
           number (valueType below) it is one number or one name, or a value tag
           that makes the number: <random><min>-7</min><max>7</max></random>, or
-          an operation such as <subtract><value><window>right</window></value><value>4</value></subtract>.
+          an operation such as <subtract><value><window><right /></window></value><value>4</value></subtract>.
           Arithmetic written as text stops the load.
         * What an object DOES is a list of command tags (the command groups
           below): <bounce />, <inc variable="paddle1.score" />, <push state="playing" />.
@@ -108,19 +108,25 @@
     <xs:attribute name="who" type="pronounType" use="optional" />
   </xs:attributeGroup>
 
-  <xs:simpleType name="windowMeasureType">
+  <xs:complexType name="windowMeasureType">
     <xs:annotation>
-      <xs:documentation><![CDATA[<window>: one of the window's measures, <window>right</window>: width and height, right and bottom (its edges, the same numbers), centerx and centery (its middle).]]></xs:documentation>
+      <xs:documentation><![CDATA[<window>: one of the window's measures, <window><right /></window>: <width /> and <height />, <right /> and <bottom /> (its edges, the same numbers), and its middle, <x><center /></x> across and <y><center /></y> down.]]></xs:documentation>
     </xs:annotation>
-    <xs:restriction base="xs:string">
-      <xs:enumeration value="width" />
-      <xs:enumeration value="height" />
-      <xs:enumeration value="right" />
-      <xs:enumeration value="bottom" />
-      <xs:enumeration value="centerx" />
-      <xs:enumeration value="centery" />
-    </xs:restriction>
-  </xs:simpleType>
+    <xs:choice>
+      <xs:element name="width" type="emptyType" />
+      <xs:element name="height" type="emptyType" />
+      <xs:element name="right" type="emptyType" />
+      <xs:element name="bottom" type="emptyType" />
+      <xs:element name="x" type="windowMiddleType" />
+      <xs:element name="y" type="windowMiddleType" />
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="windowMiddleType">
+    <xs:sequence>
+      <xs:element name="center" type="emptyType" />
+    </xs:sequence>
+  </xs:complexType>
 
   <xs:complexType name="randomType">
     <xs:annotation>
@@ -157,7 +163,7 @@
         subtract of three values:
           <x>
             <subtract>
-              <value><window>centerx</window></value>
+              <value><window><x><center /></x></window></value>
               <value><divide><value>title.width</value><value>2</value></divide></value>
             </subtract>
           </x>
