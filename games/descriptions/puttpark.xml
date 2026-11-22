@@ -141,8 +141,8 @@
             </collision>
             <collision class="cup">
               <play sound="cup" />
-              <set variable="self.velocity.x">0</set>
-              <set variable="self.velocity.y">0</set>
+              <set who="self" variable="velocity.x">0</set>
+              <set who="self" variable="velocity.y">0</set>
               <set variable="card.total"><add><value>card.total</value><value>card.strokes</value></add></set>
               <set variable="card.strokes">0</set>
               <inc variable="card.sunk" />

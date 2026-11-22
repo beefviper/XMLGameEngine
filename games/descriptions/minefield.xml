@@ -144,12 +144,12 @@
                 <condition variable="open"><equal>0</equal><trigger action="reveal" /></condition>
               </action>
               <action name="reveal">
-                <set variable="self.open">1</set>
-                <count class="mine" into="self.mine"><here /></count>
-                <count class="mine" into="self.near"><around /></count>
+                <set who="self" variable="open">1</set>
+                <count who="self" class="mine" into="mine"><here /></count>
+                <count who="self" class="mine" into="near"><around /></count>
                 <condition variable="mine">
                   <equal>1</equal>
-                  <set variable="self.near">9</set>
+                  <set who="self" variable="near">9</set>
                   <become sprite="boom" />
                   <set variable="status.lost">1</set>
                   <trigger object="squares" action="show" />
@@ -168,13 +168,13 @@
               </action>
               <!-- a flag on, or off again: open is 0 closed, 1 open, 2 flagged -->
               <action name="flag">
-                <condition variable="open"><unequal>1</unequal><set variable="self.open"><subtract><value>2</value><value>self.open</value></subtract></set></condition>
+                <condition variable="open"><unequal>1</unequal><set who="self" variable="open"><subtract><value>2</value><value><self>open</self></value></subtract></set></condition>
                 <condition variable="open"><equal>2</equal><become sprite="flag" /><inc variable="status.flags" /></condition>
                 <condition variable="open"><equal>0</equal><become from="flag" sprite="closed" /><dec variable="status.flags" /></condition>
               </action>
               <!-- the game lost: where the mines were -->
               <action name="show">
-                <count class="mine" into="self.mine"><here /></count>
+                <count who="self" class="mine" into="mine"><here /></count>
                 <condition variable="mine"><equal>1</equal><become from="closed" sprite="mine" /></condition>
               </action>
             </actions>

@@ -465,9 +465,9 @@ TEST_CASE("update=\"live\" on a half of a position: worked out again every frame
 TEST_CASE("a live variable follows what it reads; one worked out once keeps its start", "[live][follow]")
 {
 	const Scratch file(box("ball", 100, 50, "<velocity><x>6000</x><y>0</y></velocity><variables><variable name=\"base\">2</variable>"
-		"<variable name=\"twice\" update=\"live\"><multiply><value>self.base</value><value>2</value></multiply></variable>"
-		"<variable name=\"start\"><multiply><value>self.base</value><value>2</value></multiply></variable>"
-		"<variable name=\"across\" update=\"live\"><smallest><value>self.x</value><value>500</value></smallest></variable></variables>"),
+		"<variable name=\"twice\" update=\"live\"><multiply><value><self>base</self></value><value>2</value></multiply></variable>"
+		"<variable name=\"start\"><multiply><value><self>base</self></value><value>2</value></multiply></variable>"
+		"<variable name=\"across\" update=\"live\"><smallest><value><self>x</self></value><value>500</value></smallest></variable></variables>"),
 		"<set variable=\"ball.base\">10</set>");
 	Played play(file.path);
 
@@ -483,10 +483,10 @@ TEST_CASE("a live variable follows what it reads; one worked out once keeps its 
 
 TEST_CASE("a live heading turns its object, and a spawned copy follows for itself", "[live][follow]")
 {
-	const Scratch file(box("gun", 300, 400, "<heading update=\"live\"><multiply><value>self.aim</value><value>10</value></multiply></heading><variables><variable name=\"aim\">3</variable></variables>"),
+	const Scratch file(box("gun", 300, 400, "<heading update=\"live\"><multiply><value><self>aim</self></value><value>10</value></multiply></heading><variables><variable name=\"aim\">3</variable></variables>"),
 		"<inc variable=\"gun.aim\" /><spawn object=\"tag\" />",
 		"<object name=\"tag\"><sprite><rectangle><width>4</width><height>4</height></rectangle></sprite>"
-		"<position><x update=\"live\"><add><value>gun.x</value><value>self.gap</value></add></x><y>0</y></position><variables><variable name=\"gap\">7</variable></variables></object>");
+		"<position><x update=\"live\"><add><value>gun.x</value><value><self>gap</self></value></add></x><y>0</y></position><variables><variable name=\"gap\">7</variable></variables></object>");
 	Played play(file.path);
 
 	CHECK(play.get("gun").heading == Approx(30));

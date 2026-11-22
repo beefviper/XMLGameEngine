@@ -223,10 +223,10 @@
         <!-- out of play while he drops (the state down), a stand-in in his place -->
         <action name="lose">
           <play sound="hit" />
-          <set variable="down.downed.x">self.x</set>
-          <set variable="down.downed.y">self.y</set>
+          <set variable="down.downed.x"><self>x</self></set>
+          <set variable="down.downed.y"><self>y</self></set>
           <set variable="down.downed.velocity.y">-180</set>
-          <set variable="self.down">1</set>
+          <set who="self" variable="down">1</set>
           <die />
         </action>
       </actions>
@@ -305,10 +305,10 @@
         <collision sprite="flipped">
           <collision class="floor">
             <condition variable="down"><atleast>1</atleast></condition>
-            <set variable="self.velocity.x">0</set>
+            <set who="self" variable="velocity.x">0</set>
           </collision>
           <collision class="brother">
-            <inc variable="other.score">800</inc>
+            <inc who="other" variable="score">800</inc>
             <trigger action="kicked" />
           </collision>
         </collision>
@@ -323,16 +323,16 @@
             <bounce />
           </collision>
           <collision class="brother">
-            <condition object="other" variable="blink"><atmost>0</atmost></condition>
-            <trigger object="other" action="lose" />
+            <condition who="other" variable="blink"><atmost>0</atmost></condition>
+            <trigger who="other" action="lose" />
           </collision>
         </collision>
       </collisions>
       <actions>
         <action name="getup">
           <become sprite="walking" />
-          <set variable="self.velocity.x"><multiply><value>self.way</value><value>self.speed</value></multiply></set>
-          <set variable="self.down">0</set>
+          <set who="self" variable="velocity.x"><multiply><value><self>way</self></value><value><self>speed</self></value></multiply></set>
+          <set who="self" variable="down">0</set>
         </action>
         <!-- the POW: one standing on a floor hops, and on its feet goes
              over; one in the air cannot jump, and is left alone -->
@@ -347,8 +347,8 @@
           <play sound="kick" />
           <spawn object="coin"><position><x>6</x><y><subtract><value>top</value><value>9</value></subtract></y></position></spawn>
           <become sprite="kicked" />
-          <set variable="self.velocity.x">0</set>
-          <set variable="self.velocity.y"><subtract><value>0</value><value>hop</value></subtract></set>
+          <set who="self" variable="velocity.x">0</set>
+          <set who="self" variable="velocity.y"><subtract><value>0</value><value>hop</value></subtract></set>
         </action>
       </actions>
       <variables>
@@ -368,19 +368,19 @@
              once down lies still (the rule for a floor) -->
         <timer sprite="flipped">
           <after>0</after>
-          <set variable="self.way">
+          <set who="self" variable="way">
             <sign>
-              <value>self.velocity.x</value>
+              <value><self>velocity.x</self></value>
             </sign>
           </set>
-          <set variable="self.down">1</set>
+          <set who="self" variable="down">1</set>
         </timer>
         <!-- left there, it gets up by itself, faster and red (blue the
              second time, the rule for a floor) -->
         <timer sprite="flipped">
           <after>8</after>
-          <inc variable="self.speed"><divide><value>crawl</value><value>2</value></divide></inc>
-          <inc variable="self.ups" />
+          <inc who="self" variable="speed"><divide><value>crawl</value><value>2</value></divide></inc>
+          <inc who="self" variable="ups" />
           <trigger action="getup" />
           <become style="angry" />
         </timer>
@@ -395,13 +395,13 @@
         <collision class="brother" through="floor">
           <collision sprite="walking">
             <become sprite="flipped" />
-            <set variable="self.velocity.y"><subtract><value>0</value><value>hop</value></subtract></set>
+            <set who="self" variable="velocity.y"><subtract><value>0</value><value>hop</value></subtract></set>
             <play sound="flip" />
           </collision>
           <collision sprite="flipped">
             <condition variable="down"><atleast>1</atleast></condition>
             <trigger action="getup" />
-            <set variable="self.velocity.y"><subtract><value>0</value><value>hop</value></subtract></set>
+            <set who="self" variable="velocity.y"><subtract><value>0</value><value>hop</value></subtract></set>
           </collision>
         </collision>
       </collisions>
@@ -439,8 +439,8 @@
             <bounce />
           </collision>
           <collision class="brother">
-            <condition object="other" variable="blink"><atmost>0</atmost></condition>
-            <trigger object="other" action="lose" />
+            <condition who="other" variable="blink"><atmost>0</atmost></condition>
+            <trigger who="other" action="lose" />
           </collision>
         </collision>
         <!-- bumped from below through a floor, the look it leads to first:
@@ -448,25 +448,25 @@
         <collision class="brother" through="floor">
           <collision sprite="mad">
             <become sprite="flipped" />
-            <set variable="self.velocity.y"><subtract><value>0</value><value>hop</value></subtract></set>
+            <set who="self" variable="velocity.y"><subtract><value>0</value><value>hop</value></subtract></set>
             <play sound="flip" />
           </collision>
           <collision sprite="walking">
             <become sprite="mad" />
-            <set variable="self.velocity.x">
+            <set who="self" variable="velocity.x">
               <multiply>
-                <value><sign><value>self.velocity.x</value></sign></value>
-                <value>self.speed</value>
+                <value><sign><value><self>velocity.x</self></value></sign></value>
+                <value><self>speed</self></value>
                 <value>2</value>
               </multiply>
             </set>
-            <set variable="self.velocity.y"><subtract><value>0</value><value>hop</value></subtract></set>
+            <set who="self" variable="velocity.y"><subtract><value>0</value><value>hop</value></subtract></set>
             <play sound="mad" />
           </collision>
           <collision sprite="flipped">
             <condition variable="down"><atleast>1</atleast></condition>
             <trigger action="getup" />
-            <set variable="self.velocity.y"><subtract><value>0</value><value>hop</value></subtract></set>
+            <set who="self" variable="velocity.y"><subtract><value>0</value><value>hop</value></subtract></set>
           </collision>
         </collision>
       </collisions>
@@ -500,13 +500,13 @@
         <collision class="brother" through="floor">
           <collision sprite="walking">
             <become sprite="flipped" />
-            <set variable="self.velocity.y"><subtract><value>0</value><value>hop</value></subtract></set>
+            <set who="self" variable="velocity.y"><subtract><value>0</value><value>hop</value></subtract></set>
             <play sound="flip" />
           </collision>
           <collision sprite="flipped">
             <condition variable="down"><atleast>1</atleast></condition>
             <trigger action="getup" />
-            <set variable="self.velocity.y"><subtract><value>0</value><value>hop</value></subtract></set>
+            <set who="self" variable="velocity.y"><subtract><value>0</value><value>hop</value></subtract></set>
           </collision>
         </collision>
       </collisions>
@@ -554,7 +554,7 @@
           <despawn />
         </collision>
         <collision class="brother">
-          <inc variable="other.score">800</inc>
+          <inc who="other" variable="score">800</inc>
           <play sound="coin" />
           <despawn />
         </collision>
@@ -867,7 +867,7 @@
               </animation>
               <collisions>
                 <collision class="brother">
-                  <inc variable="other.score">800</inc>
+                  <inc who="other" variable="score">800</inc>
                   <play sound="coin" />
                   <despawn />
                 </collision>

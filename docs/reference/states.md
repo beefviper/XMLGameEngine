@@ -146,7 +146,7 @@ A condition is checked every frame while its state (or scene) is current. It hol
 - **`sprite="settling"`** looks only at the matched objects showing that look. With no test tag, showing it is the test: `<condition object="table" sprite="settling">` holds while the table shows `settling`. A look none of them has stops the load. Where a game is in its turn (betting, playing, settling) is a look of one object, changed with `<become>`, not a number.
 
 - **`<lowest />` and `<highest />`** are tests too: they hold for the one matched whose variable is lowest (or highest) of all those matched, the first of a tie.
-- **`self` and `others`.** In a condition matching a class (or a group), `self` is each one it holds for and `others` the rest of those it matches: `<inc variable="self.score">self.got</inc>`, `<inc variable="others.score">26</inc>`, and `sprite="self"` in a `<become>` is the look named after it.
+- **`self` and `others`.** In a condition matching a class (or a group), `self` is each one it holds for and `others` the rest of those it matches: `<inc who="self" variable="score"><self>got</self></inc>`, `<inc who="others" variable="score">26</inc>`, and `as="self"` in a `<become>` is the look named after it.
   - What names `self` or `others` runs for each one it holds for, in order; the rest of its commands once, after.
   - With class= and no test at all, it holds for each one there.
   - A total (`total=`, `<remaining>`) holds for no one object, so its commands cannot name them.
@@ -157,7 +157,7 @@ A condition is checked every frame while its state (or scene) is current. It hol
 <condition object="table" sprite="done">
   <condition class="player" variable="score" total="highest"><atleast>100</atleast>
     <condition class="player" variable="score"><lowest />
-      <become object="over.winner" sprite="self" />
+      <become object="over.winner" as="self" />
       <push state="over" />
     </condition>
   </condition>

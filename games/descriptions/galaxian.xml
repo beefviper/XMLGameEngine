@@ -143,15 +143,15 @@
     <path name="dive">
       <speed>divespeed</speed>
       <!-- whoever dives, alone or taken along by a flagship, is worth more until it wraps -->
-      <step><x>-24</x><y>-24</y><play sound="dive" /><set variable="self.pays">self.diving</set></step>
+      <step><x>-24</x><y>-24</y><play sound="dive" /><set who="self" variable="pays"><self>diving</self></set></step>
       <step><x>-24</x><y>40</y></step>
       <step><x>
         <divide>
-          <value><subtract><value>ship.x</value><value>self.x</value></subtract></value>
+          <value><subtract><value>ship.x</value><value><self>x</self></value></subtract></value>
           <value>2</value>
         </divide>
       </x><y>160</y><fire object="bomb" /></step>
-      <step><x><subtract><value>ship.x</value><value>self.x</value></subtract></x><y>160</y><fire object="bomb" /></step>
+      <step><x><subtract><value>ship.x</value><value><self>x</self></value></subtract></x><y>160</y><fire object="bomb" /></step>
       <step><x>0</x><y>
         <subtract>
           <value><add><value><window>bottom</window></value><value>alienheight</value></add></value>
@@ -457,11 +457,11 @@
                 <!-- back in at the top, on its way home -->
                 <collision edge="bottom">
                   <wrap />
-                  <set variable="self.pays">self.worth</set>
+                  <set who="self" variable="pays"><self>worth</self></set>
                 </collision>
                 <collision object="shot">
                   <die />
-                  <inc variable="ship.score">self.pays</inc>
+                  <inc variable="ship.score"><self>pays</self></inc>
                   <play sound="hit" />
                   <spawn object="boom" />
                 </collision>

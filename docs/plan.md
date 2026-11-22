@@ -120,9 +120,6 @@ Games the vocabulary cannot say yet: [near misses](designs/54-games.md#near-miss
 - **Conditions** ([states-and-conditions](designs/07-states-and-conditions.md)): object-level conditions, a total inside a value, conditions on edge rules.
 - **Scenes** ([scenes](designs/12-scenes.md)): Berserk's larger grid of rooms, which needs maps made while playing.
 - **Demos** ([time](designs/29-time.md#open)): the shipped games have none; record them again (`xgecli <game> --record`), about thirty seconds each.
-- **Reserved names:** an object, group, member, map or state may not be called `self`, `other`, `others`, `window` or `color`, nor anything a number, because dotted names mix the game's own names with the engine's words (`self.x`, `other.score`, `window.width`, `red`).
-  - Variables and sounds are free (only ever after a dot, or named by `sound=`), and `top` is free (`top.rank` is read before any name).
-  - Look for a way to say those things that needs no reserved words, so any name is free (an object may already be called `object`).
 
 ### The games
 

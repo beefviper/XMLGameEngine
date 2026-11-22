@@ -158,7 +158,7 @@ A `<text>` is pieces, in any order, then `<size>`, `<color>` and `<font>` (or a 
 | Piece | Shows |
 |---|---|
 | `<content>PONG</content>` | the words as written |
-| `<number>paddle1.score</number>` | a number; one `owner.variable` is live and redraws when it changes (`self.score` is the object's own, also in a group's piece taken by `from=`), anything else is worked out once |
+| `<number>paddle1.score</number>` | a number; one `owner.variable` is live and redraws when it changes (`<self>score</self>` is the object's own, also in a group's piece taken by `from=`), anything else is worked out once |
 | `<letter>entry.first</letter>` | a number as a letter, 0 is A and 25 Z, wrapping: initials are three variables |
 | `<choose><by>value</by><word>LOVE</word><word>15</word>...</choose>` | one of its words, the first for 0 (past either end, the end word), live like a number |
 
@@ -259,8 +259,8 @@ An object with several named sprites and no unnamed animation has **looks**. It 
 
 ```xml
 <sprite name="waiting" />
-<sprite name="open"><text style="offer"><number>self.offer</number></text></sprite>
-<sprite name="written"><text style="points"><number>self.score</number></text></sprite>
+<sprite name="open"><text style="offer"><number><self>offer</self></number></text></sprite>
+<sprite name="written"><text style="points"><number><self>score</self></number></text></sprite>
 ```
 - **Looks that move.** A named `<animation name="walking">` is a look, picked by name like a sprite. The looks are the named animations in order, then the sprites, then the animations played `<once />`, so an object never starts as one of those. Animations are all named or none.
 

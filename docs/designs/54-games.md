@@ -143,7 +143,7 @@ The author listed about thirty non-scrolling Atari 2600 games and asked for five
 - **Pitfall!** Screens are scenes built from pieces; each is entered through an unseen strip at each side. A never-drawn `status` object holds score, lives and clock, so resetting Harry costs nothing. A rolling log knocks Harry back, so only a jump passes. Crocodiles are two looks with a timer each.
 - **Missile Command.** The base `<aim>`s at the sight and fires; each counter-missile trails a `<tether>`. Its burst is an animation tested by pixel. Waves are scenes, each `from=` the one before.
 - **Combat.** One group of tanks with an inner group per player; shells `<knock>` the tank back; pixel tanks bounce off box walls.
-- **Air-Sea Battle.** Guns with a heading, pointed by `<set variable="self.heading">`. Plane lanes start off the side they fly in from, so a revealed plane comes back from there.
+- **Air-Sea Battle.** Guns with a heading, pointed by `<set who="self" variable="heading">`. Plane lanes start off the side they fly in from, so a revealed plane comes back from there.
 - **Megamania.** Eight waves as a `from=` chain. Energy is a named timer (`energy.level`) drawn as a bar.
 - **Atlantis.** The third wave keeps the second's scene but replaces its `launch` timer and `quota` condition by name. Ships drop a lane at the right edge; a ship cannot leave the screen first, since `<wrap />` is the only edge rule that waits until it is off.
 - **Adventure.** One `<carry />` rule for class `item`; dragons wake by a distance holding a flag's test (a condition in a condition). A room's walls in another colour must be written again, since a take replaces a whole sprite.

@@ -98,21 +98,21 @@ An object out of play does nothing when its action is pressed or triggered; lett
 | `<enter scene="room2" />`, `<enter way="east" />` | makes that scene current; the one left stays as it was |
 | `<reveal object="blocks">count</reveal>` | brings back the first `count` (default 1) out of play, where they started |
 | `<fire object="shot" />` | launches a copy of a piece (a top-level `<objects>` entry; anything else stops the load): along an aim; else from its facing side; else from its nose along a heading; else from its top with the shot's own velocity |
-| `<spawn object="ball">`, `<spawn object="debris"><count>4</count></spawn>` | a new copy (or `<count>` of them), placed and moving as its `<position>`, `<velocity>`, `<acceleration>` say, read as it runs: `<x><centered><add><value>self.x</value><value>5</value></add></centered></x>`. A half of the position left out is the middle of the object running it (with none, where the piece says); its velocity left out is the piece's own. Refused only when not one may be made |
+| `<spawn object="ball">`, `<spawn object="debris"><count>4</count></spawn>` | a new copy (or `<count>` of them), placed and moving as its `<position>`, `<velocity>`, `<acceleration>` say, read as it runs: `<x><centered><add><value><self>x</self></value><value>5</value></add></centered></x>`. A half of the position left out is the middle of the object running it (with none, where the piece says); its velocity left out is the piece's own. Refused only when not one may be made |
 | `<despawn />`, `<despawn object="bomb" />` | takes it, or every copy of that name, out of the game ([spawn and despawn](objects.md#spawn-and-despawn)) |
 
 ## Numbers
 
 | Command | Does |
 |---|---|
-| `<inc variable="ship.score" />`, `<inc variable="ship.score">self.worth</inc>` | adds 1, or the amount |
+| `<inc variable="ship.score" />`, `<inc variable="ship.score"><self>worth</self></inc>` | adds 1, or the amount |
 | `<dec variable="frog.lives" />` | takes 1, or the amount, off; may go below 0 |
 | `<set variable="target">value</set>`, `<set group="dice" variable="kept">0</set>` | an object's variable or a live number (`x`, `y`, `velocity.x`, `velocity.y`, `heading`, `altitude`, `rise`, `light`, `blink`). With `group=`, every member's: `variable=` is then the members' own name for it |
 | `<copy variable="ship.score" into="best.score" />` | the second takes the first's number now |
 | `<count class="black" into="score.black" />` | how many of that class are in play; with [`<here />` or `<around>`](maps.md#pushing-merging-and-counting), how many in those cells |
 | `<rank variable="entry.score" into="table" />` | the entry takes its place in a [table of the best](states.md#a-table-of-the-best) |
 
-The variable must belong to an object; one no object has stops the load. So does a group's name in `variable=` (`dice.kept`), since it cannot say which member: name one (`dice.2.kept`, `self.kept`, `players.current.score` for the [player on its turn](states.md#players-as-a-group)), or set them all with `group=`.
+The variable must belong to an object; one no object has stops the load. So does a group's name in `variable=` (`dice.kept`), since it cannot say which member: name one (`dice.2.kept`, `who="self" variable="kept"`, `players.current.score` for the [player on its turn](states.md#players-as-a-group)), or set them all with `group=`.
 
 ## Look and sound
 
@@ -138,11 +138,11 @@ Actions that trigger one another in a circle stop the load, except through a tri
 
 ## Conditions in an action
 
-An action may hold a `<condition>` among its commands. Its test is the same as a state's, with `self` and a bare `variable=` meaning this object; its commands run when it holds, in their place in the list.
+An action may hold a `<condition>` among its commands. Its test is the same as a state's, with `who="self"` and a bare `variable=` meaning this object; its commands run when it holds, in their place in the list.
 
 ```xml
 <action name="look">
-  <count class="spot" into="self.home"><here /></count>
+  <count who="self" class="spot" into="home"><here /></count>
   <condition variable="home"><equal>1</equal><become sprite="home" /></condition>
   <condition variable="home"><equal>0</equal><become sprite="crate" /></condition>
 </action>
@@ -166,7 +166,7 @@ there is no key named 'spcae' (did you mean 'space'?)
 - a condition's `variable=` that nothing it looks at has, as its own variable or as a number the engine keeps (`x`, `moves`, ...);
 - a `<show object=>` that names no object or group, and a `<trigger from=>` that is no look of what it names (a condition's or a rule's `sprite=` was already checked);
 - a holder's `<by variable=>`, `<counts variable=>`, `<wild variable=>` or `<accepts>` condition, or a cell check's `<alike variable=>`, naming a variable no object has;
-- an object, group, member, map or state called `self`, `other`, `others`, `window` or `color` (the words a dotted name can start with), or anything called by a number. A variable or a sound may be called a word (a card's `color`).
+- anything called by a number. Every word is free as a name (`self`, `window`, `color`): the engine's own are tags ([pronouns](format.md#pronouns)).
 - a key the engine does not have, a colour that is not one of the engine's names;
 - a command where it does nothing (a `<move>` in an `<input>`), listing what can go there;
 - an `<inc>` or `<dec>` of a variable no object has.

@@ -1361,19 +1361,15 @@ namespace xge
 		}
 
 
-		// A name the engine's own words would hide. What starts a dotted
-		// name (an object, group, member, map or state) may not be one of the
-		// engine's words that start one (self.x, window.width, red);
-		// nothing may be a number. A variable is only ever after the dot, so
-		// its name may be a word (a card's color).
-		void refuseReserved(const std::string& name, const char* kind, const std::string& where, bool startsNames = true)
+		// A name that reads as a number. The engine's own words are tags
+		// (<self>, <window>), so every other name is the game's.
+		void refuseNumber(const std::string& name, const char* kind, const std::string& where)
 		{
-			static const std::set<std::string> reserved{ "self", "other", "others", "window", "color" };
 			const bool number = !name.empty() && std::any_of(name.begin(), name.end(), [](char c) { return std::isdigit(static_cast<unsigned char>(c)) != 0; })
 				&& std::all_of(name.begin(), name.end(), [](char c) { return std::isdigit(static_cast<unsigned char>(c)) != 0 || c == '.' || c == '-'; });
-			if ((startsNames && reserved.count(name)) || number)
+			if (number)
 			{
-				fail(where, std::string(kind) + " may not be called '" + name + "': " + (number ? "a number" : "the engine's own word") + " reads that way; give it another name");
+				fail(where, std::string(kind) + " may not be called '" + name + "': a number reads that way; give it another name");
 			}
 		}
 
@@ -1385,7 +1381,7 @@ namespace xge
 			for (std::unique_ptr<XmlNode> variable = variablesNode->getFirstChild(); variable != nullptr; variable = variable->getNextSibling())
 			{
 				const std::string name = variable->getAttribute("name");
-				refuseReserved(name, "a variable", where, false);
+				refuseNumber(name, "a variable", where);
 				WrittenValue value = readValue(*variable, where + " > <variable name=\"" + name + "\">");
 
 				// Declaring a name twice keeps the later value, in the earlier place.
@@ -1908,7 +1904,7 @@ namespace xge
 			WrittenObject writtenObject;
 			writtenObject.line = object.line();
 			writtenObject.name = object.getAttribute("name");
-			refuseReserved(writtenObject.name, "an object", "<object name=\"" + writtenObject.name + "\">");
+			refuseNumber(writtenObject.name, "an object", "<object name=\"" + writtenObject.name + "\">");
 			writtenObject.objClass = object.getAttribute("class");
 
 			const std::string where = "object '" + writtenObject.name + "'";
@@ -2364,7 +2360,7 @@ namespace xge
 
 				++count;
 				const std::string ownName = child->getAttribute("name");
-				if (!ownName.empty()) { refuseReserved(ownName, "a member", where); }
+				if (!ownName.empty()) { refuseNumber(ownName, "a member", where); }
 				const std::string memberName = ownName.empty() ? name + "." + std::to_string(count) : ownName;
 				const std::string here = "object '" + memberName + "' (a member of " + where + ")";
 
@@ -2501,7 +2497,7 @@ namespace xge
 		{
 			const std::string name = group.getAttribute("name");
 			const std::string where = "group '" + name + "'";
-			refuseReserved(name, "a group", where);
+			refuseNumber(name, "a group", where);
 
 			GroupShared own = outer;
 			// Its members are of one kind (Kind): their rules are written
@@ -2574,7 +2570,7 @@ namespace xge
 			MapLayout map;
 			map.name = node.getAttribute("name");
 			const std::string where = "map '" + map.name + "'";
-			refuseReserved(map.name, "a map", where);
+			refuseNumber(map.name, "a map", where);
 			const Children children(node);
 
 			const XmlNode* tile = children.find("tile");
@@ -2683,7 +2679,7 @@ namespace xge
 		{
 			WrittenSound written;
 			written.name = sound.getAttribute("name");
-			refuseReserved(written.name, "a sound", "<sound name=\"" + written.name + "\">", false);
+			refuseNumber(written.name, "a sound", "<sound name=\"" + written.name + "\">");
 			written.wave = sound.getAttribute("wave");
 
 			const std::string where = "sound '" + written.name + "'";
@@ -2852,6 +2848,11 @@ namespace xge
 			written.line = node.line();
 			written.filterClass = node.getAttribute("class");
 			written.filterObject = node.getAttribute("object");
+			if (const std::string who = readWho(node, here); !who.empty())
+			{
+				if (!written.filterObject.empty()) { fail(here, "has object= and who=; who= says which object, so give one"); }
+				written.filterObject = who;
+			}
 			written.variableName = node.getAttribute("variable");
 			written.total = node.getAttribute("total");
 			written.distance = node.getAttribute("distance");
@@ -3165,7 +3166,7 @@ namespace xge
 			WrittenState writtenState{};
 			writtenState.line = state.line();
 			writtenState.name = state.getAttribute("name");
-			refuseReserved(writtenState.name, "a state", "<state name=\"" + writtenState.name + "\">");
+			refuseNumber(writtenState.name, "a state", "<state name=\"" + writtenState.name + "\">");
 			writtenState.from = state.getAttribute("from");
 
 			const std::string where = "state '" + writtenState.name + "'";

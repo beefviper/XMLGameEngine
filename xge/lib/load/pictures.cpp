@@ -154,7 +154,7 @@ namespace xge
 				if (const auto reference = parseVariableReference(written.value.text))
 				{
 					std::string owner = reference->first;
-					if (self && owner == "self") { owner = self->name; }
+					if (self && owner == "@self") { owner = self->name; }
 					if (self && self->inGroup(owner) && objectVariables.count(self->name + "." + reference->second))
 					{
 						owner = self->name;

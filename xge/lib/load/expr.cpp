@@ -634,7 +634,7 @@ namespace xge
 					{
 						const std::vector<const std::string*> texts = value.expressions();
 						const bool own = std::any_of(texts.begin(), texts.end(),
-							[](const std::string* text) { return text->find("self.") != std::string::npos; });
+							[](const std::string* text) { return text->find("@self.") != std::string::npos; });
 						if (own || namesLive(value))
 						{
 							live = std::make_shared<const WrittenValue>(value);
@@ -1048,14 +1048,14 @@ namespace xge
 		// only reads the compiled one again. The symbols it reads are bound
 		// by reference, so it always sees the numbers as they are now.
 		// self., while one object's test is worked out, is that object's.
-		if (selfNow && text.compare(0, 5, "self.") == 0)
+		if (selfNow && text.compare(0, 6, "@self.") == 0)
 		{
-			selfText.assign(*selfNow).append(text, 4, std::string::npos);
+			selfText.assign(*selfNow).append(text, 5, std::string::npos);
 			return evaluateExpression(selfText, where);
 		}
-		if (otherNow && text.compare(0, 6, "other.") == 0)
+		if (otherNow && text.compare(0, 7, "@other.") == 0)
 		{
-			selfText.assign(*otherNow).append(text, 5, std::string::npos);
+			selfText.assign(*otherNow).append(text, 6, std::string::npos);
 			return evaluateExpression(selfText, where);
 		}
 		auto found = compiled.find(text);
@@ -1219,7 +1219,7 @@ namespace xge
 				{
 					named.push_back(each);
 					if (own) { nameSelfIn(named.front(), selfName); }
-					if (theirs) { renameObjectIn(named, "other", otherName); }
+					if (theirs) { renameObjectIn(named, "@other", otherName); }
 				}
 				const WrittenCommand& making = own || theirs ? named.front() : each;
 				Command made = onLine(each.line, [&] { return makeCommand(making, [&](const WrittenValue& value) { return evaluate(value, where); }); });

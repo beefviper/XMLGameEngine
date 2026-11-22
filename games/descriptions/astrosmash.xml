@@ -188,7 +188,7 @@
                   <value>
                     <subtract>
                       <value>ship.score</value>
-                      <value><divide><value>self.worth</value><value>2</value></divide></value>
+                      <value><divide><value><self>worth</self></value><value>2</value></divide></value>
                     </subtract>
                   </value>
                 </largest>
@@ -202,7 +202,7 @@
               <spawn object="chip"><count>2</count></spawn>
             </collision>
             <collision object="shot">
-              <inc variable="ship.score">self.worth</inc>
+              <inc variable="ship.score"><self>worth</self></inc>
               <set variable="ship.peak">
                 <largest>
                   <value>ship.peak</value>

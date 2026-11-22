@@ -108,7 +108,7 @@
         <hitbox><all>2</all></hitbox>
         <collision edge="horizontal">
           <bounce />
-          <set variable="self.luck"><random><min>0</min><max>1</max></random></set>
+          <set who="self" variable="luck"><random><min>0</min><max>1</max></random></set>
         </collision>
         <collision edge="bottom">
           <despawn />
@@ -126,8 +126,8 @@
         <collision class="girder" sprite="down">
           <condition variable="velocity.x"><equal>0</equal></condition>
           <condition variable="velocity.y"><equal>0</equal></condition>
-          <set variable="self.velocity.x">self.way</set>
-          <set variable="self.luck"><random><min>0</min><max>1</max></random></set>
+          <set who="self" variable="velocity.x"><self>way</self></set>
+          <set who="self" variable="luck"><random><min>0</min><max>1</max></random></set>
           <become sprite="rolling" />
         </collision>
         <!-- into the oil drum: it flares up, and lets out a fireball -->
@@ -147,7 +147,7 @@
       </collisions>
       <actions>
         <action name="descend">
-          <set variable="self.way"><subtract><value>0</value><value>self.velocity.x</value></subtract></set>
+          <set who="self" variable="way"><subtract><value>0</value><value><self>velocity.x</self></value></subtract></set>
           <become sprite="down" />
           <climb direction="down" class="ladder">90</climb>
         </action>
@@ -200,8 +200,8 @@
         <collision class="girder" sprite="climbing">
           <condition variable="velocity.x"><equal>0</equal></condition>
           <condition variable="velocity.y"><equal>0</equal></condition>
-          <set variable="self.velocity.x">self.way</set>
-          <set variable="self.luck"><random><min>0</min><max>1</max></random></set>
+          <set who="self" variable="velocity.x"><self>way</self></set>
+          <set who="self" variable="luck"><random><min>0</min><max>1</max></random></set>
           <become sprite="burning" />
         </collision>
         <collision object="man">
@@ -213,7 +213,7 @@
       </collisions>
       <actions>
         <action name="rise">
-          <set variable="self.way">self.velocity.x</set>
+          <set who="self" variable="way"><self>velocity.x</self></set>
           <become sprite="climbing" />
           <climb direction="up" class="ladder">60</climb>
         </action>
@@ -226,7 +226,7 @@
         <timer sprite="burning">
           <every><random><min>1.5</min><max>4</max></random></every>
           <reverse />
-          <set variable="self.luck"><random><min>0</min><max>1</max></random></set>
+          <set who="self" variable="luck"><random><min>0</min><max>1</max></random></set>
         </timer>
       </timers>
     </object>
@@ -433,13 +433,13 @@
             </collision>
             <collision class="girder">
               <land />
-              <set variable="self.jumped">0</set>
+              <set who="self" variable="jumped">0</set>
             </collision>
             <!-- down from a jump over a barrel -->
             <collision class="girder">
               <condition variable="over"><equal>1</equal></condition>
-              <set variable="self.over">0</set>
-              <inc variable="self.score">100</inc>
+              <set who="self" variable="over">0</set>
+              <inc who="self" variable="score">100</inc>
               <play sound="points" />
             </collision>
             <collision class="barrel">

@@ -121,18 +121,18 @@
           <rows>4</rows>
           <cells />
           <group name="tiles" class="tile">
-            <sprite><text style="number"><number>self.value</number></text></sprite>
+            <sprite><text style="number"><number><self>value</self></number></text></sprite>
             <collisions>
               <!-- meeting an equal number: one, the sum -->
               <collision class="tile">
                 <merge variable="value" />
-                <inc variable="status.score">self.value</inc>
+                <inc variable="status.score"><self>value</self></inc>
                 <play sound="merge" />
               </collision>
             </collisions>
             <actions>
               <action name="count">
-                <count class="tile" into="self.pairs"><around><straight /><alike variable="value" /></around></count>
+                <count who="self" class="tile" into="pairs"><around><straight /><alike variable="value" /></around></count>
               </action>
             </actions>
             <variables>

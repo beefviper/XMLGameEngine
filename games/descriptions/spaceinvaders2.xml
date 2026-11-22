@@ -268,7 +268,7 @@
               <inc variable="player.score">
                 <multiply>
                   <value>50</value>
-                  <value><ceiling><value>self.worth</value></ceiling></value>
+                  <value><ceiling><value><self>worth</self></value></ceiling></value>
                 </multiply>
               </inc>
               <spawn object="blast" />
@@ -322,7 +322,7 @@
               <move direction="down">10</move>
             </collision>
             <collision object="bullet">
-              <inc variable="player.score">self.worth</inc>
+              <inc variable="player.score"><self>worth</self></inc>
               <spawn object="blast" />
               <play sound="alienhit" />
               <die />

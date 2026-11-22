@@ -97,8 +97,16 @@
     <xsl:variable name="own" select="substring-after($text, '.')" />
     <xsl:if test="not(string(number($text)) != 'NaN'
         or /game/variables/variable[@name = $text]
-        or ($self and (ancestor::position or ancestor::velocity or ancestor::variable) and (starts-with($text, concat($self/@name, '.')) or starts-with($text, 'self.')) and $self/variables/variable[@name = $own]))">
+        or ($self and (ancestor::position or ancestor::velocity or ancestor::variable) and starts-with($text, concat($self/@name, '.')) and $self/variables/variable[@name = $own]))">
       <xsl:call-template name="gap"><xsl:with-param name="what" select="concat('the name ', $quote, $text, $quote)" /></xsl:call-template>
+    </xsl:if>
+  </xsl:template>
+
+  <!-- <self>, where the object starts, names one of its own variables. -->
+  <xsl:template mode="covers" match="self">
+    <xsl:variable name="self" select="ancestor::object[1]" />
+    <xsl:if test="not($self and (ancestor::position or ancestor::velocity or ancestor::variable) and $self/variables/variable[@name = normalize-space(current())])">
+      <xsl:call-template name="gap"><xsl:with-param name="what" select="concat('&lt;self&gt;', normalize-space(.), '&lt;/self&gt;')" /></xsl:call-template>
     </xsl:if>
   </xsl:template>
 </xsl:stylesheet>

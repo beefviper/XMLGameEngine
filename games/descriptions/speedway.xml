@@ -86,13 +86,13 @@
       <heading>90</heading>
       <collisions>
         <type>pixel</type>
-        <collision object="gate2"><condition variable="next"><equal>2</equal></condition><set variable="self.next">3</set></collision>
-        <collision object="gate3"><condition variable="next"><equal>3</equal></condition><set variable="self.next">4</set></collision>
-        <collision object="gate4"><condition variable="next"><equal>4</equal></condition><set variable="self.next">1</set></collision>
+        <collision object="gate2"><condition variable="next"><equal>2</equal></condition><set who="self" variable="next">3</set></collision>
+        <collision object="gate3"><condition variable="next"><equal>3</equal></condition><set who="self" variable="next">4</set></collision>
+        <collision object="gate4"><condition variable="next"><equal>4</equal></condition><set who="self" variable="next">1</set></collision>
         <collision object="gate1">
           <condition variable="next"><equal>1</equal></condition>
-          <set variable="self.next">2</set>
-          <inc variable="self.lap" />
+          <set who="self" variable="next">2</set>
+          <inc who="self" variable="lap" />
           <play sound="lap" />
         </collision>
       </collisions>

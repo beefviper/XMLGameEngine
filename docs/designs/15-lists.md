@@ -65,7 +65,7 @@ A scratch copy of Pac-Man, no engine change. Its scatter-and-chase test passes o
 <group name="waves" class="wave">
   <columns>6</columns>
   ...
-  <actions><action name="read"><copy variable="self.seconds" into="mode.for" /></action></actions>
+  <actions><action name="read"><copy who="self" variable="seconds" into="mode.for" /></action></actions>
   <variables><variable name="seconds">20</variable></variables>
   <column><number>1</number><number>3</number><variables><variable name="seconds">5</variable></variables></column>
   <column><number>5</number><variables><variable name="seconds">7</variable></variables></column>

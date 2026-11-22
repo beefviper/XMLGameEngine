@@ -163,7 +163,7 @@
             <collision class="fish">
               <condition variable="line"><equal>0</equal></condition>
               <carry />
-              <set variable="self.line">1</set>
+              <set who="self" variable="line">1</set>
               <play sound="bite" />
             </collision>
           </collisions>
@@ -220,25 +220,25 @@
             <collision object="hook1">
               <condition object="hook1" variable="line"><equal>1</equal></condition>
               <set variable="hook1.line">2</set>
-              <set variable="self.by">1</set>
+              <set who="self" variable="by">1</set>
               <stop />
             </collision>
             <collision object="hook2">
               <condition object="hook2" variable="line"><equal>1</equal></condition>
               <set variable="hook2.line">2</set>
-              <set variable="self.by">2</set>
+              <set who="self" variable="by">2</set>
               <stop />
             </collision>
             <!-- landed, for whoever it is on -->
             <collision object="surface">
               <condition variable="by"><equal>1</equal></condition>
-              <inc variable="left.score">self.worth</inc>
+              <inc variable="left.score"><self>worth</self></inc>
               <reset object="hook1" />
               <trigger action="landed" />
             </collision>
             <collision object="surface">
               <condition variable="by"><equal>2</equal></condition>
-              <inc variable="right.score">self.worth</inc>
+              <inc variable="right.score"><self>worth</self></inc>
               <reset object="hook2" />
               <trigger action="landed" />
             </collision>
@@ -258,12 +258,12 @@
             <action name="landed">
               <set variable="shark.velocity.x"><multiply><value>shark.velocity.x</value><value>1.1</value></multiply></set>
               <play sound="landed" />
-              <set variable="self.by">0</set>
+              <set who="self" variable="by">0</set>
               <reset />
             </action>
             <action name="eaten">
               <play sound="chomp" />
-              <set variable="self.by">0</set>
+              <set who="self" variable="by">0</set>
               <reset />
             </action>
           </actions>

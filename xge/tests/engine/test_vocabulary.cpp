@@ -80,6 +80,8 @@ namespace
 		{ "near", "a chase that stops short" },
 		{ "odd", "the pair of <even> in rows and columns" },
 		{ "off", "a <collisions> written but off until a rule turns it on; its pair is collisions on by default" },
+		{ "other", "a pronoun beside self: the object a rule touched, as a value (games use who=\"other\")" },
+		{ "others", "a pronoun beside self: each of the rest, as a value (games use who=\"others\")" },
 		{ "press", "a <demo>'s key going down" },
 		{ "pull", "one object drawn to another" },
 		{ "release", "a <demo>'s key coming up" },

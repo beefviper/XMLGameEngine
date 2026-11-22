@@ -142,8 +142,8 @@ Turn-by-turn puzzles (Crates, Doubles, Minefield) are cell pieces moved by keys 
 - **`<here />` and `<around>`** in a `<count>` or a `<trigger class>` name cells: `<here />` this piece's cell, `<around>` the eight round it (`<straight />`: the four beside it; `<alike variable="value" />`: only pieces whose variable equals this one's). Every layer is looked at.
 
 ```xml
-<count class="spot" into="self.home"><here /></count>
-<count class="mine" into="self.near"><here /><!-- or --><around /></count>
+<count who="self" class="spot" into="home"><here /></count>
+<count who="self" class="mine" into="near"><here /><!-- or --><around /></count>
 <trigger class="square" action="open"><around /></trigger>
 ```
 

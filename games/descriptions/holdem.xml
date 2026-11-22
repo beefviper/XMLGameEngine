@@ -275,23 +275,23 @@
           <actions>
             <action name="call">
               <condition object="cpu" variable="turn"><equal>1</equal><become object="cpusays" sprite="call" /></condition>
-              <dec variable="self.chips">table.owed</dec>
+              <dec who="self" variable="chips">table.owed</dec>
               <inc variable="table.pot">table.owed</inc>
               <set variable="table.owed">0</set>
               <inc variable="table.acted">1</inc>
-              <set variable="self.ready">0</set>
+              <set who="self" variable="ready">0</set>
               <become object="thought" sprite="idle" />
               <play sound="chip" />
               <pass />
             </action>
             <action name="raise">
               <condition object="cpu" variable="turn"><equal>1</equal><become object="cpusays" sprite="raise" /></condition>
-              <dec variable="self.chips"><add><value>table.owed</value><value>table.bet</value></add></dec>
+              <dec who="self" variable="chips"><add><value>table.owed</value><value>table.bet</value></add></dec>
               <inc variable="table.pot"><add><value>table.owed</value><value>table.bet</value></add></inc>
               <set variable="table.owed">table.bet</set>
               <inc variable="table.raises">1</inc>
               <inc variable="table.acted">1</inc>
-              <set variable="self.ready">0</set>
+              <set who="self" variable="ready">0</set>
               <become object="thought" sprite="idle" />
               <play sound="raise" />
               <pass />
@@ -300,12 +300,12 @@
             <action name="allin">
               <condition object="you" variable="turn"><equal>1</equal><inc variable="cpu.chips"><subtract><value>table.owed</value><value>you.chips</value></subtract></inc></condition>
               <condition object="cpu" variable="turn"><equal>1</equal><inc variable="you.chips"><subtract><value>table.owed</value><value>cpu.chips</value></subtract></inc><become object="cpusays" sprite="call" /></condition>
-              <dec variable="table.pot"><subtract><value>table.owed</value><value>self.chips</value></subtract></dec>
-              <inc variable="table.pot">self.chips</inc>
-              <set variable="self.chips">0</set>
+              <dec variable="table.pot"><subtract><value>table.owed</value><value><self>chips</self></value></subtract></dec>
+              <inc variable="table.pot"><self>chips</self></inc>
+              <set who="self" variable="chips">0</set>
               <set variable="table.owed">0</set>
               <inc variable="table.acted">1</inc>
-              <set variable="self.ready">0</set>
+              <set who="self" variable="ready">0</set>
               <become object="thought" sprite="idle" />
               <play sound="chip" />
               <pass />
@@ -315,7 +315,7 @@
               <condition object="you" variable="turn"><equal>1</equal><inc variable="cpu.chips">table.pot</inc><become object="result" sprite="youfold" /></condition>
               <condition object="cpu" variable="turn"><equal>1</equal><inc variable="you.chips">table.pot</inc><become object="result" sprite="cpufolds" /><become object="cpusays" sprite="fold" /></condition>
               <set variable="table.pot">0</set>
-              <set variable="self.ready">0</set>
+              <set who="self" variable="ready">0</set>
               <become object="thought" sprite="idle" />
               <become object="hand" sprite="done" />
               <play sound="fold" />

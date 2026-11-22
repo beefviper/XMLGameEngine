@@ -217,7 +217,7 @@ TEST_CASE("a rule written on a group of groups, with a check about itself, looks
 	// shot is the outer group's, and only a rock worth 10 counts a split.
 	const auto variant = GENERATE(
 		std::tuple{ std::string("worth"), std::string("<member><position><x>100</x><y>100</y></position></member>"), std::string("<member><position><x>300</x><y>100</y></position></member>") },
-		std::tuple{ std::string("self.worth"), std::string("<member><position><x>100</x><y>100</y></position></member>"), std::string("<member><position><x>300</x><y>100</y></position></member>") },
+		std::tuple{ std::string("worth\" who=\"self"), std::string("<member><position><x>100</x><y>100</y></position></member>"), std::string("<member><position><x>300</x><y>100</y></position></member>") },
 		std::tuple{ std::string("worth"), std::string("<columns>1</columns><rows>1</rows><position><x>100</x><y>100</y></position>"), std::string("<columns>1</columns><rows>1</rows><position><x>300</x><y>100</y></position>") });
 	const auto& [variable, big, small] = variant;
 	INFO(variable << " " << big);
@@ -259,7 +259,7 @@ TEST_CASE("an object put somewhere has moved: it touches what it is put on, with
 			"<states><objects>"
 			"<object name=\"a\"><sprite><rectangle><width>4</width><height>4</height><color>white</color></rectangle></sprite>"
 			"<position><x>10</x><y>10</y></position>"
-			"<collisions><collision object=\"b\"><inc variable=\"self.hits\" /></collision></collisions><variables><variable name=\"hits\">0</variable></variables></object>"
+			"<collisions><collision object=\"b\"><inc who=\"self\" variable=\"hits\" /></collision></collisions><variables><variable name=\"hits\">0</variable></variables></object>"
 			"<object name=\"b\"><sprite><rectangle><width>4</width><height>4</height><color>white</color></rectangle></sprite>"
 			"<position><x>100</x><y>50</y></position><collisions></collisions></object>"
 						"</objects><state name=\"playing\"><shows><show object=\"a\" /><show object=\"b\" /></shows>"
@@ -305,8 +305,8 @@ TEST_CASE("a rule names the object it touched other, whichever of its class that
 		"<object name=\"p2\" class=\"player\"><sprite><rectangle><width>10</width><height>10</height></rectangle></sprite>"
 		"<position><x>400</x><y>100</y></position>" + player + "</object>"
 		+ played::box("coin", 600, 400, "<collisions><collision class=\"player\">"
-			"<condition object=\"other\" variable=\"shield\"><atmost>0</atmost></condition>"
-			"<inc variable=\"other.score\">5</inc><set variable=\"other.shield\">1</set></collision></collisions>"),
+			"<condition who=\"other\" variable=\"shield\"><atmost>0</atmost></condition>"
+			"<inc who=\"other\" variable=\"score\">5</inc><set who=\"other\" variable=\"shield\">1</set></collision></collisions>"),
 		"<pop />");
 	played::Played play(file.path);
 
@@ -336,7 +336,7 @@ TEST_CASE("other is a spawned copy when a copy is what was touched", "[collision
 		"<velocity><x>0</x><y>-300</y></velocity><collisions></collisions>"
 		"<variables><variable name=\"hits\">0</variable></variables></object>";
 	const played::Scratch file(
-		played::box("wall", 300, 300, "<collisions><collision class=\"bullet\"><inc variable=\"other.hits\" /></collision></collisions>"),
+		played::box("wall", 300, 300, "<collisions><collision class=\"bullet\"><inc who=\"other\" variable=\"hits\" /></collision></collisions>"),
 		"<spawn object=\"shot\"><position><x>302</x><y>340</y></position></spawn>", {}, shot);
 	played::Played play(file.path);
 
@@ -355,13 +355,13 @@ TEST_CASE("other is only for a rule about another object", "[collision_rules][ot
 		xge::Game game(file.path);
 	};
 	const std::string scored = played::box("p1", 100, 100, "<variables><variable name=\"score\">0</variable></variables>");
-	CHECK_THROWS_WITH(loads(scored, "<inc variable=\"other.score\" />"), Catch::Matchers::ContainsSubstring("only a rule about another object"));
-	CHECK_THROWS_WITH(loads(scored, "<reset object=\"other\" />"), Catch::Matchers::ContainsSubstring("only a rule about another object"));
+	CHECK_THROWS_WITH(loads(scored, "<inc who=\"other\" variable=\"score\" />"), Catch::Matchers::ContainsSubstring("only a rule about another object"));
+	CHECK_THROWS_WITH(loads(scored, "<reset who=\"other\"/>"), Catch::Matchers::ContainsSubstring("only a rule about another object"));
 	// A rule about a class there is none of has no other to name.
-	CHECK_THROWS_WITH(loads(scored + played::box("coin", 0, 0, "<collisions><collision class=\"ghost\"><reset object=\"other\" /></collision></collisions>"), "<pop />"),
+	CHECK_THROWS_WITH(loads(scored + played::box("coin", 0, 0, "<collisions><collision class=\"ghost\"><reset who=\"other\"/></collision></collisions>"), "<pop />"),
 		Catch::Matchers::ContainsSubstring("nothing of class \"ghost\" for it to touch"));
 	// What every object it can touch has is checked for each.
-	CHECK_THROWS_WITH(loads(scored + played::box("p2", 0, 0) + played::box("coin", 0, 0, "<collisions><collision><inc variable=\"other.score\" /></collision></collisions>"), "<pop />"),
+	CHECK_THROWS_WITH(loads(scored + played::box("p2", 0, 0) + played::box("coin", 0, 0, "<collisions><collision><inc who=\"other\" variable=\"score\" /></collision></collisions>"), "<pop />"),
 		Catch::Matchers::ContainsSubstring("p2"));
 }
 
@@ -372,7 +372,7 @@ TEST_CASE("an object whose picture changes has changed: it touches what the new 
 		"<object name=\"trap\"><sprite name=\"shut\"><rectangle><width>10</width><height>10</height></rectangle></sprite>"
 		"<sprite name=\"open\"><rectangle><width>40</width><height>10</height></rectangle></sprite>"
 		"<position><x>100</x><y>100</y></position>"
-		"<collisions><collision object=\"player\"><inc variable=\"self.bites\" /></collision></collisions>"
+		"<collisions><collision object=\"player\"><inc who=\"self\" variable=\"bites\" /></collision></collisions>"
 		"<variables><variable name=\"bites\">0</variable></variables></object>"
 		+ played::box("player", 125, 100, "<collisions></collisions>"),
 		"<become object=\"trap\" sprite=\"open\" />");
@@ -399,7 +399,7 @@ TEST_CASE("a rule about a screen edge can hold conditions: it runs only while th
 	const played::Scratch file(
 		played::box("box", 0, 100, "<velocity><x>-60</x><y>0</y></velocity>"
 			"<collisions><collision edge=\"left\"><condition variable=\"armed\"><atleast>1</atleast></condition>"
-			"<inc variable=\"self.hits\" /></collision></collisions>"
+			"<inc who=\"self\" variable=\"hits\" /></collision></collisions>"
 			"<variables><variable name=\"armed\">0</variable><variable name=\"hits\">0</variable></variables>"),
 		"<set variable=\"box.armed\">1</set>");
 	played::Played play(file.path);

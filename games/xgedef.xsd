@@ -80,9 +80,33 @@
     <xs:choice>
       <xs:element name="random" type="randomType" />
       <xs:element name="window" type="windowMeasureType" />
+      <xs:element name="self" type="xs:NMTOKEN" />
+      <xs:element name="other" type="xs:NMTOKEN" />
+      <xs:element name="others" type="xs:NMTOKEN" />
       <xs:group ref="operation" />
     </xs:choice>
   </xs:group>
+
+  <xs:simpleType name="pronounType">
+    <xs:annotation>
+      <xs:documentation><![CDATA[
+        The pronouns: self, the object running it; other, the one a collision
+        rule touched; others, each of the rest a state's condition looks at.
+        As a value tag one names its variable (<self>score</self>); as who=
+        it says whose a command's names are (<inc who="other" variable="score" />)
+        or, naming none, which object it is about; as=, the look named after it.
+      ]]></xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="self" />
+      <xs:enumeration value="other" />
+      <xs:enumeration value="others" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:attributeGroup name="whoAttribute">
+    <xs:attribute name="who" type="pronounType" use="optional" />
+  </xs:attributeGroup>
 
   <xs:simpleType name="windowMeasureType">
     <xs:annotation>
@@ -114,6 +138,9 @@
     </xs:annotation>
     <xs:choice minOccurs="0">
       <xs:element name="window" type="windowMeasureType" />
+      <xs:element name="self" type="xs:NMTOKEN" />
+      <xs:element name="other" type="xs:NMTOKEN" />
+      <xs:element name="others" type="xs:NMTOKEN" />
       <xs:group ref="operation" />
     </xs:choice>
   </xs:complexType>
@@ -172,6 +199,9 @@
     <xs:choice minOccurs="0">
       <xs:element name="random" type="randomType" />
       <xs:element name="window" type="windowMeasureType" />
+      <xs:element name="self" type="xs:NMTOKEN" />
+      <xs:element name="other" type="xs:NMTOKEN" />
+      <xs:element name="others" type="xs:NMTOKEN" />
       <xs:element name="add" type="addType" />
       <xs:element name="subtract" type="subtractType" />
       <xs:element name="multiply" type="multiplyType" />
@@ -1286,6 +1316,7 @@
       <xs:group ref="valueTag" minOccurs="0" />
     </xs:sequence>
     <xs:attribute name="variable" type="xs:NMTOKEN" use="required" />
+    <xs:attributeGroup ref="whoAttribute" />
   </xs:complexType>
 
   <xs:complexType name="targetValueType" mixed="true">
@@ -1415,6 +1446,7 @@
       <xs:group ref="valueTag" minOccurs="0" />
     </xs:sequence>
     <xs:attribute name="variable" type="xs:NMTOKEN" use="required" />
+    <xs:attributeGroup ref="whoAttribute" />
     <xs:attribute name="group" type="xs:NMTOKEN">
       <xs:annotation>
         <xs:documentation>group: every member of this group takes the value; variable= is then the members' variable alone (kept)</xs:documentation>
@@ -1843,6 +1875,7 @@
         <xs:complexType>
           <xs:attribute name="variable" type="xs:NMTOKEN" use="required" />
           <xs:attribute name="into" type="xs:NMTOKEN" use="required" />
+          <xs:attributeGroup ref="whoAttribute" />
         </xs:complexType>
       </xs:element>
       <xs:element name="count">
@@ -1855,6 +1888,7 @@
           </xs:sequence>
           <xs:attribute name="class" type="xs:NMTOKEN" use="required" />
           <xs:attribute name="into" type="xs:NMTOKEN" use="required" />
+          <xs:attributeGroup ref="whoAttribute" />
         </xs:complexType>
       </xs:element>
       <xs:element name="rank">
@@ -1883,8 +1917,14 @@
               <xs:documentation>a look, a palette (a style its bitmaps take instead), or both</xs:documentation>
             </xs:annotation>
           </xs:attribute>
+          <xs:attribute name="as" type="pronounType" use="optional">
+            <xs:annotation>
+              <xs:documentation>the look named after that object</xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
           <xs:attribute name="style" type="xs:NMTOKEN" use="optional" />
           <xs:attribute name="object" type="xs:NMTOKEN" use="optional" />
+          <xs:attributeGroup ref="whoAttribute" />
           <xs:attribute name="from" type="xs:NMTOKEN" use="optional">
             <xs:annotation>
               <xs:documentation>only those showing this look change</xs:documentation>
@@ -1941,6 +1981,7 @@
         </xs:annotation>
         <xs:complexType>
           <xs:attribute name="object" type="xs:NMTOKEN" use="optional" />
+          <xs:attributeGroup ref="whoAttribute" />
           <xs:attribute name="scene" type="xs:NMTOKEN" use="optional" />
           <xs:attribute name="way" type="xs:NMTOKEN" use="optional" />
         </xs:complexType>
@@ -1994,6 +2035,7 @@
             </xs:element>
             <xs:group ref="cellPlace" />
           </xs:choice>
+          <xs:attributeGroup ref="whoAttribute" />
           <xs:attribute name="object" type="xs:NMTOKEN" use="optional">
             <xs:annotation>
               <xs:documentation>left out in an object's own collision, action or timer: that object</xs:documentation>
@@ -2652,6 +2694,7 @@
     <xs:group ref="conditionTest" minOccurs="0" />
     <xs:attribute name="class" type="xs:NMTOKEN" use="optional" />
     <xs:attribute name="object" type="xs:NMTOKEN" use="optional" />
+    <xs:attributeGroup ref="whoAttribute" />
     <xs:attribute name="variable" type="xs:NMTOKEN" use="optional" />
     <xs:attribute name="total" type="totalType" use="optional">
       <xs:annotation>
@@ -2698,6 +2741,7 @@
   <xs:attributeGroup name="conditionAttributes">
     <xs:attribute name="class" type="xs:NMTOKEN" use="optional" />
     <xs:attribute name="object" type="xs:NMTOKEN" use="optional" />
+    <xs:attributeGroup ref="whoAttribute" />
     <xs:attribute name="variable" type="xs:NMTOKEN" use="optional" />
     <xs:attribute name="total" type="totalType" use="optional">
       <xs:annotation>
@@ -2879,6 +2923,9 @@
     <xs:choice minOccurs="0">
       <xs:element name="offset" type="xs:string" />
       <xs:element name="window" type="windowMeasureType" />
+      <xs:element name="self" type="xs:NMTOKEN" />
+      <xs:element name="other" type="xs:NMTOKEN" />
+      <xs:element name="others" type="xs:NMTOKEN" />
       <xs:group ref="operation" />
     </xs:choice>
   </xs:complexType>

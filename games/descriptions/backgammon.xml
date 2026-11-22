@@ -356,12 +356,12 @@
           <position><x>0</x><y>0</y></position>
           <actions>
             <action name="roll">
-              <set variable="self.worth"><smallest><value><floor><value><random><min>1</min><max>7</max></random></value></floor></value><value>6</value></smallest></set>
+              <set who="self" variable="worth"><smallest><value><floor><value><random><min>1</min><max>7</max></random></value></floor></value><value>6</value></smallest></set>
               <trigger action="show" />
             </action>
             <!-- not rolled this turn: no number -->
             <action name="clear">
-              <set variable="self.worth">0</set>
+              <set who="self" variable="worth">0</set>
               <become sprite="blank" />
             </action>
             <action name="show">

@@ -53,7 +53,8 @@
 - **Each slot says what kind of thing it holds,** so no word is taken from the game's names (the author's choice over letting a game's name win, or marking the engine's words with a character). Colours, the window and the pronouns `self`, `other` and `others` once shared the object-name space, so those names were refused.
 - **Colours:** a `<color>` or `<background>` holds a colour's bare name (`yellow`); the `color.` prefix said what the slot already did.
 - **The window:** `<window>right</window>`, a value tag and an operand like `<random>`, from a closed list (width, height, right, bottom, centerx, centery). Inside, the engine names them `@window.right`; text starting with `@` stops the load, so a game's `window` object is its own. Looked at for the middle: `middle` read by the axis it sits in (meaning from context), or no word and a divide (64 places longer); centerx and centery won.
-- Next: the pronouns as their own operand tags.
+- **The pronouns:** `<self>score</self>` (and `<other>`, `<others>`) as a value tag; in attributes, `who=` takes only a pronoun and says whose `variable=` and `into=` are, or which object (`<trigger who="other" action="lose" />`); `as="self"` on `<become>` is the look named after it. Inside they are `@self` and the like. Looked at: `of=` (reads well on variables, oddly on triggers and resets). `who=` on a `<copy>` owns both its names, so a copy from one pronoun to another is not said yet.
+- The rule left: a name that is a number is still refused (it reads as one).
 
 ## An object's own size
 

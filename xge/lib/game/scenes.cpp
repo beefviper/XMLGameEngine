@@ -147,12 +147,20 @@ namespace xge
 			std::string expression(const std::string& text, const Context& context) const
 			{
 				std::string out;
-				const auto word = [](char c) { return std::isalnum(static_cast<unsigned char>(c)) != 0 || c == '_' || c == '.'; };
+				const auto word = [](char c) { return std::isalnum(static_cast<unsigned char>(c)) != 0 || c == '_' || c == '.' || c == '@'; };
 				std::size_t i = 0;
 				while (i < text.size())
 				{
 					const char c = text[i];
-					if (std::isalpha(static_cast<unsigned char>(c)) != 0 || c == '_')
+					if (c == '@')
+					{
+						// the engine's own (@self.x, @window.right), as it is
+						std::size_t end = i + 1;
+						while (end < text.size() && word(text[end])) { ++end; }
+						out.append(text, i, end - i);
+						i = end;
+					}
+					else if (std::isalpha(static_cast<unsigned char>(c)) != 0 || c == '_')
 					{
 						std::size_t end = i;
 						while (end < text.size() && word(text[end])) { ++end; }

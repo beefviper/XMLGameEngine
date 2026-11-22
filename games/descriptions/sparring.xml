@@ -82,12 +82,12 @@
         <collision class="boxer" by="fist">
           <collision sprite="guarding"><play sound="thud" /></collision>
           <collision hitbox="body" sprite="guard">
-            <inc variable="other.points" />
+            <inc who="other" variable="points" />
             <become sprite="reeling" />
             <play sound="smack" />
           </collision>
           <collision hitbox="body" sprite="jab">
-            <inc variable="other.points" />
+            <inc who="other" variable="points" />
             <become sprite="reeling" />
             <play sound="smack" />
           </collision>

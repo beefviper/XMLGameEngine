@@ -107,7 +107,7 @@
             <type>pixel</type>
             <collision edge="bottom"><stick /></collision>
             <collision edge="top">
-              <inc variable="self.score" />
+              <inc who="self" variable="score" />
               <play sound="score" />
               <reset />
             </collision>

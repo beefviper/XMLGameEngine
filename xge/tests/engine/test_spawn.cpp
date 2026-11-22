@@ -33,7 +33,7 @@ namespace
 		"<velocity><x>0</x><y>-300</y></velocity>"
 		"<collisions><collision edge=\"top\"><despawn /></collision></collisions>"
 		"<variables><variable name=\"age\">0</variable></variables>"
-		"<timers><timer><every>0.01</every><inc variable=\"self.age\" /></timer></timers></object>";
+		"<timers><timer><every>0.01</every><inc who=\"self\" variable=\"age\" /></timer></timers></object>";
 }
 
 TEST_CASE("a piece is not in play until a copy of it is spawned", "[spawn]")
@@ -123,7 +123,7 @@ TEST_CASE("<despawn object> takes out an object the file wrote, until a reset", 
 
 TEST_CASE("<most> caps how many copies exist, and a refused spawn stops what comes after", "[spawn]")
 {
-	const Scratch file(box("ship", 300, 400, "<actions><action name=\"shoot\"><spawn object=\"shot\" /><inc variable=\"self.shots\" /></action></actions>"
+	const Scratch file(box("ship", 300, 400, "<actions><action name=\"shoot\"><spawn object=\"shot\" /><inc who=\"self\" variable=\"shots\" /></action></actions>"
 		"<variables><variable name=\"shots\">0</variable></variables>"),
 		"<trigger object=\"ship\" action=\"shoot\" />", {},
 		"<object name=\"shot\"><sprite><rectangle><width>4</width><height>8</height></rectangle></sprite><most>2</most></object>");
@@ -176,7 +176,7 @@ TEST_CASE("<fire> and <spawn> of a piece make copies of it", "[spawn]")
 TEST_CASE("a <spawn> with a <count> makes that many, at the spawner's middle unless a <position> says, up to the <most>", "[spawn]")
 {
 	const Scratch file(box("rock", 300, 380, "<actions><action name=\"break\">"
-		"<spawn object=\"piece\"><count>3</count></spawn><inc variable=\"self.breaks\" /></action></actions>"
+		"<spawn object=\"piece\"><count>3</count></spawn><inc who=\"self\" variable=\"breaks\" /></action></actions>"
 		"<variables><variable name=\"breaks\">0</variable></variables>")
 		+ box("cliff", 100, 100, "<actions><action name=\"drop\"><spawn object=\"piece\"><count>2</count><position><x>10</x></position></spawn></action></actions>"),
 		"<trigger object=\"rock\" action=\"break\" />", {},
@@ -327,7 +327,7 @@ TEST_CASE("a copy's rule with a condition tests the copy's own values", "[spawn]
 TEST_CASE("a spawn's <acceleration> is read as it runs and pulls the copy for as long as it lasts", "[spawn]")
 {
 	const Scratch file(box("gun", 300, 400, "<actions><action name=\"shoot\"><spawn object=\"shell\">"
-		"<velocity><y>-240</y></velocity><acceleration><x>self.wind</x><y>1800</y></acceleration></spawn></action></actions>"
+		"<velocity><y>-240</y></velocity><acceleration><x><self>wind</self></x><y>1800</y></acceleration></spawn></action></actions>"
 		"<variables><variable name=\"wind\">900</variable></variables>"),
 		"<trigger object=\"gun\" action=\"shoot\" />", {},
 		"<object name=\"shell\"><sprite><rectangle><width>4</width><height>4</height></rectangle></sprite></object>");

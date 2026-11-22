@@ -566,7 +566,7 @@ namespace xge
 
 	bool renameStart(std::string& text, const std::string& from, const std::string& to)
 	{
-		const auto word = [](char c) { return std::isalnum(static_cast<unsigned char>(c)) != 0 || c == '_' || c == '.'; };
+		const auto word = [](char c) { return std::isalnum(static_cast<unsigned char>(c)) != 0 || c == '_' || c == '.' || c == '@'; };
 		// A name that starts with `from` and a dot, at the start of a word.
 		const auto startsHere = [&](std::size_t i)
 		{
@@ -606,10 +606,10 @@ namespace xge
 			for (WrittenCondition& part : condition.parts) { nameSelfInCheck(part, name); }
 			if (condition.join != WrittenCondition::Join::None) { return; }
 
-			const std::string own = "self.";
+			const std::string own = "@self.";
 			for (std::string* each : { &condition.filterObject, &condition.distance, &condition.sees })
 			{
-				if (*each == "self") { *each = name; }
+				if (*each == "@self") { *each = name; }
 			}
 			if (condition.variableName.compare(0, own.size(), own) == 0 && condition.filterClass.empty()
 				&& (condition.filterObject.empty() || condition.filterObject == name))
@@ -625,7 +625,7 @@ namespace xge
 
 		bool nameSelfInValue(WrittenValue& each, const std::string& name)
 		{
-			return renameInValue(each, "self", name);
+			return renameInValue(each, "@self", name);
 		}
 	}
 
@@ -662,7 +662,7 @@ namespace xge
 			if (command.test)
 			{
 				auto test = std::make_shared<WrittenCondition>(*command.test);
-				nameSelfInCheck(*test, "self");
+				nameSelfInCheck(*test, "@self");
 				nameSelfInTests(test->commands);
 				command.test = std::move(test);
 			}
@@ -676,7 +676,7 @@ namespace xge
 			if (namesOf(command).object == Naming::OneObject && command.object.empty()) { command.object = name; changed = true; }
 			for (std::string* text : { &command.variable, &command.into })
 			{
-				changed = renameStart(*text, "self", name) || changed;
+				changed = renameStart(*text, "@self", name) || changed;
 			}
 			command.forEachValue([&](WrittenValue& each) { changed = nameSelfInValue(each, name) || changed; });
 			// A condition in an action: its test and its commands.
@@ -699,7 +699,7 @@ namespace xge
 	bool namesSelf(const WrittenCommand& command)
 	{
 		WrittenCommand probe = command;
-		return nameSelfIn(probe, "self_");
+		return nameSelfIn(probe, "@self_");
 	}
 
 	namespace
@@ -772,18 +772,18 @@ namespace xge
 	bool namesOther(const WrittenCommand& command)
 	{
 		std::vector<WrittenCommand> probe{ command };
-		return renameObjectIn(probe, "other", "other_");
+		return renameObjectIn(probe, "@other", "@other_");
 	}
 
 	bool namesOther(const WrittenCondition& condition)
 	{
 		WrittenCondition probe = condition;
-		return renameObjectInCheck(probe, "other", "other_");
+		return renameObjectInCheck(probe, "@other", "@other_");
 	}
 
 	void nameOtherInTest(WrittenCondition& condition, const std::string& name)
 	{
-		renameObjectInCheck(condition, "other", name);
+		renameObjectInCheck(condition, "@other", name);
 	}
 
 	void nameOther(std::vector<WrittenObject>& objects)
@@ -794,8 +794,8 @@ namespace xge
 			for (WrittenCollisionRule& rule : object.writtenCollisionData.others)
 			{
 				WrittenCollisionRule probe = rule;
-				const bool inCommands = renameObjectIn(probe.commands, "other", "other_");
-				const bool inCheck = renameObjectInCheck(probe.check, "other", "other_");
+				const bool inCommands = renameObjectIn(probe.commands, "@other", "@other_");
+				const bool inCheck = renameObjectInCheck(probe.check, "@other", "@other_");
 				if (!inCommands && !inCheck)
 				{
 					rules.push_back(std::move(rule));
@@ -833,7 +833,7 @@ namespace xge
 			const auto own = [&](std::vector<WrittenCommand>& list) { nameSelfInTests(list); };
 			const auto commands = [&](std::vector<WrittenCommand>& list) { nameSelfIn(list, object.name); };
 			// A rule's test says self too, found as it is tested (Game::holds).
-			const auto check = [&](WrittenCondition& condition) { nameSelfInCheck(condition, "self"); };
+			const auto check = [&](WrittenCondition& condition) { nameSelfInCheck(condition, "@self"); };
 
 			WrittenCollisionData& collisions = object.writtenCollisionData;
 			for (auto& edge : collisions.edges)

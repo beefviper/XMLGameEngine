@@ -1347,7 +1347,7 @@ TEST_CASE("mistakes in nested conditions and look tests stop the load, saying wh
 TEST_CASE("<unequal> holds for what is not that number", "[conditions][self]")
 {
 	// v is 2, 5 and 9.
-	Coins each("class=\"coin\" variable=\"v\"><unequal>5</unequal><inc variable=\"self.v\">10</inc>");
+	Coins each("class=\"coin\" variable=\"v\"><unequal>5</unequal><inc who=\"self\" variable=\"v\">10</inc>");
 	each.loaded.frames(1);
 	CHECK(each.loaded.variable("coin1", "v") == 12.0f);
 	CHECK(each.loaded.variable("coin2", "v") == 5.0f);
@@ -1369,8 +1369,8 @@ TEST_CASE("a collision rule holds rules: what it says they say too, its <first> 
 {
 	Loaded loaded(ruled("<collision class=\"wall\" side=\"left\">"
 		"<condition variable=\"n\"><atleast>0</atleast></condition>"
-		"<first><inc variable=\"self.n\">1</inc></first>"
-		"<collision><condition variable=\"n\"><atmost>5</atmost></condition><inc variable=\"self.n\">2</inc></collision>"
+		"<first><inc who=\"self\" variable=\"n\">1</inc></first>"
+		"<collision><condition variable=\"n\"><atmost>5</atmost></condition><inc who=\"self\" variable=\"n\">2</inc></collision>"
 		"<collision object=\"w\"><stop /></collision>"
 		"</collision>"
 		"<collision unless=\"wall\"><collision edge=\"horizontal\"><wrap /></collision></collision>"));
@@ -1407,9 +1407,9 @@ TEST_CASE("a key's trigger holds an <otherwise>, run only when its action is ref
 {
 	// "stuck" hops up off the window, which is refused; "fine" counts; "mark" marks out.
 	const std::string actions = "<actions>"
-		"<action name=\"stuck\"><hop direction=\"up\">20</hop><inc variable=\"self.n\">100</inc></action>"
-		"<action name=\"fine\"><inc variable=\"self.n\">1</inc></action>"
-		"<action name=\"mark\"><inc variable=\"self.out\">10</inc></action>"
+		"<action name=\"stuck\"><hop direction=\"up\">20</hop><inc who=\"self\" variable=\"n\">100</inc></action>"
+		"<action name=\"fine\"><inc who=\"self\" variable=\"n\">1</inc></action>"
+		"<action name=\"mark\"><inc who=\"self\" variable=\"out\">10</inc></action>"
 		"</actions><variables><variable name=\"n\">0</variable><variable name=\"out\">0</variable></variables>";
 	const auto otherwise = [](const std::string& button, const std::string& trigger)
 	{
@@ -1459,27 +1459,27 @@ TEST_CASE("a key's trigger holds an <otherwise>, run only when its action is ref
 TEST_CASE("a condition on a class: self is each one it holds for, others the rest; what names neither runs once", "[conditions][self]")
 {
 	// v is 2, 5 and 9; flag.n counts the commands run once.
-	Coins each("class=\"coin\" variable=\"v\"><above>3</above><inc variable=\"self.v\">10</inc>");
+	Coins each("class=\"coin\" variable=\"v\"><above>3</above><inc who=\"self\" variable=\"v\">10</inc>");
 	each.loaded.frames(1);
 	CHECK(each.loaded.variable("coin1", "v") == 2.0f);
 	CHECK(each.loaded.variable("coin2", "v") == 15.0f);
 	CHECK(each.loaded.variable("coin3", "v") == 19.0f);
 	CHECK(each.loaded.variable("flag", "n") == 1.0f);
 
-	Coins others("class=\"coin\" variable=\"v\"><equal>2</equal><inc variable=\"others.v\">1</inc>");
+	Coins others("class=\"coin\" variable=\"v\"><equal>2</equal><inc who=\"others\" variable=\"v\">1</inc>");
 	others.loaded.frames(1);
 	CHECK(others.loaded.variable("coin1", "v") == 2.0f);
 	CHECK(others.loaded.variable("coin2", "v") == 6.0f);
 	CHECK(others.loaded.variable("coin3", "v") == 10.0f);
 
 	// The lowest and the highest: one each, the first of a tie.
-	Coins lowest("class=\"coin\" variable=\"v\"><lowest /><set variable=\"flag.gap\">self.v</set>");
+	Coins lowest("class=\"coin\" variable=\"v\"><lowest /><set variable=\"flag.gap\"><self>v</self></set>");
 	lowest.loaded.frames(1);
 	CHECK(lowest.loaded.variable("flag", "gap") == 2.0f);
-	Coins highest("class=\"coin\" variable=\"v\"><highest /><set variable=\"flag.gap\">self.v</set>");
+	Coins highest("class=\"coin\" variable=\"v\"><highest /><set variable=\"flag.gap\"><self>v</self></set>");
 	highest.loaded.frames(1);
 	CHECK(highest.loaded.variable("flag", "gap") == 9.0f);
-	Coins tie("class=\"coin\" variable=\"v\"><lowest /><set variable=\"self.v\">9</set>");
+	Coins tie("class=\"coin\" variable=\"v\"><lowest /><set who=\"self\" variable=\"v\">9</set>");
 	tie.loaded.frames(1);
 	tie.loaded.frames(1); // coin1 and coin3 9 now: coin2 the lowest
 	CHECK(tie.loaded.variable("coin2", "v") == 9.0f);
@@ -1487,10 +1487,10 @@ TEST_CASE("a condition on a class: self is each one it holds for, others the res
 	CHECK(tie.loaded.variable("coin1", "v") == 9.0f);
 
 	// With no test, each one there.
-	Coins all("class=\"coin\"><inc variable=\"self.v\">1</inc>");
+	Coins all("class=\"coin\"><inc who=\"self\" variable=\"v\">1</inc>");
 	all.loaded.frames(1);
 	CHECK(all.loaded.variable("coin1", "v") == 3.0f);
 	CHECK(all.loaded.variable("coin3", "v") == 10.0f);
 
-	CHECK_THROWS_WITH(Coins("class=\"coin\" total=\"count\"><atleast>1</atleast><inc variable=\"self.v\">1</inc>"), ContainsSubstring("no one object holds it"));
+	CHECK_THROWS_WITH(Coins("class=\"coin\" total=\"count\"><atleast>1</atleast><inc who=\"self\" variable=\"v\">1</inc>"), ContainsSubstring("no one object holds it"));
 }

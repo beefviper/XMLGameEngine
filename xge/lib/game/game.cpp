@@ -2350,7 +2350,7 @@ namespace xge
 	float Game::stepHalf(const WrittenValue& value, const Object& follower)
 	{
 		WrittenValue own = value;
-		renameInValue(own, "self", follower.name);
+		renameInValue(own, "@self", follower.name);
 		return evaluateNow(own, "object '" + follower.name + "' > <follow> > <step>");
 	}
 
@@ -2380,7 +2380,7 @@ namespace xge
 				ownCommands.resize(1);
 				ownCommands.front() = *live.written;
 				if (live.namesSelf) { nameSelfIn(ownCommands.front(), self->name); }
-				if (live.namesOther) { renameObjectIn(ownCommands, "other", other->name); }
+				if (live.namesOther) { renameObjectIn(ownCommands, "@other", other->name); }
 				return makeCommand(ownCommands.front(), [&](const WrittenValue& value) { return evaluateNow(value, live.where); });
 			}
 			return makeCommand(*live.written, [&](const WrittenValue& value) { return evaluateNow(value, live.where); });

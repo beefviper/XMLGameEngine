@@ -120,6 +120,13 @@ namespace xge
 	// underscores and (when dots is true) dots, like `ship.score`.
 	bool isName(const std::string& text, bool dots);
 
+	// Whether a word is self, other or others.
+	bool isPronoun(const std::string& word);
+
+	// A tag's who= (self, other or others) as the engine names it (@self),
+	// or empty when it has none; anything else stops the load.
+	std::string readWho(const XmlNode& node, const std::string& where);
+
 	// An operand of an operation is a name or a number and
 	// nothing else: anything more is an operation of its own.
 	std::string requireTerm(const std::string& text, const std::string& here);

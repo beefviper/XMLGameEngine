@@ -285,15 +285,15 @@
             <collision edge="bottom">
               <play sound="drain" />
               <dec variable="table.balls" />
-              <set variable="self.x"><subtract><value>laneX</value><value>radius</value></subtract></set>
-              <set variable="self.y">
+              <set who="self" variable="x"><subtract><value>laneX</value><value>radius</value></subtract></set>
+              <set who="self" variable="y">
                 <subtract>
                   <value>plungerTop</value>
                   <value><multiply><value>radius</value><value>2</value></multiply></value>
                 </subtract>
               </set>
-              <set variable="self.velocity.x">0</set>
-              <set variable="self.velocity.y">0</set>
+              <set who="self" variable="velocity.x">0</set>
+              <set who="self" variable="velocity.y">0</set>
             </collision>
           </collisions>
         </object>

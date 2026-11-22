@@ -86,9 +86,22 @@ A `<random>` is drawn at load and again whenever its object comes back into play
 | `object.width`, `object.height` | its size (its sprite's footprint); meant for `<position>` |
 | `object.timer` | a named object timer's [time left](timers.md#time-left) |
 | `object.x`, `.y`, `.velocity.x`, `.velocity.y`, `.heading`, `.altitude`, `.rise`, `.light`, `.blink`, `.speed` | **live numbers**: its top left, how it goes (`speed` how fast, read only; in a touch rule, as the touch happened), its [height](pictures.md#height-and-shadows), [light](pictures.md#light-and-dark), [blinking](pictures.md#poses-mirror-grip-and-blinking) |
-| `self.` before any of these | in an object's own rules, actions, timers and numbers, the object running it |
 
 An object's own `<variable>` named like a size or live number (`width`, `x`) wins over it.
+
+### Pronouns
+
+What the engine provides is a tag; text is only the game's own names and numbers. So the object running a rule, action, timer or number is `<self>`, a value tag holding one of its variables or live numbers; `<other>` is the one a rule touched ([collisions](collisions.md#rules)) and `<others>` the rest a condition matched ([states](states.md#conditions-in-conditions)):
+
+```xml
+<inc variable="ship.score"><self>worth</self></inc>
+<inc who="other" variable="score">800</inc>
+<become object="over.winner" as="self" />
+```
+
+- **`who=`** on a command or condition says whose its `variable=` and `into=` are, or, naming neither, which object it is about (`<reset who="other" />`). It takes only `self`, `other` or `others`.
+- **`as=`** on a `<become>` takes the look named after that object.
+- `self.score` in text is the object called `self`: every name is the game's.
 
 The window's numbers are a tag of their own, `<window>`, anywhere a value or an operand goes, so no game name is taken by them:
 
@@ -107,7 +120,7 @@ The window's numbers are a tag of their own, `<window>`, anywhere a value or an 
 A command whose numbers name something that changes is worked out each time it runs:
 
 ```xml
-<inc variable="player.score">self.worth</inc>                     <!-- the worth of the fish just landed -->
+<inc variable="player.score"><self>worth</self></inc>                     <!-- the worth of the fish just landed -->
 <set variable="shark.velocity.x"><multiply><value>shark.velocity.x</value><value>1.1</value></multiply></set>     <!-- speed the shark up -->
 <above>gun2.score</above>                                         <!-- a test following gun 2's score -->
 ```
@@ -120,8 +133,8 @@ Every other value is fixed at load, and one that is not a command's (a position,
 
 ```xml
 <position><x update="live"><add><value>player.x</value><value>18</value></add></x><y>0</y></position>      <!-- Demon Attack's shot, steered by the cannon -->
-<heading update="live"><subtract><value>self.level</value><value><multiply><value>self.side</value><value>self.elevation</value></multiply></value></subtract></heading>  <!-- Cannon Hill's barrel follows its elevation -->
-<variable name="tipx" update="live"><add>...<sine><value>self.heading</value></sine>...</add></variable>
+<heading update="live"><subtract><value><self>level</self></value><value><multiply><value><self>side</self></value><value><self>elevation</self></value></multiply></value></subtract></heading>  <!-- Cannon Hill's barrel follows its elevation -->
+<variable name="tipx" update="live"><add>...<sine><value><self>heading</self></value></sine>...</add></variable>
 ```
 
 - It may read anything a command can: live numbers, other variables, `self`, an operation. A group's live half is worked out for each member, its place in the group added.

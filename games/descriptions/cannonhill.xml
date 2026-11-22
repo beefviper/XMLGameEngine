@@ -79,72 +79,72 @@
       <position><x>0</x><y>0</y></position>
       <heading update="live">
         <subtract>
-          <value>self.level</value>
+          <value><self>level</self></value>
           <value>
             <multiply>
-              <value>self.side</value>
-              <value>self.elevation</value>
+              <value><self>side</self></value>
+              <value><self>elevation</self></value>
             </multiply>
           </value>
         </subtract>
       </heading>
       <actions>
         <action name="raise">
-          <inc variable="self.elevation">aimstep</inc>
-          <set variable="self.elevation">
+          <inc who="self" variable="elevation">aimstep</inc>
+          <set who="self" variable="elevation">
             <clamp>
-              <value>self.elevation</value>
+              <value><self>elevation</self></value>
               <atleast>0</atleast>
               <atmost>90</atmost>
             </clamp>
           </set>
         </action>
         <action name="lower">
-          <dec variable="self.elevation">aimstep</dec>
-          <set variable="self.elevation">
+          <dec who="self" variable="elevation">aimstep</dec>
+          <set who="self" variable="elevation">
             <clamp>
-              <value>self.elevation</value>
+              <value><self>elevation</self></value>
               <atleast>0</atleast>
               <atmost>90</atmost>
             </clamp>
           </set>
         </action>
         <action name="charge">
-          <inc variable="self.power">charge</inc>
-          <set variable="self.power"><smallest><value>self.power</value><value>most</value></smallest></set>
+          <inc who="self" variable="power">charge</inc>
+          <set who="self" variable="power"><smallest><value><self>power</self></value><value>most</value></smallest></set>
         </action>
         <action name="fire">
           <spawn object="shell">
             <position>
               <x><centered>
                 <add>
-                  <value>self.x</value>
-                  <value><divide><value>self.width</value><value>2</value></divide></value>
-                  <value>self.tipx</value>
+                  <value><self>x</self></value>
+                  <value><divide><value><self>width</self></value><value>2</value></divide></value>
+                  <value><self>tipx</self></value>
                 </add>
               </centered></x>
               <y><centered>
                 <add>
-                  <value>self.y</value>
-                  <value><divide><value>self.height</value><value>2</value></divide></value>
-                  <value>self.tipy</value>
+                  <value><self>y</self></value>
+                  <value><divide><value><self>height</self></value><value>2</value></divide></value>
+                  <value><self>tipy</self></value>
                 </add>
               </centered></y>
             </position>
             <velocity>
               <x>
                 <multiply>
-                  <value>self.power</value>
+                  <value><self>power</self></value>
                   <value>speed</value>
-                  <value><sine><value>self.heading</value></sine></value>
+                  <value><sine><value><self>heading</self></value></sine></value>
                 </multiply>
               </x>
               <y>
                 <multiply>
-                  <value>self.power</value>
+                  <value><self>power</self></value>
                   <value>speed</value>
                   <value>-1</value>
-                  <value><cosine><value>self.heading</value></cosine></value>
+                  <value><cosine><value><self>heading</self></value></cosine></value>
                 </multiply>
               </y>
             </velocity>
@@ -153,8 +153,8 @@
               <y>gravity</y>
             </acceleration>
           </spawn>
-          <set variable="self.last">self.power</set>
-          <set variable="self.power">0</set>
+          <set who="self" variable="last"><self>power</self></set>
+          <set who="self" variable="power">0</set>
           <become object="table" sprite="flying" />
           <become sprite="idle" />
           <play sound="fire" />
@@ -170,14 +170,14 @@
         <variable name="tipx" update="live">
           <multiply>
             <value>tip</value>
-            <value><sine><value>self.heading</value></sine></value>
+            <value><sine><value><self>heading</self></value></sine></value>
           </multiply>
         </variable>
         <variable name="tipy" update="live">
           <multiply>
             <value>tip</value>
             <value>-1</value>
-            <value><cosine><value>self.heading</value></cosine></value>
+            <value><cosine><value><self>heading</self></value></cosine></value>
           </multiply>
         </variable>
       </variables>

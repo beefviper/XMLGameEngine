@@ -315,7 +315,7 @@ TEST_CASE("<shift> moves objects and the places they go home to; one on a path o
 TEST_CASE("a path step that names something live is worked out as it starts, with self the one following", "[paths]")
 {
 	const std::string paths = "<paths><path name=\"aim\"><speed>20</speed>"
-		"<step><x><subtract><value>b.x</value><value>self.x</value></subtract></x><y>0</y></step><home /></path></paths>";
+		"<step><x><subtract><value>b.x</value><value><self>x</self></value></subtract></x><y>0</y></step><home /></path></paths>";
 	Loaded loaded(paths, box("a", 50, 50) + box("b", 10, 0));
 	Object& a = loaded.game.object("a");
 	Object& b = loaded.game.object("b");
@@ -334,7 +334,7 @@ TEST_CASE("a path step that names something live is worked out as it starts, wit
 TEST_CASE("a step's commands can name the one flying it as self, whoever sent it", "[paths]")
 {
 	const std::string paths = "<paths><path name=\"count\"><speed>10</speed>"
-		"<step><x>3</x><y>0</y><inc variable=\"self.n\">self.x</inc></step></path></paths>";
+		"<step><x>3</x><y>0</y><inc who=\"self\" variable=\"n\"><self>x</self></inc></step></path></paths>";
 	const std::string group = "<group name=\"b\"><sprite><rectangle><width>4</width><height>4</height><color>white</color></rectangle></sprite>"
 		"<position><y>40</y></position><velocity><x>0</x><y>0</y></velocity><collisions><off /></collisions>"
 		"<variables><variable name=\"n\">0</variable></variables>"

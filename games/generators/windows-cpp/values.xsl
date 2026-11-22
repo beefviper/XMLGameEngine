@@ -11,8 +11,8 @@
 <xsl:stylesheet version="1.0"
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
-  <!-- $node holds the value: its text, or one operation, <random>, <window>
-       or <centered />. $self is the object the value is of (for its own
+  <!-- $node holds the value: its text, or one operation, <random>, <window>,
+       <self> or <centered />. $self is the object the value is of (for its own
        variables and size); $axis is x or y in a <position>; $nested, that
        it is inside another operation and wants brackets. -->
   <xsl:template name="value">
@@ -34,6 +34,9 @@
         <xsl:text>, </xsl:text>
         <xsl:call-template name="value"><xsl:with-param name="node" select="$tag/max" /><xsl:with-param name="self" select="$self" /></xsl:call-template>
         <xsl:text>)</xsl:text>
+      </xsl:when>
+      <xsl:when test="local-name($tag) = 'self' and $self/variables/variable[@name = normalize-space($tag)]">
+        <xsl:call-template name="camel"><xsl:with-param name="name" select="normalize-space($tag)" /></xsl:call-template>
       </xsl:when>
       <xsl:when test="local-name($tag) = 'window'">
         <xsl:variable name="measure" select="normalize-space($tag)" />
@@ -114,7 +117,7 @@
       <xsl:when test="/game/variables/variable[@name = $text]">
         <xsl:call-template name="camel"><xsl:with-param name="name" select="$text" /></xsl:call-template>
       </xsl:when>
-      <xsl:when test="$self and (starts-with($text, concat($self/@name, '.')) or starts-with($text, 'self.')) and $self/variables/variable[@name = $own]">
+      <xsl:when test="$self and starts-with($text, concat($self/@name, '.')) and $self/variables/variable[@name = $own]">
         <xsl:call-template name="camel"><xsl:with-param name="name" select="$own" /></xsl:call-template>
       </xsl:when>
       <xsl:otherwise>

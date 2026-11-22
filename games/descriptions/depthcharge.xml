@@ -146,7 +146,7 @@
             <type>pixel</type>
             <collision edge="horizontal"><wrap /></collision>
             <collision class="charge">
-              <inc variable="status.score">self.worth</inc>
+              <inc variable="status.score"><self>worth</self></inc>
               <play sound="sink" />
               <spawn object="burst" />
               <die />

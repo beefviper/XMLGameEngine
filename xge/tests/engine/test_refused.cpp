@@ -106,8 +106,8 @@ TEST_CASE("an edge rule stops at a refused spawn, and the rules after it still r
 {
 	const played::Scratch file(played::box("ship", 0, 400,
 		"<velocity><x>-60</x><y>0</y></velocity>"
-		"<collisions><collision edge=\"left\"><spawn object=\"shot\" /><inc variable=\"self.shots\" /></collision>"
-		"<collision edge=\"left\"><inc variable=\"self.touches\" /></collision></collisions>"
+		"<collisions><collision edge=\"left\"><spawn object=\"shot\" /><inc who=\"self\" variable=\"shots\" /></collision>"
+		"<collision edge=\"left\"><inc who=\"self\" variable=\"touches\" /></collision></collisions>"
 		"<variables><variable name=\"shots\">0</variable><variable name=\"touches\">0</variable></variables>"),
 		"", {}, kCappedShot);
 	Played play(file.path);
@@ -121,8 +121,8 @@ TEST_CASE("an edge rule stops at a refused spawn, and the rules after it still r
 TEST_CASE("a rule about another object stops at a refused spawn", "[refused][spawn]")
 {
 	const played::Scratch file(played::box("ship", 300, 400,
-		"<collisions><collision object=\"rock\"><spawn object=\"shot\" /><inc variable=\"self.shots\" /></collision>"
-		"<collision object=\"rock\"><inc variable=\"self.touches\" /></collision></collisions>"
+		"<collisions><collision object=\"rock\"><spawn object=\"shot\" /><inc who=\"self\" variable=\"shots\" /></collision>"
+		"<collision object=\"rock\"><inc who=\"self\" variable=\"touches\" /></collision></collisions>"
 		"<variables><variable name=\"shots\">0</variable><variable name=\"touches\">0</variable></variables>")
 		+ played::box("rock", 312, 400, "<velocity><x>-60</x><y>0</y></velocity><collisions></collisions>"),
 		"", {}, kCappedShot);

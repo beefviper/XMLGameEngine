@@ -75,7 +75,7 @@ namespace xge
 			return std::nullopt;
 		}
 
-		const auto isIdentChar = [](char c) { return std::isalnum(static_cast<unsigned char>(c)) || c == '_'; };
+		const auto isIdentChar = [](char c) { return std::isalnum(static_cast<unsigned char>(c)) || c == '_' || c == '@'; };
 
 		for (std::size_t i = 0; i < reference.size(); ++i)
 		{

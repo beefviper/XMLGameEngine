@@ -101,7 +101,7 @@ TEST_CASE("self in any of a command's numbers is the object running it", "[value
 	for (const auto& [name, part] : commandValues)
 	{
 		INFO(name);
-		WrittenCommand command = commandWith(part, "self.h + 1");
+		WrittenCommand command = commandWith(part, "@self.h + 1");
 		CHECK(nameSelfIn(command, "frog"));
 		CHECK(part(command).text == "frog.h + 1");
 	}

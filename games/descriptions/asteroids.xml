@@ -175,7 +175,7 @@
       <timers>
         <timer>
           <every>1.5</every>
-          <set variable="self.velocity.y"><random><min>-90</min><max>90</max></random></set>
+          <set who="self" variable="velocity.y"><random><min>-90</min><max>90</max></random></set>
         </timer>
       </timers>
       <!-- the big one; it shoots anywhere (its timers are where play takes it) -->

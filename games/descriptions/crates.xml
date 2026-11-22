@@ -60,7 +60,7 @@
         </collisions>
         <actions>
           <action name="look">
-            <count class="spot" into="self.home"><here /></count>
+            <count who="self" class="spot" into="home"><here /></count>
             <condition variable="home"><equal>1</equal><become sprite="home" /></condition>
             <condition variable="home"><equal>0</equal><become sprite="crate" /></condition>
           </action>

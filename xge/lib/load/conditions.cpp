@@ -36,7 +36,7 @@ namespace xge
 		bool saysSelf(const WrittenValue& value)
 		{
 			WrittenValue probe = value;
-			return renameInValue(probe, "self", "self_");
+			return renameInValue(probe, "@self", "@self_");
 		}
 
 		// Whether a condition's class= and object= pick the object.
@@ -48,7 +48,7 @@ namespace xge
 
 		// A command's `from` (self, others) made the object `to`: as the
 		// object it names, at the start of the variables and values it names,
-		// and, as a look, its own name (sprite="self": the look named after
+		// and, as a look, its own name (as="self": the look named after
 		// it). Whether it named `from` at all.
 		bool renameIn(WrittenCommand& command, const std::string& from, const std::string& to)
 		{
@@ -77,20 +77,20 @@ namespace xge
 			for (const WrittenCommand& command : list)
 			{
 				WrittenCommand probe = command;
-				if (renameIn(probe, "others", "others_"))
+				if (renameIn(probe, "@others", "@others_"))
 				{
 					named = true;
 					for (const std::string& other : others)
 					{
 						WrittenCommand each = command;
-						renameIn(each, "others", other);
-						renameIn(each, "self", self);
+						renameIn(each, "@others", other);
+						renameIn(each, "@self", self);
 						out.push_back(std::move(each));
 					}
 					continue;
 				}
 				WrittenCommand each = command;
-				named = renameIn(each, "self", self) || named;
+				named = renameIn(each, "@self", self) || named;
 				out.push_back(std::move(each));
 			}
 			list = std::move(out);
@@ -124,7 +124,7 @@ namespace xge
 		// One about self is made, and checked, for the object being made;
 		// as it is tested, it is about the object testing it.
 		// The same for other, in a rule about touching: the one touched.
-		const bool own = !selfName.empty() && (writtenCondition.filterObject == "self" || writtenCondition.distance == "self" || writtenCondition.sees == "self"
+		const bool own = !selfName.empty() && (writtenCondition.filterObject == "@self" || writtenCondition.distance == "@self" || writtenCondition.sees == "@self"
 			|| saysSelf(writtenCondition.threshold));
 		const bool theirs = !otherName.empty() && namesOther(writtenCondition);
 		if (own || theirs)
@@ -136,15 +136,11 @@ namespace xge
 			made.saysSelf = true;
 			if (own) { made.madeFor = selfName; }
 			if (theirs) { made.madeAgainst = otherName; }
-			for (const char* name : { "self", "other" })
+			for (const char* name : { "@self", "@other" })
 			{
 				if (writtenCondition.filterObject == name) { made.filterObject = name; }
 				if (writtenCondition.distance == name) { made.distanceTo = name; }
 				if (writtenCondition.sees == name) { made.sees = name; }
-			}
-			if (theirs && writtenCondition.variableName.compare(0, 6, "other.") == 0)
-			{
-				throw std::runtime_error(where + ": variable=\"" + writtenCondition.variableName + "\": say whose with object=\"other\" and variable=\"" + writtenCondition.variableName.substr(6) + "\"");
 			}
 			if (saysSelf(writtenCondition.threshold) || (theirs && namesLive(writtenCondition.threshold)))
 			{
@@ -176,8 +172,8 @@ namespace xge
 						}
 					}
 				};
-				reads("self.", own ? selfName : std::string(), made.selfReads);
-				reads("other.", theirs ? otherName : std::string(), made.otherReads);
+				reads("@self.", own ? selfName : std::string(), made.selfReads);
+				reads("@other.", theirs ? otherName : std::string(), made.otherReads);
 			}
 			return made;
 		}
@@ -343,7 +339,7 @@ namespace xge
 	{
 		Condition condition = makeTest(writtenCondition, where, owner, objects);
 		std::vector<WrittenCommand> probe = writtenCondition.commands;
-		if (!forMatched(probe, "self_", { "others_" }))
+		if (!forMatched(probe, "@self_", { "@others_" }))
 		{
 			condition.commands = processCommands(writtenCondition.commands, where);
 			return condition;
@@ -369,7 +365,7 @@ namespace xge
 		for (const WrittenCommand& command : writtenCondition.commands)
 		{
 			std::vector<WrittenCommand> one{ command };
-			(forMatched(one, "self_", { "others_" }) ? eachOne : once).push_back(command);
+			(forMatched(one, "@self_", { "@others_" }) ? eachOne : once).push_back(command);
 		}
 		for (const std::string& self : matched)
 		{

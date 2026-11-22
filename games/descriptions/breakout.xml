@@ -113,7 +113,7 @@
           </x></position>
           <collisions>
             <collision object="ball">
-              <inc variable="status.score">self.worth</inc>
+              <inc variable="status.score"><self>worth</self></inc>
               <die />
             </collision>
           </collisions>

@@ -260,7 +260,7 @@
               <play sound="hit" />
             </collision>
             <collision class="farside">
-              <inc variable="self.score" />
+              <inc who="self" variable="score" />
               <reset />
               <play sound="cross" />
             </collision>

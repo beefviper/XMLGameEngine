@@ -28,6 +28,6 @@ namespace xge::words
 	inline const Name calling{ "calling" };
 	inline const Name called{ "called" };
 	// The two a rule names its own: the one it is for and the one it meets.
-	inline const Name self{ "self" };
-	inline const Name other{ "other" };
+	inline const Name self{ "@self" };
+	inline const Name other{ "@other" };
 }

@@ -168,7 +168,7 @@ namespace
 			"<variables><variable name=\"moved\">0</variable><variable name=\"score\">0</variable></variables></object>"
 			"<map name=\"board\"><tile><width>10</width><height>10</height></tile><position><x>0</x><y>0</y></position><cells /><row>" + row + "</row>"
 			"<group name=\"tiles\" class=\"tile\">" + number +
-			"<collisions><collision class=\"tile\"><merge variable=\"value\" /><inc variable=\"holder.score\">self.value</inc></collision></collisions>"
+			"<collisions><collision class=\"tile\"><merge variable=\"value\" /><inc variable=\"holder.score\"><self>value</self></inc></collision></collisions>"
 			"<variables><variable name=\"value\">2</variable></variables>"
 			"<group name=\"twos\" char=\"t\" /><group name=\"fours\" char=\"f\"><variables><variable name=\"value\">4</variable></variables></group></group></map>";
 	}

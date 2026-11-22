@@ -183,10 +183,33 @@ TEST_CASE("what a holder keeps its cards in order by is a variable some object h
 	CHECK_THAT(message, ContainsSubstring("<by variable=\"siut\">: no object has a variable or number of that name") && ContainsSubstring("did you mean 'suit'"));
 }
 
-TEST_CASE("an object, group, map or state may not take a name the engine's words start with, and nothing is a number", "[names]")
+TEST_CASE("every name is the game's: self, other, window and color are objects like any, and the engine's words are tags", "[names]")
 {
-	CHECK_THAT(errorOf(played::box("self", 0, 0)), ContainsSubstring("an object may not be called 'self'"));
-	CHECK_THAT(errorOf(played::box("window", 0, 0)), ContainsSubstring("an object may not be called 'window'"));
+	const auto counter = [](const std::string& name, int n)
+	{
+		return played::box(name, 0, 0, "<variables><variable name=\"n\">" + std::to_string(n) + "</variable></variables>");
+	};
+	// <self>n</self> is the object running it; self.n the object called self.
+	const played::Scratch file(counter("self", 2) + counter("other", 3) + counter("window", 4) + counter("color", 5)
+		+ played::box("me", 0, 0, "<variables><variable name=\"n\">0</variable></variables>"
+			"<timers><timer><every>0.5</every><inc who=\"self\" variable=\"n\"><add><value>self.n</value><value>other.n</value>"
+			"<value>window.n</value><value>color.n</value><value><self>n</self></value></add></inc></timer></timers>"),
+		"<pop />");
+	played::Played play(file.path);
+	play.frames(30);
+	CHECK(play.get("me").variable.at("n") == 14.0f);
+	play.frames(30);
+	CHECK(play.get("me").variable.at("n") == 42.0f);
+	CHECK(play.get("self").variable.at("n") == 2.0f);
+
+	// The engine's own names start with an @, which no text of a game can.
+	CHECK_THAT(errorOf(played::box("o", 0, 0, "<variables><variable name=\"w\">@window.right</variable></variables>")), ContainsSubstring("\"@window.right\" is not a name or a number"));
+	// who= takes only a pronoun (the schema says so first).
+	CHECK_FALSE(errorOf(played::box("o", 0, 0, "<actions><action name=\"a\"><inc who=\"me\" variable=\"n\" /></action></actions>")).empty());
+}
+
+TEST_CASE("nothing is called by a number", "[names]")
+{
 	CHECK_THAT(errorOf(played::box("7", 0, 0)), ContainsSubstring("an object may not be called '7': a number reads that way"));
 	CHECK_THAT(errorOf(played::box("o", 0, 0, "<variables><variable name=\"2\">0</variable></variables>")), ContainsSubstring("a variable may not be called '2'"));
 	// A variable is only read after a dot, so a word is free there.

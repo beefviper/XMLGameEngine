@@ -207,7 +207,7 @@ namespace xge
 	// `other` left in a list that is not a rule about another object.
 	static std::string otherOutOfPlace(const std::string& name)
 	{
-		return name == "other" ? "; other is the object a <collision> rule touched, so only a rule about another object (class=, object= or neither) names it" : std::string();
+		return name == "@other" ? "; other is the object a <collision> rule touched, so only a rule about another object (class=, object= or neither) names it" : std::string();
 	}
 
 	void checkObject(const Checking& checking, const std::string& name, const std::string& what, const char* kind)

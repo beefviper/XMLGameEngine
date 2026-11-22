@@ -48,7 +48,7 @@
   * A rule for every player is written once, for the class: `self` is the
     one it holds for (<lowest /> score wins, `self.got` joins its score),
     `others` the rest (26 to them when the moon is shot), and
-    sprite="self" the look named after it.
+    as="self" the look named after it.
 -->
 
 <game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
@@ -307,13 +307,13 @@
           <!-- all thirteen tricks taken: one who took all 26 shot the moon; else each one's points join its score -->
           <condition object="table" variable="tricks"><equal>13</equal>
             <condition class="player" variable="got"><equal>26</equal>
-              <inc variable="others.score">26</inc>
+              <inc who="others" variable="score">26</inc>
               <become object="message" sprite="moon" />
               <become object="table" sprite="done" />
               <pass object="players" member="0" />
             </condition>
             <condition class="player">
-              <inc variable="self.score">self.got</inc>
+              <inc who="self" variable="score"><self>got</self></inc>
               <become object="message" sprite="done" />
               <become object="table" sprite="done" />
               <pass object="players" member="0" />
@@ -343,7 +343,7 @@
         <condition object="table" sprite="done">
           <condition class="player" variable="score" total="highest"><atleast>100</atleast>
             <condition class="player" variable="score"><lowest />
-              <become object="over.winner" sprite="self" />
+              <become object="over.winner" as="self" />
               <push state="over" />
             </condition>
           </condition>

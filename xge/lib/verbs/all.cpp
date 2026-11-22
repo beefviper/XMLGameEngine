@@ -172,6 +172,25 @@ namespace xge
 		command.into = node.getAttribute("into");
 		command.from = node.getAttribute("from");
 
+		// who= says whose its variables are, or, naming none, the object it
+		// is about: <inc who="other" variable="score" />, <reset who="other" />.
+		if (const std::string who = readWho(node, where); !who.empty())
+		{
+			if (!command.object.empty()) { fail(where, "<" + command.verb + "> has object= and who=; who= says which object, so give one"); }
+			if (command.variable.empty() && command.into.empty()) { command.object = who; }
+			for (std::string* name : { &command.variable, &command.into })
+			{
+				if (!name->empty()) { *name = who + "." + *name; }
+			}
+		}
+		// as= takes the look named after an object: <become object="over.winner" as="self" />.
+		if (const std::string as = node.getAttribute("as"); !as.empty())
+		{
+			if (!command.sprite.empty()) { fail(where, "<" + command.verb + "> has sprite= and as=; give one"); }
+			if (!isPronoun(as)) { fail(where, "<" + command.verb + "> as=\"" + as + "\": as= is self, other or others"); }
+			command.sprite = "@" + as;
+		}
+
 		if (verb->read) { verb->read(node, where, command); }
 		return command;
 	}

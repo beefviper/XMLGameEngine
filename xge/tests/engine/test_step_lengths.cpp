@@ -61,13 +61,13 @@ TEST_CASE("an animation passes the same pictures, and runs their commands as oft
 	// 0.25, 0.4 ... seconds, 13 times in 2 seconds.
 	const std::string spinner = "<object name=\"spinner\">" + sprites +
 		"<animation><seconds>0.05</seconds><frame sprite=\"a\" /><frame sprite=\"b\" />"
-		"<frame sprite=\"c\"><inc variable=\"self.n\" /></frame></animation>"
+		"<frame sprite=\"c\"><inc who=\"self\" variable=\"n\" /></frame></animation>"
 		"<position><x>0</x><y>0</y></position><collisions><off /></collisions>"
 		"<variables><variable name=\"n\">0</variable></variables></object>";
 	// Once through, its <then> once.
 	const std::string flash = "<object name=\"flash\">" + sprites +
 		"<animation><seconds>0.1</seconds><once /><frame sprite=\"a\" /><frame sprite=\"b\" /><frame sprite=\"c\" />"
-		"<then><inc variable=\"self.ended\" /></then></animation>"
+		"<then><inc who=\"self\" variable=\"ended\" /></then></animation>"
 		"<position><x>20</x><y>0</y></position><collisions><off /></collisions>"
 		"<variables><variable name=\"ended\">0</variable></variables></object>";
 	const std::string game = smallGame(spinner + flash);

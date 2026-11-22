@@ -179,9 +179,9 @@
           <position><y><centered>sea</centered></y></position>
           <heading>0</heading>
           <actions>
-            <action name="left"><set variable="self.heading">315</set></action>
-            <action name="up"><set variable="self.heading">0</set></action>
-            <action name="right"><set variable="self.heading">45</set></action>
+            <action name="left"><set who="self" variable="heading">315</set></action>
+            <action name="up"><set who="self" variable="heading">0</set></action>
+            <action name="right"><set who="self" variable="heading">45</set></action>
           </actions>
           <variables>
             <variable name="score">0</variable>

@@ -102,6 +102,40 @@ namespace xge
 		return "@window." + text;
 	}
 
+	bool isPronoun(const std::string& word)
+	{
+		return word == "self" || word == "other" || word == "others";
+	}
+
+	// <self>score</self>: a variable of the object running it (<other>: the
+	// one it touched, <others>: each of the rest), as the engine names it.
+	static std::string pronounVariable(const XmlNode& tag, const std::string& where)
+	{
+		const std::string text = readText(tag);
+		if (tag.getFirstChild() || !isName(text, true))
+		{
+			fail(where + " > <" + tag.getName() + ">", "names one of its variables (or a live number such as x)");
+		}
+		return "@" + tag.getName() + "." + text;
+	}
+
+	// A tag that is one name the engine gives: a window measure or a
+	// pronoun's variable. Empty for any other tag.
+	static std::string engineName(const XmlNode& tag, const std::string& where)
+	{
+		if (tag.getName() == "window") { return windowMeasure(tag, where); }
+		if (isPronoun(tag.getName())) { return pronounVariable(tag, where); }
+		return {};
+	}
+
+	std::string readWho(const XmlNode& node, const std::string& where)
+	{
+		const std::string who = node.getAttribute("who");
+		if (who.empty()) { return {}; }
+		if (!isPronoun(who)) { fail(where, "<" + node.getName() + "> who=\"" + who + "\": who= is self, other or others"); }
+		return "@" + who;
+	}
+
 	// Text written as a value: a game's names never start with an @, which
 	// marks the engine's own (see windowMeasure).
 	static std::string writtenText(const std::string& text, const std::string& here)
@@ -133,10 +167,10 @@ namespace xge
 			const std::unique_ptr<XmlNode> inside = node->getFirstChild();
 			WrittenOperand operand;
 			operand.role = end;
-			if (inside && inside->getName() == "window")
+			if (const std::string named = inside ? engineName(*inside, there + " > <" + end + ">") : std::string(); !named.empty())
 			{
-				if (!text.empty() || inside->getNextSibling()) { fail(there + " > <" + end + ">", "holds a <window> and something more; an end is a number, a name or an operation"); }
-				operand.value = WrittenValue::expression(windowMeasure(*inside, there + " > <" + end + ">"));
+				if (!text.empty() || inside->getNextSibling()) { fail(there + " > <" + end + ">", "holds a <" + inside->getName() + "> and something more; an end is a number, a name or an operation"); }
+				operand.value = WrittenValue::expression(named);
 			}
 			else if (inside)
 			{
@@ -221,10 +255,10 @@ namespace xge
 		if (tag->getNextSibling()) { fail(here, "holds more than one tag"); }
 
 		if (tag->getName() == "random") { return readRandom(*tag, here); }
-		if (tag->getName() == "window") { return WrittenValue::expression(windowMeasure(*tag, here)); }
+		if (const std::string named = engineName(*tag, here); !named.empty()) { return WrittenValue::expression(named); }
 
 		const OperationShape* shape = operationShape(tag->getName());
-		if (!shape) { fail(here, "has <" + tag->getName() + ">, which is not an operation; expected a name, a number, <random>, <window>, " + operationTags()); }
+		if (!shape) { fail(here, "has <" + tag->getName() + ">, which is not an operation; expected a name, a number, <random>, <window>, <self>, <other>, <others>, " + operationTags()); }
 
 		WrittenValue value;
 		value.kind = WrittenValue::Kind::Formula;
@@ -320,7 +354,7 @@ namespace xge
 		const std::string tagName = tag->getName();
 
 		if (tagName == "random") { return readRandom(*tag, here); }
-		if (tagName == "window") { return WrittenValue::expression(windowMeasure(*tag, here)); }
+		if (const std::string named = engineName(*tag, here); !named.empty()) { return WrittenValue::expression(named); }
 		if (isOperation(tagName)) { return readOperation(*tag, here); }
 		if (tagName == "centered")
 		{
@@ -339,10 +373,10 @@ namespace xge
 					value.operations = readOperation(*inside, centered).operations;
 					return value;
 				}
-				if (inside->getName() == "window")
+				if (const std::string named = engineName(*inside, centered); !named.empty())
 				{
-					if (!value.text.empty()) { fail(centered, "holds both the text \"" + value.text + "\" and a <window>; use one or the other"); }
-					value.text = windowMeasure(*inside, centered);
+					if (!value.text.empty()) { fail(centered, "holds both the text \"" + value.text + "\" and a <" + inside->getName() + ">; use one or the other"); }
+					value.text = named;
 					return value;
 				}
 				if (inside->getName() != "offset" || inside->getFirstChild()) { fail(centered, "holds where the middle goes (a name, a number or an operation), one <offset> from the window's middle, or nothing for the window's middle"); }
@@ -372,7 +406,7 @@ namespace xge
 			return value;
 		}
 
-		fail(here, "unknown value tag <" + tagName + ">; a value is a number, a name, <random>, <window>, <centered>, a side (<left>, <right>, <top>, <bottom>) or an operation: " + operationTags());
+		fail(here, "unknown value tag <" + tagName + ">; a value is a number, a name, <random>, <window>, <self>, <other>, <others>, <centered>, a side (<left>, <right>, <top>, <bottom>) or an operation: " + operationTags());
 	}
 
 	WrittenValue readValue(const XmlNode& node, const std::string& where)
@@ -400,7 +434,7 @@ namespace xge
 		for (std::unique_ptr<XmlNode> child = node.getFirstChild(); child != nullptr; child = child->getNextSibling())
 		{
 			const std::string tag = child->getName();
-			if (tag == "random" || tag == "window" || isOperation(tag))
+			if (tag == "random" || tag == "window" || isPronoun(tag) || isOperation(tag))
 			{
 				if (!valueTagName.empty()) { fail(here, "holds more than one value tag"); }
 				valueTagName = tag;
@@ -417,7 +451,7 @@ namespace xge
 		if (!valueTag && text.empty()) { fail(here, "has no value; its number goes between its tags"); }
 		if (!valueTag) { return WrittenValue::expression(writtenText(text, here)); }
 		if (valueTag->getName() == "random") { return readRandom(*valueTag, here); }
-		if (valueTag->getName() == "window") { return WrittenValue::expression(windowMeasure(*valueTag, here)); }
+		if (const std::string named = engineName(*valueTag, here); !named.empty()) { return WrittenValue::expression(named); }
 		return readOperation(*valueTag, here);
 	}
 

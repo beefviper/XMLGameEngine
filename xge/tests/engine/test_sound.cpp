@@ -837,14 +837,14 @@ TEST_CASE("a frame's commands run each time the animation moves on to it: a tick
 	const std::vector<std::string> expected{ "tock", "tick", "tock", "tick" };
 	// Six frames a picture: over 25 the pictures change four times (b, a, b, a).
 	CHECK(marched("<animation><seconds>0.1</seconds>"
-		"<frame sprite=\"a\"><play sound=\"tick\" /><inc variable=\"self.steps\" /></frame>"
-		"<frame sprite=\"b\"><play sound=\"tock\" /><inc variable=\"self.steps\" /></frame></animation>", 25) == expected);
+		"<frame sprite=\"a\"><play sound=\"tick\" /><inc who=\"self\" variable=\"steps\" /></frame>"
+		"<frame sprite=\"b\"><play sound=\"tock\" /><inc who=\"self\" variable=\"steps\" /></frame></animation>", 25) == expected);
 	CHECK(marched("<animation name=\"march\"><seconds>0.1</seconds>"
-		"<frame sprite=\"a\"><play sound=\"tick\" /><inc variable=\"self.steps\" /></frame>"
-		"<frame sprite=\"b\"><seconds>0.1</seconds><play sound=\"tock\" /><inc variable=\"self.steps\" /></frame></animation>", 25) == expected);
+		"<frame sprite=\"a\"><play sound=\"tick\" /><inc who=\"self\" variable=\"steps\" /></frame>"
+		"<frame sprite=\"b\"><seconds>0.1</seconds><play sound=\"tock\" /><inc who=\"self\" variable=\"steps\" /></frame></animation>", 25) == expected);
 	// A frame with none is quiet.
 	CHECK(marched("<animation><seconds>0.1</seconds><frame sprite=\"a\" />"
-		"<frame sprite=\"b\"><play sound=\"tock\" /><inc variable=\"self.steps\" /></frame></animation>", 25) == std::vector<std::string>{ "tock", "tock" });
+		"<frame sprite=\"b\"><play sound=\"tock\" /><inc who=\"self\" variable=\"steps\" /></frame></animation>", 25) == std::vector<std::string>{ "tock", "tock" });
 }
 
 TEST_CASE("a state's music names a sound of the game", "[sound][xml][music][errors]")

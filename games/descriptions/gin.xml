@@ -236,7 +236,7 @@
               <pick class="card" />
               <place into="discard" />
               <play sound="card" />
-              <set variable="self.discarded">1</set>
+              <set who="self" variable="discarded">1</set>
               <become object="table" sprite="drawing" />
               <pass />
             </action>
@@ -368,7 +368,7 @@
         <condition object="table" sprite="done">
           <condition class="player" variable="score" total="highest"><atleast>100</atleast>
             <condition class="player" variable="score"><highest />
-              <become object="over.winner" sprite="self" />
+              <become object="over.winner" as="self" />
               <push state="over" />
             </condition>
           </condition>
