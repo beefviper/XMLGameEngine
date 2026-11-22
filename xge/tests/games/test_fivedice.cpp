@@ -141,13 +141,18 @@ TEST_CASE("fivedice: a written box ends the turn, and a full card ends the game 
 	{
 		play.roll();
 		play.tap(KeyCode::Num1);
+		play.tap(KeyCode::Num4);
 		play.frames(1);
 		if (row <= 6) { play.showing({ float(row), float(row), float(row), float(row), 1 }); }
 		else { play.showing({ 2, 3, 4, 5, 6 }); }
 		play.write();
 		REQUIRE(play.box(row, "filled") == 1);
 		REQUIRE(play.card("rolls") == 0);
-		REQUIRE(play.of("dice.1", "kept") == 0);
+		for (int number = 1; number <= 5; ++number)
+		{
+			REQUIRE(play.of("dice." + std::to_string(number), "kept") == 0);
+			REQUIRE(play.get("dice." + std::to_string(number)).looks.worn == play.get("dice.2").looks.worn);
+		}
 		if (row < 13)
 		{
 			REQUIRE(play.card("turn") == float(row + 1));
