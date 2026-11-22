@@ -45,6 +45,10 @@ namespace xge
 		bool sendHeld(Name from, Name into, int count, bool all, Name sprite);
 		bool orderHeld(Name holder);
 		bool turnHeld(Object& holder, Name sprite);
+		// What a holder holds, the bottom first (none: no such holder); one
+		// of them, by its number, sent into another (false: not there).
+		std::vector<Object*> heldIn(Name holder);
+		bool sendItem(int number, Name from, Name into);
 
 		// The deal at the start of a state, and where every held item is drawn.
 		void sendStarts();

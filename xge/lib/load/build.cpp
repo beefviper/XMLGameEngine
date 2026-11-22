@@ -515,6 +515,22 @@ namespace xge
 			set.on = NameStore::program().of(writtenSet.on);
 			set.closeClass = writtenSet.closeClass;
 			set.closeObject = writtenSet.closeObject;
+			for (const auto& [column, row] : writtenSet.route)
+			{
+				if (column > writtenObject.cell.mapColumns || row > writtenObject.cell.mapRows)
+				{
+					throw std::runtime_error(where + " > <moves> > <route>: column " + std::to_string(column) + ", row " + std::to_string(row) + " is off its map, which is "
+						+ std::to_string(writtenObject.cell.mapColumns) + " cells across and " + std::to_string(writtenObject.cell.mapRows) + " down");
+				}
+				set.route.cells.push_back({ column, row });
+			}
+			set.route.start = writtenSet.routeStart;
+			set.route.end = writtenSet.routeEnd;
+			set.route.home = writtenSet.home;
+			set.route.steps = writtenSet.steps;
+			set.route.into = writtenSet.stepsInto;
+			set.route.hits = NameStore::program().of(writtenSet.hits);
+			if (!set.route.cells.empty() && set.route.steps.empty()) { throw std::runtime_error(where + " > <moves>: a <route> needs <steps holder=\"...\" />, what says how far each move goes"); }
 			parts->give(parts->moves, object.id).sets.push_back(std::move(set));
 		}
 		for (const WrittenObject::WrittenMarkSet& writtenSet : writtenObject.markSets)
@@ -646,6 +662,8 @@ namespace xge
 			mapPlace.columns = writtenObject.cell.mapColumns;
 			mapPlace.rows = writtenObject.cell.mapRows;
 			mapPlace.tile = { evaluate(writtenObject.cell.tileWidth, where), evaluate(writtenObject.cell.tileHeight, where) };
+			mapPlace.stack = writtenObject.cell.stack;
+			mapPlace.stackAcross = writtenObject.cell.stackAcross;
 			mapPlace.origin = startFor(object).position - object.layout.cellOffset;
 
 			// On a cell map: the cell it is in, its map's checks, and a

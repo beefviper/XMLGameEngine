@@ -951,6 +951,7 @@ namespace xge
 		std::vector<PieceMoveTo> found;
 		const Object::MoveSet* set = moveSetOf(piece);
 		if (!set || !piece.onCells || !piece.exists) { return found; }
+		if (!set->route.cells.empty()) { return jumpsOnly ? found : routeMoves(piece); }
 		const int column = whole(game.place(piece).column);
 		const int row = whole(game.place(piece).row);
 		const auto onMap = [&](int c, int r) { return c >= 1 && r >= 1 && c <= game.mapOf(piece).columns && r <= game.mapOf(piece).rows; };
@@ -1282,6 +1283,17 @@ namespace xge
 		if (move == moves.end()) { return false; }
 
 		const Object::MoveSet* set = moveSetOf(*piece);
+		if (set && !set->route.cells.empty())
+		{
+			game.pickerFor(picker).fromColumn = whole(game.place(*piece).column);
+			game.pickerFor(picker).fromRow = whole(game.place(*piece).row);
+			game.pickerFor(picker).toColumn = column;
+			game.pickerFor(picker).toRow = row;
+			placeAlong(*piece, *move);
+			game.pickerFor(picker).picked.clear();
+			countMoves();
+			return true;
+		}
 		const bool jumped = move->taken != nullptr;
 		if (!game.pickerOf(picker).inChain)
 		{

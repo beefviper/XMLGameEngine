@@ -482,6 +482,10 @@ namespace xge
 		// settles on it (its <checks>). Every piece of the map carries them.
 		bool cells{ false };
 		std::vector<WrittenCheck> checks;
+		// A cell of several tiles: how many, and whether they run across
+		// (else down). The tile above is then the whole cell.
+		int stack{ 1 };
+		bool stackAcross{ false };
 
 		// The character of the map's rows that picked it ('\0' for none).
 		char character{};
@@ -724,6 +728,15 @@ namespace xge
 			std::vector<std::string> on;    // <on class>: a piece put goes only on one of these, in its place
 			std::string closeClass;          // <close class object>: a put walling in a piece of closeClass...
 			std::string closeObject;         // ...puts a copy of closeObject in its cell
+			// <route>, <steps>, <hit> (see Object::Route): its cells in order,
+			// a whole cell counting from 1 each.
+			std::vector<std::pair<int, int>> route;
+			bool routeStart{ false };
+			bool routeEnd{ false };
+			int home{};
+			std::string steps;
+			std::string stepsInto;
+			std::vector<std::string> hits;
 		};
 		std::vector<WrittenMoveSet> moveSets;
 		// <marks>: on a picker, the pieces it shows on a map of cells for
@@ -1458,6 +1471,10 @@ namespace xge
 			Vector2f tile{};
 			int columns{};
 			int rows{};
+			// A cell of several tiles (<cells><height>): how many, and whether
+			// they run across. Its pieces stack in them (CellMaps::layStacks).
+			int stack{ 1 };
+			bool stackAcross{ false };
 			// The map it was written on. Sent to another (a next-piece box), it
 			// is only shown there: its timers do not count and its actions do
 			// not run until it is back (Game::awayFromHome).
@@ -1496,6 +1513,29 @@ namespace xge
 			int x{};
 			int y{};
 		};
+		// <route>: the cells a piece goes along, in order; the first its
+		// start when `start` (where a piece hit waits, and comes in from
+		// before any other of its class moves), the last its end when `end`
+		// (borne off, once every piece of the class is within `home` cells
+		// of it). A move goes as many cells along as the worth of an item
+		// `steps` holds, which is then sent `into`; a turn uses as many of
+		// them as it can. Landing on a lone piece of a class it `hits`
+		// sends that piece to its own start; two or more stop it.
+		struct Route
+		{
+			struct Cell
+			{
+				int column{};
+				int row{};
+			};
+			std::vector<Cell> cells;
+			bool start{ false };
+			bool end{ false };
+			int home{};
+			Name steps;
+			Name into;
+			std::vector<Name> hits;
+		};
 		struct MoveSet
 		{
 			std::optional<std::size_t> look;
@@ -1508,7 +1548,8 @@ namespace xge
 			std::vector<Name> on;
 			Name closeClass;
 			Name closeObject;
-			bool puts() const noexcept { return moves.empty(); }
+			Route route;
+			bool puts() const noexcept { return moves.empty() && route.cells.empty(); }
 		};
 		struct Moves
 		{
@@ -1518,6 +1559,9 @@ namespace xge
 			// A piece whose set has <flank>s counts the cells a new piece of its
 			// kind could be put in as well.
 			float count{};
+			// On a <route>: how far along it is (the live number `along`), 0
+			// at its start; -1 off it.
+			float along{ -1.0f };
 		};
 
 		// <marks>: copies of the mark pieces put in the cells marked (see
@@ -2217,6 +2261,10 @@ namespace xge
 		// <cells /> and the <checks> (see WrittenCell::cells).
 		bool cells{ false };
 		std::vector<WrittenCheck> checks;
+		// <cells><width> or <height>: a cell is that many tiles, and the
+		// pieces in it stack in its tiles (a backgammon point).
+		int cellWidth{ 1 };
+		int cellHeight{ 1 };
 
 		int across() const noexcept { return rows.empty() ? columns : static_cast<int>(rows.front().size()); }
 		int down() const noexcept { return rows.empty() ? rowCount : static_cast<int>(rows.size()); }

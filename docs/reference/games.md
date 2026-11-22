@@ -98,6 +98,7 @@ Each plays the computer, or two players with 2 on the title. Cursor on W A S D o
 |---|---|---|
 | `checkers` | Space picks up and puts down, X or Backspace puts back; M, V, J options | [`<moves>`](boards.md), forced jumps, kings by `<promote>`, [`<marks>`](boards.md#marks), a computer that [`<think>`](states.md#computer-players)s; red and white a [players group](states.md#players-as-a-group) that each `<owns class>` its pieces |
 | `reversi` | Space puts a disc; M option | [`<flank>`](boards.md#pieces-put-not-moved), `<put>`, the score by `<count>` |
+| `backgammon` | Space rolls, picks up and puts down; X puts back; C doubles, Y takes, N drops | points as [tall cells](maps.md#tall-cells), each side's [`<route>`](boards.md#along-a-route) with `<steps>` by the dice and `<hit>`, live `along` for the win and gammons; the cube as variables |
 | `fivedice` | Space rolls (three a turn), 1 to 5 keep a die, W/S along the card, E writes | dice as a held group whose six looks are faces and whose `worth` a `<set>` rolls; the cup [`<counts>`](cards.md#holders) them, and a holder per box [scores `<with>`](cards.md#patterns) the cup by one pattern (three or four alike, full house, runs, five alike); a group text showing each box's own number |
 | `fourinarow` | A/D move, Space, S or Down drops | [`<fall />`](boards.md#pieces-put-not-moved) in the moves; the win by a `<line>` check |
 | `tictactoe` | Space marks; A/D on the title for easy or smart | an empty `<moves />`: any free square |

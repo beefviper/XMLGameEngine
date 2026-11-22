@@ -86,6 +86,10 @@ A map with `<cells />` is a playfield such as Tetris's well: pieces move a whole
 - **Spawning into a cell**: `<spawn object="pieces"><random /><column>4</column><row>1</row></spawn>`. Column and row count from 1; left out, they are the spawner's cell. `<free />` is a free cell at random (`<free><below>6</below></free>`: under row 6). `<random />` picks one member of a group. A spawn into a taken cell or off the map is refused.
 - **A `<shape>`** is a piece of several cells drawn as rows; each character is the map's piece that picks it, `.` is no cell. A group of groups may pick one character for all of them: a shape's cell of that character is any one at random (Columns' jewels). Live numbers `column` and `row` are a piece's cell.
 
+### Tall cells
+
+`<cells><height>6</height></cells>` makes each cell six tiles tall (`<width>`: wide), so a map of 12 rows has 2 rows of cells. A piece's character picks the cell its tile is in, and the pieces in a cell stack in its tiles from the end at the board's nearer edge, closer together when there are more than its tiles: a backgammon point drawn with its checkers.
+
 ### Moving on cells
 
 | Verb | Does |

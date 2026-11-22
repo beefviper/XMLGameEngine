@@ -1691,6 +1691,35 @@ namespace xge
 		return true;
 	}
 
+	std::vector<Object*> Holders::heldIn(Name name)
+	{
+		std::vector<Object*> held;
+		Object* holder = holderNamed(name);
+		if (!holder) { return held; }
+		for (const int number : game.holderOf(*holder).items)
+		{
+			if (Object* item = itemAt(number)) { held.push_back(item); }
+		}
+		return held;
+	}
+
+	bool Holders::sendItem(int number, Name fromName, Name intoName)
+	{
+		Object* from = holderNamed(fromName);
+		Object* into = holderNamed(intoName);
+		if (!from || !into || from == into) { return false; }
+		std::vector<int>& items = game.holderOf(*from).items;
+		const auto found = std::find(items.begin(), items.end(), number);
+		if (found == items.end()) { return false; }
+		items.erase(found);
+		refreshHolder(*from);
+		putInHolder(*into, number);
+		refreshHolder(*into);
+		showTop(*from);
+		layOutItems();
+		return true;
+	}
+
 	bool Holders::orderHeld(Name name)
 	{
 		Object* holder = holderNamed(name);

@@ -95,7 +95,7 @@ The review that started this plan argued with this list; its view is beside each
 
 | Listed | The review's view |
 |---|---|
-| **Backgammon**, the author's call once the word list in [board games](designs/26-board-games.md#open) is read | A large rule set: a track of holders, moves by dice, the bar, bearing off, legality over both dice, the cube |
+| **A computer for Backgammon** ([board games](designs/26-board-games.md#open)) | `<think>` searching over chance: an expected value over the 21 rolls, by the route's own moves |
 | **Moves as timelines** (fighting games: key sequences, blocking that a fist meets first, hit-stun, rounds), the next class after tables and tracks ([tables-and-tracks](designs/25-tables-and-tracks.md)) | Animations that run once and a hitbox per frame are built (F2, done; `sparring` proves them). Stop before combos |
 | **Lookahead for action games' computers** ([board-games](designs/26-board-games.md#open)) | A research project; arcade enemies are better on their simple rules |
 | **A deck of single cards**, each its own picture and numbers ([cards](designs/27-cards.md)) | Wait until a game cannot be written without it |
@@ -144,6 +144,7 @@ Games the vocabulary cannot say yet: [near misses](designs/54-games.md#near-miss
 
 What only eyes, ears or MSVC can check. Whoever lands a change that needs one adds its line; the author deletes it once seen.
 
+- **Backgammon:** the stacks read well, the cursor frames a point, and a hit checker shows on the bar.
 - **Five Dice:** the dice read well at their size, kept dice turn gold, and the card's offers are easy to follow.
 
 - **The schema's documentation in an editor (A6), not urgent (the author works mostly from the command line):** hovering `<deflect>` (or any tag) in VS Code with the XML extension shows its sentence, and completion lists show them too.

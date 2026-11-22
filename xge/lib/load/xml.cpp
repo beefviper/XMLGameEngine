@@ -1189,6 +1189,52 @@ namespace xge
 			return std::stoi(text);
 		}
 
+		// A whole number of at least 1 from that child of `node`.
+		int readWholeChild(const XmlNode& node, const char* tag, const std::string& where)
+		{
+			const auto part = findChild(&node, tag);
+			if (!part) { fail(where, std::string("missing <") + tag + ">"); }
+			return readCount(*part, where);
+		}
+
+		// <route>: its cells in order. A <row number> or <column number> is
+		// the cells <from> one <to> another along it, either way round; a
+		// <start> or <end> (<column> and <row>) one cell, first or last.
+		void readRoute(const XmlNode& node, WrittenObject::WrittenMoveSet& set, const std::string& where)
+		{
+			for (std::unique_ptr<XmlNode> part = node.getFirstChild(); part != nullptr; part = part->getNextSibling())
+			{
+				const std::string tag = part->getName();
+				const std::string here = where + " > <" + tag + ">";
+				if (tag == "start" || tag == "end")
+				{
+					if (tag == "start" && !set.route.empty()) { fail(here, "comes first: it is where the route begins"); }
+					set.route.emplace_back(readWholeChild(*part, "column", here), readWholeChild(*part, "row", here));
+					if (tag == "start") { set.routeStart = true; continue; }
+					set.routeEnd = true;
+					if (findChild(part.get(), "home")) { set.home = readWholeChild(*part, "home", here); }
+					continue;
+				}
+				if (set.routeEnd) { fail(here, "comes after <end>, which is the route's last cell"); }
+				const std::string text = requireAttribute(*part, "number", here);
+				if (text.empty() || text.size() > 4 || !std::all_of(text.begin(), text.end(), [](unsigned char c) { return std::isdigit(c) != 0; }) || std::stoi(text) < 1)
+				{
+					fail(here, "number=\"" + text + "\": expected a whole number from 1");
+				}
+				const int line = std::stoi(text);
+				const int from = readWholeChild(*part, "from", here);
+				const int to = readWholeChild(*part, "to", here);
+				const int way = to >= from ? 1 : -1;
+				for (int at = from;; at += way)
+				{
+					if (tag == "row") { set.route.emplace_back(at, line); }
+					else { set.route.emplace_back(line, at); }
+					if (at == to) { break; }
+				}
+			}
+			if (set.route.size() < 2) { fail(where, "goes through fewer than two cells"); }
+		}
+
 		// <moves>: a board game piece's steps and jumps, a set for each look
 		// that has its own (sprite=) and one for the rest.
 		void readPieceMoves(const XmlNode& node, WrittenObject& object, const std::string& where)
@@ -1222,6 +1268,18 @@ namespace xge
 						continue;
 					}
 					if (tag == "fall") { set.fall = true; continue; }
+					if (tag == "route") { readRoute(*move, set, here + " > <route>"); continue; }
+					if (tag == "steps")
+					{
+						set.steps = move->getAttribute("holder");
+						set.stepsInto = move->getAttribute("into");
+						continue;
+					}
+					if (tag == "hit")
+					{
+						set.hits.push_back(move->getAttribute("class"));
+						continue;
+					}
 					if (tag == "on")
 					{
 						set.on.push_back(move->getAttribute("class"));
@@ -2529,6 +2587,13 @@ namespace xge
 			if (auto columns = children.find("columns")) { map.columns = readCount(*columns, where); }
 			if (auto rows = children.find("rows")) { map.rowCount = readCount(*rows, where); }
 			map.cells = children.find("cells") != nullptr;
+			if (const XmlNode* cells = children.find("cells"))
+			{
+				const std::string here = where + " > <cells>";
+				if (findChild(cells, "width")) { map.cellWidth = readWholeChild(*cells, "width", here); }
+				if (findChild(cells, "height")) { map.cellHeight = readWholeChild(*cells, "height", here); }
+				if (map.cellWidth > 1 && map.cellHeight > 1) { fail(here, "has a <width> and a <height>; a cell's pieces stack one way, so give one"); }
+			}
 			if (auto checks = children.find("checks"))
 			{
 				if (!map.cells) { fail(where, "has <checks>, which ask about a map with <cells />"); }
@@ -2550,6 +2615,11 @@ namespace xge
 			if ((map.columns > 0) != (map.rowCount > 0)) { fail(where, "has <columns> or <rows> and not the other; a map without <row>s needs both"); }
 			if (map.rows.empty() && map.columns == 0) { fail(where, "has no <row>s, and no <columns> and <rows>"); }
 			if (!map.rows.empty() && map.columns > 0) { fail(where, "has <row>s and <columns> and <rows>; its rows say how big it is, so give one or the other"); }
+			if (map.across() % map.cellWidth != 0 || map.down() % map.cellHeight != 0)
+			{
+				fail(where, "is " + std::to_string(map.across()) + " by " + std::to_string(map.down()) + " tiles, which are not whole cells of "
+					+ std::to_string(map.cellWidth) + " by " + std::to_string(map.cellHeight));
+			}
 
 			std::map<char, std::string> picked;
 			map.picked = &picked;

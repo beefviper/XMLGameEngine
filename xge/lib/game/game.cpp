@@ -139,6 +139,7 @@ namespace xge
 		itemHolders.markOddsRead();
 		itemHolders.sendStarts();
 		itemHolders.scoreDueHolders();
+		cellMapping.layStacks();
 		// The players: the first one's turn; those the computer plays.
 		for (const WrittenObject& written : writtenObjects)
 		{
@@ -219,6 +220,7 @@ namespace xge
 		playOneFrame(getCurrentObjects(), windowDesc, *this, seconds);
 		settle();
 		cellMapping.showJoins();
+		cellMapping.layStacks();
 		placeByResizedTexts();
 	}
 

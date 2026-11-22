@@ -10,6 +10,7 @@
 #include "game/object.h"
 
 #include <optional>
+#include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -37,6 +38,7 @@ namespace xge
 			int column{};
 			int row{};
 			Object* taken{ nullptr };
+			int steps{};    // along a <route>: how far, the worth used
 		};
 		// Puts a piece in that cell of its map of cells.
 		void putInCell(Object& object, int column, int row);
@@ -160,6 +162,16 @@ namespace xge
 		const Object::MoveSet* moveSetOf(const Object& piece) const noexcept;
 		std::vector<PieceMoveTo> movesOf(Object& piece, bool jumpsOnly);
 		std::vector<PieceMoveTo> legalMoves(Object& piece, bool jumpsOnly);
+		// Along a <route> (game/routes.cpp): the moves a piece may make by
+		// the worths its steps holder holds, a turn using as many as it can
+		// (the live number `along` set on the way); one made, what it hits
+		// sent to its start and the worth used sent on.
+		std::vector<PieceMoveTo> routeMoves(Object& piece);
+		void placeAlong(Object& piece, const PieceMoveTo& move);
+		// Pieces sharing a cell of several tiles, laid in its tiles from the
+		// end at the board's nearer edge (closer together when they are
+		// more than its tiles); at the end of every frame.
+		void layStacks();
 
 		// The cells a refused step was going into, while its touch's rules
 		// run: no <free /> spawn goes there.
@@ -220,5 +232,7 @@ namespace xge
 			CellsStill& operator=(const CellsStill&) = delete;
 		};
 		HeldCells heldCells;
+		// How many steps a route's turn can use, by the board and the steps.
+		std::unordered_map<std::string, int> routeMemo;
 	};
 }

@@ -99,3 +99,32 @@ What a piece's `<moves>` say decides where `<put>` may go:
 - Live `moves` of a putting piece counts the cells it could go, so a side whose `moves` add up to 0 must pass.
 - The map's `<checks>` are asked after each put, so `<line class="red"><atleast>4</atleast>` finds four in a row.
 - `<count class="black" into="score.black" />` sets the variable to how many of that class are in play, those put this frame included.
+
+## Along a route
+
+Backgammon's checkers race round the board by the dice rather than step by offsets. A red checker:
+
+```xml
+<moves>
+  <route>
+    <start><column>7</column><row>2</row></start>          <!-- its bar -->
+    <row number="2"><from>13</from><to>8</to></row>        <!-- the points, in order -->
+    <row number="2"><from>6</from><to>1</to></row>
+    <row number="1"><from>1</from><to>6</to></row>
+    <row number="1"><from>8</from><to>13</to></row>
+    <end><column>14</column><row>1</row><home>6</home></end>  <!-- its tray -->
+  </route>
+  <steps holder="rolled" into="used" />
+  <hit class="white" />
+</moves>
+```
+
+- **`<route>`** is the cells it goes along, in order: runs of a `<row number>` or `<column number>` from one cell `<to>` another, either way round.
+- **`<steps holder into>`**: a move goes as many cells along as the `worth` of an item that holder holds (a [die](cards.md#holders)), which is then sent into the other. A turn uses as many as it can; when only one fits, the biggest that does.
+- **`<hit class>`**: landing on a lone piece of that class sends it to the start of its own route. Two or more of them close the cell. Any other piece closes it too.
+- **`<start>`** is the first cell: a piece hit waits there, and one waiting moves before any other of its class.
+- **`<end>`** is the last: a piece goes there (borne off) only once every piece of its class is within `<home>` cells of it, and further than it needs only from the furthest back.
+- **Live number `along`**: how far a piece is along its route, 0 at the start, -1 off it. `class="red" variable="along" total="lowest"` reaching the end is a side all borne off.
+- `<place />` makes the move ending in the picker's cell; the end cell takes any die that may bear the piece off there, the smallest first.
+
+Pieces sharing a cell stack in it when its map's [cells are several tiles](maps.md#tall-cells).

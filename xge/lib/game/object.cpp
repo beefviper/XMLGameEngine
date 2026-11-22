@@ -179,6 +179,17 @@ namespace xge
 		return any;
 	}
 
+	namespace
+	{
+		WrittenValue operationOf(const char* op, std::vector<WrittenValue> values);
+
+		// The value that many times over (itself, once).
+		WrittenValue timesWhole(const WrittenValue& value, int times)
+		{
+			return times == 1 ? value : operationOf("multiply", { value, WrittenValue::expression(std::to_string(times)) });
+		}
+	}
+
 	std::vector<std::pair<std::size_t, std::size_t>> tilesOf(const WrittenMap& map, char character)
 	{
 		std::vector<std::pair<std::size_t, std::size_t>> tiles;
@@ -197,14 +208,17 @@ namespace xge
 		object.cell.character = character;
 		object.writtenPosition = map.position;
 		object.cell.map = map.name;
-		object.cell.mapColumn = static_cast<int>(column) + 1;
-		object.cell.mapRow = static_cast<int>(row) + 1;
-		object.cell.mapColumns = map.across();
-		object.cell.mapRows = map.down();
+		// A cell of several tiles is the tile the object knows.
+		object.cell.mapColumn = static_cast<int>(column) / map.cellWidth + 1;
+		object.cell.mapRow = static_cast<int>(row) / map.cellHeight + 1;
+		object.cell.mapColumns = map.across() / map.cellWidth;
+		object.cell.mapRows = map.down() / map.cellHeight;
 		object.cell.cells = map.cells;
 		object.cell.checks = map.checks;
-		object.cell.tileWidth = map.tileWidth;
-		object.cell.tileHeight = map.tileHeight;
+		object.cell.tileWidth = timesWhole(map.tileWidth, map.cellWidth);
+		object.cell.tileHeight = timesWhole(map.tileHeight, map.cellHeight);
+		object.cell.stack = std::max(map.cellWidth, map.cellHeight);
+		object.cell.stackAcross = map.cellWidth > 1;
 		if (std::find(object.outerGroups.begin(), object.outerGroups.end(), map.name) == object.outerGroups.end())
 		{
 			object.outerGroups.insert(object.outerGroups.begin(), map.name);
@@ -442,6 +456,13 @@ namespace xge
 		bool hasPlace(const Parts& parts, const Object& object) { return parts.cells.has(object.id); }
 		bool isHolder(const Parts& parts, const Object& object) { return parts.holders.has(object.id); }
 		bool hasMoves(const Parts& parts, const Object& object) { return parts.moves.has(object.id); }
+		float& alongNumber(Parts& parts, Object& object)
+		{
+			if (Object::Moves* moves = parts.moves.find(object.id)) { return moves->along; }
+			thread_local float none;
+			none = -1.0f;
+			return none;
+		}
 		float& movesNumber(Parts& parts, Object& object)
 		{
 			if (Object::Moves* moves = parts.moves.find(object.id)) { return moves->count; }
@@ -467,6 +488,7 @@ namespace xge
 			{ "column", [](Parts& p, Object& o) -> float& { return placeNumber(p, o, &Object::Cells::Place::column); }, false, hasPlace },
 			{ "row", [](Parts& p, Object& o) -> float& { return placeNumber(p, o, &Object::Cells::Place::row); }, false, hasPlace },
 			{ "moves", [](Parts& p, Object& o) -> float& { return movesNumber(p, o); }, true, hasMoves },
+			{ "along", [](Parts& p, Object& o) -> float& { return alongNumber(p, o); }, true, hasMoves },
 			{ "cards", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::itemCount); }, true, isHolder },
 			{ "held", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::itemCount); }, true, isHolder },
 			{ "calling", [](Parts& p, Object& o) -> float& { return holderNumber(p, o, &Holder::calling); }, true, isHolder },

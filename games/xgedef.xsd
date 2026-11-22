@@ -1140,6 +1140,13 @@
         in that cell, and the put counts as refused, so the turn goes on (dots and boxes' boxes).
         A set with no step or jump is of pieces put; one with nothing in it puts in any free cell (tic-tac-toe).
         promote: reaching that row, it shows that look (crowned), and its move ends.
+        route: the cells it goes along in order: <row number> or <column number> runs the cells <from> one <to> another
+        (either way round); <start> (a <column> and <row>, first) is where a piece hit waits, and one there moves before
+        any other of its class; <end> (last) is where it is borne off, once every piece of its class is within <home> cells of it,
+        and past it only from the one furthest back.
+        steps holder= into=: each move along the route goes as far as the worth of an item that holder holds, which is then sent
+        into the other; a turn uses as many of them as it can, the biggest when only one fits (backgammon's dice).
+        hit: landing on a lone piece of that class sends it to the start of its own route; two or more stop it.
       ]]></xs:documentation>
     </xs:annotation>
     <xs:sequence>
@@ -1156,6 +1163,18 @@
           </xs:complexType>
         </xs:element>
       </xs:choice>
+      <xs:element name="route" type="routeType" minOccurs="0" />
+      <xs:element name="steps" minOccurs="0">
+        <xs:complexType>
+          <xs:attribute name="holder" type="xs:NMTOKEN" use="required" />
+          <xs:attribute name="into" type="xs:NMTOKEN" use="required" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="hit" minOccurs="0" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:attribute name="class" type="xs:NMTOKEN" use="required" />
+        </xs:complexType>
+      </xs:element>
       <xs:element name="flank" minOccurs="0" maxOccurs="unbounded">
         <xs:complexType>
           <xs:sequence>
@@ -1186,6 +1205,39 @@
       </xs:element>
     </xs:sequence>
     <xs:attribute name="sprite" type="xs:NMTOKEN" use="optional" />
+  </xs:complexType>
+  <xs:complexType name="routeType">
+    <xs:sequence>
+      <xs:element name="start" type="routeCellType" minOccurs="0" />
+      <xs:choice maxOccurs="unbounded">
+        <xs:element name="row" type="routeRunType" />
+        <xs:element name="column" type="routeRunType" />
+      </xs:choice>
+      <xs:element name="end" minOccurs="0">
+        <xs:complexType>
+          <xs:complexContent>
+            <xs:extension base="routeCellType">
+              <xs:sequence>
+                <xs:element name="home" type="xs:positiveInteger" minOccurs="0" />
+              </xs:sequence>
+            </xs:extension>
+          </xs:complexContent>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="routeCellType">
+    <xs:sequence>
+      <xs:element name="column" type="xs:positiveInteger" />
+      <xs:element name="row" type="xs:positiveInteger" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="routeRunType">
+    <xs:sequence>
+      <xs:element name="from" type="xs:positiveInteger" />
+      <xs:element name="to" type="xs:positiveInteger" />
+    </xs:sequence>
+    <xs:attribute name="number" type="xs:positiveInteger" use="required" />
   </xs:complexType>
   <xs:complexType name="cellOffsetType">
     <xs:sequence>
@@ -3361,10 +3413,17 @@
         </xs:annotation>
       </xs:element>
       <xs:element name="rows" type="xs:positiveInteger" minOccurs="0" />
-      <xs:element name="cells" type="emptyType" minOccurs="0">
+      <xs:element name="cells" minOccurs="0">
         <xs:annotation>
-          <xs:documentation>its pieces move a cell at a time, and a move that is refused touches what refused it</xs:documentation>
+          <xs:documentation>its pieces move a cell at a time, and a move that is refused touches what refused it;
+            with a width or height, a cell is that many tiles and the pieces in it stack in its tiles from the board's nearer edge</xs:documentation>
         </xs:annotation>
+        <xs:complexType>
+          <xs:choice minOccurs="0">
+            <xs:element name="width" type="xs:positiveInteger" />
+            <xs:element name="height" type="xs:positiveInteger" />
+          </xs:choice>
+        </xs:complexType>
       </xs:element>
       <xs:element name="row" type="xs:string" minOccurs="0" maxOccurs="unbounded" />
       <xs:choice minOccurs="0" maxOccurs="unbounded">

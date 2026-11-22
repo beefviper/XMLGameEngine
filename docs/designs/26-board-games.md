@@ -1,6 +1,6 @@
 # Board games
 
-**Status:** Built: Checkers with a computer, marks, put back and the mouse; Reversi, Four in a Row, Tic-Tac-Toe, Dots and Boxes. Open: other board games, lookahead for action games. Reference: [board games](../reference/boards.md), [thinking](../reference/states.md#thinking).
+**Status:** Built: Checkers with a computer, marks, put back and the mouse; Reversi, Four in a Row, Tic-Tac-Toe, Dots and Boxes; Backgammon for two. Open: other board games, lookahead for action games. Reference: [board games](../reference/boards.md), [thinking](../reference/states.md#thinking).
 
 ## What we looked for
 
@@ -40,6 +40,16 @@ Turn games on cells. Maps of cells already knew which piece is where; missing we
 - **Dots and Boxes** needed `<on class>` (a line only on its place) and `<close class object>` (claims the boxes walled in; the put counts as refused so the turn does not pass). Each side's lines are its own class. `<close>` sits in the line's `<moves>`, not in the put, so one class-less put serves both players and the box claimed follows the line.
 - **`<onto class>` on a hop or a track** moves only between places of those classes, reading the map as rows like a text cursor. No rule of cell distances alone fits both across and down lines.
 
+## Racing along a route
+
+- **The ask** (the author): extend what is there rather than add verbs; a cell holding more than one piece is a generic thing to allow.
+- **A point is a tall cell**, `<cells><height>6</height></cells>`, not a holder: the board keeps its cells, the picker, marks and `moves`, and the ASCII rows show the starting checkers one character each. The stack is laid from the board's nearer edge each frame; more than fit close up.
+- **A route is runs**, a row or column from one cell to another, so backgammon writes four runs, not 24 cells. Each side writes its own, so direction needs no word, and its first and last cells are its bar and tray.
+- **Dice are items** ([cards](27-cards.md)): `<steps holder into>` reads their worths and plays one per move, so doubles are simply four dice in the holder.
+- **Rules built in, as forced jumps are:** a piece at the start comes in first; bearing off waits for `<home>`; a turn uses as many dice as it can (the biggest when only one fits), found by searching the orders of the dice; a lone piece of a `<hit>` class is sent to its start, two close the point. Each is a rule the engine must know before it refuses a press, so it cannot be a condition.
+- **Live `along`** gives the win, the gammon and the backgammon as ordinary class conditions, with no counting word.
+- Left as the game's own: whose turn, rolling (a `<set>` of `<random>`), passing when stuck, the cube (variables and a state).
+
 ## The computer
 
 - The ask: a generic player that knows the rules and goals, not a strong one. The rules are already data, so the computer need only play them forward.
@@ -55,11 +65,5 @@ Turn games on cells. Maps of cells already knew which piece is where; missing we
 - **Lookahead for action games:** play the game forward a second or two on a copy of the objects' numbers for each choice of keys, scored by goals inferred from the conditions.
 - A stronger Dots and Boxes (chains) and Reversi (corners, mobility).
 - `<onto>` for Checkers' and Reversi's cursors; draws by repetition or forty quiet moves.
-- **Backgammon would need** (dice themselves are held items, [cards](27-cards.md)):
-  - points as holders along a track, a checker moving by a die's number of points rather than a cell offset;
-  - a lone checker hit to a bar holder, which must enter first;
-  - bearing off once all of a side are home;
-  - legality over both dice (both used if they can be, doubles four times), which `<moves>` cannot say today;
-  - the doubling cube, a variable offered and taken or refused;
-  - `<think>` over chance (an expected value over rolls).
+- **A computer for Backgammon:** `<think>` over chance, an expected value over the 21 rolls.
 - Halma (jumps that do not take), chess (sliding moves of any length, blocking pieces, stalemate).
