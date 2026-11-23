@@ -190,12 +190,18 @@ var Module = { canvas: document.getElementById('game') };
 
 cmake_minimum_required(VERSION 3.20)
 
+# Emscripten's toolchain, from the emsdk the prompt was set up with
+# (emsdk_env), when emcmake has not named it.
+if (NOT CMAKE_TOOLCHAIN_FILE AND DEFINED ENV{EMSDK})
+	set(CMAKE_TOOLCHAIN_FILE "$ENV{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake")
+endif()
+
 project(</xsl:text>
     <xsl:value-of select="$name" />
     <xsl:text> LANGUAGES C CXX)
 
 if (NOT EMSCRIPTEN)
-	message(FATAL_ERROR "A web page is built with Emscripten: emcmake cmake -B build")
+	message(FATAL_ERROR "A web page is built with Emscripten: run emsdk_env first, delete build/ and configure again")
 endif()
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/output")
@@ -285,12 +291,14 @@ kept in the browser's storage for the page.
 
 ## Build
 
-With Emscripten's `emcmake` on the path (emsdk), from this folder:
+In a prompt set up by emsdk (`emsdk_env`), with Ninja, from this folder:
 
 ```
-emcmake cmake -B build
+cmake -B build -G Ninja
 cmake --build build
 ```
+
+The build finds Emscripten through `EMSDK`; `emcmake cmake -B build -G Ninja` works too.
 
 Then open `output/</xsl:text>
     <xsl:value-of select="$name" />

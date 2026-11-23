@@ -113,7 +113,7 @@ This writes a C++ program on SFML 3 that is **the engine with the game built in*
 ```
 xgecli pong --generate web -o pong-web
 cd pong-web
-emcmake cmake -B build
+cmake -B build -G Ninja      # in a prompt set up by emsdk_env: EMSDK names the toolchain
 cmake --build build          # output/pong.html
 ```
 
