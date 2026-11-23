@@ -23,7 +23,7 @@ A `<map>` is level data drawn as text: each `<row>` is a row of tiles, one chara
 
 - `<tile>` is a tile's size, `<position>` the map's top left. Rows must be equally wide.
 - **A group** with `char="x"` has a member in the middle of every tile of that character, named under the map in reading order (`maze.dots.1`). It has no position or members of its own, but everything else a group has, inner groups too.
-- **An object** picks a character found on exactly one tile, where it starts, or on two side by side, and starts between them (Pac-Man's `@@`, half a tile off the grid as in the arcade). Not on a cell map, where a piece is always on a cell.
+- **An object** picks a character found on exactly one tile, where it starts, or on two side by side, and starts between them (Pac-Man's `@@`, half a tile off the grid as in the arcade). It sits in the middle of its place by its largest look, so a cherry whose first look is empty still shows centred when it comes. Not on a cell map, where a piece is always on a cell.
 - A character nothing picks is an empty tile; two pieces may not pick one character. Rows are trimmed, so an empty tile at an end is a character nobody picks (Pac-Man's `,`), not a space.
 - The map's name means everything on it (`<reset object="maze" />`).
 - **A map piece.** Maps that share their tile, place and pieces (Berserk's rooms) take one map piece and give only what differs, usually the rows: `<map name="maze"><row>+-+x+-+</row> ... </map>`.

@@ -608,7 +608,14 @@ namespace xge
 			const std::string where = "object '" + writtenObject.name + "' (on map '" + writtenObject.cell.map + "')";
 			const Vector2f tile{ evaluate(writtenObject.cell.tileWidth, where + " > <tile> > <width>"), evaluate(writtenObject.cell.tileHeight, where + " > <tile> > <height>") };
 			if (!(tile.x > 0.0f) || !(tile.y > 0.0f)) { throw std::runtime_error(where + ": a <tile> is " + formatDisplayNumber(tile.x) + " by " + formatDisplayNumber(tile.y) + "; both have to be above 0"); }
-			const Vector2f own = layoutSize(pictures.at(writtenObject.name));
+			// By its largest look: one that starts showing none (a cherry
+			// that comes later) still shows in the middle when it comes.
+			Vector2f own = layoutSize(pictures.at(writtenObject.name));
+			for (const WrittenSprite& look : writtenObject.looks)
+			{
+				const Vector2f size = layoutSize(buildPicture(look, where, nullptr, nullptr, &writtenObject));
+				own = { std::max(own.x, size.x), std::max(own.y, size.y) };
+			}
 			const float across = static_cast<float>(writtenObject.cell.mapColumn - 1) + (writtenObject.cell.between ? 0.5f : 0.0f);
 			offsets[writtenObject.name] = { across * tile.x + (tile.x - own.x) / 2.0f,
 				static_cast<float>(writtenObject.cell.mapRow - 1) * tile.y + (tile.y - own.y) / 2.0f };

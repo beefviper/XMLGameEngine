@@ -720,3 +720,18 @@ TEST_CASE("pacman: both schema checkers take the game", "[pacman][schema]")
 	auto strong = XmlDocumentFactory::create(XmlBackend::Xerces);
 	CHECK(strong->load("descriptions/pacman.xml"));
 }
+TEST_CASE("pacman: the cherry sits in the middle under the house, and he shrivels where he was drawn", "[pacman]")
+{
+	PacmanPlay maze;
+	Object& fruit = maze.game.object("playing.fruit");
+	maze.game.become("playing.fruit", "fruit");
+	CHECK(middleOf(fruit).x == Approx(start().x));
+	CHECK(middleOf(fruit).y == Approx(tile(13, 17).y));
+
+	maze.game.object("playing.status").variable["dying"] = 1.0f;
+	maze.frames(1);
+	REQUIRE(maze.state() == "dying");
+	const Object& shrivel = maze.game.object("dying.shrivel");
+	CHECK(middleOf(shrivel).x == Approx(middleOf(maze.pacman()).x));
+	CHECK(middleOf(shrivel).y == Approx(middleOf(maze.pacman()).y));
+}

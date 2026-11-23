@@ -307,7 +307,7 @@
           <row>tttttt.   | I P C|   .tttttt</row>
           <row>-----7.r7 |      | r7.r-----</row>
           <row>,,,,,|.|| L------J ||.|,,,,,</row>
-          <row>,,,,,|.||     f    ||.|,,,,,</row>
+          <row>,,,,,|.||    ff    ||.|,,,,,</row>
           <row>,,,,,|.|| r------7 ||.|,,,,,</row>
           <row>r----J.LJ L--7r--J LJ.L----7</row>
           <row>|............||............|</row>
@@ -769,6 +769,8 @@
             <frame sprite="g"><seconds>0.3</seconds></frame>
           </animation>
           <position><x update="live">pacman.x</x><y update="live">pacman.y</y></position>
+          <!-- a heading, as Pac-Man has, gives it his square, so it shrivels where he was drawn; up, as in the arcade -->
+          <heading>0</heading>
         </object>
       </objects>
       <shows>
