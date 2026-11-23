@@ -8,8 +8,8 @@
 #include "picture/font.h"
 #include "picture/shapes.h"
 
-#include <charconv>
 #include <cmath>
+#include <cstdio>
 
 namespace xge
 {
@@ -19,9 +19,8 @@ namespace xge
 		std::string keyNumber(float number)
 		{
 			char text[32];
-			const auto [end, failed] = std::to_chars(text, text + sizeof text, number);
-			(void)failed;
-			return std::string(text, end);
+			const int written = std::snprintf(text, sizeof text, "%.9g", static_cast<double>(number));
+			return std::string(text, static_cast<std::size_t>(written));
 		}
 	}
 

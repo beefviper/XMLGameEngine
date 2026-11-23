@@ -10,7 +10,9 @@
 // them but no XML library and none of the other libraries. That it plays as
 // the file does, frame by frame, is in test_generated_games.cpp, which
 // compiles it. The windows-cpp target
-// (games/generators/windows-cpp) writes pong_min as games/prototypes has it.
+// (games/generators/windows-cpp) writes pong_min as games/prototypes has it,
+// and the web target (games/generators/web) writes what engine-cpp does for
+// a web page.
 
 #include "scratch.h"
 #include "game/game.h"
@@ -196,6 +198,56 @@ TEST_CASE("a generated program copies the font and pictures its game uses", "[ge
 	CHECK(assets.count("assets/tuffy.ttf") == 1);
 	CHECK(assets.count("assets/Space Invaders Color Sprites.svg") == 1);
 	CHECK(fs::exists(folder.path / "out/assets/Space Invaders Color Sprites.svg"));
+}
+
+TEST_CASE("web writes the game as engine-cpp does, played on the page's canvas and Web Audio, built by Emscripten into one page", "[generate]")
+{
+	TempFolder folder("xge_test_generate_web");
+	const GeneratedProgram program = generateGame(requestFor(fs::current_path() / "descriptions/pong.xml", folder.path / "out", "web"));
+	const fs::path out = folder.path / "out";
+
+	for (const char* file : { "source/pong.cpp", "source/main.cpp", "source/page.html", "CMakeLists.txt", "README.md", ".gitignore" })
+	{
+		INFO(file);
+		CHECK(fs::exists(out / file));
+	}
+
+	// the same tree of data engine-cpp writes
+	TempFolder engineCpp("xge_test_generate_web_engine_cpp");
+	generateGame(requestFor(fs::current_path() / "descriptions/pong.xml", engineCpp.path / "out"));
+	CHECK(readFile(out / "source/pong.cpp") == readFile(engineCpp.path / "out/source/pong.cpp"));
+
+	// played by a frame each time the browser draws, on the page's window and sound
+	const std::string main = readFile(out / "source/main.cpp");
+	CHECK(main.rfind("// main.cpp\n// XML Game Engine\n// author: beefviper\n// date: ", 0) == 0);
+	CHECK(main.find("std::make_unique<xge::WebWindow>(game.getWindowDesc()), std::make_unique<xge::WebAudio>()") != std::string::npos);
+	CHECK(main.find("emscripten_set_main_loop(frame, 0, 0);") != std::string::npos);
+	CHECK(readFile(out / "source/page.html").find("{{{ SCRIPT }}}") != std::string::npos);
+
+	// the engine's files with the page's window and sound in place of SFML's
+	std::set<std::string> copied;
+	for (const fs::path& file : program.files)
+	{
+		const std::string path = file.generic_string();
+		if (path.starts_with("engine/")) { copied.insert(path.substr(7)); }
+	}
+	for (const char* web : { "window/web.cpp", "audio/web.cpp", "engine/engine.cpp", "load/xml.cpp" })
+	{
+		INFO(web);
+		CHECK(copied.count(web) == 1);
+	}
+	for (const char* left : { "window/sfml.cpp", "audio/sfml.cpp" })
+	{
+		INFO(left);
+		CHECK(copied.count(left) == 0);
+	}
+
+	// one page with everything in it
+	const std::string cmake = readFile(out / "CMakeLists.txt");
+	CHECK(cmake.find("\tengine/window/web.cpp\n") != std::string::npos);
+	CHECK(cmake.find("-sSINGLE_FILE=1") != std::string::npos);
+	CHECK(cmake.find("--embed-file=${CMAKE_CURRENT_SOURCE_DIR}/assets@/assets") != std::string::npos);
+	CHECK(cmake.find("SFML") == std::string::npos);
 }
 
 TEST_CASE("the game file is written as a tree, an entry for each element", "[generate]")

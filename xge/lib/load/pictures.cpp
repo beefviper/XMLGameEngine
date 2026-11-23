@@ -19,13 +19,13 @@
 #include "play/numbers.h"
 #include "audio/wave.h"
 #include <algorithm>
-#include <charconv>
-#include <iterator>
-#include <functional>
-#include <initializer_list>
 #include <cctype>
 #include <cmath>
+#include <cstdio>
 #include <cstdlib>
+#include <functional>
+#include <initializer_list>
+#include <iterator>
 #include <memory>
 #include <optional>
 #include <set>
@@ -45,7 +45,8 @@ namespace xge
 				for (auto& [character, color] : sprite.bitmapColors)
 				{
 					if (sprite.styleChars.find(character) == std::string::npos) { continue; }
-					const auto given = std::find_if(style.bitmapColors.begin(), style.bitmapColors.end(), [&](const auto& each) { return each.first == character; });
+					const auto drawnWith = character;
+					const auto given = std::find_if(style.bitmapColors.begin(), style.bitmapColors.end(), [&](const auto& each) { return each.first == drawnWith; });
 					if (given != style.bitmapColors.end()) { color = given->second; }
 				}
 			}
@@ -57,8 +58,8 @@ namespace xge
 		std::string keyNumber(float value)
 		{
 			char text[32];
-			const auto written = std::to_chars(std::begin(text), std::end(text), value);
-			return std::string(text, written.ptr);
+			const int written = std::snprintf(text, sizeof text, "%.9g", static_cast<double>(value));
+			return std::string(text, static_cast<std::size_t>(written));
 		}
 
 		std::string colorKey(const Color& color)

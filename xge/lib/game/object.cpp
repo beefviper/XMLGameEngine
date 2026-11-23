@@ -322,7 +322,8 @@ namespace xge
 					}
 					for (const auto& [character, color] : style->bitmapColors)
 					{
-						const bool own = std::any_of(sprite.bitmapColors.begin(), sprite.bitmapColors.end(), [&](const auto& each) { return each.first == character; });
+						const auto drawnWith = character;
+						const bool own = std::any_of(sprite.bitmapColors.begin(), sprite.bitmapColors.end(), [&](const auto& each) { return each.first == drawnWith; });
 						if (!own)
 						{
 							sprite.bitmapColors.emplace_back(character, color);

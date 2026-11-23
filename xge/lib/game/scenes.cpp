@@ -599,7 +599,8 @@ namespace xge
 
 				for (const auto& [name, value] : scene.variables)
 				{
-					const auto existing = std::find_if(local.begin(), local.end(), [&](const auto& entry) { return entry.first == name; });
+					const auto& named = name;
+					const auto existing = std::find_if(local.begin(), local.end(), [&](const auto& entry) { return entry.first == named; });
 					if (existing != local.end()) { existing->second = value; }
 					else { local.emplace_back(name, value); }
 				}

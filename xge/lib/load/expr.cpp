@@ -585,9 +585,10 @@ namespace xge
 				for (const auto& [way, to] : writtenScene.ways)
 				{
 					// A scene of the same state, by its name there or by its path.
+					const std::string& target = to;
 					const auto leads = std::find_if(writtenState.scenes.begin(), writtenState.scenes.end(), [&](const WrittenScene& other)
 						{
-							return other.name == to || writtenState.name + "." + other.name == to;
+							return other.name == target || writtenState.name + "." + other.name == target;
 						});
 					if (leads == writtenState.scenes.end())
 					{

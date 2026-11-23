@@ -5,37 +5,49 @@
 #
 # One game written out and built as a program of its own, as a person would:
 # run as a test by ctest --test-dir build/generated (tests.cmake), never
-# included. It generates the game with xgecli --generate engine-cpp into
-# OUTPUT, configures it with the main build's generator and toolchain (its
-# own CMakeLists.txt sets the engine's warnings), and builds it. Any step
-# that fails, or any warning, fails the test, with the compiler's lines
-# printed.
+# included. It generates the game with xgecli --generate GENERATE (engine-cpp
+# when not given) into OUTPUT, configures it with the main build's generator
+# and toolchain (its own CMakeLists.txt sets the engine's warnings), or for
+# web through EMCMAKE (Emscripten's emcmake), and builds it. Any step that
+# fails, or any warning, fails the test, with the compiler's lines printed.
 #
 #     cmake -DGAME=<name> -DXGECLI=<xgecli> -DOUTPUT=<folder> -DCONFIG=<config>
 #           -DGENERATOR=<generator> [-DPLATFORM=<platform>] [-DTOOLCHAIN=<file>]
-#           [-DDEPS=<build/_deps>] -P build_generated.cmake
+#           [-DDEPS=<build/_deps>] [-DGENERATE=web -DEMCMAKE=<emcmake>]
+#           -P build_generated.cmake
 
 foreach(required GAME XGECLI OUTPUT CONFIG GENERATOR)
 	if (NOT ${required})
 		message(FATAL_ERROR "build_generated.cmake needs -D${required}=")
 	endif()
 endforeach()
+if (NOT GENERATE)
+	set(GENERATE engine-cpp)
+endif()
+if (GENERATE STREQUAL "web" AND NOT EMCMAKE)
+	message(FATAL_ERROR "build_generated.cmake needs -DEMCMAKE= for web")
+endif()
 
 get_filename_component(xgecli_dir "${XGECLI}" DIRECTORY)
 execute_process(
-	COMMAND "${XGECLI}" "${GAME}" --generate engine-cpp -o "${OUTPUT}"
+	COMMAND "${XGECLI}" "${GAME}" --generate ${GENERATE} -o "${OUTPUT}"
 	WORKING_DIRECTORY "${xgecli_dir}"
 	RESULT_VARIABLE result OUTPUT_VARIABLE said ERROR_VARIABLE said)
 if (NOT result EQUAL 0)
 	message(FATAL_ERROR "${GAME} did not generate:\n${said}")
 endif()
 
-set(configure "${CMAKE_COMMAND}" -S "${OUTPUT}" -B "${OUTPUT}/build" -G "${GENERATOR}")
-if (PLATFORM)
-	list(APPEND configure -A "${PLATFORM}")
-endif()
-if (TOOLCHAIN)
-	list(APPEND configure "-DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN}")
+if (GENERATE STREQUAL "web")
+	# Emscripten brings its own toolchain; a web page has no platform.
+	set(configure "${EMCMAKE}" "${CMAKE_COMMAND}" -S "${OUTPUT}" -B "${OUTPUT}/build" -G "${GENERATOR}")
+else()
+	set(configure "${CMAKE_COMMAND}" -S "${OUTPUT}" -B "${OUTPUT}/build" -G "${GENERATOR}")
+	if (PLATFORM)
+		list(APPEND configure -A "${PLATFORM}")
+	endif()
+	if (TOOLCHAIN)
+		list(APPEND configure "-DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN}")
+	endif()
 endif()
 list(APPEND configure "-DCMAKE_BUILD_TYPE=${CONFIG}")
 # A library the main build fetched is taken from its copy, not fetched again.
@@ -67,7 +79,7 @@ if (warnings)
 	message(FATAL_ERROR "${GAME} built with warnings:\n${lines}")
 endif()
 
-# The program is in OUTPUT/output; a game's object files are near a gigabyte
+# The program (or page) is in OUTPUT/output; a game's object files are near a gigabyte
 # in Debug, so a clean build's folder goes. A failed one stays to look into.
 file(REMOVE_RECURSE "${OUTPUT}/build")
 message(STATUS "${GAME} generated and built without a warning")

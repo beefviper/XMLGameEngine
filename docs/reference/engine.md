@@ -61,6 +61,7 @@ An object is **in play** when it is not out of play (`<waiting />`, dead, despaw
 - **A build has some, not all**: SFML 3 and Xerces by default; `-DXGE_WITH_<NAME>=ON` adds one, `-DXGE_ALL_BACKENDS=ON` or `-DBUILD_TESTING=ON` all (Direct3D only on Windows). A library's code compiles only behind `XGE_WITH_<NAME>`. Each factory says what it has (`available()`, `availableBackends()`, `defaultBackend()`, `name()`); `create()` of one not built throws, naming those that are.
 - **Pictures** are drawn by the engine, so a window library mostly shows bitmaps; only circles and rectangles are its own.
 - **Sound** is made by the engine (`synthesize()`, `audio/sound.h`), so it is the same whichever library plays it. `Game` never makes a noise: `<play>` asks, and `Engine` hands the frame's sounds to its `Audio`. Window and sound libraries are chosen apart; any goes with any.
+- `window/web` and `audio/web` are a web page's canvas and Web Audio, for the [web generator](programs.md#generating-a-program); they compile only under Emscripten and are in no factory.
 - `Engine::replaceWindow()` swaps the window of a running game (the old destroyed first), `Engine::replaceAudio()` the sound, `Engine::silence()` stops what plays, `Engine::pump()` keeps a paused window responsive, dropping the keys pressed meanwhile.
 
 ### What a window must do
@@ -111,7 +112,7 @@ xvfb-run -a output/Debug/xgetest "[window]"   # opens every window backend (no x
 | `pong`, `pong_min` | the hand-written prototypes (`games/prototypes/`) |
 | `xgedata` | copies `games/` beside the programs |
 
-`output/<config>/` holds the programs, `games/` and `libraries/`, and `generated/` what belongs to the generator: `xgetest-generated`, `prototypes/` (`pong`, `pong_min`), and `games/<game>/`, where the `program: <game>` tests write and build each game. In Visual Studio `xgetest-generated` is in the `XGETestGenerated` folder and the prototypes in `XGETestGenerated/XGETestPrototypes`.
+`output/<config>/` holds the programs, `games/` and `libraries/`, and `generated/` what belongs to the generator: `xgetest-generated`, `prototypes/` (`pong`, `pong_min`), `engine-cpp/<game>/`, where the `program: <game>` tests write and build each game, and `web/<game>/`, where the `web: <game>` tests build each as a page (`output/<game>.html`), when Emscripten's `emcmake` and Ninja are found. In Visual Studio `xgetest-generated` is in the `XGETestGenerated` folder and the prototypes in `XGETestGenerated/XGETestPrototypes`.
 
 - **Output.** Everything to run lands in `output/<Config>/`: the programs, a copy of `games/` with the schema, and the libraries in `libraries/` (found through a manifest on Windows, a relative run path elsewhere). The folder can be copied anywhere.
 - **Dependencies** are found through vcpkg or the system, or fetched and built (`FORCE_LOCAL_<NAME>` forces a fetch). Qt 6 and libxslt are only found, never fetched. Vulkan needs no SDK: Khronos's headers and volk are fetched, and volk opens the driver's own Vulkan library when the window opens. In Visual Studio every fetched library's projects sit in one solution folder, `CMakeFetchedLibraries` (`xge_fold_fetched_targets`). CMake modules are in `scripts/cmake/`.

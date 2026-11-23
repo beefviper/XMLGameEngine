@@ -432,7 +432,8 @@ namespace xge
 		{
 			std::sort(worths.rbegin(), worths.rend());
 			const std::size_t length = worths.size();
-			const auto has = [&](float worth) { return std::find(worths.begin(), worths.end(), worth) != worths.end(); };
+			const std::vector<float>& inKind = worths;
+			const auto has = [&](float worth) { return std::find(inKind.begin(), inKind.end(), worth) != inKind.end(); };
 			if (trumped[kind])
 			{
 				for (std::size_t k = 0; k < 3; ++k)

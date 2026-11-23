@@ -9,10 +9,10 @@
 
 #include <algorithm>
 #include <cctype>
-#include <charconv>
-#include <iterator>
 #include <cmath>
+#include <cstdio>
 #include <cstdlib>
+#include <iterator>
 
 namespace xge
 {
@@ -242,8 +242,8 @@ namespace xge
 		std::string exactly(float value)
 		{
 			char text[32];
-			const auto written = std::to_chars(std::begin(text), std::end(text), value);
-			return std::string(text, written.ptr);
+			const int written = std::snprintf(text, sizeof text, "%.9g", static_cast<double>(value));
+			return std::string(text, static_cast<std::size_t>(written));
 		}
 	}
 

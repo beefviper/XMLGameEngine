@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- engine.xml -->
+<!-- XML Game Engine -->
+<!-- author: beefviper -->
+<!-- date: Nov 23, 2026 -->
+
+<!-- The engine's files a web page needs beyond engine-cpp's list
+     (../engine-cpp/engine.xml, less SFML's window and sound): the page's
+     window and sound. -->
+<engine>
+  <file>lib/window/web.h</file>
+  <file>lib/window/web.cpp</file>
+  <file>lib/audio/web.h</file>
+  <file>lib/audio/web.cpp</file>
+</engine>
