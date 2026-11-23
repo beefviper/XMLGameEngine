@@ -836,7 +836,7 @@ TEST_CASE("both schema checkers turn away the same mistakes", "[xml_format][sche
 		{ "a framerate of 0", "<height>720</height>", "<height>720</height><framerate>0</framerate>", "not a valid" },
 		{ "an edge that is not one", "<collision edge=\"vertical\">", "<collision edge=\"middle\">", "edge" },
 		{ "a <random> with no max", "<random><min>-30</min><max>30</max></random>", "<random><min>-30</min></random>", "max" },
-		{ "several keys in one button=", "<input button=\"w\">", "<input button=\"w up\">", "not a valid" },
+		{ "several keys in one button=", "<input button=\"a\">", "<input button=\"a d\">", "not a valid" },
 		{ "two words in a name", "<group name=\"paddles\" class=\"paddle\">", "<group name=\"paddles\" class=\"left paddle\">", "not a valid xs:NMTOKEN" },
 		{ "a key moment that is not one", "<input button=\"space\">", "<input button=\"space\" on=\"tap\">", "not a valid" },
 	};

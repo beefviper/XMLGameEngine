@@ -136,7 +136,7 @@
         </object>
       </objects>
       <inputs>
-        <input><button>num1</button><button>numpad1</button><button>num2</button><button>numpad2</button><push state="playing" /></input>
+        <input><button>num1</button><button>numpad1</button><button>num2</button><button>numpad2</button><people>2</people><push state="playing" /></input>
       </inputs>
     </state>
 
@@ -269,14 +269,18 @@
         </object>
       </objects>
       <inputs>
-        <input button="w"><trigger object="p1" action="go" /></input>
-        <input button="s"><trigger object="p1" action="brake" /></input>
-        <input button="a"><trigger object="p1" action="left" /></input>
-        <input button="d"><trigger object="p1" action="right" /></input>
-        <input button="up"><trigger object="p2" action="go" /></input>
-        <input button="down"><trigger object="p2" action="brake" /></input>
-        <input button="left"><trigger object="p2" action="left" /></input>
-        <input button="right"><trigger object="p2" action="right" /></input>
+        <seat number="1">
+          <input><button>w</button><button>pad.up</button><trigger object="p1" action="go" /></input>
+          <input><button>s</button><button>pad.down</button><trigger object="p1" action="brake" /></input>
+          <input><button>a</button><button>pad.left</button><trigger object="p1" action="left" /></input>
+          <input><button>d</button><button>pad.right</button><trigger object="p1" action="right" /></input>
+        </seat>
+        <seat number="2">
+          <input><button>up</button><button>pad.up</button><trigger object="p2" action="go" /></input>
+          <input><button>down</button><button>pad.down</button><trigger object="p2" action="brake" /></input>
+          <input><button>left</button><button>pad.left</button><trigger object="p2" action="left" /></input>
+          <input><button>right</button><button>pad.right</button><trigger object="p2" action="right" /></input>
+        </seat>
         <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>

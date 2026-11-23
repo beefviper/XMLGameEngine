@@ -406,16 +406,16 @@
       <inputs>
         <!-- the keys of whoever's turn it is: yours, and the computer's in seat 2 -->
         <seat number="1">
-          <input><button>w</button><button>up</button><button>pad1.up</button><trigger object="players" action="raise" from="act" /></input>
+          <input><button>w</button><button>up</button><button>pad.up</button><trigger object="players" action="raise" from="act" /></input>
           <input>
-            <button>space</button><button>pad1.a</button>
+            <button>space</button><button>pad.a</button>
             <trigger object="players" action="call" from="act" />
             <trigger object="players" action="call" from="callonly" />
             <trigger object="players" action="allin" from="allin" />
             <trigger object="hand" action="next" from="done" />
           </input>
           <input>
-            <button>x</button><button>backspace</button><button>pad1.b</button>
+            <button>x</button><button>backspace</button><button>pad.b</button>
             <trigger object="players" action="fold" from="act" />
             <trigger object="players" action="fold" from="callonly" />
             <trigger object="players" action="fold" from="allin" />

@@ -189,10 +189,10 @@
       <inputs>
         <!-- one set of keys, for whichever player is on its turn -->
         <seat number="1">
-          <input><button>a</button><button>left</button><button>pad1.left</button><trigger object="cursor" action="left" /></input>
-          <input><button>d</button><button>right</button><button>pad1.right</button><trigger object="cursor" action="right" /></input>
+          <input><button>a</button><button>left</button><button>pad.left</button><trigger object="cursor" action="left" /></input>
+          <input><button>d</button><button>right</button><button>pad.right</button><trigger object="cursor" action="right" /></input>
           <input>
-            <button>space</button><button>s</button><button>down</button><button>pad1.a</button><button>mouse.left</button>
+            <button>space</button><button>s</button><button>down</button><button>pad.a</button><button>mouse.left</button>
             <trigger object="cursor" action="put" />
           </input>
           <input axis="mouse.x"><trigger object="cursor" action="point" /></input>

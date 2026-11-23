@@ -255,7 +255,7 @@
         </object>
       </objects>
       <inputs>
-        <input><button>num1</button><button>numpad1</button><button>num2</button><button>numpad2</button><push state="playing" /></input>
+        <input><button>num1</button><button>numpad1</button><button>num2</button><button>numpad2</button><people>2</people><push state="playing" /></input>
       </inputs>
     </state>
 
@@ -490,10 +490,13 @@
         </scene>
       </scenes>
       <inputs>
-        <input on="hold"><button>w</button><button>up</button><trigger object="barrels" action="raise" from="ready" /></input>
-        <input on="hold"><button>s</button><button>down</button><trigger object="barrels" action="lower" from="ready" /></input>
-        <input button="space" on="hold"><trigger object="barrels" action="charge" from="ready" /></input>
-        <input button="space" on="release"><trigger object="barrels" action="fire" from="ready" /></input>
+        <seat number="1">
+          <input on="hold"><button>w</button><button>up</button><button>pad.up</button><trigger object="barrels" action="raise" from="ready" /></input>
+          <input on="hold"><button>s</button><button>down</button><button>pad.down</button><trigger object="barrels" action="lower" from="ready" /></input>
+          <input on="hold"><button>space</button><button>pad.a</button><trigger object="barrels" action="charge" from="ready" /></input>
+          <input on="release"><button>space</button><button>pad.a</button><trigger object="barrels" action="fire" from="ready" /></input>
+        </seat>
+        <seat number="2" from="1" />
         <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>

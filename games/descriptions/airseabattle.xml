@@ -101,7 +101,7 @@
         </object>
       </objects>
       <inputs>
-        <input><button>num1</button><button>numpad1</button><button>num2</button><button>numpad2</button><push state="playing" /></input>
+        <input><button>num1</button><button>numpad1</button><button>num2</button><button>numpad2</button><people>2</people><push state="playing" /></input>
       </inputs>
     </state>
     <state name="playing">
@@ -226,14 +226,18 @@
       </objects>
       <music sound="drone" />
       <inputs>
-        <input button="a"><trigger object="gun1" action="left" /></input>
-        <input button="s"><trigger object="gun1" action="up" /></input>
-        <input button="d"><trigger object="gun1" action="right" /></input>
-        <input button="w"><trigger object="gun1" action="fire" /></input>
-        <input button="left"><trigger object="gun2" action="left" /></input>
-        <input button="down"><trigger object="gun2" action="up" /></input>
-        <input button="right"><trigger object="gun2" action="right" /></input>
-        <input button="up"><trigger object="gun2" action="fire" /></input>
+        <seat number="1">
+          <input><button>a</button><button>pad.left</button><trigger object="gun1" action="left" /></input>
+          <input><button>s</button><button>pad.down</button><trigger object="gun1" action="up" /></input>
+          <input><button>d</button><button>pad.right</button><trigger object="gun1" action="right" /></input>
+          <input><button>w</button><button>pad.up</button><trigger object="gun1" action="fire" /></input>
+        </seat>
+        <seat number="2">
+          <input><button>left</button><button>pad.left</button><trigger object="gun2" action="left" /></input>
+          <input><button>down</button><button>pad.down</button><trigger object="gun2" action="up" /></input>
+          <input><button>right</button><button>pad.right</button><trigger object="gun2" action="right" /></input>
+          <input><button>up</button><button>pad.up</button><trigger object="gun2" action="fire" /></input>
+        </seat>
         <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>

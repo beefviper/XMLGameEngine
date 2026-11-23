@@ -193,6 +193,66 @@ TEST_CASE("<people>2</people> gives seat 2 to a person, and the computer stops",
 	CHECK(play.get("two").velocity.x == Approx(-120));
 }
 
+namespace
+{
+	// Two bats; seat 1's keys are A and its pad's left, seat 2's what it is given.
+	std::string padded(const std::string& seat2, const std::string& more = "")
+	{
+		const std::string moves = "<actions><action name=\"left\"><move direction=\"left\">120</move></action></actions>";
+		return "<game xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"../xgedef.xsd\">"
+			"<window name=\"pads\"><width>800</width><height>600</height><background>black</background>"
+			"<framerate>60</framerate></window>"
+			"<variables><variable name=\"unused\">0</variable></variables><states><state name=\"playing\"><objects>"
+			+ box("one", 300, 100, moves) + box("two", 300, 500, moves) + "</objects><inputs>"
+			"<seat number=\"1\"><input><button>a</button><button>pad.left</button><trigger object=\"one\" action=\"left\" /></input></seat>"
+			+ seat2 + more +
+			"<input button=\"num2\"><people>2</people></input>"
+			"</inputs></state></states></game>";
+	}
+}
+
+TEST_CASE("pad.left in a seat is that seat's own pad", "[computer][seats][pads]")
+{
+	const Written file(padded("<seat number=\"2\"><input><button>j</button><button>pad.left</button><trigger object=\"two\" action=\"left\" /></input></seat>"));
+	Played play(file.path);
+	play.tap(KeyCode::Num2);
+	play.engine.handleKeyPressed(KeyCode::Pad2Left);
+	play.frames(1);
+	CHECK(play.get("one").velocity.x == Approx(0));
+	CHECK(play.get("two").velocity.x == Approx(-120));
+	play.engine.handleKeyReleased(KeyCode::Pad2Left);
+	play.engine.handleKeyPressed(KeyCode::Pad1Left);
+	play.frames(1);
+	CHECK(play.get("one").velocity.x == Approx(-120));
+}
+
+TEST_CASE("a seat from= another takes its keys, and its pad's buttons on its own pad", "[computer][seats][pads]")
+{
+	const Written file(padded("<seat number=\"2\" from=\"1\" />"));
+	Played play(file.path);
+	// Seat 2 is nobody's yet: its pad does nothing.
+	play.engine.handleKeyPressed(KeyCode::Pad2Left);
+	play.frames(1);
+	CHECK(play.get("one").velocity.x == Approx(0));
+	play.engine.handleKeyReleased(KeyCode::Pad2Left);
+	play.tap(KeyCode::Num2);
+	play.engine.handleKeyPressed(KeyCode::Pad2Left);
+	play.frames(1);
+	CHECK(play.get("one").velocity.x == Approx(-120));
+}
+
+TEST_CASE("pad.left outside a seat, or in seat 3, stops the load", "[computer][seats][pads]")
+{
+	{
+		const Written file(padded("", "<input><button>pad.left</button><trigger object=\"two\" action=\"left\" /></input>"));
+		CHECK_THROWS_WITH(Played(file.path), ContainsSubstring("is in no <seat>; name a pad (pad1.left)"));
+	}
+	{
+		const Written file(padded("<seat number=\"3\"><input><button>pad.left</button><trigger object=\"two\" action=\"left\" /></input></seat>"));
+		CHECK_THROWS_WITH(Played(file.path), ContainsSubstring("there are two pads, for seats 1 and 2"));
+	}
+}
+
 TEST_CASE("tennis.xml: the set's banner says YOU and CPU against the computer, PLAYER 1 and 2 between people", "[computer][tennis][seats]")
 {
 	const auto banner = [](KeyCode start, const char* winner)

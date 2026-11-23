@@ -8,6 +8,7 @@ Every game follows it, and `test_engine_input` checks it:
 
 - **1** starts every game from its title, as the one player button of an arcade; **2** starts the games two people can play, saying how many [people](input.md#seats) play. **Space** plays again (never Enter); in play it jumps or fires.
 - The **Pause** key pauses and plays on, in every game (and a pad's Start). Nothing else pauses.
+- **Pads** follow the seats: a game for two gives each seat its own pad (`pad.up` in a seat), so player 2 plays on pad 2.
 - Player one plays on **W A S D**. The arrows are a second way in one-player games, and player two's keys in two-player ones.
 - Colours are the engine's colour names only ([colours](format.md#colours)).
 

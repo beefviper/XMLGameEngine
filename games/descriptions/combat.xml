@@ -100,7 +100,7 @@
         </object>
       </objects>
       <inputs>
-        <input><button>num1</button><button>numpad1</button><button>num2</button><button>numpad2</button><push state="playing" /></input>
+        <input><button>num1</button><button>numpad1</button><button>num2</button><button>numpad2</button><people>2</people><push state="playing" /></input>
       </inputs>
     </state>
     <state name="playing">
@@ -178,16 +178,20 @@
         </object>
       </objects>
       <inputs>
-        <input button="w"><trigger object="tank1" action="forward" /></input>
-        <input button="s"><trigger object="tank1" action="back" /></input>
-        <input button="a"><trigger object="tank1" action="left" /></input>
-        <input button="d"><trigger object="tank1" action="right" /></input>
-        <input><button>f</button><button>lshift</button><trigger object="tank1" action="fire" /></input>
-        <input button="up"><trigger object="tank2" action="forward" /></input>
-        <input button="down"><trigger object="tank2" action="back" /></input>
-        <input button="left"><trigger object="tank2" action="left" /></input>
-        <input button="right"><trigger object="tank2" action="right" /></input>
-        <input><button>rshift</button><button>rcontrol</button><trigger object="tank2" action="fire" /></input>
+        <seat number="1">
+          <input><button>w</button><button>pad.up</button><trigger object="tank1" action="forward" /></input>
+          <input><button>s</button><button>pad.down</button><trigger object="tank1" action="back" /></input>
+          <input><button>a</button><button>pad.left</button><trigger object="tank1" action="left" /></input>
+          <input><button>d</button><button>pad.right</button><trigger object="tank1" action="right" /></input>
+          <input><button>f</button><button>lshift</button><button>pad.a</button><trigger object="tank1" action="fire" /></input>
+        </seat>
+        <seat number="2">
+          <input><button>up</button><button>pad.up</button><trigger object="tank2" action="forward" /></input>
+          <input><button>down</button><button>pad.down</button><trigger object="tank2" action="back" /></input>
+          <input><button>left</button><button>pad.left</button><trigger object="tank2" action="left" /></input>
+          <input><button>right</button><button>pad.right</button><trigger object="tank2" action="right" /></input>
+          <input><button>rshift</button><button>rcontrol</button><button>pad.a</button><trigger object="tank2" action="fire" /></input>
+        </seat>
         <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <timers>

@@ -689,15 +689,15 @@
       <inputs>
         <!-- one set of keys, for whichever player is on its turn -->
         <seat number="1">
-          <input><button>space</button><button>pad1.a</button><trigger object="card" action="roll" /></input>
+          <input><button>space</button><button>pad.a</button><trigger object="card" action="roll" /></input>
           <input><button>num1</button><trigger object="card" action="keep1" /></input>
           <input><button>num2</button><trigger object="card" action="keep2" /></input>
           <input><button>num3</button><trigger object="card" action="keep3" /></input>
           <input><button>num4</button><trigger object="card" action="keep4" /></input>
           <input><button>num5</button><trigger object="card" action="keep5" /></input>
-          <input><button>w</button><button>up</button><button>pad1.up</button><trigger object="card" action="up" /></input>
-          <input><button>s</button><button>down</button><button>pad1.down</button><trigger object="card" action="down" /></input>
-          <input><button>e</button><button>pad1.b</button><trigger object="card" action="write" /></input>
+          <input><button>w</button><button>up</button><button>pad.up</button><trigger object="card" action="up" /></input>
+          <input><button>s</button><button>down</button><button>pad.down</button><trigger object="card" action="down" /></input>
+          <input><button>e</button><button>pad.b</button><trigger object="card" action="write" /></input>
         </seat>
         <seat number="2" from="1" />
         <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>

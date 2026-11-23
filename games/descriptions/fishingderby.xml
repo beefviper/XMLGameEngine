@@ -302,17 +302,17 @@
       </objects>
       <inputs>
         <seat number="1">
-          <input button="w"><trigger object="hook1" action="up" /></input>
-          <input button="s"><trigger object="hook1" action="down" /></input>
-          <input button="a"><trigger object="hook1" action="left" /></input>
-          <input button="d"><trigger object="hook1" action="right" /></input>
+          <input><button>w</button><button>pad.up</button><trigger object="hook1" action="up" /></input>
+          <input><button>s</button><button>pad.down</button><trigger object="hook1" action="down" /></input>
+          <input><button>a</button><button>pad.left</button><trigger object="hook1" action="left" /></input>
+          <input><button>d</button><button>pad.right</button><trigger object="hook1" action="right" /></input>
         </seat>
         <!-- the right pier: the computer's, or a second player's -->
         <seat number="2">
-          <input button="up"><trigger object="hook2" action="up" /></input>
-          <input button="down"><trigger object="hook2" action="down" /></input>
-          <input button="left"><trigger object="hook2" action="left" /></input>
-          <input button="right"><trigger object="hook2" action="right" /></input>
+          <input><button>up</button><button>pad.up</button><trigger object="hook2" action="up" /></input>
+          <input><button>down</button><button>pad.down</button><trigger object="hook2" action="down" /></input>
+          <input><button>left</button><button>pad.left</button><trigger object="hook2" action="left" /></input>
+          <input><button>right</button><button>pad.right</button><trigger object="hook2" action="right" /></input>
         </seat>
         <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>

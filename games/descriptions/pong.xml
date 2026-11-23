@@ -182,12 +182,12 @@
       </objects>
       <inputs>
         <seat number="1">
-          <input button="w"><trigger object="paddle1" action="up" /></input>
-          <input button="s"><trigger object="paddle1" action="down" /></input>
+          <input><button>w</button><button>pad.up</button><trigger object="paddle1" action="up" /></input>
+          <input><button>s</button><button>pad.down</button><trigger object="paddle1" action="down" /></input>
         </seat>
         <seat number="2">
-          <input button="up"><trigger object="paddle2" action="up" /></input>
-          <input button="down"><trigger object="paddle2" action="down" /></input>
+          <input><button>up</button><button>pad.up</button><trigger object="paddle2" action="up" /></input>
+          <input><button>down</button><button>pad.down</button><trigger object="paddle2" action="down" /></input>
         </seat>
         <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>

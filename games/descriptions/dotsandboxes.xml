@@ -284,12 +284,12 @@
       <inputs>
         <!-- one set of keys, for whichever player is on its turn -->
         <seat number="1">
-          <input><button>w</button><button>up</button><button>pad1.up</button><trigger object="cursor" action="up" /></input>
-          <input><button>s</button><button>down</button><button>pad1.down</button><trigger object="cursor" action="down" /></input>
-          <input><button>a</button><button>left</button><button>pad1.left</button><trigger object="cursor" action="left" /></input>
-          <input><button>d</button><button>right</button><button>pad1.right</button><trigger object="cursor" action="right" /></input>
+          <input><button>w</button><button>up</button><button>pad.up</button><trigger object="cursor" action="up" /></input>
+          <input><button>s</button><button>down</button><button>pad.down</button><trigger object="cursor" action="down" /></input>
+          <input><button>a</button><button>left</button><button>pad.left</button><trigger object="cursor" action="left" /></input>
+          <input><button>d</button><button>right</button><button>pad.right</button><trigger object="cursor" action="right" /></input>
           <input>
-            <button>space</button><button>pad1.a</button><button>mouse.left</button>
+            <button>space</button><button>pad.a</button><button>mouse.left</button>
             <trigger object="cursor" action="put" />
             <trigger object="cursor" action="tally" />
           </input>

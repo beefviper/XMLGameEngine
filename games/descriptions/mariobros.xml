@@ -995,14 +995,14 @@
       </shows>
       <inputs>
         <seat number="1">
-          <input button="a"><trigger object="mario" action="left" /></input>
-          <input button="d"><trigger object="mario" action="right" /></input>
-          <input><button>w</button><button>space</button><trigger object="mario" action="jump" /></input>
+          <input><button>a</button><button>pad.left</button><trigger object="mario" action="left" /></input>
+          <input><button>d</button><button>pad.right</button><trigger object="mario" action="right" /></input>
+          <input><button>w</button><button>space</button><button>pad.a</button><trigger object="mario" action="jump" /></input>
         </seat>
         <seat number="2">
-          <input button="left"><trigger object="luigi" action="left" /></input>
-          <input button="right"><trigger object="luigi" action="right" /></input>
-          <input button="up"><trigger object="luigi" action="jump" /></input>
+          <input><button>left</button><button>pad.left</button><trigger object="luigi" action="left" /></input>
+          <input><button>right</button><button>pad.right</button><trigger object="luigi" action="right" /></input>
+          <input><button>up</button><button>pad.a</button><trigger object="luigi" action="jump" /></input>
         </seat>
         <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>

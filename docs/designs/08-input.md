@@ -49,7 +49,8 @@ Built by a state change count compared in `Engine::syncHeldKeysToState()` after 
 - **Looked at:** a toggle key on the title for person or computer in seat 2. Not needed yet: 1 and 2 on the title say it.
 - **Turns:** a players group member's seat is its number, already its seat at a trick, so a turn game says nothing new. Its keys sit in seat 1 and in seat 2 `from="1"`, and answer the seat on turn. This replaced the rule that a person's keys miss a picker while a `<think>` condition holds (`answersPicker`).
 - **Hold'em** has no computer keys left: both players wear the same choice looks (act, callonly, allin), set by one group action on whoever is on turn, so your keys trigger `players` and the computer presses them in seat 2. The end of a hand gives you the turn, so Space deals as your own key. No F-keys remain in any game.
-- **Open:** pads following the seat; demos playing on their own fixed steps.
+- **Pads follow the seat:** `pad.up` written in a seat is that seat's pad, so a seat says "my pad" once and `from=` gives the copy its own; writing `pad2.up` in seat 2 by hand was the other way, and would have to be repeated in every turn game. Only two pads exist, so seats 3 and 4 refuse it. The two-person games (Combat, Freeway, ...) moved into seats for it, with `<people>2</people>` on their title.
+- **Open:** demos playing on their own fixed steps.
 
 ## Mouse and pads
 

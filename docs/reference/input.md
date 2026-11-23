@@ -53,6 +53,7 @@ So remapping a key is one edit in one state, a key can do different things in di
 - **`<people>N</people>`** (a command, 1 to 4, at first 1) says how many people play: seats 1 to N are theirs, the rest are the [computer's](states.md#computer-players). `<people />` reads the count back as a [value](format.md#the-windows-numbers), so a win screen can say YOU or PLAYER 1.
 - **A seat nobody has answers no key from the keyboard**, nor the mouse, so the second player's keys do nothing against the computer, with no rule saying so.
 - **`from=` an earlier seat** gives a seat the same keys, for players taking turns at one keyboard: a key in several seats answers the seat of the [players group](states.md#players-as-a-group) member on its turn, its number in the group. A seat may add keys of its own.
+- **`pad.left` in a seat** (any pad button, and `pad.x`/`pad.y` for an axis) is that seat's own pad: `pad1.left` in seat 1, `pad2.left` in seat 2. A seat `from=` another takes these on its own pad, so seat 2 `from="1"` plays turns on pad 2. Outside a seat, or in seat 3 or 4, it stops the load: there are two pads.
 - A state [from another](states.md#a-state-from-another) takes its seats too, key by key.
 
 ## A key's three moments

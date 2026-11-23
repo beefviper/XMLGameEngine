@@ -2737,7 +2737,24 @@ namespace xge
 			std::map<std::string, std::vector<int>> seats;     // a button's seats
 			std::map<std::string, std::vector<int>> axisSeats; // a pointing control's seats
 			std::map<int, std::vector<std::string>> seatKeys;  // a seat's buttons and controls
+			std::set<std::string> seatPads;                    // what a seat's pad.* became (pad1.a), which a from= seat takes as its own pad's
 		};
+
+		// pad.a in seat 2 is pad2.a: the pad of the seat it is written in.
+		// Any other name is as written.
+		std::string seatPad(const std::string& name, int seat, const std::string& where)
+		{
+			if (name.rfind("pad.", 0) != 0) { return name; }
+			if (seat == 0) { fail(where, "'" + name + "' is the pad of the seat it is in, and this is in no <seat>; name a pad (pad1" + name.substr(3) + ")"); }
+			if (seat > 2) { fail(where, "'" + name + "' in seat " + std::to_string(seat) + ": there are two pads, for seats 1 and 2"); }
+			return "pad" + std::to_string(seat) + name.substr(3);
+		}
+
+		// The same name on seat `seat`'s pad (pad1.a on seat 2: pad2.a).
+		std::string onSeatPad(const std::string& name, int seat)
+		{
+			return "pad" + std::to_string(seat) + name.substr(4);
+		}
 
 		// The names a node gives one way or the other: one by an attribute
 		// (button="space"), several by an element each, written first
@@ -2790,8 +2807,23 @@ namespace xge
 				if (!out.seatKeys.count(from) || from == number) { fail(here, "from=\"" + std::to_string(from) + "\" is no seat written before it"); }
 				for (const std::string& name : std::vector<std::string>(out.seatKeys[from]))
 				{
-					(out.axes.count(name) ? out.axisSeats : out.seats)[name].push_back(number);
-					out.seatKeys[number].push_back(name);
+					const bool isAxis = out.axes.count(name) != 0;
+					if (!out.seatPads.count(name))
+					{
+						(isAxis ? out.axisSeats : out.seats)[name].push_back(number);
+						out.seatKeys[number].push_back(name);
+						continue;
+					}
+					// Its own pad's, running the same commands.
+					if (number > 2) { fail(here, "from=\"" + std::to_string(from) + "\" takes '" + name + "' as this seat's pad; there are two pads, for seats 1 and 2"); }
+					const std::string own = onSeatPad(name, number);
+					if (isAxis) { out.axes[own] = out.axes[name]; }
+					for (auto& moment : out.buttons)
+					{
+						if (const auto commands = moment.find(name); commands != moment.end()) { moment[own] = commands->second; }
+					}
+					(isAxis ? out.axisSeats : out.seats)[own] = { number };
+					out.seatKeys[number].push_back(own);
 				}
 			}
 			readInputs(node, here, out, number);
@@ -2813,7 +2845,9 @@ namespace xge
 				}
 				std::unique_ptr<XmlNode> commandsStart;
 				const std::vector<std::string> buttons = namesGiven(*input, "button", where + " > <input>", &commandsStart);
-				const std::string axis = input->getAttribute("axis");
+				const std::string writtenAxis = input->getAttribute("axis");
+				const std::string axis = writtenAxis.empty() ? writtenAxis : seatPad(writtenAxis, seat, where + " > <input axis=\"" + writtenAxis + "\">");
+				if (!axis.empty() && axis != writtenAxis) { out.seatPads.insert(axis); }
 				if (buttons.empty() == axis.empty())
 				{
 					fail(where, "an <input> names a button (button=\"...\", or a <button> each) or an axis=\"...\", one of the two");
@@ -2838,8 +2872,10 @@ namespace xge
 					: std::find_if(keyMoments.begin(), keyMoments.end(), [&](const char* name) { return on == name; });
 				const std::vector<WrittenCommand> commands = readKeyCommands(std::move(commandsStart), where + " > <input " + written + ">");
 				auto& to = out.buttons[static_cast<std::size_t>(moment - keyMoments.begin())];
-				for (const std::string& button : buttons)
+				for (const std::string& writtenButton : buttons)
 				{
+					const std::string button = seatPad(writtenButton, seat, where + " > <input " + written + ">");
+					if (button != writtenButton) { out.seatPads.insert(button); }
 					if (to.count(button)) { fail(where + " > <input " + written + ">", "binds '" + button + "' again: this state's <inputs> already has it" + (on.empty() ? std::string() : " on=\"" + on + "\"")); }
 					to[button] = commands;
 					if (seat != 0 && !out.seats.count(button)) { out.seatKeys[seat].push_back(button); }

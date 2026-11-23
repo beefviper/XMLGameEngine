@@ -398,13 +398,13 @@
       <inputs>
         <!-- one set of keys, for whichever player is on its turn -->
         <seat number="1">
-          <input><button>w</button><button>up</button><button>pad1.up</button><trigger object="cursor" action="up" /></input>
-          <input><button>s</button><button>down</button><button>pad1.down</button><trigger object="cursor" action="down" /></input>
-          <input><button>a</button><button>left</button><button>pad1.left</button><trigger object="cursor" action="left" /></input>
-          <input><button>d</button><button>right</button><button>pad1.right</button><trigger object="cursor" action="right" /></input>
+          <input><button>w</button><button>up</button><button>pad.up</button><trigger object="cursor" action="up" /></input>
+          <input><button>s</button><button>down</button><button>pad.down</button><trigger object="cursor" action="down" /></input>
+          <input><button>a</button><button>left</button><button>pad.left</button><trigger object="cursor" action="left" /></input>
+          <input><button>d</button><button>right</button><button>pad.right</button><trigger object="cursor" action="right" /></input>
           <!-- one press: put the checker held down (or take up the one pointed at), take one up, roll, or pass -->
           <input>
-            <button>space</button><button>pad1.a</button>
+            <button>space</button><button>pad.a</button>
             <trigger object="cursor" action="place" from="held">
               <otherwise><trigger object="cursor" action="pick" /></otherwise>
             </trigger>
@@ -413,7 +413,7 @@
             <trigger object="table" action="pass" from="stuck" />
           </input>
           <input>
-            <button>x</button><button>backspace</button><button>pad1.b</button>
+            <button>x</button><button>backspace</button><button>pad.b</button>
             <trigger object="cursor" action="back" from="held" />
           </input>
           <input button="c"><trigger object="table" action="offer" from="rolling" /></input>

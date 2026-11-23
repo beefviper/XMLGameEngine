@@ -216,17 +216,17 @@
       </objects>
       <inputs>
         <seat number="1">
-          <input button="w"><trigger object="player" action="up" /></input>
-          <input button="s"><trigger object="player" action="down" /></input>
-          <input button="a"><trigger object="player" action="left" /></input>
-          <input button="d"><trigger object="player" action="right" /></input>
+          <input><button>w</button><button>pad.up</button><trigger object="player" action="up" /></input>
+          <input><button>s</button><button>pad.down</button><trigger object="player" action="down" /></input>
+          <input><button>a</button><button>pad.left</button><trigger object="player" action="left" /></input>
+          <input><button>d</button><button>pad.right</button><trigger object="player" action="right" /></input>
         </seat>
         <!-- the far end: the computer's, or a second player's -->
         <seat number="2">
-          <input button="up"><trigger object="cpu" action="up" /></input>
-          <input button="down"><trigger object="cpu" action="down" /></input>
-          <input button="left"><trigger object="cpu" action="left" /></input>
-          <input button="right"><trigger object="cpu" action="right" /></input>
+          <input><button>up</button><button>pad.up</button><trigger object="cpu" action="up" /></input>
+          <input><button>down</button><button>pad.down</button><trigger object="cpu" action="down" /></input>
+          <input><button>left</button><button>pad.left</button><trigger object="cpu" action="left" /></input>
+          <input><button>right</button><button>pad.right</button><trigger object="cpu" action="right" /></input>
         </seat>
         <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>

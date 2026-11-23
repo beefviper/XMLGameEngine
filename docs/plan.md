@@ -118,6 +118,7 @@ Games the vocabulary cannot say yet: [near misses](designs/54-games.md#near-miss
 - **Stereo** (the author's wish): every sound is one channel today, and a stereo recording is averaged into it. Some later games, music above all, will want two. A mono sound then plays the same on both sides, so every game so far sounds as it does now.
 - **Values** ([arithmetic](designs/03-arithmetic.md)): tangent, square root, power, `pick`, when a game needs one.
 - **Conditions** ([states-and-conditions](designs/07-states-and-conditions.md)): object-level conditions, a total inside a value, conditions on edge rules.
+- **Starting between tiles** (the author): a doubled character (`@@`) starts an object half a tile over, which does for now; a better way is wanted, such as the map holding only the maze and an object placing itself at a column like 13.5.
 - **Scenes** ([scenes](designs/12-scenes.md)): Berserk's larger grid of rooms, which needs maps made while playing.
 - **Demos** ([time](designs/29-time.md#open)): the shipped games have none; record them again (`xgecli <game> --record`), about thirty seconds each.
 
@@ -131,7 +132,7 @@ Games the vocabulary cannot say yet: [near misses](designs/54-games.md#near-miss
 
 ### Code
 
-- **Controllers** (the author's idea): [seats](reference/input.md#seats) are built; a person or the computer plays each, and the computer presses its seat's keys. Left: pads following the seat, and a demo driving the step itself (delta time) so a demo is simple to describe and exact to replay, letting go of `Engine::playRecording` splitting steps at key times; played in a window at another rate it must still keep to real time.
+- **Controllers** (the author's idea): [seats](reference/input.md#seats) are built; a person or the computer plays each, and the computer presses its seat's keys. Left: a demo driving the step itself (delta time) so a demo is simple to describe and exact to replay, letting go of `Engine::playRecording` splitting steps at key times; played in a window at another rate it must still keep to real time.
 - **xgegui's Qt window on Windows** (the author, after DT5): slow and uneven on some games, docked more than popped out, while SFML2 and SDL2 play them smoothly. On Linux every game draws a frame in under 1.5 ms. Left for now; a readout of step, draw and paint times would show where it goes.
 
 - `Engine::handleKeyPressed`/`handleKeyReleased` are public only because the tests and `played.h` press keys through them; a test seam would let them go private.

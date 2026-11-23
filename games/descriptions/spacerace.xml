@@ -59,7 +59,7 @@
         </object>
       </objects>
       <inputs>
-        <input><button>num1</button><button>numpad1</button><button>num2</button><button>numpad2</button><push state="playing" /></input>
+        <input><button>num1</button><button>numpad1</button><button>num2</button><button>numpad2</button><people>2</people><push state="playing" /></input>
       </inputs>
     </state>
     <state name="playing">
@@ -157,10 +157,14 @@
         </object>
       </objects>
       <inputs>
-        <input button="w"><trigger object="rocket1" action="up" /></input>
-        <input button="s"><trigger object="rocket1" action="down" /></input>
-        <input button="up"><trigger object="rocket2" action="up" /></input>
-        <input button="down"><trigger object="rocket2" action="down" /></input>
+        <seat number="1">
+          <input><button>w</button><button>pad.up</button><trigger object="rocket1" action="up" /></input>
+          <input><button>s</button><button>pad.down</button><trigger object="rocket1" action="down" /></input>
+        </seat>
+        <seat number="2">
+          <input><button>up</button><button>pad.up</button><trigger object="rocket2" action="up" /></input>
+          <input><button>down</button><button>pad.down</button><trigger object="rocket2" action="down" /></input>
+        </seat>
         <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
       </inputs>
       <conditions>
