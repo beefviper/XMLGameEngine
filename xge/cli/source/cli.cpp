@@ -78,6 +78,7 @@ namespace xge
 		constexpr std::string_view generateNames[] = {
 			"engine-cpp",
 			"web-asm",
+			"web-js",
 			"windows-cpp",
 		};
 
@@ -593,8 +594,9 @@ namespace xge
 			"                       engine-cpp (C++ on SFML 3, with a CMakeLists.txt: the\n"
 			"                       engine's own code with the game's data built in),\n"
 			"                       web-asm (the same, built with Emscripten into one web\n"
-			"                       page), or windows-cpp (the game as a person would\n"
-			"                       write it, on SFML 3: pong_min.xml for now)\n"
+			"                       page), windows-cpp (the game as a person would write\n"
+			"                       it, on SFML 3: pong_min.xml for now) or web-js (the\n"
+			"                       same as one web page in plain JavaScript)\n"
 			"  -o, --output <dir>   where --generate writes it (default <game>-<target>)\n"
 			"  --record             play, and write what was played into the game file as\n"
 			"                       its <demo> when the window closes (the attract mode)\n"

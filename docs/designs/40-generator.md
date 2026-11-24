@@ -1,6 +1,6 @@
 # Generating a program
 
-**Status:** Built: `xgecli --generate engine-cpp` covers every game, and `web-asm` builds the same into one web page. XSLT writes the game file out as a tree of C++ data, and the program reads it with the engine's own reader and plays it with the engine's own code on SFML. A test plays each generated game beside the engine's. Reference: [programs](../reference/programs.md#generating-a-program).
+**Status:** Built: `xgecli --generate engine-cpp` covers every game, and `web-asm` builds the same into one web page; `windows-cpp` and `web-js` write `pong_min` as a person would, in C++ and in JavaScript. XSLT writes the game file out as a tree of C++ data, and the program reads it with the engine's own reader and plays it with the engine's own code on SFML. A test plays each generated game beside the engine's. Reference: [programs](../reference/programs.md#generating-a-program).
 
 ## What we looked for
 
@@ -55,10 +55,11 @@ The first target wrote each game as a program a person might write (Pong about 4
 - **The backends are thin** because the engine draws every picture: `window/web` hands each bitmap to a canvas of its own on the page and draws it on the game's canvas, and `audio/web` hands each sound's samples to a Web Audio buffer. They compile only under Emscripten, so the native build leaves them out.
 - **One file:** `-sSINGLE_FILE` puts the WebAssembly in the page, and the assets go into Emscripten's in-memory files. A browser forbids loading anything else from a page opened from the disk, so a page that fetched its parts would not play by double-click.
 - **The browser's loop:** a frame runs each time the browser draws, at most `<framerate>` a second. The computer's thinking, on a thread of its own in a window, is done in the frame instead (the page has no threads), so a deep search holds the picture until it is done.
+- **Then the readable one too:** `web-asm`'s page is about 5 MB, nearly all WebAssembly. The author wanted a page a person can read as well, so `web-js` is the first option above after all, beside `web-asm` rather than in its place: `windows-cpp`'s shape in JavaScript, one page with no build. It shares `windows-cpp`'s `covers.xsl`, so the two readable targets grow together; its own verb files say how each verb is written and where it may stand.
 
 ## Open
 
 - Other targets (another language, an 8-bit machine) need the runtime in that language: a port, not a generator. The web page escapes this only because C++ compiles to WebAssembly.
 - Built with GCC and Clang on Linux, and MSVC at `/W4`, each game by its own `engine-cpp build: <game>` test in `build/generated`.
 - Not yet in `windows-cpp`: colours other than white, a `<move>` for something with its own `<velocity>`, a touch rule on a group, and the deflect off a top or bottom is untried by any game.
-- `windows-cpp` writes one game so far (`pong_min.xml`). For any other it lists every part it has no words for and writes nothing: what it covers is said as match patterns in `covers.xsl` and in each verb's file, so a new verb says where it may stand beside how it is written. The list doubles as the to-do for the next game.
+- `windows-cpp` and `web-js` write one game so far (`pong_min.xml`). For any other it lists every part it has no words for and writes nothing: what it covers is said as match patterns in `covers.xsl` and in each verb's file, so a new verb says where it may stand beside how it is written. The list doubles as the to-do for the next game.

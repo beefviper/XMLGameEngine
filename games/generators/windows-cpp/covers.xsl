@@ -5,7 +5,7 @@
 <!-- date: Nov 13, 2026 -->
 
 <!-- What windows-cpp has words for yet, said as the parts of a game it
-     covers. Before it writes anything the generator walks the game in mode
+     covers; web-js, its twin in JavaScript, walks the game with it too. Before it writes anything the generator walks the game in mode
      covers: a part it covers goes on to its attributes, children and text;
      any other is a gap, and the walk does not go into it. Every gap, once
      each, is listed and the generator stops (generate.xsl), so nothing is

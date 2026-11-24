@@ -138,6 +138,14 @@ windows-cpp cannot write these parts of pong.xml yet; use engine-cpp for this ga
   ...
 ```
 
+`xgecli pong_min --generate web-js` writes the same game **as a person would write it for the browser**: one page, `<game>.html`, its rules in plain JavaScript on a canvas, readable by opening it in an editor. It is `windows-cpp` in another language, in the same shape (constants, a plain object per thing, start functions, `key()`, one `frame(seconds)`), and it covers the same games, walked by `windows-cpp`'s `covers.xsl`; a game it cannot write it lists in the same way, with "use web-asm for this game". The stylesheets are in `games/generators/web-js/`:
+
+| Written | By | What |
+|---|---|---|
+| `<game>.html` | `game.xsl`, with `names.xsl`, `values.xsl` and a file per verb in `verbs/` | the game's numbers, things and rules, then the page: the canvas filling the window with the game's proportions, keys in (a game's key is kept from the page), a frame each time the browser draws with the time since the last (at most a quarter of a second) |
+| `README.md` | `generate.xsl` | what the page is, and to open it |
+| `LICENSE` | `xgecli` | the repository's licence |
+
 `xgetest-generated` also generates each game `windows-cpp` covers and runs its checks (`xge/tests/written/<game>.h`) on it: what the game does, not every frame.
 
 `xgetest-generated` (`cmake --build build --target xgetest-generated`, never in an ordinary build) generates every game, compares its compiled data with what `readGame` reads from the file field by field, and plays the two side by side frame by frame. Without libxslt, `xgecli` is built without `--generate` and says so. Design: [generator](../designs/40-generator.md).

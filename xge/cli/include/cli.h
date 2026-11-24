@@ -148,7 +148,7 @@ namespace xge
 	std::string audioBackendName(AudioBackend backend);
 
 	// The targets --generate can write a game out for ("engine-cpp",
-	// "web-asm", "windows-cpp").
+	// "web-asm", "web-js", "windows-cpp").
 	std::vector<std::string> generateTargets();
 
 	// The usage text, for --help and after an error.
