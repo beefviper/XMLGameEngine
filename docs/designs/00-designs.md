@@ -54,7 +54,8 @@ Status words: **Built** is in the code. **Decided** is chosen, not built. **Open
 
 | File | Topic | Status |
 |---|---|---|
-| [generator](40-generator.md) | XSLT writes the game as the engine's data | Built; readable output Open |
+| [generator](40-generator.md) | XSLT writes the game as the engine's data, or as plain code | Built; readable output Open |
+| [writing-out](41-writing-out.md) | Why a description must be easy to write out; what helped, what was hard, suggestions | Running record |
 | [backends](50-backends.md) | Interfaces and factories, scale, the library | Built |
 | [build-and-layout](51-build-and-layout.md) | CMake, output, folders, pipeline | Built |
 | [cli](52-cli.md), [gui](53-gui.md) | `xgecli`; `xgegui` | Built |

@@ -64,4 +64,5 @@ The first target wrote each game as a program a person might write (Pong about 4
 - Built with GCC and Clang on Linux, and MSVC at `/W4`, each game by its own `engine-cpp build: <game>` test in `build/generated`.
 - Not yet in `windows-cpp`: a `<move>` for something with its own `<velocity>`, a touch rule on a group, groups in groups, looks other than two texts, and the deflect off a top or bottom is untried by any game. Breakout's list is the next step's to-do.
 - `web-js` has no play checks of its own: its page is held to a few lines by `test_generate.cpp`, and played by hand in a browser.
+- What made each game easy or hard to write out, and suggestions for the language, are kept in [writing-out](41-writing-out.md).
 - `windows-cpp` and `web-js` write two games so far (`pong_min.xml`, `pong.xml`). For any other it lists every part it has no words for and writes nothing: what it covers is said as match patterns in `covers.xsl` and in each verb's file, so a new verb says where it may stand beside how it is written. The list doubles as the to-do for the next game.
