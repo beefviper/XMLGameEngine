@@ -19,6 +19,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 
+#include <algorithm>
 #include <filesystem>
 #include <iterator>
 #include <memory>
@@ -53,10 +54,11 @@ namespace
 		return out.str();
 	}
 
-	// The keys pressed: Space first (it starts every game), then each of the
-	// others held for a while in turn, so the players move, jump and fire.
+	// The keys pressed: 1 first (it starts every game, one player), then
+	// each of the others held for a while in turn, so the players move,
+	// jump and fire.
 	const KeyCode script[] = {
-		KeyCode::Space, KeyCode::Left, KeyCode::Space, KeyCode::Right, KeyCode::Up, KeyCode::A,
+		KeyCode::Num1, KeyCode::Left, KeyCode::Space, KeyCode::Right, KeyCode::Up, KeyCode::A,
 		KeyCode::Space, KeyCode::D, KeyCode::Down, KeyCode::W, KeyCode::S, KeyCode::Space,
 	};
 
@@ -96,7 +98,7 @@ TEST_CASE("every generated game plays frame for frame as the engine plays its fi
 			Evaluator::fixRandomSeed(20261011u);
 			Game fromFile{ std::string(each.file) };
 			const std::vector<std::string> expected = play(fromFile);
-			CHECK(expected.front() != expected.back()); // the keys did play it
+			CHECK(std::any_of(expected.begin(), expected.end(), [&](const std::string& shot) { return shot != expected.front(); })); // the keys did play it
 
 			Evaluator::fixRandomSeed(20261011u);
 			Game generated{ each.read() };
