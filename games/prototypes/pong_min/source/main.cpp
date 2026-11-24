@@ -1,7 +1,7 @@
 // main.cpp
 // Pong
 // author: beefviper
-// date: Nov 13, 2026
+// date: Nov 24, 2026
 //
 // The window: keys in, a step of the time since the last frame, the picture out.
 
@@ -14,19 +14,19 @@
 
 namespace
 {
-	void draw(sf::RenderWindow& window, const pong_min::Thing& thing)
+	using namespace pong_min;
+
+	void box(sf::RenderWindow& window, sf::Vector2f position, sf::Vector2f size, sf::Color color = sf::Color::White)
 	{
-		sf::RectangleShape shape(thing.size);
-		shape.setPosition(thing.position);
-		shape.setFillColor(sf::Color::White);
+		sf::RectangleShape shape(size);
+		shape.setPosition(position);
+		shape.setFillColor(color);
 		window.draw(shape);
 	}
 }
 
 int main()
 {
-	using namespace pong_min;
-
 	sf::RenderWindow window(sf::VideoMode({ static_cast<unsigned>(windowWidth), static_cast<unsigned>(windowHeight) }), "Pong");
 	window.setFramerateLimit(60);
 	window.setKeyRepeatEnabled(false);
@@ -46,9 +46,9 @@ int main()
 		game.frame(std::min(clock.restart().asSeconds(), 0.25f));
 
 		window.clear(sf::Color::Black);
-		draw(window, game.ball);
-		draw(window, game.paddle1);
-		draw(window, game.paddle2);
+		box(window, game.ball.position, game.ball.size);
+		box(window, game.paddle1.position, game.paddle1.size);
+		box(window, game.paddle2.position, game.paddle2.size);
 		window.display();
 	}
 }

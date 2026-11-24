@@ -1,7 +1,7 @@
 // pong_min.cpp
 // Pong
 // author: beefviper
-// date: Nov 13, 2026
+// date: Nov 24, 2026
 
 #include "pong_min.h"
 
@@ -70,12 +70,11 @@ namespace pong_min
 	// Where the ball starts, and starts again.
 	void Pong::startBall()
 	{
-		const float speed = 360;
 		const float angle = between(-30, 30);
 		const float side = between(-1, 1);
 		ball.size = { size, size };
 		ball.position = { windowWidth / 2 - size / 2, windowHeight / 2 - size / 2 };
-		ball.velocity = { sign(side) * speed * cosine(angle), speed * sine(angle) };
+		ball.velocity = { sign(side) * ballSpeed * cosine(angle), ballSpeed * sine(angle) };
 	}
 
 	void Pong::key(sf::Keyboard::Key key, bool down)

@@ -14,9 +14,9 @@
   </xsl:template>
 
   <xsl:template match="deflect" mode="touch">
-    <xsl:param name="self" />
+    <xsl:param name="who" />
     <xsl:param name="other" />
-    <xsl:value-of select="concat('deflect(', $self, ', ', $other, ', ')" />
+    <xsl:value-of select="concat('deflect(', $who, ', ', $other, ', ')" />
     <xsl:call-template name="value"><xsl:with-param name="node" select="." /></xsl:call-template>
     <xsl:text>);</xsl:text>
   </xsl:template>

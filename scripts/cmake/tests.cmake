@@ -319,6 +319,7 @@ add_executable(xgetest-generated EXCLUDE_FROM_ALL
 	"xge/tests/generated/test_generated_games.cpp"
 	"xge/tests/generated/test_written_games.cpp"
 	"xge/tests/written/pong_min.h"
+	"xge/tests/written/pong.h"
 )
 # Visual Studio's Build Solution leaves it out too.
 # In an IDE, out of the way in a folder of its own (with the hand-written
@@ -390,7 +391,8 @@ target_include_directories(xgetest-generated PRIVATE "${XGE_GENERATED_DIR}" xge/
 # and compiled in, so test_written_games.cpp plays each with its checks
 # (xge/tests/written/<game>.h). test_generate.cpp holds the same list.
 set(windows_cpp_games
-	"pong_min=pong_min::Pong")
+	"pong_min=pong_min::Pong"
+	"pong=pong::Pong")
 set(written_includes "")
 set(written_entries "")
 foreach(entry IN LISTS windows_cpp_games)

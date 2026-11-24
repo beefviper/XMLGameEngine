@@ -132,6 +132,6 @@ if (XGE_WITH_SFML3)
 	xge_place_program(pong FOLDER generated/prototypes)
 	set_target_properties(pong PROPERTIES FOLDER XGETestGenerated/XGETestPrototypes)
 	add_custom_command(TARGET pong POST_BUILD
-		COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/games/assets/tuffy.ttf" "$<TARGET_FILE_DIR:pong>/tuffy.ttf"
+		COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/games/assets/tuffy.ttf" "$<TARGET_FILE_DIR:pong>/assets/tuffy.ttf"
 		VERBATIM)
 endif()

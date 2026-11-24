@@ -10,8 +10,8 @@
 // them but no XML library and none of the other libraries. That it plays as
 // the file does, frame by frame, is in test_generated_games.cpp, which
 // compiles it. The windows-cpp target (games/generators/windows-cpp) writes
-// pong_min as games/prototypes has it, web-js the same as one page of plain
-// JavaScript, and web-asm what engine-cpp does for a web page.
+// pong_min and pong as games/prototypes has them, web-js the same as a page
+// of plain JavaScript each, and web-asm what engine-cpp does for a web page.
 
 #include "scratch.h"
 #include "game/game.h"
@@ -22,11 +22,13 @@
 
 #include <filesystem>
 #include <fstream>
+#include <map>
 #include <memory>
 #include <regex>
 #include <set>
 #include <sstream>
 #include <string>
+#include <vector>
 
 using namespace xge;
 
@@ -320,31 +322,43 @@ namespace
 	}
 }
 
-TEST_CASE("windows-cpp writes pong_min as the hand-written one in games/prototypes is written", "[generate]")
+TEST_CASE("windows-cpp writes pong_min and pong as the hand-written ones in games/prototypes are written", "[generate]")
 {
-	TempFolder folder("xge_test_generate_windows_cpp");
-	const fs::path out = folder.path / "out";
-	generateGame(requestFor(fs::current_path() / "descriptions/pong_min.xml", out, "windows-cpp"));
-	const fs::path written = fs::path(XGE_ENGINE_FOLDER).parent_path() / "games/prototypes/pong_min/source";
-
-	for (const char* file : { "pong_min.h", "pong_min.cpp", "main.cpp" })
+	for (const std::string game : { "pong_min", "pong" })
 	{
-		INFO(file);
-		CHECK(undated(readFile(out / "source" / file)) == undated(readFile(written / file)));
+		INFO(game);
+		TempFolder folder("xge_test_generate_windows_cpp_" + game);
+		const fs::path out = folder.path / "out";
+		generateGame(requestFor(fs::current_path() / ("descriptions/" + game + ".xml"), out, "windows-cpp"));
+		const fs::path written = fs::path(XGE_ENGINE_FOLDER).parent_path() / "games/prototypes" / game / "source";
+
+		const std::vector<std::string> sources{ game + ".h", game + ".cpp", "main.cpp" };
+		for (const std::string& file : sources)
+		{
+			INFO(file);
+			CHECK(undated(readFile(out / "source" / file)) == undated(readFile(written / file)));
+		}
+
+		// it stands alone: SFML and nothing of the engine, nowhere named
+		const std::string build = readFile(out / "CMakeLists.txt");
+		CHECK(build.find("SFML::Graphics") != std::string::npos);
+		CHECK_FALSE(fs::exists(out / "engine"));
+		for (const std::string& file : { "source/" + sources[0], "source/" + sources[1], std::string("source/main.cpp"), std::string("CMakeLists.txt"), std::string("README.md") })
+		{
+			INFO(file);
+			const std::string text = readFile(out / file);
+			CHECK(text.find("xge") == std::string::npos);
+			CHECK(text.find("XML Game Engine") == std::string::npos);
+		}
+		CHECK(fs::exists(out / "LICENSE"));
 	}
 
-	// it stands alone: SFML and nothing of the engine, nowhere named
-	const std::string build = readFile(out / "CMakeLists.txt");
-	CHECK(build.find("SFML::Graphics") != std::string::npos);
-	CHECK_FALSE(fs::exists(out / "engine"));
-	for (const char* file : { "source/pong_min.h", "source/pong_min.cpp", "source/main.cpp", "CMakeLists.txt", "README.md" })
-	{
-		INFO(file);
-		const std::string text = readFile(out / file);
-		CHECK(text.find("xge") == std::string::npos);
-		CHECK(text.find("XML Game Engine") == std::string::npos);
-	}
-	CHECK(fs::exists(out / "LICENSE"));
+	// pong's words are drawn in the engine's font, copied beside it, and its
+	// sounds need SFML's audio
+	TempFolder folder("xge_test_generate_windows_cpp_pong_parts");
+	generateGame(requestFor(fs::current_path() / "descriptions/pong.xml", folder.path / "out", "windows-cpp"));
+	CHECK(fs::exists(folder.path / "out/assets/tuffy.ttf"));
+	CHECK(readFile(folder.path / "out/CMakeLists.txt").find("SFML::Audio") != std::string::npos);
 }
 
 TEST_CASE("windows-cpp lists every part of a game it has no words for yet, then stops", "[generate]")
@@ -352,60 +366,76 @@ TEST_CASE("windows-cpp lists every part of a game it has no words for yet, then 
 	TempFolder folder("xge_test_generate_windows_cpp_stops");
 	try
 	{
-		generateGame(requestFor(fs::current_path() / "descriptions/pong.xml", folder.path / "out", "windows-cpp"));
-		FAIL("pong.xml was written");
+		generateGame(requestFor(fs::current_path() / "descriptions/breakout.xml", folder.path / "out", "windows-cpp"));
+		FAIL("breakout.xml was written");
 	}
 	catch (const GenerateError& error)
 	{
 		const std::string what = error.what();
 		INFO(what);
-		CHECK(what.find("windows-cpp cannot write these parts of pong.xml yet; use engine-cpp for this game:\n") != std::string::npos);
+		CHECK(what.find("windows-cpp cannot write these parts of breakout.xml yet; use engine-cpp for this game:\n") != std::string::npos);
 		// the whole list, a line each and each once, with the object it is in
-		CHECK(what.find("\n  more than one <state>") != std::string::npos);
-		CHECK(what.find("\n  <styles> in <game>") != std::string::npos);
-		CHECK(what.find("\n  <text> in <sprite> (object 'score1')") != std::string::npos);
-		CHECK(what.find("\n  <play> in <collision> (object 'ball')") != std::string::npos);
-		CHECK(what.find("\n  the name 'score1.width' (object 'score1')") != std::string::npos);
-		CHECK(count(what, "\n  <styles> in <game>") == 1);
+		CHECK(what.find("\n  <group> in <group> (group 'red')") != std::string::npos);
+		CHECK(what.find("\n  <track> in <action> (object 'player')") != std::string::npos);
+		CHECK(what.find("\n  <dec> in <collision> (object 'ball')") != std::string::npos);
+		CHECK(what.find("\n  a <collision> on a touch in a group (group 'wall')") != std::string::npos);
+		CHECK(count(what, "\n  <dec> in <collision> (object 'ball')") == 1);
 		// a long list comes through whole (libxslt hands it over in one piece)
-		CHECK(what.find("\n  <sounds> in <game>") != std::string::npos);
+		CHECK(what.find("\n  a <sound> other than one square note in hertz") != std::string::npos);
 	}
 	CHECK_FALSE(fs::exists(folder.path / "out"));
 }
 
-TEST_CASE("web-js writes pong_min as one page of plain JavaScript that names nothing of the engine", "[generate]")
+TEST_CASE("web-js writes pong_min and pong as one page of plain JavaScript each that names nothing of the engine", "[generate]")
 {
-	TempFolder folder("xge_test_generate_web_js");
-	const fs::path out = folder.path / "out";
-	const GeneratedProgram program = generateGame(requestFor(fs::current_path() / "descriptions/pong_min.xml", out, "web-js"));
-
-	const std::set<fs::path> files(program.files.begin(), program.files.end());
-	CHECK(files == std::set<fs::path>{ "pong_min.html", "README.md", "LICENSE" });
-
-	const std::string page = readFile(out / "pong_min.html");
-	CHECK(page.rfind("<!DOCTYPE html>\n<!-- pong_min.html -->\n<!-- Pong -->\n<!-- author: beefviper -->\n<!-- date: ", 0) == 0);
-	// the file's numbers, its things and its rules, in its own words
-	for (const char* line : {
-		"const margin = 30;",
-		"function startBall() {",
-		"let paddle2 = { position: { x: windowWidth - margin - width, y: windowHeight / 2 - height / 2 }",
-		"case \"KeyW\": wHeld = down; return true;",
-		"case \"ArrowUp\": upHeld = down; return true;",
-		"if (wHeld) { paddle1.velocity.y -= step; }",
-		"if (ball.position.x < 0 || ball.position.x > windowWidth - ball.size.x) { ball = startBall(); }",
-		"for (const paddle of [paddle1, paddle2]) {",
-		"if (touching(ball, other)) { deflect(ball, other, 45); }",
-		"requestAnimationFrame(play);" })
+	// a line or two of each, in the page's own words
+	const std::map<std::string, std::vector<std::string>> lines{
+		{ "pong_min", {
+			"const margin = 30;",
+			"function startBall() {",
+			"let paddle2 = { position: { x: windowWidth - margin - width, y: windowHeight / 2 - height / 2 }",
+			"case \"KeyW\": wHeld = down; break;",
+			"if (wHeld) { paddle1.velocity.y -= step; }",
+			"if (ball.position.x < 0 || ball.position.x > windowWidth - ball.size.x) { ball = startBall(); }",
+			"if (touching(ball, other)) { deflect(ball, other, 45); }",
+			"requestAnimationFrame(playFrame);" } },
+		{ "pong", {
+			"let computer = { look: \"easy\", level: 1 };",
+			"let screens = [\"title\"];",
+			"if (code === \"Digit1\" || code === \"Numpad1\") { people = 1; screens.push(\"playing\"); }",
+			"if (code === \"Space\") { keep(); newGame(); }",
+			"if (people < 2) { seat2 = computerHolds(); }",
+			"\t\tpaddle2.score += 1;\n\t\tplay(\"score\");\n\t\tball = startBall();",
+			"ball.velocity.x *= 1.3;",
+			"if (paddle1.score >= 11 || paddle2.score >= 11) { screens.push(\"over\"); }",
+			"localStorage.setItem(\"pong-kept\"",
+			"case \"paused\": drawPlaying(); drawPaused(); break;" } },
+	};
+	for (const auto& [game, wanted] : lines)
 	{
-		INFO(line);
-		CHECK(page.find(line) != std::string::npos);
-	}
-	for (const char* file : { "pong_min.html", "README.md" })
-	{
-		INFO(file);
-		const std::string text = readFile(out / file);
-		CHECK(text.find("xge") == std::string::npos);
-		CHECK(text.find("XML Game Engine") == std::string::npos);
+		INFO(game);
+		TempFolder folder("xge_test_generate_web_js_" + game);
+		const fs::path out = folder.path / "out";
+		const GeneratedProgram program = generateGame(requestFor(fs::current_path() / ("descriptions/" + game + ".xml"), out, "web-js"));
+
+		const std::set<fs::path> files(program.files.begin(), program.files.end());
+		CHECK(files == std::set<fs::path>{ game + ".html", "README.md", "LICENSE" });
+		CHECK_FALSE(fs::exists(out / "source"));
+
+		const std::string page = readFile(out / (game + ".html"));
+		CHECK(page.rfind("<!DOCTYPE html>\n<!-- " + game + ".html -->\n<!-- Pong -->\n<!-- author: beefviper -->\n<!-- date: ", 0) == 0);
+		for (const std::string& line : wanted)
+		{
+			INFO(line);
+			CHECK(page.find(line) != std::string::npos);
+		}
+		for (const std::string& file : { game + ".html", std::string("README.md") })
+		{
+			INFO(file);
+			const std::string text = readFile(out / file);
+			CHECK(text.find("xge") == std::string::npos);
+			CHECK(text.find("XML Game Engine") == std::string::npos);
+		}
 	}
 }
 
@@ -414,16 +444,16 @@ TEST_CASE("web-js lists every part of a game it has no words for yet, then stops
 	TempFolder folder("xge_test_generate_web_js_stops");
 	try
 	{
-		generateGame(requestFor(fs::current_path() / "descriptions/pong.xml", folder.path / "out", "web-js"));
-		FAIL("pong.xml was written");
+		generateGame(requestFor(fs::current_path() / "descriptions/breakout.xml", folder.path / "out", "web-js"));
+		FAIL("breakout.xml was written");
 	}
 	catch (const GenerateError& error)
 	{
 		const std::string what = error.what();
 		INFO(what);
-		CHECK(what.find("web-js cannot write these parts of pong.xml yet; use web-asm for this game:\n") != std::string::npos);
-		CHECK(what.find("\n  more than one <state>") != std::string::npos);
-		CHECK(what.find("\n  <play> in <collision> (object 'ball')") != std::string::npos);
+		CHECK(what.find("web-js cannot write these parts of breakout.xml yet; use web-asm for this game:\n") != std::string::npos);
+		CHECK(what.find("\n  <group> in <group> (group 'red')") != std::string::npos);
+		CHECK(what.find("\n  <dec> in <collision> (object 'ball')") != std::string::npos);
 	}
 	CHECK_FALSE(fs::exists(folder.path / "out"));
 }
@@ -431,7 +461,7 @@ TEST_CASE("web-js lists every part of a game it has no words for yet, then stops
 TEST_CASE("the games windows-cpp and web-js cover: the rest stop with their list", "[.long][generate]")
 {
 	// A line here for each game they learn to write (plan A5).
-	const std::set<std::string> covered{ "pong_min" };
+	const std::set<std::string> covered{ "pong_min", "pong" };
 
 	for (const std::string target : { "windows-cpp", "web-js" })
 	{

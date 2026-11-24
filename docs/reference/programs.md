@@ -121,30 +121,33 @@ cmake --build build          # output/pong.html
 
 In the page the canvas fills the browser's window, the game's proportions kept. Keys, the mouse and pads work as in a window. Sound starts at the first key press or click, as browsers require. What the game keeps is saved in the browser's storage for the page.
 
-`xgecli pong_min --generate windows-cpp` writes the game instead **as a person would write it**: a small program of its own on SFML 3 that uses none of the engine and never names it. Its numbers are constants, each object a `Thing` (where, how fast, how big), and its rules plain code in one `frame(seconds)` (keys held, moves by the time passed, edges, meetings) with a few small functions where they are used (`touching`, `deflect`). The stylesheets are in `games/generators/windows-cpp/`:
+`xgecli pong --generate windows-cpp` writes the game instead **as a person would write it**: a small program of its own on SFML 3 that uses none of the engine and never names it. Its numbers are constants, each object a `Thing` (where, how fast, how big), or a struct on it when it counts something (`struct Ball : Thing { int hits{ 0 }; }`), and its rules plain code in one `frame(seconds)` (keys held, moves by the time passed, edges, meetings, the game's own tests) with a few small functions where they are used (`touching`, `deflect`, `computerHolds`). Its states are a stack of `Screen`s, each drawn by its own function; its sounds square waves made in `main.cpp`; what it keeps a small text file beside it (`pong-kept.txt`). The stylesheets are in `games/generators/windows-cpp/`:
 
 | Written | By | What |
 |---|---|---|
-| `source/<game>.h`, `source/<game>.cpp` | `game.xsl`, with `names.xsl`, `values.xsl` and a file per verb in `verbs/` | the game's numbers, class (`pong_min::Pong`) and rules |
-| `source/main.cpp`, `CMakeLists.txt`, `README.md`, `.gitignore` | `program.xsl` | the window: keys in, a step of the time since the last frame (at most a quarter of a second), the picture; the build finds or fetches SFML 3 |
+| `source/<game>.h`, `source/<game>.cpp` | `game.xsl`, with `kinds.xsl`, `names.xsl`, `values.xsl` and a file per verb in `verbs/` | the game's numbers, class (`pong::Pong`) and rules |
+| `source/main.cpp`, `CMakeLists.txt`, `README.md`, `.gitignore` | `program.xsl` | the window: keys and pads in, a step of the time since the last frame (at most a quarter of a second), the picture and the sounds out; the build finds or fetches SFML 3 |
+| `assets/tuffy.ttf` | `xgecli` | the font, when the game has words |
 | `LICENSE` | `xgecli` | the repository's licence |
 
-It writes `pong_min.xml` only for now, as `games/prototypes/pong_min/` has it. Before writing, it walks the game; for any other game it writes nothing and lists every part it has no words for yet, a line each with the object it is in:
+`kinds.xsl` sorts the game's parts once for both targets: the things (what moves, meets or counts), the words and still pictures only drawn, the records (live variables, or more than one look), each variable a constant, a start value or a member, and what is kept.
+
+It writes `pong_min.xml` and `pong.xml` for now, as `games/prototypes/` has them. Before writing, it walks the game; for any other game it writes nothing and lists every part it has no words for yet, a line each with the object it is in:
 
 ```
-windows-cpp cannot write these parts of pong.xml yet; use engine-cpp for this game:
-  <styles> in <game>
-  more than one <state>
-  <text> in <sprite> (object 'score1')
-  <play> in <collision> (object 'ball')
+windows-cpp cannot write these parts of breakout.xml yet; use engine-cpp for this game:
+  <group> in <group> (group 'red')
+  looks other than two texts (object 'player')
+  <track> in <action> (object 'player')
+  <dec> in <collision> (object 'ball')
   ...
 ```
 
-`xgecli pong_min --generate web-js` writes the same game **as a person would write it for the browser**: one page, `<game>.html`, its rules in plain JavaScript on a canvas, readable by opening it in an editor. It is `windows-cpp` in another language, in the same shape (constants, a plain object per thing, start functions, `key()`, one `frame(seconds)`), and it covers the same games, walked by `windows-cpp`'s `covers.xsl`; a game it cannot write it lists in the same way, with "use web-asm for this game". The stylesheets are in `games/generators/web-js/`:
+`xgecli pong --generate web-js` writes the same game **as a person would write it for the browser**: one page, `<game>.html`, its rules in plain JavaScript on a canvas, readable by opening it in an editor. It is `windows-cpp` in another language, in the same shape (constants, a plain object per thing, start functions, screens as strings, `key()`, one `frame(seconds)`, a `draw` function per screen), with the browser's own parts for the rest: Web Audio for the square waves, `localStorage` for what is kept, the browser's sans-serif for words. It covers the same games, walked by `windows-cpp`'s `covers.xsl`; a game it cannot write it lists in the same way, with "use web-asm for this game". The stylesheets are in `games/generators/web-js/`:
 
 | Written | By | What |
 |---|---|---|
-| `<game>.html` | `game.xsl`, with `names.xsl`, `values.xsl` and a file per verb in `verbs/` | the game's numbers, things and rules, then the page: the canvas filling the window with the game's proportions, keys in (a game's key is kept from the page), a frame each time the browser draws with the time since the last (at most a quarter of a second) |
+| `<game>.html` | `game.xsl`, with `windows-cpp`'s `kinds.xsl`, its own `names.xsl`, `values.xsl` and a file per verb in `verbs/` | the game's numbers, things and rules, then the page: the canvas filling the window with the game's proportions, keys in (a game's key is kept from the page), a frame each time the browser draws with the time since the last (at most a quarter of a second) |
 | `README.md` | `generate.xsl` | what the page is, and to open it |
 | `LICENSE` | `xgecli` | the repository's licence |
 

@@ -248,6 +248,10 @@ namespace xge
 				throw GenerateError(withMessages("could not generate " + source + " for " + request.target, messages));
 			}
 
+			// a page has no source/: the folder goes when nothing was written in it
+			std::error_code notEmpty;
+			std::filesystem::remove(output / "source", notEmpty);
+
 			GeneratedProgram program;
 			std::set<std::filesystem::path> copied;
 			xmlNode* root = xmlDocGetRootElement(manifest.get());

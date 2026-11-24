@@ -24,15 +24,24 @@
     extension-element-prefixes="exsl">
 
   <xsl:include href="../engine-cpp/text.xsl" />
+  <xsl:include href="kinds.xsl" />
   <xsl:include href="names.xsl" />
   <xsl:include href="values.xsl" />
   <xsl:include href="covers.xsl" />
   <xsl:include href="game.xsl" />
   <xsl:include href="program.xsl" />
+  <xsl:include href="verbs/become.xsl" />
   <xsl:include href="verbs/bounce.xsl" />
   <xsl:include href="verbs/deflect.xsl" />
+  <xsl:include href="verbs/hold.xsl" />
+  <xsl:include href="verbs/inc.xsl" />
   <xsl:include href="verbs/move.xsl" />
+  <xsl:include href="verbs/people.xsl" />
+  <xsl:include href="verbs/play.xsl" />
+  <xsl:include href="verbs/pop.xsl" />
+  <xsl:include href="verbs/push.xsl" />
   <xsl:include href="verbs/reset.xsl" />
+  <xsl:include href="verbs/set.xsl" />
   <xsl:include href="verbs/stick.xsl" />
   <xsl:include href="verbs/trigger.xsl" />
 
@@ -93,6 +102,7 @@ output/
       <file path="README.md" />
       <file path=".gitignore" />
       <license path="LICENSE" from="LICENSE" />
+      <xsl:if test="$texts"><asset path="assets/tuffy.ttf" /></xsl:if>
     </generated>
   </xsl:template>
 

@@ -1,7 +1,7 @@
 // pong.cpp
 // Pong
 // author: beefviper
-// date: Nov 13, 2026
+// date: Nov 24, 2026
 
 #include "pong.h"
 
@@ -16,18 +16,44 @@ namespace pong
 	{
 		constexpr float pi = 3.14159265358979f;
 
-		float radians(float degrees) { return degrees * pi / 180; }
+		float sine(float degrees) { return std::sin(degrees * pi / 180); }
+		float cosine(float degrees) { return std::cos(degrees * pi / 180); }
 
-		// Up held, down held: which way a paddle goes, at its speed.
-		float upOrDown(bool up, bool down)
+		float sign(float number) { return number > 0 ? 1.0f : number < 0 ? -1.0f : 0.0f; }
+
+		bool touching(const Thing& a, const Thing& b)
 		{
-			if (up == down) { return 0; }
-			return up ? -paddleSpeed : paddleSpeed;
+			return a.position.x < b.position.x + b.size.x && b.position.x < a.position.x + a.size.x
+				&& a.position.y < b.position.y + b.size.y && b.position.y < a.position.y + a.size.y;
 		}
 
-		bool overlaps(sf::Vector2f a, sf::Vector2f aSize, sf::Vector2f b, sf::Vector2f bSize)
+		// Off the side of `other` it hit, at the same speed, up to `degrees` off
+		// straight out: steeper the further from that side's middle, towards
+		// the end it hit nearer to.
+		void deflect(Thing& thing, const Thing& other, float degrees)
 		{
-			return a.x < b.x + bSize.x && b.x < a.x + aSize.x && a.y < b.y + bSize.y && b.y < a.y + aSize.y;
+			const sf::Vector2f middle = thing.position + thing.size / 2.0f;
+			const sf::Vector2f otherMiddle = other.position + other.size / 2.0f;
+			const sf::Vector2f apart = middle - otherMiddle;
+			const sf::Vector2f reach = (thing.size + other.size) / 2.0f;
+			const float speed = std::hypot(thing.velocity.x, thing.velocity.y);
+
+			if (reach.x - std::abs(apart.x) < reach.y - std::abs(apart.y))
+			{
+				// its left or right side
+				const float away = apart.x < 0 ? -1.0f : 1.0f;
+				const float angle = degrees * std::clamp(apart.y / (other.size.y / 2), -1.0f, 1.0f);
+				thing.velocity = { away * speed * cosine(angle), speed * sine(angle) };
+				thing.position.x = otherMiddle.x + away * reach.x - thing.size.x / 2;
+			}
+			else
+			{
+				// its top or bottom
+				const float away = apart.y < 0 ? -1.0f : 1.0f;
+				const float angle = degrees * std::clamp(apart.x / (other.size.x / 2), -1.0f, 1.0f);
+				thing.velocity = { speed * sine(angle), away * speed * cosine(angle) };
+				thing.position.y = otherMiddle.y + away * reach.y - thing.size.y / 2;
+			}
 		}
 	}
 
@@ -36,53 +62,76 @@ namespace pong
 		newGame();
 	}
 
-	// The ball from the middle at its first speed, within 30 degrees of
-	// straight left or right, to either side.
-	void Pong::serve()
+	float Pong::between(float min, float max)
 	{
-		const float angle = std::uniform_real_distribution<float>(-30, 30)(random);
-		const float side = std::uniform_real_distribution<float>(-1, 1)(random) < 0 ? -1.0f : 1.0f;
-		ball.position = { windowWidth / 2 - ballSize / 2, windowHeight / 2 - ballSize / 2 };
-		ball.velocity = { side * ballSpeed * std::cos(radians(angle)), ballSpeed * std::sin(radians(angle)) };
-		ball.hits = 0;
+		return std::uniform_real_distribution<float>(min, max)(random);
 	}
 
+	// A new game: everything as it starts but what is kept, from the first screen.
 	void Pong::newGame()
 	{
-		left = { { margin, windowHeight / 2 - paddleHeight / 2 } };
-		right = { { windowWidth - margin - paddleWidth, windowHeight / 2 - paddleHeight / 2 } };
-		serve();
+		startPaddle1();
+		startPaddle2();
+		startBall();
 		screens = { Screen::Title };
 	}
 
-	// Two numbers, one a line: players (1 or 2), then 1 for easy or 2 for
-	// smart.
-	void Pong::keepChoicesIn(const std::string& file)
+	void Pong::startPaddle1()
 	{
-		choicesFile = file;
+		paddle1.size = { width, height };
+		paddle1.position = { margin, windowHeight / 2 - height / 2 };
+		paddle1.velocity = {};
+		paddle1.score = 0;
+	}
+
+	void Pong::startPaddle2()
+	{
+		paddle2.size = { width, height };
+		paddle2.position = { windowWidth - margin - width, windowHeight / 2 - height / 2 };
+		paddle2.velocity = {};
+		paddle2.score = 0;
+	}
+
+	// Where the ball starts, and starts again.
+	void Pong::startBall()
+	{
+		const float angle = between(-30, 30);
+		const float side = between(-1, 1);
+		ball.size = { ballSize, ballSize };
+		ball.position = { windowWidth / 2 - ballSize / 2, windowHeight / 2 - ballSize / 2 };
+		ball.velocity = { sign(side) * ballSpeed * cosine(angle), ballSpeed * sine(angle) };
+		ball.hits = 0;
+	}
+
+	// One line each: the computer's look, then its level.
+	void Pong::keepIn(const std::string& file)
+	{
+		keptFile = file;
 		std::ifstream in(file);
-		int keptPlayers = 0;
-		int keptLevel = 0;
-		if (in >> keptPlayers >> keptLevel && (keptPlayers == 1 || keptPlayers == 2) && (keptLevel == 1 || keptLevel == 2))
+		int computerLook = 0;
+		int computerLevel = 0;
+		if (in >> computerLook >> computerLevel && computerLook >= 0 && computerLook < 2)
 		{
-			players = keptPlayers;
-			smart = keptLevel == 2;
+			computer.look = static_cast<Computer::Look>(computerLook);
+			computer.level = computerLevel;
 		}
 	}
 
-	void Pong::saveChoices() const
+	void Pong::keep() const
 	{
-		if (choicesFile.empty()) { return; }
-		std::ofstream out(choicesFile);
-		out << players << '\n' << (smart ? 2 : 1) << '\n';
+		if (keptFile.empty()) { return; }
+		std::ofstream out(keptFile);
+		out << static_cast<int>(computer.look) << '\n' << computer.level << '\n';
+	}
+
+	std::vector<Sound> Pong::takeSounds()
+	{
+		return std::exchange(sounds, {});
 	}
 
 	void Pong::key(sf::Keyboard::Key key, bool down)
 	{
 		using Key = sf::Keyboard::Key;
-
-		// The paddle keys move a paddle while they are down, whatever the
-		// screen, so one still held after a pause goes on moving.
 		switch (key)
 		{
 		case Key::W: wHeld = down; break;
@@ -96,10 +145,10 @@ namespace pong
 		switch (screen())
 		{
 		case Screen::Title:
-			if (key == Key::Space) { players = 1; screens.push_back(Screen::Playing); }
-			if (key == Key::Num2 || key == Key::Numpad2) { players = 2; screens.push_back(Screen::Playing); }
-			if (key == Key::A) { smart = false; }
-			if (key == Key::D) { smart = true; }
+			if (key == Key::Num1 || key == Key::Numpad1) { people = 1; screens.push_back(Screen::Playing); }
+			if (key == Key::Num2 || key == Key::Numpad2) { people = 2; screens.push_back(Screen::Playing); }
+			if (key == Key::A) { computer.level = 1; computer.look = Computer::Look::Easy; }
+			if (key == Key::D) { computer.level = 2; computer.look = Computer::Look::Smart; }
 			break;
 		case Screen::Playing:
 			if (key == Key::Pause) { screens.push_back(Screen::Paused); }
@@ -108,8 +157,28 @@ namespace pong
 			if (key == Key::Pause) { screens.pop_back(); }
 			break;
 		case Screen::Over:
-			if (key == Key::Space) { saveChoices(); newGame(); }
+			if (key == Key::Space) { keep(); newGame(); }
 			break;
+		}
+	}
+
+	void Pong::pad(unsigned pad, PadButton button, bool down)
+	{
+		if (pad == 1 && button == PadButton::Up) { pad1UpHeld = down; }
+		if (pad == 1 && button == PadButton::Down) { pad1DownHeld = down; }
+		if (pad == 2 && button == PadButton::Up) { pad2UpHeld = down; }
+		if (pad == 2 && button == PadButton::Down) { pad2DownHeld = down; }
+		if (!down) { return; }
+
+		switch (screen())
+		{
+		case Screen::Playing:
+			if (pad == 1 && button == PadButton::Start) { screens.push_back(Screen::Paused); }
+			break;
+		case Screen::Paused:
+			if (pad == 1 && button == PadButton::Start) { screens.pop_back(); }
+			break;
+		default: break;
 		}
 	}
 
@@ -117,94 +186,93 @@ namespace pong
 	{
 		if (screen() != Screen::Playing) { return; }
 
-		left.speed = upOrDown(wHeld, sHeld);
-		right.speed = twoPlayers() ? upOrDown(upHeld, downHeld) : computerSpeed();
-		movePaddle(left, seconds);
-		movePaddle(right, seconds);
-		moveBall(seconds);
+		// the keys held, seat 2's by the computer while nobody has it
+		bool seat2Up = upHeld || pad2UpHeld;
+		bool seat2Down = downHeld || pad2DownHeld;
+		if (people < 2) { computerHolds(seat2Up, seat2Down); }
+		paddle1.velocity = {};
+		if (wHeld || pad1UpHeld) { paddle1.velocity.y -= step; }
+		if (sHeld || pad1DownHeld) { paddle1.velocity.y += step; }
+		paddle2.velocity = {};
+		if (seat2Up) { paddle2.velocity.y -= step; }
+		if (seat2Down) { paddle2.velocity.y += step; }
 
-		if (left.score >= winningScore || right.score >= winningScore) { screens.push_back(Screen::Over); }
-	}
-
-	// The computer keeps the right paddle's middle within 8 of where it
-	// wants it. Easy wants it level with the ball, always; smart only once
-	// the ball comes over the net towards it, and in the middle until then.
-	float Pong::computerSpeed() const
-	{
-		const bool coming = ball.velocity.x > 0 && ball.position.x > windowWidth / 2;
-		const float wanted = !smart || coming ? ball.position.y + ballSize / 2 : windowHeight / 2;
-		const float aim = wanted - paddleHeight / 2;
-		if (right.position.y < aim - 8) { return paddleSpeed; }
-		if (right.position.y > aim + 8) { return -paddleSpeed; }
-		return 0;
-	}
-
-	// A paddle stops at the top and the bottom.
-	void Pong::movePaddle(Paddle& paddle, float seconds)
-	{
-		paddle.position.y = std::clamp(paddle.position.y + paddle.speed * seconds, 0.0f, windowHeight - paddleHeight);
-	}
-
-	void Pong::moveBall(float seconds)
-	{
+		// everything moves
+		paddle1.position += paddle1.velocity * seconds;
+		paddle2.position += paddle2.velocity * seconds;
 		ball.position += ball.velocity * seconds;
 
-		// off the top and the bottom
-		if (ball.position.y < 0 && ball.velocity.y < 0)
+		// at the window's edges
+		for (Paddle* paddle : { &paddle1, &paddle2 })
 		{
-			ball.velocity.y = -ball.velocity.y;
-			sounds.push_back("wall");
+			if (paddle->position.y < 0) { paddle->position.y = 0; }
+			if (paddle->position.y > windowHeight - paddle->size.y) { paddle->position.y = windowHeight - paddle->size.y; }
 		}
-		if (ball.position.y > windowHeight - ballSize && ball.velocity.y > 0)
+		if (ball.position.y < 0)
 		{
-			ball.velocity.y = -ball.velocity.y;
-			sounds.push_back("wall");
+			ball.velocity.y = std::abs(ball.velocity.y);
+			sounds.push_back(Sound::Wall);
+		}
+		if (ball.position.y > windowHeight - ball.size.y)
+		{
+			ball.velocity.y = -std::abs(ball.velocity.y);
+			sounds.push_back(Sound::Wall);
+		}
+		if (ball.position.x < 0)
+		{
+			paddle2.score += 1;
+			sounds.push_back(Sound::Score);
+			startBall();
+		}
+		if (ball.position.x > windowWidth - ball.size.x)
+		{
+			paddle1.score += 1;
+			sounds.push_back(Sound::Score);
+			startBall();
 		}
 
-		// off a paddle
-		const sf::Vector2f paddleSize{ paddleWidth, paddleHeight };
-		const sf::Vector2f size{ ballSize, ballSize };
-		if (ball.velocity.x < 0 && overlaps(ball.position, size, left.position, paddleSize))
+		// what meets what
+		for (const Paddle* paddle : { &paddle1, &paddle2 })
 		{
-			ball.position.x = left.position.x + paddleWidth;
-			hitPaddle(left, 1);
-		}
-		if (ball.velocity.x > 0 && overlaps(ball.position, size, right.position, paddleSize))
-		{
-			ball.position.x = right.position.x - ballSize;
-			hitPaddle(right, -1);
+			if (touching(ball, *paddle))
+			{
+				deflect(ball, *paddle, 45);
+				ball.hits += 1;
+				sounds.push_back(Sound::Paddle);
+				if (ball.hits == 4 || ball.hits == 12)
+				{
+					ball.velocity.x *= 1.3f;
+					ball.velocity.y *= 1.3f;
+				}
+			}
 		}
 
-		// past a paddle: a point to the other side
-		if (ball.position.x < 0) { point(right); }
-		if (ball.position.x > windowWidth - ballSize) { point(left); }
+		// the game's own tests, the first that holds
+		if (paddle1.score >= 11 || paddle2.score >= 11) { screens.push_back(Screen::Over); }
 	}
 
-	// Back at the same speed, up to 45 degrees off straight, steeper the
-	// further from the paddle's middle it hits: off the top half it goes up,
-	// off the bottom half down. The fourth hit and the twelfth make it
-	// faster, as the arcade's did.
-	void Pong::hitPaddle(const Paddle& paddle, float away)
+	// The computer in seat 2: the keys it holds.
+	void Pong::computerHolds(bool& seat2Up, bool& seat2Down) const
 	{
-		const float offset = (ball.position.y + ballSize / 2) - (paddle.position.y + paddleHeight / 2);
-		const float angle = 45 * std::clamp(offset / (paddleHeight / 2), -1.0f, 1.0f);
-		const float speed = std::hypot(ball.velocity.x, ball.velocity.y);
-		ball.velocity = { away * speed * std::cos(radians(angle)), speed * std::sin(radians(angle)) };
-
-		ball.hits += 1;
-		if (ball.hits == 4 || ball.hits == 12) { ball.velocity *= 1.3f; }
-		sounds.push_back("paddle");
-	}
-
-	void Pong::point(Paddle& winner)
-	{
-		winner.score += 1;
-		sounds.push_back("score");
-		serve();
-	}
-
-	std::vector<std::string> Pong::takeSounds()
-	{
-		return std::exchange(sounds, {});
+		seat2Up = false;
+		seat2Down = false;
+		if (computer.level == 1)
+		{
+			if (paddle2.position.y < ball.position.y + ballSize / 2 - height / 2 - 8) { seat2Down = true; }
+			if (paddle2.position.y > ball.position.y + ballSize / 2 - height / 2 + 8) { seat2Up = true; }
+		}
+		if (computer.level == 2)
+		{
+			if (ball.velocity.x > 0 && ball.position.x > windowWidth / 2)
+			{
+				if (paddle2.position.y < ball.position.y + ballSize / 2 - height / 2 - 8) { seat2Down = true; }
+				if (paddle2.position.y > ball.position.y + ballSize / 2 - height / 2 + 8) { seat2Up = true; }
+			}
+			if (ball.velocity.x <= 0 || ball.position.x <= windowWidth / 2)
+			{
+				if (paddle2.position.y < windowHeight / 2 - height / 2 - 8) { seat2Down = true; }
+				if (paddle2.position.y > windowHeight / 2 - height / 2 + 8) { seat2Up = true; }
+			}
+		}
 	}
 }

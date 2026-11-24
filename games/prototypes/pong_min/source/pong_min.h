@@ -1,7 +1,7 @@
 // pong_min.h
 // Pong
 // author: beefviper
-// date: Nov 13, 2026
+// date: Nov 24, 2026
 //
 // Pong: its numbers, its things and its rules. main.cpp draws it.
 
@@ -22,6 +22,7 @@ namespace pong_min
 	constexpr float width = 20;
 	constexpr float height = 120;
 	constexpr float step = 300;
+	constexpr float ballSpeed = 360;
 
 	// Something on the screen: where it is, how it moves, how big it is.
 	struct Thing

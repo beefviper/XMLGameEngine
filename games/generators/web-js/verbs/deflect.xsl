@@ -2,7 +2,7 @@
 <!-- deflect.xsl -->
 <!-- XML Game Engine -->
 <!-- author: beefviper -->
-<!-- date: Nov 24, 2026 -->
+<!-- date: Nov 13, 2026 -->
 
 <!-- <deflect>degrees</deflect> on a touch: deflect() off the other thing, written with the game when it is used (game.xsl). -->
 <xsl:stylesheet version="1.0"
@@ -14,9 +14,9 @@
   </xsl:template>
 
   <xsl:template match="deflect" mode="touch">
-    <xsl:param name="self" />
+    <xsl:param name="who" />
     <xsl:param name="other" />
-    <xsl:value-of select="concat('deflect(', $self, ', ', $other, ', ')" />
+    <xsl:value-of select="concat('deflect(', $who, ', ', $other, ', ')" />
     <xsl:call-template name="value"><xsl:with-param name="node" select="." /></xsl:call-template>
     <xsl:text>);</xsl:text>
   </xsl:template>

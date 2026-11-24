@@ -1,10 +1,9 @@
 // pong.h
 // Pong
 // author: beefviper
-// date: Nov 13, 2026
+// date: Nov 24, 2026
 //
-// The game itself: two paddles, a ball, the scores, who plays the right
-// paddle and the four screens. main.cpp draws it and plays its sounds.
+// Pong: its numbers, its things and its rules. main.cpp draws it and plays its sounds.
 
 #pragma once
 
@@ -21,78 +20,88 @@ namespace pong
 	constexpr float windowHeight = 720;
 
 	constexpr float margin = 30;
-	constexpr float paddleWidth = 20;
-	constexpr float paddleHeight = 120;
-	constexpr float paddleSpeed = 300; // pixels a second
+	constexpr float width = 20;
+	constexpr float height = 120;
+	constexpr float step = 300;
 	constexpr float ballSize = 16;
 	constexpr float ballSpeed = 540;
-	constexpr int winningScore = 11;
 
-	enum class Screen { Title, Playing, Paused, Over };
-
-	struct Paddle
-	{
-		sf::Vector2f position;
-		float speed{ 0 };
-		int score{ 0 };
-	};
-
-	struct Ball
+	// Something on the screen: where it is, how it moves, how big it is.
+	struct Thing
 	{
 		sf::Vector2f position;
 		sf::Vector2f velocity;
+		sf::Vector2f size;
+	};
+
+	struct Computer
+	{
+		enum class Look { Easy, Smart };
+		Look look{ Look::Easy };
+		int level{ 1 };
+	};
+
+	struct Paddle : Thing
+	{
+		int score{ 0 };
+	};
+
+	struct Ball : Thing
+	{
 		int hits{ 0 };
 	};
+
+	enum class Screen { Title, Playing, Paused, Over };
+	enum class Sound { Paddle, Wall, Score };
+
+	// A game pad's buttons, named for an Xbox pad's.
+	enum class PadButton { A, B, X, Y, LB, RB, Back, Start, Up, Down, Left, Right };
 
 	class Pong
 	{
 	public:
 		explicit Pong(unsigned seed = std::random_device{}());
 
-		// Who plays the right paddle and how well the computer plays, read
-		// from the file and written back to it at every new game.
-		void keepChoicesIn(const std::string& file);
+		// What is kept from one game to the next: read from this file, and
+		// written to it by keep().
+		void keepIn(const std::string& file);
+		void keep() const;
 
 		void key(sf::Keyboard::Key key, bool down);
-		// A step of the game, `seconds` long.
+		void pad(unsigned pad, PadButton button, bool down);
 		void frame(float seconds);
 
-		// The sounds to play since the last time: "paddle", "wall", "score".
-		std::vector<std::string> takeSounds();
-
 		Screen screen() const { return screens.back(); }
-		bool twoPlayers() const { return players == 2; }
-		bool computerIsSmart() const { return smart; }
+		// The sounds asked for since the last time.
+		std::vector<Sound> takeSounds();
 
-		Paddle left;
-		Paddle right;
+		int people{ 1 };
+		Computer computer;
+		Paddle paddle1;
+		Paddle paddle2;
 		Ball ball;
 
 	private:
-		// The screen on top is played; paused and game over sit on top of
-		// the game, which shows still beneath them.
 		std::vector<Screen> screens{ Screen::Title };
-
-		int players{ 1 };
-		bool smart{ false };
-		std::string choicesFile;
-
-		bool upHeld{ false };
-		bool downHeld{ false };
-		bool wHeld{ false };
-		bool sHeld{ false };
+		std::vector<Sound> sounds;
+		std::string keptFile;
 
 		std::mt19937 random;
-		std::vector<std::string> sounds;
+		float between(float min, float max);
 
-		void serve();
+		bool wHeld{ false };
+		bool sHeld{ false };
+		bool upHeld{ false };
+		bool downHeld{ false };
+		bool pad1UpHeld{ false };
+		bool pad1DownHeld{ false };
+		bool pad2UpHeld{ false };
+		bool pad2DownHeld{ false };
+
 		void newGame();
-		void saveChoices() const;
-
-		float computerSpeed() const;
-		void movePaddle(Paddle& paddle, float seconds);
-		void moveBall(float seconds);
-		void hitPaddle(const Paddle& paddle, float away);
-		void point(Paddle& winner);
+		void startPaddle1();
+		void startPaddle2();
+		void startBall();
+		void computerHolds(bool& seat2Up, bool& seat2Down) const;
 	};
 }
