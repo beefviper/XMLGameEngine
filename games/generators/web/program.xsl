@@ -221,6 +221,12 @@ set(LUNASVG_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(PLUTOVG_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 FetchContent_Declare(lunasvg GIT_REPOSITORY https://github.com/sammycage/lunasvg.git GIT_TAG v3.5.0 EXCLUDE_FROM_ALL SYSTEM)
 FetchContent_MakeAvailable(lunasvg)
+# Their code is theirs: its warnings are not the game's.
+foreach(fetched lunasvg plutovg)
+	if (TARGET ${fetched})
+		target_compile_options(${fetched} PRIVATE -w)
+	endif()
+endforeach()
 
 add_executable(</xsl:text>
     <xsl:value-of select="$name" />
