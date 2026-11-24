@@ -249,6 +249,15 @@ set_target_properties(</xsl:text>
     <xsl:value-of select="$name" />
     <xsl:text> PROPERTIES UNITY_BUILD ON UNITY_BUILD_MODE GROUP)
 
+# The warnings the engine is built with (xge_warnings in its
+# scripts/cmake/platform.cmake), Emscripten being Clang.
+target_compile_options(</xsl:text>
+    <xsl:value-of select="$name" />
+    <xsl:text> PRIVATE -Wall -Wextra -Wpedantic -Wshadow -Wconversion
+	-Wsign-conversion -Wnon-virtual-dtor -Woverloaded-virtual -Wcast-align -Wunused
+	-Wnull-dereference -Wformat=2 -Wimplicit-fallthrough
+	-Wold-style-cast -Wmisleading-indentation)
+
 # One page with everything in it, opened straight from the disk: the
 # WebAssembly and the game's assets inside, memory as the game needs it.
 target_link_options(</xsl:text>

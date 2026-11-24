@@ -1308,12 +1308,12 @@ namespace xge
 	private:
 		template <typename Command, typename Visit> static void eachValue(Command& command, Visit& visit)
 		{
-			std::visit([&](auto& own)
+			std::visit([&](auto& written)
 			{
-				using Own = std::remove_const_t<std::remove_reference_t<decltype(own)>>;
+				using Own = std::remove_const_t<std::remove_reference_t<decltype(written)>>;
 				if constexpr (!std::is_same_v<Own, std::monostate>)
 				{
-					std::apply([&](auto&... parts) { visitValues(visit, parts...); }, Own::values(own));
+					std::apply([&](auto&... parts) { visitValues(visit, parts...); }, Own::values(written));
 				}
 			}, command.own);
 		}
