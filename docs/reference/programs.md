@@ -92,6 +92,8 @@ xgecli pong --generate engine-cpp                 # writes pong-engine-cpp/
 xgecli pong --generate engine-cpp -o out/pong     # or into the folder named
 ```
 
+On Windows, `scripts\shell\windows\xgegen.bat <generator> [game]` writes every game in `games/descriptions/` with one generator, or just the game named, each to `output\<config>\generated\<generator>\<game>` with the newest build's `xgecli` (Debug, else Release). Run bare, it prints its usage and the generators. A game that will not generate shows its error; for every game, a line of it each and the list of those not written at the end.
+
 This writes a C++ program on SFML 3 that is **the engine with the game built in**, so it plays exactly as `xgecli` does. The engine first loads the game as for play (a game that will not load is not generated), then the XSLT stylesheets in `games/generators/engine-cpp/` (run by libxslt) write:
 
 | Written | By | What |
