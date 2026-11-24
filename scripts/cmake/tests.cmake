@@ -217,9 +217,21 @@ catch_discover_tests(xgetest
 # cannot find cases in a program not built yet when ctest starts, so every
 # case is named in EACH_GAME, SERIAL or WHOLE. LINES are more
 # tests, written as they are into the folder's test file (with BUILD_FIRST,
-# each says FIXTURES_REQUIRED <target> itself).
+# each says FIXTURES_REQUIRED <target> itself). NAMED gives a tag's tests
+# another name than the tag's, as tag/name pairs.
+# The name a tag's tests go by in ctest: its NAMED name, or the tag.
+macro(xge_ctest_name tag out)
+	list(FIND arg_NAMED "${tag}" named_at)
+	if (named_at EQUAL -1)
+		set(${out} "${tag}")
+	else()
+		math(EXPR named_at "${named_at} + 1")
+		list(GET arg_NAMED ${named_at} ${out})
+	endif()
+endmacro()
+
 function(xge_ctest_folder target folder)
-	cmake_parse_arguments(arg "BUILD_FIRST" "SPEC" "EACH_GAME;GAMES;SERIAL;WHOLE;LINES" ${ARGN})
+	cmake_parse_arguments(arg "BUILD_FIRST" "SPEC" "EACH_GAME;GAMES;SERIAL;WHOLE;LINES;NAMED" ${ARGN})
 	set(folder_dir "${CMAKE_BINARY_DIR}/${folder}")
 	set(program "$<TARGET_FILE:${target}>")
 	set(games_dir "${XGE_OUTPUT_DIR}/games")
@@ -236,10 +248,11 @@ function(xge_ctest_folder target folder)
 		set(end "endif()\n")
 	endif()
 	foreach(tag IN LISTS arg_EACH_GAME)
+		xge_ctest_name(${tag} name)
 		foreach(game IN LISTS arg_GAMES)
 			string(APPEND lines
-				"  add_test(\"${tag}: ${game}\" \"${program}\" \"${arg_SPEC}[${tag}]\" -c \"${game}\")\n"
-				"  set_tests_properties(\"${tag}: ${game}\" PROPERTIES WORKING_DIRECTORY \"${games_dir}\"${after_build})\n")
+				"  add_test(\"${name}: ${game}\" \"${program}\" \"${arg_SPEC}[${tag}]\" -c \"${game}\")\n"
+				"  set_tests_properties(\"${name}: ${game}\" PROPERTIES WORKING_DIRECTORY \"${games_dir}\"${after_build})\n")
 		endforeach()
 	endforeach()
 	foreach(tag IN LISTS arg_SERIAL)
@@ -248,9 +261,10 @@ function(xge_ctest_folder target folder)
 			"  set_tests_properties(\"${tag}\" PROPERTIES WORKING_DIRECTORY \"${games_dir}\" RUN_SERIAL ON${after_build})\n")
 	endforeach()
 	foreach(tag IN LISTS arg_WHOLE)
+		xge_ctest_name(${tag} name)
 		string(APPEND lines
-			"  add_test(\"${tag}\" \"${program}\" \"${arg_SPEC}[${tag}]\")\n"
-			"  set_tests_properties(\"${tag}\" PROPERTIES WORKING_DIRECTORY \"${games_dir}\"${after_build})\n")
+			"  add_test(\"${name}\" \"${program}\" \"${arg_SPEC}[${tag}]\")\n"
+			"  set_tests_properties(\"${name}\" PROPERTIES WORKING_DIRECTORY \"${games_dir}\"${after_build})\n")
 	endforeach()
 	string(APPEND lines ${arg_LINES} "${end}")
 
@@ -441,8 +455,8 @@ foreach(game IN LISTS shipped_games)
 		" -P \"${CMAKE_CURRENT_SOURCE_DIR}/scripts/cmake/build_generated.cmake\"")
 	string(CONCAT build_one ${build_one})
 	string(APPEND program_tests
-		"add_test(\"program: ${game}\" ${build_one})\n"
-		"set_tests_properties(\"program: ${game}\" PROPERTIES PROCESSORS 4 FIXTURES_REQUIRED xgetest-generated)\n")
+		"add_test(\"engine-cpp build: ${game}\" ${build_one})\n"
+		"set_tests_properties(\"engine-cpp build: ${game}\" PROPERTIES PROCESSORS 4 FIXTURES_REQUIRED xgetest-generated)\n")
 	if (XGE_EMCMAKE AND XGE_NINJA)
 		set(build_page "\"${CMAKE_COMMAND}\" -DGAME=${game} \"-DXGECLI=$<TARGET_FILE:xgecli>\" -DGENERATE=web-asm"
 			" \"-DEMCMAKE=${XGE_EMCMAKE}\" \"-DOUTPUT=${XGE_OUTPUT_DIR}/generated/web-asm/${game}\" -DCONFIG=Release"
@@ -450,8 +464,8 @@ foreach(game IN LISTS shipped_games)
 			" -P \"${CMAKE_CURRENT_SOURCE_DIR}/scripts/cmake/build_generated.cmake\"")
 		string(CONCAT build_page ${build_page})
 		string(APPEND program_tests
-			"add_test(\"web-asm: ${game}\" ${build_page})\n"
-			"set_tests_properties(\"web-asm: ${game}\" PROPERTIES PROCESSORS 4 FIXTURES_REQUIRED xgetest-generated)\n")
+			"add_test(\"web-asm build: ${game}\" ${build_page})\n"
+			"set_tests_properties(\"web-asm build: ${game}\" PROPERTIES PROCESSORS 4 FIXTURES_REQUIRED xgetest-generated)\n")
 	endif()
 endforeach()
 xge_ctest_folder(xgetest-generated generated
@@ -459,4 +473,5 @@ xge_ctest_folder(xgetest-generated generated
 	EACH_GAME generated_games
 	GAMES ${shipped_games}
 	WHOLE written_games
+	NAMED generated_games "engine-cpp play" written_games "windows-cpp play"
 	LINES "${program_tests}")
