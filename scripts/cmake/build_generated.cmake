@@ -38,8 +38,13 @@ if (NOT result EQUAL 0)
 endif()
 
 if (GENERATE STREQUAL "web")
-	# Emscripten brings its own toolchain; a web page has no platform.
-	set(configure "${EMCMAKE}" "${CMAKE_COMMAND}" -S "${OUTPUT}" -B "${OUTPUT}/build" -G "${GENERATOR}")
+	# Emscripten's own toolchain, beside emcmake, named outright: emcmake
+	# leaves it out when the environment names another (vcpkg's). A web
+	# page has no platform.
+	get_filename_component(emscripten "${EMCMAKE}" REALPATH)
+	get_filename_component(emscripten "${emscripten}" DIRECTORY)
+	set(configure "${EMCMAKE}" "${CMAKE_COMMAND}" -S "${OUTPUT}" -B "${OUTPUT}/build" -G "${GENERATOR}"
+		"-DCMAKE_TOOLCHAIN_FILE=${emscripten}/cmake/Modules/Platform/Emscripten.cmake")
 else()
 	set(configure "${CMAKE_COMMAND}" -S "${OUTPUT}" -B "${OUTPUT}/build" -G "${GENERATOR}")
 	if (PLATFORM)

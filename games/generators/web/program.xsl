@@ -191,8 +191,9 @@ var Module = { canvas: document.getElementById('game') };
 cmake_minimum_required(VERSION 3.20)
 
 # Emscripten's toolchain, from the emsdk the prompt was set up with
-# (emsdk_env), when emcmake has not named it.
-if (NOT CMAKE_TOOLCHAIN_FILE AND DEFINED ENV{EMSDK})
+# (emsdk_env), in place of none or another (vcpkg's, from the environment,
+# which emcmake then leaves alone): a web page builds with nothing else.
+if (DEFINED ENV{EMSDK} AND NOT CMAKE_TOOLCHAIN_FILE MATCHES "Emscripten\\.cmake$")
 	set(CMAKE_TOOLCHAIN_FILE "$ENV{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake")
 endif()
 
