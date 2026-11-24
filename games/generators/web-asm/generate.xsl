@@ -4,7 +4,7 @@
 <!-- author: beefviper -->
 <!-- date: Nov 23, 2026 -->
 
-<!-- The web target: a game file in, one web page out (output/<game>.html)
+<!-- The web-asm target: a game file in, one web page out (output/<game>.html)
      that plays the game in a browser opened straight from the disk, with
      nothing else beside it. It is engine-cpp built with Emscripten: the game
      written out as a tree of C++ data (engine-cpp's tree.xsl), played by the
@@ -49,7 +49,7 @@
 
   <xsl:template match="/">
     <xsl:if test="not(game)">
-      <xsl:message terminate="yes">web: this is not a game file (no &lt;game&gt;)</xsl:message>
+      <xsl:message terminate="yes">web-asm: this is not a game file (no &lt;game&gt;)</xsl:message>
     </xsl:if>
 
     <exsl:document href="source/{$name}.cpp" method="text" encoding="UTF-8">
@@ -79,7 +79,7 @@ output/
 </xsl:text>
     </exsl:document>
 
-    <generated target="web" name="{$name}">
+    <generated target="web-asm" name="{$name}">
       <file path="source/{$name}.cpp" />
       <file path="source/main.cpp" />
       <file path="source/page.html" />

@@ -8,12 +8,12 @@
 # included. It generates the game with xgecli --generate GENERATE (engine-cpp
 # when not given) into OUTPUT, configures it with the main build's generator
 # and toolchain (its own CMakeLists.txt sets the engine's warnings), or for
-# web through EMCMAKE (Emscripten's emcmake), and builds it. Any step that
+# web-asm through EMCMAKE (Emscripten's emcmake), and builds it. Any step that
 # fails, or any warning, fails the test, with the compiler's lines printed.
 #
 #     cmake -DGAME=<name> -DXGECLI=<xgecli> -DOUTPUT=<folder> -DCONFIG=<config>
 #           -DGENERATOR=<generator> [-DPLATFORM=<platform>] [-DTOOLCHAIN=<file>]
-#           [-DDEPS=<build/_deps>] [-DGENERATE=web -DEMCMAKE=<emcmake>]
+#           [-DDEPS=<build/_deps>] [-DGENERATE=web-asm -DEMCMAKE=<emcmake>]
 #           -P build_generated.cmake
 
 foreach(required GAME XGECLI OUTPUT CONFIG GENERATOR)
@@ -24,8 +24,8 @@ endforeach()
 if (NOT GENERATE)
 	set(GENERATE engine-cpp)
 endif()
-if (GENERATE STREQUAL "web" AND NOT EMCMAKE)
-	message(FATAL_ERROR "build_generated.cmake needs -DEMCMAKE= for web")
+if (GENERATE STREQUAL "web-asm" AND NOT EMCMAKE)
+	message(FATAL_ERROR "build_generated.cmake needs -DEMCMAKE= for web-asm")
 endif()
 
 get_filename_component(xgecli_dir "${XGECLI}" DIRECTORY)
@@ -37,7 +37,7 @@ if (NOT result EQUAL 0)
 	message(FATAL_ERROR "${GAME} did not generate:\n${said}")
 endif()
 
-if (GENERATE STREQUAL "web")
+if (GENERATE STREQUAL "web-asm")
 	# Emscripten's own toolchain, beside emcmake, named outright: emcmake
 	# leaves it out when the environment names another (vcpkg's). A web
 	# page has no platform.

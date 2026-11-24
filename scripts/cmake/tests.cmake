@@ -429,7 +429,7 @@ xge_ctest_folder(xgetest long
 # its own and built at full warnings (build_generated.cmake), each under
 # output/<config>/generated/engine-cpp/<game>. With Emscripten's emcmake and
 # Ninja found, also a test per game written out as a web page, each under
-# output/<config>/generated/web/<game> (the page in its output/).
+# output/<config>/generated/web-asm/<game> (the page in its output/).
 find_program(XGE_EMCMAKE emcmake)
 find_program(XGE_NINJA ninja)
 set(program_tests "")
@@ -444,14 +444,14 @@ foreach(game IN LISTS shipped_games)
 		"add_test(\"program: ${game}\" ${build_one})\n"
 		"set_tests_properties(\"program: ${game}\" PROPERTIES PROCESSORS 4 FIXTURES_REQUIRED xgetest-generated)\n")
 	if (XGE_EMCMAKE AND XGE_NINJA)
-		set(build_page "\"${CMAKE_COMMAND}\" -DGAME=${game} \"-DXGECLI=$<TARGET_FILE:xgecli>\" -DGENERATE=web"
-			" \"-DEMCMAKE=${XGE_EMCMAKE}\" \"-DOUTPUT=${XGE_OUTPUT_DIR}/generated/web/${game}\" -DCONFIG=Release"
+		set(build_page "\"${CMAKE_COMMAND}\" -DGAME=${game} \"-DXGECLI=$<TARGET_FILE:xgecli>\" -DGENERATE=web-asm"
+			" \"-DEMCMAKE=${XGE_EMCMAKE}\" \"-DOUTPUT=${XGE_OUTPUT_DIR}/generated/web-asm/${game}\" -DCONFIG=Release"
 			" -DGENERATOR=Ninja \"-DDEPS=${CMAKE_BINARY_DIR}/_deps\""
 			" -P \"${CMAKE_CURRENT_SOURCE_DIR}/scripts/cmake/build_generated.cmake\"")
 		string(CONCAT build_page ${build_page})
 		string(APPEND program_tests
-			"add_test(\"web: ${game}\" ${build_page})\n"
-			"set_tests_properties(\"web: ${game}\" PROPERTIES PROCESSORS 4 FIXTURES_REQUIRED xgetest-generated)\n")
+			"add_test(\"web-asm: ${game}\" ${build_page})\n"
+			"set_tests_properties(\"web-asm: ${game}\" PROPERTIES PROCESSORS 4 FIXTURES_REQUIRED xgetest-generated)\n")
 	endif()
 endforeach()
 xge_ctest_folder(xgetest-generated generated

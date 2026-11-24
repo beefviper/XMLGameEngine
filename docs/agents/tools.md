@@ -17,7 +17,7 @@ Tips for changing the libraries behind the engine, the build, the generator and 
 - XSLT comments cannot hold `--`; libxml2 refuses the stylesheet.
 - A new engine source a generated program needs goes in `engine.xml` and `assets.cmake`; one that reads XML or chooses libraries stays out (keep `game/game.cpp` and `engine/engine.cpp` free of `load/xml.h` and the factories).
 - After a generator or reader change, `cmake --build build --target xgetest-generated`.
-- `web` builds only under Emscripten. Ubuntu's `apt install emscripten` (3.1.6, clang 15, an older libc++) builds it here: the page needs `-sMINIFY_HTML=0` (that version's HTML minifier breaks), and the engine must not use `std::to_chars` on a float or name a structured binding inside a lambda, which clang 15 refuses. Look at a page with Playwright's Chromium on its `file://` URL.
+- `web-asm` builds only under Emscripten. Ubuntu's `apt install emscripten` (3.1.6, clang 15, an older libc++) builds it here: the page needs `-sMINIFY_HTML=0` (that version's HTML minifier breaks), and the engine must not use `std::to_chars` on a float or name a structured binding inside a lambda, which clang 15 refuses. Look at a page with Playwright's Chromium on its `file://` URL.
 
 ## xgegui
 

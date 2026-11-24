@@ -11,7 +11,7 @@
 // the file does, frame by frame, is in test_generated_games.cpp, which
 // compiles it. The windows-cpp target
 // (games/generators/windows-cpp) writes pong_min as games/prototypes has it,
-// and the web target (games/generators/web) writes what engine-cpp does for
+// and the web-asm target (games/generators/web-asm) writes what engine-cpp does for
 // a web page.
 
 #include "scratch.h"
@@ -200,10 +200,10 @@ TEST_CASE("a generated program copies the font and pictures its game uses", "[ge
 	CHECK(fs::exists(folder.path / "out/assets/Space Invaders Color Sprites.svg"));
 }
 
-TEST_CASE("web writes the game as engine-cpp does, played on the page's canvas and Web Audio, built by Emscripten into one page", "[generate]")
+TEST_CASE("web-asm writes the game as engine-cpp does, played on the page's canvas and Web Audio, built by Emscripten into one page", "[generate]")
 {
 	TempFolder folder("xge_test_generate_web");
-	const GeneratedProgram program = generateGame(requestFor(fs::current_path() / "descriptions/pong.xml", folder.path / "out", "web"));
+	const GeneratedProgram program = generateGame(requestFor(fs::current_path() / "descriptions/pong.xml", folder.path / "out", "web-asm"));
 	const fs::path out = folder.path / "out";
 
 	for (const char* file : { "source/pong.cpp", "source/main.cpp", "source/page.html", "CMakeLists.txt", "README.md", ".gitignore" })

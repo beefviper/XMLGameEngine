@@ -238,7 +238,7 @@ TEST_CASE("generate needs a known target and output needs generate", "[cli]")
 	CHECK_THROWS_AS(parseCommandLine({ "--generate", "engine-cpp", "--generate", "engine-cpp" }), CliError);
 	CHECK_THROWS_AS(parseCommandLine({ "-o", "out" }), CliError);
 	CHECK_THROWS_AS(parseCommandLine({ "--generate", "engine-cpp", "-o", "a", "-o", "b" }), CliError);
-	CHECK(generateTargets() == std::vector<std::string>{ "engine-cpp", "web", "windows-cpp" });
+	CHECK(generateTargets() == std::vector<std::string>{ "engine-cpp", "web-asm", "windows-cpp" });
 }
 
 TEST_CASE("record writes the game played into the game file, once and not when generating", "[cli][demo]")

@@ -16,7 +16,7 @@
     </xsl:call-template>
     <xsl:text>//
 // </xsl:text>
-    <xsl:value-of select="concat($title, ', generated from ', $source, ' by xgecli --generate web. The')" />
+    <xsl:value-of select="concat($title, ', generated from ', $source, ' by xgecli --generate web-asm. The')" />
     <xsl:text>
 // game is in source/</xsl:text>
     <xsl:value-of select="$name" />
@@ -153,7 +153,7 @@ int main()
   <xsl:template name="page-file">
     <xsl:text>&lt;!doctype html&gt;
 &lt;!-- </xsl:text>
-    <xsl:value-of select="concat($title, ', generated from ', $source, ' by xgecli --generate web. ')" />
+    <xsl:value-of select="concat($title, ', generated from ', $source, ' by xgecli --generate web-asm. ')" />
     <xsl:text>--&gt;
 &lt;html lang="en"&gt;
 &lt;head&gt;
@@ -182,7 +182,7 @@ var Module = { canvas: document.getElementById('game') };
   <xsl:template name="cmake-file">
     <xsl:text># CMakeLists.txt
 # </xsl:text>
-    <xsl:value-of select="concat($title, ', generated from ', $source, ' by xgecli --generate web.')" />
+    <xsl:value-of select="concat($title, ', generated from ', $source, ' by xgecli --generate web-asm.')" />
     <xsl:text>
 # Built with Emscripten (emcmake), into one page: output/</xsl:text>
     <xsl:value-of select="$name" />
@@ -279,7 +279,7 @@ set_property(TARGET </xsl:text>
   </xsl:template>
 
   <xsl:template name="readme-file">
-    <xsl:value-of select="concat('# ', $title, '&#10;&#10;Generated from `', $source, '` by `xgecli --generate web`. It is the game xgecli and&#10;')" />
+    <xsl:value-of select="concat('# ', $title, '&#10;&#10;Generated from `', $source, '` by `xgecli --generate web-asm`. It is the game xgecli and&#10;')" />
     <xsl:text>xgegui play, built with Emscripten into one web page, `output/</xsl:text>
     <xsl:value-of select="$name" />
     <xsl:text>.html`, that plays

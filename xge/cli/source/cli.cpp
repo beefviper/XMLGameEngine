@@ -77,7 +77,7 @@ namespace xge
 		// each a folder of stylesheets in games/generators/.
 		constexpr std::string_view generateNames[] = {
 			"engine-cpp",
-			"web",
+			"web-asm",
 			"windows-cpp",
 		};
 
@@ -591,10 +591,10 @@ namespace xge
 			"  -a, --audio <name>   sound library: " + namesOf(audioNames) + " (default " + AudioFactory::name(AudioFactory::defaultBackend()) + ")\n"
 			"  --generate <target>  write the game out as a program instead of playing it:\n"
 			"                       engine-cpp (C++ on SFML 3, with a CMakeLists.txt: the\n"
-			"                       engine's own code with the game's data built in), web\n"
-			"                       (the same, built with Emscripten into one web page), or\n"
-			"                       windows-cpp (the game as a person would write it, on\n"
-			"                       SFML 3: pong_min.xml for now)\n"
+			"                       engine's own code with the game's data built in),\n"
+			"                       web-asm (the same, built with Emscripten into one web\n"
+			"                       page), or windows-cpp (the game as a person would\n"
+			"                       write it, on SFML 3: pong_min.xml for now)\n"
 			"  -o, --output <dir>   where --generate writes it (default <game>-<target>)\n"
 			"  --record             play, and write what was played into the game file as\n"
 			"                       its <demo> when the window closes (the attract mode)\n"

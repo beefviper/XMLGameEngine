@@ -12,8 +12,8 @@
 
 namespace xge
 {
-	// A canvas on a web page, for a game built with Emscripten (the web
-	// generator, games/generators/web/). The page's JavaScript keeps the
+	// A canvas on a web page, for a game built with Emscripten (the web-asm
+	// generator, games/generators/web-asm/). The page's JavaScript keeps the
 	// canvas, a canvas of its own a picture, and the keys, mouse and pads it
 	// heard; this only hands it pictures and asks what happened. The canvas
 	// fills the browser's window, the game's proportions kept.

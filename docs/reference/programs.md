@@ -101,18 +101,18 @@ This writes a C++ program on SFML 3 that is **the engine with the game built in*
 | `engine/` | listed in `engine.xml` | the engine's files, copied unchanged from `xge/lib/` of the repository `xgecli` was built from, less the XML libraries and the other libraries |
 | `assets/`, `LICENSE` | `xgecli` | the pictures and font it uses (with a font's licence), the repository's licence |
 
-`xgecli pong --generate web` writes the same game as **one web page**: engine-cpp's tree of the game and the engine's files, with a window that is the page's canvas and sound that is its Web Audio, built with Emscripten into `output/pong.html`. The page holds everything (the WebAssembly, the game, its font and pictures) and plays when opened straight from the disk:
+`xgecli pong --generate web-asm` writes the same game as **one web page**: engine-cpp's tree of the game and the engine's files, with a window that is the page's canvas and sound that is its Web Audio, built with Emscripten into `output/pong.html`. The page holds everything (the WebAssembly, the game, its font and pictures) and plays when opened straight from the disk:
 
 | Written | By | What |
 |---|---|---|
 | `source/<game>.cpp` | engine-cpp's `tree.xsl` | the game as a tree, as above |
-| `source/main.cpp`, `source/page.html`, `CMakeLists.txt`, `README.md`, `.gitignore` | `web/program.xsl` | makes the `Game`, a `WebWindow` and a `WebAudio` and plays a frame each time the browser draws (at most `<framerate>` a second); the page it is put in; the build, for `emcmake`, which fetches lunasvg |
-| `engine/` | engine-cpp's `engine.xml`, less SFML, and `web/engine.xml` | the engine's files, `window/web` and `audio/web` among them |
+| `source/main.cpp`, `source/page.html`, `CMakeLists.txt`, `README.md`, `.gitignore` | `web-asm/program.xsl` | makes the `Game`, a `WebWindow` and a `WebAudio` and plays a frame each time the browser draws (at most `<framerate>` a second); the page it is put in; the build, for `emcmake`, which fetches lunasvg |
+| `engine/` | engine-cpp's `engine.xml`, less SFML, and `web-asm/engine.xml` | the engine's files, `window/web` and `audio/web` among them |
 | `assets/`, `LICENSE` | `xgecli` | as above; the assets are built into the page |
 
 ```
-xgecli pong --generate web -o pong-web
-cd pong-web
+xgecli pong --generate web-asm -o pong-web-asm
+cd pong-web-asm
 cmake -B build -G Ninja      # in a prompt set up by emsdk_env: EMSDK names the toolchain
 cmake --build build          # output/pong.html
 ```

@@ -1,6 +1,6 @@
 # Generating a program
 
-**Status:** Built: `xgecli --generate engine-cpp` covers every game, and `web` builds the same into one web page. XSLT writes the game file out as a tree of C++ data, and the program reads it with the engine's own reader and plays it with the engine's own code on SFML. A test plays each generated game beside the engine's. Reference: [programs](../reference/programs.md#generating-a-program).
+**Status:** Built: `xgecli --generate engine-cpp` covers every game, and `web-asm` builds the same into one web page. XSLT writes the game file out as a tree of C++ data, and the program reads it with the engine's own reader and plays it with the engine's own code on SFML. A test plays each generated game beside the engine's. Reference: [programs](../reference/programs.md#generating-a-program).
 
 ## What we looked for
 
@@ -51,7 +51,7 @@ The first target wrote each game as a program a person might write (Pong about 4
 
 - **Wanted:** a game as one HTML file that plays when dropped into a browser, from the disk, with nothing beside it.
 - **Looked at:** a JavaScript game written per game by XSLT (`windows-cpp` again, in another language: Pong only for a long time); the engine ported to JavaScript (a second engine, which drifts as G1 did); **the engine itself compiled to WebAssembly** with Emscripten.
-- **Chosen:** the last. `web` is `engine-cpp` with two new backends, so it covers every game the engine does and plays as `xgecli` does. Its stylesheets add only `main.cpp`, the page and the build; the tree is `engine-cpp`'s.
+- **Chosen:** the last. `web-asm` is `engine-cpp` with two new backends, so it covers every game the engine does and plays as `xgecli` does. Its stylesheets add only `main.cpp`, the page and the build; the tree is `engine-cpp`'s.
 - **The backends are thin** because the engine draws every picture: `window/web` hands each bitmap to a canvas of its own on the page and draws it on the game's canvas, and `audio/web` hands each sound's samples to a Web Audio buffer. They compile only under Emscripten, so the native build leaves them out.
 - **One file:** `-sSINGLE_FILE` puts the WebAssembly in the page, and the assets go into Emscripten's in-memory files. A browser forbids loading anything else from a page opened from the disk, so a page that fetched its parts would not play by double-click.
 - **The browser's loop:** a frame runs each time the browser draws, at most `<framerate>` a second. The computer's thinking, on a thread of its own in a window, is done in the frame instead (the page has no threads), so a deep search holds the picture until it is done.
