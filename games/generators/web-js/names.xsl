@@ -38,6 +38,36 @@
     </xsl:call-template>
   </xsl:template>
 
+  <!-- One cell of a grid, as a loop names it: brick, or cell when the game
+       has a number of that name. -->
+  <xsl:template name="cell-name">
+    <xsl:param name="grid" select="." />
+    <xsl:variable name="named"><xsl:call-template name="cell-word"><xsl:with-param name="grid" select="$grid" /></xsl:call-template></xsl:variable>
+    <xsl:choose>
+      <xsl:when test="/game/variables/variable[@name = $named] or $everything[@name = $named]">cell</xsl:when>
+      <xsl:otherwise><xsl:value-of select="$named" /></xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
+  <!-- What a grid's cells are: its class, or its name made one: brick. -->
+  <xsl:template name="cell-word">
+    <xsl:param name="grid" select="." />
+    <xsl:call-template name="camel">
+      <xsl:with-param name="name">
+        <xsl:choose>
+          <xsl:when test="$grid/@class"><xsl:value-of select="$grid/@class" /></xsl:when>
+          <xsl:otherwise><xsl:call-template name="singular"><xsl:with-param name="name" select="$grid/@name" /></xsl:call-template></xsl:otherwise>
+        </xsl:choose>
+      </xsl:with-param>
+    </xsl:call-template>
+  </xsl:template>
+
+  <!-- An action written as a function of its own: faster. -->
+  <xsl:template name="action-name">
+    <xsl:param name="action" />
+    <xsl:call-template name="camel"><xsl:with-param name="name" select="$action" /></xsl:call-template>
+  </xsl:template>
+
   <!-- A screen, a sound and a look are each called by their name in the
        file: "playing", "wall", "smart". -->
   <xsl:template name="screen-name">

@@ -26,13 +26,28 @@ The largest single step was not a language change. It was dropping the frame-for
 
 ## What was still hard
 
-- **What a part is for.** The file does not say which objects move or meet, which are only drawn, and which need a struct of their own. `kinds.xsl` works this out from use. It holds for Pong; Breakout's groups and looks will test it.
+- **What a part is for.** The file does not say which objects move or meet, which are only drawn, and which need a struct of their own. `kinds.xsl` works this out from use. It held for Pong and for Breakout's groups and looks.
 - **Centred words.** A centre needs the words' size, which only the window knows, so `main.cpp` measures before drawing.
 - **What the engine does without being told.** A target has to copy each of these, and nothing in the file shows them:
   - a state's conditions stop at the first that holds, but every matching touch rule runs;
   - a refused press stops the verbs after it;
   - live numbers are worked out once a frame;
   - a reset also clears what is in flight.
+
+## What Breakout added
+
+| Part of the file | What the written game does with it |
+|---|---|
+| A group of rows and columns | a list of bricks (`std::vector`, a JS array), built by a `startWall()` loop; a brick hit is removed from the list |
+| Looks on the members | a brick's kind is a number into one colour table, not a type each |
+| `<self>` in a group's touch rule | the brick being looped over (`cell.worth`) |
+| Conditions inside conditions | `&&`, or an `if` inside an `if` |
+| An action run by a touch rule | a function of its own, called from the rule |
+| Pitch names (`A4`) | hertz, worked out by XSLT at writing time |
+| Words in a row | each row measured on its own before centring |
+
+- **Names the platform owns.** A plain page script shares the window's names, so `const top` clashed with `window.top`. The page is now a module script, which keeps its names to itself. Each new target will have its own such names to keep clear of.
+- **The gap list held.** Every part Breakout needed showed up in `covers.xsl` first, and each was a few lines to cover.
 
 ## Suggestions
 

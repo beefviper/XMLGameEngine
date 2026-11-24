@@ -26,6 +26,9 @@ namespace pong
 	constexpr float ballSize = 16;
 	constexpr float ballSpeed = 540;
 
+	enum class Screen { Title, Playing, Paused, Over };
+	enum class Sound { Paddle, Wall, Score };
+
 	// Something on the screen: where it is, how it moves, how big it is.
 	struct Thing
 	{
@@ -50,9 +53,6 @@ namespace pong
 	{
 		int hits{ 0 };
 	};
-
-	enum class Screen { Title, Playing, Paused, Over };
-	enum class Sound { Paddle, Wall, Score };
 
 	// A game pad's buttons, named for an Xbox pad's.
 	enum class PadButton { A, B, X, Y, LB, RB, Back, Start, Up, Down, Left, Right };

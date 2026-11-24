@@ -20,7 +20,7 @@ The tables list only keys beyond that.
 |---|---|---|
 | `pong` | W/S; on the title 1 plays the computer (A/D easy or smart), 2 two players on Up/Down | [`<deflect>`](commands.md#touching) off the paddles, a [computer](states.md#computer-players) of two levels in [seat](input.md#seats) 2, so Up and Down do nothing against it; `windows-cpp` writes it as `games/prototypes/pong/` has it |
 | `pong_min` | W/S, Up/Down | two paddles and a ball, nothing else; the game [`--generate`](programs.md#generating-a-program) was grown on; `windows-cpp` writes it as `games/prototypes/pong_min/` has it |
-| `breakout` | A/D, the mouse | eight rows of bricks as one group, a half paddle at the top, the mouse by [`<track />`](input.md#pointing-controls) |
+| `breakout` | A/D, the mouse | eight rows of bricks as one group, a half paddle at the top, the mouse by [`<track />`](input.md#pointing-controls); `windows-cpp` writes it as `games/prototypes/breakout/` has it |
 | `spacerace` | W/S, Up/Down | two rockets through drifting debris, the most crossings in a minute |
 
 ## Shooters

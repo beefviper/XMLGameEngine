@@ -14,7 +14,7 @@
        object that starts again, anywhere -->
   <xsl:template match="object/collisions/collision[@edge]/reset[not(@* or node())] | input/reset[not(@* or node())]" mode="covers" />
   <xsl:template match="reset[@object and not(node())]" mode="covers">
-    <xsl:if test="not($everything[@name = current()/@object])">
+    <xsl:if test="not($everything[@name = current()/@object] | $grids[@name = current()/@object])">
       <xsl:call-template name="gap"><xsl:with-param name="what" select="concat('&lt;reset&gt; of ', $quote, @object, $quote, ', not an object')" /></xsl:call-template>
     </xsl:if>
   </xsl:template>
@@ -28,7 +28,7 @@
   <xsl:template match="reset" mode="do">
     <xsl:choose>
       <xsl:when test="@object">
-        <xsl:call-template name="start-name"><xsl:with-param name="object" select="$everything[@name = current()/@object]" /></xsl:call-template>
+        <xsl:call-template name="start-name"><xsl:with-param name="object" select="$everything[@name = current()/@object] | $grids[@name = current()/@object]" /></xsl:call-template>
         <xsl:text>();</xsl:text>
       </xsl:when>
       <xsl:when test="$kept">keep(); newGame();</xsl:when>

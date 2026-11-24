@@ -1,6 +1,6 @@
 # Generating a program
 
-**Status:** Built: `xgecli --generate engine-cpp` covers every game, and `web-asm` builds the same into one web page; `windows-cpp` and `web-js` write `pong_min` and `pong` as a person would, in C++ and in JavaScript. XSLT writes the game file out as a tree of C++ data, and the program reads it with the engine's own reader and plays it with the engine's own code on SFML. A test plays each generated game beside the engine's. Reference: [programs](../reference/programs.md#generating-a-program).
+**Status:** Built: `xgecli --generate engine-cpp` covers every game, and `web-asm` builds the same into one web page; `windows-cpp` and `web-js` write `pong_min`, `pong` and `breakout` as a person would, in C++ and in JavaScript. XSLT writes the game file out as a tree of C++ data, and the program reads it with the engine's own reader and plays it with the engine's own code on SFML. A test plays each generated game beside the engine's. Reference: [programs](../reference/programs.md#generating-a-program).
 
 ## What we looked for
 
@@ -62,7 +62,8 @@ The first target wrote each game as a program a person might write (Pong about 4
 
 - Other targets (another language, an 8-bit machine) need the runtime in that language: a port, not a generator. The web page escapes this only because C++ compiles to WebAssembly.
 - Built with GCC and Clang on Linux, and MSVC at `/W4`, each game by its own `engine-cpp build: <game>` test in `build/generated`.
-- Not yet in `windows-cpp`: a `<move>` for something with its own `<velocity>`, a touch rule on a group, groups in groups, looks other than two texts, and the deflect off a top or bottom is untried by any game. Breakout's list is the next step's to-do.
+- Not yet in `windows-cpp`: a `<move>` for something with its own `<velocity>`, a touch rule on a group of members, an edge rule on a grid, numbered rows of things, and a grid's own rule other than one that ends in `<die />`. Space Race's list is the next step's to-do.
+- **A grid is a list.** A group of rows and columns whose cells meet something (Breakout's wall) is a `std::vector` of a record, built by a start function a kind (a subgroup) at a time, with the kind's look, numbers and sound in each cell. It is found from use (`kinds.xsl`, `$grids`), as the things are; a group of words in rows is drawn a row at a time, each measured. The page writes the same with an array, its script a module so that a name such as `top` stays the game's and not the browser's.
 - `web-js` has no play checks of its own: its page is held to a few lines by `test_generate.cpp`, and played by hand in a browser.
 - What made each game easy or hard to write out, and suggestions for the language, are kept in [writing-out](41-writing-out.md).
-- `windows-cpp` and `web-js` write two games so far (`pong_min.xml`, `pong.xml`). For any other it lists every part it has no words for and writes nothing: what it covers is said as match patterns in `covers.xsl` and in each verb's file, so a new verb says where it may stand beside how it is written. The list doubles as the to-do for the next game.
+- `windows-cpp` and `web-js` write three games so far (`pong_min.xml`, `pong.xml`, `breakout.xml`). For any other it lists every part it has no words for and writes nothing: what it covers is said as match patterns in `covers.xsl` and in each verb's file, so a new verb says where it may stand beside how it is written. The list doubles as the to-do for the next game.

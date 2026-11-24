@@ -43,6 +43,12 @@
         <xsl:call-template name="value"><xsl:with-param name="node" select="$tag/max" /><xsl:with-param name="self" select="$self" /><xsl:with-param name="in" select="$in" /><xsl:with-param name="start" select="$start" /></xsl:call-template>
         <xsl:text>)</xsl:text>
       </xsl:when>
+      <xsl:when test="$op = 'self' and $self/self::group">
+        <!-- a number of a grid's cell, in the loop over its list -->
+        <xsl:call-template name="cell-name"><xsl:with-param name="grid" select="$self" /></xsl:call-template>
+        <xsl:text>.</xsl:text>
+        <xsl:call-template name="camel"><xsl:with-param name="name" select="normalize-space($tag)" /></xsl:call-template>
+      </xsl:when>
       <xsl:when test="$op = 'self'">
         <xsl:call-template name="name-or-number">
           <xsl:with-param name="text" select="concat($self/@name, '.', normalize-space($tag))" />
@@ -87,9 +93,33 @@
           <xsl:when test="string(number($size)) != 'NaN'"><xsl:value-of select="$size div 2" /></xsl:when>
           <xsl:otherwise><xsl:value-of select="concat($size, ' / 2')" /></xsl:otherwise>
         </xsl:choose>
+        <xsl:call-template name="offset"><xsl:with-param name="node" select="$tag/offset" /><xsl:with-param name="self" select="$self" /><xsl:with-param name="in" select="$in" /></xsl:call-template>
+        <xsl:if test="$wrap &gt;= 2">)</xsl:if>
+      </xsl:when>
+      <xsl:when test="$op = 'left' or $op = 'top'">
+        <!-- that side on the window's, so far in -->
+        <xsl:choose>
+          <xsl:when test="$tag/offset"><xsl:call-template name="value"><xsl:with-param name="node" select="$tag/offset" /><xsl:with-param name="self" select="$self" /><xsl:with-param name="in" select="$in" /><xsl:with-param name="wrap" select="$wrap" /></xsl:call-template></xsl:when>
+          <xsl:otherwise>0</xsl:otherwise>
+        </xsl:choose>
+      </xsl:when>
+      <xsl:when test="$op = 'right' or $op = 'bottom'">
+        <xsl:variable name="size">
+          <xsl:call-template name="own-size">
+            <xsl:with-param name="self" select="$self" />
+            <xsl:with-param name="axis" select="$axis" />
+            <xsl:with-param name="in" select="$in" />
+          </xsl:call-template>
+        </xsl:variable>
+        <xsl:if test="$wrap &gt;= 2">(</xsl:if>
+        <xsl:choose>
+          <xsl:when test="$op = 'right'">windowWidth - </xsl:when>
+          <xsl:otherwise>windowHeight - </xsl:otherwise>
+        </xsl:choose>
+        <xsl:value-of select="$size" />
         <xsl:if test="$tag/offset">
-          <xsl:text> + </xsl:text>
-          <xsl:call-template name="value"><xsl:with-param name="node" select="$tag/offset" /><xsl:with-param name="self" select="$self" /><xsl:with-param name="in" select="$in" /><xsl:with-param name="wrap" select="1" /></xsl:call-template>
+          <xsl:text> - </xsl:text>
+          <xsl:call-template name="value"><xsl:with-param name="node" select="$tag/offset" /><xsl:with-param name="self" select="$self" /><xsl:with-param name="in" select="$in" /><xsl:with-param name="wrap" select="2" /></xsl:call-template>
         </xsl:if>
         <xsl:if test="$wrap &gt;= 2">)</xsl:if>
       </xsl:when>
@@ -135,6 +165,24 @@
         <xsl:message terminate="yes">web-js cannot write a &lt;<xsl:value-of select="$op" />&gt; value yet; use web-asm for this game</xsl:message>
       </xsl:otherwise>
     </xsl:choose>
+  </xsl:template>
+
+  <!-- + 70, or - 110 for a number below nothing: an offset added on. -->
+  <xsl:template name="offset">
+    <xsl:param name="node" />
+    <xsl:param name="self" />
+    <xsl:param name="in" select="''" />
+    <xsl:if test="$node">
+      <xsl:choose>
+        <xsl:when test="not($node/*) and starts-with(normalize-space($node), '-')">
+          <xsl:value-of select="concat(' - ', substring(normalize-space($node), 2))" />
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:text> + </xsl:text>
+          <xsl:call-template name="value"><xsl:with-param name="node" select="$node" /><xsl:with-param name="self" select="$self" /><xsl:with-param name="in" select="$in" /><xsl:with-param name="wrap" select="1" /></xsl:call-template>
+        </xsl:otherwise>
+      </xsl:choose>
+    </xsl:if>
   </xsl:template>
 
   <!-- A number, a variable of the game

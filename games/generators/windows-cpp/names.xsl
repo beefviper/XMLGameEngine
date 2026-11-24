@@ -44,12 +44,16 @@
   </xsl:template>
 
   <!-- What an object's record is called: Ball, or for a group's member
-       the group's one, Paddle. -->
+       the group's one, Paddle; a grid's cell, its class or its one, Brick. -->
   <xsl:template name="record-name">
     <xsl:param name="object" select="." />
     <xsl:call-template name="type-word">
       <xsl:with-param name="name">
         <xsl:choose>
+          <xsl:when test="$object/self::group[@class]"><xsl:value-of select="$object/@class" /></xsl:when>
+          <xsl:when test="$object/self::group">
+            <xsl:call-template name="singular"><xsl:with-param name="name" select="$object/@name" /></xsl:call-template>
+          </xsl:when>
           <xsl:when test="$object/self::member">
             <xsl:call-template name="singular"><xsl:with-param name="name" select="$object/../@name" /></xsl:call-template>
           </xsl:when>
@@ -86,6 +90,32 @@
         <xsl:value-of select="concat(' ', $variable/@name)" />
       </xsl:with-param>
     </xsl:call-template>
+  </xsl:template>
+
+  <!-- One cell of a grid, as a loop names it: brick, or cell when the game
+       has a number of that name. -->
+  <xsl:template name="cell-name">
+    <xsl:param name="grid" select="." />
+    <xsl:variable name="named">
+      <xsl:call-template name="camel">
+        <xsl:with-param name="name">
+          <xsl:choose>
+            <xsl:when test="$grid/@class"><xsl:value-of select="$grid/@class" /></xsl:when>
+            <xsl:otherwise><xsl:call-template name="singular"><xsl:with-param name="name" select="$grid/@name" /></xsl:call-template></xsl:otherwise>
+          </xsl:choose>
+        </xsl:with-param>
+      </xsl:call-template>
+    </xsl:variable>
+    <xsl:choose>
+      <xsl:when test="/game/variables/variable[@name = $named] or $everything[@name = $named]">cell</xsl:when>
+      <xsl:otherwise><xsl:value-of select="$named" /></xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
+  <!-- An action written as a function of its own: faster. -->
+  <xsl:template name="action-name">
+    <xsl:param name="action" />
+    <xsl:call-template name="camel"><xsl:with-param name="name" select="$action" /></xsl:call-template>
   </xsl:template>
 
   <!-- Screen::Playing, Sound::Wall, Computer::Look::Smart. -->

@@ -43,17 +43,24 @@
   <xsl:variable name="moved" select="$things[@name = $held-inputs/trigger/@object]" />
   <xsl:variable name="owners" select="$played/objects/object[count(. | $things) = count($things)] | $played/objects/group[member[count(. | $things) = count($things)]]" />
   <xsl:variable name="edge-owners" select="$owners[collisions/collision[@edge]]" />
-  <xsl:variable name="touch-owners" select="$owners[self::object][collisions/collision[not(@edge)]]" />
+  <xsl:variable name="touch-owners" select="$owners[self::object][collisions/collision[not(@edge)] or @name = $grids/collisions/collision/@object]" />
   <xsl:variable name="new-game" select="boolean($inputs/reset[not(@object)])" />
   <xsl:variable name="reset-names" select="//reset/@object | //collision/reset[not(@object)]/ancestor::object[1]/@name" />
+  <!-- what has a start function: a thing with a record, numbers drawn at
+       random or a reset, and every grid; a plain record starts as it is
+       declared ({}) -->
   <xsl:variable name="started" select="($things | $records)[not(@name = $kept/@name)]
-      [count(. | $records) = count($records) or .//random or @name = $reset-names]" />
+      [(count(. | $things) = count($things) and count(. | $records) = count($records)) or .//random or @name = $reset-names] | $grids" />
   <xsl:variable name="randoms" select="$everything//random" />
   <xsl:variable name="deflects" select="$played//deflect" />
   <xsl:variable name="sounds" select="/game/sounds/sound" />
   <xsl:variable name="uses-people" select="boolean(//people or $computer)" />
   <xsl:variable name="uses-sign" select="boolean($everything//sign)" />
   <xsl:variable name="uses-angles" select="boolean($everything//sine | $everything//cosine | $deflects)" />
+  <xsl:variable name="touch-bounces" select="$played/objects/object/collisions/collision[not(@edge)]/bounce" />
+  <xsl:variable name="mouse-input" select="$states/inputs//input[@axis = 'mouse.x']" />
+  <!-- the actions rules run, each a function of the game's -->
+  <xsl:variable name="called" select="$everything/actions/action[@name = //collision/trigger[not(@object)]/@action]" />
 
   <!-- source/<game>.h -->
   <xsl:template name="header-file">
@@ -66,11 +73,11 @@
 #include &lt;SFML/System/Vector2.hpp&gt;
 #include &lt;SFML/Window/Keyboard.hpp&gt;
 </xsl:text>
-    <xsl:if test="$randoms or $kept or $screens or $sounds">
+    <xsl:if test="$randoms or $kept or $screens or $sounds or $grids">
       <xsl:text>&#10;</xsl:text>
       <xsl:if test="$randoms"><xsl:text>#include &lt;random&gt;&#10;</xsl:text></xsl:if>
       <xsl:if test="$kept"><xsl:text>#include &lt;string&gt;&#10;</xsl:text></xsl:if>
-      <xsl:if test="$screens or $sounds"><xsl:text>#include &lt;vector&gt;&#10;</xsl:text></xsl:if>
+      <xsl:if test="$screens or $sounds or $grids"><xsl:text>#include &lt;vector&gt;&#10;</xsl:text></xsl:if>
     </xsl:if>
     <xsl:text>&#10;namespace </xsl:text>
     <xsl:call-template name="namespace-name" />
@@ -82,18 +89,6 @@
     <xsl:call-template name="value"><xsl:with-param name="node" select="window/height" /></xsl:call-template>
     <xsl:text>;&#10;</xsl:text>
     <xsl:call-template name="constants" />
-    <xsl:text>
-	// Something on the screen: where it is, how it moves, how big it is.
-	struct Thing
-	{
-		sf::Vector2f position;
-		sf::Vector2f velocity;
-		sf::Vector2f size;
-	};
-</xsl:text>
-    <xsl:for-each select="$records[not(self::member) or not(preceding-sibling::member[count(. | $records) = count($records)])]">
-      <xsl:call-template name="record" />
-    </xsl:for-each>
     <xsl:if test="$screens or $sounds">
       <xsl:text>&#10;</xsl:text>
       <xsl:if test="$screens">
@@ -113,6 +108,21 @@
         <xsl:text> };&#10;</xsl:text>
       </xsl:if>
     </xsl:if>
+    <xsl:text>
+	// Something on the screen: where it is, how it moves, how big it is.
+	struct Thing
+	{
+		sf::Vector2f position;
+		sf::Vector2f velocity;
+		sf::Vector2f size;
+	};
+</xsl:text>
+    <xsl:for-each select="$records[not(self::member) or not(preceding-sibling::member[count(. | $records) = count($records)])] | $grids">
+      <xsl:choose>
+        <xsl:when test="self::group"><xsl:call-template name="grid-record" /></xsl:when>
+        <xsl:otherwise><xsl:call-template name="record" /></xsl:otherwise>
+      </xsl:choose>
+    </xsl:for-each>
     <xsl:if test="$uses-pads">
       <xsl:text>
 	// A game pad's buttons, named for an Xbox pad's.
@@ -140,6 +150,9 @@
     <xsl:if test="$uses-pads">
       <xsl:text>&#9;&#9;void pad(unsigned pad, PadButton button, bool down);&#10;</xsl:text>
     </xsl:if>
+    <xsl:if test="$mouse-input">
+      <xsl:text>&#9;&#9;void mouse(float x);&#10;</xsl:text>
+    </xsl:if>
     <xsl:text>&#9;&#9;void frame(float seconds);&#10;</xsl:text>
     <xsl:if test="$screens or $sounds">
       <xsl:text>&#10;</xsl:text>
@@ -152,9 +165,16 @@
     </xsl:if>
     <xsl:text>&#10;</xsl:text>
     <xsl:if test="$uses-people"><xsl:text>&#9;&#9;int people{ 1 };&#10;</xsl:text></xsl:if>
-    <xsl:for-each select="$everything[count(. | $things | $records) = count($things | $records)]">
+    <xsl:for-each select="$everything[count(. | $things | $records) = count($things | $records)] | $grids">
       <xsl:text>&#9;&#9;</xsl:text>
-      <xsl:call-template name="type-name" />
+      <xsl:choose>
+        <xsl:when test="self::group">
+          <xsl:text>std::vector&lt;</xsl:text>
+          <xsl:call-template name="cell-type" />
+          <xsl:text>&gt;</xsl:text>
+        </xsl:when>
+        <xsl:otherwise><xsl:call-template name="type-name" /></xsl:otherwise>
+      </xsl:choose>
       <xsl:text> </xsl:text>
       <xsl:call-template name="object-name" />
       <xsl:text>;&#10;</xsl:text>
@@ -192,12 +212,24 @@
           </xsl:for-each>
         </part>
       </xsl:if>
-      <xsl:if test="$new-game or $started or $computer">
+      <xsl:if test="$new-game or $started or $computer or $called">
         <part>
           <xsl:if test="$new-game"><xsl:text>&#9;&#9;void newGame();&#10;</xsl:text></xsl:if>
           <xsl:for-each select="$started">
             <xsl:text>&#9;&#9;void </xsl:text>
             <xsl:call-template name="start-name" />
+            <xsl:text>();&#10;</xsl:text>
+            <xsl:if test="self::group[group]">
+              <xsl:text>&#9;&#9;void </xsl:text>
+              <xsl:call-template name="add-name" />
+              <xsl:text>(</xsl:text>
+              <xsl:call-template name="add-parameters" />
+              <xsl:text>);&#10;</xsl:text>
+            </xsl:if>
+          </xsl:for-each>
+          <xsl:for-each select="$called">
+            <xsl:text>&#9;&#9;void </xsl:text>
+            <xsl:call-template name="action-name"><xsl:with-param name="action" select="@name" /></xsl:call-template>
             <xsl:text>();&#10;</xsl:text>
           </xsl:for-each>
           <xsl:if test="$computer">
@@ -293,7 +325,7 @@
     <xsl:variable name="named" select="@name" />
     <xsl:variable name="changes" select="//*[self::set or self::inc or self::dec][substring-after(@variable, '.') = $named and (substring-before(@variable, '.') = $owner/@name or substring-before(@variable, '.') = $owner/member/@name)]" />
     <xsl:choose>
-      <xsl:when test="not(*) and floor(number(.)) = number(.) and not($changes[* or (normalize-space(.) != '' and floor(number(.)) != number(.))])">int</xsl:when>
+      <xsl:when test="not(*) and floor(number(.)) = number(.) and not($changes[*[not(self::self)] or (not(*) and normalize-space(.) != '' and floor(number(.)) != number(.))])">int</xsl:when>
       <xsl:otherwise>float</xsl:otherwise>
     </xsl:choose>
   </xsl:template>
@@ -309,10 +341,10 @@
   <xsl:template name="game-file">
     <xsl:call-template name="header"><xsl:with-param name="file" select="concat($name, '.cpp')" /></xsl:call-template>
     <xsl:value-of select="concat('&#10;#include &quot;', $name, '.h&quot;&#10;')" />
-    <xsl:if test="$deflects or $uses-angles or $edge-owners//bounce or $kept or $sounds">
+    <xsl:if test="$deflects or $uses-angles or $edge-owners//bounce or $touch-bounces or $kept or $sounds or $mouse-input">
       <xsl:text>&#10;</xsl:text>
-      <xsl:if test="$deflects"><xsl:text>#include &lt;algorithm&gt;&#10;</xsl:text></xsl:if>
-      <xsl:if test="$deflects or $uses-angles or $edge-owners//bounce"><xsl:text>#include &lt;cmath&gt;&#10;</xsl:text></xsl:if>
+      <xsl:if test="$deflects or $mouse-input"><xsl:text>#include &lt;algorithm&gt;&#10;</xsl:text></xsl:if>
+      <xsl:if test="$deflects or $uses-angles or $edge-owners//bounce or $touch-bounces"><xsl:text>#include &lt;cmath&gt;&#10;</xsl:text></xsl:if>
       <xsl:if test="$kept"><xsl:text>#include &lt;fstream&gt;&#10;</xsl:text></xsl:if>
       <xsl:if test="$sounds"><xsl:text>#include &lt;utility&gt;&#10;</xsl:text></xsl:if>
     </xsl:if>
@@ -328,7 +360,10 @@
       <xsl:call-template name="new-game-function" />
     </xsl:if>
     <xsl:for-each select="$started">
-      <xsl:call-template name="start-function" />
+      <xsl:choose>
+        <xsl:when test="self::group"><xsl:call-template name="grid-start-function" /></xsl:when>
+        <xsl:otherwise><xsl:call-template name="start-function" /></xsl:otherwise>
+      </xsl:choose>
     </xsl:for-each>
     <xsl:if test="$kept">
       <xsl:call-template name="keep-functions" />
@@ -340,7 +375,13 @@
     <xsl:if test="$uses-pads">
       <xsl:call-template name="pad-function" />
     </xsl:if>
+    <xsl:if test="$mouse-input">
+      <xsl:call-template name="mouse-function" />
+    </xsl:if>
     <xsl:call-template name="frame-function" />
+    <xsl:for-each select="$called">
+      <xsl:call-template name="action-function" />
+    </xsl:for-each>
     <xsl:if test="$computer">
       <xsl:call-template name="computer-function" />
     </xsl:if>
@@ -350,7 +391,7 @@
 
   <!-- The small functions the rules are written with, those they use. -->
   <xsl:template name="helpers">
-    <xsl:if test="$uses-sign or $uses-angles or $touch-owners">
+    <xsl:if test="$uses-sign or $uses-angles or $touch-owners or $touch-bounces">
       <xsl:text>	namespace
 	{
 </xsl:text>
@@ -371,6 +412,23 @@
 		{
 			return a.position.x &lt; b.position.x + b.size.x &amp;&amp; b.position.x &lt; a.position.x + a.size.x
 				&amp;&amp; a.position.y &lt; b.position.y + b.size.y &amp;&amp; b.position.y &lt; a.position.y + a.size.y;
+		}
+</part>
+        </xsl:if>
+        <xsl:if test="$touch-bounces">
+          <part>		// Off the side of `other` it hit: its speed into that side turned round.
+		void bounce(Thing&amp; thing, const Thing&amp; other)
+		{
+			const sf::Vector2f apart = (thing.position + thing.size / 2.0f) - (other.position + other.size / 2.0f);
+			const sf::Vector2f reach = (thing.size + other.size) / 2.0f;
+			if (reach.x - std::abs(apart.x) &lt; reach.y - std::abs(apart.y))
+			{
+				thing.velocity.x = apart.x &lt; 0 ? -std::abs(thing.velocity.x) : std::abs(thing.velocity.x);
+			}
+			else
+			{
+				thing.velocity.y = apart.y &lt; 0 ? -std::abs(thing.velocity.y) : std::abs(thing.velocity.y);
+			}
 		}
 </part>
         </xsl:if>
@@ -435,12 +493,16 @@
 
   <!-- Each thing and record that is not kept, as it starts. -->
   <xsl:template name="starts">
-    <xsl:for-each select="($things | $records)[not(@name = $kept/@name)]">
+    <xsl:for-each select="($things | $records)[not(@name = $kept/@name)] | $grids">
       <xsl:text>&#9;&#9;</xsl:text>
       <xsl:choose>
         <xsl:when test="count(. | $started) = count($started)">
           <xsl:call-template name="start-name" />
           <xsl:text>();&#10;</xsl:text>
+        </xsl:when>
+        <xsl:when test="count(. | $things) != count($things)">
+          <xsl:call-template name="object-name" />
+          <xsl:text> = {};&#10;</xsl:text>
         </xsl:when>
         <xsl:otherwise>
           <xsl:call-template name="object-name" />
@@ -829,25 +891,82 @@
 		// the game's own tests, the first that holds
 </xsl:text>
       <xsl:for-each select="$played/conditions/condition">
-        <xsl:variable name="body">
-          <xsl:for-each select="*[not(self::any or self::atleast or self::atmost or self::above or self::below or self::equal or self::unequal)]">
-            <line><xsl:apply-templates select="." mode="do" /></line>
-          </xsl:for-each>
-        </xsl:variable>
-        <xsl:variable name="header">
-          <xsl:if test="position() &gt; 1">else </xsl:if>
-          <xsl:text>if (</xsl:text>
-          <xsl:call-template name="test" />
-          <xsl:text>)</xsl:text>
-        </xsl:variable>
-        <xsl:call-template name="write-block">
-          <xsl:with-param name="header" select="$header" />
-          <xsl:with-param name="lines" select="exsl:node-set($body)/line" />
-          <xsl:with-param name="indent" select="'&#9;&#9;'" />
+        <xsl:call-template name="state-condition">
+          <xsl:with-param name="before">
+            <xsl:if test="position() &gt; 1">else </xsl:if>
+          </xsl:with-param>
         </xsl:call-template>
       </xsl:for-each>
     </xsl:if>
     <xsl:text>	}&#10;</xsl:text>
+  </xsl:template>
+
+  <!-- One of the game's own tests and what it does; one holding a
+       condition is tested with it (&&), and does what that one does. -->
+  <xsl:template name="state-condition">
+    <xsl:param name="before" />
+    <xsl:param name="tests" select="''" />
+    <xsl:variable name="test">
+      <xsl:call-template name="test"><xsl:with-param name="joined" select="$tests != '' or condition" /></xsl:call-template>
+    </xsl:variable>
+    <xsl:variable name="all">
+      <xsl:if test="$tests != ''"><xsl:value-of select="concat($tests, ' &amp;&amp; ')" /></xsl:if>
+      <xsl:value-of select="$test" />
+    </xsl:variable>
+    <xsl:choose>
+      <xsl:when test="condition">
+        <xsl:for-each select="condition">
+          <xsl:call-template name="state-condition">
+            <xsl:with-param name="before" select="$before" />
+            <xsl:with-param name="tests" select="$all" />
+          </xsl:call-template>
+        </xsl:for-each>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:variable name="body">
+          <xsl:for-each select="*[not(self::any or self::remaining or self::atleast or self::atmost or self::above or self::below or self::equal or self::unequal)]">
+            <line><xsl:apply-templates select="." mode="do" /></line>
+          </xsl:for-each>
+        </xsl:variable>
+        <xsl:call-template name="write-block">
+          <xsl:with-param name="header" select="concat($before, 'if (', $all, ')')" />
+          <xsl:with-param name="lines" select="exsl:node-set($body)/line" />
+          <xsl:with-param name="indent" select="'&#9;&#9;'" />
+        </xsl:call-template>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
+  <!-- mouse(): the thing the mouse steers, its middle at the mouse, kept in the window. -->
+  <xsl:template name="mouse-function">
+    <xsl:variable name="input" select="$mouse-input[1]" />
+    <xsl:variable name="object" select="$things[@name = $input/trigger/@object]" />
+    <xsl:variable name="thing"><xsl:call-template name="object-name"><xsl:with-param name="object" select="$object" /></xsl:call-template></xsl:variable>
+    <xsl:value-of select="concat('&#10;&#9;// The mouse across the window: the ', $object/@name, &quot;'s middle follows it, kept inside the window.&#10;&#9;void &quot;, $class, '::mouse(float x)&#10;&#9;{&#10;')" />
+    <xsl:if test="$screens">
+      <xsl:text>&#9;&#9;if (screen() != </xsl:text>
+      <xsl:call-template name="screen-name"><xsl:with-param name="state" select="$input/ancestor::state/@name" /></xsl:call-template>
+      <xsl:text>) { return; }&#10;</xsl:text>
+    </xsl:if>
+    <xsl:value-of select="concat('&#9;&#9;', $thing, '.position.x = std::clamp(x - ', $thing, '.size.x / 2, 0.0f, windowWidth - ', $thing, '.size.x);&#10;&#9;}&#10;')" />
+  </xsl:template>
+
+  <!-- An action a rule runs: faster(), its verbs on the thing it is of. -->
+  <xsl:template name="action-function">
+    <xsl:variable name="object" select="ancestor::object[1]" />
+    <xsl:value-of select="concat('&#10;&#9;void ', $class, '::')" />
+    <xsl:call-template name="action-name"><xsl:with-param name="action" select="@name" /></xsl:call-template>
+    <xsl:text>()&#10;&#9;{&#10;</xsl:text>
+    <xsl:variable name="body">
+      <xsl:for-each select="*">
+        <line><xsl:apply-templates select="." mode="do"><xsl:with-param name="self" select="$object" /></xsl:apply-templates></line>
+      </xsl:for-each>
+    </xsl:variable>
+    <xsl:call-template name="print-lines">
+      <xsl:with-param name="lines" select="exsl:node-set($body)/line" />
+      <xsl:with-param name="indent" select="'&#9;&#9;'" />
+    </xsl:call-template>
+    <xsl:text>&#9;}&#10;</xsl:text>
   </xsl:template>
 
   <!-- seat2Up: a held input of the computer's seat, by its first button. -->
@@ -872,7 +991,7 @@
     <xsl:variable name="object" select="." />
     <xsl:variable name="thing"><xsl:call-template name="object-name" /></xsl:variable>
     <xsl:value-of select="concat('&#9;&#9;', $thing, '.velocity = {};&#10;')" />
-    <xsl:for-each select="$played/inputs//input[trigger/@object = $object/@name]">
+    <xsl:for-each select="$played/inputs//input[not(@axis)][trigger/@object = $object/@name]">
       <xsl:text>&#9;&#9;if (</xsl:text>
       <xsl:choose>
         <xsl:when test="$computer and ancestor::seat/@number = $computer/@seat"><xsl:call-template name="seat-held" /></xsl:when>
@@ -1016,75 +1135,112 @@
   </xsl:template>
 
   <!-- An object's <collision>s naming no edge: on meeting another thing,
-       of the class it names or any. Rules for the same class share one loop,
-       in the file's order. -->
+       of the class or the object it names, or any. Rules that name the same
+       share one loop, in the file's order; a grid's list is looped over
+       with its cells' own rules (grids.xsl), even where the thing has none
+       for them. -->
   <xsl:template name="meetings">
     <xsl:variable name="object" select="." />
     <xsl:variable name="thing"><xsl:call-template name="object-name" /></xsl:variable>
-    <xsl:for-each select="collisions/collision[not(@edge)][not(@class = preceding-sibling::collision[not(@edge)]/@class) and not(not(@class) and preceding-sibling::collision[not(@edge) and not(@class)])]">
-      <xsl:variable name="class" select="@class" />
-      <xsl:variable name="rules" select="../collision[not(@edge)][string(@class) = string($class)]" />
-      <xsl:variable name="others" select="$things[generate-id() != generate-id($object)][not($class) or (@class | parent::group/@class) = $class]" />
-      <xsl:variable name="one">
-        <xsl:choose>
-          <xsl:when test="count($others) = 1"><xsl:call-template name="object-name"><xsl:with-param name="object" select="$others" /></xsl:call-template></xsl:when>
-          <xsl:when test="$class"><xsl:call-template name="camel"><xsl:with-param name="name" select="$class" /></xsl:call-template></xsl:when>
-          <xsl:otherwise>other</xsl:otherwise>
-        </xsl:choose>
-      </xsl:variable>
-      <xsl:variable name="other">
-        <xsl:if test="count($others) &gt; 1">*</xsl:if>
-        <xsl:value-of select="$one" />
-      </xsl:variable>
-      <xsl:variable name="body">
-        <xsl:for-each select="$rules">
-          <xsl:call-template name="rule-lines">
-            <xsl:with-param name="who" select="$thing" />
-            <xsl:with-param name="self" select="$object" />
-            <xsl:with-param name="other" select="$other" />
-          </xsl:call-template>
-        </xsl:for-each>
-      </xsl:variable>
-      <xsl:variable name="lines" select="exsl:node-set($body)/line" />
-      <xsl:choose>
-        <xsl:when test="count($others) = 1">
-          <xsl:call-template name="write-block">
-            <xsl:with-param name="header" select="concat('if (touching(', $thing, ', ', $other, '))')" />
-            <xsl:with-param name="lines" select="$lines" />
-            <xsl:with-param name="indent" select="'&#9;&#9;'" />
-          </xsl:call-template>
-        </xsl:when>
-        <xsl:when test="$others">
-          <!-- their record when they share one, else Thing -->
-          <xsl:variable name="first"><xsl:call-template name="type-name"><xsl:with-param name="object" select="$others[1]" /></xsl:call-template></xsl:variable>
-          <xsl:variable name="unlike">
-            <xsl:for-each select="$others">
-              <xsl:variable name="each"><xsl:call-template name="type-name" /></xsl:variable>
-              <xsl:if test="$each != $first">x</xsl:if>
-            </xsl:for-each>
-          </xsl:variable>
-          <xsl:variable name="type">
-            <xsl:choose>
-              <xsl:when test="$unlike = ''"><xsl:value-of select="$first" /></xsl:when>
-              <xsl:otherwise>Thing</xsl:otherwise>
-            </xsl:choose>
-          </xsl:variable>
-          <xsl:value-of select="concat('&#9;&#9;for (const ', $type, '* ', $one, ' : { ')" />
-          <xsl:for-each select="$others">
-            <xsl:if test="position() &gt; 1">, </xsl:if>
-            <xsl:text>&amp;</xsl:text>
-            <xsl:call-template name="object-name" />
-          </xsl:for-each>
-          <xsl:text> })&#10;&#9;&#9;{&#10;</xsl:text>
-          <xsl:call-template name="write-block">
-            <xsl:with-param name="header" select="concat('if (touching(', $thing, ', ', $other, '))')" />
-            <xsl:with-param name="lines" select="$lines" />
-            <xsl:with-param name="indent" select="'&#9;&#9;&#9;'" />
-          </xsl:call-template>
-          <xsl:text>&#9;&#9;}&#10;</xsl:text>
-        </xsl:when>
-      </xsl:choose>
+    <xsl:variable name="touches" select="collisions/collision[not(@edge)]" />
+    <xsl:for-each select="$touches">
+      <xsl:variable name="rule" select="." />
+      <xsl:variable name="alike" select="$touches[string(@class) = string($rule/@class) and string(@object) = string($rule/@object)]" />
+      <xsl:if test="generate-id($alike[1]) = generate-id($rule)">
+        <xsl:call-template name="meeting">
+          <xsl:with-param name="object" select="$object" />
+          <xsl:with-param name="thing" select="$thing" />
+          <xsl:with-param name="rules" select="$alike" />
+        </xsl:call-template>
+      </xsl:if>
     </xsl:for-each>
+    <xsl:for-each select="$grids[collisions/collision/@object = $object/@name][not((@class | @name) = $touches/@class or @name = $touches/@object)]">
+      <xsl:call-template name="grid-meeting">
+        <xsl:with-param name="grid" select="." />
+        <xsl:with-param name="thing" select="$thing" />
+        <xsl:with-param name="object" select="$object" />
+        <xsl:with-param name="rules" select="/.." />
+      </xsl:call-template>
+    </xsl:for-each>
+  </xsl:template>
+
+  <!-- The rules of one thing that name the same class, object or any. -->
+  <xsl:template name="meeting">
+    <xsl:param name="object" />
+    <xsl:param name="thing" />
+    <xsl:param name="rules" />
+    <xsl:variable name="class" select="@class" />
+    <xsl:variable name="named" select="@object" />
+    <xsl:variable name="grid" select="$grids[($class and (@class = $class or @name = $class)) or @name = $named]" />
+    <xsl:variable name="others" select="$things[generate-id() != generate-id($object)]
+        [($named and @name = $named) or ($class and (@class | parent::group/@class) = $class) or (not($named) and not($class))]" />
+    <xsl:variable name="one">
+      <xsl:choose>
+        <xsl:when test="count($others) = 1"><xsl:call-template name="object-name"><xsl:with-param name="object" select="$others" /></xsl:call-template></xsl:when>
+        <xsl:when test="$class"><xsl:call-template name="camel"><xsl:with-param name="name" select="$class" /></xsl:call-template></xsl:when>
+        <xsl:otherwise>other</xsl:otherwise>
+      </xsl:choose>
+    </xsl:variable>
+    <xsl:variable name="other">
+      <xsl:if test="count($others) &gt; 1">*</xsl:if>
+      <xsl:value-of select="$one" />
+    </xsl:variable>
+    <xsl:variable name="body">
+      <xsl:for-each select="$rules">
+        <xsl:call-template name="rule-lines">
+          <xsl:with-param name="who" select="$thing" />
+          <xsl:with-param name="self" select="$object" />
+          <xsl:with-param name="other" select="$other" />
+        </xsl:call-template>
+      </xsl:for-each>
+    </xsl:variable>
+    <xsl:variable name="lines" select="exsl:node-set($body)/line" />
+    <xsl:choose>
+      <xsl:when test="$grid">
+        <xsl:call-template name="grid-meeting">
+          <xsl:with-param name="grid" select="$grid" />
+          <xsl:with-param name="thing" select="$thing" />
+          <xsl:with-param name="object" select="$object" />
+          <xsl:with-param name="rules" select="$rules" />
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:when test="count($others) = 1">
+        <xsl:call-template name="write-block">
+          <xsl:with-param name="header" select="concat('if (touching(', $thing, ', ', $other, '))')" />
+          <xsl:with-param name="lines" select="$lines" />
+          <xsl:with-param name="indent" select="'&#9;&#9;'" />
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:when test="$others">
+        <!-- their record when they share one, else Thing -->
+        <xsl:variable name="first"><xsl:call-template name="type-name"><xsl:with-param name="object" select="$others[1]" /></xsl:call-template></xsl:variable>
+        <xsl:variable name="unlike">
+          <xsl:for-each select="$others">
+            <xsl:variable name="each"><xsl:call-template name="type-name" /></xsl:variable>
+            <xsl:if test="$each != $first">x</xsl:if>
+          </xsl:for-each>
+        </xsl:variable>
+        <xsl:variable name="type">
+          <xsl:choose>
+            <xsl:when test="$unlike = ''"><xsl:value-of select="$first" /></xsl:when>
+            <xsl:otherwise>Thing</xsl:otherwise>
+          </xsl:choose>
+        </xsl:variable>
+        <xsl:value-of select="concat('&#9;&#9;for (const ', $type, '* ', $one, ' : { ')" />
+        <xsl:for-each select="$others">
+          <xsl:if test="position() &gt; 1">, </xsl:if>
+          <xsl:text>&amp;</xsl:text>
+          <xsl:call-template name="object-name" />
+        </xsl:for-each>
+        <xsl:text> })&#10;&#9;&#9;{&#10;</xsl:text>
+        <xsl:call-template name="write-block">
+          <xsl:with-param name="header" select="concat('if (touching(', $thing, ', ', $other, '))')" />
+          <xsl:with-param name="lines" select="$lines" />
+          <xsl:with-param name="indent" select="'&#9;&#9;&#9;'" />
+        </xsl:call-template>
+        <xsl:text>&#9;&#9;}&#10;</xsl:text>
+      </xsl:when>
+    </xsl:choose>
   </xsl:template>
 
   <!-- A rule's lines: its commands, behind the tests it starts with. -->
@@ -1092,9 +1248,10 @@
     <xsl:param name="who" />
     <xsl:param name="self" />
     <xsl:param name="other" />
+    <xsl:param name="skip" select="/.." />
     <xsl:variable name="tests" select="*[self::any or self::condition][not(preceding-sibling::*[not(self::any or self::condition)])]" />
     <xsl:variable name="commands">
-      <xsl:for-each select="*[count(. | $tests) != count($tests)]">
+      <xsl:for-each select="*[count(. | $tests) != count($tests)][count(. | $skip) != count($skip)]">
         <line>
           <xsl:apply-templates select="." mode="touch">
             <xsl:with-param name="who" select="$who" />
@@ -1141,6 +1298,14 @@
         </xsl:when>
         <xsl:when test="$condition/any">
           <xsl:call-template name="test"><xsl:with-param name="condition" select="$condition/any" /><xsl:with-param name="self" select="$self" /></xsl:call-template>
+        </xsl:when>
+        <xsl:when test="$condition/remaining">
+          <!-- no more than so many of a grid's cells left -->
+          <xsl:variable name="list"><xsl:call-template name="object-name"><xsl:with-param name="object" select="$grids[@name = $condition/@object]" /></xsl:call-template></xsl:variable>
+          <xsl:choose>
+            <xsl:when test="normalize-space($condition/remaining) = '0'"><xsl:value-of select="concat($list, '.empty()')" /></xsl:when>
+            <xsl:otherwise><xsl:value-of select="concat($list, '.size() &lt;= ', normalize-space($condition/remaining))" /></xsl:otherwise>
+          </xsl:choose>
         </xsl:when>
         <xsl:otherwise>
           <xsl:variable name="compare" select="$condition/*[self::atleast or self::atmost or self::above or self::below or self::equal or self::unequal][1]" />
@@ -1254,8 +1419,9 @@
   <xsl:template name="block-lines">
     <xsl:param name="header" />
     <xsl:param name="lines" />
+    <xsl:param name="otherwise" select="''" />
     <xsl:choose>
-      <xsl:when test="count($lines) = 1 and not($lines/@depth)">
+      <xsl:when test="count($lines) = 1 and not($lines/@depth) and not(contains($lines, '&#10;')) and $otherwise = ''">
         <line><xsl:value-of select="concat($header, ' { ', $lines, ' }')" /></line>
       </xsl:when>
       <xsl:otherwise>
@@ -1265,6 +1431,9 @@
           <line depth="{1 + number(concat('0', @depth))}"><xsl:value-of select="." /></line>
         </xsl:for-each>
         <line>}</line>
+        <xsl:if test="$otherwise != ''">
+          <line><xsl:value-of select="concat('else { ', $otherwise, ' }')" /></line>
+        </xsl:if>
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
@@ -1274,12 +1443,32 @@
     <xsl:param name="lines" />
     <xsl:param name="indent" />
     <xsl:for-each select="$lines">
-      <xsl:value-of select="$indent" />
-      <xsl:if test="@depth">
-        <xsl:value-of select="substring('&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;', 1, @depth)" />
-      </xsl:if>
-      <xsl:value-of select="concat(., '&#10;')" />
+      <xsl:call-template name="print-line">
+        <xsl:with-param name="text" select="string(.)" />
+        <xsl:with-param name="indent">
+          <xsl:value-of select="$indent" />
+          <xsl:if test="@depth">
+            <xsl:value-of select="substring('&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;&#9;', 1, @depth)" />
+          </xsl:if>
+        </xsl:with-param>
+      </xsl:call-template>
     </xsl:for-each>
+  </xsl:template>
+
+  <!-- A line, or a line of several (a verb that writes two statements), each at the indent. -->
+  <xsl:template name="print-line">
+    <xsl:param name="text" />
+    <xsl:param name="indent" />
+    <xsl:choose>
+      <xsl:when test="contains($text, '&#10;')">
+        <xsl:value-of select="concat($indent, substring-before($text, '&#10;'), '&#10;')" />
+        <xsl:call-template name="print-line">
+          <xsl:with-param name="text" select="substring-after($text, '&#10;')" />
+          <xsl:with-param name="indent" select="$indent" />
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:otherwise><xsl:value-of select="concat($indent, $text, '&#10;')" /></xsl:otherwise>
+    </xsl:choose>
   </xsl:template>
 
   <!-- A block written out. -->
@@ -1287,10 +1476,12 @@
     <xsl:param name="header" />
     <xsl:param name="lines" />
     <xsl:param name="indent" />
+    <xsl:param name="otherwise" select="''" />
     <xsl:variable name="block">
       <xsl:call-template name="block-lines">
         <xsl:with-param name="header" select="$header" />
         <xsl:with-param name="lines" select="$lines" />
+        <xsl:with-param name="otherwise" select="$otherwise" />
       </xsl:call-template>
     </xsl:variable>
     <xsl:call-template name="print-lines">

@@ -21,7 +21,8 @@
 <xsl:stylesheet version="1.0"
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
     xmlns:exsl="http://exslt.org/common"
-    extension-element-prefixes="exsl">
+    xmlns:math="http://exslt.org/math"
+    extension-element-prefixes="exsl math">
 
   <xsl:variable name="states" select="/game/states/state" />
   <xsl:variable name="screens" select="count($states) &gt; 1" />
@@ -43,8 +44,16 @@
        or (@class | parent::group/@class) = $met-classes
        or @name = //trigger/@object]" />
 
+  <!-- Grids: a group of cells in rows and columns, in groups of its own
+       (one kind of cell each) or not, whose cells meet: a list of them. -->
+  <xsl:variable name="grids" select="$states/objects/group[not(member)][(sprite | group/sprite)/rectangle]
+      [collisions or group/collisions or @class = $met-classes or @name = //collision/@object]" />
+
+  <!-- Rows of words: a group of texts, a row's words each. -->
+  <xsl:variable name="text-rows" select="$states/objects/group[not(member)][sprite/text]" />
+
   <!-- The state that is played: its things move, its rules run. -->
-  <xsl:variable name="played" select="($states[objects//*[count(. | $things) = count($things)] or conditions or computer or .//trigger])[1]" />
+  <xsl:variable name="played" select="($states[objects//*[count(. | $things | $grids) = count($things | $grids)] or conditions or computer or .//trigger])[1]" />
 
   <!-- Texts. -->
   <xsl:variable name="texts" select="$everything[(sprite | parent::group/sprite)[1]/text]" />
@@ -111,6 +120,24 @@
     <xsl:choose>
       <xsl:when test="substring($name, string-length($name)) = 's'"><xsl:value-of select="substring($name, 1, string-length($name) - 1)" /></xsl:when>
       <xsl:otherwise><xsl:value-of select="concat($name, '-one')" /></xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
+  <!-- A pitch in hertz: a number as it is, or a note (a letter, a sharp or
+       flat, an octave; A4 is 440) to a hundredth. -->
+  <xsl:template name="hertz">
+    <xsl:param name="pitch" />
+    <xsl:choose>
+      <xsl:when test="string(number($pitch)) != 'NaN'"><xsl:value-of select="$pitch" /></xsl:when>
+      <xsl:otherwise>
+        <xsl:variable name="letter" select="translate(substring($pitch, 1, 1), 'abcdefg', 'ABCDEFG')" />
+        <xsl:variable name="accidental" select="substring($pitch, 2, 1)" />
+        <xsl:variable name="shift" select="number($accidental = '#') - number($accidental = 'b')" />
+        <xsl:variable name="octave" select="number(substring($pitch, 2 + number($shift != 0)))" />
+        <xsl:variable name="letter-at" select="string-length(substring-before('A_B_C_D_E_F_G', $letter)) div 2" />
+        <xsl:variable name="midi" select="($octave + 1) * 12 + number(substring('09110002040507', 1 + 2 * $letter-at, 2)) + $shift" />
+        <xsl:value-of select="format-number(440 * math:power(2, ($midi - 69) div 12), '0.##')" />
+      </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
 </xsl:stylesheet>

@@ -49,24 +49,67 @@
     </xsl:if>
     <xsl:apply-templates select="@* | * | text()" mode="covers" />
   </xsl:template>
-  <xsl:template match="object[count(sprite) &gt; 2] | group[count(sprite) &gt; 1] | object[count(sprite) = 2][sprite[not(text/content)]]" mode="covers" priority="2">
-    <xsl:call-template name="gap"><xsl:with-param name="what" select="'looks other than two texts'" /></xsl:call-template>
+  <!-- Looks: two texts, or rectangles of one colour (only their size
+       differs). -->
+  <xsl:template match="object[count(sprite) &gt; 1] | group[count(sprite) &gt; 1]" mode="covers" priority="2">
+    <xsl:variable name="color" select="string(sprite[1]/rectangle/color)" />
+    <xsl:if test="self::group or not((count(sprite) = 2 and not(sprite[not(text/content)]))
+        or (not(sprite[not(rectangle)]) and not(sprite/rectangle[string(color) != $color])))">
+      <xsl:call-template name="gap"><xsl:with-param name="what" select="'looks other than two texts or rectangles of one colour'" /></xsl:call-template>
+    </xsl:if>
     <xsl:apply-templates select="@* | * | text()" mode="covers" />
   </xsl:template>
   <xsl:template match="game/variables/variable[.//random]" mode="covers" priority="2">
     <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;random&gt; in the game variables'" /></xsl:call-template>
   </xsl:template>
   <xsl:template match="group/collisions/collision[not(@edge)]" mode="covers" priority="2">
-    <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;collision&gt; on a touch in a group'" /></xsl:call-template>
+    <xsl:variable name="grid" select="ancestor::group[parent::objects]" />
+    <xsl:choose>
+      <xsl:when test="count($grid | $grids) = count($grids) and @object and $things[@name = current()/@object] and *[last()][self::die] and not(ancestor::group[2])">
+        <xsl:apply-templates select="@* | * | text()" mode="covers" />
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;collision&gt; on a touch in a group, other than a grid meeting one thing and its cell dying'" /></xsl:call-template>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+  <xsl:template match="group/collisions/collision[@edge][ancestor::group[parent::objects][not(member)]]" mode="covers" priority="2">
+    <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;collision&gt; at an edge in a grid'" /></xsl:call-template>
+  </xsl:template>
+
+  <!-- A group in a grid: one kind of its cells, in rows of their own, which
+       may give them a colour, a place, numbers and a sound when they meet. -->
+  <xsl:template match="objects/group/group" mode="covers" priority="2">
+    <xsl:choose>
+      <xsl:when test="count(.. | $grids) = count($grids)">
+        <xsl:apply-templates select="@* | * | text()" mode="covers" />
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:call-template name="gap"><xsl:with-param name="what" select="'&lt;group&gt; in a &lt;group&gt; other than a grid'" /></xsl:call-template>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+  <xsl:template match="group/group/collisions/collision" mode="covers" priority="3">
+    <xsl:if test="@edge or not(@object) or *[not(self::play)] or count(*) != 1 or not(../../../collisions/collision[@object = current()/@object])">
+      <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;collision&gt; in a grid group other than one sound where the grid meets that thing'" /></xsl:call-template>
+    </xsl:if>
+  </xsl:template>
+  <xsl:template match="group/group/columns | group/group/rows | group/group/padding | group/group/velocity | group/group/group" mode="covers" priority="3">
+    <xsl:call-template name="gap"><xsl:with-param name="what" select="concat('&lt;', local-name(), '&gt; in a grid group')" /></xsl:call-template>
+  </xsl:template>
+  <xsl:template match="group/group/sprite[*[not(self::rectangle)] or rectangle/*[not(self::color)]]" mode="covers" priority="3">
+    <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;sprite&gt; in a grid group other than a colour'" /></xsl:call-template>
   </xsl:template>
   <xsl:template match="member/variables | member/sprite" mode="covers" priority="2">
     <xsl:call-template name="gap"><xsl:with-param name="what" select="concat('&lt;', local-name(), '&gt; of a member')" /></xsl:call-template>
   </xsl:template>
-  <xsl:template match="text[count(content | number) != 1 or not(@style)] | style[font or not(size)]" mode="covers" priority="2">
+  <xsl:template match="text[count(content | number) != 1 and not(parent::sprite/parent::group[rows]/row/sprite/text/content)] | text[not(@style)][not(parent::sprite/parent::row)]
+      | row/sprite/text[@style or color or count(content) != 1] | style[font or not(size)]" mode="covers" priority="2">
     <xsl:call-template name="gap"><xsl:with-param name="what" select="'a text other than one &lt;content&gt; or &lt;number&gt; in a style with a size'" /></xsl:call-template>
   </xsl:template>
-  <xsl:template match="sound[count(*) != 1 or not(note) or @wave or note/@wave or note/@to or string(number(note/@pitch)) = 'NaN']" mode="covers" priority="2">
-    <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;sound&gt; other than one square note in hertz'" /></xsl:call-template>
+  <xsl:template match="sound[count(note) != 1 or *[not(self::note or self::volume)] or note/@*[not(local-name() = 'pitch' or local-name() = 'to' or local-name() = 'wave')]
+      or (@wave | note/@wave)[not(. = 'square' or . = 'triangle' or . = 'sine' or . = 'sawtooth')] or @*[not(local-name() = 'name' or local-name() = 'wave')]]" mode="covers" priority="2">
+    <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;sound&gt; other than one note, its wave not noise'" /></xsl:call-template>
   </xsl:template>
   <xsl:template match="keeps/keep" mode="covers" priority="2">
     <xsl:if test="not($everything[@name = current()/@object][count(. | $things) != count($things)])">
@@ -76,17 +119,32 @@
   <xsl:template match="computer[not(@seat)] | state[count(computer) &gt; 1]/computer" mode="covers" priority="2">
     <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;computer&gt; other than one for a seat'" /></xsl:call-template>
   </xsl:template>
-  <xsl:template match="conditions/condition[condition or first or otherwise]" mode="covers" priority="2">
+  <xsl:template match="conditions/condition[count(condition) &gt; 1 or first or otherwise or (condition and *[not(self::condition or self::any or self::remaining
+      or self::atleast or self::atmost or self::above or self::below or self::equal or self::unequal)])]" mode="covers" priority="2">
     <xsl:call-template name="gap"><xsl:with-param name="what" select="'a state &lt;condition&gt; holding conditions'" /></xsl:call-template>
   </xsl:template>
   <xsl:template match="input[trigger and *[not(self::button or self::trigger)]] | input[@on]" mode="covers" priority="2">
     <xsl:call-template name="gap"><xsl:with-param name="what" select="'a key that triggers and does more, or on= a moment'" /></xsl:call-template>
   </xsl:template>
+  <!-- The mouse across the window, steering a thing. -->
+  <xsl:template match="input[@axis]" mode="covers" priority="3">
+    <xsl:if test="@axis != 'mouse.x' or * [not(self::trigger)] or count(trigger) != 1
+        or not($things[@name = current()/trigger/@object]/actions/action[@name = current()/trigger/@action][count(*) = 1]/track[not(node())])">
+      <xsl:call-template name="gap"><xsl:with-param name="what" select="'an axis other than mouse.x steering a thing by &lt;track /&gt;'" /></xsl:call-template>
+    </xsl:if>
+  </xsl:template>
   <xsl:template match="centered[node()[not(self::offset)]] | centered[not(ancestor::*[sprite][1]/sprite/rectangle or ancestor::*[sprite][1]/sprite/text)]" mode="covers" priority="2">
     <xsl:call-template name="gap"><xsl:with-param name="what" select="'&lt;centered&gt; other than on a rectangle or a text, with an offset at most'" /></xsl:call-template>
   </xsl:template>
-  <xsl:template match="group[not(member)][(columns &gt; 1 and position/x//centered) or (rows &gt; 1 and position/y//centered)]" mode="covers" priority="3">
+  <xsl:template match="group[not(member) and not(sprite/text)][(columns &gt; 1 and position/x//centered) or (rows &gt; 1 and position/y//centered)]" mode="covers" priority="3">
     <xsl:call-template name="gap"><xsl:with-param name="what" select="'&lt;centered&gt; across a block of more than one'" /></xsl:call-template>
+  </xsl:template>
+
+  <!-- No more than so many of a grid's cells left. -->
+  <xsl:template match="condition/remaining" mode="covers" priority="2">
+    <xsl:if test="not($grids[@name = current()/../@object]) or ../@class or string(number(.)) = 'NaN'">
+      <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;remaining&gt; other than of a grid'" /></xsl:call-template>
+    </xsl:if>
   </xsl:template>
 
   <!-- The parts covered: the game, its window and numbers, its states of
@@ -102,7 +160,8 @@
       | objects/object | objects/group | group/member
       | object/sprite | object/position | object/velocity | object/collisions | object/variables | object/actions
       | group/sprite | group/position | group/collisions | group/actions | group/variables
-      | group/columns | group/rows | group/padding | padding/x | padding/y
+      | group/columns | group/rows | group/padding | padding/x | padding/y | group/group | group/row | row/sprite
+      | sound/volume | text/color | x/right | x/left | y/top | y/bottom | right/offset | left/offset | top/offset | bottom/offset
       | member/position | member/velocity
       | sprite/rectangle | rectangle/width | rectangle/height | rectangle/color
       | sprite/text | text/content | text/number
@@ -120,7 +179,8 @@
   <xsl:template mode="covers" match="
       game/@*[namespace-uri() != ''] | window/@name | variable/@name | state/@name | style/@name | sound/@name | note/@pitch
       | object/@name | group/@name | member/@name | group/@class | object/@class | sprite/@name | text/@style
-      | action/@name | collision/@edge | collision/@class | input/@button | seat/@number | computer/@seat
+      | action/@name | collision/@edge | collision/@class | collision/@object | input/@button | seat/@number | computer/@seat
+      | row/@number | note/@to | note/@wave | sound/@wave
       | show/@object | show/@state | condition/@object | condition/@class | condition/@variable" />
 
   <!-- A name in a value must be one the program has: a number, a
@@ -146,12 +206,12 @@
       <xsl:call-template name="gap"><xsl:with-param name="what" select="concat('the name ', $quote, $text, $quote)" /></xsl:call-template>
     </xsl:if>
   </xsl:template>
-  <xsl:template mode="covers" match="text()[normalize-space(.) != ''][parent::content or parent::size or parent::color or parent::note or parent::columns or parent::rows]" />
+  <xsl:template mode="covers" match="text()[normalize-space(.) != ''][parent::content or parent::size or parent::color or parent::note or parent::columns or parent::rows or parent::volume]" />
 
-  <!-- <self> names one of the object's own variables. -->
+  <!-- <self> names one of the object's own variables, or a grid cell's. -->
   <xsl:template mode="covers" match="self">
-    <xsl:variable name="self" select="ancestor::*[self::object or self::member][1]" />
-    <xsl:if test="not(($self/variables/variable | $self/parent::group/variables/variable)[@name = normalize-space(current())])">
+    <xsl:variable name="self" select="ancestor::*[self::object or self::member or self::group[count(. | $grids) = count($grids)]][1]" />
+    <xsl:if test="not(($self/variables/variable | $self/parent::group/variables/variable | $self/group/variables/variable)[@name = normalize-space(current())])">
       <xsl:call-template name="gap"><xsl:with-param name="what" select="concat('&lt;self&gt;', normalize-space(.), '&lt;/self&gt;')" /></xsl:call-template>
     </xsl:if>
   </xsl:template>

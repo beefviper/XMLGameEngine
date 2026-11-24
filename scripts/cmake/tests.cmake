@@ -152,6 +152,8 @@ add_executable(xgetest
 	"games/prototypes/pong_min/source/pong_min.cpp"
 	"xge/tests/engine/test_prototype_pong_full.cpp"
 	"games/prototypes/pong/source/pong.cpp"
+	"xge/tests/engine/test_prototype_breakout.cpp"
+	"games/prototypes/breakout/source/breakout.cpp"
 	"xge/cli/source/cli.cpp"
 	"xge/cli/source/generate.cpp"
 	"xge/tests/long/test_random_keys.cpp"
@@ -165,10 +167,10 @@ add_executable(xgetest
 
 # cli.cpp and generate.cpp are xgecli's own code, compiled in again here so
 # test_cli.cpp and test_generate.cpp can call it; the library does not contain
-# it (see executables.cmake). pong_min.cpp and pong.cpp are the hand-written
-# Pongs (games/prototypes/), stand-alone on SFML: test_prototype_pong.cpp and
-# test_prototype_pong_full.cpp check what they do.
-target_include_directories(xgetest PRIVATE xge/cli/include xge/tests xge/tests/helpers games/prototypes/pong_min/source games/prototypes/pong/source)
+# it (see executables.cmake). pong_min.cpp, pong.cpp and breakout.cpp are the
+# hand-written games (games/prototypes/), stand-alone on SFML: each
+# test_prototype_*.cpp checks what one does.
+target_include_directories(xgetest PRIVATE xge/cli/include xge/tests xge/tests/helpers games/prototypes/pong_min/source games/prototypes/pong/source games/prototypes/breakout/source)
 
 target_compile_features(xgetest PRIVATE cxx_std_20)
 
@@ -320,6 +322,7 @@ add_executable(xgetest-generated EXCLUDE_FROM_ALL
 	"xge/tests/generated/test_written_games.cpp"
 	"xge/tests/written/pong_min.h"
 	"xge/tests/written/pong.h"
+	"xge/tests/written/breakout.h"
 )
 # Visual Studio's Build Solution leaves it out too.
 # In an IDE, out of the way in a folder of its own (with the hand-written
@@ -392,7 +395,8 @@ target_include_directories(xgetest-generated PRIVATE "${XGE_GENERATED_DIR}" xge/
 # (xge/tests/written/<game>.h). test_generate.cpp holds the same list.
 set(windows_cpp_games
 	"pong_min=pong_min::Pong"
-	"pong=pong::Pong")
+	"pong=pong::Pong"
+	"breakout=breakout::Breakout")
 set(written_includes "")
 set(written_entries "")
 foreach(entry IN LISTS windows_cpp_games)
