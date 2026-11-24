@@ -18,6 +18,8 @@
 #include "window/null.h"
 
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/interfaces/catch_interfaces_config.hpp>
+#include <catch2/internal/catch_context.hpp>
 
 #include <algorithm>
 #include <filesystem>
@@ -80,6 +82,42 @@ namespace
 		return shots;
 	}
 
+	// Whole frames in a failure only when asked for (-v high): a frame of a
+	// big game is hundreds of lines.
+	bool wholeFrames()
+	{
+		return Catch::getCurrentContext().getConfig()->verbosity() == Catch::Verbosity::High;
+	}
+
+	// The lines of two frames that differ, file then generated, the first
+	// few of them.
+	std::string differences(const std::string& fromFile, const std::string& generated)
+	{
+		constexpr int shown = 8;
+		std::istringstream a(fromFile);
+		std::istringstream b(generated);
+		std::ostringstream out;
+		int found = 0;
+		std::string lineA;
+		std::string lineB;
+		bool moreA = static_cast<bool>(std::getline(a, lineA));
+		bool moreB = static_cast<bool>(std::getline(b, lineB));
+		while ((moreA || moreB) && found < shown)
+		{
+			if (!moreA) { lineA = "(no line)"; }
+			if (!moreB) { lineB = "(no line)"; }
+			if (lineA != lineB)
+			{
+				out << "  file:      " << lineA << "\n  generated: " << lineB << '\n';
+				++found;
+			}
+			moreA = moreA && static_cast<bool>(std::getline(a, lineA));
+			moreB = moreB && static_cast<bool>(std::getline(b, lineB));
+		}
+		if (found == shown) { out << "  ...\n"; }
+		return out.str();
+	}
+
 	struct SeedReset
 	{
 		~SeedReset() { Evaluator::fixRandomSeed(std::nullopt); }
@@ -98,7 +136,8 @@ TEST_CASE("every generated game plays frame for frame as the engine plays its fi
 			Evaluator::fixRandomSeed(20261011u);
 			Game fromFile{ std::string(each.file) };
 			const std::vector<std::string> expected = play(fromFile);
-			CHECK(std::any_of(expected.begin(), expected.end(), [&](const std::string& shot) { return shot != expected.front(); })); // the keys did play it
+			const bool keysPlayedIt = std::any_of(expected.begin(), expected.end(), [&](const std::string& shot) { return shot != expected.front(); });
+			CHECK(keysPlayedIt);
 
 			Evaluator::fixRandomSeed(20261011u);
 			Game generated{ each.read() };
@@ -109,7 +148,12 @@ TEST_CASE("every generated game plays frame for frame as the engine plays its fi
 			{
 				if (played[frame] != expected[frame])
 				{
-					INFO("frame " << frame << "\nfrom the file:\n" << expected[frame] << "\ngenerated:\n" << played[frame]);
+					if (wholeFrames())
+					{
+						INFO("frame " << frame << "\nfrom the file:\n" << expected[frame] << "\ngenerated:\n" << played[frame]);
+						FAIL("the generated game played differently");
+					}
+					INFO("frame " << frame << ", the lines that differ (-v high for whole frames):\n" << differences(expected[frame], played[frame]));
 					FAIL("the generated game played differently");
 				}
 			}
