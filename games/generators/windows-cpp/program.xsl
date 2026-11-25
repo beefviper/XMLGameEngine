@@ -46,8 +46,8 @@
 
   <!-- Sounds: plain ones are a square wave at the usual volume; the rest
        name their wave, slide or loudness. -->
-  <xsl:variable name="plain-sounds" select="$sounds[not(@wave or note/@wave or note/@to or volume)]" />
-  <xsl:variable name="shaped-sounds" select="$sounds[@wave or note/@wave or note/@to or volume]" />
+  <xsl:variable name="plain-sounds" select="$sounds[not(@wave or note/@wave or note/@to or volume) and count(note) = 1]" />
+  <xsl:variable name="shaped-sounds" select="$sounds[count(. | $plain-sounds) != count($plain-sounds)]" />
   <xsl:variable name="wave-list">
     <xsl:if test="$plain-sounds or $sounds[not(@wave or note/@wave)]"><w>square</w></xsl:if>
     <xsl:for-each select="$sounds/@wave | $sounds/note/@wave">
@@ -80,6 +80,7 @@
     <xsl:if test="$texts-drawn or $sounds"><xsl:text>#include &lt;iostream&gt;&#10;</xsl:text></xsl:if>
     <xsl:if test="$sounds"><xsl:text>#include &lt;map&gt;&#10;</xsl:text></xsl:if>
     <xsl:text>#include &lt;optional&gt;&#10;</xsl:text>
+    <xsl:if test="$waves = 'noise'"><xsl:text>#include &lt;random&gt;&#10;</xsl:text></xsl:if>
     <xsl:if test="$texts-drawn"><xsl:text>#include &lt;string&gt;&#10;</xsl:text></xsl:if>
     <xsl:if test="$sounds"><xsl:text>#include &lt;vector&gt;&#10;</xsl:text></xsl:if>
     <xsl:text>
@@ -118,7 +119,25 @@ namespace
 			shape.setFillColor(color);
 			window.draw(shape);
 		}
-
+</xsl:text>
+      <xsl:if test="$pictures">
+        <xsl:text>
+		// The lit pixels of a picture's rows over the box at `position`, `extent` big.
+		void pixels(const std::vector&lt;std::string&gt;&amp; rows, sf::Vector2f position, sf::Vector2f extent, sf::Color color = sf::Color::White)
+		{
+			const sf::Vector2f pixel{ extent.x / static_cast&lt;float&gt;(rows.front().size()), extent.y / static_cast&lt;float&gt;(rows.size()) };
+			for (std::size_t row = 0; row &lt; rows.size(); ++row)
+			{
+				for (std::size_t column = 0; column &lt; rows[row].size(); ++column)
+				{
+					const sf::Vector2f corner{ static_cast&lt;float&gt;(column) * pixel.x, static_cast&lt;float&gt;(row) * pixel.y };
+					if (rows[row][column] != '.') { box(position + corner, pixel, color); }
+				}
+			}
+		}
+</xsl:text>
+      </xsl:if>
+      <xsl:text>
 		// How big these words are drawn: the box their letters cover.
 		sf::Vector2f measure(const std::string&amp; words, const Style&amp; style) const
 		{
@@ -150,6 +169,23 @@ namespace
 		window.draw(shape);
 	}
 </xsl:text>
+      <xsl:if test="$pictures">
+        <xsl:text>
+	// The lit pixels of a picture's rows over the box at `position`, `extent` big.
+	void pixels(sf::RenderWindow&amp; window, const std::vector&lt;std::string&gt;&amp; rows, sf::Vector2f position, sf::Vector2f extent, sf::Color color = sf::Color::White)
+	{
+		const sf::Vector2f pixel{ extent.x / static_cast&lt;float&gt;(rows.front().size()), extent.y / static_cast&lt;float&gt;(rows.size()) };
+		for (std::size_t row = 0; row &lt; rows.size(); ++row)
+		{
+			for (std::size_t column = 0; column &lt; rows[row].size(); ++column)
+			{
+				const sf::Vector2f corner{ static_cast&lt;float&gt;(column) * pixel.x, static_cast&lt;float&gt;(row) * pixel.y };
+				if (rows[row][column] != '.') { box(window, position + corner, pixel, color); }
+			}
+		}
+	}
+</xsl:text>
+      </xsl:if>
     </xsl:if>
     <xsl:for-each select="$colored-grids">
       <xsl:variable name="colors"><xsl:call-template name="grid-colors-name" /></xsl:variable>
@@ -171,11 +207,11 @@ namespace
       <xsl:text>
 	// A square wave, faded in and out over two thousandths of a second so it
 	// doesn't click.
-	sf::SoundBuffer tone(double hertz, double seconds)
+	sf::SoundBuffer tone(double hertz, double duration)
 	{
 		constexpr unsigned rate = 44100;
 		constexpr double volume = 0.3;
-		const std::size_t count = static_cast&lt;std::size_t&gt;(seconds * rate);
+		const std::size_t count = static_cast&lt;std::size_t&gt;(duration * rate);
 		const std::size_t fade = std::min&lt;std::size_t&gt;(count / 4, rate / 500);
 
 		std::vector&lt;std::int16_t&gt; samples(count);
@@ -333,7 +369,7 @@ int main(</xsl:text>
   <!-- const sf::Color lightgrey{ 192, 192, 192 }: the colours SFML has no
        name for. -->
   <xsl:template name="color-constants">
-    <xsl:variable name="used" select="(//rectangle/color | $styles/color)[not(contains($basic-colors, concat('|', normalize-space(.), '|')))]" />
+    <xsl:variable name="used" select="(//rectangle/color | //text/color | $styles/color)[not(contains($basic-colors, concat('|', normalize-space(.), '|')))]" />
     <xsl:variable name="list">
       <xsl:for-each select="$used">
         <xsl:if test="not(normalize-space(.) = preceding::color[count(. | $used) = count($used)]/text())"><c><xsl:value-of select="normalize-space(.)" /></c></xsl:if>
@@ -477,6 +513,17 @@ int main(</xsl:text>
       <xsl:when test="count(. | $text-rows) = count($text-rows)">
         <xsl:call-template name="text-row-lines" />
       </xsl:when>
+      <xsl:when test="count(. | $things) = count($things) and $pictures[@name = $sprite/bitmap/@from]">
+        <xsl:variable name="thing"><xsl:call-template name="object-name" /></xsl:variable>
+        <xsl:variable name="rows"><xsl:call-template name="picture-name"><xsl:with-param name="bitmap" select="$pictures[@name = $sprite/bitmap/@from]" /></xsl:call-template></xsl:variable>
+        <line>
+          <xsl:choose>
+            <xsl:when test="$texts-drawn">picture.pixels(</xsl:when>
+            <xsl:otherwise>pixels(window, </xsl:otherwise>
+          </xsl:choose>
+          <xsl:value-of select="concat($rows, ', game.', $thing, '.position, game.', $thing, '.size', $color, ');')" />
+        </line>
+      </xsl:when>
       <xsl:when test="count(. | $things) = count($things)">
         <xsl:variable name="thing"><xsl:call-template name="object-name" /></xsl:variable>
         <line><xsl:value-of select="concat($box, 'game.', $thing, '.position, game.', $thing, '.size', $color, ');')" /></line>
@@ -566,21 +613,30 @@ int main(</xsl:text>
     <xsl:variable name="object" select="." />
     <xsl:variable name="named"><xsl:call-template name="object-name" /></xsl:variable>
     <xsl:variable name="base"><xsl:call-template name="camel"><xsl:with-param name="name" select="sprite[1]/text/@style" /></xsl:call-template></xsl:variable>
-    <xsl:variable name="colored" select="count(sprite) = 2 and sprite/text/color" />
+    <xsl:variable name="first-style"><xsl:call-template name="text-style"><xsl:with-param name="sprite" select="sprite[1]" /><xsl:with-param name="style" select="$base" /></xsl:call-template></xsl:variable>
+    <xsl:variable name="styled">
+      <xsl:for-each select="sprite[position() &gt; 1]">
+        <xsl:variable name="own"><xsl:call-template name="text-style"><xsl:with-param name="sprite" select="." /><xsl:with-param name="style" select="$base" /></xsl:call-template></xsl:variable>
+        <xsl:if test="$own != $first-style">yes</xsl:if>
+      </xsl:for-each>
+    </xsl:variable>
+    <xsl:variable name="colored" select="$styled != ''" />
     <xsl:variable name="style">
       <xsl:choose>
         <xsl:when test="$colored"><xsl:value-of select="concat($named, 'Style')" /></xsl:when>
-        <xsl:otherwise><xsl:call-template name="text-style"><xsl:with-param name="sprite" select="sprite[1]" /><xsl:with-param name="style" select="$base" /></xsl:call-template></xsl:otherwise>
+        <xsl:otherwise><xsl:value-of select="$first-style" /></xsl:otherwise>
       </xsl:choose>
     </xsl:variable>
     <xsl:variable name="words">
       <xsl:choose>
-        <xsl:when test="count(sprite) = 2">
-          <xsl:value-of select="concat('game.', $named, '.look == ')" />
-          <xsl:call-template name="look-name"><xsl:with-param name="object" select="." /><xsl:with-param name="look" select="sprite[2]/@name" /></xsl:call-template>
-          <xsl:text> ? </xsl:text>
-          <xsl:call-template name="string"><xsl:with-param name="text" select="sprite[2]/text/content" /></xsl:call-template>
-          <xsl:text> : </xsl:text>
+        <xsl:when test="count(sprite) &gt; 1">
+          <xsl:for-each select="sprite[position() &gt; 1]">
+            <xsl:value-of select="concat('game.', $named, '.look == ')" />
+            <xsl:call-template name="look-name"><xsl:with-param name="object" select="$object" /><xsl:with-param name="look" select="@name" /></xsl:call-template>
+            <xsl:text> ? </xsl:text>
+            <xsl:call-template name="string"><xsl:with-param name="text" select="text/content" /></xsl:call-template>
+            <xsl:text> : </xsl:text>
+          </xsl:for-each>
           <xsl:call-template name="string"><xsl:with-param name="text" select="sprite[1]/text/content" /></xsl:call-template>
         </xsl:when>
         <xsl:when test="sprite/text/number">
@@ -605,11 +661,15 @@ int main(</xsl:text>
     </xsl:variable>
     <xsl:if test="$colored">
       <line>
-        <xsl:value-of select="concat('const Style ', $named, 'Style = game.', $named, '.look == ')" />
-        <xsl:call-template name="look-name"><xsl:with-param name="object" select="." /><xsl:with-param name="look" select="sprite[2]/@name" /></xsl:call-template>
-        <xsl:text> ? Style</xsl:text>
-        <xsl:call-template name="text-style"><xsl:with-param name="sprite" select="sprite[2]" /><xsl:with-param name="style" select="$base" /><xsl:with-param name="always" select="true()" /></xsl:call-template>
-        <xsl:text> : Style</xsl:text>
+        <xsl:value-of select="concat('const Style ', $named, 'Style = ')" />
+        <xsl:for-each select="sprite[position() &gt; 1]">
+          <xsl:value-of select="concat('game.', $named, '.look == ')" />
+          <xsl:call-template name="look-name"><xsl:with-param name="object" select="$object" /><xsl:with-param name="look" select="@name" /></xsl:call-template>
+          <xsl:text> ? Style</xsl:text>
+          <xsl:call-template name="text-style"><xsl:with-param name="sprite" select="." /><xsl:with-param name="style" select="$base" /><xsl:with-param name="always" select="true()" /></xsl:call-template>
+          <xsl:text> : </xsl:text>
+        </xsl:for-each>
+        <xsl:text>Style</xsl:text>
         <xsl:call-template name="text-style"><xsl:with-param name="sprite" select="sprite[1]" /><xsl:with-param name="style" select="$base" /><xsl:with-param name="always" select="true()" /></xsl:call-template>
         <xsl:text>;</xsl:text>
       </line>
@@ -623,15 +683,20 @@ int main(</xsl:text>
     <line><xsl:value-of select="concat('picture.text(', $shown, ', ', $style, ', { ', $x, ', ', $y, ' });')" /></line>
   </xsl:template>
 
-  <!-- A text's style: the style it names, or that style's size in a colour
+  <!-- A text's style: the style it names, or that style with a size or colour
        of the text's own. -->
   <xsl:template name="text-style">
     <xsl:param name="sprite" />
     <xsl:param name="style" />
     <xsl:param name="always" select="false()" />
     <xsl:choose>
-      <xsl:when test="$sprite/text/color or $always">
-        <xsl:value-of select="concat('{ ', $style, '.size, ')" />
+      <xsl:when test="$sprite/text/color or $sprite/text/size or $always">
+        <xsl:text>{ </xsl:text>
+        <xsl:choose>
+          <xsl:when test="$sprite/text/size"><xsl:value-of select="normalize-space($sprite/text/size)" /></xsl:when>
+          <xsl:otherwise><xsl:value-of select="concat($style, '.size')" /></xsl:otherwise>
+        </xsl:choose>
+        <xsl:text>, </xsl:text>
         <xsl:choose>
           <xsl:when test="$sprite/text/color"><xsl:call-template name="color"><xsl:with-param name="color" select="normalize-space($sprite/text/color)" /></xsl:call-template></xsl:when>
           <xsl:otherwise><xsl:value-of select="concat($style, '.color')" /></xsl:otherwise>
@@ -707,8 +772,9 @@ int main(</xsl:text>
     <xsl:text>Colors</xsl:text>
   </xsl:template>
 
-  <!-- tone(220, 0.03), or tone(Wave::Triangle, 329.63, 82.41, 0.4, 0.4):
-       a sound's note, its wave, slide and loudness when it has any. -->
+  <!-- tone(220, 0.03), or tone({ { Wave::Triangle, 329.63, 82.41, 0.4 } }, 0.4):
+       a plain sound's note, or a shaped one's notes, each its wave, pitch,
+       slide and length, and the sound's loudness. -->
   <xsl:template name="tone-call">
     <xsl:variable name="hertz"><xsl:call-template name="hertz"><xsl:with-param name="pitch" select="normalize-space(note/@pitch)" /></xsl:call-template></xsl:variable>
     <xsl:choose>
@@ -716,18 +782,32 @@ int main(</xsl:text>
         <xsl:value-of select="concat('tone(', $hertz, ', ', normalize-space(note), ')')" />
       </xsl:when>
       <xsl:otherwise>
-        <xsl:variable name="wave" select="(note/@wave | @wave)[1]" />
-        <xsl:text>tone(Wave::</xsl:text>
+        <xsl:variable name="sound" select="." />
+        <xsl:text>tone({</xsl:text>
+        <xsl:for-each select="note">
+          <xsl:if test="position() &gt; 1">,</xsl:if>
+          <xsl:choose>
+            <xsl:when test="last() &gt; 1"><xsl:text>&#10;&#9;&#9;&#9;</xsl:text></xsl:when>
+            <xsl:otherwise><xsl:text> </xsl:text></xsl:otherwise>
+          </xsl:choose>
+          <xsl:variable name="wave" select="(@wave | $sound/@wave)[1]" />
+          <xsl:variable name="from"><xsl:call-template name="hertz"><xsl:with-param name="pitch" select="normalize-space(@pitch)" /></xsl:call-template></xsl:variable>
+          <xsl:text>{ Wave::</xsl:text>
+          <xsl:choose>
+            <xsl:when test="$wave"><xsl:call-template name="type-word"><xsl:with-param name="name" select="$wave" /></xsl:call-template></xsl:when>
+            <xsl:otherwise>Square</xsl:otherwise>
+          </xsl:choose>
+          <xsl:value-of select="concat(', ', $from, ', ')" />
+          <xsl:choose>
+            <xsl:when test="@to"><xsl:call-template name="hertz"><xsl:with-param name="pitch" select="normalize-space(@to)" /></xsl:call-template></xsl:when>
+            <xsl:otherwise><xsl:value-of select="$from" /></xsl:otherwise>
+          </xsl:choose>
+          <xsl:value-of select="concat(', ', normalize-space(.), ' }')" />
+        </xsl:for-each>
         <xsl:choose>
-          <xsl:when test="$wave"><xsl:call-template name="type-word"><xsl:with-param name="name" select="$wave" /></xsl:call-template></xsl:when>
-          <xsl:otherwise>Square</xsl:otherwise>
+          <xsl:when test="count(note) &gt; 1"><xsl:text>&#10;&#9;&#9;}, </xsl:text></xsl:when>
+          <xsl:otherwise><xsl:text> }, </xsl:text></xsl:otherwise>
         </xsl:choose>
-        <xsl:value-of select="concat(', ', $hertz, ', ')" />
-        <xsl:choose>
-          <xsl:when test="note/@to"><xsl:call-template name="hertz"><xsl:with-param name="pitch" select="normalize-space(note/@to)" /></xsl:call-template></xsl:when>
-          <xsl:otherwise><xsl:value-of select="$hertz" /></xsl:otherwise>
-        </xsl:choose>
-        <xsl:value-of select="concat(', ', normalize-space(note), ', ')" />
         <xsl:choose>
           <xsl:when test="volume"><xsl:value-of select="normalize-space(volume)" /></xsl:when>
           <xsl:otherwise>0.3</xsl:otherwise>
@@ -737,9 +817,11 @@ int main(</xsl:text>
     </xsl:choose>
   </xsl:template>
 
-  <!-- The waves the sounds use, a tone of any of them sliding in pitch, and
-       a plain square one when some sounds are plain. -->
+  <!-- The waves the sounds use, notes of any of them sliding in pitch one
+       after another, and a plain square tone when some sounds are plain. -->
   <xsl:template name="shaped-tone">
+    <xsl:variable name="pitched" select="$waves[. != 'noise']" />
+    <xsl:variable name="noisy" select="$waves[. = 'noise']" />
     <xsl:text>
 	enum class Wave { </xsl:text>
     <xsl:for-each select="$waves">
@@ -748,44 +830,89 @@ int main(</xsl:text>
     </xsl:for-each>
     <xsl:text> };
 
+	// A wave sliding evenly in pitch from `hertz` to `toHertz`.
+	struct Note
+	{
+		Wave wave;
+		double hertz;
+		double toHertz;
+		double duration;
+	};
+</xsl:text>
+    <xsl:if test="$pitched">
+      <xsl:text>
 	// How high the wave is, -1 to 1, at `phase` (0 to 1) through one cycle.
 	double height(Wave wave, double phase)
 	{
 </xsl:text>
-    <xsl:for-each select="$waves[position() &gt; 1]">
-      <xsl:text>&#9;&#9;if (wave == Wave::</xsl:text>
-      <xsl:call-template name="type-word"><xsl:with-param name="name" select="." /></xsl:call-template>
-      <xsl:text>) { return </xsl:text>
-      <xsl:call-template name="wave-height" />
-      <xsl:text>; }&#10;</xsl:text>
-    </xsl:for-each>
-    <xsl:text>&#9;&#9;</xsl:text>
-    <xsl:if test="count($waves) = 1">static_cast&lt;void&gt;(wave);&#10;&#9;&#9;</xsl:if>
-    <xsl:text>return </xsl:text>
-    <xsl:for-each select="$waves[1]"><xsl:call-template name="wave-height" /></xsl:for-each>
-    <xsl:text>;
+      <xsl:for-each select="$pitched[position() &gt; 1]">
+        <xsl:text>&#9;&#9;if (wave == Wave::</xsl:text>
+        <xsl:call-template name="type-word"><xsl:with-param name="name" select="." /></xsl:call-template>
+        <xsl:text>) { return </xsl:text>
+        <xsl:call-template name="wave-height" />
+        <xsl:text>; }&#10;</xsl:text>
+      </xsl:for-each>
+      <xsl:text>&#9;&#9;</xsl:text>
+      <xsl:if test="count($pitched) = 1">static_cast&lt;void&gt;(wave);&#10;&#9;&#9;</xsl:if>
+      <xsl:text>return </xsl:text>
+      <xsl:for-each select="$pitched[1]"><xsl:call-template name="wave-height" /></xsl:for-each>
+      <xsl:text>;
 	}
-
-	// A wave sliding evenly in pitch from `hertz` to `toHertz`, faded in and
-	// out over two thousandths of a second so it doesn't click.
-	sf::SoundBuffer tone(Wave wave, double hertz, double toHertz, double seconds, double volume)
+</xsl:text>
+    </xsl:if>
+    <xsl:text>
+	// The notes one after another, each faded in and out over two
+	// thousandths of a second so it doesn't click</xsl:text>
+    <xsl:if test="$noisy">
+      <xsl:text>; noise is a new random
+	// level every half cycle, held in between, so the pitch sets how coarse
+	// the hiss is</xsl:text>
+    </xsl:if>
+    <xsl:text>.
+	sf::SoundBuffer tone(const std::vector&lt;Note&gt;&amp; notes, double volume)
 	{
 		constexpr unsigned rate = 44100;
-		const std::size_t count = static_cast&lt;std::size_t&gt;(seconds * rate);
-		const std::size_t fade = std::min&lt;std::size_t&gt;(count / 4, rate / 500);
-
-		std::vector&lt;std::int16_t&gt; samples(count);
-		double phase = 0.0;
-		for (std::size_t i = 0; i &lt; count; ++i)
+</xsl:text>
+    <xsl:if test="$noisy">
+      <xsl:text>		std::minstd_rand random;
+		std::uniform_real_distribution&lt;double&gt; level(-1, 1);
+</xsl:text>
+    </xsl:if>
+    <xsl:text>
+		std::vector&lt;std::int16_t&gt; samples;
+		for (const Note&amp; note : notes)
 		{
-			double level = height(wave, phase) * volume;
-			if (i &lt; fade) { level *= static_cast&lt;double&gt;(i) / static_cast&lt;double&gt;(fade); }
-			if (i &gt;= count - fade) { level *= static_cast&lt;double&gt;(count - 1 - i) / static_cast&lt;double&gt;(fade); }
-			samples[i] = static_cast&lt;std::int16_t&gt;(std::lround(level * 32767));
+			const std::size_t count = static_cast&lt;std::size_t&gt;(note.duration * rate);
+			const std::size_t fade = std::min&lt;std::size_t&gt;(count / 4, rate / 500);
+			double phase = 0.0;
+</xsl:text>
+    <xsl:if test="$noisy"><xsl:text>			double held = level(random);&#10;</xsl:text></xsl:if>
+    <xsl:text>			for (std::size_t i = 0; i &lt; count; ++i)
+			{
+				double value = </xsl:text>
+    <xsl:choose>
+      <xsl:when test="$noisy and $pitched">(note.wave == Wave::Noise ? held : height(note.wave, phase))</xsl:when>
+      <xsl:when test="$noisy">held</xsl:when>
+      <xsl:otherwise>height(note.wave, phase)</xsl:otherwise>
+    </xsl:choose>
+    <xsl:text> * volume;
+				if (i &lt; fade) { value *= static_cast&lt;double&gt;(i) / static_cast&lt;double&gt;(fade); }
+				if (i &gt;= count - fade) { value *= static_cast&lt;double&gt;(count - 1 - i) / static_cast&lt;double&gt;(fade); }
+				samples.push_back(static_cast&lt;std::int16_t&gt;(std::lround(value * 32767)));
 
-			const double through = static_cast&lt;double&gt;(i) / static_cast&lt;double&gt;(count);
-			phase += hertz * std::pow(toHertz / hertz, through) / rate;
-			phase -= std::floor(phase);
+				const double through = static_cast&lt;double&gt;(i) / static_cast&lt;double&gt;(count);
+				phase += note.hertz * std::pow(note.toHertz / note.hertz, through) / rate;
+</xsl:text>
+    <xsl:if test="$noisy">
+      <xsl:text>				if (note.wave == Wave::Noise &amp;&amp; phase &gt;= 0.5)
+				{
+					held = level(random);
+					phase -= 0.5;
+				}
+</xsl:text>
+    </xsl:if>
+    <xsl:text>				phase -= std::floor(phase);
+			}
 		}
 
 		sf::SoundBuffer buffer;
@@ -799,9 +926,9 @@ int main(</xsl:text>
     <xsl:if test="$plain-sounds">
       <xsl:text>
 	// A plain tone: a square wave at the usual loudness.
-	sf::SoundBuffer tone(double hertz, double seconds)
+	sf::SoundBuffer tone(double hertz, double duration)
 	{
-		return tone(Wave::Square, hertz, hertz, seconds, 0.3);
+		return tone({ { Wave::Square, hertz, hertz, duration } }, 0.3);
 	}
 </xsl:text>
     </xsl:if>

@@ -121,7 +121,7 @@ cmake --build build          # output/pong.html
 
 In the page the canvas fills the browser's window, the game's proportions kept. Keys, the mouse and pads work as in a window. Sound starts at the first key press or click, as browsers require. What the game keeps is saved in the browser's storage for the page.
 
-`xgecli pong --generate windows-cpp` writes the game instead **as a person would write it**: a small program of its own on SFML 3 that uses none of the engine and never names it. Its numbers are constants, each object a `Thing` (where, how fast, how big), or a struct on it when it counts something (`struct Ball : Thing { int hits{ 0 }; }`), and its rules plain code in one `frame(seconds)` (keys held, moves by the time passed, edges, meetings, the game's own tests) with a few small functions where they are used (`touching`, `deflect`, `computerHolds`). A grid of rows and columns whose cells meet something is a list of them (`std::vector<Brick> wall`), built a kind at a time and erased from as cells die. Its states are a stack of `Screen`s, each drawn by its own function; its sounds tones made in `main.cpp` (a square wave, or another wave sliding in pitch, notes named as hertz); what it keeps a small text file beside it (`pong-kept.txt`). The stylesheets are in `games/generators/windows-cpp/`:
+`xgecli pong --generate windows-cpp` writes the game instead **as a person would write it**: a small program of its own on SFML 3 that uses none of the engine and never names it. Its numbers are constants, each object a `Thing` (where, how fast, how big), or a struct on it when it counts something (`struct Ball : Thing { int hits{ 0 }; }`), and its rules plain code in one `frame(elapsed)` (keys held, moves by the time passed, edges, meetings, the game's own tests) with a few small functions where they are used (`touching`, `deflect`, `computerHolds`). A grid of rows and columns whose cells meet something is a list of them (`std::vector<Brick> wall`), built a kind at a time and erased from as cells die. A picture is its rows of text (`rocketsPicture`), drawn a lit pixel at a time and, where the file says so, touched by its lit pixels only (`touchingPixels`). Its states are a stack of `Screen`s, each drawn by its own function; its sounds tones made in `main.cpp` (a square wave, or another wave or noise sliding in pitch, several notes one after another, notes named as hertz); what it keeps a small text file beside it (`pong-kept.txt`). The stylesheets are in `games/generators/windows-cpp/`:
 
 | Written | By | What |
 |---|---|---|
@@ -132,18 +132,18 @@ In the page the canvas fills the browser's window, the game's proportions kept. 
 
 `kinds.xsl` sorts the game's parts once for both targets: the things (what moves, meets or counts), the grids (rows and columns whose cells meet), the words and still pictures only drawn, the records (live variables, or more than one look), each variable a constant, a start value or a member, and what is kept.
 
-It writes `pong_min.xml`, `pong.xml` and `breakout.xml` for now; `ctest --test-dir build/generated` writes and builds each under `output/<config>/generated/windows-cpp/<game>/`. Before writing, it walks the game; for any other game it writes nothing and lists every part it has no words for yet, a line each with the object it is in:
+It writes `pong_min.xml`, `pong.xml`, `breakout.xml` and `spacerace.xml` for now; `ctest --test-dir build/generated` writes and builds each under `output/<config>/generated/windows-cpp/<game>/`. Before writing, it walks the game; for any other game it writes nothing and lists every part it has no words for yet, a line each with the object it is in:
 
 ```
-windows-cpp cannot write these parts of spacerace.xml yet; use engine-cpp for this game:
-  things moving in more than one <state>
-  a <collision> at an edge in a grid (group 'debris')
-  <number> in <row> (group 'debris')
-  <bitmap> in <sprite> (group 'rockets')
+windows-cpp cannot write these parts of kaboom.xml yet; use engine-cpp for this game:
+  <background> in <window>
+  <objects> in <game>
+  looks other than texts or rectangles of one colour (object 'bucket')
+  <scenes> in <state>
   ...
 ```
 
-`xgecli pong --generate web-js` writes the same game **as a person would write it for the browser**: one page, `<game>.html`, its rules in plain JavaScript on a canvas, readable by opening it in an editor. It is `windows-cpp` in another language, in the same shape (constants, a plain object per thing, an array per grid, start functions, screens as strings, `key()`, `mouse()`, one `frame(seconds)`, a `draw` function per screen), in a module script so its names never meet the browser's (`top`), with the browser's own parts for the rest: Web Audio for the tones, `localStorage` for what is kept, the browser's sans-serif for words. It covers the same games, walked by `windows-cpp`'s `covers.xsl`; a game it cannot write it lists in the same way, with "use web-asm for this game". The stylesheets are in `games/generators/web-js/`:
+`xgecli pong --generate web-js` writes the same game **as a person would write it for the browser**: one page, `<game>.html`, its rules in plain JavaScript on a canvas, readable by opening it in an editor. It is `windows-cpp` in another language, in the same shape (constants, a plain object per thing, an array per grid, start functions, screens as strings, `key()`, `mouse()`, one `frame(elapsed)`, a `draw` function per screen), in a module script so its names never meet the browser's (`top`), with the browser's own parts for the rest: Web Audio for the tones, `localStorage` for what is kept, the browser's sans-serif for words. It covers the same games, walked by `windows-cpp`'s `covers.xsl`; a game it cannot write it lists in the same way, with "use web-asm for this game". The stylesheets are in `games/generators/web-js/`:
 
 | Written | By | What |
 |---|---|---|

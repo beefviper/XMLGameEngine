@@ -41,12 +41,19 @@
   <xsl:variable name="computer" select="$played/computer" />
   <xsl:variable name="moved" select="$things[@name = $held-inputs/trigger/@object]" />
   <xsl:variable name="owners" select="$played/objects/object[count(. | $things) = count($things)] | $played/objects/group[member[count(. | $things) = count($things)]]" />
-  <xsl:variable name="edge-owners" select="$owners[collisions/collision[@edge]]" />
-  <xsl:variable name="touch-owners" select="$owners[self::object][collisions/collision[not(@edge)] or @name = $grids/collisions/collision/@object]" />
+  <xsl:variable name="edge-owners" select="$owners[collisions/collision[@edge]] | $grids[collisions/collision[@edge]]" />
+  <!-- grids whose cells move: the way across of their rows -->
+  <xsl:variable name="moving-grids" select="$grids[row/velocity]" />
+  <xsl:variable name="touch-owners" select="$owners[self::object][collisions/collision[not(@edge)] or @name = $grids/collisions/collision/@object]
+      | $owners[self::group][collisions/collision[not(@edge)]]" />
+  <!-- what touches by its picture's lit pixels -->
+  <xsl:variable name="pixel-touchers" select="$owners[collisions/type = 'pixel']" />
   <xsl:variable name="new-game" select="boolean($inputs/reset[not(@object)])" />
   <xsl:variable name="reset-names" select="//reset/@object | //collision/reset[not(@object)]/ancestor::object[1]/@name" />
   <xsl:variable name="started" select="($things | $records)[not(@name = $kept/@name)][count(. | $things) = count($things)]
       [count(. | $records) = count($records) or .//random or @name = $reset-names] | $grids" />
+  <!-- members that go back where they started: their start kept in their record -->
+  <xsl:variable name="returners" select="$states/objects/group[member][collisions/collision/reset[not(@* or node())]]/member" />
   <xsl:variable name="randoms" select="$everything//random" />
   <xsl:variable name="deflects" select="$played//deflect" />
   <xsl:variable name="sounds" select="/game/sounds/sound" />
@@ -57,8 +64,8 @@
   <xsl:variable name="mouse-input" select="$states/inputs//input[@axis = 'mouse.x']" />
   <!-- the actions rules run, each a function of its own -->
   <xsl:variable name="called" select="$everything/actions/action[@name = //collision/trigger[not(@object)]/@action]" />
-  <!-- sounds that name their wave, slide or loudness -->
-  <xsl:variable name="shaped-sounds" select="$sounds[@wave or note/@wave or note/@to or volume]" />
+  <!-- sounds that name their wave, slide or loudness, or have several notes -->
+  <xsl:variable name="shaped-sounds" select="$sounds[@wave or note/@wave or note/@to or volume or count(note) &gt; 1]" />
 
   <!-- What the game is called: its window's name, or else the program's. -->
   <xsl:variable name="title">
@@ -94,6 +101,16 @@ const windowWidth = </xsl:text>
     <xsl:text>;&#10;</xsl:text>
     <xsl:call-template name="constants" />
     <xsl:call-template name="helpers" />
+    <xsl:for-each select="$pictures">
+      <xsl:value-of select="concat('&#10;// The ', @name, ' picture, a row a line: lit where it is not a dot.&#10;const ')" />
+      <xsl:call-template name="picture-name" />
+      <xsl:text> = [</xsl:text>
+      <xsl:for-each select="row">
+        <xsl:if test="position() &gt; 1">, </xsl:if>
+        <xsl:value-of select="concat('&quot;', normalize-space(.), '&quot;')" />
+      </xsl:for-each>
+      <xsl:text>];&#10;</xsl:text>
+    </xsl:for-each>
     <xsl:for-each select="$started">
       <xsl:choose>
         <xsl:when test="count(. | $grids) = count($grids)"><xsl:call-template name="grid-start-function" /></xsl:when>
@@ -277,6 +294,22 @@ function cosine(degrees) { return Math.cos(degrees * Math.PI / 180); }
 }
 </part>
       </xsl:if>
+      <xsl:if test="$pixel-touchers">
+        <part>// Whether a lit pixel of `picture`, drawn over `thing`, overlaps `other`.
+function touchingPixels(thing, picture, other) {
+	if (!touching(thing, other)) { return false; }
+	const pixel = { x: thing.size.x / picture[0].length, y: thing.size.y / picture.length };
+	for (let row = 0; row &lt; picture.length; ++row) {
+		for (let column = 0; column &lt; picture[row].length; ++column) {
+			if (picture[row][column] === ".") { continue; }
+			const lit = { position: { x: thing.position.x + column * pixel.x, y: thing.position.y + row * pixel.y }, size: pixel };
+			if (touching(lit, other)) { return true; }
+		}
+	}
+	return false;
+}
+</part>
+      </xsl:if>
       <xsl:if test="$touch-bounces">
         <part>// Off the side of `other` it hit: its speed into that side turned round.
 function bounce(thing, other) {
@@ -335,23 +368,44 @@ function deflect(thing, other, degrees) {
     <xsl:choose>
       <xsl:when test="$of">
         <xsl:text>{ x: </xsl:text>
-        <xsl:call-template name="value"><xsl:with-param name="node" select="$of/x" /><xsl:with-param name="self" select="$self" /><xsl:with-param name="axis" select="'x'" /><xsl:with-param name="start" select="$start" /></xsl:call-template>
+        <xsl:call-template name="axis-value"><xsl:with-param name="node" select="$of/x" /><xsl:with-param name="self" select="$self" /><xsl:with-param name="axis" select="'x'" /><xsl:with-param name="start" select="$start" /></xsl:call-template>
         <xsl:text>, y: </xsl:text>
-        <xsl:call-template name="value"><xsl:with-param name="node" select="$of/y" /><xsl:with-param name="self" select="$self" /><xsl:with-param name="axis" select="'y'" /><xsl:with-param name="start" select="$start" /></xsl:call-template>
+        <xsl:call-template name="axis-value"><xsl:with-param name="node" select="$of/y" /><xsl:with-param name="self" select="$self" /><xsl:with-param name="axis" select="'y'" /><xsl:with-param name="start" select="$start" /></xsl:call-template>
         <xsl:text> }</xsl:text>
       </xsl:when>
       <xsl:otherwise>{ x: 0, y: 0 }</xsl:otherwise>
     </xsl:choose>
   </xsl:template>
 
-  <!-- { x: width, y: height } of its rectangle, or its group's. -->
+  <!-- One axis of a pair: its value, or 0 when the file leaves it out. -->
+  <xsl:template name="axis-value">
+    <xsl:param name="node" />
+    <xsl:param name="self" />
+    <xsl:param name="axis" />
+    <xsl:param name="start" />
+    <xsl:choose>
+      <xsl:when test="$node"><xsl:call-template name="value"><xsl:with-param name="node" select="$node" /><xsl:with-param name="self" select="$self" /><xsl:with-param name="axis" select="$axis" /><xsl:with-param name="start" select="$start" /></xsl:call-template></xsl:when>
+      <xsl:otherwise>0</xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
+  <!-- { x: width, y: height } of its rectangle or picture, or its group's. -->
   <xsl:template name="size">
-    <xsl:variable name="rectangle" select="(sprite | parent::group/sprite)[1]/rectangle" />
-    <xsl:text>{ x: </xsl:text>
-    <xsl:call-template name="value"><xsl:with-param name="node" select="$rectangle/width" /><xsl:with-param name="self" select="." /></xsl:call-template>
-    <xsl:text>, y: </xsl:text>
-    <xsl:call-template name="value"><xsl:with-param name="node" select="$rectangle/height" /><xsl:with-param name="self" select="." /></xsl:call-template>
-    <xsl:text> }</xsl:text>
+    <xsl:variable name="sprite" select="(sprite | parent::group/sprite)[1]" />
+    <xsl:variable name="bitmap" select="$pictures[@name = $sprite/bitmap/@from]" />
+    <xsl:choose>
+      <xsl:when test="$bitmap">
+        <xsl:variable name="scale"><xsl:call-template name="picture-scale"><xsl:with-param name="bitmap" select="$bitmap" /></xsl:call-template></xsl:variable>
+        <xsl:value-of select="concat('{ x: ', string-length(normalize-space($bitmap/row[1])) * $scale, ', y: ', count($bitmap/row) * $scale, ' }')" />
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:text>{ x: </xsl:text>
+        <xsl:call-template name="value"><xsl:with-param name="node" select="$sprite/rectangle/width" /><xsl:with-param name="self" select="." /></xsl:call-template>
+        <xsl:text>, y: </xsl:text>
+        <xsl:call-template name="value"><xsl:with-param name="node" select="$sprite/rectangle/height" /><xsl:with-param name="self" select="." /></xsl:call-template>
+        <xsl:text> }</xsl:text>
+      </xsl:otherwise>
+    </xsl:choose>
   </xsl:template>
 
   <!-- startBall(): its numbers drawn at random (drawn again each time),
@@ -375,13 +429,26 @@ function deflect(thing, other, degrees) {
         <xsl:text>;&#10;</xsl:text>
       </xsl:if>
     </xsl:for-each>
-    <xsl:text>&#9;return {&#10;&#9;&#9;position: </xsl:text>
-    <xsl:call-template name="pair"><xsl:with-param name="of" select="position" /><xsl:with-param name="start" select="true()" /></xsl:call-template>
-    <xsl:text>,&#10;&#9;&#9;velocity: </xsl:text>
+    <xsl:variable name="returns" select="count(. | $returners) = count($returners)" />
+    <xsl:choose>
+      <xsl:when test="$returns">
+        <!-- where it starts, kept to go back to -->
+        <xsl:text>&#9;const position = </xsl:text>
+        <xsl:call-template name="pair"><xsl:with-param name="of" select="position" /><xsl:with-param name="start" select="true()" /></xsl:call-template>
+        <xsl:text>;&#10;&#9;return {&#10;&#9;&#9;position,</xsl:text>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:text>&#9;return {&#10;&#9;&#9;position: </xsl:text>
+        <xsl:call-template name="pair"><xsl:with-param name="of" select="position" /><xsl:with-param name="start" select="true()" /></xsl:call-template>
+        <xsl:text>,</xsl:text>
+      </xsl:otherwise>
+    </xsl:choose>
+    <xsl:text>&#10;&#9;&#9;velocity: </xsl:text>
     <xsl:call-template name="pair"><xsl:with-param name="of" select="velocity | parent::group/velocity[not(current()/velocity)]" /><xsl:with-param name="start" select="true()" /></xsl:call-template>
     <xsl:text>,&#10;&#9;&#9;size: </xsl:text>
     <xsl:call-template name="size" />
     <xsl:text>,&#10;</xsl:text>
+    <xsl:if test="$returns"><xsl:text>&#9;&#9;start: { ...position },&#10;</xsl:text></xsl:if>
     <xsl:variable name="parts"><xsl:call-template name="record-parts"><xsl:with-param name="start" select="true()" /></xsl:call-template></xsl:variable>
     <xsl:for-each select="exsl:node-set($parts)/part">
       <xsl:value-of select="concat('&#9;&#9;', ., ',&#10;')" />
@@ -483,49 +550,131 @@ function play(sound) {
   </xsl:template>
 
   <!-- play(): a sound, as the page can once a key is pressed: each its
-       note, and the wave, slide and loudness of those that have their own. -->
+       note or notes, and the wave, slide and loudness of those that have
+       their own. -->
   <xsl:template name="shaped-sound-function">
+    <xsl:variable name="noisy" select="$sounds[@wave = 'noise' or note/@wave = 'noise']" />
+    <xsl:variable name="tunes" select="$sounds[count(note) &gt; 1]" />
     <xsl:text>
 // The sounds: how high, how long, and where a sound has its own, its wave,
-// the pitch it slides to and how loud it is.
+// the pitch it slides to and how loud it is</xsl:text>
+    <xsl:if test="$tunes">; a tune is its notes, one after another</xsl:if>
+    <xsl:text>.
 const sounds = {
 </xsl:text>
     <xsl:for-each select="$sounds">
-      <xsl:variable name="hertz"><xsl:call-template name="hertz"><xsl:with-param name="pitch" select="normalize-space(note/@pitch)" /></xsl:call-template></xsl:variable>
-      <xsl:value-of select="concat('&#9;', @name, ': { hertz: ', $hertz, ', seconds: ', normalize-space(note))" />
-      <xsl:if test="(note/@wave | @wave)[1]"><xsl:value-of select="concat(', wave: &quot;', (note/@wave | @wave)[1], '&quot;')" /></xsl:if>
-      <xsl:if test="note/@to">
-        <xsl:text>, to: </xsl:text>
-        <xsl:call-template name="hertz"><xsl:with-param name="pitch" select="normalize-space(note/@to)" /></xsl:call-template>
-      </xsl:if>
-      <xsl:if test="volume"><xsl:value-of select="concat(', volume: ', normalize-space(volume))" /></xsl:if>
-      <xsl:text> },&#10;</xsl:text>
+      <xsl:value-of select="concat('&#9;', @name, ': {')" />
+      <xsl:choose>
+        <xsl:when test="count(note) &gt; 1">
+          <xsl:if test="@wave"><xsl:value-of select="concat(' wave: &quot;', @wave, '&quot;,')" /></xsl:if>
+          <xsl:if test="volume"><xsl:value-of select="concat(' volume: ', normalize-space(volume), ',')" /></xsl:if>
+          <xsl:text> notes: [&#10;</xsl:text>
+          <xsl:for-each select="note">
+            <xsl:text>&#9;&#9;{ </xsl:text>
+            <xsl:call-template name="note-parts"><xsl:with-param name="wave" select="@wave" /></xsl:call-template>
+            <xsl:text> },&#10;</xsl:text>
+          </xsl:for-each>
+          <xsl:text>&#9;] },&#10;</xsl:text>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:text> </xsl:text>
+          <xsl:for-each select="note"><xsl:call-template name="note-parts"><xsl:with-param name="wave" select="(@wave | ../@wave)[1]" /></xsl:call-template></xsl:for-each>
+          <xsl:if test="volume"><xsl:value-of select="concat(', volume: ', normalize-space(volume))" /></xsl:if>
+          <xsl:text> },&#10;</xsl:text>
+        </xsl:otherwise>
+      </xsl:choose>
     </xsl:for-each>
     <xsl:text>};
 let audio = null;
-
-// A sound, sliding evenly in pitch where it slides, faded in and out over
-// two thousandths of a second so it doesn't click, at half its loudness as
-// every sound here is. The browser lets a page make sounds once a key has
-// been pressed.
-function play(sound) {
-	audio ??= new AudioContext();
-	const { hertz, seconds, wave = "square", to = hertz, volume = 0.3 } = sounds[sound];
-	const now = audio.currentTime;
-	const tone = audio.createOscillator();
-	const fade = audio.createGain();
-	tone.type = wave;
-	tone.frequency.setValueAtTime(hertz, now);
-	tone.frequency.exponentialRampToValueAtTime(to, now + seconds);
-	fade.gain.setValueAtTime(0, now);
-	fade.gain.linearRampToValueAtTime(volume / 2, now + 0.002);
-	fade.gain.setValueAtTime(volume / 2, now + seconds - 0.002);
-	fade.gain.linearRampToValueAtTime(0, now + seconds);
-	tone.connect(fade).connect(audio.destination);
-	tone.start(now);
-	tone.stop(now + seconds);
+</xsl:text>
+    <xsl:if test="$noisy">
+      <xsl:text>
+// Noise, `seconds` long: a new random level every half cycle, held in
+// between, so the pitch sets how coarse the hiss is.
+function noise(hertz, to, seconds) {
+	const buffer = audio.createBuffer(1, Math.ceil(seconds * audio.sampleRate), audio.sampleRate);
+	const samples = buffer.getChannelData(0);
+	let phase = 0;
+	let held = Math.random() * 2 - 1;
+	for (let i = 0; i &lt; samples.length; ++i) {
+		samples[i] = held;
+		phase += hertz * Math.pow(to / hertz, i / samples.length) / audio.sampleRate;
+		if (phase &gt;= 0.5) {
+			held = Math.random() * 2 - 1;
+			phase -= 0.5;
+		}
+	}
+	const source = audio.createBufferSource();
+	source.buffer = buffer;
+	return source;
 }
 </xsl:text>
+    </xsl:if>
+    <xsl:text>
+// A sound</xsl:text>
+    <xsl:if test="$tunes">, note by note</xsl:if>
+    <xsl:text>, sliding evenly in pitch where it slides, faded in and
+// out over two thousandths of a second so it doesn't click, at half its
+// loudness as every sound here is. The browser lets a page make sounds once
+// a key has been pressed.
+function play(name) {
+	audio ??= new AudioContext();
+	const sound = sounds[name];
+	const volume = sound.volume ?? 0.3;
+	let at = audio.currentTime;
+	for (const { hertz, seconds, wave = sound.wave ?? "square", to = hertz } of </xsl:text>
+    <xsl:choose>
+      <xsl:when test="$tunes">sound.notes ?? [sound]</xsl:when>
+      <xsl:otherwise>[sound]</xsl:otherwise>
+    </xsl:choose>
+    <xsl:text>) {
+</xsl:text>
+    <xsl:choose>
+      <xsl:when test="$noisy">
+        <xsl:text>		let tone;
+		if (wave === "noise") {
+			tone = noise(hertz, to, seconds);
+		} else {
+			tone = audio.createOscillator();
+			tone.type = wave;
+			tone.frequency.setValueAtTime(hertz, at);
+			tone.frequency.exponentialRampToValueAtTime(to, at + seconds);
+		}
+</xsl:text>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:text>		const tone = audio.createOscillator();
+		tone.type = wave;
+		tone.frequency.setValueAtTime(hertz, at);
+		tone.frequency.exponentialRampToValueAtTime(to, at + seconds);
+</xsl:text>
+      </xsl:otherwise>
+    </xsl:choose>
+    <xsl:text>		const fade = audio.createGain();
+		fade.gain.setValueAtTime(0, at);
+		fade.gain.linearRampToValueAtTime(volume / 2, at + 0.002);
+		fade.gain.setValueAtTime(volume / 2, at + seconds - 0.002);
+		fade.gain.linearRampToValueAtTime(0, at + seconds);
+		tone.connect(fade).connect(audio.destination);
+		tone.start(at);
+		tone.stop(at + seconds);
+		at += seconds;
+	}
+}
+</xsl:text>
+  </xsl:template>
+
+  <!-- hertz: 329.63, seconds: 0.4, wave: "triangle", to: 82.41: a note's
+       pitch and length, and its wave and slide where it has them. -->
+  <xsl:template name="note-parts">
+    <xsl:param name="wave" />
+    <xsl:variable name="hertz"><xsl:call-template name="hertz"><xsl:with-param name="pitch" select="normalize-space(@pitch)" /></xsl:call-template></xsl:variable>
+    <xsl:value-of select="concat('hertz: ', $hertz, ', seconds: ', normalize-space(.))" />
+    <xsl:if test="$wave"><xsl:value-of select="concat(', wave: &quot;', $wave, '&quot;')" /></xsl:if>
+    <xsl:if test="@to">
+      <xsl:text>, to: </xsl:text>
+      <xsl:call-template name="hertz"><xsl:with-param name="pitch" select="normalize-space(@to)" /></xsl:call-template>
+    </xsl:if>
   </xsl:template>
 
   <!-- key(): which keys are down, then the presses the screen on top
@@ -682,7 +831,23 @@ function key(code, down) {
   <!-- frame(): the keys held, everything moving, the window's edges, the
        meetings, the game's own tests. -->
   <xsl:template name="frame-function">
-    <xsl:text>&#10;function frame(seconds) {&#10;</xsl:text>
+    <xsl:text>&#10;function frame(elapsed) {&#10;</xsl:text>
+    <xsl:for-each select="$states[count(. | $played) = 2][conditions/condition]">
+      <!-- a screen that waits for keys, testing as it waits -->
+      <xsl:text>&#9;if (screen() === </xsl:text>
+      <xsl:call-template name="screen-name"><xsl:with-param name="state" select="@name" /></xsl:call-template>
+      <xsl:text>) {&#10;</xsl:text>
+      <xsl:value-of select="concat('&#9;&#9;// the ', @name, ' screen', &quot;'s own tests, the first that holds&#10;&quot;)" />
+      <xsl:for-each select="conditions/condition">
+        <xsl:call-template name="state-condition">
+          <xsl:with-param name="before">
+            <xsl:if test="position() &gt; 1">else </xsl:if>
+          </xsl:with-param>
+          <xsl:with-param name="indent" select="'&#9;&#9;'" />
+        </xsl:call-template>
+      </xsl:for-each>
+      <xsl:text>&#9;&#9;return;&#10;&#9;}&#10;</xsl:text>
+    </xsl:for-each>
     <xsl:if test="$screens">
       <xsl:text>&#9;if (screen() !== </xsl:text>
       <xsl:call-template name="screen-name"><xsl:with-param name="state" select="$played/@name" /></xsl:call-template>
@@ -711,10 +876,10 @@ function key(code, down) {
     </xsl:if>
     <xsl:text>	// everything moves
 	for (const thing of </xsl:text>
-    <xsl:call-template name="all-things" />
+    <xsl:call-template name="all-things"><xsl:with-param name="spread" select="$moving-grids" /></xsl:call-template>
     <xsl:text>) {
-		thing.position.x += thing.velocity.x * seconds;
-		thing.position.y += thing.velocity.y * seconds;
+		thing.position.x += thing.velocity.x * elapsed;
+		thing.position.y += thing.velocity.y * elapsed;
 	}
 </xsl:text>
     <xsl:if test="$edge-owners">
@@ -753,6 +918,7 @@ function key(code, down) {
   <xsl:template name="state-condition">
     <xsl:param name="before" />
     <xsl:param name="tests" select="''" />
+    <xsl:param name="indent" select="'&#9;'" />
     <xsl:variable name="test">
       <xsl:call-template name="test"><xsl:with-param name="joined" select="$tests != '' or condition" /></xsl:call-template>
     </xsl:variable>
@@ -766,6 +932,7 @@ function key(code, down) {
           <xsl:call-template name="state-condition">
             <xsl:with-param name="before" select="$before" />
             <xsl:with-param name="tests" select="$all" />
+            <xsl:with-param name="indent" select="$indent" />
           </xsl:call-template>
         </xsl:for-each>
       </xsl:when>
@@ -778,7 +945,7 @@ function key(code, down) {
         <xsl:call-template name="write-block">
           <xsl:with-param name="header" select="concat($before, 'if (', $all, ')')" />
           <xsl:with-param name="lines" select="exsl:node-set($body)/line" />
-          <xsl:with-param name="indent" select="'&#9;'" />
+          <xsl:with-param name="indent" select="$indent" />
         </xsl:call-template>
       </xsl:otherwise>
     </xsl:choose>
@@ -836,9 +1003,15 @@ function key(code, down) {
   <!-- [ball, paddle1, paddle2]: these things, or every one. -->
   <xsl:template name="all-things">
     <xsl:param name="things" select="$things" />
+    <xsl:param name="spread" select="/.." />
     <xsl:text>[</xsl:text>
     <xsl:for-each select="$things">
       <xsl:if test="position() &gt; 1">, </xsl:if>
+      <xsl:call-template name="object-name" />
+    </xsl:for-each>
+    <!-- and every cell of these grids -->
+    <xsl:for-each select="$spread">
+      <xsl:text>, ...</xsl:text>
       <xsl:call-template name="object-name" />
     </xsl:for-each>
     <xsl:text>]</xsl:text>
@@ -881,6 +1054,20 @@ function key(code, down) {
        members in turn. -->
   <xsl:template name="edges">
     <xsl:choose>
+      <xsl:when test="count(. | $grids) = count($grids)">
+        <xsl:variable name="cell"><xsl:call-template name="cell-name" /></xsl:variable>
+        <xsl:value-of select="concat('&#9;for (const ', $cell, ' of ')" />
+        <xsl:call-template name="object-name" />
+        <xsl:text>) {&#10;</xsl:text>
+        <xsl:for-each select="collisions/collision[@edge]">
+          <xsl:call-template name="edge-rule">
+            <xsl:with-param name="of" select="concat($cell, '.')" />
+            <xsl:with-param name="self" select="../.." />
+            <xsl:with-param name="indent" select="'&#9;&#9;'" />
+          </xsl:call-template>
+        </xsl:for-each>
+        <xsl:text>&#9;}&#10;</xsl:text>
+      </xsl:when>
       <xsl:when test="self::group">
         <xsl:variable name="one">
           <xsl:call-template name="camel">
@@ -893,7 +1080,7 @@ function key(code, down) {
         <xsl:for-each select="collisions/collision[@edge]">
           <xsl:call-template name="edge-rule">
             <xsl:with-param name="of" select="concat($one, '.')" />
-            <xsl:with-param name="self" select="../../member[1]" />
+            <xsl:with-param name="self" select="../.." />
             <xsl:with-param name="indent" select="'&#9;&#9;'" />
           </xsl:call-template>
         </xsl:for-each>
@@ -962,6 +1149,13 @@ function key(code, down) {
       </xsl:for-each>
     </xsl:variable>
     <xsl:choose>
+      <xsl:when test="not($rule/*[not(self::wrap)])">
+        <!-- a wrap writes its own test: its lines as they are -->
+        <xsl:call-template name="print-lines">
+          <xsl:with-param name="lines" select="$rules/line" />
+          <xsl:with-param name="indent" select="$indent" />
+        </xsl:call-template>
+      </xsl:when>
       <xsl:when test="count($rules) &gt; 1 and $differ = ''">
         <xsl:variable name="header">
           <xsl:text>if (</xsl:text>
@@ -995,8 +1189,31 @@ function key(code, down) {
        with its cells' own rules (grids.xsl), even where the thing has none
        for them. -->
   <xsl:template name="meetings">
+    <xsl:choose>
+      <xsl:when test="self::group">
+        <!-- each member in turn, the group's rules on it -->
+        <xsl:variable name="one"><xsl:call-template name="loop-name"><xsl:with-param name="group" select="." /></xsl:call-template></xsl:variable>
+        <xsl:variable name="each">
+          <xsl:call-template name="object-meetings"><xsl:with-param name="thing" select="$one" /></xsl:call-template>
+        </xsl:variable>
+        <xsl:value-of select="concat('&#9;for (const ', $one, ' of ')" />
+        <xsl:call-template name="all-things"><xsl:with-param name="things" select="member" /></xsl:call-template>
+        <xsl:text>) {&#10;&#9;</xsl:text>
+        <xsl:call-template name="replace">
+          <xsl:with-param name="text" select="substring($each, 1, string-length($each) - 1)" />
+          <xsl:with-param name="from" select="'&#10;'" />
+          <xsl:with-param name="to" select="'&#10;&#9;'" />
+        </xsl:call-template>
+        <xsl:text>&#10;&#9;}&#10;</xsl:text>
+      </xsl:when>
+      <xsl:otherwise><xsl:call-template name="object-meetings" /></xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
+  <!-- The meetings of an object, or of a group's member ($thing). -->
+  <xsl:template name="object-meetings">
+    <xsl:param name="thing"><xsl:call-template name="object-name" /></xsl:param>
     <xsl:variable name="object" select="." />
-    <xsl:variable name="thing"><xsl:call-template name="object-name" /></xsl:variable>
     <xsl:variable name="touches" select="collisions/collision[not(@edge)]" />
     <xsl:for-each select="$touches">
       <xsl:variable name="rule" select="." />
@@ -1017,6 +1234,22 @@ function key(code, down) {
         <xsl:with-param name="rules" select="/.." />
       </xsl:call-template>
     </xsl:for-each>
+  </xsl:template>
+
+  <!-- touching(ball, paddle), or by the lit pixels of a picture,
+       touchingPixels(rocket, rocketsPicture, cell). -->
+  <xsl:template name="touch-test">
+    <xsl:param name="object" />
+    <xsl:param name="thing" />
+    <xsl:param name="other" />
+    <xsl:choose>
+      <xsl:when test="$object/collisions/type = 'pixel'">
+        <xsl:value-of select="concat('touchingPixels(', $thing, ', ')" />
+        <xsl:call-template name="picture-name"><xsl:with-param name="bitmap" select="$pictures[@name = $object/sprite/bitmap/@from]" /></xsl:call-template>
+        <xsl:value-of select="concat(', ', $other, ')')" />
+      </xsl:when>
+      <xsl:otherwise><xsl:value-of select="concat('touching(', $thing, ', ', $other, ')')" /></xsl:otherwise>
+    </xsl:choose>
   </xsl:template>
 
   <!-- The rules of one thing that name the same class, object or any. -->
@@ -1057,7 +1290,11 @@ function key(code, down) {
       </xsl:when>
       <xsl:when test="count($others) = 1">
         <xsl:call-template name="write-block">
-          <xsl:with-param name="header" select="concat('if (touching(', $thing, ', ', $other, '))')" />
+          <xsl:with-param name="header">
+            <xsl:text>if (</xsl:text>
+            <xsl:call-template name="touch-test"><xsl:with-param name="object" select="$object" /><xsl:with-param name="thing" select="$thing" /><xsl:with-param name="other" select="$other" /></xsl:call-template>
+            <xsl:text>)</xsl:text>
+          </xsl:with-param>
           <xsl:with-param name="lines" select="$lines" />
           <xsl:with-param name="indent" select="'&#9;'" />
         </xsl:call-template>
@@ -1067,7 +1304,11 @@ function key(code, down) {
         <xsl:call-template name="all-things"><xsl:with-param name="things" select="$others" /></xsl:call-template>
         <xsl:text>) {&#10;</xsl:text>
         <xsl:call-template name="write-block">
-          <xsl:with-param name="header" select="concat('if (touching(', $thing, ', ', $other, '))')" />
+          <xsl:with-param name="header">
+            <xsl:text>if (</xsl:text>
+            <xsl:call-template name="touch-test"><xsl:with-param name="object" select="$object" /><xsl:with-param name="thing" select="$thing" /><xsl:with-param name="other" select="$other" /></xsl:call-template>
+            <xsl:text>)</xsl:text>
+          </xsl:with-param>
           <xsl:with-param name="lines" select="$lines" />
           <xsl:with-param name="indent" select="'&#9;&#9;'" />
         </xsl:call-template>
@@ -1424,6 +1665,19 @@ function box(x, y, width, height, color = "white") {
 	context.fillRect(x, y, width, height);
 }
 </xsl:text>
+    <xsl:if test="$pictures">
+      <xsl:text>
+// The lit pixels of a picture's rows over the box at x, y, width by height.
+function pixels(rows, x, y, width, height, color = "white") {
+	const pixel = { x: width / rows[0].length, y: height / rows.length };
+	for (let row = 0; row &lt; rows.length; ++row) {
+		for (let column = 0; column &lt; rows[row].length; ++column) {
+			if (rows[row][column] !== ".") { box(x + column * pixel.x, y + row * pixel.y, pixel.x, pixel.y, color); }
+		}
+	}
+}
+</xsl:text>
+    </xsl:if>
     <xsl:if test="$screens">
       <xsl:call-template name="draw-functions" />
     </xsl:if>
@@ -1565,6 +1819,11 @@ function draw() {
       <xsl:when test="count(. | $text-rows) = count($text-rows)">
         <xsl:call-template name="text-row-lines" />
       </xsl:when>
+      <xsl:when test="count(. | $things) = count($things) and $pictures[@name = $sprite/bitmap/@from]">
+        <xsl:variable name="thing"><xsl:call-template name="object-name" /></xsl:variable>
+        <xsl:variable name="rows"><xsl:call-template name="picture-name"><xsl:with-param name="bitmap" select="$pictures[@name = $sprite/bitmap/@from]" /></xsl:call-template></xsl:variable>
+        <line><xsl:value-of select="concat('pixels(', $rows, ', ', $thing, '.position.x, ', $thing, '.position.y, ', $thing, '.size.x, ', $thing, '.size.y', $color, ');')" /></line>
+      </xsl:when>
       <xsl:when test="count(. | $things) = count($things)">
         <xsl:variable name="thing"><xsl:call-template name="object-name" /></xsl:variable>
         <line><xsl:value-of select="concat('box(', $thing, '.position.x, ', $thing, '.position.y, ', $thing, '.size.x, ', $thing, '.size.y', $color, ');')" /></line>
@@ -1642,19 +1901,28 @@ function draw() {
   <xsl:template name="text-lines">
     <xsl:variable name="named"><xsl:call-template name="object-name" /></xsl:variable>
     <xsl:variable name="base"><xsl:call-template name="camel"><xsl:with-param name="name" select="sprite[1]/text/@style" /></xsl:call-template></xsl:variable>
-    <xsl:variable name="colored" select="count(sprite) = 2 and sprite/text/color" />
+    <xsl:variable name="first-style"><xsl:call-template name="text-style"><xsl:with-param name="sprite" select="sprite[1]" /><xsl:with-param name="style" select="$base" /></xsl:call-template></xsl:variable>
+    <xsl:variable name="styled">
+      <xsl:for-each select="sprite[position() &gt; 1]">
+        <xsl:variable name="own"><xsl:call-template name="text-style"><xsl:with-param name="sprite" select="." /><xsl:with-param name="style" select="$base" /></xsl:call-template></xsl:variable>
+        <xsl:if test="$own != $first-style">yes</xsl:if>
+      </xsl:for-each>
+    </xsl:variable>
+    <xsl:variable name="colored" select="$styled != ''" />
     <xsl:variable name="style">
       <xsl:choose>
         <xsl:when test="$colored"><xsl:value-of select="concat($named, 'Style')" /></xsl:when>
-        <xsl:otherwise><xsl:call-template name="text-style"><xsl:with-param name="sprite" select="sprite[1]" /><xsl:with-param name="style" select="$base" /></xsl:call-template></xsl:otherwise>
+        <xsl:otherwise><xsl:value-of select="$first-style" /></xsl:otherwise>
       </xsl:choose>
     </xsl:variable>
     <xsl:variable name="words">
       <xsl:choose>
-        <xsl:when test="count(sprite) = 2">
-          <xsl:value-of select="concat($named, '.look === &quot;', sprite[2]/@name, '&quot; ? ')" />
-          <xsl:call-template name="string"><xsl:with-param name="text" select="sprite[2]/text/content" /></xsl:call-template>
-          <xsl:text> : </xsl:text>
+        <xsl:when test="count(sprite) &gt; 1">
+          <xsl:for-each select="sprite[position() &gt; 1]">
+            <xsl:value-of select="concat($named, '.look === &quot;', @name, '&quot; ? ')" />
+            <xsl:call-template name="string"><xsl:with-param name="text" select="text/content" /></xsl:call-template>
+            <xsl:text> : </xsl:text>
+          </xsl:for-each>
           <xsl:call-template name="string"><xsl:with-param name="text" select="sprite[1]/text/content" /></xsl:call-template>
         </xsl:when>
         <xsl:when test="sprite/text/number">
@@ -1679,9 +1947,12 @@ function draw() {
     </xsl:variable>
     <xsl:if test="$colored">
       <line>
-        <xsl:value-of select="concat('const ', $named, 'Style = ', $named, '.look === &quot;', sprite[2]/@name, '&quot; ? ')" />
-        <xsl:call-template name="text-style"><xsl:with-param name="sprite" select="sprite[2]" /><xsl:with-param name="style" select="$base" /></xsl:call-template>
-        <xsl:text> : </xsl:text>
+        <xsl:value-of select="concat('const ', $named, 'Style = ')" />
+        <xsl:for-each select="sprite[position() &gt; 1]">
+          <xsl:value-of select="concat($named, '.look === &quot;', @name, '&quot; ? ')" />
+          <xsl:call-template name="text-style"><xsl:with-param name="sprite" select="." /><xsl:with-param name="style" select="$base" /></xsl:call-template>
+          <xsl:text> : </xsl:text>
+        </xsl:for-each>
         <xsl:call-template name="text-style"><xsl:with-param name="sprite" select="sprite[1]" /><xsl:with-param name="style" select="$base" /></xsl:call-template>
         <xsl:text>;</xsl:text>
       </line>
@@ -1695,15 +1966,19 @@ function draw() {
     <line><xsl:value-of select="concat('text(', $shown, ', ', $style, ', ', $x, ', ', $y, ');')" /></line>
   </xsl:template>
 
-  <!-- A text's style: the style it names, or that style in a colour of the
-       text's own. -->
+  <!-- A text's style: the style it names, or that style with a size or
+       colour of the text's own. -->
   <xsl:template name="text-style">
     <xsl:param name="sprite" />
     <xsl:param name="style" />
     <xsl:choose>
-      <xsl:when test="$sprite/text/color">
-        <xsl:value-of select="concat('{ ...', $style, ', color: ')" />
-        <xsl:call-template name="color"><xsl:with-param name="color" select="normalize-space($sprite/text/color)" /></xsl:call-template>
+      <xsl:when test="$sprite/text/color or $sprite/text/size">
+        <xsl:value-of select="concat('{ ...', $style)" />
+        <xsl:if test="$sprite/text/size"><xsl:value-of select="concat(', size: ', normalize-space($sprite/text/size))" /></xsl:if>
+        <xsl:if test="$sprite/text/color">
+          <xsl:text>, color: </xsl:text>
+          <xsl:call-template name="color"><xsl:with-param name="color" select="normalize-space($sprite/text/color)" /></xsl:call-template>
+        </xsl:if>
         <xsl:text> }</xsl:text>
       </xsl:when>
       <xsl:otherwise><xsl:value-of select="$style" /></xsl:otherwise>

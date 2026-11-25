@@ -48,6 +48,7 @@
   <xsl:include href="verbs/stick.xsl" />
   <xsl:include href="verbs/track.xsl" />
   <xsl:include href="verbs/trigger.xsl" />
+  <xsl:include href="verbs/wrap.xsl" />
 
   <xsl:output method="xml" indent="yes" encoding="UTF-8" />
 

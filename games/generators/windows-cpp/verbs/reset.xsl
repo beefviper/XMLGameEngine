@@ -13,12 +13,25 @@
   <!-- covered: bare, in an object's rule at an edge or on a key; naming an
        object that starts again, anywhere -->
   <xsl:template match="object/collisions/collision[@edge]/reset[not(@* or node())] | input/reset[not(@* or node())]" mode="covers" />
+  <!-- and bare in a rule of a group of members that start still: each back
+       where it started (its start, kept in its record) -->
+  <xsl:template match="group[member][not(velocity or member/velocity)]/collisions/collision/reset[not(@* or node())]" mode="covers" />
   <xsl:template match="reset[@object and not(node())]" mode="covers">
     <xsl:if test="not($everything[@name = current()/@object] | $grids[@name = current()/@object])">
       <xsl:call-template name="gap"><xsl:with-param name="what" select="concat('&lt;reset&gt; of ', $quote, @object, $quote, ', not an object')" /></xsl:call-template>
     </xsl:if>
   </xsl:template>
   <xsl:template match="reset/@object" mode="covers" />
+
+  <xsl:template match="reset[not(@object)][ancestor::group[member]]" mode="edge">
+    <xsl:param name="of" />
+    <xsl:value-of select="concat($of, 'position = ', $of, 'start;&#10;', $of, 'velocity = {};')" />
+  </xsl:template>
+  <xsl:template match="reset[not(@object)][ancestor::group[member]]" mode="touch">
+    <xsl:param name="who" />
+    <xsl:variable name="of" select="concat(substring($who, 2), '-&gt;')" />
+    <xsl:value-of select="concat($of, 'position = ', $of, 'start;&#10;', $of, 'velocity = {};')" />
+  </xsl:template>
 
   <xsl:template match="reset" mode="edge">
     <xsl:call-template name="start-name"><xsl:with-param name="object" select="($everything[@name = current()/@object] | ../../parent::*[not(current()/@object)])[1]" /></xsl:call-template>

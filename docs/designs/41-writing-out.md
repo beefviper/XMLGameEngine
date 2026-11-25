@@ -49,6 +49,22 @@ The largest single step was not a language change. It was dropping the frame-for
 - **Names the platform owns.** A plain page script shares the window's names, so `const top` clashed with `window.top`. The page is now a module script, which keeps its names to itself. Each new target will have its own such names to keep clear of. The game's own names clash the same way with the code's: a `box(..., size)` parameter hid pong_min's `size` constant, which only MSVC flags (C4459), so `test_generate.cpp` now checks that no parameter or local takes a constant's name.
 - **The gap list held.** Every part Breakout needed showed up in `covers.xsl` first, and each was a few lines to cover.
 
+## What Space Race added
+
+| Part of the file | What the written game does with it |
+|---|---|
+| `<row>`s naming their `<number>`s, each a speed | a table of speeds by row (`rowSpeeds[row]`) in the start loop |
+| `<wrap />` at the sides | one `if` per side, testing for itself: right off, then a window and its size back |
+| A group of members with touch rules | a loop over the members (`for (Rocket* rocket : { &rocket1, &rocket2 })`) |
+| A bare `<reset />` in that group's rule | back to a `start` kept in the member's record, its score kept |
+| `<type>pixel</type>` and a `<bitmap>` | the picture as rows of text, `touchingPixels()` over its lit pixels, drawn a pixel at a time |
+| Conditions in a state that waits for keys | tested at the top of `frame()` while that screen is on top |
+| Several `<note>`s, a noise wave | the notes one after another; noise a held random level |
+
+- **Names clash both ways.** Space Race's own constant `seconds` met `frame(float seconds)` and the tone's `seconds`: the written names are now `elapsed` and `duration`, words a game is unlikely to use.
+- **Two more hidden rules.** A `<wrap />` waits until the thing is right off the edge and moves it a window and its own size, so a lane keeps its spacing. A bare `<reset />` puts a thing back where it started and keeps its numbers; `<reset object>` starts it again whole.
+- **Pixels were small.** The one subsystem-shaped part, a touch by lit pixels, is about a dozen lines once the picture is rows of text.
+
 ## Suggestions
 
 Each is an idea, to be weighed when the game that needs it is written out.

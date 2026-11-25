@@ -120,6 +120,7 @@ set(data_generators
 	"games/generators/web-js/verbs/stick.xsl"
 	"games/generators/web-js/verbs/track.xsl"
 	"games/generators/web-js/verbs/trigger.xsl"
+	"games/generators/web-js/verbs/wrap.xsl"
 	"games/generators/windows-cpp/generate.xsl"
 	"games/generators/windows-cpp/kinds.xsl"
 	"games/generators/windows-cpp/names.xsl"
@@ -144,7 +145,8 @@ set(data_generators
 	"games/generators/windows-cpp/verbs/set.xsl"
 	"games/generators/windows-cpp/verbs/stick.xsl"
 	"games/generators/windows-cpp/verbs/track.xsl"
-	"games/generators/windows-cpp/verbs/trigger.xsl")
+	"games/generators/windows-cpp/verbs/trigger.xsl"
+	"games/generators/windows-cpp/verbs/wrap.xsl")
 
 set(data_outputs "")
 foreach(item IN LISTS data_xsd data_xml data_assets data_generators)

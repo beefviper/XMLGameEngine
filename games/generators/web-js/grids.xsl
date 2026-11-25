@@ -56,7 +56,7 @@
     <xsl:variable name="axis"><xsl:call-template name="kind-axis" /></xsl:variable>
     <xsl:variable name="sound"><xsl:call-template name="kind-sound" /></xsl:variable>
     <xsl:variable name="add"><xsl:call-template name="add-name" /></xsl:variable>
-    <xsl:variable name="cells"><xsl:call-template name="cell-word" />s</xsl:variable>
+    <xsl:variable name="cells"><xsl:call-template name="cells-name" /></xsl:variable>
     <xsl:variable name="parts"><xsl:call-template name="kind-parts" /></xsl:variable>
     <xsl:text>&#10;</xsl:text>
     <xsl:if test="@name = $reset-names">
@@ -111,21 +111,34 @@
   <!-- The size, then a cell for each row and column, pushed onto the array. -->
   <xsl:template name="cell-loops">
     <xsl:param name="axis" select="''" />
-    <xsl:variable name="cells"><xsl:call-template name="cell-word" />s</xsl:variable>
+    <xsl:variable name="cells"><xsl:call-template name="cells-name" /></xsl:variable>
     <xsl:variable name="rows" select="number(concat('0', normalize-space(rows)))" />
     <xsl:variable name="columns" select="number(concat('0', normalize-space(columns)))" />
     <xsl:variable name="parts"><xsl:call-template name="kind-parts" /></xsl:variable>
+    <xsl:variable name="row-speeds" select="row[number][velocity/x]" />
     <xsl:text>&#9;const size = </xsl:text>
     <xsl:call-template name="size" />
     <xsl:text>;&#10;</xsl:text>
+    <xsl:if test="$row-speeds">
+      <!-- each row's way across, row 1 first -->
+      <xsl:text>&#9;const rowSpeeds = [</xsl:text>
+      <xsl:call-template name="row-speeds"><xsl:with-param name="rows" select="$rows" /></xsl:call-template>
+      <xsl:text>];&#10;</xsl:text>
+    </xsl:if>
     <xsl:variable name="x">
       <xsl:call-template name="cell-place"><xsl:with-param name="along" select="'x'" /><xsl:with-param name="given" select="$axis = 'x'" /><xsl:with-param name="count" select="$columns" /><xsl:with-param name="index" select="'column'" /></xsl:call-template>
     </xsl:variable>
     <xsl:variable name="y">
       <xsl:call-template name="cell-place"><xsl:with-param name="along" select="'y'" /><xsl:with-param name="given" select="$axis = 'y'" /><xsl:with-param name="count" select="$rows" /><xsl:with-param name="index" select="'row'" /></xsl:call-template>
     </xsl:variable>
+    <xsl:variable name="velocity">
+      <xsl:choose>
+        <xsl:when test="$row-speeds">{ x: rowSpeeds[row], y: 0 }</xsl:when>
+        <xsl:otherwise>{ x: 0, y: 0 }</xsl:otherwise>
+      </xsl:choose>
+    </xsl:variable>
     <xsl:variable name="push">
-      <xsl:value-of select="concat($cells, '.push({ position: { x: ', $x, ', y: ', $y, ' }, velocity: { x: 0, y: 0 }, size: { ...size }')" />
+      <xsl:value-of select="concat($cells, '.push({ position: { x: ', $x, ', y: ', $y, ' }, velocity: ', $velocity, ', size: { ...size }')" />
       <xsl:for-each select="exsl:node-set($parts)/p[not(@given)]">
         <xsl:value-of select="concat(', ', .)" />
       </xsl:for-each>
@@ -160,6 +173,22 @@
     </xsl:call-template>
   </xsl:template>
 
+  <!-- 90, -150, ...: the way across each row of so many is given, by the
+     row that names its number, 0 where none does. -->
+  <xsl:template name="row-speeds">
+    <xsl:param name="rows" />
+    <xsl:param name="at" select="1" />
+    <xsl:variable name="row" select="row[number[normalize-space(.) = $at]]" />
+    <xsl:if test="$at &gt; 1">, </xsl:if>
+    <xsl:choose>
+      <xsl:when test="$row/velocity/x"><xsl:call-template name="value"><xsl:with-param name="node" select="$row/velocity/x" /></xsl:call-template></xsl:when>
+      <xsl:otherwise>0</xsl:otherwise>
+    </xsl:choose>
+    <xsl:if test="$at &lt; $rows">
+      <xsl:call-template name="row-speeds"><xsl:with-param name="rows" select="$rows" /><xsl:with-param name="at" select="$at + 1" /></xsl:call-template>
+    </xsl:if>
+  </xsl:template>
+
   <!-- One axis of a cell's place: the grid's (or the kind's, given as a
        parameter), then a cell's size and padding for each before it. -->
   <xsl:template name="cell-place">
@@ -167,15 +196,17 @@
     <xsl:param name="given" />
     <xsl:param name="count" />
     <xsl:param name="index" />
+    <xsl:variable name="start" select="position/*[local-name() = $along][* or normalize-space(.) != '0']" />
     <xsl:choose>
       <xsl:when test="$given"><xsl:value-of select="$along" /></xsl:when>
-      <xsl:when test="position/*[local-name() = $along]">
+      <xsl:when test="$start">
         <xsl:call-template name="value"><xsl:with-param name="node" select="position/*[local-name() = $along]" /><xsl:with-param name="self" select="." /><xsl:with-param name="axis" select="$along" /><xsl:with-param name="wrap" select="1" /></xsl:call-template>
       </xsl:when>
-      <xsl:otherwise>0</xsl:otherwise>
+      <xsl:when test="$count &lt;= 1">0</xsl:when>
     </xsl:choose>
     <xsl:if test="$count &gt; 1">
-      <xsl:value-of select="concat(' + ', $index, ' * ')" />
+      <xsl:if test="$given or $start"> + </xsl:if>
+      <xsl:value-of select="concat($index, ' * ')" />
       <xsl:choose>
         <xsl:when test="padding/*[local-name() = $along]">
           <xsl:value-of select="concat('(size.', $along, ' + ')" />
@@ -229,7 +260,11 @@
     </xsl:choose>
     <xsl:text>) {&#10;</xsl:text>
     <xsl:call-template name="write-block">
-      <xsl:with-param name="header" select="concat('if (touching(', $thing, ', ', $cell, '))')" />
+      <xsl:with-param name="header">
+        <xsl:text>if (</xsl:text>
+        <xsl:call-template name="touch-test"><xsl:with-param name="object" select="$object" /><xsl:with-param name="thing" select="$thing" /><xsl:with-param name="other" select="$cell" /></xsl:call-template>
+        <xsl:text>)</xsl:text>
+      </xsl:with-param>
       <xsl:with-param name="lines" select="exsl:node-set($body)/line" />
       <xsl:with-param name="indent" select="'&#9;&#9;'" />
     </xsl:call-template>

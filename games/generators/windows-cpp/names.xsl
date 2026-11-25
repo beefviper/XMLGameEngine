@@ -107,9 +107,29 @@
       </xsl:call-template>
     </xsl:variable>
     <xsl:choose>
-      <xsl:when test="/game/variables/variable[@name = $named] or $everything[@name = $named]">cell</xsl:when>
+      <xsl:when test="/game/variables/variable[@name = $named] or $everything[@name = $named] or $grid/@name = $named">cell</xsl:when>
       <xsl:otherwise><xsl:value-of select="$named" /></xsl:otherwise>
     </xsl:choose>
+  </xsl:template>
+
+  <!-- What a loop over a group calls the one it is at: a grid's cell, or
+     one of its members (rocket for rockets). -->
+  <xsl:template name="loop-name">
+    <xsl:param name="group" />
+    <xsl:choose>
+      <xsl:when test="$group/member">
+        <xsl:call-template name="camel">
+          <xsl:with-param name="name"><xsl:call-template name="singular"><xsl:with-param name="name" select="$group/@name" /></xsl:call-template></xsl:with-param>
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:otherwise><xsl:call-template name="cell-name"><xsl:with-param name="grid" select="$group" /></xsl:call-template></xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
+  <!-- A picture's pixels: rocketsPicture. -->
+  <xsl:template name="picture-name">
+    <xsl:param name="bitmap" select="." />
+    <xsl:call-template name="camel"><xsl:with-param name="name" select="concat($bitmap/@name, ' picture')" /></xsl:call-template>
   </xsl:template>
 
   <!-- An action written as a function of its own: faster. -->

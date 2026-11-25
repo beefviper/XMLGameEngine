@@ -16,8 +16,10 @@
        (live variables) and its look, when it has more than one.
      * An object's variable is a constant when nothing changes it, a local of
        its start when it is drawn at random there, and live when changed.
+     * A picture is a bitmap a thing is drawn with: its rows of pixels as
+       the file writes them.
      * The screens are the states; the one whose things move is played,
-       the others wait for keys. -->
+       the others wait for keys (and test their own conditions). -->
 <xsl:stylesheet version="1.0"
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
     xmlns:exsl="http://exslt.org/common"
@@ -37,8 +39,9 @@
   <!-- the classes rules meet -->
   <xsl:variable name="met-classes" select="//collision/@class" />
 
-  <!-- Things: rectangles that move, meet or count, in the file's order. -->
-  <xsl:variable name="things" select="$everything[(sprite | parent::group/sprite)[1]/rectangle]
+  <!-- Things: rectangles or pictures that move, meet or count, in the
+       file's order. -->
+  <xsl:variable name="things" select="$everything[(sprite | parent::group/sprite)[1][rectangle or bitmap]]
       [velocity or collisions or actions or variables
        or parent::group[velocity or collisions or actions or variables]
        or (@class | parent::group/@class) = $met-classes
@@ -48,6 +51,9 @@
        (one kind of cell each) or not, whose cells meet: a list of them. -->
   <xsl:variable name="grids" select="$states/objects/group[not(member)][(sprite | group/sprite)/rectangle]
       [collisions or group/collisions or @class = $met-classes or @name = //collision/@object]" />
+
+  <!-- Pictures: bitmaps of the game's things, square pixels a row a line. -->
+  <xsl:variable name="pictures" select="/game/pictures/bitmap[@name = $everything/sprite/bitmap/@from or @name = $everything/parent::group/sprite/bitmap/@from]" />
 
   <!-- Rows of words: a group of texts, a row's words each. -->
   <xsl:variable name="text-rows" select="$states/objects/group[not(member)][sprite/text]" />
@@ -120,6 +126,15 @@
     <xsl:choose>
       <xsl:when test="substring($name, string-length($name)) = 's'"><xsl:value-of select="substring($name, 1, string-length($name) - 1)" /></xsl:when>
       <xsl:otherwise><xsl:value-of select="concat($name, '-one')" /></xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
+  <!-- How many across a picture's pixel is: its <scale>, or 1. -->
+  <xsl:template name="picture-scale">
+    <xsl:param name="bitmap" />
+    <xsl:choose>
+      <xsl:when test="$bitmap/scale"><xsl:value-of select="normalize-space($bitmap/scale)" /></xsl:when>
+      <xsl:otherwise>1</xsl:otherwise>
     </xsl:choose>
   </xsl:template>
 

@@ -44,8 +44,8 @@
         <xsl:text>)</xsl:text>
       </xsl:when>
       <xsl:when test="$op = 'self' and $self/self::group">
-        <!-- a number of a grid's cell, in the loop over its list -->
-        <xsl:call-template name="cell-name"><xsl:with-param name="grid" select="$self" /></xsl:call-template>
+        <!-- a number of a grid's cell or a group's member, in the loop over them -->
+        <xsl:call-template name="loop-name"><xsl:with-param name="group" select="$self" /></xsl:call-template>
         <xsl:text>.</xsl:text>
         <xsl:call-template name="camel"><xsl:with-param name="name" select="normalize-space($tag)" /></xsl:call-template>
       </xsl:when>
@@ -73,7 +73,8 @@
         </xsl:choose>
       </xsl:when>
       <xsl:when test="$op = 'centered'">
-        <!-- its middle on the window's: the window's middle less half its size, and any offset -->
+        <!-- its middle on the window's (or on a value it holds): that middle
+             less half its size, and any offset -->
         <xsl:variable name="window">
           <xsl:choose>
             <xsl:when test="$axis = 'x'">windowWidth</xsl:when>
@@ -88,7 +89,14 @@
           </xsl:call-template>
         </xsl:variable>
         <xsl:if test="$wrap &gt;= 2">(</xsl:if>
-        <xsl:value-of select="concat($window, ' / 2 - ')" />
+        <xsl:choose>
+          <xsl:when test="$tag/*[not(self::offset)] or normalize-space($tag/text()) != ''">
+            <!-- on a value of its own: its middle there -->
+            <xsl:call-template name="value"><xsl:with-param name="node" select="$tag" /><xsl:with-param name="self" select="$self" /><xsl:with-param name="in" select="$in" /><xsl:with-param name="wrap" select="1" /></xsl:call-template>
+            <xsl:text> - </xsl:text>
+          </xsl:when>
+          <xsl:otherwise><xsl:value-of select="concat($window, ' / 2 - ')" /></xsl:otherwise>
+        </xsl:choose>
         <xsl:choose>
           <xsl:when test="string(number($size)) != 'NaN'"><xsl:value-of select="$size div 2" /></xsl:when>
           <xsl:otherwise><xsl:value-of select="concat($size, ' / 2')" /></xsl:otherwise>
@@ -249,13 +257,23 @@
   <xsl:template name="variable-target">
     <xsl:param name="path" />
     <xsl:param name="self" />
-    <xsl:call-template name="name-or-number">
-      <xsl:with-param name="text">
-        <xsl:if test="not(contains($path, '.')) or not($everything[@name = substring-before($path, '.')])"><xsl:value-of select="concat($self/@name, '.')" /></xsl:if>
-        <xsl:value-of select="$path" />
-      </xsl:with-param>
-      <xsl:with-param name="self" select="$self" />
-    </xsl:call-template>
+    <xsl:choose>
+      <xsl:when test="$self/self::group and not(contains($path, '.'))">
+        <!-- of the member or cell the loop is at -->
+        <xsl:call-template name="loop-name"><xsl:with-param name="group" select="$self" /></xsl:call-template>
+        <xsl:text>.</xsl:text>
+        <xsl:call-template name="camel"><xsl:with-param name="name" select="$path" /></xsl:call-template>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:call-template name="name-or-number">
+          <xsl:with-param name="text">
+            <xsl:if test="not(contains($path, '.')) or not($everything[@name = substring-before($path, '.')])"><xsl:value-of select="concat($self/@name, '.')" /></xsl:if>
+            <xsl:value-of select="$path" />
+          </xsl:with-param>
+          <xsl:with-param name="self" select="$self" />
+        </xsl:call-template>
+      </xsl:otherwise>
+    </xsl:choose>
   </xsl:template>
 
   <!-- .position.x for x, .velocity.y for velocity.y, .size.x for width. -->
@@ -280,6 +298,14 @@
       <xsl:when test="$sprite/text">
         <xsl:call-template name="object-name"><xsl:with-param name="object" select="$self" /></xsl:call-template>
         <xsl:value-of select="concat('Size.', $axis)" />
+      </xsl:when>
+      <xsl:when test="$sprite/bitmap">
+        <xsl:variable name="bitmap" select="$pictures[@name = $sprite/bitmap/@from]" />
+        <xsl:variable name="scale"><xsl:call-template name="picture-scale"><xsl:with-param name="bitmap" select="$bitmap" /></xsl:call-template></xsl:variable>
+        <xsl:choose>
+          <xsl:when test="$axis = 'x'"><xsl:value-of select="string-length(normalize-space($bitmap/row[1])) * $scale" /></xsl:when>
+          <xsl:otherwise><xsl:value-of select="count($bitmap/row) * $scale" /></xsl:otherwise>
+        </xsl:choose>
       </xsl:when>
       <xsl:when test="$sprite/rectangle">
         <xsl:variable name="one">
