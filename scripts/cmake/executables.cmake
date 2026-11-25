@@ -105,47 +105,32 @@ target_include_directories(xgecli PRIVATE xge/cli/include)
 # --generate needs libxslt (dependencies.cmake); without it generate.cpp says so.
 xge_link_xslt(xgecli)
 
-# What the windows-cpp generator writes (games/autogen/windows-cpp/<game>/): stand-alone games on SFML, none of the engine. pong_min first.
-if (XGE_WITH_SFML3)
-	add_executable(pong_min
-		"games/autogen/windows-cpp/pong_min/source/main.cpp"
-		"games/autogen/windows-cpp/pong_min/source/pong_min.cpp"
-		"games/autogen/windows-cpp/pong_min/source/pong_min.h"
-	)
-	target_compile_features(pong_min PRIVATE cxx_std_20)
-	target_link_libraries(pong_min PRIVATE SFML::Graphics)
-	xge_warnings(pong_min)
-	xge_place_program(pong_min FOLDER generated/autogen)
+# What the windows-cpp generator writes (games/autogen/windows-cpp/<game>/):
+# stand-alone games on SFML, none of the engine, each built into
+# output/<config>/generated/autogen/windows-cpp/<game>/. AUDIO links SFML's
+# audio, FONT copies the engine's font beside the game.
+function(xge_autogen_game game)
+	cmake_parse_arguments(arg "AUDIO;FONT" "" "" ${ARGN})
+	set(source "games/autogen/windows-cpp/${game}/source")
+	add_executable(${game} "${source}/main.cpp" "${source}/${game}.cpp" "${source}/${game}.h")
+	target_compile_features(${game} PRIVATE cxx_std_20)
+	target_link_libraries(${game} PRIVATE SFML::Graphics)
+	if (arg_AUDIO)
+		target_link_libraries(${game} PRIVATE SFML::Audio)
+	endif()
+	xge_warnings(${game})
+	if (arg_FONT)
+		add_custom_command(TARGET ${game} POST_BUILD
+			COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/games/assets/tuffy.ttf" "$<TARGET_FILE_DIR:${game}>/assets/tuffy.ttf"
+			VERBATIM)
+	endif()
+	xge_place_program(${game} FOLDER generated/autogen/windows-cpp/${game})
 	# In an IDE, beside the generated games' tests (tests.cmake).
-	set_target_properties(pong_min PROPERTIES FOLDER XGETestGenerated/XGETestAutogen)
+	set_target_properties(${game} PROPERTIES FOLDER XGETestGenerated/XGETestAutogen)
+endfunction()
 
-	# And pong.xml, its font copied beside it.
-	add_executable(pong
-		"games/autogen/windows-cpp/pong/source/main.cpp"
-		"games/autogen/windows-cpp/pong/source/pong.cpp"
-		"games/autogen/windows-cpp/pong/source/pong.h"
-	)
-	target_compile_features(pong PRIVATE cxx_std_20)
-	target_link_libraries(pong PRIVATE SFML::Graphics SFML::Audio)
-	xge_warnings(pong)
-	xge_place_program(pong FOLDER generated/autogen)
-	set_target_properties(pong PROPERTIES FOLDER XGETestGenerated/XGETestAutogen)
-	add_custom_command(TARGET pong POST_BUILD
-		COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/games/assets/tuffy.ttf" "$<TARGET_FILE_DIR:pong>/assets/tuffy.ttf"
-		VERBATIM)
-
-	# And breakout.xml.
-	add_executable(breakout
-		"games/autogen/windows-cpp/breakout/source/main.cpp"
-		"games/autogen/windows-cpp/breakout/source/breakout.cpp"
-		"games/autogen/windows-cpp/breakout/source/breakout.h"
-	)
-	target_compile_features(breakout PRIVATE cxx_std_20)
-	target_link_libraries(breakout PRIVATE SFML::Graphics SFML::Audio)
-	xge_warnings(breakout)
-	xge_place_program(breakout FOLDER generated/autogen)
-	set_target_properties(breakout PROPERTIES FOLDER XGETestGenerated/XGETestAutogen)
-	add_custom_command(TARGET breakout POST_BUILD
-		COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/games/assets/tuffy.ttf" "$<TARGET_FILE_DIR:breakout>/assets/tuffy.ttf"
-		VERBATIM)
+if (XGE_WITH_SFML3)
+	xge_autogen_game(pong_min)
+	xge_autogen_game(pong AUDIO FONT)
+	xge_autogen_game(breakout AUDIO FONT)
 endif()
