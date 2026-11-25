@@ -49,13 +49,16 @@
     </xsl:if>
     <xsl:apply-templates select="@* | * | text()" mode="covers" />
   </xsl:template>
-  <!-- Looks: texts, or rectangles of one colour (only their size
-       differs). -->
+  <!-- Looks: texts, rectangles of one colour (only their size differs) or
+       pictures; or the pictures of an animation of what is fired. -->
   <xsl:template match="object[count(sprite) &gt; 1] | group[count(sprite) &gt; 1]" mode="covers" priority="2">
     <xsl:variable name="color" select="string(sprite[1]/rectangle/color)" />
+    <xsl:variable name="animated" select="animation and count(. | $fired) = count($fired)" />
     <xsl:if test="self::group or not(not(sprite[not(text/content)])
-        or (not(sprite[not(rectangle)]) and not(sprite/rectangle[string(color) != $color])))">
-      <xsl:call-template name="gap"><xsl:with-param name="what" select="'looks other than texts or rectangles of one colour'" /></xsl:call-template>
+        or (not(sprite[not(rectangle)]) and not(sprite/rectangle[string(color) != $color]))
+        or (not(sprite[not(bitmap)]) and not(animation))
+        or ($animated and not(sprite[not(@name = current()/animation/frame/@sprite)]) and not(sprite[not(bitmap)])))">
+      <xsl:call-template name="gap"><xsl:with-param name="what" select="'looks other than texts, pictures or rectangles of one colour'" /></xsl:call-template>
     </xsl:if>
     <xsl:apply-templates select="@* | * | text()" mode="covers" />
   </xsl:template>
@@ -106,9 +109,10 @@
   <xsl:template match="member/variables | member/sprite" mode="covers" priority="2">
     <xsl:call-template name="gap"><xsl:with-param name="what" select="concat('&lt;', local-name(), '&gt; of a member')" /></xsl:call-template>
   </xsl:template>
-  <xsl:template match="text[count(content | number) != 1 and not(parent::sprite/parent::group[rows]/row/sprite/text/content)] | text[not(@style)][not(parent::sprite/parent::row)]
-      | row/sprite/text[@style or color or count(content) != 1] | style[font or not(size)]" mode="covers" priority="2">
-    <xsl:call-template name="gap"><xsl:with-param name="what" select="'a text other than one &lt;content&gt; or &lt;number&gt; in a style with a size'" /></xsl:call-template>
+  <xsl:template match="text[count(content) &gt; 1 or count(number) &gt; 1 or number/following-sibling::content
+        or (not(content | number) and not(parent::sprite/parent::group[rows]/row/sprite/text/content))] | text[not(@style)][not(parent::sprite/parent::row)]
+      | row/sprite/text[@style or count(content) != 1 or number] | style[font or (not(size) and @name = //text/@style)]" mode="covers" priority="2">
+    <xsl:call-template name="gap"><xsl:with-param name="what" select="'a text other than a &lt;content&gt;, a &lt;number&gt; or the two in a style with a size'" /></xsl:call-template>
   </xsl:template>
   <xsl:template match="sound[*[not(self::note or self::volume)] or note/@*[not(local-name() = 'pitch' or local-name() = 'to' or local-name() = 'wave')]
       or (@wave | note/@wave)[not(. = 'square' or . = 'triangle' or . = 'sine' or . = 'sawtooth' or . = 'noise')] or @*[not(local-name() = 'name' or local-name() = 'wave')]]" mode="covers" priority="2">
@@ -129,11 +133,11 @@
   <xsl:template match="input[trigger and *[not(self::button or self::trigger)]] | input[@on]" mode="covers" priority="2">
     <xsl:call-template name="gap"><xsl:with-param name="what" select="'a key that triggers and does more, or on= a moment'" /></xsl:call-template>
   </xsl:template>
-  <!-- The mouse across the window, steering a thing. -->
+  <!-- The mouse, or pad 1's stick, across the window, steering a thing. -->
   <xsl:template match="input[@axis]" mode="covers" priority="3">
-    <xsl:if test="@axis != 'mouse.x' or * [not(self::trigger)] or count(trigger) != 1
+    <xsl:if test="(@axis != 'mouse.x' and @axis != 'pad1.x') or * [not(self::trigger)] or count(trigger) != 1
         or not($things[@name = current()/trigger/@object]/actions/action[@name = current()/trigger/@action][count(*) = 1]/track[not(node())])">
-      <xsl:call-template name="gap"><xsl:with-param name="what" select="'an axis other than mouse.x steering a thing by &lt;track /&gt;'" /></xsl:call-template>
+      <xsl:call-template name="gap"><xsl:with-param name="what" select="'an axis other than mouse.x or pad1.x steering a thing by &lt;track /&gt;'" /></xsl:call-template>
     </xsl:if>
   </xsl:template>
   <xsl:template match="centered[offset and *[not(self::offset)]] | centered[count(*[not(self::offset)]) &gt; 1] | centered[not(ancestor::*[sprite][1]/sprite/rectangle or ancestor::*[sprite][1]/sprite/text or ancestor::*[sprite][1]/sprite/bitmap)]" mode="covers" priority="2">
@@ -164,12 +168,81 @@
     </xsl:if>
   </xsl:template>
 
+  <!-- Scenes: of the state that is played, each from= the one before it,
+       its ways leading to the next, naming the first's numbers; the first
+       takes the pieces. -->
+  <xsl:template match="state/scenes" mode="covers" priority="2">
+    <xsl:choose>
+      <xsl:when test="count(.. | $played) != 1">
+        <xsl:call-template name="gap"><xsl:with-param name="what" select="'&lt;scenes&gt; in a &lt;state&gt; that is not played'" /></xsl:call-template>
+      </xsl:when>
+      <xsl:otherwise><xsl:apply-templates select="@* | * | text()" mode="covers" /></xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+  <xsl:template match="scenes/scene" mode="covers" priority="2">
+    <xsl:variable name="before" select="preceding-sibling::scene[1]" />
+    <xsl:variable name="named" select="variables/variable/@name" />
+    <xsl:if test="($before and objects) or ($before and string(@from) != string($before/@name)) or (not($before) and @from)
+        or timers or count($named) != count($scene-numbers) or $scene-numbers[not(@name = $named)]">
+      <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;scene&gt; other than one from= the one before it, naming the same numbers, the first with the objects'" /></xsl:call-template>
+    </xsl:if>
+    <xsl:apply-templates select="@* | * | text()" mode="covers" />
+  </xsl:template>
+  <xsl:template match="scene/ways/way" mode="covers" priority="2">
+    <xsl:if test="string(@scene) != string(../../following-sibling::scene[1]/@name)">
+      <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;way&gt; to a scene other than the next'" /></xsl:call-template>
+    </xsl:if>
+  </xsl:template>
+  <xsl:template match="scene/variables/variable[*]" mode="covers" priority="2">
+    <xsl:call-template name="gap"><xsl:with-param name="what" select="'a number of a scene other than a plain one'" /></xsl:call-template>
+  </xsl:template>
+  <xsl:template match="scene/objects/object" mode="covers" priority="2">
+    <xsl:if test="* or @*[local-name() != 'name'] or not($pieces[@name = current()/@name])">
+      <xsl:call-template name="gap"><xsl:with-param name="what" select="'an object of a scene other than a piece it takes as it is'" /></xsl:call-template>
+    </xsl:if>
+  </xsl:template>
+  <!-- A piece: one a scene takes, or one that is fired. -->
+  <xsl:template match="game/objects/object" mode="covers" priority="2">
+    <xsl:choose>
+      <xsl:when test="count(. | $taken | $fired) != count($taken | $fired) or count(. | $taken) + count(. | $fired) = 2">
+        <xsl:call-template name="gap"><xsl:with-param name="what" select="'a piece other than one the scenes take or one that is fired'" /></xsl:call-template>
+      </xsl:when>
+      <xsl:otherwise><xsl:apply-templates select="@* | * | text()" mode="covers" /></xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+  <!-- Timers: a thing's, every so often. -->
+  <xsl:template match="object/timers/timer" mode="covers" priority="2">
+    <xsl:if test="@* or not(every) or *[not(self::every)][not(self::fire or self::reverse or self::play or self::inc or self::dec or self::set)] or count(../.. | $things) != count($things)">
+      <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;timer&gt; other than every so often of a thing'" /></xsl:call-template>
+    </xsl:if>
+    <xsl:apply-templates select="*" mode="covers" />
+  </xsl:template>
+  <!-- An animation: of what is fired, its pictures round and round, each as long. -->
+  <xsl:template match="object/animation" mode="covers" priority="2">
+    <xsl:if test="count(.. | $fired) != count($fired) or *[not(self::seconds or self::frame)] or frame/@*[local-name() != 'sprite'] or frame/node() or not(seconds)">
+      <xsl:call-template name="gap"><xsl:with-param name="what" select="'an &lt;animation&gt; other than of what is fired, each picture as long'" /></xsl:call-template>
+    </xsl:if>
+    <xsl:apply-templates select="seconds" mode="covers" />
+  </xsl:template>
+  <xsl:template match="object/facing" mode="covers" priority="2">
+    <xsl:if test="not(. = 'up' or . = 'down' or . = 'left' or . = 'right')">
+      <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;facing&gt; other than up, down, left or right'" /></xsl:call-template>
+    </xsl:if>
+  </xsl:template>
+  <xsl:template match="object/most" mode="covers" priority="2">
+    <xsl:if test="count(.. | $fired) != count($fired) or string(number(.)) = 'NaN'">
+      <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;most&gt; other than a number of what is fired'" /></xsl:call-template>
+    </xsl:if>
+  </xsl:template>
+
   <!-- The parts covered: the game, its window and numbers, its states of
        objects and groups (rectangles, blocks of them and texts), their
        rules, actions and keys, the seats and the computer's, the screens on
        the stack, the sounds and what is kept. -->
   <xsl:template mode="covers" match="
-      game | game/window | window/width | window/height | window/framerate
+      game | game/window | window/width | window/height | window/framerate | window/background | game/objects
+      | state/scenes | scenes/scene | scene/ways | scene/variables | scene/objects | scene/conditions
+      | object/timers | timer/every | animation/seconds | bitmap/color | style/scale
       | game/variables | variables/variable | game/styles | styles/style | style/size | style/color
       | game/keeps | game/sounds | sounds/sound | sound/note
       | game/states | states/objects | states/state | state/objects | state/inputs | state/shows | shows/show
@@ -199,7 +272,8 @@
       | object/@name | group/@name | member/@name | group/@class | object/@class | sprite/@name | text/@style
       | action/@name | collision/@edge | collision/@class | collision/@object | input/@button | seat/@number | computer/@seat
       | row/@number | bitmap/@name | bitmap/@from | note/@to | note/@wave | sound/@wave
-      | show/@object | show/@state | condition/@object | condition/@class | condition/@variable" />
+      | show/@object | show/@state | condition/@object | condition/@class | condition/@variable
+      | scene/@name | scene/@from | condition/@name | color/@char | bitmap/@style" />
 
   <!-- A name in a value must be one the program has: a number, a
        variable of the game, an object's variable (one drawn at random only
@@ -208,7 +282,7 @@
   <xsl:template mode="covers" match="text()[normalize-space(.) != ''][parent::width or parent::height or parent::x or parent::y
       or parent::value or parent::min or parent::max or parent::variable or parent::move or parent::bounce or parent::deflect
       or parent::offset or parent::number or parent::set or parent::inc or parent::atleast or parent::atmost or parent::above
-      or parent::below or parent::equal or parent::unequal]">
+      or parent::below or parent::equal or parent::unequal or parent::every or parent::seconds]">
     <xsl:variable name="text" select="normalize-space(.)" />
     <xsl:variable name="first" select="substring-before($text, '.')" />
     <xsl:variable name="rest" select="substring-after($text, '.')" />
@@ -218,6 +292,7 @@
     <xsl:variable name="random-here" select="$variable//random and ($here = $owner or $here/member = $owner) and (ancestor::position or ancestor::velocity or ancestor::variable)" />
     <xsl:if test="not(string(number($text)) != 'NaN'
         or /game/variables/variable[@name = $text]
+        or $scene-numbers[@name = $text]
         or ($variable and (not($variable//random) or $random-here or $written[. = $text]))
         or ($owner and count($owner | $things) = count($things) and ($rest = 'x' or $rest = 'y' or $rest = 'velocity.x' or $rest = 'velocity.y' or $rest = 'width' or $rest = 'height'))
         or ($owner and count($owner | $texts) = count($texts) and ($rest = 'width' or $rest = 'height') and generate-id($here) = generate-id($owner) and ancestor::position))">
@@ -225,7 +300,8 @@
     </xsl:if>
   </xsl:template>
   <xsl:template mode="covers" match="text()[normalize-space(.) != ''][parent::content or parent::size or parent::color or parent::note or parent::columns or parent::rows or parent::volume
-      or parent::row[parent::bitmap] or parent::scale or parent::type or parent::number[parent::row]]" />
+      or parent::row[parent::bitmap] or parent::scale or parent::type or parent::number[parent::row] or parent::background or parent::most
+      or parent::variable[ancestor::scene]]" />
 
   <!-- <self> names one of the object's own variables, or a grid cell's. -->
   <xsl:template mode="covers" match="self">

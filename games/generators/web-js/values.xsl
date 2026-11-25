@@ -213,6 +213,11 @@
       <xsl:when test="/game/variables/variable[@name = $text]">
         <xsl:call-template name="camel"><xsl:with-param name="name" select="$text" /></xsl:call-template>
       </xsl:when>
+      <xsl:when test="$scene-numbers[@name = $text]">
+        <!-- the scene's, of the one it is at -->
+        <xsl:value-of select="concat($scene-one, '().')" />
+        <xsl:call-template name="camel"><xsl:with-param name="name" select="$text" /></xsl:call-template>
+      </xsl:when>
       <xsl:when test="$variable">
         <xsl:variable name="kind"><xsl:call-template name="variable-kind"><xsl:with-param name="variable" select="$variable" /></xsl:call-template></xsl:variable>
         <xsl:choose>
@@ -240,6 +245,13 @@
           <xsl:when test="$rest = 'width'">Size.x</xsl:when>
           <xsl:otherwise>Size.y</xsl:otherwise>
         </xsl:choose>
+      </xsl:when>
+      <xsl:when test="$start and $owner and generate-id($owner) = generate-id($self) and ($rest = 'width' or $rest = 'height')">
+        <!-- its own size, in its start, where the thing is not made yet -->
+        <xsl:call-template name="own-size">
+          <xsl:with-param name="self" select="$owner" />
+          <xsl:with-param name="axis" select="substring('xy', 1 + number($rest = 'height'), 1)" />
+        </xsl:call-template>
       </xsl:when>
       <xsl:when test="$owner and count($owner | $things) = count($things) and ($rest = 'x' or $rest = 'y' or $rest = 'velocity.x' or $rest = 'velocity.y' or $rest = 'width' or $rest = 'height')">
         <xsl:value-of select="$in" />

@@ -214,6 +214,11 @@
       <xsl:when test="/game/variables/variable[@name = $text]">
         <xsl:call-template name="camel"><xsl:with-param name="name" select="$text" /></xsl:call-template>
       </xsl:when>
+      <xsl:when test="$scene-numbers[@name = $text]">
+        <!-- the scene's, of the one it is at -->
+        <xsl:value-of select="concat($in, $scene-one, '().')" />
+        <xsl:call-template name="camel"><xsl:with-param name="name" select="$text" /></xsl:call-template>
+      </xsl:when>
       <xsl:when test="$variable">
         <xsl:variable name="kind"><xsl:call-template name="variable-kind"><xsl:with-param name="variable" select="$variable" /></xsl:call-template></xsl:variable>
         <xsl:choose>

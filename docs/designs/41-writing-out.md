@@ -65,6 +65,24 @@ The largest single step was not a language change. It was dropping the frame-for
 - **Two more hidden rules.** A `<wrap />` waits until the thing is right off the edge and moves it a window and its own size, so a lane keeps its spacing. A bare `<reset />` puts a thing back where it started and keeps its numbers; `<reset object>` starts it again whole.
 - **Pixels were small.** The one subsystem-shaped part, a touch by lit pixels, is about a dozen lines once the picture is rows of text.
 
+## What Kaboom added
+
+| Part of the file | What the written game does with it |
+|---|---|
+| `<scenes>` each `from=` the one before, with the same numbers | a table, a row a scene (`waves[]`), `waveAt`, `wave().pace`, and `startWave()` starting the pieces the scenes take |
+| A condition copied down the scenes, one replaced by name in the last | the tests merged by name, then one test for each run of scenes they come out the same in (`waveAt < 7`, `waveAt == 7`) |
+| `<timers>` with `<every>` | a countdown in the record (`untilFire`), and a `while` that runs it as often as the time owes |
+| `<fire object>`, `<most>` | a list of the piece (`bombs`), a new one pushed from under the thing it leaves, none past the most |
+| `<despawn object>`, a bare `<despawn />` | the list emptied (and out of the loop over it); the one met erased |
+| `<animation>` on a fired piece | an `age` on each, the picture picked by `age / seconds` |
+| `<become from= sprite=>` | an `if` on the look, the look's picture size set with it |
+| `<color char>` on a picture or its style, `<background>` | a palette a picture (`Colors`), each lit pixel its letter's colour; the window cleared to the background |
+| `axis="pad1.x"` | the stick's moves sent to `mouse()` |
+
+- **More hidden rules.** The pieces a scene takes draw first, the screen's own objects next, what is fired last, so the score sits over the rooftop. A timer's wait is drawn again each time it is done, and the time over carries. A look of another size keeps the thing's top left. A shot leaves from the middle of the side its thing faces.
+- **The scenes were a table all along.** Kaboom's eight waves differ only in six numbers and one test; written out, they are eight rows and two `else if`s. A scene that changes more than numbers would need more, and this target says so rather than guessing.
+- **Names clash with the game's again.** The tone's `enum class Wave` met the game's `Wave` (a scene), so the sound's is now `Waveform`. In JavaScript, a start function that reads its own thing's size (`bomber.height`) reads it before the thing is made, so the size is written as the number it is.
+
 ## Suggestions
 
 Each is an idea, to be weighed when the game that needs it is written out.

@@ -18,6 +18,8 @@
        its start when it is drawn at random there, and live when changed.
      * A picture is a bitmap a thing is drawn with: its rows of pixels as
        the file writes them.
+     * A scene is a row of a table of its numbers; the things it takes are
+       the game's, started anew as it starts. What a thing fires is a list.
      * The screens are the states; the one whose things move is played,
        the others wait for keys (and test their own conditions). -->
 <xsl:stylesheet version="1.0"
@@ -30,8 +32,17 @@
   <xsl:variable name="screens" select="count($states) &gt; 1" />
   <xsl:variable name="shared" select="/game/states/objects/object" />
 
-  <!-- every object and member in the game, the shared ones first, in the file's order -->
-  <xsl:variable name="everything" select="/game/states/objects/object | $states/objects/object | $states/objects/group/member" />
+  <!-- Pieces: the top-level objects. A scene takes some (its own copy
+       each, started anew when the scene is), a thing fires others: a list
+       of them in flight. -->
+  <xsl:variable name="pieces" select="/game/objects/object" />
+  <xsl:variable name="scenes" select="$states/scenes/scene" />
+  <xsl:variable name="taken" select="$pieces[@name = $scenes/objects/object/@name]" />
+  <xsl:variable name="fired" select="$pieces[@name = //fire/@object]" />
+
+  <!-- every object and member in the game, the pieces the scenes take and
+       the shared ones first, in the file's order; not what is fired -->
+  <xsl:variable name="everything" select="$taken | /game/states/objects/object | $states/objects/object | $states/objects/group/member" />
 
   <!-- the names commands change: set, inc and dec say a variable, copy into one -->
   <xsl:variable name="written" select="//set/@variable | //inc/@variable | //dec/@variable | //copy/@into" />
@@ -42,7 +53,7 @@
   <!-- Things: rectangles or pictures that move, meet or count, in the
        file's order. -->
   <xsl:variable name="things" select="$everything[(sprite | parent::group/sprite)[1][rectangle or bitmap]]
-      [velocity or collisions or actions or variables
+      [velocity or collisions or actions or variables or timers
        or parent::group[velocity or collisions or actions or variables]
        or (@class | parent::group/@class) = $met-classes
        or @name = //trigger/@object]" />
@@ -53,7 +64,7 @@
       [collisions or group/collisions or @class = $met-classes or @name = //collision/@object]" />
 
   <!-- Pictures: bitmaps of the game's things, square pixels a row a line. -->
-  <xsl:variable name="pictures" select="/game/pictures/bitmap[@name = $everything/sprite/bitmap/@from or @name = $everything/parent::group/sprite/bitmap/@from]" />
+  <xsl:variable name="pictures" select="/game/pictures/bitmap[@name = ($everything | $fired)/sprite/bitmap/@from or @name = $everything/parent::group/sprite/bitmap/@from]" />
 
   <!-- Rows of words: a group of texts, a row's words each. -->
   <xsl:variable name="text-rows" select="$states/objects/group[not(member)][sprite/text]" />
@@ -76,6 +87,58 @@
   <xsl:variable name="records" select="$everything[@name = exsl:node-set($record-list)/name]" />
 
   <xsl:variable name="kept" select="$everything[@name = /game/keeps/keep/@object]" />
+
+  <!-- The scenes' numbers: those of the first, which every scene names. -->
+  <xsl:variable name="scene-numbers" select="$scenes[1]/variables/variable" />
+
+  <!-- One of the scenes, as many of them are called: wave for wave1, or
+       scene. -->
+  <xsl:template name="scene-word">
+    <xsl:variable name="word" select="translate($scenes[1]/@name, $digits, '')" />
+    <xsl:choose>
+      <xsl:when test="$word != '' and $word != $scenes[1]/@name"><xsl:value-of select="$word" /></xsl:when>
+      <xsl:otherwise>scene</xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
+  <!-- A scene's number is whole (int) when it is in every scene and is not
+       a speed, a place or a time. -->
+  <xsl:template name="scene-number-whole">
+    <xsl:param name="named" select="@name" />
+    <xsl:variable name="values" select="$scenes/variables/variable[@name = $named]" />
+    <xsl:if test="not($values[* or floor(number(.)) != number(.)])
+        and not(//*[self::velocity or self::position or self::every or self::move or self::seconds]//text()[normalize-space(.) = $named])">yes</xsl:if>
+  </xsl:template>
+
+  <!-- |wave|upto|: the scenes' whole numbers. -->
+  <xsl:variable name="whole-scene-numbers">
+    <xsl:text>|</xsl:text>
+    <xsl:for-each select="$scene-numbers">
+      <xsl:variable name="whole"><xsl:call-template name="scene-number-whole" /></xsl:variable>
+      <xsl:if test="$whole = 'yes'"><xsl:value-of select="concat(@name, '|')" /></xsl:if>
+    </xsl:for-each>
+  </xsl:variable>
+
+  <!-- A scene's conditions, as <c id="" /> each: those of the scene it is
+       from= (one of the same name its own instead), then its own others. -->
+  <xsl:template name="scene-conditions">
+    <xsl:param name="scene" />
+    <xsl:variable name="own" select="$scene/conditions/condition" />
+    <xsl:variable name="copied">
+      <xsl:if test="$scene/@from">
+        <xsl:call-template name="scene-conditions"><xsl:with-param name="scene" select="$scenes[@name = $scene/@from]" /></xsl:call-template>
+      </xsl:if>
+    </xsl:variable>
+    <xsl:for-each select="exsl:node-set($copied)/c">
+      <xsl:choose>
+        <xsl:when test="@name != '' and $own[@name = current()/@name]"><c id="{generate-id($own[@name = current()/@name])}" name="{@name}" /></xsl:when>
+        <xsl:otherwise><xsl:copy-of select="." /></xsl:otherwise>
+      </xsl:choose>
+    </xsl:for-each>
+    <xsl:for-each select="$own[not(@name) or not(@name = exsl:node-set($copied)/c/@name)]">
+      <c id="{generate-id()}" name="{@name}" />
+    </xsl:for-each>
+  </xsl:template>
 
   <!-- 'live', 'constant' or 'start' for the variable that is the context:
        a variable of an object or of a group. -->
@@ -100,7 +163,7 @@
         <xsl:call-template name="variable-kind" />
       </xsl:for-each>
     </xsl:variable>
-    <xsl:if test="contains($kinds, 'live') or count($object/sprite) &gt; 1">yes</xsl:if>
+    <xsl:if test="contains($kinds, 'live') or count($object/sprite) &gt; 1 or $object/timers/timer">yes</xsl:if>
   </xsl:template>
 
   <!-- The object a name's first part names, or its group: ball, paddle1, paddles. -->
@@ -129,11 +192,13 @@
     </xsl:choose>
   </xsl:template>
 
-  <!-- How many across a picture's pixel is: its <scale>, or 1. -->
+  <!-- How many across a picture's pixel is: its <scale>, its style's, or 1. -->
   <xsl:template name="picture-scale">
     <xsl:param name="bitmap" />
+    <xsl:variable name="style" select="/game/styles/style[@name = $bitmap/@style]" />
     <xsl:choose>
       <xsl:when test="$bitmap/scale"><xsl:value-of select="normalize-space($bitmap/scale)" /></xsl:when>
+      <xsl:when test="$style/scale"><xsl:value-of select="normalize-space($style/scale)" /></xsl:when>
       <xsl:otherwise>1</xsl:otherwise>
     </xsl:choose>
   </xsl:template>

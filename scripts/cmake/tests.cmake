@@ -316,6 +316,7 @@ add_executable(xgetest-generated EXCLUDE_FROM_ALL
 	"xge/tests/written/pong.h"
 	"xge/tests/written/breakout.h"
 	"xge/tests/written/spacerace.h"
+	"xge/tests/written/kaboom.h"
 )
 # Visual Studio's Build Solution leaves it out too.
 # In an IDE, out of the way in a folder of its own.
@@ -389,7 +390,8 @@ set(windows_cpp_games
 	"pong_min=pong_min::Pong"
 	"pong=pong::Pong"
 	"breakout=breakout::Breakout"
-	"spacerace=spacerace::SpaceRace")
+	"spacerace=spacerace::SpaceRace"
+	"kaboom=kaboom::Kaboom")
 set(written_includes "")
 set(written_entries "")
 set(written_tests "")

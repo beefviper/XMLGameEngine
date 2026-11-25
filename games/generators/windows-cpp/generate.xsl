@@ -30,12 +30,16 @@
   <xsl:include href="covers.xsl" />
   <xsl:include href="game.xsl" />
   <xsl:include href="grids.xsl" />
+  <xsl:include href="scenes.xsl" />
   <xsl:include href="program.xsl" />
   <xsl:include href="verbs/become.xsl" />
   <xsl:include href="verbs/bounce.xsl" />
   <xsl:include href="verbs/dec.xsl" />
   <xsl:include href="verbs/deflect.xsl" />
+  <xsl:include href="verbs/despawn.xsl" />
   <xsl:include href="verbs/die.xsl" />
+  <xsl:include href="verbs/enter.xsl" />
+  <xsl:include href="verbs/fire.xsl" />
   <xsl:include href="verbs/hold.xsl" />
   <xsl:include href="verbs/inc.xsl" />
   <xsl:include href="verbs/move.xsl" />
@@ -44,6 +48,7 @@
   <xsl:include href="verbs/pop.xsl" />
   <xsl:include href="verbs/push.xsl" />
   <xsl:include href="verbs/reset.xsl" />
+  <xsl:include href="verbs/reverse.xsl" />
   <xsl:include href="verbs/set.xsl" />
   <xsl:include href="verbs/stick.xsl" />
   <xsl:include href="verbs/track.xsl" />

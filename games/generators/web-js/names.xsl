@@ -74,6 +74,40 @@
     </xsl:choose>
   </xsl:template>
 
+  <!-- The list of a fired piece in flight: bombs. -->
+  <xsl:template name="fired-list-name">
+    <xsl:param name="piece" select="." />
+    <xsl:call-template name="camel"><xsl:with-param name="name" select="concat($piece/@name, 's')" /></xsl:call-template>
+  </xsl:template>
+
+  <!-- A timer's count down: untilFire, by its name or its first verb. -->
+  <xsl:template name="timer-name">
+    <xsl:param name="timer" select="." />
+    <xsl:call-template name="camel">
+      <xsl:with-param name="name">
+        <xsl:text>until </xsl:text>
+        <xsl:choose>
+          <xsl:when test="$timer/@name"><xsl:value-of select="$timer/@name" /></xsl:when>
+          <xsl:otherwise><xsl:value-of select="local-name($timer/*[not(self::every)][1])" /></xsl:otherwise>
+        </xsl:choose>
+      </xsl:with-param>
+    </xsl:call-template>
+  </xsl:template>
+
+  <!-- bomberColors: a picture's palette, by its name, or by its style's when
+       it has none of its own. -->
+  <xsl:template name="palette-name">
+    <xsl:param name="bitmap" select="." />
+    <xsl:call-template name="camel">
+      <xsl:with-param name="name">
+        <xsl:choose>
+          <xsl:when test="$bitmap/color or not($bitmap/@style)"><xsl:value-of select="concat($bitmap/@name, ' colors')" /></xsl:when>
+          <xsl:otherwise><xsl:value-of select="concat($bitmap/@style, ' colors')" /></xsl:otherwise>
+        </xsl:choose>
+      </xsl:with-param>
+    </xsl:call-template>
+  </xsl:template>
+
   <!-- A picture's pixels: rocketsPicture. -->
   <xsl:template name="picture-name">
     <xsl:param name="bitmap" select="." />

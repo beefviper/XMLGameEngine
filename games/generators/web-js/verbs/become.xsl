@@ -4,14 +4,14 @@
 <!-- author: beefviper -->
 <!-- date: Nov 24, 2026 -->
 
-<!-- <become object sprite /> gives an object that look: computer.look = "smart"; and a thing whose looks differ in size, that size. -->
+<!-- <become object sprite /> gives an object that look: computer.look = "smart"; and a thing whose looks differ in size, that size; with from=, only when it shows that look. -->
 <xsl:stylesheet version="1.0"
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
   <!-- covered: anywhere, naming an object with that look -->
   <xsl:template match="become[@object and @sprite and not(node())]" mode="covers">
     <xsl:variable name="object" select="$everything[@name = current()/@object] | $states[@name = substring-before(current()/@object, '.')]/objects/object[@name = substring-after(current()/@object, '.')]" />
-    <xsl:if test="not($object/sprite[@name = current()/@sprite])">
+    <xsl:if test="not($object/sprite[@name = current()/@sprite]) or (@from and not($object/sprite[@name = current()/@from]))">
       <xsl:call-template name="gap"><xsl:with-param name="what" select="concat('&lt;become&gt; of ', $quote, @object, $quote, ' to a look it has not')" /></xsl:call-template>
     </xsl:if>
   </xsl:template>
@@ -19,20 +19,67 @@
   <xsl:template match="become" mode="do">
     <xsl:variable name="object" select="$everything[@name = current()/@object] | $states[@name = substring-before(current()/@object, '.')]/objects/object[@name = substring-after(current()/@object, '.')]" />
     <xsl:variable name="thing"><xsl:call-template name="object-name"><xsl:with-param name="object" select="$object" /></xsl:call-template></xsl:variable>
-    <xsl:variable name="look" select="$object/sprite[@name = current()/@sprite]/rectangle" />
-    <xsl:value-of select="concat($thing, '.look = ')" />
-    <xsl:call-template name="look-name"><xsl:with-param name="object" select="$object" /><xsl:with-param name="look" select="@sprite" /></xsl:call-template>
-    <xsl:text>;</xsl:text>
+    <xsl:variable name="look" select="$object/sprite[@name = current()/@sprite]" />
+    <xsl:variable name="width"><xsl:call-template name="look-size"><xsl:with-param name="look" select="$look" /><xsl:with-param name="axis" select="'x'" /></xsl:call-template></xsl:variable>
+    <xsl:variable name="height"><xsl:call-template name="look-size"><xsl:with-param name="look" select="$look" /><xsl:with-param name="axis" select="'y'" /></xsl:call-template></xsl:variable>
     <!-- a size that differs between its looks, this look's -->
-    <xsl:if test="$look and $object/sprite/rectangle[string(width) != string($look/width)]">
-      <xsl:value-of select="concat('&#10;', $thing, '.size.x = ')" />
-      <xsl:call-template name="value"><xsl:with-param name="node" select="$look/width" /><xsl:with-param name="self" select="$object" /></xsl:call-template>
+    <xsl:variable name="widths">
+      <xsl:for-each select="$object/sprite">
+        <xsl:variable name="each"><xsl:call-template name="look-size"><xsl:with-param name="look" select="." /><xsl:with-param name="axis" select="'x'" /></xsl:call-template></xsl:variable>
+        <xsl:if test="$each != $width">x</xsl:if>
+      </xsl:for-each>
+    </xsl:variable>
+    <xsl:variable name="heights">
+      <xsl:for-each select="$object/sprite">
+        <xsl:variable name="each"><xsl:call-template name="look-size"><xsl:with-param name="look" select="." /><xsl:with-param name="axis" select="'y'" /></xsl:call-template></xsl:variable>
+        <xsl:if test="$each != $height">x</xsl:if>
+      </xsl:for-each>
+    </xsl:variable>
+    <xsl:variable name="lines">
+      <xsl:value-of select="concat($thing, '.look = ')" />
+      <xsl:call-template name="look-name"><xsl:with-param name="object" select="$object" /><xsl:with-param name="look" select="@sprite" /></xsl:call-template>
       <xsl:text>;</xsl:text>
-    </xsl:if>
-    <xsl:if test="$look and $object/sprite/rectangle[string(height) != string($look/height)]">
-      <xsl:value-of select="concat('&#10;', $thing, '.size.y = ')" />
-      <xsl:call-template name="value"><xsl:with-param name="node" select="$look/height" /><xsl:with-param name="self" select="$object" /></xsl:call-template>
-      <xsl:text>;</xsl:text>
-    </xsl:if>
+      <xsl:if test="$widths != ''"><xsl:value-of select="concat('&#10;', $thing, '.size.x = ', $width, ';')" /></xsl:if>
+      <xsl:if test="$heights != ''"><xsl:value-of select="concat('&#10;', $thing, '.size.y = ', $height, ';')" /></xsl:if>
+    </xsl:variable>
+    <xsl:choose>
+      <xsl:when test="@from">
+        <!-- only when it shows that look -->
+        <xsl:value-of select="concat('if (', $thing, '.look === ')" />
+        <xsl:call-template name="look-name"><xsl:with-param name="object" select="$object" /><xsl:with-param name="look" select="@from" /></xsl:call-template>
+        <xsl:text>)</xsl:text>
+        <xsl:choose>
+          <xsl:when test="contains($lines, '&#10;')">
+            <xsl:text> {&#10;&#9;</xsl:text>
+            <xsl:call-template name="replace"><xsl:with-param name="text" select="$lines" /><xsl:with-param name="from" select="'&#10;'" /><xsl:with-param name="to" select="'&#10;&#9;'" /></xsl:call-template>
+            <xsl:text>&#10;}</xsl:text>
+          </xsl:when>
+          <xsl:otherwise><xsl:value-of select="concat(' { ', $lines, ' }')" /></xsl:otherwise>
+        </xsl:choose>
+      </xsl:when>
+      <xsl:otherwise><xsl:value-of select="$lines" /></xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
+  <!-- A look's width (x) or height (y): its rectangle's, or its picture's. -->
+  <xsl:template name="look-size">
+    <xsl:param name="look" />
+    <xsl:param name="axis" />
+    <xsl:variable name="bitmap" select="$pictures[@name = $look/bitmap/@from]" />
+    <xsl:choose>
+      <xsl:when test="$bitmap">
+        <xsl:variable name="scale"><xsl:call-template name="picture-scale"><xsl:with-param name="bitmap" select="$bitmap" /></xsl:call-template></xsl:variable>
+        <xsl:choose>
+          <xsl:when test="$axis = 'x'"><xsl:value-of select="string-length(normalize-space($bitmap/row[1])) * $scale" /></xsl:when>
+          <xsl:otherwise><xsl:value-of select="count($bitmap/row) * $scale" /></xsl:otherwise>
+        </xsl:choose>
+      </xsl:when>
+      <xsl:when test="$look/rectangle">
+        <xsl:call-template name="value">
+          <xsl:with-param name="node" select="$look/rectangle/*[local-name() = substring('widthheight', 1 + 5 * number($axis = 'y'), 5 + number($axis = 'y'))]" />
+          <xsl:with-param name="self" select="$look/.." />
+        </xsl:call-template>
+      </xsl:when>
+    </xsl:choose>
   </xsl:template>
 </xsl:stylesheet>

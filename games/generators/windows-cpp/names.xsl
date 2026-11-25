@@ -126,6 +126,36 @@
     </xsl:choose>
   </xsl:template>
 
+  <!-- The list of a fired piece in flight: bombs. -->
+  <xsl:template name="fired-list-name">
+    <xsl:param name="piece" select="." />
+    <xsl:call-template name="camel"><xsl:with-param name="name" select="concat($piece/@name, 's')" /></xsl:call-template>
+  </xsl:template>
+
+  <!-- What one in flight is: its record (Bomb) when it has an animation or
+       numbers of its own, else a Thing. -->
+  <xsl:template name="fired-type">
+    <xsl:param name="piece" select="." />
+    <xsl:choose>
+      <xsl:when test="$piece/animation or $piece/variables/variable"><xsl:call-template name="type-word"><xsl:with-param name="name" select="$piece/@name" /></xsl:call-template></xsl:when>
+      <xsl:otherwise>Thing</xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
+  <!-- A timer's count down: untilFire, by its name or its first verb. -->
+  <xsl:template name="timer-name">
+    <xsl:param name="timer" select="." />
+    <xsl:call-template name="camel">
+      <xsl:with-param name="name">
+        <xsl:text>until </xsl:text>
+        <xsl:choose>
+          <xsl:when test="$timer/@name"><xsl:value-of select="$timer/@name" /></xsl:when>
+          <xsl:otherwise><xsl:value-of select="local-name($timer/*[not(self::every)][1])" /></xsl:otherwise>
+        </xsl:choose>
+      </xsl:with-param>
+    </xsl:call-template>
+  </xsl:template>
+
   <!-- A picture's pixels: rocketsPicture. -->
   <xsl:template name="picture-name">
     <xsl:param name="bitmap" select="." />
