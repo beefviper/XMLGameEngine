@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<!-- pong_min.html -->
+<!-- Pong -->
+<!-- author: beefviper -->
+<!-- date: Nov 25, 2026 -->
+
+<!-- Pong: its numbers, its things and its rules, then the page that
+     plays them. Open it in a browser. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Pong</title>
+<style>
+	html, body { margin: 0; height: 100%; background: black; overflow: hidden; }
+	body { display: flex; align-items: center; justify-content: center; }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<script type="module">
+const windowWidth = 1280;
+const windowHeight = 720;
+
+const margin = 30;
+const size = 16;
+const width = 20;
+const height = 120;
+const step = 300;
+const ballSpeed = 360;
+
+function sine(degrees) { return Math.sin(degrees * Math.PI / 180); }
+function cosine(degrees) { return Math.cos(degrees * Math.PI / 180); }
+
+function between(min, max) { return min + Math.random() * (max - min); }
+
+function touching(a, b) {
+	return a.position.x < b.position.x + b.size.x && b.position.x < a.position.x + a.size.x
+		&& a.position.y < b.position.y + b.size.y && b.position.y < a.position.y + a.size.y;
+}
+
+// Off the side of `other` it hit, at the same speed, up to `degrees` off
+// straight out: steeper the further from that side's middle, towards the
+// end it hit nearer to.
+function deflect(thing, other, degrees) {
+	const middle = { x: thing.position.x + thing.size.x / 2, y: thing.position.y + thing.size.y / 2 };
+	const otherMiddle = { x: other.position.x + other.size.x / 2, y: other.position.y + other.size.y / 2 };
+	const apart = { x: middle.x - otherMiddle.x, y: middle.y - otherMiddle.y };
+	const reach = { x: (thing.size.x + other.size.x) / 2, y: (thing.size.y + other.size.y) / 2 };
+	const speed = Math.hypot(thing.velocity.x, thing.velocity.y);
+
+	if (reach.x - Math.abs(apart.x) < reach.y - Math.abs(apart.y)) {
+		// its left or right side
+		const away = apart.x < 0 ? -1 : 1;
+		const angle = degrees * Math.max(-1, Math.min(1, apart.y / (other.size.y / 2)));
+		thing.velocity = { x: away * speed * cosine(angle), y: speed * sine(angle) };
+		thing.position.x = otherMiddle.x + away * reach.x - thing.size.x / 2;
+	} else {
+		// its top or bottom
+		const away = apart.y < 0 ? -1 : 1;
+		const angle = degrees * Math.max(-1, Math.min(1, apart.x / (other.size.x / 2)));
+		thing.velocity = { x: speed * sine(angle), y: away * speed * cosine(angle) };
+		thing.position.y = otherMiddle.y + away * reach.y - thing.size.y / 2;
+	}
+}
+
+// The ball as it starts, and starts again.
+function startBall() {
+	const angle = between(-30, 30);
+	const side = between(-1, 1);
+	return {
+		position: { x: windowWidth / 2 - size / 2, y: windowHeight / 2 - size / 2 },
+		velocity: { x: Math.sign(side) * ballSpeed * cosine(angle), y: ballSpeed * sine(angle) },
+		size: { x: size, y: size },
+	};
+}
+
+// Each thing on the screen: where it is, how it moves, how big it is.
+let ball = startBall();
+let paddle1 = { position: { x: margin, y: windowHeight / 2 - height / 2 }, velocity: { x: 0, y: 0 }, size: { x: width, y: height } };
+let paddle2 = { position: { x: windowWidth - margin - width, y: windowHeight / 2 - height / 2 }, velocity: { x: 0, y: 0 }, size: { x: width, y: height } };
+
+// Which keys are down.
+let wHeld = false;
+let sHeld = false;
+let upHeld = false;
+let downHeld = false;
+
+// The keys the game uses, kept from the page (the arrows would scroll it).
+const gameKeys = new Set(["KeyW", "KeyS", "ArrowUp", "ArrowDown"]);
+
+function key(code, down) {
+	switch (code) {
+	case "KeyW": wHeld = down; break;
+	case "KeyS": sHeld = down; break;
+	case "ArrowUp": upHeld = down; break;
+	case "ArrowDown": downHeld = down; break;
+	}
+}
+
+function frame(seconds) {
+	// the keys held
+	paddle1.velocity = { x: 0, y: 0 };
+	if (wHeld) { paddle1.velocity.y -= step; }
+	if (sHeld) { paddle1.velocity.y += step; }
+	paddle2.velocity = { x: 0, y: 0 };
+	if (upHeld) { paddle2.velocity.y -= step; }
+	if (downHeld) { paddle2.velocity.y += step; }
+
+	// everything moves
+	for (const thing of [ball, paddle1, paddle2]) {
+		thing.position.x += thing.velocity.x * seconds;
+		thing.position.y += thing.velocity.y * seconds;
+	}
+
+	// at the window's edges
+	if (ball.position.y < 0) { ball.velocity.y = Math.abs(ball.velocity.y); }
+	if (ball.position.y > windowHeight - ball.size.y) { ball.velocity.y = -Math.abs(ball.velocity.y); }
+	if (ball.position.x < 0 || ball.position.x > windowWidth - ball.size.x) { ball = startBall(); }
+	for (const paddle of [paddle1, paddle2]) {
+		if (paddle.position.y < 0) { paddle.position.y = 0; }
+		if (paddle.position.y > windowHeight - paddle.size.y) { paddle.position.y = windowHeight - paddle.size.y; }
+	}
+
+	// what meets what
+	for (const other of [paddle1, paddle2]) {
+		if (touching(ball, other)) { deflect(ball, other, 45); }
+	}
+}
+
+// The page: the canvas as large as the browser's window holds, the game's
+// proportions kept, with a canvas pixel for each of the screen's.
+const canvas = document.getElementById("game");
+const context = canvas.getContext("2d");
+
+function fit() {
+	const scale = Math.min(innerWidth / windowWidth, innerHeight / windowHeight);
+	canvas.style.width = Math.floor(windowWidth * scale) + "px";
+	canvas.style.height = Math.floor(windowHeight * scale) + "px";
+	canvas.width = Math.max(1, Math.round(windowWidth * scale * devicePixelRatio));
+	canvas.height = Math.max(1, Math.round(windowHeight * scale * devicePixelRatio));
+}
+addEventListener("resize", fit);
+fit();
+
+// Keys in, a key held down saying so once. Away from the page nothing stays
+// held.
+const held = new Set();
+addEventListener("keydown", (event) => {
+	if (!gameKeys.has(event.code)) { return; }
+	event.preventDefault();
+	if (!event.repeat) { held.add(event.code); key(event.code, true); }
+});
+addEventListener("keyup", (event) => {
+	if (!gameKeys.has(event.code)) { return; }
+	event.preventDefault();
+	held.delete(event.code);
+	key(event.code, false);
+});
+addEventListener("blur", () => {
+	for (const code of held) { key(code, false); }
+	held.clear();
+});
+
+function box(x, y, width, height, color = "white") {
+	context.fillStyle = color;
+	context.fillRect(x, y, width, height);
+}
+
+// A frame each time the browser draws: the time since the last one, at most
+// a quarter of a second, then the picture.
+let last = performance.now();
+function playFrame(now) {
+	frame(Math.min(Math.max(now - last, 0) / 1000, 0.25));
+	last = now;
+
+	context.setTransform(canvas.width / windowWidth, 0, 0, canvas.height / windowHeight, 0, 0);
+	context.fillStyle = "black";
+	context.fillRect(0, 0, windowWidth, windowHeight);
+	box(ball.position.x, ball.position.y, ball.size.x, ball.size.y);
+	box(paddle1.position.x, paddle1.position.y, paddle1.size.x, paddle1.size.y);
+	box(paddle2.position.x, paddle2.position.y, paddle2.size.x, paddle2.size.y);
+	requestAnimationFrame(playFrame);
+}
+requestAnimationFrame(playFrame);
+</script>
+</body>
+</html>

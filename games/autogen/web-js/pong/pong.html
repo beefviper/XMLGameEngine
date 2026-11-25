@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<!-- pong.html -->
+<!-- Pong -->
+<!-- author: beefviper -->
+<!-- date: Nov 25, 2026 -->
+
+<!-- Pong: its numbers, its things and its rules, then the page that
+     plays them. Open it in a browser. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Pong</title>
+<style>
+	html, body { margin: 0; height: 100%; background: black; overflow: hidden; }
+	body { display: flex; align-items: center; justify-content: center; }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<script type="module">
+const windowWidth = 1280;
+const windowHeight = 720;
+
+const margin = 30;
+const width = 20;
+const height = 120;
+const step = 300;
+const ballSize = 16;
+const ballSpeed = 540;
+
+function sine(degrees) { return Math.sin(degrees * Math.PI / 180); }
+function cosine(degrees) { return Math.cos(degrees * Math.PI / 180); }
+
+function between(min, max) { return min + Math.random() * (max - min); }
+
+function touching(a, b) {
+	return a.position.x < b.position.x + b.size.x && b.position.x < a.position.x + a.size.x
+		&& a.position.y < b.position.y + b.size.y && b.position.y < a.position.y + a.size.y;
+}
+
+// Off the side of `other` it hit, at the same speed, up to `degrees` off
+// straight out: steeper the further from that side's middle, towards the
+// end it hit nearer to.
+function deflect(thing, other, degrees) {
+	const middle = { x: thing.position.x + thing.size.x / 2, y: thing.position.y + thing.size.y / 2 };
+	const otherMiddle = { x: other.position.x + other.size.x / 2, y: other.position.y + other.size.y / 2 };
+	const apart = { x: middle.x - otherMiddle.x, y: middle.y - otherMiddle.y };
+	const reach = { x: (thing.size.x + other.size.x) / 2, y: (thing.size.y + other.size.y) / 2 };
+	const speed = Math.hypot(thing.velocity.x, thing.velocity.y);
+
+	if (reach.x - Math.abs(apart.x) < reach.y - Math.abs(apart.y)) {
+		// its left or right side
+		const away = apart.x < 0 ? -1 : 1;
+		const angle = degrees * Math.max(-1, Math.min(1, apart.y / (other.size.y / 2)));
+		thing.velocity = { x: away * speed * cosine(angle), y: speed * sine(angle) };
+		thing.position.x = otherMiddle.x + away * reach.x - thing.size.x / 2;
+	} else {
+		// its top or bottom
+		const away = apart.y < 0 ? -1 : 1;
+		const angle = degrees * Math.max(-1, Math.min(1, apart.x / (other.size.x / 2)));
+		thing.velocity = { x: speed * sine(angle), y: away * speed * cosine(angle) };
+		thing.position.y = otherMiddle.y + away * reach.y - thing.size.y / 2;
+	}
+}
+
+function startPaddle1() {
+	return {
+		position: { x: margin, y: windowHeight / 2 - height / 2 },
+		velocity: { x: 0, y: 0 },
+		size: { x: width, y: height },
+		score: 0,
+	};
+}
+
+function startPaddle2() {
+	return {
+		position: { x: windowWidth - margin - width, y: windowHeight / 2 - height / 2 },
+		velocity: { x: 0, y: 0 },
+		size: { x: width, y: height },
+		score: 0,
+	};
+}
+
+// The ball as it starts, and starts again.
+function startBall() {
+	const angle = between(-30, 30);
+	const side = between(-1, 1);
+	return {
+		position: { x: windowWidth / 2 - ballSize / 2, y: windowHeight / 2 - ballSize / 2 },
+		velocity: { x: Math.sign(side) * ballSpeed * cosine(angle), y: ballSpeed * sine(angle) },
+		size: { x: ballSize, y: ballSize },
+		hits: 0,
+	};
+}
+
+// Each thing on the screen: where it is, how it moves, how big it is, and what it counts.
+let people = 1;
+let computer = { look: "easy", level: 1 };
+let paddle1 = startPaddle1();
+let paddle2 = startPaddle2();
+let ball = startBall();
+
+// The screens, the one on top played.
+let screens = ["title"];
+function screen() { return screens[screens.length - 1]; }
+
+// A new game: everything as it starts but what is kept, from the first screen.
+function newGame() {
+	paddle1 = startPaddle1();
+	paddle2 = startPaddle2();
+	ball = startBall();
+	screens = ["title"];
+}
+
+// What is kept from one game to the next, in the browser for this page.
+function keep() {
+	try {
+		localStorage.setItem("pong-kept", JSON.stringify({ computerLook: computer.look, computerLevel: computer.level }));
+	} catch {
+		// a page the browser keeps nothing for plays on
+	}
+}
+
+function readKept() {
+	try {
+		const kept = JSON.parse(localStorage.getItem("pong-kept")) ?? {};
+		if (["easy", "smart"].includes(kept.computerLook)) { computer.look = kept.computerLook; }
+		if (typeof kept.computerLevel === "number") { computer.level = kept.computerLevel; }
+	} catch {
+		// nothing kept yet
+	}
+}
+
+// The sounds, a square wave each: how high, how long.
+const sounds = {
+	paddle: { hertz: 459, seconds: 0.1 },
+	wall: { hertz: 226, seconds: 0.02 },
+	score: { hertz: 490, seconds: 0.26 },
+};
+let audio = null;
+
+// A sound, faded in and out over two thousandths of a second so it doesn't
+// click. The browser lets a page make sounds once a key has been pressed.
+function play(sound) {
+	audio ??= new AudioContext();
+	const { hertz, seconds } = sounds[sound];
+	const now = audio.currentTime;
+	const tone = audio.createOscillator();
+	const volume = audio.createGain();
+	tone.type = "square";
+	tone.frequency.value = hertz;
+	volume.gain.setValueAtTime(0, now);
+	volume.gain.linearRampToValueAtTime(0.15, now + 0.002);
+	volume.gain.setValueAtTime(0.15, now + seconds - 0.002);
+	volume.gain.linearRampToValueAtTime(0, now + seconds);
+	tone.connect(volume).connect(audio.destination);
+	tone.start(now);
+	tone.stop(now + seconds);
+}
+
+// Which keys are down.
+let wHeld = false;
+let pad1UpHeld = false;
+let sHeld = false;
+let pad1DownHeld = false;
+let upHeld = false;
+let pad2UpHeld = false;
+let downHeld = false;
+let pad2DownHeld = false;
+
+// The keys the game uses, kept from the page (the arrows would scroll it).
+const gameKeys = new Set(["Digit1", "Numpad1", "Digit2", "Numpad2", "KeyA", "KeyD", "KeyW", "KeyS", "ArrowUp", "ArrowDown", "Pause", "Space"]);
+
+function key(code, down) {
+	switch (code) {
+	case "KeyW": wHeld = down; break;
+	case "KeyS": sHeld = down; break;
+	case "ArrowUp": upHeld = down; break;
+	case "ArrowDown": downHeld = down; break;
+	}
+	if (!down) { return; }
+
+	switch (screen()) {
+	case "title":
+		if (code === "Digit1" || code === "Numpad1") { people = 1; screens.push("playing"); }
+		if (code === "Digit2" || code === "Numpad2") { people = 2; screens.push("playing"); }
+		if (code === "KeyA") { computer.level = 1; computer.look = "easy"; }
+		if (code === "KeyD") { computer.level = 2; computer.look = "smart"; }
+		break;
+	case "playing":
+		if (code === "Pause") { screens.push("paused"); }
+		break;
+	case "paused":
+		if (code === "Pause") { screens.pop(); }
+		break;
+	case "over":
+		if (code === "Space") { keep(); newGame(); }
+		break;
+	}
+}
+
+function pad(pad, button, down) {
+	if (pad === 1 && button === "up") { pad1UpHeld = down; }
+	if (pad === 1 && button === "down") { pad1DownHeld = down; }
+	if (pad === 2 && button === "up") { pad2UpHeld = down; }
+	if (pad === 2 && button === "down") { pad2DownHeld = down; }
+	if (!down) { return; }
+
+	switch (screen()) {
+	case "playing":
+		if (pad === 1 && button === "start") { screens.push("paused"); }
+		break;
+	case "paused":
+		if (pad === 1 && button === "start") { screens.pop(); }
+		break;
+	}
+}
+
+function frame(seconds) {
+	if (screen() !== "playing") { return; }
+
+	// the keys held, seat 2's by the computer while nobody has it
+	let seat2 = { up: upHeld || pad2UpHeld, down: downHeld || pad2DownHeld };
+	if (people < 2) { seat2 = computerHolds(); }
+	paddle1.velocity = { x: 0, y: 0 };
+	if (wHeld || pad1UpHeld) { paddle1.velocity.y -= step; }
+	if (sHeld || pad1DownHeld) { paddle1.velocity.y += step; }
+	paddle2.velocity = { x: 0, y: 0 };
+	if (seat2.up) { paddle2.velocity.y -= step; }
+	if (seat2.down) { paddle2.velocity.y += step; }
+
+	// everything moves
+	for (const thing of [paddle1, paddle2, ball]) {
+		thing.position.x += thing.velocity.x * seconds;
+		thing.position.y += thing.velocity.y * seconds;
+	}
+
+	// at the window's edges
+	for (const paddle of [paddle1, paddle2]) {
+		if (paddle.position.y < 0) { paddle.position.y = 0; }
+		if (paddle.position.y > windowHeight - paddle.size.y) { paddle.position.y = windowHeight - paddle.size.y; }
+	}
+	if (ball.position.y < 0) {
+		ball.velocity.y = Math.abs(ball.velocity.y);
+		play("wall");
+	}
+	if (ball.position.y > windowHeight - ball.size.y) {
+		ball.velocity.y = -Math.abs(ball.velocity.y);
+		play("wall");
+	}
+	if (ball.position.x < 0) {
+		paddle2.score += 1;
+		play("score");
+		ball = startBall();
+	}
+	if (ball.position.x > windowWidth - ball.size.x) {
+		paddle1.score += 1;
+		play("score");
+		ball = startBall();
+	}
+
+	// what meets what
+	for (const paddle of [paddle1, paddle2]) {
+		if (touching(ball, paddle)) {
+			deflect(ball, paddle, 45);
+			ball.hits += 1;
+			play("paddle");
+			if (ball.hits === 4 || ball.hits === 12) {
+				ball.velocity.x *= 1.3;
+				ball.velocity.y *= 1.3;
+			}
+		}
+	}
+
+	// the game's own tests, the first that holds
+	if (paddle1.score >= 11 || paddle2.score >= 11) { screens.push("over"); }
+}
+
+// The computer in seat 2: the keys it holds.
+function computerHolds() {
+	const holds = { up: false, down: false };
+	if (computer.level === 1) {
+		if (paddle2.position.y < ball.position.y + ballSize / 2 - height / 2 - 8) { holds.down = true; }
+		if (paddle2.position.y > ball.position.y + ballSize / 2 - height / 2 + 8) { holds.up = true; }
+	}
+	if (computer.level === 2) {
+		if (ball.velocity.x > 0 && ball.position.x > windowWidth / 2) {
+			if (paddle2.position.y < ball.position.y + ballSize / 2 - height / 2 - 8) { holds.down = true; }
+			if (paddle2.position.y > ball.position.y + ballSize / 2 - height / 2 + 8) { holds.up = true; }
+		}
+		if (ball.velocity.x <= 0 || ball.position.x <= windowWidth / 2) {
+			if (paddle2.position.y < windowHeight / 2 - height / 2 - 8) { holds.down = true; }
+			if (paddle2.position.y > windowHeight / 2 - height / 2 + 8) { holds.up = true; }
+		}
+	}
+	return holds;
+}
+
+// The page: the canvas as large as the browser's window holds, the game's
+// proportions kept, with a canvas pixel for each of the screen's.
+const canvas = document.getElementById("game");
+const context = canvas.getContext("2d");
+
+function fit() {
+	const scale = Math.min(innerWidth / windowWidth, innerHeight / windowHeight);
+	canvas.style.width = Math.floor(windowWidth * scale) + "px";
+	canvas.style.height = Math.floor(windowHeight * scale) + "px";
+	canvas.width = Math.max(1, Math.round(windowWidth * scale * devicePixelRatio));
+	canvas.height = Math.max(1, Math.round(windowHeight * scale * devicePixelRatio));
+}
+addEventListener("resize", fit);
+fit();
+
+// Keys in, a key held down saying so once. Away from the page nothing stays
+// held.
+const held = new Set();
+addEventListener("keydown", (event) => {
+	if (!gameKeys.has(event.code)) { return; }
+	event.preventDefault();
+	if (!event.repeat) { held.add(event.code); key(event.code, true); }
+});
+addEventListener("keyup", (event) => {
+	if (!gameKeys.has(event.code)) { return; }
+	event.preventDefault();
+	held.delete(event.code);
+	key(event.code, false);
+});
+addEventListener("blur", () => {
+	for (const code of held) { key(code, false); }
+	held.clear();
+});
+
+// The pads' buttons by the browser's standard layout, an Xbox pad's, and
+// their directions by the d-pad or the left stick past halfway; a button is
+// pressed or let go when it is not as it was.
+const padButtons = { a: 0, b: 1, x: 2, y: 3, lb: 4, rb: 5, back: 8, start: 9, up: 12, down: 13, left: 14, right: 15 };
+const padsWere = [{}, {}];
+function readPads() {
+	const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+	for (let number = 0; number < 2; ++number) {
+		const found = pads[number];
+		const now = {};
+		for (const [button, index] of Object.entries(padButtons)) { now[button] = !!found?.buttons[index]?.pressed; }
+		if (found) {
+			now.up ||= found.axes[1] < -0.5;
+			now.down ||= found.axes[1] > 0.5;
+			now.left ||= found.axes[0] < -0.5;
+			now.right ||= found.axes[0] > 0.5;
+		}
+		for (const button in now) {
+			if (now[button] !== !!padsWere[number][button]) { pad(number + 1, button, now[button]); }
+		}
+		padsWere[number] = now;
+	}
+}
+
+// The words' styles: how big, what colour.
+const banner = { size: 160, color: "white" };
+const prompt = { size: 48, color: "rgb(192, 192, 192)" };
+const hud = { size: 128, color: "white" };
+
+// How big words are drawn: the box their letters cover.
+function measure(words, style) {
+	context.font = style.size + "px sans-serif";
+	const letters = context.measureText(words);
+	return {
+		x: letters.actualBoundingBoxLeft + letters.actualBoundingBoxRight,
+		y: letters.actualBoundingBoxAscent + letters.actualBoundingBoxDescent,
+	};
+}
+
+// Words with their letters' top left at x, y.
+function text(words, style, x, y) {
+	context.font = style.size + "px sans-serif";
+	const letters = context.measureText(words);
+	context.fillStyle = style.color;
+	context.fillText(words, x + letters.actualBoundingBoxLeft, y + letters.actualBoundingBoxAscent);
+}
+
+function box(x, y, width, height, color = "white") {
+	context.fillStyle = color;
+	context.fillRect(x, y, width, height);
+}
+
+function drawTitle() {
+	const titleSize = measure("PONG", banner);
+	text("PONG", banner, windowWidth / 2 - titleSize.x / 2, margin * 4);
+	const startSize = measure("1 player against the computer, 2 for two players", prompt);
+	text("1 player against the computer, 2 for two players", prompt, windowWidth / 2 - startSize.x / 2, windowHeight / 2 - startSize.y / 2 + 120);
+	const computerText = computer.look === "smart" ? "a d: the computer plays smart" : "a d: the computer plays easy";
+	const computerSize = measure(computerText, prompt);
+	text(computerText, prompt, windowWidth / 2 - computerSize.x / 2, windowHeight / 2 - computerSize.y / 2 + 190);
+}
+
+function drawPlaying() {
+	for (let row = 0; row < 18; ++row) { box(windowWidth / 2 - 3, 10 + 40 * row, 6, 20, "rgb(192, 192, 192)"); }
+	box(paddle1.position.x, paddle1.position.y, paddle1.size.x, paddle1.size.y);
+	box(paddle2.position.x, paddle2.position.y, paddle2.size.x, paddle2.size.y);
+	const score1Text = String(paddle1.score);
+	const score1Size = measure(score1Text, hud);
+	text(score1Text, hud, windowWidth / 2 - 80 - score1Size.x, margin);
+	text(String(paddle2.score), hud, windowWidth / 2 + 80, margin);
+	box(ball.position.x, ball.position.y, ball.size.x, ball.size.y);
+}
+
+function drawPaused() {
+	const pausedSize = measure("PAUSED", banner);
+	text("PAUSED", banner, windowWidth / 2 - pausedSize.x / 2, windowHeight / 2 - pausedSize.y / 2);
+}
+
+function drawOver() {
+	const gameoverSize = measure("GAME OVER", banner);
+	text("GAME OVER", banner, windowWidth / 2 - gameoverSize.x / 2, windowHeight / 2 - gameoverSize.y / 2);
+	const continueSize = measure("spacebar to play again", prompt);
+	text("spacebar to play again", prompt, windowWidth / 2 - continueSize.x / 2, windowHeight / 2 - continueSize.y / 2 + 120);
+}
+
+// The screen on top, over those it shows still beneath it.
+function draw() {
+	switch (screen()) {
+	case "title": drawTitle(); break;
+	case "playing": drawPlaying(); break;
+	case "paused": drawPlaying(); drawPaused(); break;
+	case "over": drawPlaying(); drawOver(); break;
+	}
+}
+
+// A frame each time the browser draws: the time since the last one, at most
+// a quarter of a second, then the picture.
+let last = performance.now();
+function playFrame(now) {
+	readPads();
+	frame(Math.min(Math.max(now - last, 0) / 1000, 0.25));
+	last = now;
+
+	context.setTransform(canvas.width / windowWidth, 0, 0, canvas.height / windowHeight, 0, 0);
+	context.fillStyle = "black";
+	context.fillRect(0, 0, windowWidth, windowHeight);
+	draw();
+	requestAnimationFrame(playFrame);
+}
+readKept();
+addEventListener("pagehide", keep);
+requestAnimationFrame(playFrame);
+</script>
+</body>
+</html>

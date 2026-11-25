@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<!-- breakout.html -->
+<!-- Breakout -->
+<!-- author: beefviper -->
+<!-- date: Nov 25, 2026 -->
+
+<!-- Breakout: its numbers, its things and its rules, then the page that
+     plays them. Open it in a browser. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Breakout</title>
+<style>
+	html, body { margin: 0; height: 100%; background: black; overflow: hidden; }
+	body { display: flex; align-items: center; justify-content: center; }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<script type="module">
+const windowWidth = 640;
+const windowHeight = 720;
+
+const brick = 38;
+const gap = 4;
+const line = 18;
+const top = 110;
+const paddle = 64;
+const step = 480;
+
+function sine(degrees) { return Math.sin(degrees * Math.PI / 180); }
+function cosine(degrees) { return Math.cos(degrees * Math.PI / 180); }
+
+function between(min, max) { return min + Math.random() * (max - min); }
+
+function touching(a, b) {
+	return a.position.x < b.position.x + b.size.x && b.position.x < a.position.x + a.size.x
+		&& a.position.y < b.position.y + b.size.y && b.position.y < a.position.y + a.size.y;
+}
+
+// Off the side of `other` it hit: its speed into that side turned round.
+function bounce(thing, other) {
+	const apart = {
+		x: thing.position.x + thing.size.x / 2 - (other.position.x + other.size.x / 2),
+		y: thing.position.y + thing.size.y / 2 - (other.position.y + other.size.y / 2),
+	};
+	const reach = { x: (thing.size.x + other.size.x) / 2, y: (thing.size.y + other.size.y) / 2 };
+	if (reach.x - Math.abs(apart.x) < reach.y - Math.abs(apart.y)) {
+		thing.velocity.x = apart.x < 0 ? -Math.abs(thing.velocity.x) : Math.abs(thing.velocity.x);
+	} else {
+		thing.velocity.y = apart.y < 0 ? -Math.abs(thing.velocity.y) : Math.abs(thing.velocity.y);
+	}
+}
+
+// Off the side of `other` it hit, at the same speed, up to `degrees` off
+// straight out: steeper the further from that side's middle, towards the
+// end it hit nearer to.
+function deflect(thing, other, degrees) {
+	const middle = { x: thing.position.x + thing.size.x / 2, y: thing.position.y + thing.size.y / 2 };
+	const otherMiddle = { x: other.position.x + other.size.x / 2, y: other.position.y + other.size.y / 2 };
+	const apart = { x: middle.x - otherMiddle.x, y: middle.y - otherMiddle.y };
+	const reach = { x: (thing.size.x + other.size.x) / 2, y: (thing.size.y + other.size.y) / 2 };
+	const speed = Math.hypot(thing.velocity.x, thing.velocity.y);
+
+	if (reach.x - Math.abs(apart.x) < reach.y - Math.abs(apart.y)) {
+		// its left or right side
+		const away = apart.x < 0 ? -1 : 1;
+		const angle = degrees * Math.max(-1, Math.min(1, apart.y / (other.size.y / 2)));
+		thing.velocity = { x: away * speed * cosine(angle), y: speed * sine(angle) };
+		thing.position.x = otherMiddle.x + away * reach.x - thing.size.x / 2;
+	} else {
+		// its top or bottom
+		const away = apart.y < 0 ? -1 : 1;
+		const angle = degrees * Math.max(-1, Math.min(1, apart.x / (other.size.x / 2)));
+		thing.velocity = { x: speed * sine(angle), y: away * speed * cosine(angle) };
+		thing.position.y = otherMiddle.y + away * reach.y - thing.size.y / 2;
+	}
+}
+
+// The wall as it starts, and starts again.
+function startWall() {
+	const bricks = [];
+	addBricks(bricks, "red", top, 7, "red");
+	addBricks(bricks, "orange", top + 2 * line, 5, "orange");
+	addBricks(bricks, "green", top + 4 * line, 3, "green");
+	addBricks(bricks, "yellow", top + 6 * line, 1, "yellow");
+	return bricks;
+}
+
+// 2 rows of 14 bricks of one look, the first row's top at y.
+function addBricks(bricks, look, y, worth, sound) {
+	const size = { x: brick, y: line - gap };
+	for (let row = 0; row < 2; ++row) {
+		for (let column = 0; column < 14; ++column) {
+			bricks.push({ position: { x: (windowWidth - 14 * brick - 13 * gap) / 2 + column * (size.x + gap), y: y + row * (size.y + gap) }, velocity: { x: 0, y: 0 }, size: { ...size }, look, worth, sound });
+		}
+	}
+}
+
+function startPlayer() {
+	return {
+		position: { x: windowWidth / 2 - paddle / 2, y: windowHeight - 60 },
+		velocity: { x: 0, y: 0 },
+		size: { x: paddle, y: 12 },
+		look: "full",
+	};
+}
+
+// The ball as it starts, and starts again.
+function startBall() {
+	return {
+		position: { x: windowWidth / 2 - 5, y: windowHeight / 2 - 5 },
+		velocity: { x: between(-180, 180), y: 240 },
+		size: { x: 10, y: 10 },
+		hits: 0,
+		deep: 0,
+	};
+}
+
+// Each thing on the screen: where it is, how it moves, how big it is, and what it counts.
+let status = { score: 0, balls: 3, walls: 0 };
+let wall = startWall();
+let player = startPlayer();
+let ball = startBall();
+let message = { look: "won" };
+
+// The screens, the one on top played.
+let screens = ["title"];
+function screen() { return screens[screens.length - 1]; }
+
+// A new game: everything as it starts but what is kept, from the first screen.
+function newGame() {
+	status = { score: 0, balls: 3, walls: 0 };
+	wall = startWall();
+	player = startPlayer();
+	ball = startBall();
+	message = { look: "won" };
+	screens = ["title"];
+}
+
+// The sounds: how high, how long, and where a sound has its own, its wave,
+// the pitch it slides to and how loud it is.
+const sounds = {
+	wall: { hertz: 220, seconds: 0.03 },
+	paddle: { hertz: 440, seconds: 0.04 },
+	red: { hertz: 1046.5, seconds: 0.05 },
+	orange: { hertz: 783.99, seconds: 0.05 },
+	green: { hertz: 523.25, seconds: 0.05 },
+	yellow: { hertz: 392, seconds: 0.05 },
+	lost: { hertz: 329.63, seconds: 0.4, wave: "triangle", to: 82.41, volume: 0.4 },
+};
+let audio = null;
+
+// A sound, sliding evenly in pitch where it slides, faded in and out over
+// two thousandths of a second so it doesn't click, at half its loudness as
+// every sound here is. The browser lets a page make sounds once a key has
+// been pressed.
+function play(sound) {
+	audio ??= new AudioContext();
+	const { hertz, seconds, wave = "square", to = hertz, volume = 0.3 } = sounds[sound];
+	const now = audio.currentTime;
+	const tone = audio.createOscillator();
+	const fade = audio.createGain();
+	tone.type = wave;
+	tone.frequency.setValueAtTime(hertz, now);
+	tone.frequency.exponentialRampToValueAtTime(to, now + seconds);
+	fade.gain.setValueAtTime(0, now);
+	fade.gain.linearRampToValueAtTime(volume / 2, now + 0.002);
+	fade.gain.setValueAtTime(volume / 2, now + seconds - 0.002);
+	fade.gain.linearRampToValueAtTime(0, now + seconds);
+	tone.connect(fade).connect(audio.destination);
+	tone.start(now);
+	tone.stop(now + seconds);
+}
+
+// Which keys are down.
+let aHeld = false;
+let leftHeld = false;
+let pad1LeftHeld = false;
+let dHeld = false;
+let rightHeld = false;
+let pad1RightHeld = false;
+
+// The keys the game uses, kept from the page (the arrows would scroll it).
+const gameKeys = new Set(["Digit1", "Numpad1", "KeyA", "ArrowLeft", "KeyD", "ArrowRight", "Pause", "Space"]);
+
+function key(code, down) {
+	switch (code) {
+	case "KeyA": aHeld = down; break;
+	case "ArrowLeft": leftHeld = down; break;
+	case "KeyD": dHeld = down; break;
+	case "ArrowRight": rightHeld = down; break;
+	}
+	if (!down) { return; }
+
+	switch (screen()) {
+	case "title":
+		if (code === "Digit1" || code === "Numpad1") { screens.push("playing"); }
+		break;
+	case "playing":
+		if (code === "Pause") { screens.push("paused"); }
+		break;
+	case "paused":
+		if (code === "Pause") { screens.pop(); }
+		break;
+	case "over":
+		if (code === "Space") { newGame(); }
+		break;
+	}
+}
+
+function pad(pad, button, down) {
+	if (pad === 1 && button === "left") { pad1LeftHeld = down; }
+	if (pad === 1 && button === "right") { pad1RightHeld = down; }
+	if (!down) { return; }
+
+	switch (screen()) {
+	case "title":
+		if (pad === 1 && button === "start") { screens.push("playing"); }
+		break;
+	case "playing":
+		if (pad === 1 && button === "start") { screens.push("paused"); }
+		break;
+	case "paused":
+		if (pad === 1 && button === "start") { screens.pop(); }
+		break;
+	case "over":
+		if (pad === 1 && button === "start") { newGame(); }
+		break;
+	}
+}
+
+// The mouse across the window: the player's middle follows it, kept inside the window.
+function mouse(x) {
+	if (screen() !== "playing") { return; }
+	player.position.x = Math.max(0, Math.min(windowWidth - player.size.x, x - player.size.x / 2));
+}
+
+function frame(seconds) {
+	if (screen() !== "playing") { return; }
+
+	// the keys held
+	player.velocity = { x: 0, y: 0 };
+	if (aHeld || leftHeld || pad1LeftHeld) { player.velocity.x -= step; }
+	if (dHeld || rightHeld || pad1RightHeld) { player.velocity.x += step; }
+
+	// everything moves
+	for (const thing of [player, ball]) {
+		thing.position.x += thing.velocity.x * seconds;
+		thing.position.y += thing.velocity.y * seconds;
+	}
+
+	// at the window's edges
+	if (player.position.x < 0) { player.position.x = 0; }
+	if (player.position.x > windowWidth - player.size.x) { player.position.x = windowWidth - player.size.x; }
+	if (ball.position.x < 0) {
+		ball.velocity.x = Math.abs(ball.velocity.x);
+		play("wall");
+	}
+	if (ball.position.x > windowWidth - ball.size.x) {
+		ball.velocity.x = -Math.abs(ball.velocity.x);
+		play("wall");
+	}
+	if (ball.position.y < 0) {
+		ball.velocity.y = Math.abs(ball.velocity.y);
+		play("wall");
+		player.look = "half";
+		player.size.x = paddle / 2;
+	}
+	if (ball.position.y > windowHeight - ball.size.y) {
+		status.balls -= 1;
+		play("lost");
+		ball = startBall();
+	}
+
+	// what meets what
+	if (touching(ball, player)) {
+		deflect(ball, player, 60);
+		ball.hits += 1;
+		play("paddle");
+		if (ball.hits === 4 || ball.hits === 12) { faster(); }
+	}
+	for (const cell of [...wall]) {
+		if (touching(ball, cell)) {
+			bounce(ball, cell);
+			if (ball.position.y < top + 4 * line && ball.deep === 0) {
+				ball.deep += 1;
+				faster();
+			}
+			status.score += cell.worth;
+			play(cell.sound);
+			wall.splice(wall.indexOf(cell), 1);
+		}
+	}
+
+	// the game's own tests, the first that holds
+	if (wall.length === 0 && status.walls >= 1) {
+		message.look = "won";
+		screens.push("over");
+	}
+	else if (wall.length === 0) {
+		status.walls += 1;
+		wall = startWall();
+		ball = startBall();
+	}
+	else if (status.balls <= 0) {
+		message.look = "lost";
+		screens.push("over");
+	}
+}
+
+function faster() {
+	ball.velocity.x *= 1.25;
+	ball.velocity.y *= 1.25;
+}
+
+// The page: the canvas as large as the browser's window holds, the game's
+// proportions kept, with a canvas pixel for each of the screen's.
+const canvas = document.getElementById("game");
+const context = canvas.getContext("2d");
+
+function fit() {
+	const scale = Math.min(innerWidth / windowWidth, innerHeight / windowHeight);
+	canvas.style.width = Math.floor(windowWidth * scale) + "px";
+	canvas.style.height = Math.floor(windowHeight * scale) + "px";
+	canvas.width = Math.max(1, Math.round(windowWidth * scale * devicePixelRatio));
+	canvas.height = Math.max(1, Math.round(windowHeight * scale * devicePixelRatio));
+}
+addEventListener("resize", fit);
+fit();
+
+// Keys in, a key held down saying so once. Away from the page nothing stays
+// held.
+const held = new Set();
+addEventListener("keydown", (event) => {
+	if (!gameKeys.has(event.code)) { return; }
+	event.preventDefault();
+	if (!event.repeat) { held.add(event.code); key(event.code, true); }
+});
+addEventListener("keyup", (event) => {
+	if (!gameKeys.has(event.code)) { return; }
+	event.preventDefault();
+	held.delete(event.code);
+	key(event.code, false);
+});
+addEventListener("blur", () => {
+	for (const code of held) { key(code, false); }
+	held.clear();
+});
+
+// The mouse across the canvas, as the game's x.
+canvas.addEventListener("mousemove", (event) => {
+	const area = canvas.getBoundingClientRect();
+	mouse((event.clientX - area.left) * windowWidth / area.width);
+});
+
+// The pads' buttons by the browser's standard layout, an Xbox pad's, and
+// their directions by the d-pad or the left stick past halfway; a button is
+// pressed or let go when it is not as it was.
+const padButtons = { a: 0, b: 1, x: 2, y: 3, lb: 4, rb: 5, back: 8, start: 9, up: 12, down: 13, left: 14, right: 15 };
+const padsWere = [{}, {}];
+function readPads() {
+	const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+	for (let number = 0; number < 2; ++number) {
+		const found = pads[number];
+		const now = {};
+		for (const [button, index] of Object.entries(padButtons)) { now[button] = !!found?.buttons[index]?.pressed; }
+		if (found) {
+			now.up ||= found.axes[1] < -0.5;
+			now.down ||= found.axes[1] > 0.5;
+			now.left ||= found.axes[0] < -0.5;
+			now.right ||= found.axes[0] > 0.5;
+		}
+		for (const button in now) {
+			if (now[button] !== !!padsWere[number][button]) { pad(number + 1, button, now[button]); }
+		}
+		padsWere[number] = now;
+	}
+}
+
+// The words' styles: how big, what colour.
+const banner = { size: 100, color: "rgb(255, 165, 0)" };
+const prompt = { size: 36, color: "white" };
+const help = { size: 26, color: "rgb(192, 192, 192)" };
+const hud = { size: 64, color: "white" };
+
+// How big words are drawn: the box their letters cover.
+function measure(words, style) {
+	context.font = style.size + "px sans-serif";
+	const letters = context.measureText(words);
+	return {
+		x: letters.actualBoundingBoxLeft + letters.actualBoundingBoxRight,
+		y: letters.actualBoundingBoxAscent + letters.actualBoundingBoxDescent,
+	};
+}
+
+// Words with their letters' top left at x, y.
+function text(words, style, x, y) {
+	context.font = style.size + "px sans-serif";
+	const letters = context.measureText(words);
+	context.fillStyle = style.color;
+	context.fillText(words, x + letters.actualBoundingBoxLeft, y + letters.actualBoundingBoxAscent);
+}
+
+// a brick's colour by its look
+const brickColors = { red: "red", orange: "rgb(255, 165, 0)", green: "rgb(0, 255, 0)", yellow: "yellow" };
+
+function box(x, y, width, height, color = "white") {
+	context.fillStyle = color;
+	context.fillRect(x, y, width, height);
+}
+
+function drawTitle() {
+	const titleSize = measure("BREAKOUT", banner);
+	text("BREAKOUT", banner, windowWidth / 2 - titleSize.x / 2, windowHeight / 2 - titleSize.y / 2 - 110);
+	const help1Size = measure("three balls, two walls: yellow 1, green 3, orange 5, red 7", help);
+	text("three balls, two walls: yellow 1, green 3, orange 5, red 7", help, windowWidth / 2 - help1Size.x / 2, windowHeight / 2 - help1Size.y / 2 - 10);
+	const help2Size = measure("a and d, the arrows or the mouse move the paddle", help);
+	text("a and d, the arrows or the mouse move the paddle", help, windowWidth / 2 - help2Size.x / 2, windowHeight / 2 - help1Size.y / 2 - 10 + 40);
+	const startSize = measure("1 to start", prompt);
+	text("1 to start", prompt, windowWidth / 2 - startSize.x / 2, windowHeight / 2 - startSize.y / 2 + 120);
+}
+
+function drawPlaying() {
+	text(String(status.score), hud, 40, 16);
+	const ballsText = String(status.balls);
+	const ballsSize = measure(ballsText, hud);
+	text(ballsText, hud, windowWidth - ballsSize.x - 40, 16);
+	for (const cell of wall) { box(cell.position.x, cell.position.y, cell.size.x, cell.size.y, brickColors[cell.look]); }
+	box(player.position.x, player.position.y, player.size.x, player.size.y, "cyan");
+	box(ball.position.x, ball.position.y, ball.size.x, ball.size.y);
+}
+
+function drawPaused() {
+	const pausedSize = measure("PAUSED", { ...banner, color: "white" });
+	text("PAUSED", { ...banner, color: "white" }, windowWidth / 2 - pausedSize.x / 2, windowHeight / 2 - pausedSize.y / 2);
+}
+
+function drawOver() {
+	const messageStyle = message.look === "lost" ? { ...banner, color: "red" } : { ...banner, color: "rgb(0, 255, 0)" };
+	const messageText = message.look === "lost" ? "GAME OVER" : "YOU WIN";
+	const messageSize = measure(messageText, messageStyle);
+	text(messageText, messageStyle, windowWidth / 2 - messageSize.x / 2, windowHeight / 2 - messageSize.y / 2 - 60);
+	const againSize = measure("spacebar to play again", prompt);
+	text("spacebar to play again", prompt, windowWidth / 2 - againSize.x / 2, windowHeight / 2 - againSize.y / 2 + 70);
+}
+
+// The screen on top, over those it shows still beneath it.
+function draw() {
+	switch (screen()) {
+	case "title": drawTitle(); break;
+	case "playing": drawPlaying(); break;
+	case "paused": drawPlaying(); drawPaused(); break;
+	case "over": drawPlaying(); drawOver(); break;
+	}
+}
+
+// A frame each time the browser draws: the time since the last one, at most
+// a quarter of a second, then the picture.
+let last = performance.now();
+function playFrame(now) {
+	readPads();
+	frame(Math.min(Math.max(now - last, 0) / 1000, 0.25));
+	last = now;
+
+	context.setTransform(canvas.width / windowWidth, 0, 0, canvas.height / windowHeight, 0, 0);
+	context.fillStyle = "black";
+	context.fillRect(0, 0, windowWidth, windowHeight);
+	draw();
+	requestAnimationFrame(playFrame);
+}
+requestAnimationFrame(playFrame);
+</script>
+</body>
+</html>

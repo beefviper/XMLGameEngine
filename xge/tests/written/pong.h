@@ -3,8 +3,8 @@
 // author: beefviper
 // date: Nov 24, 2026
 //
-// What pong.xml written out must do, whoever wrote it: the hand-written one
-// in games/prototypes/pong (test_prototype_pong_full.cpp) and the one
+// What pong.xml written out must do, whoever wrote it: the copy kept in
+// games/autogen/windows-cpp/pong (test_autogen_pong.cpp) and a fresh one
 // windows-cpp writes (test_written_games.cpp): the title's choices, the
 // serve, the bounces, the paddles, the points, a pause, game over, the
 // computer and the kept choices. It shares no code with the engine, so

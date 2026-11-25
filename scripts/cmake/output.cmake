@@ -94,7 +94,7 @@ endif()
 # every DLL there. Call it after any other POST_BUILD step that puts DLLs in
 # place (windeployqt) and before any that runs the program (catch_discover_tests).
 #
-# A FOLDER (generated, generated/prototypes) puts it in that folder of
+# A FOLDER (generated, generated/autogen) puts it in that folder of
 # output/<config> instead, with its own libraries/ on Windows; on Linux and
 # macOS it finds the shared libraries/ above it.
 function(xge_place_program target)

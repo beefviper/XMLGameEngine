@@ -3,9 +3,9 @@
 // author: beefviper
 // date: Nov 24, 2026
 //
-// What breakout.xml written out must do, whoever wrote it: the hand-written
-// one in games/prototypes/breakout (test_prototype_breakout.cpp) and the one
-// windows-cpp writes (test_written_games.cpp): the title, the wall, the
+// What breakout.xml written out must do, whoever wrote it: the copy kept
+// in games/autogen/windows-cpp/breakout (test_autogen_breakout.cpp) and a
+// fresh one windows-cpp writes (test_written_games.cpp): the title, the wall, the
 // serve, the bounces, the paddle by keys and mouse, the bricks' worth and
 // sounds, the speed-ups, the half paddle, lost balls, the second wall, a
 // pause, winning and losing. It shares no code with the engine, so this

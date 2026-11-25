@@ -105,47 +105,46 @@ target_include_directories(xgecli PRIVATE xge/cli/include)
 # --generate needs libxslt (dependencies.cmake); without it generate.cpp says so.
 xge_link_xslt(xgecli)
 
-# The hand-written games (games/prototypes/), what the windows-cpp generator
-# writes: stand-alone games on SFML, none of the engine. pong_min first.
+# What the windows-cpp generator writes (games/autogen/windows-cpp/<game>/): stand-alone games on SFML, none of the engine. pong_min first.
 if (XGE_WITH_SFML3)
 	add_executable(pong_min
-		"games/prototypes/pong_min/source/main.cpp"
-		"games/prototypes/pong_min/source/pong_min.cpp"
-		"games/prototypes/pong_min/source/pong_min.h"
+		"games/autogen/windows-cpp/pong_min/source/main.cpp"
+		"games/autogen/windows-cpp/pong_min/source/pong_min.cpp"
+		"games/autogen/windows-cpp/pong_min/source/pong_min.h"
 	)
 	target_compile_features(pong_min PRIVATE cxx_std_20)
 	target_link_libraries(pong_min PRIVATE SFML::Graphics)
 	xge_warnings(pong_min)
-	xge_place_program(pong_min FOLDER generated/prototypes)
+	xge_place_program(pong_min FOLDER generated/autogen)
 	# In an IDE, beside the generated games' tests (tests.cmake).
-	set_target_properties(pong_min PROPERTIES FOLDER XGETestGenerated/XGETestPrototypes)
+	set_target_properties(pong_min PROPERTIES FOLDER XGETestGenerated/XGETestAutogen)
 
 	# And pong.xml, its font copied beside it.
 	add_executable(pong
-		"games/prototypes/pong/source/main.cpp"
-		"games/prototypes/pong/source/pong.cpp"
-		"games/prototypes/pong/source/pong.h"
+		"games/autogen/windows-cpp/pong/source/main.cpp"
+		"games/autogen/windows-cpp/pong/source/pong.cpp"
+		"games/autogen/windows-cpp/pong/source/pong.h"
 	)
 	target_compile_features(pong PRIVATE cxx_std_20)
 	target_link_libraries(pong PRIVATE SFML::Graphics SFML::Audio)
 	xge_warnings(pong)
-	xge_place_program(pong FOLDER generated/prototypes)
-	set_target_properties(pong PROPERTIES FOLDER XGETestGenerated/XGETestPrototypes)
+	xge_place_program(pong FOLDER generated/autogen)
+	set_target_properties(pong PROPERTIES FOLDER XGETestGenerated/XGETestAutogen)
 	add_custom_command(TARGET pong POST_BUILD
 		COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/games/assets/tuffy.ttf" "$<TARGET_FILE_DIR:pong>/assets/tuffy.ttf"
 		VERBATIM)
 
 	# And breakout.xml.
 	add_executable(breakout
-		"games/prototypes/breakout/source/main.cpp"
-		"games/prototypes/breakout/source/breakout.cpp"
-		"games/prototypes/breakout/source/breakout.h"
+		"games/autogen/windows-cpp/breakout/source/main.cpp"
+		"games/autogen/windows-cpp/breakout/source/breakout.cpp"
+		"games/autogen/windows-cpp/breakout/source/breakout.h"
 	)
 	target_compile_features(breakout PRIVATE cxx_std_20)
 	target_link_libraries(breakout PRIVATE SFML::Graphics SFML::Audio)
 	xge_warnings(breakout)
-	xge_place_program(breakout FOLDER generated/prototypes)
-	set_target_properties(breakout PROPERTIES FOLDER XGETestGenerated/XGETestPrototypes)
+	xge_place_program(breakout FOLDER generated/autogen)
+	set_target_properties(breakout PROPERTIES FOLDER XGETestGenerated/XGETestAutogen)
 	add_custom_command(TARGET breakout POST_BUILD
 		COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/games/assets/tuffy.ttf" "$<TARGET_FILE_DIR:breakout>/assets/tuffy.ttf"
 		VERBATIM)

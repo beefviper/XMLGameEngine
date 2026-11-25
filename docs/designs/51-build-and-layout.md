@@ -13,7 +13,7 @@
 - **Sanitizers.** **Chosen:** `XGE_SANITIZE` (`address`, which brings `undefined`, or `thread`, the two cannot be mixed), off by default, on the engine's own targets through `xge_warnings()`, which then drops the strict warnings and builds at `-O0`: with the warnings GCC 13 took over fifteen minutes on each large file, and at `-O1` over two hours on the verbs' one unit; at `-O0` without them, seconds.
   - GCC and Clang only; MSVC has `/fsanitize=address` alone, a possible later addition.
   - Rejected: instrumenting the fetched libraries (a rebuild of everything for little).
-- **`output/<Config>/`** holds the programs, a copy of `games/` and `libraries/`, and `generated/` for the generator's programs (its test program, the prototypes, every game written out), so they do not crowd the main ones. Directories are set before any target so fetched libraries follow.
+- **`output/<Config>/`** holds the programs, a copy of `games/` and `libraries/`, and `generated/` for the generator's programs (its test program, the kept written games, every game written out), so they do not crowd the main ones. Directories are set before any target so fetched libraries follow.
 - **DLLs in `libraries/` on Windows** by a private assembly: each program embeds a manifest naming the assembly `libraries`, whose manifest lists every DLL. Delay-loading was out (Qt and SFML export data). Linux and macOS use the run path `$ORIGIN/libraries`. Qt plug-ins go through `windeployqt`.
 - C++20. Shell scripts install prerequisites for apt, dnf and pacman.
 

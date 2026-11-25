@@ -148,12 +148,12 @@ add_executable(xgetest
 	"xge/tests/engine/test_poses.cpp"
 	"xge/tests/games/test_qbert.cpp"
 	"xge/tests/games/test_mariobros.cpp"
-	"xge/tests/engine/test_prototype_pong.cpp"
-	"games/prototypes/pong_min/source/pong_min.cpp"
-	"xge/tests/engine/test_prototype_pong_full.cpp"
-	"games/prototypes/pong/source/pong.cpp"
-	"xge/tests/engine/test_prototype_breakout.cpp"
-	"games/prototypes/breakout/source/breakout.cpp"
+	"xge/tests/engine/test_autogen_pong_min.cpp"
+	"games/autogen/windows-cpp/pong_min/source/pong_min.cpp"
+	"xge/tests/engine/test_autogen_pong.cpp"
+	"games/autogen/windows-cpp/pong/source/pong.cpp"
+	"xge/tests/engine/test_autogen_breakout.cpp"
+	"games/autogen/windows-cpp/breakout/source/breakout.cpp"
 	"xge/cli/source/cli.cpp"
 	"xge/cli/source/generate.cpp"
 	"xge/tests/long/test_random_keys.cpp"
@@ -168,9 +168,9 @@ add_executable(xgetest
 # cli.cpp and generate.cpp are xgecli's own code, compiled in again here so
 # test_cli.cpp and test_generate.cpp can call it; the library does not contain
 # it (see executables.cmake). pong_min.cpp, pong.cpp and breakout.cpp are the
-# hand-written games (games/prototypes/), stand-alone on SFML: each
-# test_prototype_*.cpp checks what one does.
-target_include_directories(xgetest PRIVATE xge/cli/include xge/tests xge/tests/helpers games/prototypes/pong_min/source games/prototypes/pong/source games/prototypes/breakout/source)
+# games windows-cpp writes (games/autogen/windows-cpp/), stand-alone on SFML: each
+# test_autogen_*.cpp checks what one does.
+target_include_directories(xgetest PRIVATE xge/cli/include xge/tests xge/tests/helpers games/autogen/windows-cpp/pong_min/source games/autogen/windows-cpp/pong/source games/autogen/windows-cpp/breakout/source)
 
 target_compile_features(xgetest PRIVATE cxx_std_20)
 
