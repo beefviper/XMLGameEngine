@@ -360,6 +360,30 @@ TEST_CASE("windows-cpp and web-js write each game they cover as games/autogen ke
 	}
 }
 
+TEST_CASE("windows-cpp names no parameter or local as one of the game's constants", "[generate]")
+{
+	// main.cpp takes in the game's namespace whole, so a parameter named as a
+	// constant hides it: MSVC warns (C4459), GCC and Clang do not
+	const fs::path kept = fs::path(XGE_ENGINE_FOLDER).parent_path() / "games/autogen/windows-cpp";
+	const std::regex constant(R"(constexpr \S+ (\w+) =)");
+	for (const std::string game : { "pong_min", "pong", "breakout" })
+	{
+		INFO(game);
+		const std::string header = readFile(kept / game / "source" / (game + ".h"));
+		for (auto found = std::sregex_iterator(header.begin(), header.end(), constant); found != std::sregex_iterator(); ++found)
+		{
+			const std::string name = (*found)[1];
+			const std::regex declared(R"(\b(float|int|bool|auto|sf::\w+|std::\w+)&?\s+)" + name + R"(\s*[,)=;{(])");
+			for (const std::string& file : { std::string("main.cpp"), game + ".cpp" })
+			{
+				INFO(file << " declares " << name);
+				const std::string code = readFile(kept / game / "source" / file);
+				CHECK_FALSE(std::regex_search(code, declared));
+			}
+		}
+	}
+}
+
 TEST_CASE("windows-cpp writes pong_min, pong and breakout as stand-alone SFML games", "[generate]")
 {
 	for (const std::string game : { "pong_min", "pong", "breakout" })

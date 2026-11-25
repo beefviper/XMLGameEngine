@@ -16,9 +16,9 @@ namespace
 {
 	using namespace pong_min;
 
-	void box(sf::RenderWindow& window, sf::Vector2f position, sf::Vector2f size, sf::Color color = sf::Color::White)
+	void box(sf::RenderWindow& window, sf::Vector2f position, sf::Vector2f extent, sf::Color color = sf::Color::White)
 	{
-		sf::RectangleShape shape(size);
+		sf::RectangleShape shape(extent);
 		shape.setPosition(position);
 		shape.setFillColor(color);
 		window.draw(shape);

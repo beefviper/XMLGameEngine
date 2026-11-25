@@ -46,7 +46,7 @@ The largest single step was not a language change. It was dropping the frame-for
 | Pitch names (`A4`) | hertz, worked out by XSLT at writing time |
 | Words in a row | each row measured on its own before centring |
 
-- **Names the platform owns.** A plain page script shares the window's names, so `const top` clashed with `window.top`. The page is now a module script, which keeps its names to itself. Each new target will have its own such names to keep clear of.
+- **Names the platform owns.** A plain page script shares the window's names, so `const top` clashed with `window.top`. The page is now a module script, which keeps its names to itself. Each new target will have its own such names to keep clear of. The game's own names clash the same way with the code's: a `box(..., size)` parameter hid pong_min's `size` constant, which only MSVC flags (C4459), so `test_generate.cpp` now checks that no parameter or local takes a constant's name.
 - **The gap list held.** Every part Breakout needed showed up in `covers.xsl` first, and each was a few lines to cover.
 
 ## Suggestions

@@ -111,9 +111,9 @@ namespace
 	public:
 		Picture(sf::RenderWindow&amp; into, const sf::Font&amp; with) : window(into), font(with) {}
 
-		void box(sf::Vector2f position, sf::Vector2f size, sf::Color color = sf::Color::White)
+		void box(sf::Vector2f position, sf::Vector2f extent, sf::Color color = sf::Color::White)
 		{
-			sf::RectangleShape shape(size);
+			sf::RectangleShape shape(extent);
 			shape.setPosition(position);
 			shape.setFillColor(color);
 			window.draw(shape);
@@ -142,9 +142,9 @@ namespace
     </xsl:if>
     <xsl:if test="not($texts-drawn)">
       <xsl:text>
-	void box(sf::RenderWindow&amp; window, sf::Vector2f position, sf::Vector2f size, sf::Color color = sf::Color::White)
+	void box(sf::RenderWindow&amp; window, sf::Vector2f position, sf::Vector2f extent, sf::Color color = sf::Color::White)
 	{
-		sf::RectangleShape shape(size);
+		sf::RectangleShape shape(extent);
 		shape.setPosition(position);
 		shape.setFillColor(color);
 		window.draw(shape);
