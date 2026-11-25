@@ -148,12 +148,6 @@ add_executable(xgetest
 	"xge/tests/engine/test_poses.cpp"
 	"xge/tests/games/test_qbert.cpp"
 	"xge/tests/games/test_mariobros.cpp"
-	"xge/tests/engine/test_autogen_pong_min.cpp"
-	"games/autogen/windows-cpp/pong_min/source/pong_min.cpp"
-	"xge/tests/engine/test_autogen_pong.cpp"
-	"games/autogen/windows-cpp/pong/source/pong.cpp"
-	"xge/tests/engine/test_autogen_breakout.cpp"
-	"games/autogen/windows-cpp/breakout/source/breakout.cpp"
 	"xge/cli/source/cli.cpp"
 	"xge/cli/source/generate.cpp"
 	"xge/tests/long/test_random_keys.cpp"
@@ -167,10 +161,8 @@ add_executable(xgetest
 
 # cli.cpp and generate.cpp are xgecli's own code, compiled in again here so
 # test_cli.cpp and test_generate.cpp can call it; the library does not contain
-# it (see executables.cmake). pong_min.cpp, pong.cpp and breakout.cpp are the
-# games windows-cpp writes (games/autogen/windows-cpp/), stand-alone on SFML: each
-# test_autogen_*.cpp checks what one does.
-target_include_directories(xgetest PRIVATE xge/cli/include xge/tests xge/tests/helpers games/autogen/windows-cpp/pong_min/source games/autogen/windows-cpp/pong/source games/autogen/windows-cpp/breakout/source)
+# it (see executables.cmake).
+target_include_directories(xgetest PRIVATE xge/cli/include xge/tests xge/tests/helpers)
 
 target_compile_features(xgetest PRIVATE cxx_std_20)
 
@@ -325,8 +317,7 @@ add_executable(xgetest-generated EXCLUDE_FROM_ALL
 	"xge/tests/written/breakout.h"
 )
 # Visual Studio's Build Solution leaves it out too.
-# In an IDE, out of the way in a folder of its own (with the hand-written
-# Pongs, executables.cmake).
+# In an IDE, out of the way in a folder of its own.
 set_target_properties(xgetest-generated PROPERTIES EXCLUDE_FROM_DEFAULT_BUILD ON FOLDER XGETestGenerated)
 target_compile_features(xgetest-generated PRIVATE cxx_std_20)
 xge_warnings(xgetest-generated)
@@ -399,6 +390,7 @@ set(windows_cpp_games
 	"breakout=breakout::Breakout")
 set(written_includes "")
 set(written_entries "")
+set(written_tests "")
 foreach(entry IN LISTS windows_cpp_games)
 	string(REPLACE "=" ";" parts "${entry}")
 	list(GET parts 0 game)
@@ -413,6 +405,24 @@ foreach(entry IN LISTS windows_cpp_games)
 	target_sources(xgetest-generated PRIVATE "${folder}/source/${game}.cpp")
 	string(APPEND written_includes "#include \"windows-cpp/${game}/source/${game}.h\"\n#include \"written/${game}.h\"\n")
 	string(APPEND written_entries "\t{ \"${game}\", [] { ${game}_plays<${class}>(); } },\n")
+	# and, for ctest --test-dir build/generated (below), written out where a
+	# person reads and plays it: windows-cpp built at full warnings, web-js
+	# as its page
+	foreach(target windows-cpp web-js)
+		set(write_one "\"${CMAKE_COMMAND}\" -DGAME=${game} \"-DXGECLI=$<TARGET_FILE:xgecli>\" -DGENERATE=${target}"
+			" \"-DOUTPUT=${XGE_OUTPUT_DIR}/generated/${target}/${game}\" -DCONFIG=$<CONFIG>"
+			" \"-DGENERATOR=${CMAKE_GENERATOR}\" \"-DPLATFORM=${CMAKE_GENERATOR_PLATFORM}\""
+			" \"-DTOOLCHAIN=${CMAKE_TOOLCHAIN_FILE}\" \"-DDEPS=${CMAKE_BINARY_DIR}/_deps\""
+			" -P \"${CMAKE_CURRENT_SOURCE_DIR}/scripts/cmake/build_generated.cmake\"")
+		string(CONCAT write_one ${write_one})
+		set(name "${target} build: ${game}")
+		if (target STREQUAL "web-js")
+			set(name "web-js write: ${game}")
+		endif()
+		string(APPEND written_tests
+			"add_test(\"${name}\" ${write_one})\n"
+			"set_tests_properties(\"${name}\" PROPERTIES PROCESSORS 4 FIXTURES_REQUIRED xgetest-generated)\n")
+	endforeach()
 endforeach()
 file(WRITE "${XGE_GENERATED_DIR}/written_games.h.in"
 	"// written_games.h\n"
@@ -447,12 +457,14 @@ xge_ctest_folder(xgetest long
 # built, then a test per generated game played against its file, the games
 # windows-cpp writes as one, and a test per game written out as a program of
 # its own and built at full warnings (build_generated.cmake), each under
-# output/<config>/generated/engine-cpp/<game>. With Emscripten's emcmake and
+# output/<config>/generated/engine-cpp/<game>; the games windows-cpp writes
+# built the same under generated/windows-cpp/<game>, and web-js's pages
+# written under generated/web-js/<game>. With Emscripten's emcmake and
 # Ninja found, also a test per game written out as a web page, each under
 # output/<config>/generated/web-asm/<game> (the page in its output/).
 find_program(XGE_EMCMAKE emcmake)
 find_program(XGE_NINJA ninja)
-set(program_tests "")
+set(program_tests "${written_tests}")
 foreach(game IN LISTS shipped_games)
 	set(build_one "\"${CMAKE_COMMAND}\" -DGAME=${game} \"-DXGECLI=$<TARGET_FILE:xgecli>\""
 		" \"-DOUTPUT=${XGE_OUTPUT_DIR}/generated/engine-cpp/${game}\" -DCONFIG=$<CONFIG>"

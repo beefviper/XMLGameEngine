@@ -3,9 +3,8 @@
 // author: beefviper
 // date: Nov 13, 2026
 //
-// What pong_min.xml written out must do, whoever wrote it: the copy kept
-// in games/autogen/windows-cpp/pong_min (test_autogen_pong_min.cpp) and a
-// fresh one windows-cpp writes (test_written_games.cpp). The written game shares no
+// What pong_min.xml written out must do, whoever wrote it, run on the one
+// windows-cpp writes (test_written_games.cpp). The written game shares no
 // code with the engine, so this checks what happens, not every frame.
 
 #pragma once

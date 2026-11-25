@@ -10,6 +10,7 @@
 # and toolchain (its own CMakeLists.txt sets the engine's warnings), or for
 # web-asm through EMCMAKE (Emscripten's emcmake), and builds it. Any step that
 # fails, or any warning, fails the test, with the compiler's lines printed.
+# A web-js page needs no build: it is only written.
 #
 #     cmake -DGAME=<name> -DXGECLI=<xgecli> -DOUTPUT=<folder> -DCONFIG=<config>
 #           -DGENERATOR=<generator> [-DPLATFORM=<platform>] [-DTOOLCHAIN=<file>]
@@ -35,6 +36,10 @@ execute_process(
 	RESULT_VARIABLE result OUTPUT_VARIABLE said ERROR_VARIABLE said)
 if (NOT result EQUAL 0)
 	message(FATAL_ERROR "${GAME} did not generate:\n${said}")
+endif()
+if (GENERATE STREQUAL "web-js")
+	message(STATUS "${GAME} written as ${OUTPUT}/${GAME}.html")
+	return()
 endif()
 
 if (GENERATE STREQUAL "web-asm")

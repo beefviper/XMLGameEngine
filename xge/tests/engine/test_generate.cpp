@@ -11,8 +11,7 @@
 // the file does, frame by frame, is in test_generated_games.cpp, which
 // compiles it. The windows-cpp target (games/generators/windows-cpp) writes
 // pong_min, pong and breakout, web-js the same as a page of plain
-// JavaScript each, both as games/autogen/<generator>/<game> keeps them, and
-// web-asm what engine-cpp does for a web page.
+// JavaScript each, and web-asm what engine-cpp does for a web page.
 
 #include "scratch.h"
 #include "game/game.h"
@@ -307,69 +306,18 @@ TEST_CASE("the function a game is written as is named for its file", "[generate]
 	CHECK(gameFunctionName("3d-tennis.xml") == "n3dTennisGame");
 }
 
-namespace
-{
-	// A written file with its date line left out, which says when it was
-	// written, and its line ends as stored: a checkout on Windows ends the
-	// kept lines with \r\n (.gitattributes), the generator with \n.
-	std::string undated(const std::string& written)
-	{
-		std::string text;
-		for (const char c : written) { if (c != '\r') { text += c; } }
-		for (const std::string mark : { "\n// date: ", "\n<!-- date: " })
-		{
-			const std::size_t at = text.find(mark);
-			if (at != std::string::npos) { return text.substr(0, at) + text.substr(text.find('\n', at + 1)); }
-		}
-		return text;
-	}
-
-	std::set<fs::path> filesIn(const fs::path& folder)
-	{
-		std::set<fs::path> files;
-		for (const fs::directory_entry& entry : fs::recursive_directory_iterator(folder))
-		{
-			if (entry.is_regular_file()) { files.insert(fs::relative(entry.path(), folder)); }
-		}
-		return files;
-	}
-}
-
-TEST_CASE("windows-cpp and web-js write each game they cover as games/autogen keeps it", "[generate]")
-{
-	const fs::path autogen = fs::path(XGE_ENGINE_FOLDER).parent_path() / "games/autogen";
-	for (const std::string target : { "windows-cpp", "web-js" })
-	{
-		for (const std::string game : { "pong_min", "pong", "breakout" })
-		{
-			INFO(target << " " << game);
-			TempFolder folder("xge_test_generate_autogen_" + target + "_" + game);
-			const fs::path out = folder.path / "out";
-			generateGame(requestFor(fs::current_path() / ("descriptions/" + game + ".xml"), out, target));
-			const fs::path kept = autogen / target / game;
-
-			const std::set<fs::path> files = filesIn(out);
-			CHECK(files == filesIn(kept));
-			for (const fs::path& file : files)
-			{
-				INFO(file.generic_string());
-				if (file.extension() == ".ttf") { CHECK(readFile(out / file) == readFile(kept / file)); }
-				else { CHECK(undated(readFile(out / file)) == undated(readFile(kept / file))); }
-			}
-		}
-	}
-}
-
 TEST_CASE("windows-cpp names no parameter or local as one of the game's constants", "[generate]")
 {
 	// main.cpp takes in the game's namespace whole, so a parameter named as a
 	// constant hides it: MSVC warns (C4459), GCC and Clang do not
-	const fs::path kept = fs::path(XGE_ENGINE_FOLDER).parent_path() / "games/autogen/windows-cpp";
 	const std::regex constant(R"(constexpr \S+ (\w+) =)");
 	for (const std::string game : { "pong_min", "pong", "breakout" })
 	{
 		INFO(game);
-		const std::string header = readFile(kept / game / "source" / (game + ".h"));
+		TempFolder folder("xge_test_generate_windows_cpp_names_" + game);
+		const fs::path written = folder.path / "out" / "source";
+		generateGame(requestFor(fs::current_path() / ("descriptions/" + game + ".xml"), folder.path / "out", "windows-cpp"));
+		const std::string header = readFile(written / (game + ".h"));
 		for (auto found = std::sregex_iterator(header.begin(), header.end(), constant); found != std::sregex_iterator(); ++found)
 		{
 			const std::string name = (*found)[1];
@@ -377,7 +325,7 @@ TEST_CASE("windows-cpp names no parameter or local as one of the game's constant
 			for (const std::string& file : { std::string("main.cpp"), game + ".cpp" })
 			{
 				INFO(file << " declares " << name);
-				const std::string code = readFile(kept / game / "source" / file);
+				const std::string code = readFile(written / file);
 				CHECK_FALSE(std::regex_search(code, declared));
 			}
 		}

@@ -104,33 +104,3 @@ target_include_directories(xgecli PRIVATE xge/cli/include)
 
 # --generate needs libxslt (dependencies.cmake); without it generate.cpp says so.
 xge_link_xslt(xgecli)
-
-# What the windows-cpp generator writes (games/autogen/windows-cpp/<game>/):
-# stand-alone games on SFML, none of the engine, each built into
-# output/<config>/generated/autogen/windows-cpp/<game>/. AUDIO links SFML's
-# audio, FONT copies the engine's font beside the game.
-function(xge_autogen_game game)
-	cmake_parse_arguments(arg "AUDIO;FONT" "" "" ${ARGN})
-	set(source "games/autogen/windows-cpp/${game}/source")
-	add_executable(${game} "${source}/main.cpp" "${source}/${game}.cpp" "${source}/${game}.h")
-	target_compile_features(${game} PRIVATE cxx_std_20)
-	target_link_libraries(${game} PRIVATE SFML::Graphics)
-	if (arg_AUDIO)
-		target_link_libraries(${game} PRIVATE SFML::Audio)
-	endif()
-	xge_warnings(${game})
-	if (arg_FONT)
-		add_custom_command(TARGET ${game} POST_BUILD
-			COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/games/assets/tuffy.ttf" "$<TARGET_FILE_DIR:${game}>/assets/tuffy.ttf"
-			VERBATIM)
-	endif()
-	xge_place_program(${game} FOLDER generated/autogen/windows-cpp/${game})
-	# In an IDE, beside the generated games' tests (tests.cmake).
-	set_target_properties(${game} PROPERTIES FOLDER XGETestGenerated/XGETestAutogen)
-endfunction()
-
-if (XGE_WITH_SFML3)
-	xge_autogen_game(pong_min)
-	xge_autogen_game(pong AUDIO FONT)
-	xge_autogen_game(breakout AUDIO FONT)
-endif()
