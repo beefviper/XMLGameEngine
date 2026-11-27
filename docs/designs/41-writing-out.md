@@ -97,7 +97,7 @@ The largest single step was not a language change. It was dropping the frame-for
 
 - **Numbers keep their kind.** `800 / 3` is two whole numbers in C++, and cut to 266; whole numbers divided are written `800.0f / 3`. A countdown starting at a game constant is a `float` like the constant, and is shown as the whole number it holds.
 - **Names clash again.** The game's `cell` is also the word for a grid's cell, so the loop calls one `one`. Its `seconds` started the clock's own `seconds`, so that is written `freeway::seconds`. Actions named `up` and `down` met `key(..., bool down)`, so a key's state is now `pressed`.
-- **The file had a mistake no engine test saw.** The trucks of lane 9 had lost their `<scale>` and colours, so the engine drew them a quarter size and white. Writing the sizes out as numbers (`{ 22, 7 }`) showed it.
+- **One more hidden rule.** A kind's picture (lane 9's `<bitmap from="lane9" />`, rows only) takes what it leaves out, its scale and colours, from the grid's picture, so the trucks are 88 by 28, not 22 by 7. The written game works it out (`kind-scale`, `kind-colors` in `kinds.xsl`).
 
 ## Suggestions
 

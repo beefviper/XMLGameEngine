@@ -237,6 +237,30 @@
     <xsl:value-of select="($kind/sprite/bitmap/@from | $kind/../sprite/bitmap/@from)[last()]" />
   </xsl:template>
 
+  <!-- A kind's picture's scale: its own, else the grid's picture's, as a
+       kind's picture takes what it leaves out from the grid's. -->
+  <xsl:template name="kind-scale">
+    <xsl:param name="kind" select="." />
+    <xsl:variable name="named"><xsl:call-template name="kind-picture"><xsl:with-param name="kind" select="$kind" /></xsl:call-template></xsl:variable>
+    <xsl:variable name="own" select="/game/pictures/bitmap[@name = $named]" />
+    <xsl:variable name="base" select="/game/pictures/bitmap[@name = $kind/../sprite/bitmap/@from]" />
+    <xsl:call-template name="picture-scale"><xsl:with-param name="bitmap" select="($own[scale] | $base[not($own/scale)] | $own[not($base)])[1]" /></xsl:call-template>
+  </xsl:template>
+
+  <!-- A kind's picture's colours, a letter's own or the rest's: the grid's
+       picture's, then its own picture's, then a colour on its sprite. -->
+  <xsl:template name="kind-colors">
+    <xsl:param name="kind" select="." />
+    <xsl:variable name="named"><xsl:call-template name="kind-picture"><xsl:with-param name="kind" select="$kind" /></xsl:call-template></xsl:variable>
+    <xsl:variable name="own" select="/game/pictures/bitmap[@name = $named]" />
+    <xsl:variable name="base" select="/game/pictures/bitmap[@name = $kind/../sprite/bitmap/@from][count(. | $own) != count($own)]" />
+    <xsl:variable name="rest" select="($kind/sprite/bitmap/color[not(@char)] | $own/color[not(@char)][not($kind/sprite/bitmap/color[not(@char)])] | $base/color[not(@char)][not($own/color[not(@char)] or $kind/sprite/bitmap/color[not(@char)])])[1]" />
+    <rest><xsl:value-of select="normalize-space($rest)" /></rest>
+    <xsl:for-each select="$base/color[@char][not(@char = $own/color/@char)] | $own/color[@char]">
+      <letter char="{@char}"><xsl:value-of select="normalize-space(.)" /></letter>
+    </xsl:for-each>
+  </xsl:template>
+
   <!-- How many across a picture's pixel is: its <scale>, its style's, or 1. -->
   <xsl:template name="picture-scale">
     <xsl:param name="bitmap" />

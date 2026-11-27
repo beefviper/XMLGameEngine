@@ -455,7 +455,7 @@ TEST_CASE("web-js writes pong_min, pong, breakout, spacerace, kaboom and freeway
 			"\t\tfor (const one of traffic) {\n\t\t\tif (touching(chicken, one)) {\n\t\t\t\tchicken.position.y += cell;",
 			"hit: { volume: 0.25, parts: [",
 			"for (const part of sound.parts ?? [sound]) {",
-			"\t\"lane9\": { rows: lane9Picture, colors: { rest: \"rgb(139, 69, 19)\", letters: { k: \"black\" } } }," } },
+			"\t\"lane9\": { rows: lane9Picture, colors: { rest: \"white\", letters: { k: \"black\" } } }," } },
 	};
 	const std::map<std::string, std::string> titles{ { "pong_min", "Pong" }, { "pong", "Pong" }, { "breakout", "Breakout" }, { "spacerace", "Space Race" }, { "kaboom", "Kaboom!" }, { "freeway", "Freeway" } };
 	for (const auto& [game, wanted] : lines)

@@ -31,7 +31,7 @@
     <xsl:variable name="named"><xsl:call-template name="kind-picture" /></xsl:variable>
     <xsl:variable name="bitmap" select="$pictures[@name = $named] | /game/pictures/bitmap[@name = $named]" />
     <xsl:if test="$bitmap">
-      <xsl:variable name="scale"><xsl:call-template name="picture-scale"><xsl:with-param name="bitmap" select="$bitmap[1]" /></xsl:call-template></xsl:variable>
+      <xsl:variable name="scale"><xsl:call-template name="kind-scale" /></xsl:variable>
       <xsl:value-of select="concat('{ ', string-length(normalize-space($bitmap[1]/row[1])) * $scale, ', ', count($bitmap[1]/row) * $scale, ' }')" />
     </xsl:if>
   </xsl:template>

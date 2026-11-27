@@ -2043,16 +2043,17 @@ addEventListener("pagehide", keep);
     <xsl:call-template name="grid-drawings-name" />
     <xsl:text> = {&#10;</xsl:text>
     <xsl:for-each select="group">
-      <xsl:variable name="bitmap" select="/game/pictures/bitmap[@name = (current()/sprite/bitmap/@from | $grid/sprite/bitmap/@from[not(current()/sprite/bitmap/@from)])]" />
-      <xsl:variable name="own" select="sprite/bitmap/color[not(@char)]" />
+      <xsl:variable name="named"><xsl:call-template name="kind-picture" /></xsl:variable>
+      <xsl:variable name="bitmap" select="/game/pictures/bitmap[@name = $named]" />
+      <xsl:variable name="colors"><xsl:call-template name="kind-colors" /></xsl:variable>
       <xsl:text>&#9;</xsl:text>
       <xsl:call-template name="look-name"><xsl:with-param name="object" select="$grid" /><xsl:with-param name="look" select="@name" /></xsl:call-template>
       <xsl:text>: { rows: </xsl:text>
       <xsl:call-template name="picture-name"><xsl:with-param name="bitmap" select="$bitmap" /></xsl:call-template>
       <xsl:text>, colors: { rest: </xsl:text>
-      <xsl:call-template name="color"><xsl:with-param name="color" select="normalize-space(($own | $bitmap/color[not(@char)][not($own)])[1])" /></xsl:call-template>
+      <xsl:call-template name="color"><xsl:with-param name="color" select="string(exsl:node-set($colors)/rest)" /></xsl:call-template>
       <xsl:text>, letters: {</xsl:text>
-      <xsl:for-each select="$bitmap/color[@char]">
+      <xsl:for-each select="exsl:node-set($colors)/letter">
         <xsl:if test="position() &gt; 1">,</xsl:if>
         <xsl:value-of select="concat(' ', @char, ': ')" />
         <xsl:call-template name="color"><xsl:with-param name="color" select="normalize-space(.)" /></xsl:call-template>
