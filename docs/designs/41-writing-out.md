@@ -83,6 +83,22 @@ The largest single step was not a language change. It was dropping the frame-for
 - **The scenes were a table all along.** Kaboom's eight waves differ only in six numbers and one test; written out, they are eight rows and two `else if`s. A scene that changes more than numbers would need more, and this target says so rather than guessing.
 - **Names clash with the game's again.** The tone's `enum class Wave` met the game's `Wave` (a scene), so the sound's is now `Waveform`. In JavaScript, a start function that reads its own thing's size (`bomber.height`) reads it before the thing is made, so the size is written as the number it is.
 
+## What Freeway added
+
+| Part of the file | What the written game does with it |
+|---|---|
+| Kinds in a grid each giving a place, a speed, a count, a spacing or a picture | one `addTraffics(look, first, size, speed, count, gap)` call a lane, the loop counting to `count` |
+| Kinds each a picture, or a colour on the grid's picture | a table by look of the rows and colours (`trafficDrawings`), a kind's colour in place of its picture's own |
+| `<hop>` in an action a key triggers | a function the press calls with the member (`up(chicken1)`): a refused hop `return`s before the move, so its sound never plays |
+| `<move>` in a rule on meeting | that many pixels that way, once (`chicken->position.y += cell`) |
+| `<timers>` in the played state | a countdown of the game's own (`untilTick`), started again with a new game |
+| A `<sound>` of `<part>`s | the parts made one by one and added together (`together()`); in JavaScript, each part started at the same moment |
+| A member's `<position>` with only `x` | its `y` the group's |
+
+- **Numbers keep their kind.** `800 / 3` is two whole numbers in C++, and cut to 266; whole numbers divided are written `800.0f / 3`. A countdown starting at a game constant is a `float` like the constant, and is shown as the whole number it holds.
+- **Names clash again.** The game's `cell` is also the word for a grid's cell, so the loop calls one `one`. Its `seconds` started the clock's own `seconds`, so that is written `freeway::seconds`. Actions named `up` and `down` met `key(..., bool down)`, so a key's state is now `pressed`.
+- **The file had a mistake no engine test saw.** The trucks of lane 9 had lost their `<scale>` and colours, so the engine drew them a quarter size and white. Writing the sizes out as numbers (`{ 22, 7 }`) showed it.
+
 ## Suggestions
 
 Each is an idea, to be weighed when the game that needs it is written out.

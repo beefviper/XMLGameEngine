@@ -4,7 +4,7 @@
 <!-- author: beefviper -->
 <!-- date: Nov 13, 2026 -->
 
-<!-- <move direction>step</move> in an action: while its key is held, that many pixels a second that way. -->
+<!-- <move direction>step</move> in an action: while its key is held, that many pixels a second that way; in a rule on meeting, that many pixels that way, once. -->
 <xsl:stylesheet version="1.0"
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
@@ -14,8 +14,34 @@
     <xsl:apply-templates select="@* | * | text()" mode="covers" />
   </xsl:template>
   <xsl:template match="move/@direction" mode="covers" />
+  <!-- covered: up, down, left or right in a group's rule on meeting -->
+  <xsl:template match="group[member]/collisions/collision[not(@edge)]/move[@direction = 'up' or @direction = 'down' or @direction = 'left' or @direction = 'right'][not(*)]" mode="covers">
+    <xsl:apply-templates select="text()" mode="covers" />
+  </xsl:template>
   <xsl:template match="action/move[ancestor::object[1]/velocity | ancestor::group[1]/member/velocity]" mode="covers" priority="2">
     <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;move&gt; for something with a &lt;velocity&gt;'" /></xsl:call-template>
+  </xsl:template>
+
+  <xsl:template match="move" mode="touch">
+    <xsl:param name="who" />
+    <xsl:param name="self" />
+    <xsl:variable name="of">
+      <xsl:choose>
+        <xsl:when test="starts-with($who, '*')"><xsl:value-of select="concat(substring($who, 2), '-&gt;')" /></xsl:when>
+        <xsl:otherwise><xsl:value-of select="concat($who, '.')" /></xsl:otherwise>
+      </xsl:choose>
+    </xsl:variable>
+    <xsl:variable name="along">
+      <xsl:choose>
+        <xsl:when test="@direction = 'up'">position.y -= </xsl:when>
+        <xsl:when test="@direction = 'down'">position.y += </xsl:when>
+        <xsl:when test="@direction = 'left'">position.x -= </xsl:when>
+        <xsl:otherwise>position.x += </xsl:otherwise>
+      </xsl:choose>
+    </xsl:variable>
+    <xsl:value-of select="concat($of, $along)" />
+    <xsl:call-template name="value"><xsl:with-param name="node" select="." /><xsl:with-param name="self" select="$self" /></xsl:call-template>
+    <xsl:text>;</xsl:text>
   </xsl:template>
 
   <xsl:template match="move" mode="held">

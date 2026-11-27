@@ -41,6 +41,7 @@
   <xsl:include href="verbs/enter.xsl" />
   <xsl:include href="verbs/fire.xsl" />
   <xsl:include href="verbs/hold.xsl" />
+  <xsl:include href="verbs/hop.xsl" />
   <xsl:include href="verbs/inc.xsl" />
   <xsl:include href="verbs/move.xsl" />
   <xsl:include href="verbs/people.xsl" />

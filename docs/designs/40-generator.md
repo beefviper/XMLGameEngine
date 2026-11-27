@@ -1,6 +1,6 @@
 # Generating a program
 
-**Status:** Built: `xgecli --generate engine-cpp` covers every game, and `web-asm` builds the same into one web page; `windows-cpp` and `web-js` write `pong_min`, `pong`, `breakout`, `spacerace` and `kaboom` as a person would, in C++ and in JavaScript. XSLT writes the game file out as a tree of C++ data, and the program reads it with the engine's own reader and plays it with the engine's own code on SFML. A test plays each generated game beside the engine's. Reference: [programs](../reference/programs.md#generating-a-program).
+**Status:** Built: `xgecli --generate engine-cpp` covers every game, and `web-asm` builds the same into one web page; `windows-cpp` and `web-js` write `pong_min`, `pong`, `breakout`, `spacerace`, `kaboom` and `freeway` as a person would, in C++ and in JavaScript. XSLT writes the game file out as a tree of C++ data, and the program reads it with the engine's own reader and plays it with the engine's own code on SFML. A test plays each generated game beside the engine's. Reference: [programs](../reference/programs.md#generating-a-program).
 
 ## What we looked for
 
@@ -67,4 +67,4 @@ The first target wrote each game as a program a person might write (Pong about 4
 - **Scenes are a table.** Scenes that each say the same numbers (Kaboom's waves) are rows of one record (`Wave`), the game keeps which it is at and reads `wave().pace`; starting one starts the pieces it takes. Their conditions are merged by name down the `from=` chain, and runs of scenes whose tests come out the same share one test (`waveAt < 7`). What a thing fires is a list of its own (`bombs`), a timer a countdown in its owner's record.
 - `web-js` has no play checks of its own: its page is held to a few lines by `test_generate.cpp`, and played by hand in a browser.
 - What made each game easy or hard to write out, and suggestions for the language, are kept in [writing-out](41-writing-out.md).
-- `windows-cpp` and `web-js` write five games so far (`pong_min.xml`, `pong.xml`, `breakout.xml`, `spacerace.xml`, `kaboom.xml`). For any other it lists every part it has no words for and writes nothing: what it covers is said as match patterns in `covers.xsl` and in each verb's file, so a new verb says where it may stand beside how it is written. The list doubles as the to-do for the next game.
+- `windows-cpp` and `web-js` write six games so far (`pong_min.xml`, `pong.xml`, `breakout.xml`, `spacerace.xml`, `kaboom.xml`, `freeway.xml`). For any other it lists every part it has no words for and writes nothing: what it covers is said as match patterns in `covers.xsl` and in each verb's file, so a new verb says where it may stand beside how it is written. The list doubles as the to-do for the next game.

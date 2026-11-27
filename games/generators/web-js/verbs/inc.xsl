@@ -13,6 +13,8 @@
     <xsl:apply-templates select="* | text()" mode="covers" />
   </xsl:template>
   <xsl:template match="inc/@variable" mode="covers" />
+  <!-- who="self": the one the rule is of, as without it -->
+  <xsl:template match="inc/@who[. = 'self']" mode="covers" />
 
   <xsl:template match="inc" mode="do">
     <xsl:param name="self" select="/.." />

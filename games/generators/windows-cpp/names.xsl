@@ -92,8 +92,8 @@
     </xsl:call-template>
   </xsl:template>
 
-  <!-- One cell of a grid, as a loop names it: brick, or cell when the game
-       has a number of that name. -->
+  <!-- One cell of a grid, as a loop names it: brick, or cell (one when cell is
+       taken too) when the game has a number of that name. -->
   <xsl:template name="cell-name">
     <xsl:param name="grid" select="." />
     <xsl:variable name="named">
@@ -107,8 +107,9 @@
       </xsl:call-template>
     </xsl:variable>
     <xsl:choose>
-      <xsl:when test="/game/variables/variable[@name = $named] or $everything[@name = $named] or $grid/@name = $named">cell</xsl:when>
-      <xsl:otherwise><xsl:value-of select="$named" /></xsl:otherwise>
+      <xsl:when test="not(/game/variables/variable[@name = $named] or $everything[@name = $named] or $grid/@name = $named)"><xsl:value-of select="$named" /></xsl:when>
+      <xsl:when test="/game/variables/variable[@name = 'cell'] or $everything[@name = 'cell']">one</xsl:when>
+      <xsl:otherwise>cell</xsl:otherwise>
     </xsl:choose>
   </xsl:template>
 
@@ -142,7 +143,8 @@
     </xsl:choose>
   </xsl:template>
 
-  <!-- A timer's count down: untilFire, by its name or its first verb. -->
+  <!-- A timer's count down: untilFire, by its name or its first verb;
+       a screen's own, untilTick. -->
   <xsl:template name="timer-name">
     <xsl:param name="timer" select="." />
     <xsl:call-template name="camel">
@@ -150,6 +152,7 @@
         <xsl:text>until </xsl:text>
         <xsl:choose>
           <xsl:when test="$timer/@name"><xsl:value-of select="$timer/@name" /></xsl:when>
+          <xsl:when test="$timer/../parent::state">tick</xsl:when>
           <xsl:otherwise><xsl:value-of select="local-name($timer/*[not(self::every)][1])" /></xsl:otherwise>
         </xsl:choose>
       </xsl:with-param>

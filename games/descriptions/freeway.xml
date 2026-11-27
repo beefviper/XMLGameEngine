@@ -426,7 +426,11 @@
       <color>white</color>
       <color char="k">black</color>
     </bitmap>
-    <bitmap name="lane9"><row>****************.*****</row><row>****************.*kk**</row><row>****************.*kk**</row><row>**********************</row><row>**********************</row><row>.kk..kk.......kk..kk..</row><row>.kk..kk.......kk..kk..</row></bitmap>
+    <bitmap name="lane9"><row>****************.*****</row><row>****************.*kk**</row><row>****************.*kk**</row><row>**********************</row><row>**********************</row><row>.kk..kk.......kk..kk..</row><row>.kk..kk.......kk..kk..</row>
+      <scale>4</scale>
+      <color>brown</color>
+      <color char="k">black</color>
+    </bitmap>
     <bitmap name="chickens">
       <row>...rr...</row>
       <row>..****..</row>

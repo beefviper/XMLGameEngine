@@ -60,11 +60,12 @@
 
   <!-- Grids: a group of cells in rows and columns, in groups of its own
        (one kind of cell each) or not, whose cells meet: a list of them. -->
-  <xsl:variable name="grids" select="$states/objects/group[not(member)][(sprite | group/sprite)/rectangle]
+  <xsl:variable name="grids" select="$states/objects/group[not(member)][(sprite | group/sprite)/rectangle or sprite/bitmap]
       [collisions or group/collisions or @class = $met-classes or @name = //collision/@object]" />
 
   <!-- Pictures: bitmaps of the game's things, square pixels a row a line. -->
-  <xsl:variable name="pictures" select="/game/pictures/bitmap[@name = ($everything | $fired)/sprite/bitmap/@from or @name = $everything/parent::group/sprite/bitmap/@from]" />
+  <xsl:variable name="pictures" select="/game/pictures/bitmap[@name = ($everything | $fired)/sprite/bitmap/@from or @name = $everything/parent::group/sprite/bitmap/@from
+      or @name = $grids/descendant::bitmap/@from]" />
 
   <!-- Rows of words: a group of texts, a row's words each. -->
   <xsl:variable name="text-rows" select="$states/objects/group[not(member)][sprite/text]" />
@@ -190,6 +191,50 @@
       <xsl:when test="substring($name, string-length($name)) = 's'"><xsl:value-of select="substring($name, 1, string-length($name) - 1)" /></xsl:when>
       <xsl:otherwise><xsl:value-of select="concat($name, '-one')" /></xsl:otherwise>
     </xsl:choose>
+  </xsl:template>
+
+  <!-- What else its kinds give of their own, each a 'yes': a way across
+       (a lane's speed), a count of columns, a padding across, a picture of
+       another size. Shared by the grids of each target. -->
+  <xsl:template name="kind-speed">
+    <xsl:param name="grid" select="." />
+    <xsl:if test="$grid/group/velocity">yes</xsl:if>
+  </xsl:template>
+  <xsl:template name="kind-count">
+    <xsl:param name="grid" select="." />
+    <xsl:if test="$grid/group/columns">yes</xsl:if>
+  </xsl:template>
+  <xsl:template name="kind-gap">
+    <xsl:param name="grid" select="." />
+    <xsl:if test="$grid/group/padding/x">yes</xsl:if>
+  </xsl:template>
+  <xsl:template name="kind-size">
+    <xsl:param name="grid" select="." />
+    <xsl:variable name="sizes">
+      <xsl:for-each select="$grid/group">
+        <xsl:call-template name="kind-size-of" />
+        <xsl:text>|</xsl:text>
+      </xsl:for-each>
+    </xsl:variable>
+    <xsl:variable name="first"><xsl:for-each select="$grid/group[1]"><xsl:call-template name="kind-size-of" /></xsl:for-each></xsl:variable>
+    <xsl:if test="$grid/group[2]">
+      <xsl:call-template name="sizes-differ"><xsl:with-param name="sizes" select="$sizes" /><xsl:with-param name="first" select="$first" /></xsl:call-template>
+    </xsl:if>
+  </xsl:template>
+  <xsl:template name="sizes-differ">
+    <xsl:param name="sizes" />
+    <xsl:param name="first" />
+    <xsl:choose>
+      <xsl:when test="$sizes = ''" />
+      <xsl:when test="substring-before($sizes, '|') != $first">yes</xsl:when>
+      <xsl:otherwise><xsl:call-template name="sizes-differ"><xsl:with-param name="sizes" select="substring-after($sizes, '|')" /><xsl:with-param name="first" select="$first" /></xsl:call-template></xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
+  <!-- A kind's picture: its own, or the grid's. -->
+  <xsl:template name="kind-picture">
+    <xsl:param name="kind" select="." />
+    <xsl:value-of select="($kind/sprite/bitmap/@from | $kind/../sprite/bitmap/@from)[last()]" />
   </xsl:template>
 
   <!-- How many across a picture's pixel is: its <scale>, its style's, or 1. -->

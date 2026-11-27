@@ -158,14 +158,23 @@
         <xsl:if test="$bracketed">(</xsl:if>
         <xsl:for-each select="$tag/value">
           <xsl:if test="position() &gt; 1"><xsl:value-of select="$sign" /></xsl:if>
-          <xsl:call-template name="value">
-            <xsl:with-param name="node" select="." />
-            <xsl:with-param name="self" select="$self" />
-            <xsl:with-param name="in" select="$in" />
-            <xsl:with-param name="start" select="$start" />
-            <!-- the first is worked out first anyway; after a - or a /, the rest keep their own order -->
-            <xsl:with-param name="wrap" select="$binds + number(position() &gt; 1 and ($op = 'subtract' or $op = 'divide'))" />
-          </xsl:call-template>
+          <xsl:choose>
+            <!-- 800.0f / 3: whole numbers divided are not cut to a whole one -->
+            <xsl:when test="$op = 'divide' and position() = 1 and not(*) and floor(number(.)) = number(.)
+                and not(../value[2]/*) and floor(number(../value[2])) = number(../value[2])">
+              <xsl:value-of select="concat(normalize-space(.), '.0f')" />
+            </xsl:when>
+            <xsl:otherwise>
+              <xsl:call-template name="value">
+                <xsl:with-param name="node" select="." />
+                <xsl:with-param name="self" select="$self" />
+                <xsl:with-param name="in" select="$in" />
+                <xsl:with-param name="start" select="$start" />
+                <!-- the first is worked out first anyway; after a - or a /, the rest keep their own order -->
+                <xsl:with-param name="wrap" select="$binds + number(position() &gt; 1 and ($op = 'subtract' or $op = 'divide'))" />
+              </xsl:call-template>
+            </xsl:otherwise>
+          </xsl:choose>
         </xsl:for-each>
         <xsl:if test="$bracketed">)</xsl:if>
       </xsl:when>

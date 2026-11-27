@@ -15,13 +15,25 @@
     xmlns:exsl="http://exslt.org/common"
     extension-element-prefixes="exsl">
 
-  <!-- The axis the kinds' places give (x or y), when they give one. -->
+  <!-- The axis the kinds' places give (x or y, or xy for both), when they
+       give one. -->
   <xsl:template name="kind-axis">
     <xsl:param name="grid" select="." />
     <xsl:choose>
+      <xsl:when test="$grid/group/position/x and $grid/group/position/y">xy</xsl:when>
       <xsl:when test="$grid/group/position/y">y</xsl:when>
       <xsl:when test="$grid/group/position/x">x</xsl:when>
     </xsl:choose>
+  </xsl:template>
+
+  <!-- { 48, 28 }: the size of a kind's picture. -->
+  <xsl:template name="kind-size-of">
+    <xsl:variable name="named"><xsl:call-template name="kind-picture" /></xsl:variable>
+    <xsl:variable name="bitmap" select="$pictures[@name = $named] | /game/pictures/bitmap[@name = $named]" />
+    <xsl:if test="$bitmap">
+      <xsl:variable name="scale"><xsl:call-template name="picture-scale"><xsl:with-param name="bitmap" select="$bitmap[1]" /></xsl:call-template></xsl:variable>
+      <xsl:value-of select="concat('{ ', string-length(normalize-space($bitmap[1]/row[1])) * $scale, ', ', count($bitmap[1]/row) * $scale, ' }')" />
+    </xsl:if>
   </xsl:template>
 
   <!-- Whether its kinds each have a sound of their own when they meet. -->
@@ -111,11 +123,22 @@
     <xsl:variable name="grid" select="." />
     <xsl:variable name="axis"><xsl:call-template name="kind-axis" /></xsl:variable>
     <xsl:variable name="sound"><xsl:call-template name="kind-sound" /></xsl:variable>
+    <xsl:variable name="own-size"><xsl:call-template name="kind-size" /></xsl:variable>
+    <xsl:variable name="speed"><xsl:call-template name="kind-speed" /></xsl:variable>
+    <xsl:variable name="count"><xsl:call-template name="kind-count" /></xsl:variable>
+    <xsl:variable name="gap"><xsl:call-template name="kind-gap" /></xsl:variable>
     <xsl:variable name="parts">
       <xsl:if test="count(group) &gt; 1">
         <p><xsl:call-template name="record-name" /><xsl:text>::Look look</xsl:text></p>
       </xsl:if>
-      <xsl:if test="$axis != ''"><p><xsl:value-of select="concat('float ', $axis)" /></p></xsl:if>
+      <xsl:choose>
+        <xsl:when test="$axis = 'xy'"><p>sf::Vector2f first</p></xsl:when>
+        <xsl:when test="$axis != ''"><p><xsl:value-of select="concat('float ', $axis)" /></p></xsl:when>
+      </xsl:choose>
+      <xsl:if test="$own-size = 'yes'"><p>sf::Vector2f size</p></xsl:if>
+      <xsl:if test="$speed = 'yes'"><p>float speed</p></xsl:if>
+      <xsl:if test="$count = 'yes'"><p>int count</p></xsl:if>
+      <xsl:if test="$gap = 'yes'"><p>float gap</p></xsl:if>
       <xsl:for-each select="group[1]/variables/variable">
         <p>
           <xsl:call-template name="grid-variable-type"><xsl:with-param name="grid" select="$grid" /></xsl:call-template>
@@ -139,6 +162,10 @@
     <xsl:variable name="axis"><xsl:call-template name="kind-axis" /></xsl:variable>
     <xsl:variable name="sound"><xsl:call-template name="kind-sound" /></xsl:variable>
     <xsl:variable name="add"><xsl:call-template name="add-name" /></xsl:variable>
+    <xsl:variable name="own-size"><xsl:call-template name="kind-size" /></xsl:variable>
+    <xsl:variable name="speed"><xsl:call-template name="kind-speed" /></xsl:variable>
+    <xsl:variable name="count"><xsl:call-template name="kind-count" /></xsl:variable>
+    <xsl:variable name="gap"><xsl:call-template name="kind-gap" /></xsl:variable>
     <xsl:text>&#10;</xsl:text>
     <xsl:if test="@name = $reset-names">
       <xsl:value-of select="concat('&#9;// Where the ', @name, ' starts, and starts again.&#10;')" />
@@ -154,8 +181,27 @@
             <xsl:if test="count($grid/group) &gt; 1">
               <a><xsl:call-template name="look-name"><xsl:with-param name="object" select="$grid" /><xsl:with-param name="look" select="@name" /></xsl:call-template></a>
             </xsl:if>
-            <xsl:if test="$axis != ''">
-              <a><xsl:call-template name="value"><xsl:with-param name="node" select="position/*[local-name() = $axis]" /></xsl:call-template></a>
+            <xsl:choose>
+              <xsl:when test="$axis = 'xy'">
+                <a>
+                  <xsl:text>{ </xsl:text>
+                  <xsl:call-template name="value"><xsl:with-param name="node" select="position/x" /></xsl:call-template>
+                  <xsl:text>, </xsl:text>
+                  <xsl:call-template name="value"><xsl:with-param name="node" select="position/y" /></xsl:call-template>
+                  <xsl:text> }</xsl:text>
+                </a>
+              </xsl:when>
+              <xsl:when test="$axis != ''">
+                <a><xsl:call-template name="value"><xsl:with-param name="node" select="position/*[local-name() = $axis]" /></xsl:call-template></a>
+              </xsl:when>
+            </xsl:choose>
+            <xsl:if test="$own-size = 'yes'"><a><xsl:call-template name="kind-size-of" /></a></xsl:if>
+            <xsl:if test="$speed = 'yes'">
+              <a><xsl:call-template name="value"><xsl:with-param name="node" select="(velocity/x | ../velocity/x)[last()]" /></xsl:call-template></a>
+            </xsl:if>
+            <xsl:if test="$count = 'yes'"><a><xsl:value-of select="normalize-space((columns | ../columns)[last()])" /></a></xsl:if>
+            <xsl:if test="$gap = 'yes'">
+              <a><xsl:call-template name="value"><xsl:with-param name="node" select="(padding/x | ../padding/x)[last()]" /></xsl:call-template></a>
             </xsl:if>
             <xsl:variable name="kind" select="." />
             <xsl:for-each select="$grid/group[1]/variables/variable">
@@ -172,7 +218,12 @@
           <xsl:text>);&#10;</xsl:text>
         </xsl:for-each>
         <xsl:text>&#9;}&#10;</xsl:text>
-        <xsl:value-of select="concat('&#10;&#9;// ', normalize-space(rows), ' rows of ', normalize-space(columns), ' ')" />
+        <xsl:text>&#10;&#9;// </xsl:text>
+        <xsl:choose>
+          <xsl:when test="$count = 'yes'">count</xsl:when>
+          <xsl:otherwise><xsl:value-of select="concat(normalize-space(rows), ' rows of ', normalize-space(columns))" /></xsl:otherwise>
+        </xsl:choose>
+        <xsl:text> </xsl:text>
         <xsl:choose>
           <xsl:when test="@class"><xsl:value-of select="@class" /></xsl:when>
           <xsl:otherwise><xsl:call-template name="singular"><xsl:with-param name="name" select="@name" /></xsl:call-template></xsl:otherwise>
@@ -181,6 +232,9 @@
         <xsl:if test="count(group) &gt; 1"> of one look</xsl:if>
         <xsl:if test="$axis = 'y'">, the first row's top at y</xsl:if>
         <xsl:if test="$axis = 'x'">, the first column's left at x</xsl:if>
+        <xsl:if test="$axis = 'xy'">, the first at first</xsl:if>
+        <xsl:if test="$gap = 'yes'">, gap apart</xsl:if>
+        <xsl:if test="$speed = 'yes'">, going at speed</xsl:if>
         <xsl:value-of select="concat('.&#10;&#9;void ', $class, '::', $add, '(')" />
         <xsl:call-template name="add-parameters" />
         <xsl:text>)&#10;&#9;{&#10;</xsl:text>
@@ -204,9 +258,15 @@
     <xsl:variable name="sound"><xsl:call-template name="kind-sound" /></xsl:variable>
     <xsl:variable name="type"><xsl:call-template name="cell-type" /></xsl:variable>
     <xsl:variable name="row-speeds" select="row[number][velocity/x]" />
-    <xsl:text>&#9;&#9;const sf::Vector2f size</xsl:text>
-    <xsl:call-template name="size" />
-    <xsl:text>;&#10;</xsl:text>
+    <xsl:variable name="own-size"><xsl:call-template name="kind-size" /></xsl:variable>
+    <xsl:variable name="speed"><xsl:call-template name="kind-speed" /></xsl:variable>
+    <xsl:variable name="count"><xsl:call-template name="kind-count" /></xsl:variable>
+    <xsl:variable name="gap"><xsl:call-template name="kind-gap" /></xsl:variable>
+    <xsl:if test="$own-size != 'yes'">
+      <xsl:text>&#9;&#9;const sf::Vector2f size</xsl:text>
+      <xsl:call-template name="size" />
+      <xsl:text>;&#10;</xsl:text>
+    </xsl:if>
     <xsl:if test="$row-speeds">
       <!-- each row's way across, row 1 first -->
       <xsl:text>&#9;&#9;constexpr float rowSpeeds[] = { </xsl:text>
@@ -214,10 +274,10 @@
       <xsl:text> };&#10;</xsl:text>
     </xsl:if>
     <xsl:variable name="x">
-      <xsl:call-template name="cell-place"><xsl:with-param name="along" select="'x'" /><xsl:with-param name="given" select="$axis = 'x'" /><xsl:with-param name="count" select="$columns" /><xsl:with-param name="index" select="'column'" /></xsl:call-template>
+      <xsl:call-template name="cell-place"><xsl:with-param name="along" select="'x'" /><xsl:with-param name="given" select="contains($axis, 'x')" /><xsl:with-param name="first" select="$axis = 'xy'" /><xsl:with-param name="count" select="$columns + number($count = 'yes') * 2" /><xsl:with-param name="index" select="'column'" /><xsl:with-param name="gap" select="$gap = 'yes'" /></xsl:call-template>
     </xsl:variable>
     <xsl:variable name="y">
-      <xsl:call-template name="cell-place"><xsl:with-param name="along" select="'y'" /><xsl:with-param name="given" select="$axis = 'y'" /><xsl:with-param name="count" select="$rows" /><xsl:with-param name="index" select="'row'" /></xsl:call-template>
+      <xsl:call-template name="cell-place"><xsl:with-param name="along" select="'y'" /><xsl:with-param name="given" select="contains($axis, 'y')" /><xsl:with-param name="first" select="$axis = 'xy'" /><xsl:with-param name="count" select="$rows" /><xsl:with-param name="index" select="'row'" /></xsl:call-template>
     </xsl:variable>
     <xsl:variable name="parts">
       <xsl:if test="count(group) &gt; 1">, look</xsl:if>
@@ -230,6 +290,7 @@
     <xsl:variable name="velocity">
       <xsl:choose>
         <xsl:when test="$row-speeds">{ rowSpeeds[row], 0 }</xsl:when>
+        <xsl:when test="$speed = 'yes'">{ speed, 0 }</xsl:when>
         <xsl:otherwise>{}</xsl:otherwise>
       </xsl:choose>
     </xsl:variable>
@@ -242,6 +303,12 @@
     </xsl:variable>
     <xsl:variable name="lines">
       <xsl:choose>
+        <xsl:when test="$count = 'yes' and $rows &lt;= 1">
+          <line>for (int column = 0; column &lt; count; ++column)</line>
+          <line>{</line>
+          <line depth="1"><xsl:value-of select="$push" /></line>
+          <line>}</line>
+        </xsl:when>
         <xsl:when test="$rows &gt; 1 and $columns &gt; 1">
           <line><xsl:value-of select="concat('for (int row = 0; row &lt; ', $rows, '; ++row)')" /></line>
           <line>{</line>
@@ -295,8 +362,11 @@
     <xsl:param name="given" />
     <xsl:param name="count" />
     <xsl:param name="index" />
+    <xsl:param name="first" select="false()" />
+    <xsl:param name="gap" select="false()" />
     <xsl:variable name="start" select="position/*[local-name() = $along][* or normalize-space(.) != '0']" />
     <xsl:choose>
+      <xsl:when test="$given and $first"><xsl:value-of select="concat('first.', $along)" /></xsl:when>
       <xsl:when test="$given"><xsl:value-of select="$along" /></xsl:when>
       <xsl:when test="$start">
         <xsl:call-template name="value"><xsl:with-param name="node" select="position/*[local-name() = $along]" /><xsl:with-param name="self" select="." /><xsl:with-param name="axis" select="$along" /><xsl:with-param name="wrap" select="1" /></xsl:call-template>
@@ -307,6 +377,7 @@
       <xsl:if test="$given or $start"> + </xsl:if>
       <xsl:value-of select="concat('static_cast&lt;float&gt;(', $index, ') * ')" />
       <xsl:choose>
+        <xsl:when test="$gap"><xsl:value-of select="concat('(size.', $along, ' + gap)')" /></xsl:when>
         <xsl:when test="padding/*[local-name() = $along]">
           <xsl:value-of select="concat('(size.', $along, ' + ')" />
           <xsl:call-template name="value"><xsl:with-param name="node" select="padding/*[local-name() = $along]" /><xsl:with-param name="wrap" select="1" /></xsl:call-template>
