@@ -1,0 +1,553 @@
+<!-- prismfall.xml -->
+<!-- XML Game Engine -->
+<!-- author: beefviper -->
+<!-- date: Nov 27, 2026 -->
+
+<!--
+  Prism Fall, an original game of the marching-fleet kind. A lattice of
+  crystal shards, four rows of nine, drifts from side to side, stepping
+  down at each edge and shedding sparks, quicker the fewer are left; a
+  comet streaks across the sky now and then. Break them all before they
+  reach the pylons; a spark costs a lens, three lenses. Diamonds are worth
+  40, rings 25, crosses 15, the comet 60 to 240. The best score is kept.
+
+  A and D or the arrows move, Space fires, Pause pauses, 1 starts,
+  Space plays again.
+
+  How it is written:
+  * The lens and the shards are <bitmap>s, `pixel` (5) real pixels to a
+    character. The shards are one group of 9 columns and 4 rows in
+    lockstep, so they drift, bounce and step down as one lattice; the
+    diamonds' two pictures and their <animation> are the group's, and rows
+    2 (rings) and 3 and 4 (crosses) change the pictures and the worth.
+  * A broken shard leaves a flash, spawned where it was, gone after a
+    fifth of a second.
+  * The drift speeds up: whenever no more shards are left than pace.next,
+    a condition sets the lattice's speed 1.25 times as fast, the beat as
+    much shorter, and halves next.
+  * The pylons are pictures with a pixel collision, so a beam or spark that
+    hits one chips a ragged <hole> in it.
+  * A spark on the lens takes it out of play and pushes "cracked", which
+    holds everything still for a second while the lens's shards glint
+    where it was (a live <position> on them); then the lens comes back.
+  * The lattice hums as it steps: its animation is four pictures, each
+    playing one of two chimes as it comes up, and its seconds are live,
+    reading pace.beat, so the hum quickens with the lattice.
+  * Paused, cracked and both endings draw the game still underneath.
+-->
+
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+  <window name="Prism Fall">
+    <width>960</width>
+    <height>720</height>
+  </window>
+  <variables>
+    <variable name="margin">120</variable>
+    <variable name="top">110</variable>
+    <variable name="pixel">5</variable>
+    <variable name="gap">20</variable>
+    <variable name="step">150</variable>
+    <variable name="pylontop">500</variable>
+  </variables>
+  <styles>
+    <style name="banner"><size>112</size><color>cyan</color></style>
+    <style name="hud"><size>32</size><color>white</color></style>
+    <style name="prompt"><size>44</size><color>white</color></style>
+  </styles>
+  <objects>
+    <object name="beam" class="beam">
+      <sprite><rectangle><width>3</width><height>20</height><color>cyan</color></rectangle></sprite>
+      <velocity><y>-780</y></velocity>
+      <most>1</most>
+      <collisions>
+        <collision edge="all"><despawn /></collision>
+        <collision class="shards"><despawn /></collision>
+        <collision class="pylon"><despawn /></collision>
+        <collision class="spark"><despawn /></collision>
+        <collision class="comet"><despawn /></collision>
+      </collisions>
+    </object>
+    <!-- a spark, four at most, twinkling as it falls, shed by any shard
+         (each faces down) after a wait of its own -->
+    <object name="spark" class="spark">
+      <sprite name="a">
+        <bitmap from="spark-a" />
+      </sprite>
+      <sprite name="b">
+        <bitmap from="spark-b" />
+      </sprite>
+      <animation><seconds>0.08</seconds><frame sprite="a" /><frame sprite="b" /></animation>
+      <velocity><y>260</y></velocity>
+      <most>4</most>
+      <collisions>
+        <collision edge="all"><despawn /></collision>
+        <collision object="lens"><despawn /></collision>
+        <collision class="pylon"><despawn /></collision>
+        <collision class="floor"><despawn /></collision>
+        <collision object="beam"><despawn /></collision>
+      </collisions>
+    </object>
+    <!-- what a broken shard leaves for a moment -->
+    <object name="flash" class="flash">
+      <sprite name="flash">
+        <bitmap from="flash" />
+      </sprite>
+      <animation><seconds>0.2</seconds><once /><frame sprite="flash" /><then><despawn /></then></animation>
+      <most>2</most>
+    </object>
+  </objects>
+  <keeps>
+    <keep object="best" />
+  </keeps>
+  <states>
+    <objects>
+      <object name="lens">
+        <sprite>
+          <bitmap from="lens" />
+        </sprite>
+        <position><x><centered /></x><y>
+          <subtract>
+            <value><window><bottom /></window></value>
+            <value><multiply><value>lens.height</value><value>2</value></multiply></value>
+          </subtract>
+        </y></position>
+        <collisions>
+          <!-- touched by its dish, not the thin emitter on top -->
+          <hitbox><horizontal>5</horizontal><top>10</top></hitbox>
+          <collision edge="horizontal"><stick /></collision>
+          <collision class="spark">
+            <dec variable="lens.lives" />
+            <inc variable="lens.struck" />
+            <play sound="crack" />
+            <die />
+          </collision>
+        </collisions>
+        <actions>
+          <action name="left"><move direction="left">step</move></action>
+          <action name="right"><move direction="right">step</move></action>
+          <action name="shine">
+            <fire object="beam" />
+            <play sound="beam" />
+          </action>
+        </actions>
+        <variables>
+          <variable name="score">0</variable>
+          <variable name="lives">3</variable>
+          <variable name="struck">0</variable>
+        </variables>
+      </object>
+      <!-- the best score, kept from game to game -->
+      <object name="best">
+        <sprite><text style="hud"><content>BEST</content><number>best.score</number></text></sprite>
+        <position><x><centered /></x><y>10</y></position>
+        <variables><variable name="score">0</variable></variables>
+      </object>
+      <object name="continue">
+        <sprite><text style="prompt"><content>spacebar to continue</content></text></sprite>
+        <position><x><centered /></x><y><add><value><window><y><center /></y></window></value><value>60</value></add></y></position>
+      </object>
+    </objects>
+    <state name="title">
+      <objects>
+        <object name="title">
+          <sprite><text style="banner"><content>PRISM FALL</content></text></sprite>
+          <position><x><centered /></x><y><centered><offset>-100</offset></centered></y></position>
+        </object>
+        <object name="table">
+          <sprite><text style="hud"><content>diamond 40   ring 25   cross 15   comet ?</content><size>26</size></text></sprite>
+          <position><x><centered /></x><y><add><value><window><y><center /></y></window></value><value>20</value></add></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show object="lens" />
+        <show object="best" />
+      </shows>
+      <inputs>
+        <input><button>num1</button><button>numpad1</button><push state="playing" /></input>
+      </inputs>
+    </state>
+    <state name="playing">
+      <objects>
+        <group name="pylons" class="pylon">
+          <columns>3</columns>
+          <rows>1</rows>
+          <padding><x>200</x><y>0</y></padding>
+          <sprite>
+            <bitmap from="pylons" />
+          </sprite>
+          <position><x>146</x><y>pylontop</y></position>
+          <collisions>
+            <type>pixel</type>
+            <collision object="beam"><hole>9<rough>0.5</rough></hole></collision>
+            <collision class="spark"><hole>7<rough>0.5</rough></hole></collision>
+          </collisions>
+        </group>
+        <object name="floor" class="floor">
+          <sprite><rectangle><width><window><right /></window></width><height>3</height><color>purple</color></rectangle></sprite>
+          <position><x>0</x><y><subtract><value><window><bottom /></window></value><value>28</value></subtract></y></position>
+        </object>
+        <!-- the comet: across the sky now and then, 60 to 240 points -->
+        <object name="comet" class="comet">
+          <sprite>
+            <bitmap from="comet" />
+          </sprite>
+          <position><x><subtract><value>0</value><value>comet.width</value></subtract></x><y>56</y></position>
+          <velocity><x>180</x></velocity>
+          <waiting />
+          <collisions>
+            <collision edge="right"><die /></collision>
+            <collision object="beam">
+              <inc variable="lens.score">
+                <multiply>
+                  <value>60</value>
+                  <value><ceiling><value><self>worth</self></value></ceiling></value>
+                </multiply>
+              </inc>
+              <spawn object="flash" />
+              <play sound="shatter" />
+              <die />
+            </collision>
+          </collisions>
+          <variables><variable name="worth"><random><min>0.01</min><max>4</max></random></variable></variables>
+        </object>
+        <group name="shards" class="shards">
+          <columns>9</columns>
+          <rows>4</rows>
+          <padding><x>gap</x><y>gap</y></padding>
+          <sprite name="a">
+            <bitmap from="diamond-a" />
+          </sprite>
+          <sprite name="b">
+            <bitmap from="diamond-b" />
+          </sprite>
+          <animation>
+            <seconds update="live">pace.beat</seconds>
+            <stepped />
+            <frame sprite="a"><play sound="hum1" /></frame>
+            <frame sprite="b"><play sound="hum2" /></frame>
+            <frame sprite="a"><play sound="hum1" /></frame>
+            <frame sprite="b"><play sound="hum2" /></frame>
+          </animation>
+          <position><x>margin</x><y>top</y></position>
+          <velocity><x>36</x></velocity>
+          <facing>down</facing>
+          <collisions>
+            <lockstep />
+            <collision edge="horizontal">
+              <bounce />
+              <move direction="down">12</move>
+            </collision>
+            <collision object="beam">
+              <inc variable="lens.score"><self>worth</self></inc>
+              <spawn object="flash" />
+              <play sound="shatter" />
+              <die />
+            </collision>
+          </collisions>
+          <variables><variable name="worth">40</variable></variables>
+          <timers>
+            <timer>
+              <every><random><min>1.5</min><max>20</max></random></every>
+              <fire object="spark" />
+            </timer>
+          </timers>
+          <row><number>2</number>
+            <sprite name="a">
+              <bitmap from="ring-a" />
+            </sprite>
+            <sprite name="b">
+              <bitmap from="ring-b" />
+            </sprite>
+            <variables><variable name="worth">25</variable></variables>
+          </row>
+          <row><number>3</number><number>4</number>
+            <sprite name="a">
+              <bitmap from="cross-a" />
+            </sprite>
+            <sprite name="b">
+              <bitmap from="cross-b" />
+            </sprite>
+            <variables><variable name="worth">15</variable></variables>
+          </row>
+        </group>
+        <!-- how many shards may be left before the drift speeds up again,
+             and how long each step of it is -->
+        <object name="pace">
+          <variables><variable name="next">18</variable><variable name="beat">0.6</variable></variables>
+        </object>
+        <object name="score">
+          <sprite><text style="hud"><content>SCORE</content><number>lens.score</number></text></sprite>
+          <position><x>20</x><y>10</y></position>
+        </object>
+        <object name="lives">
+          <sprite><text style="hud"><number>lens.lives</number><size>22</size><color>cyan</color></text></sprite>
+          <position><x>20</x><y><subtract><value><window><bottom /></window></value><value>25</value></subtract></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show object="lens" />
+        <show object="beam" />
+        <show object="best" />
+      </shows>
+      <inputs>
+        <input><button>a</button><button>left</button><trigger object="lens" action="left" /></input>
+        <input><button>d</button><button>right</button><trigger object="lens" action="right" /></input>
+        <input button="space"><trigger object="lens" action="shine" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
+      </inputs>
+      <conditions>
+        <condition class="shards">
+          <remaining>0</remaining>
+          <become object="over.message" sprite="won" />
+          <push state="over" />
+        </condition>
+        <condition object="lens" variable="lives">
+          <atmost>0</atmost>
+          <become object="over.message" sprite="lost" />
+          <push state="over" />
+        </condition>
+        <!-- the lattice down on the pylons: the shards have landed -->
+        <condition class="shards" variable="y" total="highest">
+          <atleast><subtract><value>pylontop</value><value>40</value></subtract></atleast>
+          <become object="over.message" sprite="lost" />
+          <push state="over" />
+        </condition>
+        <condition object="lens" variable="struck">
+          <atleast>1</atleast>
+          <dec variable="lens.struck" />
+          <push state="cracked" />
+        </condition>
+        <condition class="shards" total="count">
+          <atmost>pace.next</atmost>
+          <set group="shards" variable="velocity.x"><multiply><value>shards.1.1.velocity.x</value><value>1.25</value></multiply></set>
+          <set variable="pace.beat"><divide><value>pace.beat</value><value>1.25</value></divide></set>
+          <set variable="pace.next"><divide><value>pace.next</value><value>2</value></divide></set>
+        </condition>
+        <condition object="lens" variable="score">
+          <above>best.score</above>
+          <copy variable="lens.score" into="best.score" />
+        </condition>
+      </conditions>
+      <timers>
+        <timer>
+          <every><random><min>15</min><max>25</max></random></every>
+          <reveal object="comet" />
+          <play sound="comet" />
+        </timer>
+      </timers>
+    </state>
+    <state name="paused">
+      <objects>
+        <object name="paused">
+          <sprite><text style="banner"><content>paused</content><color>white</color></text></sprite>
+          <position><x><centered /></x><y><centered /></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
+      </inputs>
+    </state>
+    <!-- the lens cracked: everything holds still for a second, then the sparks are gone -->
+    <state name="cracked">
+      <objects>
+        <!-- the lens in pieces where it was hit, glinting between two pictures -->
+        <object name="shatter">
+          <sprite name="a"><bitmap from="shatter-a" /></sprite>
+          <sprite name="b"><bitmap from="shatter-b" /></sprite>
+          <animation>
+            <seconds>0.12</seconds>
+            <frame sprite="a" />
+            <frame sprite="b" />
+          </animation>
+          <position><x update="live">lens.x</x><y update="live">lens.y</y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs />
+      <timers>
+        <timer>
+          <after>1</after>
+          <despawn object="spark" />
+          <reveal object="lens" />
+          <pop />
+        </timer>
+      </timers>
+    </state>
+    <state name="over">
+      <objects>
+        <object name="message">
+          <sprite name="lost"><text style="banner"><content>SHATTERED</content><color>red</color></text></sprite>
+          <sprite name="won"><text style="banner"><content>ALL CLEAR</content></text></sprite>
+          <position><x><centered /></x><y><subtract><value><window><y><center /></y></window></value><value>150</value></subtract></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+        <show object="continue" />
+      </shows>
+      <inputs>
+        <input button="space"><reset /></input>
+      </inputs>
+    </state>
+  </states>
+  <sounds>
+    <sound name="beam" wave="sine"><volume>0.2</volume><note pitch="E6" to="B6">0.07</note></sound>
+    <sound name="shatter" wave="noise"><volume>0.3</volume><note pitch="9000" to="3000">0.12</note></sound>
+    <sound name="crack" wave="noise"><volume>0.45</volume><note pitch="4000" to="200">0.6</note></sound>
+    <!-- the comet's whoosh as it comes on -->
+    <sound name="comet" wave="sine">
+      <volume>0.15</volume>
+      <note pitch="A6" to="A5">0.3</note>
+      <note pitch="A5" to="E5">0.3</note>
+    </sound>
+    <!-- the lattice's hum: two chimes, one a step -->
+    <sound name="hum1" wave="sine"><volume>0.3</volume><note pitch="A3">0.08</note></sound>
+    <sound name="hum2" wave="sine"><volume>0.3</volume><note pitch="E3">0.08</note></sound>
+  </sounds>
+  <pictures>
+    <bitmap name="spark-a"><row>.*.</row><row>***</row><row>.*.</row><row>.*.</row><scale>3</scale><color>yellow</color></bitmap>
+    <bitmap name="spark-b"><row>*.*</row><row>.*.</row><row>*.*</row><row>.*.</row><scale>3</scale><color>yellow</color></bitmap>
+    <bitmap name="flash">
+      <row>....*....</row>
+      <row>.*..*..*.</row>
+      <row>..*...*..</row>
+      <row>***...***</row>
+      <row>..*...*..</row>
+      <row>.*..*..*.</row>
+      <row>....*....</row>
+      <scale>pixel</scale>
+      <color>white</color>
+    </bitmap>
+    <bitmap name="lens">
+      <row>.....*.....</row>
+      <row>.....*.....</row>
+      <row>...*****...</row>
+      <row>.*********.</row>
+      <row>***.***.***</row>
+      <row>***********</row>
+      <row>.*.......*.</row>
+      <scale>pixel</scale>
+      <color>cyan</color>
+    </bitmap>
+    <bitmap name="shatter-a">
+      <row>..*.....*..</row>
+      <row>*....*....*</row>
+      <row>...*...*...</row>
+      <row>.*..***..*.</row>
+      <row>..*******..</row>
+      <row>**.*****.**</row>
+      <row>.*.......*.</row>
+      <scale>pixel</scale>
+      <color>cyan</color>
+    </bitmap>
+    <bitmap name="shatter-b">
+      <row>*...*.*...*</row>
+      <row>..*.....*..</row>
+      <row>.*..*.*..*.</row>
+      <row>...*.*.*...</row>
+      <row>*.*******.*</row>
+      <row>.**.***.**.</row>
+      <row>*.*.....*.*</row>
+      <scale>pixel</scale>
+      <color>cyan</color>
+    </bitmap>
+    <bitmap name="pylons">
+      <row>..**************..</row>
+      <row>.****************.</row>
+      <row>******************</row>
+      <row>******************</row>
+      <row>*****........*****</row>
+      <row>*****........*****</row>
+      <row>*****........*****</row>
+      <row>*****........*****</row>
+      <row>*****........*****</row>
+      <row>*****........*****</row>
+      <row>******......******</row>
+      <row>*******....*******</row>
+      <scale>4</scale>
+      <color>purple</color>
+    </bitmap>
+    <bitmap name="comet">
+      <row>.........*****</row>
+      <row>.....*********</row>
+      <row>**************</row>
+      <row>.....*********</row>
+      <row>.........*****</row>
+      <scale><subtract><value>pixel</value><value>1</value></subtract></scale>
+      <color>orange</color>
+    </bitmap>
+    <bitmap name="diamond-a">
+      <row>....*....</row>
+      <row>...***...</row>
+      <row>..*****..</row>
+      <row>.***.***.</row>
+      <row>***...***</row>
+      <row>.***.***.</row>
+      <row>..*****..</row>
+      <row>...***...</row>
+      <scale>pixel</scale>
+      <color>magenta</color>
+    </bitmap>
+    <bitmap name="diamond-b">
+      <row>....*....</row>
+      <row>...*.*...</row>
+      <row>..*.*.*..</row>
+      <row>.*.*.*.*.</row>
+      <row>*.*...*.*</row>
+      <row>.*.*.*.*.</row>
+      <row>..*.*.*..</row>
+      <row>...*.*...</row>
+      <scale>pixel</scale>
+      <color>magenta</color>
+    </bitmap>
+    <bitmap name="ring-a">
+      <row>..*****..</row>
+      <row>.*.....*.</row>
+      <row>*..***..*</row>
+      <row>*.*...*.*</row>
+      <row>*.*...*.*</row>
+      <row>*..***..*</row>
+      <row>.*.....*.</row>
+      <row>..*****..</row>
+      <color>yellow</color>
+    </bitmap>
+    <bitmap name="ring-b">
+      <row>..*.*.*..</row>
+      <row>.*.....*.</row>
+      <row>*..*.*..*</row>
+      <row>..*...*..</row>
+      <row>*.*...*.*</row>
+      <row>...*.*...</row>
+      <row>.*.....*.</row>
+      <row>..*.*.*..</row>
+      <color>yellow</color>
+    </bitmap>
+    <bitmap name="cross-a">
+      <row>...***...</row>
+      <row>...*.*...</row>
+      <row>****.****</row>
+      <row>*.......*</row>
+      <row>****.****</row>
+      <row>...*.*...</row>
+      <row>...***...</row>
+      <row>.........</row>
+      <color>orange</color>
+    </bitmap>
+    <bitmap name="cross-b">
+      <row>.........</row>
+      <row>...*.*...</row>
+      <row>..**.**..</row>
+      <row>.*.....*.</row>
+      <row>..**.**..</row>
+      <row>...*.*...</row>
+      <row>.........</row>
+      <row>.........</row>
+      <color>orange</color>
+    </bitmap>
+  </pictures>
+</game>

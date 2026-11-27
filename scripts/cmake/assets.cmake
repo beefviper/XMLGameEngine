@@ -22,6 +22,7 @@ set(data_xml
 	"games/descriptions/breakout.xml"
 	"games/descriptions/spaceinvaders.xml"
 	"games/descriptions/spaceinvaders2.xml"
+	"games/descriptions/prismfall.xml"
 	"games/descriptions/frogger.xml"
 	"games/descriptions/spacerace.xml"
 	"games/descriptions/sparring.xml"

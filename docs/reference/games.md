@@ -29,6 +29,7 @@ The tables list only keys beyond that.
 |---|---|---|
 | `spaceinvaders` | A/D, Space fires | a [lockstep](collisions.md#lockstep) block, bombs, a mystery ship, shields worn by [`<hole>`](commands.md#touching) |
 | `spaceinvaders2` | as above | the same game drawn from an [SVG](pictures.md#svg-pictures) sprite sheet |
+| `prismfall` | A/D, Space fires | an original marching-fleet game: a [lockstep](collisions.md#lockstep) lattice of crystal shards, sparks on timers, a comet, pylons chipped by [`<hole>`](commands.md#touching) |
 | `astrosmash` | A/D, Space fires | rocks that split, spinners, a spare base each 1,000 |
 | `asteroids` | Left/Right turn, Up thrusts, Space fires, Down hyperspace | headings, rocks that break, two saucers, a flame [pose](pictures.md#poses-mirror-grip-and-blinking), the best score kept |
 | `demonattack` | A/D, Space fires | three waves of demons that fire back and split |

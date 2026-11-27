@@ -84,6 +84,7 @@ add_executable(xgetest
 	"xge/tests/games/test_pong.cpp"
 	"xge/tests/games/test_breakout.cpp"
 	"xge/tests/games/test_frogger.cpp"
+	"xge/tests/games/test_prismfall.cpp"
 	"xge/tests/games/test_spacerace.cpp"
 	"xge/tests/games/test_sparring.cpp"
 	"xge/tests/games/test_kaboom.cpp"
