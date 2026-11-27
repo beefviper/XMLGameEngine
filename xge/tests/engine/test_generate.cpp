@@ -10,8 +10,8 @@
 // them but no XML library and none of the other libraries. That it plays as
 // the file does, frame by frame, is in test_generated_games.cpp, which
 // compiles it. The windows-cpp target (games/generators/windows-cpp) writes
-// pong_min, pong, breakout, spacerace, kaboom and freeway, web-js the same as a page of plain
-// JavaScript each, and web-asm what engine-cpp does for a web page.
+// pong_min, pong, breakout, spacerace, kaboom, freeway and frogger, web-js the same as a page
+// of plain JavaScript each, and web-asm what engine-cpp does for a web page.
 
 #include "scratch.h"
 #include "game/game.h"
@@ -311,7 +311,7 @@ TEST_CASE("windows-cpp names no parameter or local as one of the game's constant
 	// main.cpp takes in the game's namespace whole, so a parameter named as a
 	// constant hides it: MSVC warns (C4459), GCC and Clang do not
 	const std::regex constant(R"(constexpr \S+ (\w+) =)");
-	for (const std::string game : { "pong_min", "pong", "breakout", "spacerace", "kaboom", "freeway" })
+	for (const std::string game : { "pong_min", "pong", "breakout", "spacerace", "kaboom", "freeway", "frogger" })
 	{
 		INFO(game);
 		TempFolder folder("xge_test_generate_windows_cpp_names_" + game);
@@ -332,9 +332,9 @@ TEST_CASE("windows-cpp names no parameter or local as one of the game's constant
 	}
 }
 
-TEST_CASE("windows-cpp writes pong_min, pong, breakout, spacerace, kaboom and freeway as stand-alone SFML games", "[generate]")
+TEST_CASE("windows-cpp writes pong_min, pong, breakout, spacerace, kaboom, freeway and frogger as stand-alone SFML games", "[generate]")
 {
-	for (const std::string game : { "pong_min", "pong", "breakout", "spacerace", "kaboom", "freeway" })
+	for (const std::string game : { "pong_min", "pong", "breakout", "spacerace", "kaboom", "freeway", "frogger" })
 	{
 		INFO(game);
 		TempFolder folder("xge_test_generate_windows_cpp_" + game);
@@ -364,30 +364,42 @@ TEST_CASE("windows-cpp writes pong_min, pong, breakout, spacerace, kaboom and fr
 	CHECK(readFile(folder.path / "out/CMakeLists.txt").find("SFML::Audio") != std::string::npos);
 }
 
+TEST_CASE("a target's prepare.xsl reshapes the game before it is written: windows-cpp's makes groups in groups plain", "[generate]")
+{
+	// frogger's river holds logs and turtles, each with its kinds: written
+	// out, it is one list of logs with a look for each kind and each turtle look
+	TempFolder folder("xge_test_generate_windows_cpp_prepare");
+	generateGame(requestFor(fs::current_path() / "descriptions/frogger.xml", folder.path / "out", "windows-cpp"));
+	const std::string header = readFile(folder.path / "out/source/frogger.h");
+	CHECK(header.find("\tstruct Log : Thing\n\t{\n\t\tenum class Look { Logrow2, Logrow4, Logrow5, Turtlerow3Up, Turtlerow3Under, Turtlerow6 };") != std::string::npos);
+	CHECK(header.find("float lookTime{ 0 };") != std::string::npos);
+	CHECK(header.find("\tstruct Hazard : Thing\n\t{\n\t\tenum class Look { Truckrow8, Carrow9, Carrow10, Carrow11, Carrow12 };") != std::string::npos);
+}
+
 TEST_CASE("windows-cpp lists every part of a game it has no words for yet, then stops", "[generate]")
 {
 	TempFolder folder("xge_test_generate_windows_cpp_stops");
 	try
 	{
-		generateGame(requestFor(fs::current_path() / "descriptions/frogger.xml", folder.path / "out", "windows-cpp"));
-		FAIL("frogger.xml was written");
+		generateGame(requestFor(fs::current_path() / "descriptions/spaceinvaders.xml", folder.path / "out", "windows-cpp"));
+		FAIL("spaceinvaders.xml was written");
 	}
 	catch (const GenerateError& error)
 	{
 		const std::string what = error.what();
 		INFO(what);
-		CHECK(what.find("windows-cpp cannot write these parts of frogger.xml yet; use engine-cpp for this game:\n") != std::string::npos);
+		CHECK(what.find("windows-cpp cannot write these parts of spaceinvaders.xml yet; use engine-cpp for this game:\n") != std::string::npos);
 		// the whole list, a line each and each once, with the object it is in
-		CHECK(what.find("\n  <group> in a <group> other than a grid (group 'river')") != std::string::npos);
-		CHECK(what.find("\n  <ride> in <collision> (object 'frog')") != std::string::npos);
-		CHECK(count(what, "\n  <trigger> in <condition>") == 1);
+		CHECK(what.find("\n  <lockstep> in <collisions> (group 'aliens')") != std::string::npos);
+		CHECK(what.find("\n  <fire> in <action> (object 'player')") != std::string::npos);
+		CHECK(count(what, "\n  <copy> in <condition>") == 1);
 		// a long list comes through whole (libxslt hands it over in one piece)
-		CHECK(what.find("\n  <reset> in <action> (object 'frog')") != std::string::npos);
+		CHECK(what.find("\n  <timers> in a <state> that is not played") != std::string::npos);
 	}
 	CHECK_FALSE(fs::exists(folder.path / "out"));
 }
 
-TEST_CASE("web-js writes pong_min, pong, breakout, spacerace, kaboom and freeway as one page of plain JavaScript each that names nothing of the engine", "[generate]")
+TEST_CASE("web-js writes pong_min, pong, breakout, spacerace, kaboom, freeway and frogger as one page of plain JavaScript each that names nothing of the engine", "[generate]")
 {
 	// a line or two of each, in the page's own words
 	const std::map<std::string, std::vector<std::string>> lines{
@@ -456,8 +468,20 @@ TEST_CASE("web-js writes pong_min, pong, breakout, spacerace, kaboom and freeway
 			"hit: { volume: 0.25, parts: [",
 			"for (const part of sound.parts ?? [sound]) {",
 			"\t\"lane9\": { rows: lane9Picture, colors: { rest: \"white\", letters: { k: \"black\" } } }," } },
+		{ "frogger", {
+			"addLogs(logs, \"turtlerow3-up\", { x: 60, y: 3 * cell + 8 }, { x: 80, y: 32 }, -96, 4, (windowWidth + 80) / 4 - 80);",
+			"look, lookTime: 0 });",
+			"\t\tif (log.look === \"turtlerow3-up\" && log.lookTime >= 3.5) {\n\t\t\tlog.look = \"turtlerow3-under\";\n\t\t\tlog.lookTime = 0;",
+			"\tif (frog.inPlay) {\n\t\tconst frogBody = inset(frog, 6, 4);\n\t\tif (!touchingAny(frogBody, pads)) {",
+			"\t\t\t\tfrog.position.x += log.velocity.x * elapsed;\n\t\t\t\tfrog.position.y += log.velocity.y * elapsed;\n\t\t\t\tif (log.look === \"turtlerow3-under\") { drown(); }",
+			"function lose() {\n\tif (!frog.inPlay) { return; }\n\tif (splats.length >= 1) { return; }\n\tsplats.push({",
+			"\tfor (const splash of [...splashes]) {\n\t\tif (splash.age >= 1.6) {\n\t\t\tfrog.lives -= 1;\n\t\t\tfrog.inPlay = true;",
+			"clock = { time: time };",
+			"if (pad.look === \"home\") { pixels(padsHomePicture,",
+			"if (frog.inPlay) { pixels(frogPicture,",
+			"pixels(splat.age < 0.4 ? squashedPicture : skullPicture," } },
 	};
-	const std::map<std::string, std::string> titles{ { "pong_min", "Pong" }, { "pong", "Pong" }, { "breakout", "Breakout" }, { "spacerace", "Space Race" }, { "kaboom", "Kaboom!" }, { "freeway", "Freeway" } };
+	const std::map<std::string, std::string> titles{ { "pong_min", "Pong" }, { "pong", "Pong" }, { "breakout", "Breakout" }, { "spacerace", "Space Race" }, { "kaboom", "Kaboom!" }, { "freeway", "Freeway" }, { "frogger", "Frogger" } };
 	for (const auto& [game, wanted] : lines)
 	{
 		INFO(game);
@@ -491,16 +515,16 @@ TEST_CASE("web-js lists every part of a game it has no words for yet, then stops
 	TempFolder folder("xge_test_generate_web_js_stops");
 	try
 	{
-		generateGame(requestFor(fs::current_path() / "descriptions/frogger.xml", folder.path / "out", "web-js"));
-		FAIL("frogger.xml was written");
+		generateGame(requestFor(fs::current_path() / "descriptions/spaceinvaders.xml", folder.path / "out", "web-js"));
+		FAIL("spaceinvaders.xml was written");
 	}
 	catch (const GenerateError& error)
 	{
 		const std::string what = error.what();
 		INFO(what);
-		CHECK(what.find("web-js cannot write these parts of frogger.xml yet; use web-asm for this game:\n") != std::string::npos);
-		CHECK(what.find("\n  <ride> in <collision> (object 'frog')") != std::string::npos);
-		CHECK(what.find("\n  <spawn> in <action> (object 'frog')") != std::string::npos);
+		CHECK(what.find("web-js cannot write these parts of spaceinvaders.xml yet; use web-asm for this game:\n") != std::string::npos);
+		CHECK(what.find("\n  <lockstep> in <collisions> (group 'aliens')") != std::string::npos);
+		CHECK(what.find("\n  <fire> in <action> (object 'player')") != std::string::npos);
 	}
 	CHECK_FALSE(fs::exists(folder.path / "out"));
 }
@@ -508,7 +532,7 @@ TEST_CASE("web-js lists every part of a game it has no words for yet, then stops
 TEST_CASE("the games windows-cpp and web-js cover: the rest stop with their list", "[.long][generate]")
 {
 	// A line here for each game they learn to write (plan A5).
-	const std::set<std::string> covered{ "pong_min", "pong", "breakout", "spacerace", "kaboom", "freeway" };
+	const std::set<std::string> covered{ "pong_min", "pong", "breakout", "spacerace", "kaboom", "freeway", "frogger" };
 
 	for (const std::string target : { "windows-cpp", "web-js" })
 	{

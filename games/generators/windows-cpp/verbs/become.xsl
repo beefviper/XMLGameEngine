@@ -16,6 +16,65 @@
     </xsl:if>
   </xsl:template>
 
+  <!-- covered: bare in a grid's rule, or a kind's timer, to a look of its cells -->
+  <xsl:template match="group/collisions/collision/collision/become[@sprite and not(@object or @from or node())]" mode="covers">
+    <xsl:if test="not(ancestor::group[1]/sprite[@name = current()/@sprite])">
+      <xsl:call-template name="gap"><xsl:with-param name="what" select="concat('&lt;become&gt; to ', $quote, @sprite, $quote, ', a look it has not')" /></xsl:call-template>
+    </xsl:if>
+  </xsl:template>
+
+  <!-- A grid's cell (a kind's) to one of its looks: one.look = River::Look::Turtlerow3Under;
+       how long it has looked so back to nothing, and its size when its
+       looks differ in size. -->
+  <xsl:template match="become[not(@object)]" mode="touch">
+    <xsl:param name="who" />
+    <xsl:param name="self" />
+    <xsl:variable name="owner" select="ancestor::group[1]" />
+    <xsl:choose>
+      <xsl:when test="$owner[count(. | $grids) = count($grids) or parent::group[count(. | $grids) = count($grids)]]">
+        <xsl:call-template name="cell-becomes"><xsl:with-param name="cell" select="translate($who, '*', '')" /></xsl:call-template>
+      </xsl:when>
+      <xsl:otherwise><xsl:apply-templates select="." mode="do"><xsl:with-param name="self" select="$self" /></xsl:apply-templates></xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+  <xsl:template name="cell-becomes">
+    <xsl:param name="cell" />
+    <xsl:variable name="owner" select="ancestor::group[1]" />
+    <xsl:variable name="grid" select="$owner[count(. | $grids) = count($grids)] | $owner/parent::group[count(. | $grids) = count($grids)]" />
+    <xsl:variable name="kind" select="$owner[count(. | $grid) != count($grid)]" />
+    <xsl:variable name="look" select="($kind/sprite | $grid[not($kind)]/sprite)[@name = current()/@sprite]" />
+    <xsl:variable name="named">
+      <xsl:choose>
+        <xsl:when test="$kind"><xsl:call-template name="kind-look"><xsl:with-param name="kind" select="$kind" /><xsl:with-param name="sprite" select="$look" /></xsl:call-template></xsl:when>
+        <xsl:otherwise><xsl:value-of select="@sprite" /></xsl:otherwise>
+      </xsl:choose>
+    </xsl:variable>
+    <xsl:value-of select="concat($cell, '.look = ')" />
+    <xsl:call-template name="look-name"><xsl:with-param name="object" select="$grid" /><xsl:with-param name="look" select="$named" /></xsl:call-template>
+    <xsl:text>;</xsl:text>
+    <xsl:if test="count($grid | $timed-grids) = count($timed-grids)">
+      <xsl:value-of select="concat('&#10;', $cell, '.lookTime = 0;')" />
+    </xsl:if>
+    <xsl:if test="not($kind)">
+      <xsl:call-template name="cell-look-size"><xsl:with-param name="cell" select="$cell" /><xsl:with-param name="look" select="$look" /><xsl:with-param name="axis" select="'x'" /></xsl:call-template>
+      <xsl:call-template name="cell-look-size"><xsl:with-param name="cell" select="$cell" /><xsl:with-param name="look" select="$look" /><xsl:with-param name="axis" select="'y'" /></xsl:call-template>
+    </xsl:if>
+  </xsl:template>
+  <!-- pad.size.y = 32; when the grid's looks differ that way -->
+  <xsl:template name="cell-look-size">
+    <xsl:param name="cell" />
+    <xsl:param name="look" />
+    <xsl:param name="axis" />
+    <xsl:variable name="size"><xsl:call-template name="look-size"><xsl:with-param name="look" select="$look" /><xsl:with-param name="axis" select="$axis" /></xsl:call-template></xsl:variable>
+    <xsl:variable name="differ">
+      <xsl:for-each select="$look/../sprite">
+        <xsl:variable name="each"><xsl:call-template name="look-size"><xsl:with-param name="look" select="." /><xsl:with-param name="axis" select="$axis" /></xsl:call-template></xsl:variable>
+        <xsl:if test="$each != $size">x</xsl:if>
+      </xsl:for-each>
+    </xsl:variable>
+    <xsl:if test="$differ != ''"><xsl:value-of select="concat('&#10;', $cell, '.size.', $axis, ' = ', $size, ';')" /></xsl:if>
+  </xsl:template>
+
   <xsl:template match="become" mode="do">
     <xsl:variable name="object" select="$everything[@name = current()/@object] | $states[@name = substring-before(current()/@object, '.')]/objects/object[@name = substring-after(current()/@object, '.')]" />
     <xsl:variable name="thing"><xsl:call-template name="object-name"><xsl:with-param name="object" select="$object" /></xsl:call-template></xsl:variable>

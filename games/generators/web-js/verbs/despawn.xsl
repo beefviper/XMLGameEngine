@@ -18,6 +18,7 @@
       <xsl:call-template name="gap"><xsl:with-param name="what" select="concat('&lt;despawn&gt; of ', $quote, @object, $quote, ', not a piece that is fired')" /></xsl:call-template>
     </xsl:if>
   </xsl:template>
+  <xsl:template match="object/animation/then/despawn[not(@* or node())][not(following-sibling::*)]" mode="covers" />
   <xsl:template match="object/collisions/collision[@object or @class][not(@edge)]/despawn[not(@* or node())][not(following-sibling::*)]" mode="covers">
     <xsl:if test="count(ancestor::object[1] | $fired) != count($fired)">
       <xsl:call-template name="gap"><xsl:with-param name="what" select="'a bare &lt;despawn /&gt; other than of a piece that is fired'" /></xsl:call-template>

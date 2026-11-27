@@ -27,6 +27,7 @@
 #include <cstdio>
 #include <memory>
 #include <set>
+#include <utility>
 #endif
 
 namespace xge
@@ -210,6 +211,24 @@ namespace xge
 			if (!game)
 			{
 				throw GenerateError(withMessages("could not read " + gameFile.string(), messages));
+			}
+
+			// A target may first put the game in the shape it writes from
+			// (prepare.xsl): the same game, said more plainly.
+			const std::filesystem::path prepareFile = std::filesystem::absolute(targetFolder / "prepare.xsl");
+			if (std::filesystem::exists(prepareFile))
+			{
+				const Stylesheet prepare(xsltParseStylesheetFile(xml(prepareFile.string())));
+				if (!prepare)
+				{
+					throw GenerateError(withMessages("could not read the stylesheet " + prepareFile.string(), messages));
+				}
+				Document prepared(xsltApplyStylesheet(prepare.get(), game.get(), nullptr));
+				if (!prepared)
+				{
+					throw GenerateError(withMessages("could not prepare " + gameFile.filename().string() + " for " + request.target, messages));
+				}
+				game = std::move(prepared);
 			}
 
 			const std::filesystem::path stylesheetFile = std::filesystem::absolute(targetFolder / "generate.xsl");

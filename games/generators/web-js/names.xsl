@@ -75,10 +75,12 @@
     </xsl:choose>
   </xsl:template>
 
-  <!-- The list of a fired piece in flight: bombs. -->
+  <!-- The list of a fired piece in flight: bombs, splashes. -->
   <xsl:template name="fired-list-name">
     <xsl:param name="piece" select="." />
-    <xsl:call-template name="camel"><xsl:with-param name="name" select="concat($piece/@name, 's')" /></xsl:call-template>
+    <xsl:call-template name="camel">
+      <xsl:with-param name="name"><xsl:call-template name="plural"><xsl:with-param name="name" select="$piece/@name" /></xsl:call-template></xsl:with-param>
+    </xsl:call-template>
   </xsl:template>
 
   <!-- A timer's count down: untilFire, by its name or its first verb;
@@ -123,7 +125,7 @@
     <xsl:call-template name="camel">
       <xsl:with-param name="name">
         <xsl:choose>
-          <xsl:when test="$grid/@class"><xsl:value-of select="$grid/@class" /></xsl:when>
+          <xsl:when test="$grid/@class"><xsl:call-template name="one-of-class"><xsl:with-param name="class" select="$grid/@class" /></xsl:call-template></xsl:when>
           <xsl:otherwise><xsl:call-template name="singular"><xsl:with-param name="name" select="$grid/@name" /></xsl:call-template></xsl:otherwise>
         </xsl:choose>
       </xsl:with-param>

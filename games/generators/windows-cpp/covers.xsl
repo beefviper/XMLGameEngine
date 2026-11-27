@@ -54,10 +54,11 @@
   <xsl:template match="object[count(sprite) &gt; 1] | group[count(sprite) &gt; 1]" mode="covers" priority="2">
     <xsl:variable name="color" select="string(sprite[1]/rectangle/color)" />
     <xsl:variable name="animated" select="animation and count(. | $fired) = count($fired)" />
-    <xsl:if test="self::group or not(not(sprite[not(text/content)])
+    <xsl:if test="(self::group and (count(. | $grids) != count($grids) or group or sprite[not(rectangle or bitmap)] or sprite/rectangle/*[not(self::width or self::height or self::color)]))
+        or (self::object and not(not(sprite[not(text/content)])
         or (not(sprite[not(rectangle)]) and not(sprite/rectangle[string(color) != $color]))
         or (not(sprite[not(bitmap)]) and not(animation))
-        or ($animated and not(sprite[not(@name = current()/animation/frame/@sprite)]) and not(sprite[not(bitmap)])))">
+        or ($animated and not(sprite[not(@name = current()/animation/frame/@sprite)]) and not(sprite[not(bitmap)]))))">
       <xsl:call-template name="gap"><xsl:with-param name="what" select="'looks other than texts, pictures or rectangles of one colour'" /></xsl:call-template>
     </xsl:if>
     <xsl:apply-templates select="@* | * | text()" mode="covers" />
@@ -71,11 +72,19 @@
       <xsl:when test="count($grid | $grids) = count($grids) and @object and $things[@name = current()/@object] and *[last()][self::die] and not(ancestor::group[2])">
         <xsl:apply-templates select="@* | * | text()" mode="covers" />
       </xsl:when>
+      <xsl:when test="count($grid | $grids) = count($grids) and not($grid/group) and @object and $things[@name = current()/@object] and collision and not(*[not(self::collision[@sprite])])">
+        <xsl:for-each select="collision">
+          <xsl:if test="@*[local-name() != 'sprite'] or not($grid/sprite[@name = current()/@sprite])">
+            <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;collision&gt; in a grid rule other than by one of its looks'" /></xsl:call-template>
+          </xsl:if>
+          <xsl:apply-templates select="*" mode="covers" />
+        </xsl:for-each>
+      </xsl:when>
       <xsl:when test="../../member and ((@class and ($grids[@class = current()/@class] or $things[@class = current()/@class])) or $things[@name = current()/@object])">
         <xsl:apply-templates select="@* | * | text()" mode="covers" />
       </xsl:when>
       <xsl:otherwise>
-        <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;collision&gt; on a touch in a group, other than a grid meeting one thing and its cell dying, or members meeting a grid or a thing'" /></xsl:call-template>
+        <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;collision&gt; on a touch in a group, other than a grid meeting one thing and its cell dying or by its looks, or members meeting a grid or a thing'" /></xsl:call-template>
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
@@ -95,10 +104,26 @@
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
+  <!-- a kind's sound where the grid meets a thing, or its rule on a
+       thing while it has one of its own looks -->
   <xsl:template match="group/group/collisions/collision" mode="covers" priority="3">
-    <xsl:if test="@edge or not(@object) or *[not(self::play)] or count(*) != 1 or not(../../../collisions/collision[@object = current()/@object])">
-      <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;collision&gt; in a grid group other than one sound where the grid meets that thing'" /></xsl:call-template>
-    </xsl:if>
+    <xsl:choose>
+      <xsl:when test="@sprite and not(@edge or @class) and $things[@name = current()/@object] and ../../sprite[@name = current()/@sprite]">
+        <xsl:apply-templates select="*" mode="covers" />
+      </xsl:when>
+      <xsl:when test="@edge or not(@object) or *[not(self::play)] or count(*) != 1 or not(../../../collisions/collision[@object = current()/@object])">
+        <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;collision&gt; in a grid group other than one sound where the grid meets that thing, or a rule on a thing by look'" /></xsl:call-template>
+      </xsl:when>
+    </xsl:choose>
+  </xsl:template>
+  <!-- a kind's looks that last a while, each a timer on it -->
+  <xsl:template match="group/group/timers" mode="covers" priority="3">
+    <xsl:for-each select="timer">
+      <xsl:if test="not(@sprite) or @*[local-name() != 'sprite'] or not(after) or *[not(self::after or self::become)] or not(../../sprite[@name = current()/@sprite]) or count(become) != 1
+          or not(../../sprite[@name = current()/become/@sprite]) or become/@*[local-name() != 'sprite'] or string(number(after)) = 'NaN'">
+        <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;timer&gt; in a grid group other than a look lasting a while'" /></xsl:call-template>
+      </xsl:if>
+    </xsl:for-each>
   </xsl:template>
   <xsl:template match="group/group/rows | group/group/group | group/group/velocity/y | group/group/padding/y" mode="covers" priority="3">
     <xsl:call-template name="gap"><xsl:with-param name="what" select="concat('&lt;', local-name(), '&gt; in a grid group')" /></xsl:call-template>
@@ -113,8 +138,9 @@
   <!-- a kind's look: a colour of the grid's rectangles, or a picture of its
        own or the grid's in a colour of its own -->
   <xsl:template match="group/group/sprite" mode="covers" priority="3">
-    <xsl:if test="@* or *[not(self::rectangle or self::bitmap)] or rectangle/*[not(self::color)] or (rectangle and not(../../sprite/rectangle))
-        or bitmap/@*[local-name() != 'from'] or bitmap/*[not(self::color)] or bitmap/color/@char or (bitmap and not(bitmap/@from or ../../sprite/bitmap))">
+    <xsl:if test="@*[local-name() != 'name'] or (@name and count(../sprite) = 1) or *[not(self::rectangle or self::bitmap)] or rectangle/*[not(self::color)] or (rectangle and not(../../sprite/rectangle))
+        or bitmap/@*[local-name() != 'from'] or bitmap/*[not(self::color or self::scale)] or (bitmap and not(bitmap/@from or ../../sprite/bitmap))
+        or (../sprite[2] and not(bitmap/@from))">
       <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;sprite&gt; in a grid group other than a colour or a picture'" /></xsl:call-template>
     </xsl:if>
   </xsl:template>
@@ -157,6 +183,21 @@
   </xsl:template>
   <xsl:template match="group[not(member) and not(sprite/text)][(columns &gt; 1 and position/x//centered) or (rows &gt; 1 and position/y//centered)]" mode="covers" priority="3">
     <xsl:call-template name="gap"><xsl:with-param name="what" select="'&lt;centered&gt; across a block of more than one'" /></xsl:call-template>
+  </xsl:template>
+
+  <!-- A box pulled in from an object's picture's sides, alike across and
+       alike up and down. -->
+  <xsl:template match="object/collisions/hitbox" mode="covers" priority="2">
+    <xsl:if test="@* or *[not(self::all or self::horizontal or self::vertical)] or *[string(number(.)) = 'NaN'] or count(*) &gt; 2 or (all and *[not(self::all)])
+        or (horizontal and not(vertical)) or (vertical and not(horizontal)) or ../type">
+      <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;hitbox&gt; other than one pulled in alike across and alike up and down'" /></xsl:call-template>
+    </xsl:if>
+  </xsl:template>
+  <!-- A rule passed over while a class (or grid) is touched too. -->
+  <xsl:template match="object/collisions/collision[not(@edge)]/@unless" mode="covers" priority="2">
+    <xsl:if test="not($grids[@class = current() or @name = current()] or $things[(@class | parent::group/@class) = current() or @name = current()])">
+      <xsl:call-template name="gap"><xsl:with-param name="what" select="concat('unless=', $quote, ., $quote, ', not a class of things or grids')" /></xsl:call-template>
+    </xsl:if>
   </xsl:template>
 
   <!-- Touching by the lit pixels of a picture. -->
@@ -242,12 +283,15 @@
     </xsl:if>
     <xsl:apply-templates select="*" mode="covers" />
   </xsl:template>
-  <!-- An animation: of what is fired, its pictures round and round, each as long. -->
+  <!-- An animation: of what is fired, its pictures round and round, each as
+       long; or once through, each as long as it says, then what it does
+       last of all, ending taken away. -->
   <xsl:template match="object/animation" mode="covers" priority="2">
-    <xsl:if test="count(.. | $fired) != count($fired) or *[not(self::seconds or self::frame)] or frame/@*[local-name() != 'sprite'] or frame/node() or not(seconds)">
-      <xsl:call-template name="gap"><xsl:with-param name="what" select="'an &lt;animation&gt; other than of what is fired, each picture as long'" /></xsl:call-template>
+    <xsl:if test="count(.. | $fired) != count($fired) or *[not(self::seconds or self::frame or self::once or self::then)] or frame/@*[local-name() != 'sprite'] or not(seconds)
+        or frame/*[not(self::seconds)] or (not(once) and (frame/* or then)) or (once and not(then/*[last()][self::despawn])) or frame/seconds[string(number(.)) = 'NaN'] or string(number(seconds)) = 'NaN' or once/node()">
+      <xsl:call-template name="gap"><xsl:with-param name="what" select="'an &lt;animation&gt; other than of what is fired, each picture as long, or once through then taken away'" /></xsl:call-template>
     </xsl:if>
-    <xsl:apply-templates select="seconds" mode="covers" />
+    <xsl:apply-templates select="seconds | then/*" mode="covers" />
   </xsl:template>
   <xsl:template match="object/facing" mode="covers" priority="2">
     <xsl:if test="not(. = 'up' or . = 'down' or . = 'left' or . = 'right')">

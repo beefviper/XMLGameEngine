@@ -49,8 +49,11 @@
   <xsl:include href="verbs/pop.xsl" />
   <xsl:include href="verbs/push.xsl" />
   <xsl:include href="verbs/reset.xsl" />
+  <xsl:include href="verbs/reveal.xsl" />
   <xsl:include href="verbs/reverse.xsl" />
+  <xsl:include href="verbs/ride.xsl" />
   <xsl:include href="verbs/set.xsl" />
+  <xsl:include href="verbs/spawn.xsl" />
   <xsl:include href="verbs/stick.xsl" />
   <xsl:include href="verbs/track.xsl" />
   <xsl:include href="verbs/trigger.xsl" />

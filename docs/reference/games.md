@@ -44,7 +44,7 @@ The tables list only keys beyond that.
 
 | Game | Keys | Shows |
 |---|---|---|
-| `frogger` | W A S D hop | [`<ride />`](commands.md#touching), [`unless=`](collisions.md#rule-filters), diving turtles, five bays |
+| `frogger` | W A S D hop | [`<ride />`](commands.md#touching), [`unless=`](collisions.md#rule-filters), diving turtles, five bays; `windows-cpp` and `web-js` write it out |
 | `freeway` | W/S, Up/Down | two chickens across ten lanes; a hit knocks one back a lane; `windows-cpp` and `web-js` write it out |
 | `kaboom` | A/D, the mouse | eight waves as [scenes](states.md#scenes); the bucket stack as looks; `windows-cpp` and `web-js` write it out |
 | `frostbite` | W/S hop rows, A/D walk | timed [`<hop>`](commands.md#moving), looks that turn the floes, three nights |

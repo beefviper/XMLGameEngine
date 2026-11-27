@@ -99,6 +99,25 @@ The largest single step was not a language change. It was dropping the frame-for
 - **Names clash again.** The game's `cell` is also the word for a grid's cell, so the loop calls one `one`. Its `seconds` started the clock's own `seconds`, so that is written `freeway::seconds`. Actions named `up` and `down` met `key(..., bool down)`, so a key's state is now `pressed`.
 - **One more hidden rule.** A kind's picture (lane 9's `<bitmap from="lane9" />`, rows only) takes what it leaves out, its scale and colours, from the grid's picture, so the trucks are 88 by 28, not 22 by 7. The written game works it out (`kind-scale`, `kind-colors` in `kinds.xsl`).
 
+## What Frogger added
+
+| Part of the file | What the written game does with it |
+|---|---|
+| Groups in groups (the river's logs and turtles, each with kinds) | made plain before writing (`prepare.xsl`): one list of logs, its looks each kind's and each turtle look's |
+| A kind with several looks, a `<timer sprite= after>` on one | a `look` per cell and a `lookTime`; each frame, an `if` per timed look moves it on |
+| A rule on a kind by `sprite=` (a diving turtle drowns the frog) | an `if` on the cell's look inside the loop |
+| A grid with no kinds and several looks (the pads) | each cell its look, drawn by an `if` on it |
+| `<die />` in an action, `<reveal>` later | an `inPlay` the frog's actions, meetings and drawing wait on |
+| `<spawn>` with `<most>`, `<animation><once />` and `<then>` | a list of splats, pushed centred on the frog; each picture until its time is up, then what it does and erased |
+| `<ride />` | the frog moved by the log's speed for the frame |
+| `<hitbox>` | a body pulled in from the picture's sides (`inset`), used for every touch |
+| `unless=` | the rules wrapped in `if (!touchingAny(frogBody, pads))` |
+| A bare `<reset />` in an action | back to the `start` kept in the record, standing still |
+
+- **A third level was a shape, not a rule.** Every template knew grids of kinds; the river added groups of grids. Flattening the game first (`prepare.xsl`, run by `xgecli` before `generate.xsl`) kept the rest unchanged, and the six games before it come out byte for byte the same.
+- **Hidden rules again.** An object out of play is not moved, drawn or touched, and its actions are refused, so a key pressed while the splat plays does nothing. A spawned piece with no place of its own is centred on what spawns it. A refused spawn (one splat at most) stops the rest of the action, so the frog dies once.
+- **Names.** A class word ends in an s more often than not (`logs`, `hazards`); one kind is `log`, but `debris` stays `debris`. A plural of a word ending in s takes `es` (`splashes`).
+
 ## Suggestions
 
 Each is an idea, to be weighed when the game that needs it is written out.

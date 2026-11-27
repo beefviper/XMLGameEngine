@@ -38,7 +38,7 @@
   <xsl:variable name="pieces" select="/game/objects/object" />
   <xsl:variable name="scenes" select="$states/scenes/scene" />
   <xsl:variable name="taken" select="$pieces[@name = $scenes/objects/object/@name]" />
-  <xsl:variable name="fired" select="$pieces[@name = //fire/@object]" />
+  <xsl:variable name="fired" select="$pieces[@name = //fire/@object or @name = //spawn/@object]" />
 
   <!-- every object and member in the game, the pieces the scenes take and
        the shared ones first, in the file's order; not what is fired -->
@@ -60,8 +60,14 @@
 
   <!-- Grids: a group of cells in rows and columns, in groups of its own
        (one kind of cell each) or not, whose cells meet: a list of them. -->
-  <xsl:variable name="grids" select="$states/objects/group[not(member)][(sprite | group/sprite)/rectangle or sprite/bitmap]
+  <xsl:variable name="grids" select="$states/objects/group[not(member)][(sprite | group/sprite)/*[self::rectangle or self::bitmap]]
       [collisions or group/collisions or @class = $met-classes or @name = //collision/@object]" />
+
+  <!-- Grids whose cells look more than one way: by kind, or by looks of
+       a kind's own or of the grid's; and those whose looks last a while,
+       a kind's timer on one of them changing it. -->
+  <xsl:variable name="looking-grids" select="$grids[count(group) &gt; 1 or group[count(sprite) &gt; 1] or (not(group) and count(sprite) &gt; 1)]" />
+  <xsl:variable name="timed-grids" select="$grids[group/timers/timer[@sprite]]" />
 
   <!-- Pictures: bitmaps of the game's things, square pixels a row a line. -->
   <xsl:variable name="pictures" select="/game/pictures/bitmap[@name = ($everything | $fired)/sprite/bitmap/@from or @name = $everything/parent::group/sprite/bitmap/@from
@@ -193,6 +199,28 @@
     </xsl:choose>
   </xsl:template>
 
+  <!-- One of a class: a class said in the plural (pads) as one (pad); not
+       one ending -is, -ss or -us (debris, grass, cactus). -->
+  <xsl:template name="one-of-class">
+    <xsl:param name="class" />
+    <xsl:choose>
+      <xsl:when test="substring($class, string-length($class)) = 's' and not(contains('isu', substring($class, string-length($class) - 1, 1)))"><xsl:call-template name="singular"><xsl:with-param name="name" select="$class" /></xsl:call-template></xsl:when>
+      <xsl:otherwise><xsl:value-of select="$class" /></xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
+  <!-- More than one: bombs, splashes. -->
+  <xsl:template name="plural">
+    <xsl:param name="name" />
+    <xsl:variable name="last" select="substring($name, string-length($name))" />
+    <xsl:variable name="two" select="substring($name, string-length($name) - 1)" />
+    <xsl:value-of select="$name" />
+    <xsl:choose>
+      <xsl:when test="$last = 's' or $last = 'x' or $two = 'sh' or $two = 'ch'">es</xsl:when>
+      <xsl:otherwise>s</xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
   <!-- What else its kinds give of their own, each a 'yes': a way across
        (a lane's speed), a count of columns, a padding across, a picture of
        another size. Shared by the grids of each target. -->
@@ -231,34 +259,81 @@
     </xsl:choose>
   </xsl:template>
 
-  <!-- A kind's picture: its own, or the grid's. -->
+  <!-- A kind's picture (of the look $sprite, its first by default): its
+     own, or the grid's. -->
   <xsl:template name="kind-picture">
     <xsl:param name="kind" select="." />
-    <xsl:value-of select="($kind/sprite/bitmap/@from | $kind/../sprite/bitmap/@from)[last()]" />
+    <xsl:param name="sprite" select="$kind/sprite[1]" />
+    <xsl:value-of select="($sprite/bitmap/@from | $kind/../sprite/bitmap/@from)[last()]" />
   </xsl:template>
 
-  <!-- A kind's picture's scale: its own, else the grid's picture's, as a
-       kind's picture takes what it leaves out from the grid's. -->
+  <!-- A kind's picture's scale: its sprite's, its own picture's, else the
+       grid's picture's, as a kind's picture takes what it leaves out from
+       the grid's. -->
   <xsl:template name="kind-scale">
     <xsl:param name="kind" select="." />
-    <xsl:variable name="named"><xsl:call-template name="kind-picture"><xsl:with-param name="kind" select="$kind" /></xsl:call-template></xsl:variable>
+    <xsl:param name="sprite" select="$kind/sprite[1]" />
+    <xsl:variable name="named"><xsl:call-template name="kind-picture"><xsl:with-param name="kind" select="$kind" /><xsl:with-param name="sprite" select="$sprite" /></xsl:call-template></xsl:variable>
     <xsl:variable name="own" select="/game/pictures/bitmap[@name = $named]" />
     <xsl:variable name="base" select="/game/pictures/bitmap[@name = $kind/../sprite/bitmap/@from]" />
-    <xsl:call-template name="picture-scale"><xsl:with-param name="bitmap" select="($own[scale] | $base[not($own/scale)] | $own[not($base)])[1]" /></xsl:call-template>
+    <xsl:choose>
+      <xsl:when test="$sprite/bitmap/scale"><xsl:value-of select="normalize-space($sprite/bitmap/scale)" /></xsl:when>
+      <xsl:otherwise>
+        <xsl:call-template name="picture-scale"><xsl:with-param name="bitmap" select="($own[scale] | $base[not($own/scale)] | $own[not($base)])[1]" /></xsl:call-template>
+      </xsl:otherwise>
+    </xsl:choose>
   </xsl:template>
 
   <!-- A kind's picture's colours, a letter's own or the rest's: the grid's
        picture's, then its own picture's, then a colour on its sprite. -->
   <xsl:template name="kind-colors">
     <xsl:param name="kind" select="." />
-    <xsl:variable name="named"><xsl:call-template name="kind-picture"><xsl:with-param name="kind" select="$kind" /></xsl:call-template></xsl:variable>
+    <xsl:param name="sprite" select="$kind/sprite[1]" />
+    <xsl:variable name="named"><xsl:call-template name="kind-picture"><xsl:with-param name="kind" select="$kind" /><xsl:with-param name="sprite" select="$sprite" /></xsl:call-template></xsl:variable>
     <xsl:variable name="own" select="/game/pictures/bitmap[@name = $named]" />
     <xsl:variable name="base" select="/game/pictures/bitmap[@name = $kind/../sprite/bitmap/@from][count(. | $own) != count($own)]" />
-    <xsl:variable name="rest" select="($kind/sprite/bitmap/color[not(@char)] | $own/color[not(@char)][not($kind/sprite/bitmap/color[not(@char)])] | $base/color[not(@char)][not($own/color[not(@char)] or $kind/sprite/bitmap/color[not(@char)])])[1]" />
+    <xsl:variable name="given" select="$sprite/bitmap/color" />
+    <xsl:variable name="rest" select="($given[not(@char)] | $own/color[not(@char)][not($given[not(@char)])] | $base/color[not(@char)][not($own/color[not(@char)] or $given[not(@char)])])[1]" />
     <rest><xsl:value-of select="normalize-space($rest)" /></rest>
-    <xsl:for-each select="$base/color[@char][not(@char = $own/color/@char)] | $own/color[@char]">
+    <xsl:for-each select="$base/color[@char][not(@char = $own/color/@char or @char = $given/@char)] | $own/color[@char][not(@char = $given/@char)] | $given[@char]">
       <letter char="{@char}"><xsl:value-of select="normalize-space(.)" /></letter>
     </xsl:for-each>
+  </xsl:template>
+
+  <!-- A grid's looks, a <look> each: a kind's, or each of a kind's own
+       looks (turtlerow3-up), or with no kinds the grid's own looks. -->
+  <xsl:template name="grid-looks">
+    <xsl:param name="grid" select="." />
+    <xsl:choose>
+      <xsl:when test="$grid/group">
+        <xsl:for-each select="$grid/group">
+          <xsl:choose>
+            <xsl:when test="count(sprite) &gt; 1">
+              <xsl:for-each select="sprite">
+                <look name="{concat(../@name, '-', @name)}" kind="{generate-id(..)}" sprite="{generate-id()}" />
+              </xsl:for-each>
+            </xsl:when>
+            <xsl:otherwise><look name="{@name}" kind="{generate-id()}" sprite="{generate-id(sprite[1])}" /></xsl:otherwise>
+          </xsl:choose>
+        </xsl:for-each>
+      </xsl:when>
+      <xsl:when test="count($grid/sprite) &gt; 1">
+        <xsl:for-each select="$grid/sprite">
+          <look name="{@name}" kind="" sprite="{generate-id()}" />
+        </xsl:for-each>
+      </xsl:when>
+    </xsl:choose>
+  </xsl:template>
+
+  <!-- The look a kind's cells start with, or one of its own looks: its
+       name in the grid's looks. -->
+  <xsl:template name="kind-look">
+    <xsl:param name="kind" select="." />
+    <xsl:param name="sprite" select="$kind/sprite[1]" />
+    <xsl:choose>
+      <xsl:when test="count($kind/sprite) &gt; 1"><xsl:value-of select="concat($kind/@name, '-', $sprite/@name)" /></xsl:when>
+      <xsl:otherwise><xsl:value-of select="$kind/@name" /></xsl:otherwise>
+    </xsl:choose>
   </xsl:template>
 
   <!-- How many across a picture's pixel is: its <scale>, its style's, or 1. -->

@@ -49,19 +49,24 @@
     <xsl:variable name="kinds" select="group" />
     <xsl:variable name="sound"><xsl:call-template name="kind-sound" /></xsl:variable>
     <xsl:variable name="own" select="variables/variable" />
-    <xsl:if test="count($kinds) &gt; 1 or $kinds/variables/variable or $sound = 'yes' or $own">
+    <xsl:variable name="looks" select="count(. | $looking-grids) = count($looking-grids)" />
+    <xsl:if test="$looks or $kinds/variables/variable or $sound = 'yes' or $own">
       <xsl:text>&#10;&#9;struct </xsl:text>
       <xsl:call-template name="record-name" />
       <xsl:text> : Thing&#10;&#9;{&#10;</xsl:text>
-      <xsl:if test="count($kinds) &gt; 1">
+      <xsl:if test="$looks">
+        <xsl:variable name="named"><xsl:call-template name="grid-looks" /></xsl:variable>
         <xsl:text>&#9;&#9;enum class Look { </xsl:text>
-        <xsl:for-each select="$kinds">
+        <xsl:for-each select="exsl:node-set($named)/look">
           <xsl:if test="position() &gt; 1">, </xsl:if>
           <xsl:call-template name="type-word"><xsl:with-param name="name" select="@name" /></xsl:call-template>
         </xsl:for-each>
         <xsl:text> };&#10;&#9;&#9;Look look{ Look::</xsl:text>
-        <xsl:call-template name="type-word"><xsl:with-param name="name" select="$kinds[1]/@name" /></xsl:call-template>
+        <xsl:call-template name="type-word"><xsl:with-param name="name" select="exsl:node-set($named)/look[1]/@name" /></xsl:call-template>
         <xsl:text> };&#10;</xsl:text>
+        <xsl:if test="count(. | $timed-grids) = count($timed-grids)">
+          <xsl:text>&#9;&#9;float lookTime{ 0 }; // how long it has looked as it does&#10;</xsl:text>
+        </xsl:if>
       </xsl:if>
       <xsl:for-each select="$kinds[1]/variables/variable | $own">
         <xsl:text>&#9;&#9;</xsl:text>
@@ -99,7 +104,7 @@
   <xsl:template name="cell-type">
     <xsl:param name="grid" select="." />
     <xsl:choose>
-      <xsl:when test="count($grid/group) &gt; 1 or $grid/group/variables/variable or $grid/group/collisions/collision/play or $grid/variables/variable">
+      <xsl:when test="count($grid | $looking-grids) = count($looking-grids) or $grid/group/variables/variable or $grid/group/collisions/collision/play or $grid/variables/variable">
         <xsl:call-template name="record-name"><xsl:with-param name="object" select="$grid" /></xsl:call-template>
       </xsl:when>
       <xsl:otherwise>Thing</xsl:otherwise>
@@ -128,7 +133,7 @@
     <xsl:variable name="count"><xsl:call-template name="kind-count" /></xsl:variable>
     <xsl:variable name="gap"><xsl:call-template name="kind-gap" /></xsl:variable>
     <xsl:variable name="parts">
-      <xsl:if test="count(group) &gt; 1">
+      <xsl:if test="group and count(. | $looking-grids) = count($looking-grids)">
         <p><xsl:call-template name="record-name" /><xsl:text>::Look look</xsl:text></p>
       </xsl:if>
       <xsl:choose>
@@ -178,8 +183,8 @@
         <xsl:for-each select="group">
           <xsl:value-of select="concat('&#9;&#9;', $add, '(')" />
           <xsl:variable name="arguments">
-            <xsl:if test="count($grid/group) &gt; 1">
-              <a><xsl:call-template name="look-name"><xsl:with-param name="object" select="$grid" /><xsl:with-param name="look" select="@name" /></xsl:call-template></a>
+            <xsl:if test="count($grid | $looking-grids) = count($looking-grids)">
+              <a><xsl:call-template name="look-name"><xsl:with-param name="object" select="$grid" /><xsl:with-param name="look"><xsl:call-template name="kind-look" /></xsl:with-param></xsl:call-template></a>
             </xsl:if>
             <xsl:choose>
               <xsl:when test="$axis = 'xy'">
@@ -229,7 +234,7 @@
           <xsl:otherwise><xsl:call-template name="singular"><xsl:with-param name="name" select="@name" /></xsl:call-template></xsl:otherwise>
         </xsl:choose>
         <xsl:text>s</xsl:text>
-        <xsl:if test="count(group) &gt; 1"> of one look</xsl:if>
+        <xsl:if test="count(. | $looking-grids) = count($looking-grids)"> of one look</xsl:if>
         <xsl:if test="$axis = 'y'">, the first row's top at y</xsl:if>
         <xsl:if test="$axis = 'x'">, the first column's left at x</xsl:if>
         <xsl:if test="$axis = 'xy'">, the first at first</xsl:if>
@@ -280,7 +285,7 @@
       <xsl:call-template name="cell-place"><xsl:with-param name="along" select="'y'" /><xsl:with-param name="given" select="contains($axis, 'y')" /><xsl:with-param name="first" select="$axis = 'xy'" /><xsl:with-param name="count" select="$rows" /><xsl:with-param name="index" select="'row'" /></xsl:call-template>
     </xsl:variable>
     <xsl:variable name="parts">
-      <xsl:if test="count(group) &gt; 1">, look</xsl:if>
+      <xsl:if test="group and count(. | $looking-grids) = count($looking-grids)">, look</xsl:if>
       <xsl:for-each select="group[1]/variables/variable">
         <xsl:text>, </xsl:text>
         <xsl:call-template name="camel"><xsl:with-param name="name" select="@name" /></xsl:call-template>
@@ -388,6 +393,60 @@
     </xsl:if>
   </xsl:template>
 
+  <!-- A rule of a cell's by its look, the context: if (one.look ==
+       River::Look::Turtlerow3Under) { drown(); }, as one line of lines. -->
+  <xsl:template name="look-rule">
+    <xsl:param name="cell" />
+    <xsl:param name="grid" />
+    <xsl:param name="other" />
+    <xsl:variable name="kind" select="ancestor::group[1][count(. | $grid) != count($grid)]" />
+    <xsl:variable name="named">
+      <xsl:choose>
+        <xsl:when test="$kind"><xsl:call-template name="kind-look"><xsl:with-param name="kind" select="$kind" /><xsl:with-param name="sprite" select="$kind/sprite[@name = current()/@sprite]" /></xsl:call-template></xsl:when>
+        <xsl:otherwise><xsl:value-of select="@sprite" /></xsl:otherwise>
+      </xsl:choose>
+    </xsl:variable>
+    <xsl:variable name="body">
+      <xsl:for-each select="*">
+        <line>
+          <xsl:apply-templates select="." mode="touch">
+            <xsl:with-param name="who" select="$cell" />
+            <xsl:with-param name="self" select="$grid" />
+            <xsl:with-param name="other" select="$other" />
+          </xsl:apply-templates>
+        </line>
+      </xsl:for-each>
+    </xsl:variable>
+    <xsl:variable name="header">
+      <xsl:value-of select="concat('if (', translate($cell, '*', ''), '.look == ')" />
+      <xsl:call-template name="look-name"><xsl:with-param name="object" select="$grid" /><xsl:with-param name="look" select="$named" /></xsl:call-template>
+      <xsl:text>)</xsl:text>
+    </xsl:variable>
+    <xsl:variable name="block">
+      <xsl:call-template name="block-lines">
+        <xsl:with-param name="header" select="$header" />
+        <xsl:with-param name="lines" select="exsl:node-set($body)/line" />
+      </xsl:call-template>
+    </xsl:variable>
+    <xsl:for-each select="exsl:node-set($block)/line">
+      <xsl:variable name="tabs" select="substring('&#9;&#9;&#9;&#9;&#9;&#9;', 1, number(concat('0', @depth)))" />
+      <xsl:if test="position() &gt; 1"><xsl:text>&#10;</xsl:text></xsl:if>
+      <xsl:value-of select="$tabs" />
+      <xsl:call-template name="replace"><xsl:with-param name="text" select="string(.)" /><xsl:with-param name="from" select="'&#10;'" /><xsl:with-param name="to" select="concat('&#10;', $tabs)" /></xsl:call-template>
+    </xsl:for-each>
+  </xsl:template>
+
+  <!-- A grid's rule by look on a thing, nested in its rule on it. -->
+  <xsl:template match="group/collisions/collision/collision[@sprite]" mode="touch">
+    <xsl:param name="who" />
+    <xsl:param name="other" />
+    <xsl:call-template name="look-rule">
+      <xsl:with-param name="cell" select="$who" />
+      <xsl:with-param name="grid" select="ancestor::group[1]" />
+      <xsl:with-param name="other" select="$other" />
+    </xsl:call-template>
+  </xsl:template>
+
   <!-- On meeting: a loop over the list with the thing's rules for the
        grid's cells, then the cells' own on the thing, a kind's sound, and
        the erasing when a cell dies. $rules are the thing's. -->
@@ -399,7 +458,7 @@
     <xsl:variable name="list"><xsl:call-template name="object-name"><xsl:with-param name="object" select="$grid" /></xsl:call-template></xsl:variable>
     <xsl:variable name="cell"><xsl:call-template name="cell-name"><xsl:with-param name="grid" select="$grid" /></xsl:call-template></xsl:variable>
     <xsl:variable name="own" select="$grid/collisions/collision[@object = $object/@name]" />
-    <xsl:variable name="dies" select="boolean($own)" />
+    <xsl:variable name="dies" select="boolean($own/die)" />
     <xsl:variable name="met">
       <xsl:if test="$dies">*</xsl:if>
       <xsl:value-of select="$cell" />
@@ -420,7 +479,16 @@
           <xsl:with-param name="skip" select="die" />
         </xsl:call-template>
       </xsl:for-each>
-      <xsl:if test="$grid/group/collisions/collision[@object = $object/@name]/play">
+      <xsl:for-each select="$grid/group/collisions/collision[@object = $object/@name][@sprite]">
+        <line>
+          <xsl:call-template name="look-rule">
+            <xsl:with-param name="cell" select="$cell" />
+            <xsl:with-param name="grid" select="$grid" />
+            <xsl:with-param name="other" select="$thing" />
+          </xsl:call-template>
+        </line>
+      </xsl:for-each>
+      <xsl:if test="$grid/group/collisions/collision[@object = $object/@name][not(@sprite)]/play">
         <line><xsl:value-of select="concat('sounds.push_back(', $cell, '-&gt;sound);')" /></line>
       </xsl:if>
       <xsl:for-each select="$own/die">
@@ -449,7 +517,8 @@
       </xsl:when>
       <xsl:otherwise>
         <xsl:variable name="type"><xsl:call-template name="cell-type"><xsl:with-param name="grid" select="$grid" /></xsl:call-template></xsl:variable>
-        <xsl:value-of select="concat('&#9;&#9;for (const ', $type, '&amp; ', $cell, ' : ', $list, ')&#10;&#9;&#9;{&#10;')" />
+        <xsl:variable name="const"><xsl:if test="not($own//become)">const </xsl:if></xsl:variable>
+        <xsl:value-of select="concat('&#9;&#9;for (', $const, $type, '&amp; ', $cell, ' : ', $list, ')&#10;&#9;&#9;{&#10;')" />
         <xsl:call-template name="write-block">
           <xsl:with-param name="header">
             <xsl:text>if (</xsl:text>

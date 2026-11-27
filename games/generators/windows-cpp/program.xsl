@@ -58,7 +58,7 @@
 
   <!-- Pictures with colours of their own, or their style's: a palette each,
        Colors, by the picture's name or the style's. -->
-  <xsl:variable name="looked-grids" select="$grids[count(group) &gt; 1][(sprite | group/sprite)/bitmap]" />
+  <xsl:variable name="looked-grids" select="$looking-grids[group][(sprite | group/sprite)/bitmap]" />
   <xsl:variable name="colored-pictures" select="$pictures[color or @style = /game/styles/style[color]/@name]
       [@name = ($everything | $fired)/sprite/bitmap/@from or @name = $everything/parent::group/sprite/bitmap/@from
         or @name = $grids[count(. | $looked-grids) != count($looked-grids)]/sprite/bitmap/@from]" />
@@ -512,26 +512,32 @@ int main(</xsl:text>
     <xsl:text>&#10;&#9;// a</xsl:text>
     <xsl:if test="contains('aeiou', substring(@class, 1, 1))">n</xsl:if>
     <xsl:value-of select="concat(' ', (@class | @name[not(../@class)]), &quot;'s picture and colours by its look&#10;&quot;)" />
-    <xsl:value-of select="concat('&#9;const std::array&lt;Drawing, ', count(group), '&gt; ')" />
+    <xsl:variable name="named"><xsl:call-template name="grid-looks" /></xsl:variable>
+    <xsl:variable name="looks" select="exsl:node-set($named)/look" />
+    <xsl:value-of select="concat('&#9;const std::array&lt;Drawing, ', count($looks), '&gt; ')" />
     <xsl:call-template name="grid-drawings-name" />
     <xsl:text>{ {</xsl:text>
-    <xsl:for-each select="group">
-      <xsl:variable name="named"><xsl:call-template name="kind-picture" /></xsl:variable>
-      <xsl:variable name="bitmap" select="/game/pictures/bitmap[@name = $named]" />
-      <xsl:variable name="colors"><xsl:call-template name="kind-colors" /></xsl:variable>
-      <xsl:if test="position() &gt; 1">,</xsl:if>
-      <xsl:text>&#10;&#9;&#9;{ </xsl:text>
-      <xsl:call-template name="picture-name"><xsl:with-param name="bitmap" select="$bitmap" /></xsl:call-template>
-      <xsl:text>, { </xsl:text>
-      <xsl:call-template name="color"><xsl:with-param name="color" select="string(exsl:node-set($colors)/rest)" /></xsl:call-template>
-      <xsl:text>, {</xsl:text>
-      <xsl:for-each select="exsl:node-set($colors)/letter">
-        <xsl:if test="position() &gt; 1">,</xsl:if>
-        <xsl:value-of select="concat(' { ', $quote, @char, $quote, ', ')" />
-        <xsl:call-template name="color"><xsl:with-param name="color" select="normalize-space(.)" /></xsl:call-template>
-        <xsl:text> }</xsl:text>
+    <xsl:for-each select="$looks">
+      <xsl:variable name="look" select="." />
+      <xsl:for-each select="$grid/group[generate-id() = $look/@kind]">
+        <xsl:variable name="sprite" select="sprite[generate-id() = $look/@sprite] | self::*[not(sprite)]/../sprite[1]" />
+        <xsl:variable name="picture"><xsl:call-template name="kind-picture"><xsl:with-param name="sprite" select="$sprite" /></xsl:call-template></xsl:variable>
+        <xsl:variable name="bitmap" select="/game/pictures/bitmap[@name = $picture]" />
+        <xsl:variable name="colors"><xsl:call-template name="kind-colors"><xsl:with-param name="sprite" select="$sprite" /></xsl:call-template></xsl:variable>
+        <xsl:if test="$look/preceding-sibling::look">,</xsl:if>
+        <xsl:text>&#10;&#9;&#9;{ </xsl:text>
+        <xsl:call-template name="picture-name"><xsl:with-param name="bitmap" select="$bitmap" /></xsl:call-template>
+        <xsl:text>, { </xsl:text>
+        <xsl:call-template name="color"><xsl:with-param name="color" select="string(exsl:node-set($colors)/rest)" /></xsl:call-template>
+        <xsl:text>, {</xsl:text>
+        <xsl:for-each select="exsl:node-set($colors)/letter">
+          <xsl:if test="position() &gt; 1">,</xsl:if>
+          <xsl:value-of select="concat(' { ', $quote, @char, $quote, ', ')" />
+          <xsl:call-template name="color"><xsl:with-param name="color" select="normalize-space(.)" /></xsl:call-template>
+          <xsl:text> }</xsl:text>
+        </xsl:for-each>
+        <xsl:text> } } }</xsl:text>
       </xsl:for-each>
-      <xsl:text> } } }</xsl:text>
     </xsl:for-each>
     <xsl:text>&#10;&#9;} };&#10;</xsl:text>
   </xsl:template>
@@ -634,6 +640,7 @@ int main(</xsl:text>
 
   <!-- The lines that draw one object, group or member. -->
   <xsl:template name="draw-lines">
+    <xsl:param name="in-play" select="false()" />
     <xsl:variable name="object" select="." />
     <xsl:variable name="sprite" select="(sprite | parent::group/sprite)[1]" />
     <xsl:variable name="color">
@@ -643,6 +650,15 @@ int main(</xsl:text>
       </xsl:if>
     </xsl:variable>
     <xsl:choose>
+      <xsl:when test="count(. | $dying) = count($dying) and not($in-play)">
+        <!-- only while it is in play -->
+        <xsl:variable name="thing"><xsl:call-template name="object-name" /></xsl:variable>
+        <xsl:variable name="lines"><xsl:call-template name="draw-lines"><xsl:with-param name="in-play" select="true()" /></xsl:call-template></xsl:variable>
+        <xsl:call-template name="block-lines">
+          <xsl:with-param name="header" select="concat('if (game.', $thing, '.inPlay)')" />
+          <xsl:with-param name="lines" select="exsl:node-set($lines)/line" />
+        </xsl:call-template>
+      </xsl:when>
       <xsl:when test="count(. | $grids) = count($grids)">
         <xsl:variable name="cell"><xsl:call-template name="cell-name" /></xsl:variable>
         <xsl:variable name="list"><xsl:call-template name="object-name" /></xsl:variable>
@@ -661,6 +677,51 @@ int main(</xsl:text>
           </xsl:choose>
         </xsl:variable>
         <xsl:choose>
+          <xsl:when test="not(group) and count(sprite) &gt; 1">
+            <!-- each look of its own, the first when it has none of the others -->
+            <xsl:variable name="draws">
+              <xsl:for-each select="sprite">
+                <xsl:variable name="bitmap" select="$pictures[@name = current()/bitmap/@from]" />
+                <d>
+                  <xsl:choose>
+                    <xsl:when test="$bitmap">
+                      <xsl:value-of select="concat(substring-before($box, 'box('), 'pixels(')" />
+                      <xsl:call-template name="picture-name"><xsl:with-param name="bitmap" select="$bitmap" /></xsl:call-template>
+                      <xsl:value-of select="concat(', ', $cell, '.position, ', $cell, '.size')" />
+                      <xsl:if test="count($bitmap | $colored-pictures) = count($colored-pictures)">
+                        <xsl:text>, </xsl:text>
+                        <xsl:call-template name="palette-name"><xsl:with-param name="bitmap" select="$bitmap" /></xsl:call-template>
+                      </xsl:if>
+                      <xsl:text>);</xsl:text>
+                    </xsl:when>
+                    <xsl:otherwise>
+                      <xsl:value-of select="concat($box, $cell, '.position, ', $cell, '.size, ')" />
+                      <xsl:call-template name="color"><xsl:with-param name="color" select="normalize-space(rectangle/color)" /></xsl:call-template>
+                      <xsl:text>);</xsl:text>
+                    </xsl:otherwise>
+                  </xsl:choose>
+                </d>
+              </xsl:for-each>
+            </xsl:variable>
+            <xsl:variable name="each" select="exsl:node-set($draws)/d" />
+            <line>
+              <xsl:text>for (const </xsl:text>
+              <xsl:call-template name="cell-type" />
+              <xsl:value-of select="concat('&amp; ', $cell, ' : game.', $list, ')')" />
+            </line>
+            <line>{</line>
+            <xsl:for-each select="sprite[position() &gt; 1]">
+              <xsl:variable name="at" select="position() + 1" />
+              <line depth="1">
+                <xsl:if test="position() &gt; 1">else </xsl:if>
+                <xsl:value-of select="concat('if (', $cell, '.look == ')" />
+                <xsl:call-template name="look-name"><xsl:with-param name="object" select="$object" /><xsl:with-param name="look" select="@name" /></xsl:call-template>
+                <xsl:value-of select="concat(') { ', $each[$at], ' }')" />
+              </line>
+            </xsl:for-each>
+            <line depth="1"><xsl:value-of select="concat('else { ', $each[1], ' }')" /></line>
+            <line>}</line>
+          </xsl:when>
           <xsl:when test="count(. | $looked-grids) = count($looked-grids)">
             <xsl:variable name="drawings"><xsl:call-template name="grid-drawings-name" /></xsl:variable>
             <line>
@@ -695,6 +756,21 @@ int main(</xsl:text>
         <xsl:variable name="list"><xsl:call-template name="fired-list-name" /></xsl:variable>
         <xsl:variable name="draws">
           <xsl:choose>
+            <xsl:when test="animation/once">
+              <!-- each picture until its time is up, the last after -->
+              <xsl:variable name="frames">
+                <xsl:for-each select="animation/frame">
+                  <xsl:variable name="end" select="count((preceding-sibling::frame | .)[not(seconds)]) * number(../seconds) + sum((preceding-sibling::frame | .)/seconds)" />
+                  <look at="{count(../../sprite[@name = current()/@sprite]/preceding-sibling::sprite) + 1}">
+                    <xsl:attribute name="test">
+                      <xsl:value-of select="concat($one, '.age &lt; ', $end)" />
+                      <xsl:if test="floor($end) != $end">f</xsl:if>
+                    </xsl:attribute>
+                  </look>
+                </xsl:for-each>
+              </xsl:variable>
+              <line><xsl:call-template name="pixels-call"><xsl:with-param name="looks" select="exsl:node-set($frames)/look" /><xsl:with-param name="thing" select="$one" /></xsl:call-template></line>
+            </xsl:when>
             <xsl:when test="animation">
               <line>
                 <xsl:value-of select="concat('const int frame = static_cast&lt;int&gt;(', $one, '.age / ')" />
