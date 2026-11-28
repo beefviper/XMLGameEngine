@@ -110,3 +110,24 @@ TEST_CASE("a spark on the lens cracks it, holds the game a second, then brings i
 	CHECK(sky.game.getCurrentState().name == "playing");
 	CHECK(sky.lens().variable.at("lives") == 2.0f);
 }
+
+TEST_CASE("the lattice turns once at a side and steps down once, gliding or stepping", "[prismfall]")
+{
+	// prismfall2's shards glide; a whole column meets the side together and
+	// stays over it a while, and the block still turns and steps down once
+	for (const char* file : { "descriptions/prismfall.xml", "descriptions/prismfall2.xml" })
+	{
+		INFO(file);
+		Game game{ file };
+		for (auto& object : game.getCurrentObjects()) { object.size = measureShapeSize(object.drawn.picture); }
+		game.setCurrentState("playing");
+		const Object& corner = game.object("shards.9.1");
+		const float startY = corner.position.y;
+		for (int i = 0; i < 1200 && corner.velocity.x > 0; ++i) { game.updateObjects(xge::kSixtieth); }
+		REQUIRE(corner.velocity.x < 0);
+		CHECK(corner.position.y == startY + 12);
+		for (int i = 0; i < 60; ++i) { game.updateObjects(xge::kSixtieth); }
+		CHECK(corner.velocity.x < 0);
+		CHECK(corner.position.y == startY + 12);
+	}
+}

@@ -52,21 +52,27 @@ namespace xge
 	}
 
 	// Off the window's edge, which faces straight in. An object in lockstep
-	// (a marching fleet) turns as a whole block at a side edge instead.
-	static void bounceOffEdge(Game& game, Object& object, Edge edge, float share)
+	// (a marching fleet) turns as a whole block at a side edge instead, once:
+	// a block already going away from that side (turned by another of its
+	// column, or the frame before while still over the edge) refuses, so the
+	// rest of the rule (a step down) is not done again.
+	static bool bounceOffEdge(Game& game, Object& object, Edge edge, float share)
 	{
 		if (object.kind->collisionData.lockstep && (edge == Edge::Left || edge == Edge::Right))
 		{
+			const bool goingAway = edge == Edge::Right ? object.velocity.x <= 0.0f : object.velocity.x >= 0.0f;
+			if (goingAway) { return false; }
 			game.updateLockstepObjects(object);
-			return;
+			return true;
 		}
 		object.velocity = bounced(object.velocity, edge, share);
+		return true;
 	}
 
 	static bool runBounce(const CmdBounce& bounce, const Doer& doer)
 	{
 		if (doer.touching()) { bounceOff(doer.game(), *doer.self, *doer.other, *doer.touch, bounce.share); }
-		else if (doer.atEdge()) { bounceOffEdge(doer.game(), *doer.self, *doer.screenEdge, bounce.share); }
+		else if (doer.atEdge()) { return bounceOffEdge(doer.game(), *doer.self, *doer.screenEdge, bounce.share); }
 		return true;
 	}
 

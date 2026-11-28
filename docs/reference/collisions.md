@@ -74,7 +74,7 @@ In order: `<off />` (no touches until a rule turns them on), `<lockstep />`, `<t
 
 ## Lockstep
 
-`<lockstep />` in a group's `<collisions>` makes each innermost group one block: its members never touch each other, a rule's `<move>` moves them all, and one hitting a side with `<bounce />` turns the whole block. Each cell is still swept on its own, so a bullet meets only the cells alive. This is Prism Fall's march.
+`<lockstep />` in a group's `<collisions>` makes each innermost group one block: its members never touch each other, a rule's `<move>` moves them all, and one hitting a side with `<bounce />` turns the whole block, once: while the block is already going away from that side, the bounce is refused, so the rest of that rule (a `<move>` down) waits for the next turn. Each cell is still swept on its own, so a bullet meets only the cells alive. This is Prism Fall's march.
 
 ## Knocks
 

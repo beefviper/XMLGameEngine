@@ -53,4 +53,4 @@
 
 ## Lockstep
 
-- `<lockstep />` gives all members or cells of a group one lockstep number: they never collide with each other, `<move>` moves all, and one hitting a side with `<bounce />` moves the block (a fleet marches). It changes behavior only, never geometry: every cell is swept alone, so a bullet meets only living cells and there is no bounding box.
+- `<lockstep />` gives all members or cells of a group one lockstep number: they never collide with each other, `<move>` moves all, and one hitting a side with `<bounce />` turns the block (a fleet marches). The turn is once a side: a whole column meets the side together, and a gliding block stays over it a while, so a bounce while the block already goes away is refused and the step down in the same rule is not done again. It changes behavior only, never geometry: every cell is swept alone, so a bullet meets only living cells and there is no bounding box.
