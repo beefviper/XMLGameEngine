@@ -134,6 +134,11 @@
         </xsl:if>
         <xsl:if test="$wrap &gt;= 2">)</xsl:if>
       </xsl:when>
+      <xsl:when test="$op = 'ceiling'">
+        <xsl:text>std::ceil(</xsl:text>
+        <xsl:call-template name="value"><xsl:with-param name="node" select="$tag/value" /><xsl:with-param name="self" select="$self" /><xsl:with-param name="in" select="$in" /><xsl:with-param name="start" select="$start" /></xsl:call-template>
+        <xsl:text>)</xsl:text>
+      </xsl:when>
       <xsl:when test="$op = 'sign' or $op = 'sine' or $op = 'cosine'">
         <xsl:value-of select="concat($op, '(')" />
         <xsl:call-template name="value"><xsl:with-param name="node" select="$tag/value" /><xsl:with-param name="self" select="$self" /><xsl:with-param name="in" select="$in" /><xsl:with-param name="start" select="$start" /></xsl:call-template>

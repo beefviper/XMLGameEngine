@@ -53,7 +53,7 @@
        pictures; or the pictures of an animation of what is fired. -->
   <xsl:template match="object[count(sprite) &gt; 1] | group[count(sprite) &gt; 1]" mode="covers" priority="2">
     <xsl:variable name="color" select="string(sprite[1]/rectangle/color)" />
-    <xsl:variable name="animated" select="animation and count(. | $fired) = count($fired)" />
+    <xsl:variable name="animated" select="animation and (count(. | $fired) = count($fired) or count(. | $screen-animated) = count($screen-animated))" />
     <xsl:if test="(self::group and (count(. | $grids) != count($grids) or group or sprite[not(rectangle or bitmap)] or sprite/rectangle/*[not(self::width or self::height or self::color)]))
         or (self::object and not(not(sprite[not(text/content)])
         or (not(sprite[not(rectangle)]) and not(sprite/rectangle[string(color) != $color]))
@@ -80,11 +80,14 @@
           <xsl:apply-templates select="*" mode="covers" />
         </xsl:for-each>
       </xsl:when>
+      <xsl:when test="count($grid | $grids) = count($grids) and not($grid/group) and ($fired[@name = current()/@object] or $fired[@class = current()/@class])">
+        <xsl:apply-templates select="@* | * | text()" mode="covers" />
+      </xsl:when>
       <xsl:when test="../../member and ((@class and ($grids[@class = current()/@class] or $things[@class = current()/@class])) or $things[@name = current()/@object])">
         <xsl:apply-templates select="@* | * | text()" mode="covers" />
       </xsl:when>
       <xsl:otherwise>
-        <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;collision&gt; on a touch in a group, other than a grid meeting one thing and its cell dying or by its looks, or members meeting a grid or a thing'" /></xsl:call-template>
+        <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;collision&gt; on a touch in a group, other than a grid meeting one thing and its cell dying or by its looks, a grid meeting what is fired, or members meeting a grid or a thing'" /></xsl:call-template>
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
@@ -185,12 +188,10 @@
     <xsl:call-template name="gap"><xsl:with-param name="what" select="'&lt;centered&gt; across a block of more than one'" /></xsl:call-template>
   </xsl:template>
 
-  <!-- A box pulled in from an object's picture's sides, alike across and
-       alike up and down. -->
+  <!-- A box pulled in from an object's picture's sides, each by a number. -->
   <xsl:template match="object/collisions/hitbox" mode="covers" priority="2">
-    <xsl:if test="@* or *[not(self::all or self::horizontal or self::vertical)] or *[string(number(.)) = 'NaN'] or count(*) &gt; 2 or (all and *[not(self::all)])
-        or (horizontal and not(vertical)) or (vertical and not(horizontal)) or ../type">
-      <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;hitbox&gt; other than one pulled in alike across and alike up and down'" /></xsl:call-template>
+    <xsl:if test="@* or *[not(self::all or self::horizontal or self::vertical or self::top or self::bottom or self::left or self::right)] or *[string(number(.)) = 'NaN'] or ../type">
+      <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;hitbox&gt; other than one pulled in from the sides by numbers'" /></xsl:call-template>
     </xsl:if>
   </xsl:template>
   <!-- A rule passed over while a class (or grid) is touched too. -->
@@ -207,17 +208,62 @@
     </xsl:if>
   </xsl:template>
 
-  <!-- A grid's rows by number: a way across of their own. -->
+  <!-- A grid's rows by number: a way across of their own; or, in a grid
+       that marches, its pictures by the names of the grid's, and numbers
+       of the grid's. -->
   <xsl:template match="row[number]" mode="covers" priority="2">
-    <xsl:if test="not(../parent::objects) or count(.. | $grids) != count($grids) or *[not(self::number or self::velocity)] or velocity/*[not(self::x)] or velocity/x/*">
-      <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;row&gt; by number other than a way across in a grid'" /></xsl:call-template>
+    <xsl:variable name="grid" select=".." />
+    <xsl:if test="not(../parent::objects) or count(.. | $grids) != count($grids) or *[not(self::number or self::velocity or self::sprite or self::variables)] or velocity/*[not(self::x)] or velocity/x/*
+        or ((sprite or variables) and count(.. | $marching) != count($marching))
+        or sprite[@*[local-name() != 'name'] or *[not(self::bitmap)] or bitmap/@*[local-name() != 'from'] or bitmap/* or not($grid/sprite/@name = @name)]
+        or (sprite and count(sprite) != count($grid/sprite))
+        or variables/variable[* or @*[local-name() != 'name'] or not($grid/variables/variable/@name = @name) or string(number(.)) = 'NaN']">
+      <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;row&gt; by number other than a way across in a grid, or pictures and numbers of a grid that marches'" /></xsl:call-template>
     </xsl:if>
   </xsl:template>
 
-  <!-- No more than so many of a grid's cells left. -->
+  <!-- A grid that marches (kinds.xsl): its pictures in turn, every so long,
+       each step its sounds; its way across, the way it faces, and at the
+       window's sides back, round and down, all together. -->
+  <xsl:template match="group/animation" mode="covers" priority="2">
+    <xsl:if test="count(.. | $marching) != count($marching) or @* or *[not(self::seconds or self::stepped or self::frame)] or count(seconds) != 1 or seconds/@*[not(local-name() = 'update' and . = 'live')]
+        or stepped/node() or frame/@*[local-name() != 'sprite'] or frame[not(../../sprite/@name = @sprite)] or frame/*[not(self::play)] or (frame/play and frame[count(play) != 1]) or frame/play/@*[local-name() != 'sound']">
+      <xsl:call-template name="gap"><xsl:with-param name="what" select="'an &lt;animation&gt; of a grid other than its pictures in turn as it marches, a sound a step or none'" /></xsl:call-template>
+    </xsl:if>
+    <xsl:apply-templates select="seconds/node()" mode="covers" />
+  </xsl:template>
+  <xsl:template match="group/velocity | group/facing | group/collisions/lockstep" mode="covers" priority="2">
+    <xsl:if test="count(ancestor::group[1] | $marching) != count($marching) or (self::velocity and *[not(self::x)]) or (self::facing and not(. = 'up' or . = 'down' or . = 'left' or . = 'right')) or (self::lockstep and node())">
+      <xsl:call-template name="gap"><xsl:with-param name="what" select="concat('&lt;', local-name(), '&gt; in a group other than a grid that marches')" /></xsl:call-template>
+    </xsl:if>
+    <xsl:apply-templates select="self::velocity/*" mode="covers" />
+  </xsl:template>
+  <xsl:template match="group/collisions/collision[@edge = 'horizontal'][bounce]" mode="covers" priority="3">
+    <xsl:if test="count(ancestor::group[1] | $marching) != count($marching) or @*[local-name() != 'edge'] or *[1][not(self::bounce[not(@* or node())])] or *[position() &gt; 1][not(self::move[@direction = 'down'])]">
+      <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;collision&gt; at the sides of a grid that marches, other than a bounce and moves down'" /></xsl:call-template>
+    </xsl:if>
+    <xsl:apply-templates select="move/node()" mode="covers" />
+  </xsl:template>
+  <!-- Timers of a grid's cells, each its own, every so often. -->
+  <xsl:template match="group/timers" mode="covers" priority="2">
+    <xsl:if test="count(.. | $grids) != count($grids) or ../group or timer[@* or not(every) or *[not(self::every or self::fire or self::play)]]">
+      <xsl:call-template name="gap"><xsl:with-param name="what" select="'&lt;timers&gt; in a group other than every so often of a grid'" /></xsl:call-template>
+    </xsl:if>
+    <xsl:apply-templates select="timer/*" mode="covers" />
+  </xsl:template>
+
+  <!-- No more than so many of a grid's cells left, the grid by name or class. -->
   <xsl:template match="condition/remaining" mode="covers" priority="2">
-    <xsl:if test="not($grids[@name = current()/../@object]) or ../@class or string(number(.)) = 'NaN'">
+    <xsl:if test="not($grids[@name = current()/../@object] or $grids[@class = current()/../@class]) or (../@class and ../@object) or string(number(.)) = 'NaN'">
       <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;remaining&gt; other than of a grid'" /></xsl:call-template>
+    </xsl:if>
+  </xsl:template>
+
+  <!-- A grid's cells, any of them (highest, lowest) or how many (count). -->
+  <xsl:template match="conditions/condition/@total" mode="covers" priority="2">
+    <xsl:if test="not($grids[@class = current()/../@class]) or ../@object or not(. = 'highest' or . = 'lowest' or . = 'count') or (. = 'count' and ../@variable) or (. != 'count' and not(../@variable = 'x' or ../@variable = 'y'))
+        or ../*[self::equal or self::unequal]">
+      <xsl:call-template name="gap"><xsl:with-param name="what" select="concat('total=', $quote, ., $quote, ' other than the highest, lowest or count of a grid', $quote, 's cells')" /></xsl:call-template>
     </xsl:if>
   </xsl:template>
 
@@ -263,18 +309,20 @@
       <xsl:otherwise><xsl:apply-templates select="@* | * | text()" mode="covers" /></xsl:otherwise>
     </xsl:choose>
   </xsl:template>
-  <!-- Timers of the state that is played, every so often. -->
+  <!-- Timers of the state that is played, every so often; of another, one
+       after a while that ends with leaving it. -->
   <xsl:template match="state/timers" mode="covers" priority="2">
-    <xsl:if test="count(.. | $played) != 1">
-      <xsl:call-template name="gap"><xsl:with-param name="what" select="'&lt;timers&gt; in a &lt;state&gt; that is not played'" /></xsl:call-template>
+    <xsl:if test="count(.. | $played) != 1 and (count(timer) != 1 or timer[not(after) or not(*[last()][self::pop])])">
+      <xsl:call-template name="gap"><xsl:with-param name="what" select="'&lt;timers&gt; in a &lt;state&gt; that is not played, other than one after a while that pops it'" /></xsl:call-template>
     </xsl:if>
     <xsl:apply-templates select="*" mode="covers" />
   </xsl:template>
   <xsl:template match="state/timers/timer" mode="covers" priority="2">
-    <xsl:if test="@* or not(every) or *[not(self::every)][not(self::play or self::inc or self::dec or self::set)]">
-      <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;timer&gt; of a state other than every so often'" /></xsl:call-template>
+    <xsl:if test="@* or not(every or after) or (every and after) or *[not(self::every or self::after)][not(self::play or self::inc or self::dec or self::set or self::reveal or self::despawn or self::pop)]
+        or after[* or string(number(.)) = 'NaN'] or (after and count(../.. | $played) = 1)">
+      <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;timer&gt; of a state other than every so often, or once after a while'" /></xsl:call-template>
     </xsl:if>
-    <xsl:apply-templates select="*" mode="covers" />
+    <xsl:apply-templates select="*[not(self::after)]" mode="covers" />
   </xsl:template>
   <!-- Timers: a thing's, every so often. -->
   <xsl:template match="object/timers/timer" mode="covers" priority="2">
@@ -287,11 +335,26 @@
        long; or once through, each as long as it says, then what it does
        last of all, ending taken away. -->
   <xsl:template match="object/animation" mode="covers" priority="2">
-    <xsl:if test="count(.. | $fired) != count($fired) or *[not(self::seconds or self::frame or self::once or self::then)] or frame/@*[local-name() != 'sprite'] or not(seconds)
+    <xsl:if test="(count(.. | $fired) != count($fired) and (count(.. | $screen-animated) != count($screen-animated) or once)) or *[not(self::seconds or self::frame or self::once or self::then)] or frame/@*[local-name() != 'sprite'] or not(seconds)
         or frame/*[not(self::seconds)] or (not(once) and (frame/* or then)) or (once and not(then/*[last()][self::despawn])) or frame/seconds[string(number(.)) = 'NaN'] or string(number(seconds)) = 'NaN' or once/node()">
-      <xsl:call-template name="gap"><xsl:with-param name="what" select="'an &lt;animation&gt; other than of what is fired, each picture as long, or once through then taken away'" /></xsl:call-template>
+      <xsl:call-template name="gap"><xsl:with-param name="what" select="'an &lt;animation&gt; other than of what is fired or shown on a screen that is not played, each picture as long, or once through then taken away'" /></xsl:call-template>
     </xsl:if>
     <xsl:apply-templates select="seconds | then/*" mode="covers" />
+  </xsl:template>
+  <!-- A thing that starts out of play, waiting for a <reveal>. -->
+  <xsl:template match="object/waiting" mode="covers" priority="2">
+    <xsl:if test="@* or node() or count(.. | $things) != count($things)">
+      <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;waiting /&gt; of other than a thing'" /></xsl:call-template>
+    </xsl:if>
+  </xsl:template>
+  <!-- update="live": where a picture on a screen that is not played is
+       drawn follows a thing's x or y. -->
+  <xsl:template match="object/position/x/@update | object/position/y/@update" mode="covers" priority="2">
+    <xsl:variable name="named" select="normalize-space(..)" />
+    <xsl:if test=". != 'live' or ../* or count(../../.. | $screen-animated) != count($screen-animated)
+        or not($things[@name = substring-before($named, '.')] and substring-after($named, '.') = local-name(current()/..))">
+      <xsl:call-template name="gap"><xsl:with-param name="what" select="concat('update= on &lt;', local-name(..), '&gt; other than a picture on a screen that is not played at a thing', $quote, 's place')" /></xsl:call-template>
+    </xsl:if>
   </xsl:template>
   <xsl:template match="object/facing" mode="covers" priority="2">
     <xsl:if test="not(. = 'up' or . = 'down' or . = 'left' or . = 'right')">
@@ -329,7 +392,7 @@
       | collisions/collision | collision/any | collision/condition | condition/any | any/condition | any/any
       | condition/atleast | condition/atmost | condition/above | condition/below | condition/equal | condition/unequal
       | actions/action | inputs/input | inputs/seat | seat/input | input/button
-      | add | subtract | multiply | divide | sign | sine | cosine | value
+      | add | subtract | multiply | divide | sign | sine | cosine | ceiling | value
       | random | random/min | random/max | centered | centered/offset
       | value/window | x/window | y/window | width/window | height/window | min/window | max/window
       | atleast/window | atmost/window | above/window | below/window | equal/window | unequal/window
@@ -361,6 +424,7 @@
     <xsl:variable name="random-here" select="$variable//random and ($here = $owner or $here/member = $owner) and (ancestor::position or ancestor::velocity or ancestor::variable)" />
     <xsl:if test="not(string(number($text)) != 'NaN'
         or /game/variables/variable[@name = $text]
+        or (ancestor::set[@group] and $text = concat(ancestor::set/@group, '.1.1.', ancestor::set/@variable))
         or $scene-numbers[@name = $text]
         or ($variable and (not($variable//random) or $random-here or $written[. = $text]))
         or ($owner and count($owner | $things) = count($things) and ($rest = 'x' or $rest = 'y' or $rest = 'velocity.x' or $rest = 'velocity.y' or $rest = 'width' or $rest = 'height'))

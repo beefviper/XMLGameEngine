@@ -34,6 +34,7 @@
   <xsl:include href="scenes.xsl" />
   <xsl:include href="verbs/become.xsl" />
   <xsl:include href="verbs/bounce.xsl" />
+  <xsl:include href="verbs/copy.xsl" />
   <xsl:include href="verbs/dec.xsl" />
   <xsl:include href="verbs/deflect.xsl" />
   <xsl:include href="verbs/despawn.xsl" />
@@ -41,6 +42,7 @@
   <xsl:include href="verbs/enter.xsl" />
   <xsl:include href="verbs/fire.xsl" />
   <xsl:include href="verbs/hold.xsl" />
+  <xsl:include href="verbs/hole.xsl" />
   <xsl:include href="verbs/inc.xsl" />
   <xsl:include href="verbs/hop.xsl" />
   <xsl:include href="verbs/move.xsl" />

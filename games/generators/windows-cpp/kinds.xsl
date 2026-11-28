@@ -63,10 +63,17 @@
   <xsl:variable name="grids" select="$states/objects/group[not(member)][(sprite | group/sprite)/*[self::rectangle or self::bitmap]]
       [collisions or group/collisions or @class = $met-classes or @name = //collision/@object]" />
 
+  <!-- Grids that march: their cells all step together as their pictures
+       change (<stepped />), turning as one (<lockstep />). Their own
+       pictures are the steps of the march; rows by number may give them
+       others, a look a row. -->
+  <xsl:variable name="marching" select="$grids[not(group)][animation/stepped and collisions/lockstep]" />
+
   <!-- Grids whose cells look more than one way: by kind, or by looks of
-       a kind's own or of the grid's; and those whose looks last a while,
-       a kind's timer on one of them changing it. -->
-  <xsl:variable name="looking-grids" select="$grids[count(group) &gt; 1 or group[count(sprite) &gt; 1] or (not(group) and count(sprite) &gt; 1)]" />
+       a kind's own or of the grid's, or by row as they march; and those
+       whose looks last a while, a kind's timer on one of them changing it. -->
+  <xsl:variable name="looking-grids" select="$grids[count(group) &gt; 1 or group[count(sprite) &gt; 1] or (not(group) and not(animation) and count(sprite) &gt; 1)]
+      | $marching[row/sprite]" />
   <xsl:variable name="timed-grids" select="$grids[group/timers/timer[@sprite]]" />
 
   <!-- Pictures: bitmaps of the game's things, square pixels a row a line. -->
@@ -78,6 +85,10 @@
 
   <!-- The state that is played: its things move, its rules run. -->
   <xsl:variable name="played" select="($states[objects//*[count(. | $things | $grids) = count($things | $grids)] or conditions or computer or .//trigger])[1]" />
+
+  <!-- Pictures shown in turn on a screen that is not played, by how long
+       it has been on top. -->
+  <xsl:variable name="screen-animated" select="$states[count(. | $played) != 1]/objects/object[animation][count(. | $things) != count($things)]" />
 
   <!-- Texts. -->
   <xsl:variable name="texts" select="$everything[(sprite | parent::group/sprite)[1]/text]" />
@@ -156,13 +167,16 @@
     <xsl:choose>
       <xsl:when test="$written[substring-after(., '.') = $named and (substring-before(., '.') = $owner/@name or substring-before(., '.') = $owner/member/@name)]
           or $owner//*[self::set or self::inc or self::dec][@variable = $named]">live</xsl:when>
+      <!-- drawn at random, and read by a rule: kept, drawn again as it starts again -->
+      <xsl:when test="$variable//random and ($owner/collisions//self[normalize-space(.) = $named] or $owner/actions//self[normalize-space(.) = $named])">live</xsl:when>
       <xsl:when test="$variable//random">start</xsl:when>
       <xsl:otherwise>constant</xsl:otherwise>
     </xsl:choose>
   </xsl:template>
 
   <!-- Whether the object (or member) that is the context has a record:
-       live variables, its own or its group's, or looks. -->
+       live variables, its own or its group's, looks, timers, or a time out
+       of play. -->
   <xsl:template name="has-record">
     <xsl:param name="object" select="." />
     <xsl:variable name="kinds">
@@ -170,7 +184,8 @@
         <xsl:call-template name="variable-kind" />
       </xsl:for-each>
     </xsl:variable>
-    <xsl:if test="contains($kinds, 'live') or count($object/sprite) &gt; 1 or $object/timers/timer">yes</xsl:if>
+    <xsl:if test="contains($kinds, 'live') or (count($object/sprite) &gt; 1 and not($object/animation)) or $object/timers/timer
+        or $object/waiting or $object/collisions/collision/die or $object/actions/action/die or $object/@name = //reveal/@object">yes</xsl:if>
   </xsl:template>
 
   <!-- The object a name's first part names, or its group: ball, paddle1, paddles. -->
@@ -277,7 +292,7 @@
     <xsl:variable name="own" select="/game/pictures/bitmap[@name = $named]" />
     <xsl:variable name="base" select="/game/pictures/bitmap[@name = $kind/../sprite/bitmap/@from]" />
     <xsl:choose>
-      <xsl:when test="$sprite/bitmap/scale"><xsl:value-of select="normalize-space($sprite/bitmap/scale)" /></xsl:when>
+      <xsl:when test="$sprite/bitmap/scale"><xsl:call-template name="worked-out"><xsl:with-param name="node" select="$sprite/bitmap/scale" /></xsl:call-template></xsl:when>
       <xsl:otherwise>
         <xsl:call-template name="picture-scale"><xsl:with-param name="bitmap" select="($own[scale] | $base[not($own/scale)] | $own[not($base)])[1]" /></xsl:call-template>
       </xsl:otherwise>
@@ -305,6 +320,16 @@
   <xsl:template name="grid-looks">
     <xsl:param name="grid" select="." />
     <xsl:choose>
+      <xsl:when test="count($grid | $marching) = count($marching)">
+        <!-- a march's: the grid's pictures, then each row's that differ -->
+        <xsl:variable name="named">
+          <xsl:for-each select="$grid | $grid/row[sprite]">
+            <xsl:variable name="look"><xsl:call-template name="march-look" /></xsl:variable>
+            <look name="{$look}" row="{generate-id(self::row)}" />
+          </xsl:for-each>
+        </xsl:variable>
+        <xsl:copy-of select="exsl:node-set($named)/look[not(@name = preceding-sibling::look/@name)]" />
+      </xsl:when>
       <xsl:when test="$grid/group">
         <xsl:for-each select="$grid/group">
           <xsl:choose>
@@ -325,6 +350,19 @@
     </xsl:choose>
   </xsl:template>
 
+  <!-- A look of a march, its first picture's name but for the picture's
+       own name at its end: diamond for diamond-a, the picture of a. -->
+  <xsl:template name="march-look">
+    <xsl:param name="from" select="." />
+    <xsl:variable name="first" select="$from/sprite[1]" />
+    <xsl:variable name="picture" select="string($first/bitmap/@from)" />
+    <xsl:variable name="end" select="concat('-', $first/@name)" />
+    <xsl:choose>
+      <xsl:when test="substring($picture, string-length($picture) - string-length($end) + 1) = $end"><xsl:value-of select="substring($picture, 1, string-length($picture) - string-length($end))" /></xsl:when>
+      <xsl:otherwise><xsl:value-of select="$picture" /></xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
   <!-- The look a kind's cells start with, or one of its own looks: its
        name in the grid's looks. -->
   <xsl:template name="kind-look">
@@ -336,14 +374,38 @@
     </xsl:choose>
   </xsl:template>
 
-  <!-- How many across a picture's pixel is: its <scale>, its style's, or 1. -->
+  <!-- How many across a picture's pixel is: its <scale>, its style's, or 1,
+       worked out. -->
   <xsl:template name="picture-scale">
     <xsl:param name="bitmap" />
     <xsl:variable name="style" select="/game/styles/style[@name = $bitmap/@style]" />
     <xsl:choose>
-      <xsl:when test="$bitmap/scale"><xsl:value-of select="normalize-space($bitmap/scale)" /></xsl:when>
-      <xsl:when test="$style/scale"><xsl:value-of select="normalize-space($style/scale)" /></xsl:when>
+      <xsl:when test="$bitmap/scale"><xsl:call-template name="worked-out"><xsl:with-param name="node" select="$bitmap/scale" /></xsl:call-template></xsl:when>
+      <xsl:when test="$style/scale"><xsl:call-template name="worked-out"><xsl:with-param name="node" select="$style/scale" /></xsl:call-template></xsl:when>
       <xsl:otherwise>1</xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
+  <!-- A value of numbers and the game's variables, worked out: 4 for
+       pixel - 1 when pixel is 5. -->
+  <xsl:template name="worked-out">
+    <xsl:param name="node" />
+    <xsl:variable name="tag" select="$node/*[1]" />
+    <xsl:variable name="text" select="normalize-space($node)" />
+    <xsl:choose>
+      <xsl:when test="not($tag) and string(number($text)) != 'NaN'"><xsl:value-of select="number($text)" /></xsl:when>
+      <xsl:when test="not($tag)"><xsl:call-template name="worked-out"><xsl:with-param name="node" select="/game/variables/variable[@name = $text]" /></xsl:call-template></xsl:when>
+      <xsl:otherwise>
+        <xsl:variable name="first"><xsl:call-template name="worked-out"><xsl:with-param name="node" select="$tag/value[1]" /></xsl:call-template></xsl:variable>
+        <xsl:variable name="second"><xsl:call-template name="worked-out"><xsl:with-param name="node" select="$tag/value[2]" /></xsl:call-template></xsl:variable>
+        <xsl:choose>
+          <xsl:when test="local-name($tag) = 'add'"><xsl:value-of select="$first + $second" /></xsl:when>
+          <xsl:when test="local-name($tag) = 'subtract'"><xsl:value-of select="$first - $second" /></xsl:when>
+          <xsl:when test="local-name($tag) = 'multiply'"><xsl:value-of select="$first * $second" /></xsl:when>
+          <xsl:when test="local-name($tag) = 'divide'"><xsl:value-of select="$first div $second" /></xsl:when>
+          <xsl:otherwise>NaN</xsl:otherwise>
+        </xsl:choose>
+      </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
 
@@ -363,5 +425,46 @@
         <xsl:value-of select="format-number(440 * math:power(2, ($midi - 69) div 12), '0.##')" />
       </xsl:otherwise>
     </xsl:choose>
+  </xsl:template>
+
+  <!-- bomberColors: a picture's palette, by its name, or by its style's when
+       it has none of its own. -->
+  <xsl:template name="palette-name">
+    <xsl:param name="bitmap" select="." />
+    <xsl:call-template name="camel">
+      <xsl:with-param name="name">
+        <xsl:choose>
+          <xsl:when test="$bitmap/color or not($bitmap/@style)">
+            <!-- one palette for a picture's frames of the same colours,
+                 spark-a and spark-b: sparkColors -->
+            <xsl:variable name="name" select="string($bitmap/@name)" />
+            <xsl:variable name="stem" select="substring($name, 1, string-length($name) - 2)" />
+            <xsl:variable name="key"><xsl:call-template name="palette-key"><xsl:with-param name="bitmap" select="$bitmap" /></xsl:call-template></xsl:variable>
+            <xsl:variable name="same">
+              <xsl:if test="substring($name, string-length($name) - 1, 1) = '-'">
+                <xsl:for-each select="$colored-pictures[color or not(@style)][@name != $name][substring(@name, 1, string-length(@name) - 2) = $stem][substring(@name, string-length(@name) - 1, 1) = '-']">
+                  <xsl:variable name="each"><xsl:call-template name="palette-key"><xsl:with-param name="bitmap" select="." /></xsl:call-template></xsl:variable>
+                  <xsl:if test="$each = $key">x</xsl:if>
+                </xsl:for-each>
+              </xsl:if>
+            </xsl:variable>
+            <xsl:choose>
+              <xsl:when test="$same != ''"><xsl:value-of select="concat($stem, ' colors')" /></xsl:when>
+              <xsl:otherwise><xsl:value-of select="concat($name, ' colors')" /></xsl:otherwise>
+            </xsl:choose>
+          </xsl:when>
+          <xsl:otherwise><xsl:value-of select="concat($bitmap/@style, ' colors')" /></xsl:otherwise>
+        </xsl:choose>
+      </xsl:with-param>
+    </xsl:call-template>
+  </xsl:template>
+
+  <!-- What a picture's own colours are, so two the same are one palette. -->
+  <xsl:template name="palette-key">
+    <xsl:param name="bitmap" />
+    <xsl:variable name="style" select="/game/styles/style[@name = $bitmap/@style]" />
+    <xsl:for-each select="$bitmap/color | $style/color[not(@char = $bitmap/color/@char)][@char or not($bitmap/color[not(@char)])]">
+      <xsl:value-of select="concat(@char, '=', normalize-space(.), ';')" />
+    </xsl:for-each>
   </xsl:template>
 </xsl:stylesheet>

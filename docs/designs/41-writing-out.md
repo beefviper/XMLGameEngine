@@ -118,6 +118,26 @@ The largest single step was not a language change. It was dropping the frame-for
 - **Hidden rules again.** An object out of play is not moved, drawn or touched, and its actions are refused, so a key pressed while the splat plays does nothing. A spawned piece with no place of its own is centred on what spawns it. A refused spawn (one splat at most) stops the rest of the action, so the frog dies once.
 - **Names.** A class word ends in an s more often than not (`logs`, `hazards`); one kind is `log`, but `debris` stays `debris`. A plural of a word ending in s takes `es` (`splashes`).
 
+## What Prism Fall added
+
+| Part of the file | What the written game does with it |
+|---|---|
+| `<lockstep>` on a group | one clock for the list; every `pace.beat` seconds each cell steps on, a picture and a sound a step |
+| A grid at a side, `<bounce />` and a `<move>` down | all of the list turned round, back a step and down |
+| Rows by `<number>` with their own looks and worth | tables by row (`rowLooks[row]`, `rowWorths[row]`) |
+| `<timers>` in a grid, every so often at random, `<fire>` from a cell | a countdown in each cell (`untilFire`), a spark pushed onto its list |
+| `<fire>` with one in flight at most | a beam list, the press refused while it holds one |
+| `<hole>` | `cutHole(pylon, beam, 9, 0.5)`, clearing lit pixels in the pylon's own copy of its picture |
+| `<waiting />`, and a timer's `<reveal>` | `inPlay: false` until `untilComet` runs out |
+| A screen with an `<animation>` | its own time (`crackedTime`), the picture by `crackedTime / 0.12` |
+| `<set group= variable=>` | a loop over the list (`for (const shard of shards) { shard.velocity.x *= 1.25; }`) |
+| `<remaining>` and `total=` on a class | `shards.length === 0`, `shards.length <= pace.next`, `shards.some(...)` |
+| A `<hitbox>` uneven on its sides | `inset(lens, 5, 10, 5, 0)`, pulled in by so much from each side |
+
+- **Frames share a palette.** Pictures named `diamond-a` and `diamond-b` with the same colours share one `diamondColors`, not one each.
+- **Names clash again.** The game's `top` and `pixel` met the inset's `top` and the drawing's `pixel`, which MSVC flags; the locals are now `fromTop` and `pixelSize`.
+- **One hidden rule.** A picture's hole belongs to that one pylon, so each pylon keeps a copy of the rows.
+
 ## Suggestions
 
 Each is an idea, to be weighed when the game that needs it is written out.

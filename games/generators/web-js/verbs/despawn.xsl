@@ -12,14 +12,15 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
   <!-- covered: of a fired piece, anywhere; bare, last in a fired piece's
-       rule on meeting a thing -->
+       rule on meeting a thing, or alone in one at an edge -->
   <xsl:template match="despawn[@object and not(node())]" mode="covers">
     <xsl:if test="not($fired[@name = current()/@object])">
       <xsl:call-template name="gap"><xsl:with-param name="what" select="concat('&lt;despawn&gt; of ', $quote, @object, $quote, ', not a piece that is fired')" /></xsl:call-template>
     </xsl:if>
   </xsl:template>
   <xsl:template match="object/animation/then/despawn[not(@* or node())][not(following-sibling::*)]" mode="covers" />
-  <xsl:template match="object/collisions/collision[@object or @class][not(@edge)]/despawn[not(@* or node())][not(following-sibling::*)]" mode="covers">
+  <xsl:template match="object/collisions/collision[@object or @class][not(@edge)]/despawn[not(@* or node())][not(following-sibling::*)]
+      | object/collisions/collision[@edge]/despawn[not(@* or node())][not(preceding-sibling::* or following-sibling::*)]" mode="covers">
     <xsl:if test="count(ancestor::object[1] | $fired) != count($fired)">
       <xsl:call-template name="gap"><xsl:with-param name="what" select="'a bare &lt;despawn /&gt; other than of a piece that is fired'" /></xsl:call-template>
     </xsl:if>

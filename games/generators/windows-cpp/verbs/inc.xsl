@@ -22,7 +22,17 @@
     <xsl:text> += </xsl:text>
     <xsl:choose>
       <xsl:when test="normalize-space(.) = '' and not(*)">1</xsl:when>
-      <xsl:otherwise><xsl:call-template name="value"><xsl:with-param name="node" select="." /><xsl:with-param name="self" select="$self" /></xsl:call-template></xsl:otherwise>
+      <xsl:otherwise>
+        <!-- a count added to a number that is not one: said outright -->
+        <xsl:variable name="target" select="$everything[@name = substring-before(current()/@variable, '.')]/variables/variable[@name = substring-after(current()/@variable, '.')][1]" />
+        <xsl:variable name="target-type"><xsl:for-each select="$target"><xsl:call-template name="variable-type" /></xsl:for-each></xsl:variable>
+        <xsl:variable name="source" select="($self/variables/variable | $self/parent::group/variables/variable)[@name = normalize-space(current()/self)][1]" />
+        <xsl:variable name="source-type"><xsl:for-each select="$source"><xsl:call-template name="variable-type" /></xsl:for-each></xsl:variable>
+        <xsl:variable name="cast" select="count(*) = 1 and self and $target-type = 'float' and $source-type = 'int'" />
+        <xsl:if test="$cast">static_cast&lt;float&gt;(</xsl:if>
+        <xsl:call-template name="value"><xsl:with-param name="node" select="." /><xsl:with-param name="self" select="$self" /></xsl:call-template>
+        <xsl:if test="$cast">)</xsl:if>
+      </xsl:otherwise>
     </xsl:choose>
     <xsl:text>;</xsl:text>
   </xsl:template>

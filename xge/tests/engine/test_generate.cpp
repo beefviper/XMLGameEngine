@@ -10,7 +10,7 @@
 // them but no XML library and none of the other libraries. That it plays as
 // the file does, frame by frame, is in test_generated_games.cpp, which
 // compiles it. The windows-cpp target (games/generators/windows-cpp) writes
-// pong_min, pong, breakout, spacerace, kaboom, freeway and frogger, web-js the same as a page
+// pong_min, pong, breakout, spacerace, kaboom, freeway, frogger and prismfall, web-js the same as a page
 // of plain JavaScript each, and web-asm what engine-cpp does for a web page.
 
 #include "scratch.h"
@@ -311,7 +311,7 @@ TEST_CASE("windows-cpp names no parameter or local as one of the game's constant
 	// main.cpp takes in the game's namespace whole, so a parameter named as a
 	// constant hides it: MSVC warns (C4459), GCC and Clang do not
 	const std::regex constant(R"(constexpr \S+ (\w+) =)");
-	for (const std::string game : { "pong_min", "pong", "breakout", "spacerace", "kaboom", "freeway", "frogger" })
+	for (const std::string game : { "pong_min", "pong", "breakout", "spacerace", "kaboom", "freeway", "frogger", "prismfall" })
 	{
 		INFO(game);
 		TempFolder folder("xge_test_generate_windows_cpp_names_" + game);
@@ -332,9 +332,9 @@ TEST_CASE("windows-cpp names no parameter or local as one of the game's constant
 	}
 }
 
-TEST_CASE("windows-cpp writes pong_min, pong, breakout, spacerace, kaboom, freeway and frogger as stand-alone SFML games", "[generate]")
+TEST_CASE("windows-cpp writes pong_min, pong, breakout, spacerace, kaboom, freeway, frogger and prismfall as stand-alone SFML games", "[generate]")
 {
-	for (const std::string game : { "pong_min", "pong", "breakout", "spacerace", "kaboom", "freeway", "frogger" })
+	for (const std::string game : { "pong_min", "pong", "breakout", "spacerace", "kaboom", "freeway", "frogger", "prismfall" })
 	{
 		INFO(game);
 		TempFolder folder("xge_test_generate_windows_cpp_" + game);
@@ -381,25 +381,25 @@ TEST_CASE("windows-cpp lists every part of a game it has no words for yet, then 
 	TempFolder folder("xge_test_generate_windows_cpp_stops");
 	try
 	{
-		generateGame(requestFor(fs::current_path() / "descriptions/prismfall.xml", folder.path / "out", "windows-cpp"));
-		FAIL("prismfall.xml was written");
+		generateGame(requestFor(fs::current_path() / "descriptions/prismfall2.xml", folder.path / "out", "windows-cpp"));
+		FAIL("prismfall2.xml was written");
 	}
 	catch (const GenerateError& error)
 	{
 		const std::string what = error.what();
 		INFO(what);
-		CHECK(what.find("windows-cpp cannot write these parts of prismfall.xml yet; use engine-cpp for this game:\n") != std::string::npos);
+		CHECK(what.find("windows-cpp cannot write these parts of prismfall2.xml yet; use engine-cpp for this game:\n") != std::string::npos);
 		// the whole list, a line each and each once, with the object it is in
-		CHECK(what.find("\n  <lockstep> in <collisions> (group 'shards')") != std::string::npos);
-		CHECK(what.find("\n  <fire> in <action> (object 'lens')") != std::string::npos);
-		CHECK(count(what, "\n  <copy> in <condition>") == 1);
+		CHECK(what.find("\n  <svg> in <sprite> (object 'beam')") != std::string::npos);
+		CHECK(what.find("\n  <svg> in <sprite> (group 'shards')") != std::string::npos);
+		CHECK(count(what, "\n  <music> in <state>") == 1);
 		// a long list comes through whole (libxslt hands it over in one piece)
-		CHECK(what.find("\n  <timers> in a <state> that is not played") != std::string::npos);
+		CHECK(what.find("\n  <svg> in <sprite> (object 'shatter')") != std::string::npos);
 	}
 	CHECK_FALSE(fs::exists(folder.path / "out"));
 }
 
-TEST_CASE("web-js writes pong_min, pong, breakout, spacerace, kaboom, freeway and frogger as one page of plain JavaScript each that names nothing of the engine", "[generate]")
+TEST_CASE("web-js writes pong_min, pong, breakout, spacerace, kaboom, freeway, frogger and prismfall as one page of plain JavaScript each that names nothing of the engine", "[generate]")
 {
 	// a line or two of each, in the page's own words
 	const std::map<std::string, std::vector<std::string>> lines{
@@ -480,8 +480,21 @@ TEST_CASE("web-js writes pong_min, pong, breakout, spacerace, kaboom, freeway an
 			"if (pad.look === \"home\") { pixels(padsHomePicture,",
 			"if (frog.inPlay) { pixels(frogPicture,",
 			"pixels(splat.age < 0.4 ? squashedPicture : skullPicture," } },
+		{ "prismfall", {
+			"const rowLooks = [\"diamond\", \"ring\", \"cross\", \"cross\"];",
+			"untilFire: between(1.5, 20) });",
+			"\twhile (shardTime >= pace.beat) {\n\t\tshardTime -= pace.beat;\n\t\tshardFrame = (shardFrame + 1) % 4;\n\t\tplay(shardSounds[shardFrame]);",
+			"beams = beams.filter((beam) => !(beam.position.y < 0 ||",
+			"cutHole(pylon, beam, 9, 0.5);",
+			"if (lens.inPlay && touching(spark, inset(lens, 5, 10, 5, 0))) {",
+			"for (const shard of shards) { shard.velocity.x *= 1.25; }",
+			"if (shards.length === 0) {",
+			"else if (shards.some((shard) => shard.position.y >= pylontop - 40)) {",
+			"else if (shards.length <= pace.next) {",
+			"pixels(shardFrame % 2 === 1 ? ringBPicture : ringAPicture,",
+			"const frame = Math.floor(crackedTime / 0.12) % 2;" } },
 	};
-	const std::map<std::string, std::string> titles{ { "pong_min", "Pong" }, { "pong", "Pong" }, { "breakout", "Breakout" }, { "spacerace", "Space Race" }, { "kaboom", "Kaboom!" }, { "freeway", "Freeway" }, { "frogger", "Frogger" } };
+	const std::map<std::string, std::string> titles{ { "pong_min", "Pong" }, { "pong", "Pong" }, { "breakout", "Breakout" }, { "spacerace", "Space Race" }, { "kaboom", "Kaboom!" }, { "freeway", "Freeway" }, { "frogger", "Frogger" }, { "prismfall", "Prism Fall" } };
 	for (const auto& [game, wanted] : lines)
 	{
 		INFO(game);
@@ -515,16 +528,17 @@ TEST_CASE("web-js lists every part of a game it has no words for yet, then stops
 	TempFolder folder("xge_test_generate_web_js_stops");
 	try
 	{
-		generateGame(requestFor(fs::current_path() / "descriptions/prismfall.xml", folder.path / "out", "web-js"));
-		FAIL("prismfall.xml was written");
+		generateGame(requestFor(fs::current_path() / "descriptions/prismfall2.xml", folder.path / "out", "web-js"));
+		FAIL("prismfall2.xml was written");
 	}
 	catch (const GenerateError& error)
 	{
 		const std::string what = error.what();
 		INFO(what);
-		CHECK(what.find("web-js cannot write these parts of prismfall.xml yet; use web-asm for this game:\n") != std::string::npos);
-		CHECK(what.find("\n  <lockstep> in <collisions> (group 'shards')") != std::string::npos);
-		CHECK(what.find("\n  <fire> in <action> (object 'lens')") != std::string::npos);
+		CHECK(what.find("web-js cannot write these parts of prismfall2.xml yet; use web-asm for this game:\n") != std::string::npos);
+		CHECK(what.find("\n  <svg> in <sprite> (object 'beam')") != std::string::npos);
+		CHECK(what.find("\n  <svg> in <sprite> (group 'shards')") != std::string::npos);
+		CHECK(count(what, "\n  <music> in <state>") == 1);
 	}
 	CHECK_FALSE(fs::exists(folder.path / "out"));
 }
@@ -532,7 +546,7 @@ TEST_CASE("web-js lists every part of a game it has no words for yet, then stops
 TEST_CASE("the games windows-cpp and web-js cover: the rest stop with their list", "[.long][generate]")
 {
 	// A line here for each game they learn to write (plan A5).
-	const std::set<std::string> covered{ "pong_min", "pong", "breakout", "spacerace", "kaboom", "freeway", "frogger" };
+	const std::set<std::string> covered{ "pong_min", "pong", "breakout", "spacerace", "kaboom", "freeway", "frogger", "prismfall" };
 
 	for (const std::string target : { "windows-cpp", "web-js" })
 	{

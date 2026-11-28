@@ -7,23 +7,30 @@
 <!-- <fire object /> sends a new one of a piece from a thing: onto its list
      (bombs), from the middle of the side the thing faces, just clear of it,
      that way at the piece's own speed; with no facing, from its top middle at
-     the piece's own way. None when the piece's <most> are in flight. -->
+     the piece's own way. None when the piece's <most> are in flight: in an
+     action, nothing after it is done then either. -->
 <xsl:stylesheet version="1.0"
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
-  <!-- covered: bare, in a thing's timer, of a piece that moves along one
+  <!-- covered: bare, in a thing's (or grid's) timer or a thing's action, of a piece that moves along one
        axis when the thing faces some way -->
-  <xsl:template match="object/timers/timer/fire[@object and not(node())]" mode="covers">
+  <xsl:template match="object/timers/timer/fire[@object and not(node())] | object/actions/action/fire[@object and not(node())] | group/timers/timer/fire[@object and not(node())]" mode="covers">
     <xsl:variable name="piece" select="$fired[@name = current()/@object]" />
-    <xsl:if test="not($piece/sprite[1]/bitmap or $piece/sprite[1]/rectangle) or (ancestor::object[1]/facing and count($piece/velocity/*) != 1)">
+    <xsl:if test="not($piece/sprite[1]/bitmap or $piece/sprite[1]/rectangle) or (ancestor::*[self::object or self::group][1]/facing and count($piece/velocity/*) != 1)">
       <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;fire&gt; of other than a picture or a rectangle moving along one axis'" /></xsl:call-template>
     </xsl:if>
   </xsl:template>
 
   <xsl:template match="fire" mode="do">
     <xsl:param name="self" />
+    <xsl:param name="who" select="''" />
     <xsl:variable name="piece" select="$fired[@name = current()/@object]" />
-    <xsl:variable name="from"><xsl:call-template name="object-name"><xsl:with-param name="object" select="$self" /></xsl:call-template></xsl:variable>
+    <xsl:variable name="from">
+      <xsl:choose>
+        <xsl:when test="$who != ''"><xsl:value-of select="$who" /></xsl:when>
+        <xsl:otherwise><xsl:call-template name="object-name"><xsl:with-param name="object" select="$self" /></xsl:call-template></xsl:otherwise>
+      </xsl:choose>
+    </xsl:variable>
     <xsl:variable name="shot"><xsl:call-template name="object-name"><xsl:with-param name="object" select="$piece" /></xsl:call-template></xsl:variable>
     <xsl:variable name="list"><xsl:call-template name="fired-list-name"><xsl:with-param name="piece" select="$piece" /></xsl:call-template></xsl:variable>
     <xsl:variable name="type"><xsl:call-template name="fired-type"><xsl:with-param name="piece" select="$piece" /></xsl:call-template></xsl:variable>
@@ -33,8 +40,10 @@
     <xsl:variable name="speed">
       <xsl:call-template name="value"><xsl:with-param name="node" select="$piece/velocity/*" /><xsl:with-param name="self" select="$piece" /></xsl:call-template>
     </xsl:variable>
-    <xsl:variable name="across" select="concat($from, '.position.x + ', $from, '.size.x / 2 - ', $width div 2)" />
-    <xsl:variable name="down" select="concat($from, '.position.y + ', $from, '.size.y / 2 - ', $height div 2)" />
+    <xsl:variable name="half-width"><xsl:call-template name="name-or-number"><xsl:with-param name="text" select="string($width div 2)" /></xsl:call-template></xsl:variable>
+    <xsl:variable name="half-height"><xsl:call-template name="name-or-number"><xsl:with-param name="text" select="string($height div 2)" /></xsl:call-template></xsl:variable>
+    <xsl:variable name="across" select="concat($from, '.position.x + ', $from, '.size.x / 2 - ', $half-width)" />
+    <xsl:variable name="down" select="concat($from, '.position.y + ', $from, '.size.y / 2 - ', $half-height)" />
     <xsl:variable name="position">
       <xsl:choose>
         <xsl:when test="$facing = 'down'"><xsl:value-of select="concat('{ ', $across, ', ', $from, '.position.y + ', $from, '.size.y }')" /></xsl:when>
@@ -54,9 +63,12 @@
       </xsl:choose>
     </xsl:variable>
     <xsl:variable name="tab">
-      <xsl:if test="$piece/most"><xsl:text>&#9;</xsl:text></xsl:if>
+      <xsl:if test="$piece/most and not(parent::action)"><xsl:text>&#9;</xsl:text></xsl:if>
     </xsl:variable>
-    <xsl:if test="$piece/most">
+    <xsl:if test="$piece/most and parent::action">
+      <xsl:value-of select="concat('if (', $list, '.size() &gt;= ', normalize-space($piece/most), ') { return; }&#10;')" />
+    </xsl:if>
+    <xsl:if test="$piece/most and not(parent::action)">
       <xsl:value-of select="concat('if (', $list, '.size() &lt; ', normalize-space($piece/most), ')&#10;{&#10;')" />
     </xsl:if>
     <xsl:value-of select="concat($tab, $type, ' ', $shot, ';&#10;')" />
@@ -64,6 +76,6 @@
     <xsl:value-of select="concat($tab, $shot, '.position = ', $position, ';&#10;')" />
     <xsl:value-of select="concat($tab, $shot, '.velocity = ', $velocity, ';&#10;')" />
     <xsl:value-of select="concat($tab, $list, '.push_back(', $shot, ');')" />
-    <xsl:if test="$piece/most"><xsl:text>&#10;}</xsl:text></xsl:if>
+    <xsl:if test="$piece/most and not(parent::action)"><xsl:text>&#10;}</xsl:text></xsl:if>
   </xsl:template>
 </xsl:stylesheet>

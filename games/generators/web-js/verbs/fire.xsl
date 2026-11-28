@@ -7,23 +7,30 @@
 <!-- <fire object /> sends a new one of a piece from a thing: onto its list
      (bombs), from the middle of the side the thing faces, just clear of it,
      that way at the piece's own speed; with no facing, from its top middle at
-     the piece's own way. None when the piece's <most> are in flight. -->
+     the piece's own way. None when the piece's <most> are in flight: in an
+     action, nothing after it is done then either. -->
 <xsl:stylesheet version="1.0"
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
-  <!-- covered: bare, in a thing's timer, of a piece that moves along one
+  <!-- covered: bare, in a thing's (or grid's) timer or a thing's action, of a piece that moves along one
        axis when the thing faces some way -->
-  <xsl:template match="object/timers/timer/fire[@object and not(node())]" mode="covers">
+  <xsl:template match="object/timers/timer/fire[@object and not(node())] | object/actions/action/fire[@object and not(node())] | group/timers/timer/fire[@object and not(node())]" mode="covers">
     <xsl:variable name="piece" select="$fired[@name = current()/@object]" />
-    <xsl:if test="not($piece/sprite[1]/bitmap or $piece/sprite[1]/rectangle) or (ancestor::object[1]/facing and count($piece/velocity/*) != 1)">
+    <xsl:if test="not($piece/sprite[1]/bitmap or $piece/sprite[1]/rectangle) or (ancestor::*[self::object or self::group][1]/facing and count($piece/velocity/*) != 1)">
       <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;fire&gt; of other than a picture or a rectangle moving along one axis'" /></xsl:call-template>
     </xsl:if>
   </xsl:template>
 
   <xsl:template match="fire" mode="do">
     <xsl:param name="self" />
+    <xsl:param name="who" select="''" />
     <xsl:variable name="piece" select="$fired[@name = current()/@object]" />
-    <xsl:variable name="from"><xsl:call-template name="object-name"><xsl:with-param name="object" select="$self" /></xsl:call-template></xsl:variable>
+    <xsl:variable name="from">
+      <xsl:choose>
+        <xsl:when test="$who != ''"><xsl:value-of select="$who" /></xsl:when>
+        <xsl:otherwise><xsl:call-template name="object-name"><xsl:with-param name="object" select="$self" /></xsl:call-template></xsl:otherwise>
+      </xsl:choose>
+    </xsl:variable>
     <xsl:variable name="list"><xsl:call-template name="fired-list-name"><xsl:with-param name="piece" select="$piece" /></xsl:call-template></xsl:variable>
     <xsl:variable name="width"><xsl:call-template name="own-size"><xsl:with-param name="self" select="$piece" /><xsl:with-param name="axis" select="'x'" /></xsl:call-template></xsl:variable>
     <xsl:variable name="height"><xsl:call-template name="own-size"><xsl:with-param name="self" select="$piece" /><xsl:with-param name="axis" select="'y'" /></xsl:call-template></xsl:variable>
@@ -52,9 +59,12 @@
       </xsl:choose>
     </xsl:variable>
     <xsl:variable name="tab">
-      <xsl:if test="$piece/most"><xsl:text>&#9;</xsl:text></xsl:if>
+      <xsl:if test="$piece/most and not(parent::action)"><xsl:text>&#9;</xsl:text></xsl:if>
     </xsl:variable>
-    <xsl:if test="$piece/most">
+    <xsl:if test="$piece/most and parent::action">
+      <xsl:value-of select="concat('if (', $list, '.length &gt;= ', normalize-space($piece/most), ') { return; }&#10;')" />
+    </xsl:if>
+    <xsl:if test="$piece/most and not(parent::action)">
       <xsl:value-of select="concat('if (', $list, '.length &lt; ', normalize-space($piece/most), ') {&#10;')" />
     </xsl:if>
     <xsl:value-of select="concat($tab, $list, '.push({&#10;')" />
@@ -63,6 +73,6 @@
     <xsl:value-of select="concat($tab, '&#9;size: { x: ', $width, ', y: ', $height, ' },&#10;')" />
     <xsl:if test="$piece/animation"><xsl:value-of select="concat($tab, '&#9;age: 0,&#10;')" /></xsl:if>
     <xsl:value-of select="concat($tab, '});')" />
-    <xsl:if test="$piece/most"><xsl:text>&#10;}</xsl:text></xsl:if>
+    <xsl:if test="$piece/most and not(parent::action)"><xsl:text>&#10;}</xsl:text></xsl:if>
   </xsl:template>
 </xsl:stylesheet>

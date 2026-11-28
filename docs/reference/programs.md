@@ -133,13 +133,13 @@ In the page the canvas fills the browser's window, the game's proportions kept. 
 
 `kinds.xsl` sorts the game's parts once for both targets: the things (what moves, meets or counts), the grids (rows and columns whose cells meet), the words and still pictures only drawn, the records (live variables, or more than one look), each variable a constant, a start value or a member, and what is kept.
 
-It writes `pong_min.xml`, `pong.xml`, `breakout.xml`, `spacerace.xml`, `kaboom.xml`, `freeway.xml` and `frogger.xml` for now; `ctest --test-dir build/generated` writes and builds each under `output/<config>/generated/windows-cpp/<game>/`. Before writing, it walks the game; for any other game it writes nothing and lists every part it has no words for yet, a line each with the object it is in:
+It writes `pong_min.xml`, `pong.xml`, `breakout.xml`, `spacerace.xml`, `kaboom.xml`, `freeway.xml`, `frogger.xml` and `prismfall.xml` for now; `ctest --test-dir build/generated` writes and builds each under `output/<config>/generated/windows-cpp/<game>/`. Before writing, it walks the game; for any other game it writes nothing and lists every part it has no words for yet, a line each with the object it is in:
 
 ```
-windows-cpp cannot write these parts of prismfall.xml yet; use engine-cpp for this game:
-  <despawn> in <collision> (object 'beam')
-  <fire> in <action> (object 'lens')
-  <lockstep> in <collisions> (group 'shards')
+windows-cpp cannot write these parts of prismfall2.xml yet; use engine-cpp for this game:
+  <svg> in <sprite> (object 'beam')
+  <svg> in <sprite> (object 'spark')
+  <svg> in <sprite> (object 'flash')
   ...
 ```
 

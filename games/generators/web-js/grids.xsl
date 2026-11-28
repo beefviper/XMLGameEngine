@@ -166,6 +166,29 @@
   </xsl:template>
 
   <!-- The size, then a cell for each row and column, pushed onto the array. -->
+  <!-- "diamond", "ring", ... or 40, 25, ...: each row's look (what =
+       'look') or number, by the row that names its number, the grid's own
+       where none does. -->
+  <xsl:template name="row-values">
+    <xsl:param name="rows" />
+    <xsl:param name="what" />
+    <xsl:param name="at" select="1" />
+    <xsl:variable name="row" select="row[number[normalize-space(.) = $at]]" />
+    <xsl:if test="$at &gt; 1">, </xsl:if>
+    <xsl:choose>
+      <xsl:when test="$what = 'look'">
+        <xsl:variable name="look"><xsl:call-template name="march-look"><xsl:with-param name="from" select="$row[sprite] | self::*[not($row/sprite)]" /></xsl:call-template></xsl:variable>
+        <xsl:call-template name="look-name"><xsl:with-param name="object" select="." /><xsl:with-param name="look" select="$look" /></xsl:call-template>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:call-template name="value"><xsl:with-param name="node" select="($row/variables/variable[@name = $what] | variables/variable[@name = $what][not($row/variables/variable[@name = $what])])[1]" /><xsl:with-param name="self" select="." /></xsl:call-template>
+      </xsl:otherwise>
+    </xsl:choose>
+    <xsl:if test="$at &lt; $rows">
+      <xsl:call-template name="row-values"><xsl:with-param name="rows" select="$rows" /><xsl:with-param name="what" select="$what" /><xsl:with-param name="at" select="$at + 1" /></xsl:call-template>
+    </xsl:if>
+  </xsl:template>
+
   <xsl:template name="cell-loops">
     <xsl:param name="axis" select="''" />
     <xsl:variable name="cells"><xsl:call-template name="cells-name" /></xsl:variable>
@@ -188,6 +211,34 @@
       <xsl:call-template name="row-speeds"><xsl:with-param name="rows" select="$rows" /></xsl:call-template>
       <xsl:text>];&#10;</xsl:text>
     </xsl:if>
+    <xsl:variable name="grid" select="." />
+    <xsl:variable name="row-looks" select="boolean(row[number][sprite]) and count(. | $marching) = count($marching)" />
+    <xsl:variable name="row-numbers" select="variables/variable[@name = $grid/row[number]/variables/variable/@name]" />
+    <xsl:if test="$row-looks or $row-numbers">
+      <xsl:text>&#9;// each row's </xsl:text>
+      <xsl:if test="$row-looks">look</xsl:if>
+      <xsl:for-each select="$row-numbers">
+        <xsl:choose>
+          <xsl:when test="position() = last() and ($row-looks or position() &gt; 1)"> and </xsl:when>
+          <xsl:when test="$row-looks or position() &gt; 1">, </xsl:when>
+        </xsl:choose>
+        <xsl:value-of select="@name" />
+      </xsl:for-each>
+      <xsl:text>, row 1 first&#10;</xsl:text>
+    </xsl:if>
+    <xsl:if test="$row-looks">
+      <xsl:text>&#9;const rowLooks = [</xsl:text>
+      <xsl:call-template name="row-values"><xsl:with-param name="rows" select="$rows" /><xsl:with-param name="what" select="'look'" /></xsl:call-template>
+      <xsl:text>];&#10;</xsl:text>
+    </xsl:if>
+    <xsl:for-each select="$row-numbers">
+      <xsl:text>&#9;const </xsl:text>
+      <xsl:call-template name="camel"><xsl:with-param name="name" select="concat('row ', @name, 's')" /></xsl:call-template>
+      <xsl:text> = [</xsl:text>
+      <xsl:variable name="what" select="string(@name)" />
+      <xsl:for-each select="$grid"><xsl:call-template name="row-values"><xsl:with-param name="rows" select="$rows" /><xsl:with-param name="what" select="$what" /></xsl:call-template></xsl:for-each>
+      <xsl:text>];&#10;</xsl:text>
+    </xsl:for-each>
     <xsl:variable name="x">
       <xsl:call-template name="cell-place"><xsl:with-param name="along" select="'x'" /><xsl:with-param name="given" select="contains($axis, 'x')" /><xsl:with-param name="first" select="$axis = 'xy'" /><xsl:with-param name="count" select="$columns + number($count = 'yes') * 2" /><xsl:with-param name="index" select="'column'" /><xsl:with-param name="gap" select="$gap = 'yes'" /></xsl:call-template>
     </xsl:variable>
@@ -198,6 +249,7 @@
       <xsl:choose>
         <xsl:when test="$row-speeds">{ x: rowSpeeds[row], y: 0 }</xsl:when>
         <xsl:when test="$speed = 'yes'">{ x: speed, y: 0 }</xsl:when>
+        <xsl:when test="velocity"><xsl:call-template name="pair"><xsl:with-param name="of" select="velocity" /><xsl:with-param name="self" select="$grid" /></xsl:call-template></xsl:when>
         <xsl:otherwise>{ x: 0, y: 0 }</xsl:otherwise>
       </xsl:choose>
     </xsl:variable>
@@ -206,12 +258,38 @@
       <xsl:for-each select="exsl:node-set($parts)/p[not(@given)]">
         <xsl:value-of select="concat(', ', .)" />
       </xsl:for-each>
-      <xsl:if test="not(group) and count(. | $looking-grids) = count($looking-grids)">
-        <xsl:variable name="named"><xsl:call-template name="grid-looks" /></xsl:variable>
-        <xsl:text>, look: </xsl:text>
-        <xsl:call-template name="look-name"><xsl:with-param name="object" select="." /><xsl:with-param name="look" select="exsl:node-set($named)/look[1]/@name" /></xsl:call-template>
-      </xsl:if>
+      <xsl:choose>
+        <xsl:when test="$row-looks">, look: rowLooks[row]</xsl:when>
+        <xsl:when test="not(group) and count(. | $looking-grids) = count($looking-grids)">
+          <xsl:variable name="named"><xsl:call-template name="grid-looks" /></xsl:variable>
+          <xsl:text>, look: </xsl:text>
+          <xsl:call-template name="look-name"><xsl:with-param name="object" select="." /><xsl:with-param name="look" select="exsl:node-set($named)/look[1]/@name" /></xsl:call-template>
+        </xsl:when>
+      </xsl:choose>
       <xsl:if test="count(. | $timed-grids) = count($timed-grids)">, lookTime: 0</xsl:if>
+      <xsl:for-each select="variables/variable[$row-looks or $row-numbers or $grid/collisions/collision/hole or $grid/timers/timer]">
+        <xsl:text>, </xsl:text>
+        <xsl:call-template name="camel"><xsl:with-param name="name" select="@name" /></xsl:call-template>
+        <xsl:text>: </xsl:text>
+        <xsl:choose>
+          <xsl:when test="count(. | $row-numbers) = count($row-numbers)">
+            <xsl:call-template name="camel"><xsl:with-param name="name" select="concat('row ', @name, 's')" /></xsl:call-template>
+            <xsl:text>[row]</xsl:text>
+          </xsl:when>
+          <xsl:otherwise><xsl:call-template name="value"><xsl:with-param name="node" select="." /><xsl:with-param name="self" select="$grid" /></xsl:call-template></xsl:otherwise>
+        </xsl:choose>
+      </xsl:for-each>
+      <xsl:if test="collisions/collision/hole">
+        <xsl:text>, picture: [...</xsl:text>
+        <xsl:call-template name="picture-name"><xsl:with-param name="bitmap" select="$pictures[@name = $grid/sprite/bitmap/@from]" /></xsl:call-template>
+        <xsl:text>]</xsl:text>
+      </xsl:if>
+      <xsl:for-each select="timers/timer">
+        <xsl:text>, </xsl:text>
+        <xsl:call-template name="timer-name" />
+        <xsl:text>: </xsl:text>
+        <xsl:call-template name="value"><xsl:with-param name="node" select="every" /><xsl:with-param name="self" select="$grid" /></xsl:call-template>
+      </xsl:for-each>
       <xsl:text> });</xsl:text>
     </xsl:variable>
     <xsl:variable name="lines">

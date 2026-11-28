@@ -84,7 +84,8 @@
   </xsl:template>
 
   <!-- A timer's count down: untilFire, by its name or its first verb;
-       a screen's own, untilTick. -->
+       a screen's own, untilTick, or by what its first verb is done to,
+       untilComet. -->
   <xsl:template name="timer-name">
     <xsl:param name="timer" select="." />
     <xsl:call-template name="camel">
@@ -92,6 +93,7 @@
         <xsl:text>until </xsl:text>
         <xsl:choose>
           <xsl:when test="$timer/@name"><xsl:value-of select="$timer/@name" /></xsl:when>
+          <xsl:when test="$timer/../parent::state and $timer/*[not(self::every)][1]/@object"><xsl:value-of select="$timer/*[not(self::every)][1]/@object" /></xsl:when>
           <xsl:when test="$timer/../parent::state">tick</xsl:when>
           <xsl:otherwise><xsl:value-of select="local-name($timer/*[not(self::every)][1])" /></xsl:otherwise>
         </xsl:choose>
@@ -99,19 +101,12 @@
     </xsl:call-template>
   </xsl:template>
 
-  <!-- bomberColors: a picture's palette, by its name, or by its style's when
-       it has none of its own. -->
-  <xsl:template name="palette-name">
-    <xsl:param name="bitmap" select="." />
-    <xsl:call-template name="camel">
-      <xsl:with-param name="name">
-        <xsl:choose>
-          <xsl:when test="$bitmap/color or not($bitmap/@style)"><xsl:value-of select="concat($bitmap/@name, ' colors')" /></xsl:when>
-          <xsl:otherwise><xsl:value-of select="concat($bitmap/@style, ' colors')" /></xsl:otherwise>
-        </xsl:choose>
-      </xsl:with-param>
-    </xsl:call-template>
+  <!-- How long a screen has been on top: crackedTime. -->
+  <xsl:template name="screen-time">
+    <xsl:param name="state" select="." />
+    <xsl:call-template name="camel"><xsl:with-param name="name" select="concat($state/@name, ' time')" /></xsl:call-template>
   </xsl:template>
+
 
   <!-- A picture's pixels: rocketsPicture. -->
   <xsl:template name="picture-name">
