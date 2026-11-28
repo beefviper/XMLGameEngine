@@ -14,7 +14,7 @@ What the engine cannot do today. Why, and what might come, is in the [design fil
 - Jumps are an instant step (`<hop>`), a timed straight line with an optional drawn arc, or a fixed arc under a pull (`<jump>`). No air control.
 - `<chase>` and `<aim>` go straight, through walls, with no lead.
 - Pac-Man's ghosts keep the first level's schedule on every level.
-- A path is straight legs at one speed. Enemies fire on timers from wherever they are (an invader behind others fires through them).
+- A path is straight legs at one speed. Enemies fire on timers from wherever they are (a shard behind others fires through them).
 - Cell pieces jump a cell at a time; nothing glides. A `<go>` on cells keeps its speed until the next turn; a chain cannot wrap round the map.
 - Cell checks cannot find touching groups of alike pieces (Puyo Puyo) or count a chain's rounds. No hold, lock delay, ghost piece or hidden rows; `<random />` is a plain pick, not a bag of seven.
 - `<undo />` cannot bring back a copy despawned since (Doubles' merged numbers), so it suits pushing puzzles. A `<condition>` in an action holds no conditions. A spawn picks no number by weight, so Doubles brings in only 2s. Minefield's first square can be a mine. A look cannot be a live text.
@@ -44,7 +44,7 @@ What the engine cannot do today. Why, and what might come, is in the [design fil
 - A state shown still is frozen whole, so a demo plays as a game of its own, not behind an attract screen. An object shown in two states runs in both.
 - A state with scenes cannot be copied with `from=`, and a copied condition or timer can be replaced but not removed.
 - Players taking turns see only their own game.
-- A demo played on steps other than its own drifts from the recording (Space Invaders and Pac-Man within seconds; card and board games not in thirty seconds).
+- A demo played on steps other than its own drifts from the recording (Prism Fall and Pac-Man within seconds; card and board games not in thirty seconds).
 - A demo records keys, not the mouse or a stick; game-level `<random>`s do not follow its seed; an old demo plays its keys into a changed game.
 - A table of the best has no place numbers unless each member's text has its own. A save holds numbers and looks, not places.
 

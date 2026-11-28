@@ -28,6 +28,6 @@
 ## Options and settings
 
 - File > Options: video, XML and sound libraries (only those built), the two-window question, start on load. A new video library is given the running game (`Engine::replaceWindow`, old one destroyed first since raylib and GLFW allow only one); a new XML parser rereads and restarts; one that will not start falls back to Qt.
-- Every window shows the same title, `Space Invaders (Playing: 59.9fps) (SFML3, Xerces)`.
+- Every window shows the same title, `Prism Fall (Playing: 59.9fps) (SFML3, Xerces)`.
 - **`xgegui.ini`** beside the program, written only when something changes: the window places and sizes, one or two windows, the libraries, the last game.
 - Look: Fusion with a palette-based style sheet. Do not style `QSpinBox` borders: the arrows disappear.

@@ -34,7 +34,7 @@ The 8-bit machines played bleeps, bloops and little tunes from a sound chip, not
 
 ## Notes that follow a number
 
-The arcade Invaders thump once per step of the fleet, so the march quickens as the fleet does. A fixed `<music>` loop drifts apart from a fleet that speeds up, and every sound is made once, when the window opens. Three ways were weighed:
+A marching fleet should thump once per step, so the march quickens as the fleet does. A fixed `<music>` loop drifts apart from a fleet that speeds up, and every sound is made once, when the window opens. Three ways were weighed:
 
 - **A. `<play>` gives a pitch.** `<play sound="thump"><pitch>march.note</pitch></play>`: the engine makes that sound again at the asked pitch (kept once made). Covers a siren rising with speed. Cost: sounds made during play, and the tempo still needs something to play it on time.
 - **B. One sound at several pitches, picked by a number.** `<sound name="thump"><pitches><pitch>F2</pitch><pitch>E2</pitch>...</pitches>` made at load; `<play sound="thump"><by>march.step</by></play>` picks one, as `<choose><by>` picks a word. Nothing is made during play. Same tempo problem as A.
@@ -42,7 +42,7 @@ The arcade Invaders thump once per step of the fleet, so the march quickens as t
   - an animation's `<seconds update="live">`, worked out every frame like any [live number](../reference/format.md#live-numbers-of-an-object);
   - a `<frame>` that holds a `<play>`, run as that picture comes up.
 
-  Invaders' aliens become four frames (`a`, `b`, `a`, `b`), each playing its note, with `<seconds update="live">pace.beat</seconds>`, which the speed-up condition shortens as it speeds the fleet. The march then quickens with the fleet, as the arcade's does, with no tempo word and no sound made in play. It also gives footsteps on a walk and a flap on each wingbeat.
+  Prism Fall's shards are four frames (`a`, `b`, `a`, `b`), each playing its note, with `<seconds update="live">pace.beat</seconds>`, which the speed-up condition shortens as it speeds the fleet. The march then quickens with the fleet, as the arcade's does, with no tempo word and no sound made in play. It also gives footsteps on a walk and a flap on each wingbeat.
 
 A may come later, only if a game needs a pitch that slides with a number. Open: whether the fleet's own steps (a hop per frame of the animation instead of a velocity) should be the third piece, so picture, sound and step all keep one time.
 

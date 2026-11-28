@@ -1226,7 +1226,7 @@ namespace xge
 		// What this object is called. Unique: a member of a group is the
 		// group's name and its number (logrow3.2), a cell of a group laid out
 		// in <columns> and <rows> the group's name, its column and its row,
-		// counting from 1 (aliens.3.2), unless either is given a name.
+		// counting from 1 (shards.3.2), unless either is given a name.
 		Name name;
 
 		// The <group> this object is a member of ("logrow3" for logrow3.1,
@@ -1451,8 +1451,8 @@ namespace xge
 		// Whether it has a <facing> (Moment::facing): which way it faces, one
 		// of the four directions, without turning its picture. It follows the last <move> or <hop> made, and a <fire> leaves the
 		// middle of that side, moving that way at the projectile's own speed:
-		// a man in a maze shoots the way he last walked, an invader facing
-		// down drops its bombs below it. An object with no <facing> fires from
+		// a man in a maze shoots the way he last walked, a shard facing
+		// down drops its sparks below it. An object with no <facing> fires from
 		// its top, at the projectile's own velocity, as before. See
 		// fireProjectile in verbs/fire.cpp.
 		bool hasFacing{ false };

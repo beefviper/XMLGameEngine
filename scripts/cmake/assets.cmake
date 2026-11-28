@@ -20,9 +20,8 @@ set(data_xsd
 set(data_xml
 	"games/descriptions/pong.xml"
 	"games/descriptions/breakout.xml"
-	"games/descriptions/spaceinvaders.xml"
-	"games/descriptions/spaceinvaders2.xml"
 	"games/descriptions/prismfall.xml"
+	"games/descriptions/prismfall2.xml"
 	"games/descriptions/frogger.xml"
 	"games/descriptions/spacerace.xml"
 	"games/descriptions/sparring.xml"
@@ -87,7 +86,7 @@ set(data_assets
 	"games/assets/pressstart2p-ofl.txt"
 	"games/assets/paddle.jpg"
 	"games/assets/cards.png"
-	"games/assets/Space Invaders Color Sprites.svg")
+	"games/assets/prismsheet.svg")
 
 # The stylesheets xgecli --generate runs, a folder per target (generate.cpp).
 set(data_generators

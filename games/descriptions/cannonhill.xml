@@ -17,7 +17,7 @@
   It is the game the second stage of tables and tracks was made for:
   * The hill is one <polygon>: its corners, filled. Its collisions are by
     its pixels, and a shell landing on it cuts a <hole> with a rough edge,
-    the same verb that wears away Space Invaders' shields, only bigger.
+    the same verb that wears away Prism Fall's pylons, only bigger.
   * Each shell is a <spawn> from the tip of the barrel, going along the
     barrel at the speed of the charge, with an <acceleration> the spawn
     gives it: the fall, and this shot's wind across.

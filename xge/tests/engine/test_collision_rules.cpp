@@ -5,14 +5,14 @@
 //
 // Catch2 tests for object-against-object <collision> rules, loaded from the
 // shipped games by a real xge::Game. A rule can be written with just a
-// class (or object) to apply to - <collision class="aliens"><die /></collision> -
+// class (or object) to apply to - <collision class="shards"><die /></collision> -
 // and a <collision> with no selector at all is the rule that matches anything.
 //
 // Rules can also <trigger> an action (of the object itself when object= is
 // left out), hold <condition>s that must all hold, and name the side= touched.
 //
-// Regression covered: Space Invaders' bullet used an unfiltered collision
-// rule, so it died the moment it overlapped the ship that fired it.
+// Regression covered: a shot with an unfiltered collision rule died the
+// moment it overlapped the ship that fired it.
 
 #include "scratch.h"
 #include "copies.h"
@@ -45,62 +45,61 @@ TEST_CASE("a collision with no selector still matches anything", "[collision_rul
 
 TEST_CASE("a collision naming only a class is an object rule for that class", "[collision_rules]")
 {
-	Game game{ "descriptions/spaceinvaders.xml" };
-	const Object& bullet = game.object("bullet");
+	Game game{ "descriptions/prismfall.xml" };
+	const Object& beam = game.object("beam");
 
-	// spaceinvaders.xml's bullet: <collision class="aliens"><die /></collision>,
-	// then the same for the shields, the bombs and the mystery ship
-	REQUIRE(bullet.kind->collisionData.others.size() == 4);
-	CHECK(bullet.kind->collisionData.others[0].filterClass == "aliens");
-	CHECK(bullet.kind->collisionData.others[0].filterObject.empty());
-	CHECK(bullet.kind->collisionData.others[1].filterClass == "shield");
+	// prismfall.xml's beam: <collision class="shards"><despawn /></collision>,
+	// then the same for the pylons, the sparks and the comet
+	REQUIRE(beam.kind->collisionData.others.size() == 4);
+	CHECK(beam.kind->collisionData.others[0].filterClass == "shards");
+	CHECK(beam.kind->collisionData.others[0].filterObject.empty());
+	CHECK(beam.kind->collisionData.others[1].filterClass == "pylon");
 
 	// ...and it did not also turn into a screen-edge rule.
-	CHECK(bullet.kind->collisionData.edges[edgeIndex(Edge::Left)].commands.size() == 1); // only the edge="all" <die />
+	CHECK(beam.kind->collisionData.edges[edgeIndex(Edge::Left)].commands.size() == 1); // only the edge="all" <despawn />
 }
 
-TEST_CASE("a bullet fired from the ship survives touching it", "[collision_rules]")
+TEST_CASE("a beam shone from the lens survives touching it", "[collision_rules]")
 {
-	Game game{ "descriptions/spaceinvaders.xml" };
+	Game game{ "descriptions/prismfall.xml" };
 	game.setCurrentState("playing");
 
-	Object& player = game.object("player");
-	Object& bullet = copies::spawned(game, "bullet");
-	player.size = { 50.0f, 50.0f };
-	bullet.size = { 8.0f, 8.0f };
+	Object& lens = game.object("lens");
+	Object& beam = copies::spawned(game, "beam");
+	lens.size = { 50.0f, 50.0f };
+	beam.size = { 3.0f, 20.0f };
 
-	// The engine spawns a bullet with its top-left corner at the ship's top
-	// edge, so it starts out overlapping the ship and only clears it a few
-	// frames later (360 px a second, 6 a step, 8 px tall).
-	bullet.position = { player.position.x + 25.0f, player.position.y };
-	bullet.velocity.y = -360.0f;
+	// A beam starting at the lens's top edge overlaps the lens and only
+	// clears it a few frames later (360 px a second, 6 a step, 20 px tall).
+	beam.position = { lens.position.x + 25.0f, lens.position.y };
+	beam.velocity.y = -360.0f;
 
 	for (int frame = 0; frame < 4; ++frame)
 	{
 		game.updateObjects(xge::kSixtieth);
-		CHECK(copies::count(game, "bullet") == 1);
+		CHECK(copies::count(game, "beam") == 1);
 	}
-	CHECK(bullet.position.y < player.position.y - bullet.size.y);
+	CHECK(beam.position.y < lens.position.y - beam.size.y);
 }
 
-TEST_CASE("a bullet is taken away on touching an alien", "[collision_rules]")
+TEST_CASE("a beam is taken away on touching a shard", "[collision_rules]")
 {
-	Game game{ "descriptions/spaceinvaders.xml" };
+	Game game{ "descriptions/prismfall.xml" };
 	game.setCurrentState("playing");
 
-	Object& alien = game.object("aliens");
-	Object& bullet = copies::spawned(game, "bullet");
-	alien.size = { 50.0f, 50.0f };
-	bullet.size = { 8.0f, 8.0f };
+	Object& shard = game.object("shards.1.1");
+	Object& beam = copies::spawned(game, "beam");
+	shard.size = { 50.0f, 50.0f };
+	beam.size = { 3.0f, 20.0f };
 
-	// Just under the alien, its centre a couple of pixels below the bottom
-	// edge, so it overlaps by less than its radius.
-	bullet.position = { alien.position.x + 20.0f, alien.position.y + alien.size.y - 2.0f };
-	bullet.velocity.y = -360.0f;
+	// Just under the shard, its top a couple of pixels inside the shard's
+	// bottom edge.
+	beam.position = { shard.position.x + 20.0f, shard.position.y + shard.size.y - 2.0f };
+	beam.velocity.y = -360.0f;
 
 	game.updateObjects(xge::kSixtieth);
 
-	CHECK(copies::count(game, "bullet") == 0);
+	CHECK(copies::count(game, "beam") == 0);
 }
 
 namespace

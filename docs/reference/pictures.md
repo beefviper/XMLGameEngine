@@ -79,13 +79,13 @@ Lines or polygons that draw a thing (a ship, a rock) are written once, by name, 
 A bitmap is written once, by name, in the game's `<pictures>` at the bottom of the file, and a sprite takes it with `from=`:
 
 ```xml
-<sprite><bitmap from="invader" /></sprite>
+<sprite><bitmap from="shard" /></sprite>
 ...
 <pictures>
-  <bitmap name="invader">
-    <row>..*...*..</row>
-    <row>..*****..</row>
-    <row>.**w*w**.</row>
+  <bitmap name="shard">
+    <row>....*....</row>
+    <row>..**w**..</row>
+    <row>.**www**.</row>
     <row>*********</row>
     <scale>5</scale>
     <color>green</color>             <!-- the * pixels -->
@@ -94,7 +94,7 @@ A bitmap is written once, by name, in the game's `<pictures>` at the bottom of t
 </pictures>
 ```
 
-- **A take changes what it gives**: its own `<row>`s replace all the picture's, a `<scale>` or `<flip>` the picture's, a `<color>` the one of the same `char=` (or the plain one), and `style=` the picture's. `<bitmap from="invader"><color>red</color></bitmap>` is the same invader in red. Two sprites showing one picture take the same name. A name the pictures have not got stops the load.
+- **A take changes what it gives**: its own `<row>`s replace all the picture's, a `<scale>` or `<flip>` the picture's, a `<color>` the one of the same `char=` (or the plain one), and `style=` the picture's. `<bitmap from="shard"><color>red</color></bitmap>` is the same shard in red. Two sprites showing one picture take the same name. A name the pictures have not got stops the load.
 - A bitmap can still be written whole inside a sprite; the games keep theirs in `<pictures>`.
 
 - `.` is clear, `*` the plain `<color>`, and each `<color char="x">` names one more character.
@@ -107,7 +107,7 @@ A bitmap is written once, by name, in the game's `<pictures>` at the bottom of t
 ```xml
 <sprite>
   <svg>
-    <path>assets/Space Invaders Color Sprites.svg</path>
+    <path>assets/prismsheet.svg</path>
     <x>96</x> <y>64</y> <width>32</width> <height>32</height>
     <scale>2</scale>
     <hide>backdrop</hide>

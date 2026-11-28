@@ -1,17 +1,15 @@
-// invaders_fixture.h
+// fleet_fixture.h
 // XML Game Engine
 // author: beefviper
 // date: Oct 2, 2026
 //
-// A frozen copy of the first Space Invaders game file (its aliens since
-// written as a group of 11 columns and 5 rows, as <grid> is gone): 50 by 50
-// rectangles, a 50 by 50 player and a circle for a bullet. Several tests need
-// a real game with a block in lockstep, a bullet and a win condition to check
-// the engine's cell naming, swept collisions, lockstep bounces and win, and
-// the sizes and names they check were those of this file. The game in
-// games/descriptions/spaceinvaders.xml has moved on (pictures, three kinds of alien, an
-// animation), so the tests that are about the engine and not about that game
-// load this copy instead, and do not change when the game does.
+// A small fleet shooter kept frozen for tests: a group of 11 columns and 5
+// rows of 50 by 50 rectangles in lockstep, a 50 by 50 player and a circle for
+// a bullet. Several tests need a real game with a block in lockstep, a bullet
+// and a win condition to check the engine's cell naming, swept collisions,
+// lockstep bounces and win, and the sizes and names they check are this
+// file's. The tests that are about the engine and not about a game load this
+// copy, so they do not change when a game does.
 
 #pragma once
 
@@ -21,17 +19,17 @@
 #include <fstream>
 #include <string>
 
-namespace invaders_fixture
+namespace fleet_fixture
 {
 	inline const char* xml()
 	{
-		return R"xml(<!-- spaceinvaders.xml -->
+		return R"xml(<!-- fleet.xml -->
 <!-- XML Game Engine -->
 <!-- author: beefviper -->
 <!-- date: Sept 18, 2020 -->
 
 <game>
-  <window name="Space Invaders">
+  <window name="Fleet">
     <width>1024</width>
     <height>768</height>
     <background>black</background>
@@ -61,7 +59,7 @@ namespace invaders_fixture
         <collision edge="all">
           <despawn />
         </collision>
-        <collision class="aliens">
+        <collision class="fleet">
           <despawn />
         </collision>
       </collisions>
@@ -102,7 +100,7 @@ namespace invaders_fixture
           </action>
         </actions>
       </object>
-      <group name="aliens" class="aliens">
+      <group name="fleet" class="fleet">
         <columns>11</columns>
         <rows>5</rows>
         <padding>
@@ -138,7 +136,7 @@ namespace invaders_fixture
       <object name="title">
         <sprite>
           <text>
-            <content>SPACE INVADERS</content>
+            <content>FLEET</content>
             <size>110</size>
             <color>green</color>
           </text>
@@ -265,7 +263,7 @@ namespace invaders_fixture
       <shows>
         <show object="bullet" />
         <show object="player" />
-        <show object="aliens" />
+        <show object="fleet" />
       </shows>
       <inputs>
         <input button="p">
@@ -291,7 +289,7 @@ namespace invaders_fixture
         </input>
       </inputs>
       <conditions>
-        <condition class="aliens">
+        <condition class="fleet">
           <remaining>0</remaining>
           <push state="gameover" />
         </condition>
@@ -337,7 +335,7 @@ namespace invaders_fixture
 			std::string file;
 
 			Written() :
-				file((std::filesystem::temp_directory_path() / scratchName("xge_invaders_fixture.xml")).string())
+				file((std::filesystem::temp_directory_path() / scratchName("xge_fleet_fixture.xml")).string())
 			{
 				std::ofstream out(file);
 				out << xml();

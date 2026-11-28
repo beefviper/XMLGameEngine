@@ -4,15 +4,15 @@
 // date: Sept 29, 2026
 //
 // Catch2 test for a group in lockstep bouncing off the screen edges
-// (Game::updateLockstepObjects), using the invader block of the first Space
-// Invaders game (a copy of it kept in invaders_fixture.h) in a real xge::Game.
+// (Game::updateLockstepObjects), using the block of the small fleet game kept
+// in fleet_fixture.h in a real xge::Game.
 //
 // Regression covered: on every bounce off the right edge the members stored
 // before the touching one were shifted three steps and the rest one, so the
 // last column of the block drifted 4 px further away each time.
 
 #include "game/game.h"
-#include "invaders_fixture.h"
+#include "fleet_fixture.h"
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -24,7 +24,7 @@ using namespace xge;
 
 namespace
 {
-	constexpr float kAlienWidth = 50.0f;
+	constexpr float kCellWidth = 50.0f;
 	constexpr float kPadding = 15.0f;
 
 	// The distinct x positions of the block's columns, left to right.
@@ -33,7 +33,7 @@ namespace
 		std::set<float> xs;
 		for (const auto& object : game.getCurrentObjects())
 		{
-			if (object.groupName == "aliens")
+			if (object.groupName == "fleet")
 			{
 				xs.insert(object.position.x);
 			}
@@ -47,20 +47,20 @@ namespace
 		REQUIRE(xs.size() == 11);
 		for (std::size_t i = 1; i < xs.size(); ++i)
 		{
-			CHECK(xs[i] - xs[i - 1] == kAlienWidth + kPadding);
+			CHECK(xs[i] - xs[i - 1] == kCellWidth + kPadding);
 		}
 	}
 }
 
-TEST_CASE("the invader block keeps its column spacing through every bounce", "[lockstep_bounce]")
+TEST_CASE("the fleet block keeps its column spacing through every bounce", "[lockstep_bounce]")
 {
-	Game game{ invaders_fixture::path() };
+	Game game{ fleet_fixture::path() };
 	game.setCurrentState("playing");
 
 	// Window::init() normally measures these; a Game built on its own has {0, 0}.
 	for (auto& object : game.getCurrentObjects())
 	{
-		if (object.groupName == "aliens") { object.size = { kAlienWidth, 50.0f }; }
+		if (object.groupName == "fleet") { object.size = { kCellWidth, 50.0f }; }
 		else if (object.name == "player") { object.size = { 50.0f, 50.0f }; }
 	}
 
@@ -68,12 +68,12 @@ TEST_CASE("the invader block keeps its column spacing through every bounce", "[l
 
 	// Right edge, left edge, right edge again.
 	int bounces = 0;
-	float direction = game.object("aliens").velocity.x;
+	float direction = game.object("fleet").velocity.x;
 	for (int frame = 0; frame < 3000 && bounces < 3; ++frame)
 	{
 		game.updateObjects(xge::kSixtieth);
 
-		const float now = game.object("aliens").velocity.x;
+		const float now = game.object("fleet").velocity.x;
 		if (now != direction)
 		{
 			direction = now;

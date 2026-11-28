@@ -11,7 +11,7 @@ A game plays the same whatever the frame rate: at 8 frames a second, at 60, at 1
 - **A real step of the time that passed.** Each frame the engine measures the time since the last one and plays one step of that length. No fixed step behind the scenes, and no splitting a step into smaller ones.
 - **Everything in the engine respects it:** movement, timers, animations, jumps, swings, cell ticks, held keys.
 - **A game file writes per-second numbers.** `<velocity><x>300</x>` is 300 pixels a second.
-- **Games that move in ticks** (Space Invaders' block, Snake) are still played and drawn every frame; only their own tick decides when they move.
+- **Games that move in ticks** (Prism Fall's lattice, Snake) are still played and drawn every frame; only their own tick decides when they move.
 - **Moved games behave about the same,** not pixel for pixel. Speeds can be tuned once it all works.
 
 ## Units
@@ -64,7 +64,7 @@ With steps of any length, the sums must give the same answer however a second is
 - **A fixed step with per-second units,** the loop as it was: repeatable for free and no change to the sums. Rejected by the author: it is not real delta time, and a game would still be bound to its step.
 - **Per-frame units kept, converted at load:** a number read or set while playing cannot know its units. Rejected.
 - **Splitting a long step into short ones:** hides the problem and costs time when the machine is already slow. Rejected by the author.
-- **For demos, every step's length kept, or one constant step:** exact, but a line per step in the game file, or a fixed step after all. Rejected by the author: an attract-mode demo only has to look like play, so key times alone, with steps split at a key, were chosen. Measured over 30 seconds of random keys on steps of 9 to 24 ms, 37 of 59 games stayed within 8 pixels of the recording and most stayed the same game for all of it; Space Invaders and Pac-Man drifted within seconds.
+- **For demos, every step's length kept, or one constant step:** exact, but a line per step in the game file, or a fixed step after all. Rejected by the author: an attract-mode demo only has to look like play, so key times alone, with steps split at a key, were chosen. Measured over 30 seconds of random keys on steps of 9 to 24 ms, 37 of 59 games stayed within 8 pixels of the recording and most stayed the same game for all of it; the fleet shooter and Pac-Man drifted within seconds.
 
 ## Open
 

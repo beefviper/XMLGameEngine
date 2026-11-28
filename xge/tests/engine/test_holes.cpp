@@ -5,7 +5,7 @@
 //
 // Catch2 tests for <hole>: a rule that cuts a round hole in an object's own
 // picture where something hit it, which a pixel collision then lets the next
-// thing through; then the shields of games/descriptions/spaceinvaders.xml.
+// thing through; then the pylons of games/descriptions/prismfall.xml.
 
 #include "copies.h"
 #include "played.h"
@@ -121,35 +121,35 @@ TEST_CASE("a <hole> is cut only in a picture that stays as it is", "[hole]")
 		ContainsSubstring("<hole> cuts a picture"));
 }
 
-TEST_CASE("spaceinvaders.xml: shots wear holes in a shield until they pass through it", "[hole][spaceinvaders]")
+TEST_CASE("prismfall.xml: beams wear holes in a pylon until they pass through it", "[hole][prismfall]")
 {
-	Played play("descriptions/spaceinvaders.xml");
+	Played play("descriptions/prismfall.xml");
 	play.tap(KeyCode::Num1);
 	REQUIRE(play.state() == "playing");
 
-	// Four shields, none of them hit yet; the second stands over x 349 to 437.
-	Object& shield = play.get("shields.2.1");
-	REQUIRE(play.get("shields.4.1").isVisible);
-	const auto whole = shield.drawn.bitmap;
-	CHECK(shield.position.x == Approx(349));
+	// Three pylons, none of them hit yet; the first stands from x 146.
+	Object& pylon = play.get("pylons.2.1");
+	REQUIRE(play.get("pylons.3.1").isVisible);
+	const auto whole = pylon.drawn.bitmap;
+	CHECK(play.get("pylons.1.1").position.x == Approx(146));
 
-	// Move the ship under the shield's middle and fire up into it.
-	Object& ship = play.get("player");
-	ship.position.x = shield.position.x + shield.size.x / 2 - ship.size.x / 2;
+	// Move the lens under the pylon's middle and shine up into it.
+	Object& lens = play.get("lens");
+	lens.position.x = pylon.position.x + pylon.size.x / 2 - lens.size.x / 2;
 	bool through = false;
 	for (int shot = 0; shot < 20 && !through; ++shot)
 	{
 		play.tap(KeyCode::Space);
 		play.frames(1);
-		for (int i = 0; i < 70 && copies::count(play.game, "bullet") == 1; ++i)
+		for (int i = 0; i < 70 && copies::count(play.game, "beam") == 1; ++i)
 		{
-			const Object& bullet = play.get("bullet.1");
-			through = through || bullet.position.y + measureShapeSize(bullet.drawn.picture).y < shield.position.y;
+			const Object& beam = play.get("beam.1");
+			through = through || beam.position.y + measureShapeSize(beam.drawn.picture).y < pylon.position.y;
 			play.frames(1);
 		}
-		ship.position.x = shield.position.x + shield.size.x / 2 - ship.size.x / 2;
+		lens.position.x = pylon.position.x + pylon.size.x / 2 - lens.size.x / 2;
 	}
-	CHECK(play.get("shields.2.1").drawn.bitmap != whole);
+	CHECK(play.get("pylons.2.1").drawn.bitmap != whole);
 	CHECK(through);
 }
 

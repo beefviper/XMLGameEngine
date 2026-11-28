@@ -49,7 +49,7 @@ Text and `<image>` files are made by the engine as well (plutovg reads both), so
   - One reader (`picture/image.cpp`, plutovg for PNG, JPEG, BMP; lunasvg for SVG), one cutter, area-average shrink.
 - **Runs mirror group layout:** start, count, along or down. A run never wraps at the row's end; a split animation is two runs, as the author described it.
 - **Animation cells need no sprites:** each is a sprite named `walk.N`, so `<become>`, looks and `from=` treat it like any other.
-- A cell is a whole sprite: a member changing one replaces it. Open: a row or member changing only a cell's column or row (what Space Invaders 2's SVG parts do), which would let that game move onto a sheet.
+- A cell is a whole sprite: a member changing one replaces it. Open: a row or member changing only a cell's column or row (what Prism Fall 2's SVG parts do), which would let that game move onto a sheet.
 - Rejected: a sheet per sprite (the path and grid said again and again); a list of cells in one string (the format's rule); wrapping runs (a hidden rule about where a row ends).
 
 ## Flip and turning

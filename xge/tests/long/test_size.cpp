@@ -116,7 +116,7 @@ TEST_CASE("The size of the engine's things", "[.long][size]")
 
 	xge::fixRandomSeed(1);
 	std::printf("%-14s %8s %9s %12s %9s %9s %12s\n", "game", "objects", "pictures", "picture KB", "textures", "builds", "built KB");
-	for (const std::string name : { "pong", "spaceinvaders", "pacman", "klondike" })
+	for (const std::string name : { "pong", "prismfall", "pacman", "klondike" })
 	{
 		xge::Game game{ "descriptions/" + name + ".xml" };
 		auto counting = std::make_unique<CountingWindow>();
@@ -124,7 +124,7 @@ TEST_CASE("The size of the engine's things", "[.long][size]")
 		xge::Engine engine{ game, std::move(counting) };
 
 		// Started, and played a little, so what is made on the way is counted.
-		const xge::KeyCode start = name == "pong" ? xge::KeyCode::Num1 : xge::KeyCode::Space;
+		const xge::KeyCode start = name == "pong" || name == "prismfall" ? xge::KeyCode::Num1 : xge::KeyCode::Space;
 		engine.handleKeyPressed(start);
 		engine.handleKeyReleased(start);
 		for (int frame = 0; frame < 600; ++frame) { engine.input(); engine.update(xge::kSixtieth); engine.render(); }

@@ -7,6 +7,7 @@
 // once it is gone, and a slot used again is a generation on.
 
 #include "played.h"
+#include "fleet_fixture.h"
 #include "game/store.h"
 
 #include <catch2/catch_test_macros.hpp>
@@ -248,20 +249,20 @@ TEST_CASE("objects whose looks come out the same share one set of them", "[store
 
 TEST_CASE("the members of a group share one kind: its rules and actions are held once", "[store][kind]")
 {
-	played::Played invaders("descriptions/spaceinvaders.xml");
-	const Kind* aliens = nullptr;
+	played::Played fleet(fleet_fixture::path());
+	const Kind* cells = nullptr;
 	std::size_t members = 0;
 	std::set<const Kind*> kinds;
-	for (const Object& object : invaders.game.getCurrentObjects())
+	for (const Object& object : fleet.game.getCurrentObjects())
 	{
 		kinds.insert(object.kind.get());
-		if (object.objClass != "aliens") { continue; }
+		if (object.objClass != "fleet") { continue; }
 		++members;
-		if (!aliens) { aliens = object.kind.get(); }
-		CHECK(object.kind.get() == aliens);
+		if (!cells) { cells = object.kind.get(); }
+		CHECK(object.kind.get() == cells);
 	}
 	CHECK(members == 55);
-	CHECK(kinds.size() < invaders.game.getCurrentObjects().size() - 50);
+	CHECK(kinds.size() < fleet.game.getCurrentObjects().size() - 50);
 }
 
 TEST_CASE("a spawned copy shows the looks of the piece it is copied from, held once", "[store][kind]")

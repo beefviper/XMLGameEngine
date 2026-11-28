@@ -143,7 +143,7 @@ namespace xge
 
 		// Works out the title every window the game is shown in carries: the
 		// game's name, whether it is playing (and how fast) or paused, and the
-		// video library and XML parser in use, as in "Space Invaders (Playing:
+		// video library and XML parser in use, as in "Prism Fall (Playing:
 		// 59.9fps) (SFML3, Xerces)". It goes to a library's own window, to the
 		// stage (for the Qt renderer's window in two windows) and out as
 		// titleChanged() (for the main window, which is the game's window in

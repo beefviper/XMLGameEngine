@@ -194,15 +194,15 @@ TEST_CASE("Mario's jump goes as high and is in the air as long at every step len
 	agreeAtEveryRate("descriptions/mariobros.xml", "seconds in the air", 0.05, true, [&](Played& play, Pacer& pacer) { return jump(play, pacer, false); });
 }
 
-TEST_CASE("Space Invaders' block is in the same place after 10 seconds at every step length", "[.long][steps][spaceinvaders]")
+TEST_CASE("Prism Fall's lattice is in the same place after 10 seconds at every step length", "[.long][steps][prismfall]")
 {
-	// Within one of its own steps: 15 pixels a note.
-	agreeAtEveryRate("descriptions/spaceinvaders.xml", "the block's x after 10 seconds", 15.0, false, [](Played& play, Pacer& pacer)
+	// Within one of its own steps: 36 a second for a 0.6 second beat.
+	agreeAtEveryRate("descriptions/prismfall.xml", "the lattice's x after 10 seconds", 22.0, false, [](Played& play, Pacer& pacer)
 	{
 		play.game.pushState("playing");
-		play.get("player").collisionsOn = false;
-		pacer.advance(10.0, [&] { play.get("player").collisionsOn = false; return false; });
-		return static_cast<double>(play.get("aliens.1.1").position.x);
+		play.get("lens").collisionsOn = false;
+		pacer.advance(10.0, [&] { play.get("lens").collisionsOn = false; return false; });
+		return static_cast<double>(play.get("shards.1.1").position.x);
 	});
 }
 

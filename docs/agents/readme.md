@@ -60,7 +60,7 @@ A language change is made everywhere in one commit:
 - A scratch file is named with `scratchName()`, so `ctest -j` never has two cases writing one file.
 - A test over every game is split into cases of a like size with `played::share` (`random_keys.h`), so ctest runs them side by side: one case over all of them took 100 s in a Windows Debug build.
 - Before touching `circleOverlapsBox`, add a test to `test_collision_geometry.cpp`.
-- `invaders_fixture.h` is a frozen copy of the first Space Invaders.
+- `fleet_fixture.h` is a frozen fleet shooter for tests about the engine, not a game: a lockstep block, a player, a bullet and a win.
 
 ## Docs
 

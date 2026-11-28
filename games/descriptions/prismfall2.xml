@@ -1,0 +1,546 @@
+<!-- prismfall2.xml -->
+<!-- XML Game Engine -->
+<!-- author: beefviper -->
+<!-- date: Nov 27, 2026 -->
+
+<!--
+  Prism Fall (prismfall.xml), drawn from an SVG sprite sheet instead of rows
+  of text: the same game, the same keys.
+
+  assets/prismsheet.svg is a sheet of 32 by 32 unit cells, six across and
+  four down, with the frames of each picture running left to right
+  (column, row):
+
+    row 0   lens (0,0), beam (1,0), spark (2,0), comet (3,0) to (5,0)
+    row 1   a shard breaking, (0,1) to (3,1)
+    row 2   diamond (0,2) (1,2) (2,2), ring (3,2) (4,2) (5,2)
+    row 3   cross (0,3) (1,3) (2,3)
+
+  An <svg> sprite takes a part of the drawing (<x>, <y>, <width>, <height>, in
+  its own units) and draws it `scale` real pixels to a unit, once, when the
+  game loads. The sheet's backdrop is left out with <hide>. A row that
+  changes an <svg> gives only what changes (the rings only their <x>).
+
+  The shards step through three frames each to a march that loops on its
+  own; a hit leaves the four breaking frames, spawned where it was; a spark
+  is the sheet's spark flipped to fall; a spark on the lens takes it out of
+  play while the state cracked plays the breaking frames over it, and then
+  <reveal>s it; the comet flickers its tail as it goes.
+-->
+
+<game xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../xgedef.xsd">
+  <window name="Prism Fall 2">
+    <width>960</width>
+    <height>720</height>
+  </window>
+  <variables>
+    <variable name="margin">120</variable>
+    <variable name="top">110</variable>
+    <variable name="zoom">1.75</variable>
+    <variable name="beamzoom">1.5</variable>
+    <variable name="animation.seconds">0.5</variable>
+    <variable name="gap">20</variable>
+    <variable name="step">150</variable>
+    <variable name="pylontop">500</variable>
+  </variables>
+  <styles>
+    <style name="banner"><size>112</size><color>cyan</color></style>
+    <style name="hud"><size>32</size><color>white</color></style>
+    <style name="prompt"><size>44</size><color>white</color></style>
+  </styles>
+  <objects>
+    <object name="beam" class="beam">
+      <sprite>
+        <svg>
+          <path>assets/prismsheet.svg</path>
+          <x>46</x><y>4</y><width>4</width><height>24</height>
+          <scale>beamzoom</scale>
+          <hide>backdrop</hide>
+        </svg>
+      </sprite>
+      <velocity><y>-780</y></velocity>
+      <most>1</most>
+      <collisions>
+        <collision edge="all"><despawn /></collision>
+        <collision class="shards"><despawn /></collision>
+        <collision class="pylon"><despawn /></collision>
+        <collision class="spark"><despawn /></collision>
+        <collision class="comet"><despawn /></collision>
+      </collisions>
+    </object>
+    <!-- a spark, the sheet's spark flipped to fall, four at most, shed by
+         any shard (each faces down) after a wait of its own -->
+    <object name="spark" class="spark">
+      <sprite>
+        <svg>
+          <path>assets/prismsheet.svg</path>
+          <x>74</x><y>4</y><width>12</width><height>24</height>
+          <scale>beamzoom</scale>
+          <hide>backdrop</hide>
+          <flip>vertical</flip>
+        </svg>
+      </sprite>
+      <velocity><y>260</y></velocity>
+      <most>4</most>
+      <collisions>
+        <collision edge="all"><despawn /></collision>
+        <collision object="lens"><despawn /></collision>
+        <collision class="pylon"><despawn /></collision>
+        <collision class="floor"><despawn /></collision>
+        <collision object="beam"><despawn /></collision>
+      </collisions>
+    </object>
+    <!-- the sheet's four breaking frames, left where a hit was -->
+    <object name="flash" class="flash">
+      <sprite name="a">
+        <svg>
+          <path>assets/prismsheet.svg</path>
+          <x>2</x><y>34</y><width>28</width><height>28</height>
+          <scale>zoom</scale>
+          <hide>backdrop</hide>
+        </svg>
+      </sprite>
+      <sprite name="b">
+        <svg>
+          <path>assets/prismsheet.svg</path>
+          <x>34</x><y>34</y><width>28</width><height>28</height>
+          <scale>zoom</scale>
+          <hide>backdrop</hide>
+        </svg>
+      </sprite>
+      <sprite name="c">
+        <svg>
+          <path>assets/prismsheet.svg</path>
+          <x>66</x><y>34</y><width>28</width><height>28</height>
+          <scale>zoom</scale>
+          <hide>backdrop</hide>
+        </svg>
+      </sprite>
+      <sprite name="d">
+        <svg>
+          <path>assets/prismsheet.svg</path>
+          <x>98</x><y>34</y><width>28</width><height>28</height>
+          <scale>zoom</scale>
+          <hide>backdrop</hide>
+        </svg>
+      </sprite>
+      <animation>
+        <seconds>0.08</seconds>
+        <once />
+        <frame sprite="a" />
+        <frame sprite="b" />
+        <frame sprite="c" />
+        <frame sprite="d" />
+        <then><despawn /></then>
+      </animation>
+      <most>2</most>
+    </object>
+  </objects>
+  <keeps>
+    <keep object="best" />
+  </keeps>
+  <states>
+    <objects>
+      <object name="lens">
+        <sprite>
+          <svg>
+            <path>assets/prismsheet.svg</path>
+            <x>2</x><y>2</y><width>28</width><height>23</height>
+            <scale>zoom</scale>
+            <hide>backdrop</hide>
+          </svg>
+        </sprite>
+        <position><x><centered /></x><y>
+          <subtract>
+            <value><window><bottom /></window></value>
+            <value><multiply><value>lens.height</value><value>2</value></multiply></value>
+          </subtract>
+        </y></position>
+        <collisions>
+          <collision edge="horizontal"><stick /></collision>
+          <collision class="spark">
+            <dec variable="lens.lives" />
+            <inc variable="lens.struck" />
+            <play sound="crack" />
+            <die />
+          </collision>
+        </collisions>
+        <actions>
+          <action name="left"><move direction="left">step</move></action>
+          <action name="right"><move direction="right">step</move></action>
+          <action name="shine">
+            <fire object="beam" />
+            <play sound="beam" />
+          </action>
+        </actions>
+        <variables>
+          <variable name="score">0</variable>
+          <variable name="lives">3</variable>
+          <variable name="struck">0</variable>
+        </variables>
+      </object>
+      <!-- the best score, kept from game to game -->
+      <object name="best">
+        <sprite><text style="hud"><content>BEST</content><number>best.score</number></text></sprite>
+        <position><x><centered /></x><y>10</y></position>
+        <variables><variable name="score">0</variable></variables>
+      </object>
+      <object name="continue">
+        <sprite><text style="prompt"><content>spacebar to continue</content></text></sprite>
+        <position><x><centered /></x><y><add><value><window><y><center /></y></window></value><value>60</value></add></y></position>
+      </object>
+    </objects>
+    <state name="title">
+      <objects>
+        <object name="title">
+          <sprite><text style="banner"><content>PRISM FALL</content></text></sprite>
+          <position><x><centered /></x><y><centered><offset>-100</offset></centered></y></position>
+        </object>
+        <object name="table">
+          <sprite><text style="hud"><content>diamond 40   ring 25   cross 15   comet ?</content><size>26</size></text></sprite>
+          <position><x><centered /></x><y><add><value><window><y><center /></y></window></value><value>20</value></add></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show object="lens" />
+        <show object="best" />
+      </shows>
+      <inputs>
+        <input><button>num1</button><button>numpad1</button><push state="playing" /></input>
+      </inputs>
+    </state>
+    <state name="playing">
+      <objects>
+        <group name="pylons" class="pylon">
+          <columns>3</columns>
+          <rows>1</rows>
+          <padding><x>200</x><y>0</y></padding>
+          <sprite>
+            <bitmap from="pylons" />
+          </sprite>
+          <position><x>146</x><y>pylontop</y></position>
+          <collisions>
+            <type>pixel</type>
+            <collision object="beam"><hole>9<rough>0.5</rough></hole></collision>
+            <collision class="spark"><hole>7<rough>0.5</rough></hole></collision>
+          </collisions>
+        </group>
+        <object name="floor" class="floor">
+          <sprite><rectangle><width><window><right /></window></width><height>3</height><color>purple</color></rectangle></sprite>
+          <position><x>0</x><y><subtract><value><window><bottom /></window></value><value>28</value></subtract></y></position>
+        </object>
+        <!-- the comet, its tail flickering: across the sky now and then -->
+        <object name="comet" class="comet">
+          <sprite name="a">
+            <svg>
+              <path>assets/prismsheet.svg</path>
+              <x>97</x><y>9</y><width>30</width><height>14</height>
+              <scale>zoom</scale>
+              <hide>backdrop</hide>
+            </svg>
+          </sprite>
+          <sprite name="b">
+            <svg>
+              <path>assets/prismsheet.svg</path>
+              <x>129</x><y>9</y><width>30</width><height>14</height>
+              <scale>zoom</scale>
+              <hide>backdrop</hide>
+            </svg>
+          </sprite>
+          <sprite name="c">
+            <svg>
+              <path>assets/prismsheet.svg</path>
+              <x>161</x><y>9</y><width>30</width><height>14</height>
+              <scale>zoom</scale>
+              <hide>backdrop</hide>
+            </svg>
+          </sprite>
+          <animation><seconds>0.15</seconds><frame sprite="a" /><frame sprite="b" /><frame sprite="c" /></animation>
+          <position><x><subtract><value>0</value><value>comet.width</value></subtract></x><y>56</y></position>
+          <velocity><x>180</x></velocity>
+          <waiting />
+          <collisions>
+            <collision edge="right"><die /></collision>
+            <collision object="beam">
+              <inc variable="lens.score">
+                <multiply>
+                  <value>60</value>
+                  <value><ceiling><value><self>worth</self></value></ceiling></value>
+                </multiply>
+              </inc>
+              <spawn object="flash" />
+              <play sound="shatter" />
+              <die />
+            </collision>
+          </collisions>
+          <variables><variable name="worth"><random><min>0.01</min><max>4</max></random></variable></variables>
+        </object>
+        <group name="shards" class="shards">
+          <columns>9</columns>
+          <rows>4</rows>
+          <padding><x>gap</x><y>gap</y></padding>
+          <sprite name="a">
+            <svg>
+              <path>assets/prismsheet.svg</path>
+              <x>2</x><y>66</y><width>28</width><height>28</height>
+              <scale>zoom</scale>
+              <hide>backdrop</hide>
+            </svg>
+          </sprite>
+          <sprite name="b">
+            <svg>
+              <path>assets/prismsheet.svg</path>
+              <x>34</x><y>66</y><width>28</width><height>28</height>
+              <scale>zoom</scale>
+              <hide>backdrop</hide>
+            </svg>
+          </sprite>
+          <sprite name="c">
+            <svg>
+              <path>assets/prismsheet.svg</path>
+              <x>66</x><y>66</y><width>28</width><height>28</height>
+              <scale>zoom</scale>
+              <hide>backdrop</hide>
+            </svg>
+          </sprite>
+          <animation>
+            <seconds>animation.seconds</seconds>
+            <frame sprite="a" />
+            <frame sprite="b" />
+            <frame sprite="c" />
+          </animation>
+          <position><x>margin</x><y>top</y></position>
+          <velocity><x>60</x></velocity>
+          <facing>down</facing>
+          <collisions>
+            <lockstep />
+            <collision edge="horizontal">
+              <bounce />
+              <move direction="down">12</move>
+            </collision>
+            <collision object="beam">
+              <inc variable="lens.score"><self>worth</self></inc>
+              <spawn object="flash" />
+              <play sound="shatter" />
+              <die />
+            </collision>
+          </collisions>
+          <variables><variable name="worth">40</variable></variables>
+          <timers>
+            <timer>
+              <every><random><min>1.5</min><max>20</max></random></every>
+              <fire object="spark" />
+            </timer>
+          </timers>
+          <row><number>2</number>
+            <sprite name="a"><svg><x>98</x></svg></sprite>
+            <sprite name="b"><svg><x>130</x></svg></sprite>
+            <sprite name="c"><svg><x>162</x></svg></sprite>
+            <variables><variable name="worth">25</variable></variables>
+          </row>
+          <row><number>3</number><number>4</number>
+            <sprite name="a"><svg><y>98</y></svg></sprite>
+            <sprite name="b"><svg><y>98</y></svg></sprite>
+            <sprite name="c"><svg><y>98</y></svg></sprite>
+            <variables><variable name="worth">15</variable></variables>
+          </row>
+        </group>
+        <!-- how many shards may be left before the drift speeds up again -->
+        <object name="pace">
+          <variables><variable name="next">18</variable></variables>
+        </object>
+        <object name="score">
+          <sprite><text style="hud"><content>SCORE</content><number>lens.score</number></text></sprite>
+          <position><x>20</x><y>10</y></position>
+        </object>
+        <object name="lives">
+          <sprite><text style="hud"><number>lens.lives</number><size>22</size><color>cyan</color></text></sprite>
+          <position><x>20</x><y><subtract><value><window><bottom /></window></value><value>25</value></subtract></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show object="lens" />
+        <show object="beam" />
+        <show object="best" />
+      </shows>
+      <music sound="march" />
+      <inputs>
+        <input><button>a</button><button>left</button><trigger object="lens" action="left" /></input>
+        <input><button>d</button><button>right</button><trigger object="lens" action="right" /></input>
+        <input button="space"><trigger object="lens" action="shine" /></input>
+        <input><button>pause</button><button>pad1.start</button><push state="paused" /></input>
+      </inputs>
+      <conditions>
+        <condition class="shards">
+          <remaining>0</remaining>
+          <become object="over.message" sprite="won" />
+          <push state="over" />
+        </condition>
+        <condition object="lens" variable="lives">
+          <atmost>0</atmost>
+          <become object="over.message" sprite="lost" />
+          <push state="over" />
+        </condition>
+        <!-- the lattice down on the pylons: the shards have landed -->
+        <condition class="shards" variable="y" total="highest">
+          <atleast><subtract><value>pylontop</value><value>40</value></subtract></atleast>
+          <become object="over.message" sprite="lost" />
+          <push state="over" />
+        </condition>
+        <condition object="lens" variable="struck">
+          <atleast>1</atleast>
+          <dec variable="lens.struck" />
+          <push state="cracked" />
+        </condition>
+        <condition class="shards" total="count">
+          <atmost>pace.next</atmost>
+          <set group="shards" variable="velocity.x"><multiply><value>shards.1.1.velocity.x</value><value>1.25</value></multiply></set>
+          <set variable="pace.next"><divide><value>pace.next</value><value>2</value></divide></set>
+        </condition>
+        <condition object="lens" variable="score">
+          <above>best.score</above>
+          <copy variable="lens.score" into="best.score" />
+        </condition>
+      </conditions>
+      <timers>
+        <timer>
+          <every><random><min>15</min><max>25</max></random></every>
+          <reveal object="comet" />
+          <play sound="comet" />
+        </timer>
+      </timers>
+    </state>
+    <state name="paused">
+      <objects>
+        <object name="paused">
+          <sprite><text style="banner"><content>paused</content><color>white</color></text></sprite>
+          <position><x><centered /></x><y><centered /></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs>
+        <input><button>pause</button><button>pad1.start</button><pop /></input>
+      </inputs>
+    </state>
+    <!-- the lens cracked: everything holds still for a second, then the sparks are gone -->
+    <state name="cracked">
+      <objects>
+        <!-- the lens breaking where it was hit, out of play under it -->
+        <object name="shatter">
+          <sprite name="a">
+            <svg>
+              <path>assets/prismsheet.svg</path>
+              <x>2</x><y>34</y><width>28</width><height>28</height>
+              <scale>zoom</scale>
+              <hide>backdrop</hide>
+            </svg>
+          </sprite>
+          <sprite name="b">
+            <svg>
+              <path>assets/prismsheet.svg</path>
+              <x>34</x><y>34</y><width>28</width><height>28</height>
+              <scale>zoom</scale>
+              <hide>backdrop</hide>
+            </svg>
+          </sprite>
+          <sprite name="c">
+            <svg>
+              <path>assets/prismsheet.svg</path>
+              <x>66</x><y>34</y><width>28</width><height>28</height>
+              <scale>zoom</scale>
+              <hide>backdrop</hide>
+            </svg>
+          </sprite>
+          <sprite name="d">
+            <svg>
+              <path>assets/prismsheet.svg</path>
+              <x>98</x><y>34</y><width>28</width><height>28</height>
+              <scale>zoom</scale>
+              <hide>backdrop</hide>
+            </svg>
+          </sprite>
+          <animation>
+            <seconds>0.1</seconds>
+            <once />
+            <frame sprite="a" />
+            <frame sprite="b" />
+            <frame sprite="c" />
+            <frame sprite="b" />
+            <frame sprite="c" />
+            <frame sprite="d"><seconds>0.4</seconds></frame>
+          </animation>
+          <position><x update="live">lens.x</x><y update="live">lens.y</y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+      </shows>
+      <inputs />
+      <timers>
+        <timer>
+          <after>1</after>
+          <despawn object="spark" />
+          <reveal object="lens" />
+          <reset object="shatter" />
+          <pop />
+        </timer>
+      </timers>
+    </state>
+    <state name="over">
+      <objects>
+        <object name="message">
+          <sprite name="lost"><text style="banner"><content>SHATTERED</content><color>red</color></text></sprite>
+          <sprite name="won"><text style="banner"><content>ALL CLEAR</content></text></sprite>
+          <position><x><centered /></x><y><subtract><value><window><y><center /></y></window></value><value>150</value></subtract></y></position>
+        </object>
+      </objects>
+      <shows>
+        <show state="playing" />
+        <show object="continue" />
+      </shows>
+      <inputs>
+        <input button="space"><reset /></input>
+      </inputs>
+    </state>
+  </states>
+  <sounds>
+    <sound name="beam" wave="sine"><volume>0.2</volume><note pitch="E6" to="B6">0.07</note></sound>
+    <sound name="shatter" wave="noise"><volume>0.3</volume><note pitch="9000" to="3000">0.12</note></sound>
+    <sound name="crack" wave="noise"><volume>0.45</volume><note pitch="4000" to="200">0.6</note></sound>
+    <!-- the comet's whoosh as it comes on -->
+    <sound name="comet" wave="sine">
+      <volume>0.15</volume>
+      <note pitch="A6" to="A5">0.3</note>
+      <note pitch="A5" to="E5">0.3</note>
+    </sound>
+    <!-- the march, looping on its own while the game is played -->
+    <sound name="march" wave="sine">
+      <loop />
+      <volume>0.3</volume>
+      <note pitch="A3">0.08</note>
+      <rest>0.42</rest>
+      <note pitch="E3">0.08</note>
+      <rest>0.42</rest>
+    </sound>
+  </sounds>
+  <pictures>
+    <bitmap name="pylons">
+      <row>..**************..</row>
+      <row>.****************.</row>
+      <row>******************</row>
+      <row>******************</row>
+      <row>*****........*****</row>
+      <row>*****........*****</row>
+      <row>*****........*****</row>
+      <row>*****........*****</row>
+      <row>*****........*****</row>
+      <row>*****........*****</row>
+      <row>******......******</row>
+      <row>*******....*******</row>
+      <scale>4</scale>
+      <color>purple</color>
+    </bitmap>
+  </pictures>
+</game>

@@ -4,14 +4,14 @@
 // date: Sept 30, 2026
 //
 // Catch2 tests for a <condition remaining="..."> (fires when no more than that
-// many matching objects are still in play), using Space Invaders' win: the
-// last alien dying sends the game to its gameover state, and reset() from
+// many matching objects are still in play), using the fleet fixture's win: the
+// last cell dying sends the game to its gameover state, and reset() from
 // there brings everything back.
 
 #include "play/executor.h"
 #include "game/game.h"
 #include "copies.h"
-#include "invaders_fixture.h"
+#include "fleet_fixture.h"
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -25,45 +25,45 @@ namespace
 		object.collisionsOn = false;
 	}
 
-	int aliensLeft(Game& game)
+	int cellsLeft(Game& game)
 	{
 		int left = 0;
 		for (const auto& object : game.getCurrentObjects())
 		{
-			if (object.groupName == "aliens" && object.isVisible) { ++left; }
+			if (object.groupName == "fleet" && object.isVisible) { ++left; }
 		}
 		return left;
 	}
 }
 
-TEST_CASE("the game is not over while any alien is left", "[win_condition]")
+TEST_CASE("the game is not over while any cell of the fleet is left", "[win_condition]")
 {
-	Game game{ invaders_fixture::path() };
+	Game game{ fleet_fixture::path() };
 	game.setCurrentState("playing");
 
 	int killed = 0;
 	for (auto& object : game.getCurrentObjects())
 	{
-		if (object.groupName == "aliens" && killed < 54)
+		if (object.groupName == "fleet" && killed < 54)
 		{
 			kill(object);
 			++killed;
 		}
 	}
 
-	REQUIRE(aliensLeft(game) == 1);
+	REQUIRE(cellsLeft(game) == 1);
 	game.updateObjects(xge::kSixtieth);
 	CHECK(game.getCurrentState().name == "playing");
 }
 
-TEST_CASE("killing the last alien ends the game", "[win_condition]")
+TEST_CASE("killing the last cell of the fleet ends the game", "[win_condition]")
 {
-	Game game{ invaders_fixture::path() };
+	Game game{ fleet_fixture::path() };
 	game.setCurrentState("playing");
 
 	for (auto& object : game.getCurrentObjects())
 	{
-		if (object.groupName == "aliens") { kill(object); }
+		if (object.groupName == "fleet") { kill(object); }
 	}
 
 	game.updateObjects(xge::kSixtieth);
@@ -72,21 +72,21 @@ TEST_CASE("killing the last alien ends the game", "[win_condition]")
 	CHECK(game.isShown(game.object("continue")));
 }
 
-TEST_CASE("the last alien dying to a bullet ends the game", "[win_condition]")
+TEST_CASE("the last cell dying to a bullet ends the game", "[win_condition]")
 {
-	Game game{ invaders_fixture::path() };
+	Game game{ fleet_fixture::path() };
 	game.setCurrentState("playing");
 
 	// Window::init() normally measures these.
 	for (auto& object : game.getCurrentObjects())
 	{
-		if (object.groupName == "aliens") { object.size = { 50.0f, 50.0f }; }
+		if (object.groupName == "fleet") { object.size = { 50.0f, 50.0f }; }
 	}
 
-	Object& last = game.object("aliens.6.3");
+	Object& last = game.object("fleet.6.3");
 	for (auto& object : game.getCurrentObjects())
 	{
-		if (object.groupName == "aliens" && &object != &last) { kill(object); }
+		if (object.groupName == "fleet" && &object != &last) { kill(object); }
 	}
 
 	Object& bullet = copies::spawned(game, "bullet");
@@ -101,12 +101,12 @@ TEST_CASE("the last alien dying to a bullet ends the game", "[win_condition]")
 
 TEST_CASE("reset() from the win screen starts a fresh game", "[win_condition]")
 {
-	Game game{ invaders_fixture::path() };
+	Game game{ fleet_fixture::path() };
 	game.setCurrentState("playing");
 
 	for (auto& object : game.getCurrentObjects())
 	{
-		if (object.groupName == "aliens") { kill(object); }
+		if (object.groupName == "fleet") { kill(object); }
 	}
 	game.updateObjects(xge::kSixtieth);
 	REQUIRE(game.getCurrentState().name == "gameover");
@@ -115,7 +115,7 @@ TEST_CASE("reset() from the win screen starts a fresh game", "[win_condition]")
 	executor.executeInput(Command{ CmdReset{} }, true);
 
 	CHECK(game.getCurrentState().name == "title");
-	CHECK(aliensLeft(game) == 55);
+	CHECK(cellsLeft(game) == 55);
 
 	// ...and playing again does not end at once.
 	game.setCurrentState("playing");

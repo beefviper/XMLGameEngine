@@ -194,11 +194,11 @@ TEST_CASE("a generated program carries the engine's files unchanged, its reader 
 TEST_CASE("a generated program copies the font and pictures its game uses", "[generate]")
 {
 	TempFolder folder("xge_test_generate_assets");
-	const GeneratedProgram program = generateGame(requestFor(fs::current_path() / "descriptions/spaceinvaders2.xml", folder.path / "out"));
+	const GeneratedProgram program = generateGame(requestFor(fs::current_path() / "descriptions/prismfall2.xml", folder.path / "out"));
 	const std::set<fs::path> assets(program.assets.begin(), program.assets.end());
 	CHECK(assets.count("assets/tuffy.ttf") == 1);
-	CHECK(assets.count("assets/Space Invaders Color Sprites.svg") == 1);
-	CHECK(fs::exists(folder.path / "out/assets/Space Invaders Color Sprites.svg"));
+	CHECK(assets.count("assets/prismsheet.svg") == 1);
+	CHECK(fs::exists(folder.path / "out/assets/prismsheet.svg"));
 }
 
 TEST_CASE("web-asm writes the game as engine-cpp does, played on the page's canvas and Web Audio, built by Emscripten into one page", "[generate]")
@@ -254,9 +254,9 @@ TEST_CASE("web-asm writes the game as engine-cpp does, played on the page's canv
 TEST_CASE("the game file is written as a tree, an entry for each element", "[generate]")
 {
 	TempFolder folder("xge_test_generate_tree");
-	const fs::path file = fs::current_path() / "descriptions/spaceinvaders.xml";
+	const fs::path file = fs::current_path() / "descriptions/prismfall.xml";
 	generateGame(requestFor(file, folder.path / "out"));
-	const std::string data = readFile(folder.path / "out/source/spaceinvaders.cpp");
+	const std::string data = readFile(folder.path / "out/source/prismfall.cpp");
 
 	// An entry is { "name", attributes or nullptr, count, ... }; an attribute
 	// is { "name", "value" }, so the second field tells them apart.
@@ -302,7 +302,7 @@ TEST_CASE("a game the engine will not load is not generated, and the folder made
 TEST_CASE("the function a game is written as is named for its file", "[generate]")
 {
 	CHECK(gameFunctionName("descriptions/pong_min.xml") == "pongMinGame");
-	CHECK(gameFunctionName("descriptions/spaceinvaders2.xml") == "spaceinvaders2Game");
+	CHECK(gameFunctionName("descriptions/prismfall2.xml") == "prismfall2Game");
 	CHECK(gameFunctionName("3d-tennis.xml") == "n3dTennisGame");
 }
 
@@ -381,17 +381,17 @@ TEST_CASE("windows-cpp lists every part of a game it has no words for yet, then 
 	TempFolder folder("xge_test_generate_windows_cpp_stops");
 	try
 	{
-		generateGame(requestFor(fs::current_path() / "descriptions/spaceinvaders.xml", folder.path / "out", "windows-cpp"));
-		FAIL("spaceinvaders.xml was written");
+		generateGame(requestFor(fs::current_path() / "descriptions/prismfall.xml", folder.path / "out", "windows-cpp"));
+		FAIL("prismfall.xml was written");
 	}
 	catch (const GenerateError& error)
 	{
 		const std::string what = error.what();
 		INFO(what);
-		CHECK(what.find("windows-cpp cannot write these parts of spaceinvaders.xml yet; use engine-cpp for this game:\n") != std::string::npos);
+		CHECK(what.find("windows-cpp cannot write these parts of prismfall.xml yet; use engine-cpp for this game:\n") != std::string::npos);
 		// the whole list, a line each and each once, with the object it is in
-		CHECK(what.find("\n  <lockstep> in <collisions> (group 'aliens')") != std::string::npos);
-		CHECK(what.find("\n  <fire> in <action> (object 'player')") != std::string::npos);
+		CHECK(what.find("\n  <lockstep> in <collisions> (group 'shards')") != std::string::npos);
+		CHECK(what.find("\n  <fire> in <action> (object 'lens')") != std::string::npos);
 		CHECK(count(what, "\n  <copy> in <condition>") == 1);
 		// a long list comes through whole (libxslt hands it over in one piece)
 		CHECK(what.find("\n  <timers> in a <state> that is not played") != std::string::npos);
@@ -515,16 +515,16 @@ TEST_CASE("web-js lists every part of a game it has no words for yet, then stops
 	TempFolder folder("xge_test_generate_web_js_stops");
 	try
 	{
-		generateGame(requestFor(fs::current_path() / "descriptions/spaceinvaders.xml", folder.path / "out", "web-js"));
-		FAIL("spaceinvaders.xml was written");
+		generateGame(requestFor(fs::current_path() / "descriptions/prismfall.xml", folder.path / "out", "web-js"));
+		FAIL("prismfall.xml was written");
 	}
 	catch (const GenerateError& error)
 	{
 		const std::string what = error.what();
 		INFO(what);
-		CHECK(what.find("web-js cannot write these parts of spaceinvaders.xml yet; use web-asm for this game:\n") != std::string::npos);
-		CHECK(what.find("\n  <lockstep> in <collisions> (group 'aliens')") != std::string::npos);
-		CHECK(what.find("\n  <fire> in <action> (object 'player')") != std::string::npos);
+		CHECK(what.find("web-js cannot write these parts of prismfall.xml yet; use web-asm for this game:\n") != std::string::npos);
+		CHECK(what.find("\n  <lockstep> in <collisions> (group 'shards')") != std::string::npos);
+		CHECK(what.find("\n  <fire> in <action> (object 'lens')") != std::string::npos);
 	}
 	CHECK_FALSE(fs::exists(folder.path / "out"));
 }

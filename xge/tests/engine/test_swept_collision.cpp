@@ -11,7 +11,7 @@
 #include "play/executor.h"
 #include "game/game.h"
 #include "copies.h"
-#include "invaders_fixture.h"
+#include "fleet_fixture.h"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
@@ -25,11 +25,11 @@ using Catch::Matchers::WithinAbs;
 namespace
 {
 	// Window::init() normally measures these; a Game built on its own has {0, 0}.
-	void measureInvaders(Game& game)
+	void measureFleet(Game& game)
 	{
 		for (auto& object : game.getCurrentObjects())
 		{
-			if (object.groupName == "aliens" || object.name == "player") { object.size = { 50.0f, 50.0f }; }
+			if (object.groupName == "fleet" || object.name == "player") { object.size = { 50.0f, 50.0f }; }
 		}
 	}
 
@@ -44,13 +44,13 @@ namespace
 
 TEST_CASE("every cell of a group has its own name", "[swept_collision]")
 {
-	Game game{ invaders_fixture::path() };
+	Game game{ fleet_fixture::path() };
 
 	std::set<std::string> names;
 	int cells = 0;
 	for (const auto& object : game.getCurrentObjects())
 	{
-		if (object.groupName == "aliens")
+		if (object.groupName == "fleet")
 		{
 			names.insert(object.name);
 			++cells;
@@ -59,14 +59,14 @@ TEST_CASE("every cell of a group has its own name", "[swept_collision]")
 
 	CHECK(cells == 55);
 	CHECK(names.size() == 55);
-	CHECK(names.count("aliens.1.1") == 1);
-	CHECK(names.count("aliens.11.5") == 1);
-	CHECK(names.count("aliens") == 0);
+	CHECK(names.count("fleet.1.1") == 1);
+	CHECK(names.count("fleet.11.5") == 1);
+	CHECK(names.count("fleet") == 0);
 
 	// Columns and rows count from 1, and follow where the cell is.
-	const Object& first = game.object("aliens.1.1");
-	const Object& lastColumn = game.object("aliens.11.1");
-	const Object& lastRow = game.object("aliens.1.5");
+	const Object& first = game.object("fleet.1.1");
+	const Object& lastColumn = game.object("fleet.11.1");
+	const Object& lastRow = game.object("fleet.1.5");
 	CHECK(lastColumn.position.x > first.position.x);
 	CHECK(lastColumn.position.y == first.position.y);
 	CHECK(lastRow.position.y > first.position.y);
@@ -75,35 +75,35 @@ TEST_CASE("every cell of a group has its own name", "[swept_collision]")
 
 TEST_CASE("a plain object keeps its name, and the group's name finds its first cell", "[swept_collision]")
 {
-	Game game{ invaders_fixture::path() };
+	Game game{ fleet_fixture::path() };
 
 	CHECK(game.object("player").name == "player");
-	CHECK(game.object("aliens").name == "aliens.1.1"); // the first cell
+	CHECK(game.object("fleet").name == "fleet.1.1"); // the first cell
 	CHECK(game.find("nothing.1.1") == nullptr);
 }
 
 TEST_CASE("a state that shows a group shows every cell of it", "[swept_collision]")
 {
-	Game game{ invaders_fixture::path() };
+	Game game{ fleet_fixture::path() };
 	game.setCurrentState("playing");
 
-	CHECK(game.isShown(game.object("aliens.6.3")));
+	CHECK(game.isShown(game.object("fleet.6.3")));
 
 	game.setCurrentState("paused");
-	CHECK_FALSE(game.isShown(game.object("aliens.6.3")));
+	CHECK_FALSE(game.isShown(game.object("fleet.6.3")));
 }
 
-TEST_CASE("a bullet moving faster than an alien is tall still hits it, and only that alien dies", "[swept_collision]")
+TEST_CASE("a bullet moving faster than an cell is tall still hits it, and only that cell dies", "[swept_collision]")
 {
-	Game game{ invaders_fixture::path() };
+	Game game{ fleet_fixture::path() };
 	game.setCurrentState("playing");
-	measureInvaders(game);
+	measureFleet(game);
 
-	Object& target = game.object("aliens.4.5"); // bottom row: nothing below it to run into first
+	Object& target = game.object("fleet.4.5"); // bottom row: nothing below it to run into first
 	Object& bullet = ::bullet(game);
 
 	// Just below the bottom row, in line with the fourth column, moving 90 px
-	// a frame - the bullet ends the frame 20 px above the alien, having crossed all of it.
+	// a frame - the bullet ends the frame 20 px above the cell, having crossed all of it.
 	bullet.position = { target.position.x + 21.0f, target.position.y + 70.0f };
 	bullet.velocity = { 0.0f, -5400.0f };
 	game.updateObjects(xge::kSixtieth);
@@ -117,19 +117,19 @@ TEST_CASE("a bullet moving faster than an alien is tall still hits it, and only 
 	int alive = 0;
 	for (const auto& object : game.getCurrentObjects())
 	{
-		if (object.groupName == "aliens" && object.collisionsOn) { ++alive; }
+		if (object.groupName == "fleet" && object.collisionsOn) { ++alive; }
 	}
 	CHECK(alive == 54);
 }
 
 TEST_CASE("the bullet also hits a cell in the middle of the block, not just the front row", "[swept_collision]")
 {
-	Game game{ invaders_fixture::path() };
+	Game game{ fleet_fixture::path() };
 	game.setCurrentState("playing");
-	measureInvaders(game);
+	measureFleet(game);
 
-	Object& front = game.object("aliens.6.5");
-	Object& behind = game.object("aliens.6.4");
+	Object& front = game.object("fleet.6.5");
+	Object& behind = game.object("fleet.6.4");
 	Object& bullet = ::bullet(game);
 
 	bullet.position = { front.position.x + 21.0f, front.position.y + 300.0f };
@@ -189,9 +189,9 @@ TEST_CASE("a ball fast enough to pass the paddle in one step bounces off it inst
 
 TEST_CASE("a bullet is a piece: fired, a copy leaves the ship at its own velocity, and once it is gone another can be fired", "[swept_collision]")
 {
-	Game game{ invaders_fixture::path() };
+	Game game{ fleet_fixture::path() };
 	game.setCurrentState("playing");
-	measureInvaders(game);
+	measureFleet(game);
 
 	Object& player = game.object("player");
 	CommandExecutor executor(game);
@@ -226,24 +226,24 @@ TEST_CASE("a bullet is a piece: fired, a copy leaves the ship at its own velocit
 	CHECK(game.object("bullet.1").position.y == player.position.y);
 }
 
-TEST_CASE("a full reset takes away a bullet in flight and brings back a dead alien", "[swept_collision]")
+TEST_CASE("a full reset takes away a bullet in flight and brings back a dead cell", "[swept_collision]")
 {
-	Game game{ invaders_fixture::path() };
+	Game game{ fleet_fixture::path() };
 	game.setCurrentState("playing");
 
-	Object& alien = game.object("aliens.2.2");
+	Object& cell = game.object("fleet.2.2");
 	CommandExecutor executor(game);
 
 	executor.executeInput(Command{ CmdTriggerAction{ "player", "gun" } }, true);
 	game.settleSpawns();
 	REQUIRE(copies::count(game, "bullet") == 1);
-	alien.isVisible = false;
-	alien.collisionsOn = false;
+	cell.isVisible = false;
+	cell.collisionsOn = false;
 
 	game.resetAll();
 	game.settleSpawns();
 
 	CHECK(copies::count(game, "bullet") == 0);
-	CHECK(alien.isVisible);
-	CHECK(alien.collisionsOn);
+	CHECK(cell.isVisible);
+	CHECK(cell.collisionsOn);
 }

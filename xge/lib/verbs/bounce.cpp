@@ -52,7 +52,7 @@ namespace xge
 	}
 
 	// Off the window's edge, which faces straight in. An object in lockstep
-	// (the invader block) turns as a whole block at a side edge instead.
+	// (a marching fleet) turns as a whole block at a side edge instead.
 	static void bounceOffEdge(Game& game, Object& object, Edge edge, float share)
 	{
 		if (object.kind->collisionData.lockstep && (edge == Edge::Left || edge == Edge::Right))

@@ -20,7 +20,7 @@
 - Keep a **verb language** (pick known behaviors, give them parameters), not an **expression language** (compute anything). Plain arithmetic for positions across window sizes is accepted; function-call strings are not.
 - Recognition over completeness: shared words (bounce, die) let a reader with no programming background follow a game. Tags read as nouns, attributes as descriptions, nesting as containment.
 - Finiteness comes from a few mechanism families with parameters, not one verb per game. Difficulty grows with the number of contexts a mechanic appears in (elastic or not, solid or trigger), not the number of mechanics.
-- The lineage argument: every game is a variation of Pong (Breakout = turn it 90 degrees, a grid of blocks that die; Space Invaders = blocks that step sideways and a ball that fires; Galaxian = invaders that fly in patterns). Small tweaks, repeated, rebuild the 1970s vocabulary. A written Pong-to-Galaxian chain of "which verb each step adds" is an unwritten idea.
+- The lineage argument: every game is a variation of Pong (Breakout = turn it 90 degrees, a grid of blocks that die; a fleet shooter = blocks that step sideways and a ball that fires; Galaxian = a fleet that flies in patterns). Small tweaks, repeated, rebuild the 1970s vocabulary. A written Pong-to-Galaxian chain of "which verb each step adds" is an unwritten idea.
 - Origin: Pong in plain C++, pieces moved into XML one at a time. The current code is a ground-up rewrite that keeps the XML design; the prototype's collision code (detection and response tangled, hand-parsed action strings) is what [collisions](20-collisions.md) replaced.
 
 

@@ -12,7 +12,7 @@
 
 | Words | Forced by |
 |---|---|
-| `bounce`, `stick`, `die`, `reset`, `inc` | Pong, Breakout, Invaders |
+| `bounce`, `stick`, `die`, `reset`, `inc` | Pong, Breakout, Prism Fall |
 | `dec`, `atmost`, `hop`, `wrap`, `ride`, `unless` | Frogger |
 | `<line>`, `pixel`, `<acceleration>`, `<accelerate burn>`, `<stop />`, a condition on `speed` | Lunar Lander |
 | `<heading>`, `<turn>`, `<thrust>`, `<drag>`, `<spawn>` with a `<count>`, amounts on `inc`/`dec` | Asteroids |

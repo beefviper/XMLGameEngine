@@ -87,8 +87,8 @@ namespace xge
 
 		// Whether a and b can touch at all, whatever their rules: both have
 		// their collisions on, neither is in the middle of a timed hop (it is over
-		// everything), and they are not one lockstep block (the invaders
-		// never collide with each other). Whether a rule answers is the
+		// everything), and they are not one lockstep block (a marching
+		// fleet never collides with itself). Whether a rule answers is the
 		// game's (FrameRules::canCollide), asked once (FrameRules::partners).
 		bool canTouch(const Object& a, const Object& b) noexcept
 		{

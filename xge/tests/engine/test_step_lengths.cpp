@@ -127,19 +127,19 @@ TEST_CASE("a <go> of 8 cells a second has gone 16 cells after 2 seconds, however
 	CHECK(column.front().value == 17.0);
 }
 
-TEST_CASE("Space Invaders' stepped block is in the same place after 5 seconds, however the time is cut into steps", "[steps][stepped][spaceinvaders]")
+TEST_CASE("Prism Fall's stepped lattice is in the same place after 5 seconds, however the time is cut into steps", "[steps][stepped][prismfall]")
 {
-	const auto invade = [](Played& play)
+	const auto start = [](Played& play)
 	{
 		play.game.pushState("playing");
-		play.get("player").collisionsOn = false;
+		play.get("lens").collisionsOn = false;
 	};
-	const auto across = atEveryStepLength("descriptions/spaceinvaders.xml", 5.0,
-		[](Played& play) { return static_cast<double>(play.get("aliens.1.1").position.x); }, invade);
-	// Within one of its own steps: 15 pixels a note.
-	agree(across, 15.0);
-	const auto down = atEveryStepLength("descriptions/spaceinvaders.xml", 5.0,
-		[](Played& play) { return static_cast<double>(play.get("aliens.1.1").position.y); }, invade);
+	const auto across = atEveryStepLength("descriptions/prismfall.xml", 5.0,
+		[](Played& play) { return static_cast<double>(play.get("shards.1.1").position.x); }, start);
+	// Within one of its own steps: 36 a second for a 0.6 second beat.
+	agree(across, 22.0);
+	const auto down = atEveryStepLength("descriptions/prismfall.xml", 5.0,
+		[](Played& play) { return static_cast<double>(play.get("shards.1.1").position.y); }, start);
 	agree(down, 0.0);
 }
 

@@ -5,7 +5,7 @@
 //
 // Catch2 tests for Engine's key handling (Engine::handleKeyPressed and
 // handleKeyReleased) against real xge::Games built from games/descriptions/breakout.xml
-// and games/descriptions/spaceinvaders.xml, driven through a fake Window so no real
+// and games/descriptions/prismfall.xml, driven through a fake Window so no real
 // window is opened.
 //
 // The current state decides what a held key means. Breakout's "paused"
@@ -160,40 +160,40 @@ TEST_CASE("an ordinary press and release in one state is unchanged", "[engine_in
 	CHECK(player.velocity.x == 0.0f);
 }
 
-TEST_CASE("a held fire key does not shoot again when its state returns", "[engine_input]")
+TEST_CASE("a held shine key does not shine again when its state returns", "[engine_input]")
 {
-	Game game{ "descriptions/spaceinvaders.xml" };
+	Game game{ "descriptions/prismfall.xml" };
 	Engine engine(game, std::make_unique<NullWindow>());
 	tap(engine, KeyCode::Num1); // title -> playing
 
-	engine.handleKeyPressed(KeyCode::Space); // fire
+	engine.handleKeyPressed(KeyCode::Space); // shine
 	game.settleSpawns();
-	REQUIRE(copies::count(game, "bullet") == 1);
+	REQUIRE(copies::count(game, "beam") == 1);
 
-	// Used up: the shot is gone and the key is still down.
-	game.resetObject("bullet");
+	// Used up: the beam is gone and the key is still down.
+	game.resetObject("beam");
 	game.settleSpawns();
 	tap(engine, KeyCode::Pause); // pause
 	tap(engine, KeyCode::Pause); // unpause
 	game.settleSpawns();
 
-	CHECK(copies::count(game, "bullet") == 0);
+	CHECK(copies::count(game, "beam") == 0);
 }
 
-TEST_CASE("the key that starts Space Invaders does not also fire a shot", "[engine_input]")
+TEST_CASE("the key that starts Prism Fall does not also shine a beam", "[engine_input]")
 {
-	Game game{ "descriptions/spaceinvaders.xml" };
+	Game game{ "descriptions/prismfall.xml" };
 	Engine engine(game, std::make_unique<NullWindow>());
-	// Space starts the game from the menu and fires in play. Held down through
+	// 1 starts the game from the menu. Held down through
 	// the change, it must only start the game.
 	engine.handleKeyPressed(KeyCode::Num1);
 	CHECK(game.getCurrentState().name == "playing");
 	game.settleSpawns();
-	CHECK(copies::count(game, "bullet") == 0);
+	CHECK(copies::count(game, "beam") == 0);
 
 	engine.handleKeyReleased(KeyCode::Num1);
 	game.settleSpawns();
-	CHECK(copies::count(game, "bullet") == 0);
+	CHECK(copies::count(game, "beam") == 0);
 }
 
 TEST_CASE("a key pressed while pumped is dropped, and one let go is let go", "[engine_input]")

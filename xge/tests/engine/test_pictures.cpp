@@ -77,7 +77,7 @@ namespace
 
 	// An L, so every flip and turn of it is different.
 	const std::string kRows = "<row>*..</row><row>*..</row><row>***</row>";
-	const std::string kSvg = "<path>assets/Space Invaders Color Sprites.svg</path><x>11</x><y>37</y><width>10</width><height>23</height><hide>backdrop</hide>";
+	const std::string kSvg = "<path>assets/prismsheet.svg</path><x>74</x><y>4</y><width>12</width><height>24</height><hide>backdrop</hide>";
 
 	bool samePixels(const Bitmap& a, const Bitmap& b)
 	{
@@ -171,13 +171,13 @@ TEST_CASE("a flip that is not horizontal or vertical is turned away, saying wher
 		ContainsSubstring("svg/flip: \"diagonal\" is not a valid flipType"));
 }
 
-TEST_CASE("Space Invaders 2's alien bolts are the sheet's bolt turned upside down, to fly down", "[pictures][flip][spaceinvaders2]")
+TEST_CASE("Prism Fall 2's sparks are the sheet's spark turned upside down, to fall", "[pictures][flip][prismfall2]")
 {
-	Game game{ "descriptions/spaceinvaders2.xml" };
-	Pictures sheet({ "<svg><path>assets/Space Invaders Color Sprites.svg</path><x>11</x><y>37</y><width>10</width><height>23</height><scale>1.5</scale><hide>backdrop</hide></svg>" });
+	Game game{ "descriptions/prismfall2.xml" };
+	Pictures sheet({ "<svg><path>assets/prismsheet.svg</path><x>74</x><y>4</y><width>12</width><height>24</height><scale>1.5</scale><hide>backdrop</hide></svg>" });
 
-	const Object& bolt = game.object("bomb");
-	CHECK(samePixels(*bolt.drawn.bitmap, flipBitmap(*sheet.object(1).drawn.bitmap, false, true)));
+	const Object& spark = game.object("spark");
+	CHECK(samePixels(*spark.drawn.bitmap, flipBitmap(*sheet.object(1).drawn.bitmap, false, true)));
 }
 
 TEST_CASE("an image file is read by the engine", "[pictures]")

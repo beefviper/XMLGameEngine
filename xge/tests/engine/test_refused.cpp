@@ -22,9 +22,9 @@
 using namespace xge;
 using played::Played;
 
-TEST_CASE("spaceinvaders.xml: a press of fire while the bullet is in flight makes no sound", "[refused]")
+TEST_CASE("prismfall.xml: a press of shine while the beam is in flight makes no sound", "[refused]")
 {
-	Played play("descriptions/spaceinvaders.xml");
+	Played play("descriptions/prismfall.xml");
 	play.tap(KeyCode::Num1);
 	REQUIRE(play.state() == "playing");
 	play.frames(1);
@@ -32,8 +32,8 @@ TEST_CASE("spaceinvaders.xml: a press of fire while the bullet is in flight make
 
 	play.tap(KeyCode::Space);
 	play.game.settleSpawns();
-	CHECK(copies::count(play.game, "bullet") == 1);
-	CHECK(play.game.sounds().takeRequests() == std::vector<std::string>{ "shoot" });
+	CHECK(copies::count(play.game, "beam") == 1);
+	CHECK(play.game.sounds().takeRequests() == std::vector<std::string>{ "beam" });
 
 	play.frames(2);
 	(void)play.game.sounds().takeRequests();

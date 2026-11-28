@@ -7,7 +7,7 @@
 // its own (rasterizeSvg: the part of the drawing taken, the scale, the
 // elements left out, antialiased transparency, the mistakes), an <svg> sprite
 // in a game (its size, a group's cells of it, animations of it, mistakes reported where
-// they are), and then Space Invaders 2, which is drawn from a sheet of SVG
+// they are), and then Prism Fall 2, which is drawn from a sheet of SVG
 // sprites, with both schema checkers on it.
 //
 // Small games and SVG files are written to scratch files and loaded by a real
@@ -24,6 +24,7 @@
 #include "xml/document.h"
 #include "load/xsd.h"
 
+#include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>
 
@@ -485,26 +486,26 @@ TEST_CASE("mistakes in an svg sprite are reported where they are", "[svg][xml]")
 	}
 }
 
-// ------------------------------------------------------- Space Invaders 2
+// ----------------------------------------------------------- Prism Fall 2
 
 namespace
 {
-	std::vector<const Object*> aliensOf(Game& game)
+	std::vector<const Object*> shardsOf(Game& game)
 	{
-		std::vector<const Object*> aliens;
+		std::vector<const Object*> shards;
 		for (const Object& object : game.getCurrentObjects())
 		{
-			if (object.objClass == "aliens") { aliens.push_back(&object); }
+			if (object.objClass == "shards") { shards.push_back(&object); }
 		}
-		return aliens;
+		return shards;
 	}
 
-	struct Invasion
+	struct Sky
 	{
-		Game game{ "descriptions/spaceinvaders2.xml" };
+		Game game{ "descriptions/prismfall2.xml" };
 		CommandExecutor executor{ game };
 
-		Invasion()
+		Sky()
 		{
 			measure(game);
 			game.setCurrentState("playing");
@@ -512,48 +513,42 @@ namespace
 	};
 }
 
-TEST_CASE("Space Invaders 2 draws the ship, the bolt and three kinds of alien from the sprite sheet", "[spaceinvaders2][svg]")
+TEST_CASE("Prism Fall 2 draws the lens, the beam and three kinds of shard from the sprite sheet", "[prismfall2][svg]")
 {
-	Invasion invasion;
-	Game& game = invasion.game;
+	Sky sky;
+	Game& game = sky.game;
 
-	CHECK(aliensOf(game).size() == 55);
+	CHECK(shardsOf(game).size() == 36);
 
-	// Each kind is cut to the same width, so the columns line up, and has
+	// Each kind is cut to the same size, so the columns line up, and has
 	// three frames of one size.
-	struct Kind
+	for (const char* name : { "shards.1.1", "shards.1.2", "shards.1.4" })
 	{
-		const char* name;
-		int width;
-		int height;
-	};
-	for (const Kind& kind : { Kind{ "aliens.1.1", 56, 50 }, Kind{ "aliens.1.2", 56, 46 }, Kind{ "aliens.1.4", 56, 49 } })
-	{
-		INFO(kind.name);
-		const Object& alien = game.object(kind.name);
-		REQUIRE(alien.drawn.bitmap);
-		REQUIRE(alien.animation.frames.shows().bitmaps.size() == 3);
-		CHECK(alien.animation.frames.shows().seconds == 0.5f);
+		INFO(name);
+		const Object& shard = game.object(name);
+		REQUIRE(shard.drawn.bitmap);
+		REQUIRE(shard.animation.frames.shows().bitmaps.size() == 3);
+		CHECK(shard.animation.frames.shows().seconds == 0.5f);
 
-		for (const auto& picture : alien.animation.frames.shows().bitmaps)
+		for (const auto& picture : shard.animation.frames.shows().bitmaps)
 		{
-			CHECK(picture->width == kind.width);
-			CHECK(picture->height == kind.height);
+			CHECK(picture->width == 49);
+			CHECK(picture->height == 49);
 		}
 
 		// The pictures differ, so there is something to see; and each is
 		// drawn, not blank.
-		CHECK(alien.animation.frames.shows().bitmaps[0]->rgba != alien.animation.frames.shows().bitmaps[1]->rgba);
-		CHECK(alien.animation.frames.shows().bitmaps[1]->rgba != alien.animation.frames.shows().bitmaps[2]->rgba);
-		for (const auto& picture : alien.animation.frames.shows().bitmaps)
+		CHECK(shard.animation.frames.shows().bitmaps[0]->rgba != shard.animation.frames.shows().bitmaps[1]->rgba);
+		CHECK(shard.animation.frames.shows().bitmaps[1]->rgba != shard.animation.frames.shows().bitmaps[2]->rgba);
+		for (const auto& picture : shard.animation.frames.shows().bitmaps)
 		{
 			int drawn = 0;
 			for (std::size_t at = 3; at < picture->rgba.size(); at += 4) { drawn += picture->rgba[at] != 0 ? 1 : 0; }
-			CHECK(drawn > picture->width * picture->height / 4);
+			CHECK(drawn > picture->width * picture->height / 10);
 		}
 	}
 
-	// A kind keeps its own colour: pink squids, orange crabs, green octopuses.
+	// A kind keeps its own colour: magenta diamonds, yellow rings, orange crosses.
 	const auto dominant = [&](const char* name)
 	{
 		const Bitmap& picture = *game.object(name).drawn.bitmap;
@@ -569,59 +564,58 @@ TEST_CASE("Space Invaders 2 draws the ship, the bolt and three kinds of alien fr
 		}
 		return std::make_tuple(red, green, blue);
 	};
-	const auto [squidRed, squidGreen, squidBlue] = dominant("aliens.1.1");
-	const auto [crabRed, crabGreen, crabBlue] = dominant("aliens.1.2");
-	const auto [octopusRed, octopusGreen, octopusBlue] = dominant("aliens.1.4");
-	CHECK(squidRed > squidGreen);
-	CHECK(crabRed > crabBlue);
-	CHECK(octopusGreen > octopusRed);
-	CHECK(octopusGreen > octopusBlue);
-	(void)squidBlue;
-	(void)crabGreen;
+	const auto [diamondRed, diamondGreen, diamondBlue] = dominant("shards.1.1");
+	const auto [ringRed, ringGreen, ringBlue] = dominant("shards.1.2");
+	const auto [crossRed, crossGreen, crossBlue] = dominant("shards.1.4");
+	CHECK(diamondRed > diamondGreen);
+	CHECK(diamondBlue > diamondGreen);
+	CHECK(ringGreen > ringBlue);
+	CHECK(crossRed > crossGreen);
+	CHECK(crossGreen > crossBlue);
+	(void)ringRed;
 
 	// Laid out one kind under the other, a gap between, and one column pitch
-	// (56 and a gap of 15) the same for all of them.
-	CHECK(game.object("aliens.1.1").position.y == 120.0f);
-	CHECK(game.object("aliens.1.2").position.y == 185.0f);
-	CHECK(game.object("aliens.1.3").position.y == 246.0f);
-	CHECK(game.object("aliens.1.4").position.y == 307.0f);
-	CHECK(game.object("aliens.1.5").position.y == 371.0f);
-	for (const char* name : { "aliens.2.1", "aliens.2.2", "aliens.2.4" })
+	// (49 and a gap of 20) the same for all of them.
+	CHECK(game.object("shards.1.1").position.y == 110.0f);
+	CHECK(game.object("shards.1.2").position.y == 179.0f);
+	CHECK(game.object("shards.1.3").position.y == 248.0f);
+	CHECK(game.object("shards.1.4").position.y == 317.0f);
+	for (const char* name : { "shards.2.1", "shards.2.2", "shards.2.4" })
 	{
 		INFO(name);
-		CHECK(game.object(name).position.x == 80.0f + 71.0f);
+		CHECK(game.object(name).position.x == 120.0f + 69.0f);
 	}
 
-	// One block: one lockstep number.
+	// One lattice: one lockstep number.
 	std::set<int> lockstep;
-	for (const Object* alien : aliensOf(game)) { lockstep.insert(alien->kind->collisionData.lockstep); }
+	for (const Object* shard : shardsOf(game)) { lockstep.insert(shard->kind->collisionData.lockstep); }
 	CHECK(lockstep.size() == 1);
 	CHECK(*lockstep.begin() > 0);
 
-	// The ship is one drawn picture, in the middle of the screen; the bolt is
+	// The lens is one drawn picture, in the middle of the screen; the beam is
 	// thin and tall.
-	const Object& player = game.object("player");
-	REQUIRE(player.drawn.bitmap);
-	CHECK(player.drawn.bitmap->width == 48);
-	CHECK(player.drawn.bitmap->height == 52);
-	CHECK(player.animation.frames.shows().bitmaps.empty());
-	CHECK(player.position.x == (1024.0f - 48.0f) / 2.0f);
+	const Object& lens = game.object("lens");
+	REQUIRE(lens.drawn.bitmap);
+	CHECK(lens.drawn.bitmap->width == 49);
+	CHECK(lens.drawn.bitmap->height == 41);
+	CHECK(lens.animation.frames.shows().bitmaps.empty());
+	CHECK(lens.position.x == (960.0f - 49.0f) / 2.0f);
 
-	const Object& bullet = game.object("bullet");
-	REQUIRE(bullet.drawn.bitmap);
-	CHECK(bullet.drawn.bitmap->width < bullet.drawn.bitmap->height / 3);
+	const Object& beam = game.object("beam");
+	REQUIRE(beam.drawn.bitmap);
+	CHECK(beam.drawn.bitmap->width < beam.drawn.bitmap->height / 3);
 }
 
-TEST_CASE("the aliens of Space Invaders 2 step through three pictures, all together, and march on meanwhile", "[spaceinvaders2][animation]")
+TEST_CASE("the shards of Prism Fall 2 step through three pictures, all together, and drift on meanwhile", "[prismfall2][animation]")
 {
-	Invasion invasion;
-	Game& game = invasion.game;
+	Sky sky;
+	Game& game = sky.game;
 
 	const auto onPicture = [&](std::size_t index)
 	{
-		for (const Object* alien : aliensOf(game))
+		for (const Object* shard : shardsOf(game))
 		{
-			if (alien->drawn.bitmap != alien->animation.frames.shows().bitmaps[index]) { return false; }
+			if (shard->drawn.bitmap != shard->animation.frames.shows().bitmaps[index]) { return false; }
 		}
 		return true;
 	};
@@ -633,8 +627,8 @@ TEST_CASE("the aliens of Space Invaders 2 step through three pictures, all toget
 	frames(game, 1);
 	CHECK(onPicture(1));
 
-	// Two pixels a frame to the right in the meantime, as before.
-	CHECK(game.object("aliens.1.1").position.x == 80.0f + 2.0f * 30.0f);
+	// A pixel a frame to the right in the meantime.
+	CHECK(game.object("shards.1.1").position.x == Catch::Approx(120.0f + 30.0f));
 
 	frames(game, 30);
 	CHECK(onPicture(2));
@@ -642,67 +636,69 @@ TEST_CASE("the aliens of Space Invaders 2 step through three pictures, all toget
 	CHECK(onPicture(0));
 }
 
-TEST_CASE("a shot from the ship of Space Invaders 2 can still kill an alien", "[spaceinvaders2]")
+TEST_CASE("a beam from the lens of Prism Fall 2 can still break a shard", "[prismfall2]")
 {
-	Invasion invasion;
-	Game& game = invasion.game;
-	const auto alive = [&]()
+	Sky sky;
+	Game& game = sky.game;
+	const auto whole = [&]()
 	{
-		const auto aliens = aliensOf(game);
-		return static_cast<int>(std::count_if(aliens.begin(), aliens.end(), [](const Object* alien) { return alien->isVisible; }));
+		const auto shards = shardsOf(game);
+		return static_cast<int>(std::count_if(shards.begin(), shards.end(), [](const Object* shard) { return shard->isVisible; }));
 	};
-	REQUIRE(alive() == 55);
+	REQUIRE(whole() == 36);
 
-	invasion.executor.executeInput(Command{ CmdTriggerAction{ "player", "gun" } }, true);
+	// Clear of the pylons, under the fourth column.
+	game.object("lens").position.x = game.object("shards.4.4").position.x;
+	sky.executor.executeInput(Command{ CmdTriggerAction{ "lens", "shine" } }, true);
 	game.settleSpawns();
-	REQUIRE(copies::count(game, "bullet") == 1);
-	game.object("bullet.1").size = measureShapeSize(game.object("bullet.1").drawn.picture);
+	REQUIRE(copies::count(game, "beam") == 1);
+	game.object("beam.1").size = measureShapeSize(game.object("beam.1").drawn.picture);
 	frames(game, 80);
 
-	CHECK(alive() == 54);
-	CHECK(copies::count(game, "bullet") == 0);
+	CHECK(whole() == 35);
+	CHECK(copies::count(game, "beam") == 0);
 }
 
-TEST_CASE("a bomb on the ship of Space Invaders 2 bursts it, the invasion standing still, then it comes back", "[spaceinvaders2]")
+TEST_CASE("a spark on the lens of Prism Fall 2 cracks it, the lattice standing still, then it comes back", "[prismfall2]")
 {
-	Invasion invasion;
-	Game& game = invasion.game;
-	Object& ship = game.object("player");
-	const std::string bomb = game.spawn("bomb")->name;
+	Sky sky;
+	Game& game = sky.game;
+	Object& lens = game.object("lens");
+	const std::string spark = game.spawn("spark")->name;
 	game.settleSpawns();
-	game.object(bomb).position = ship.position;
+	game.object(spark).position = lens.position;
 	frames(game, 2);
-	CHECK(game.getCurrentState().name == "blasted");
-	CHECK_FALSE(ship.isVisible);
-	CHECK(ship.variable.at("lives") == 2.0f);
-	CHECK(game.isShown(game.object("wreck")));
+	CHECK(game.getCurrentState().name == "cracked");
+	CHECK_FALSE(lens.isVisible);
+	CHECK(lens.variable.at("lives") == 2.0f);
+	CHECK(game.isShown(game.object("shatter")));
 
 	frames(game, 65);
 	CHECK(game.getCurrentState().name == "playing");
-	CHECK(ship.isVisible);
-	CHECK(copies::count(game, "bomb") == 0);
+	CHECK(lens.isVisible);
+	CHECK(copies::count(game, "spark") == 0);
 }
 
-TEST_CASE("paused, Space Invaders 2 draws the invasion still under the word", "[spaceinvaders2][scenes][shows]")
+TEST_CASE("paused, Prism Fall 2 draws the lattice still under the word", "[prismfall2][scenes][shows]")
 {
-	Invasion invasion;
-	Game& game = invasion.game;
-	CHECK(game.object("aliens.1.1").name == "playing.aliens.1.1");
-	CHECK(game.object("player").name == "player"); // the game's own: the title, the settings and playing show it
+	Sky sky;
+	Game& game = sky.game;
+	CHECK(game.object("shards.1.1").name == "playing.shards.1.1");
+	CHECK(game.object("lens").name == "lens"); // the game's own: the title and playing show it
 
 	frames(game, 5);
 	game.pushState("paused");
-	const Vector2f at = game.object("aliens.1.1").position;
+	const Vector2f at = game.object("shards.1.1").position;
 	frames(game, 30);
-	CHECK(game.object("aliens.1.1").position.x == at.x);
-	CHECK(game.isStill(game.object("aliens.1.1")));
-	CHECK(game.isStill(game.object("player")));
+	CHECK(game.object("shards.1.1").position.x == at.x);
+	CHECK(game.isStill(game.object("shards.1.1")));
+	CHECK(game.isStill(game.object("lens")));
 	CHECK(game.isShown(game.object("paused")));
 	game.popState();
-	CHECK(game.isShown(game.object("aliens.1.1")));
+	CHECK(game.isShown(game.object("shards.1.1")));
 
 	game.pushState("over");
-	CHECK(game.isStill(game.object("aliens.1.1")));
+	CHECK(game.isStill(game.object("shards.1.1")));
 	CHECK(game.isShown(game.object("over.message")));
 	CHECK(game.isShown(game.object("continue")));
 }
@@ -745,9 +741,9 @@ namespace
 	}
 }
 
-TEST_CASE("both schema checkers accept Space Invaders 2", "[spaceinvaders2][schema]")
+TEST_CASE("both schema checkers accept Prism Fall 2", "[prismfall2][schema]")
 {
-	const Verdict verdict = judge(readFile("descriptions/spaceinvaders2.xml"));
+	const Verdict verdict = judge(readFile("descriptions/prismfall2.xml"));
 
 	CHECK(verdict.weakAccepts);
 	CHECK(verdict.strongAccepts);
@@ -764,8 +760,8 @@ TEST_CASE("both schema checkers turn away the same mistakes in an svg", "[svg][s
 	};
 
 	const Mistake mistakes[] = {
-		{ "an svg with no path", "<path>assets/Space Invaders Color Sprites.svg</path>", "", "path" },
-		{ "an svg whose scale comes before its part", "<x>4</x><y>3.5</y>", "<scale>zoom</scale><x>4</x><y>3.5</y>", "<x>" },
+		{ "an svg with no path", "<path>assets/prismsheet.svg</path>", "", "path" },
+		{ "an svg whose scale comes before its part", "<x>2</x><y>2</y><width>28</width><height>23</height>", "<scale>zoom</scale><x>2</x><y>2</y><width>28</width><height>23</height>", "<x>" },
 		{ "an svg with a tag it does not have", "<hide>backdrop</hide>", "<opacity>1</opacity>", "opacity" },
 		{ "an svg hiding nothing by name", "<hide>backdrop</hide>", "<hide><x>1</x></hide>", "x" },
 	};
@@ -774,7 +770,7 @@ TEST_CASE("both schema checkers turn away the same mistakes in an svg", "[svg][s
 	{
 		DYNAMIC_SECTION(mistake.what)
 		{
-			const Verdict verdict = judge(gameWith("descriptions/spaceinvaders2.xml", mistake.from, mistake.to));
+			const Verdict verdict = judge(gameWith("descriptions/prismfall2.xml", mistake.from, mistake.to));
 
 			CHECK_FALSE(verdict.weakAccepts);
 			CHECK_THAT(verdict.weakMessage, ContainsSubstring(mistake.weakSays));

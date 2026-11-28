@@ -43,7 +43,7 @@ Pong is about 80 lines ([pong_min.xml](games/descriptions/pong_min.xml)). The [d
 
 59 games come with it, in [games/descriptions/](games/descriptions/), each with a test that plays it frame by frame:
 
-- **Arcade:** Pong, Breakout, Space Invaders, Asteroids, Pac-Man, Frogger, Donkey Kong, Q\*bert, Centipede, a boxing match and more.
+- **Arcade:** Pong, Breakout, Prism Fall, Asteroids, Pac-Man, Frogger, Donkey Kong, Q\*bert, Centipede, a boxing match and more.
 - **Puzzles:** Tetris, Columns, Snake, and pushing, merging and mine-finding games.
 - **Tables and tracks:** mini golf, artillery, pinball, a racer.
 - **Boards and cards:** Checkers, Reversi, Klondike, Hearts, Texas Hold'em and others, with computer players.

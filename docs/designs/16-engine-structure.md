@@ -13,8 +13,8 @@ The language had a pass that asked of every word whether it was needed. The C++ 
 | One `Object` | 4,736 bytes, whatever it is. A Pong ball carries a card holder (776 bytes), a hand (192), cell-map state (184) and key-drive state (224) |
 | One object as written (`WrittenObject`) | 14,600 bytes |
 | One command as written (`WrittenCommand`) | 3,328 bytes: 61 fields shared by every verb, most of them empty for any one (2,496 after CR7, each verb's own). A `Command` is 184 |
-| Pictures | Rows, SVGs and sheet cells are already drawn once per description (`drawOnce`), so Space Invaders' 77 objects hold 16 pictures. Lines and polygons are drawn per object; circles, rectangles and texts are drawn again each time a window asks. Five caches share them: `drawOnce`, the flips, the open sheets, each `Turnable`'s turned pictures and a static map of image files |
-| Textures | Each window keeps a texture per object name and builds it again whenever the object's picture changes: in 600 frames Space Invaders builds 1,109 textures (9 MB of pixels) for its 16 pictures, Pac-Man keeps 777 textures for 35 |
+| Pictures | Rows, SVGs and sheet cells are already drawn once per description (`drawOnce`), so Prism Fall's 58 objects hold 17 pictures. Lines and polygons are drawn per object; circles, rectangles and texts are drawn again each time a window asks. Five caches share them: `drawOnce`, the flips, the open sheets, each `Turnable`'s turned pictures and a static map of image files |
+| Textures | Each window keeps a texture per object name and builds it again whenever the object's picture changes: in 600 frames Pac-Man kept 777 textures for 35 pictures |
 | `before` | A whole `Moment` (its variables map and three vectors included) copied for every object every frame, read in one place for its position and two flags |
 | The reader | Looks each child up by name from the first child again (about 40 lookups an object), making a new node object for every sibling it passes, after the whole tree was copied once |
 | One tag | Written in about twelve places: `<drag>` was in the schema, the object reader, the group reader, the written object, `load/build.cpp`, `Object::Motion`, the frame, the printer and the generator's second reader |
@@ -25,11 +25,10 @@ The language had a pass that asked of every word whether it was needed. The C++ 
 | Game | Objects | Pictures held | Picture KB | Textures | Textures built | KB built |
 |---|---|---|---|---|---|---|
 | Pong | 29 | 0 | 0 | 29 | 32 | 1,310 |
-| Space Invaders | 77 | 16 | 154 | 78 | 1,109 | 9,248 |
 | Pac-Man | 777 | 35 | 85 | 777 | 1,037 | 1,445 |
 | Klondike | 76 | 55 | 2,903 | 76 | 76 | 3,938 |
 
-With textures kept a picture (CR2 step 5) the same games keep 11, 27, 43 and 20 textures, and build 14, 29, 57 and 20 of them.
+With textures kept a picture (CR2 step 5) the same games keep 11, 43 and 20 textures, and build 14, 57 and 20 of them; Prism Fall keeps 27 and builds 28.
 
 A4 put an object's fields into parts by feature, which made it readable. It did not make it smaller: every object still holds every part. Each part's size and how many objects use it: [object-parts](17-object-parts.md).
 

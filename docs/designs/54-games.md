@@ -16,7 +16,7 @@ Every game was written to try the language: what each one forced, in three parts
 
 | Game | Chosen to test | Forced (new) | Left out |
 |---|---|---|---|
-| Pong, Breakout, Space Invaders | the core: bounce, stick, die, fire, lockstep | `<deflect>`, bitmaps, animation, SVG sprites, enemy fire | Breakout's two-hit row and marching block (kept in tests) |
+| Pong, Breakout, a fleet shooter | the core: bounce, stick, die, fire, lockstep | `<deflect>`, bitmaps, animation, SVG sprites, enemy fire | Breakout's two-hit row and marching block (kept in tests) |
 | Frogger | hazards, loops, riding, lives, one-step moves | `dec`, `atmost`, `hop`, `wrap`, `ride`, `unless`, verbs in object rules, colours | crocodiles, lady frog, flies, speed-up |
 | Space Race, Freeway | a second game on the same words | nothing | lives in Freeway (kept apart from Frogger) |
 | Sparring | a reach that exists only on some frames | a `<hitbox>` on a `<frame>`, hitbox names, `hitbox=` and `by=`, mirrored shape hitboxes | key sequences, hit-stun, rounds, a computer boxer |
@@ -59,14 +59,15 @@ Lanes are groups inside one `lanes` group that gives the `<wrap />`; each lays i
 - Two saucers, the small one `from=` the big with its timers replaced; they are one group piece `ufos` so rocks can break them.
 - **The flame** is a `thrusting` pose over a two-frame animation. That needed looks with a `<heading>`: each look now keeps its own turned pictures. Chosen over a tethered flame object (needs its heading kept in step) and a `<become>` on the key (nothing puts it back).
 
-### Space Invaders
+### Prism Fall
 
-- One group of 11 columns and 5 rows, rows changing the bitmaps. Invaders 2 is the same game from an SVG sprite sheet.
-- Tests that used the game as a fixture load a frozen copy, `invaders_fixture.h`.
-- Making the bullet thin showed `<fire>` placed its left edge at the shooter's middle; now centred.
-- **The march speeds up** with one condition: a count of aliens at most `pace.next` sets the group's speed times 1.3 and halves `next`.
-- **A hit holds the game** for a second: a state over it, still, popped by an `<after>` timer.
-- Left: the march tempo following the speed (a sound is fixed when made), bombs only from a column's lowest alien, shields wearing down.
+- **An original game of the kind**, drawn and sounded for this project. The fleet shooter first written here copied a copyrighted arcade game; it, its sprite-sheet twin and its art were taken out, and the tests moved onto Prism Fall. Each game still copying one goes the same way as it is replaced.
+- One group of 9 columns and 4 rows of shards, rows changing the pictures and the worth. Prism Fall 2 is the same game drawn from its own SVG sheet, `assets/prismsheet.svg`.
+- Tests about the engine rather than a game load a frozen fleet, `fleet_fixture.h`.
+- Making the shot thin showed `<fire>` placed its left edge at the shooter's middle; now centred.
+- **The drift speeds up** with one condition: a count of shards at most `pace.next` sets the group's speed times 1.25 and halves `next`.
+- **A crack holds the game** for a second: a state over it, still, popped by an `<after>` timer.
+- Left: sparks only from a column's lowest shard.
 
 ### Pac-Man
 
@@ -118,7 +119,7 @@ The author asked another AI to write three games (Berserk, Demon Attack, Frostbi
 
 ### How the list started
 
-The author listed about thirty non-scrolling Atari 2600 games and asked for five the engine could already say. Already built from the list: Kaboom!, Asteroids, Space Invaders, Demon Attack, Frogger, Freeway, Frostbite, Berzerk, Super Breakout. The five were Pitfall!, Missile Command, Combat, Air-Sea Battle and Megamania; the games after them each tried a new word.
+The author listed about thirty non-scrolling Atari 2600 games and asked for five the engine could already say. Already built from the list: Kaboom!, Asteroids, Space Invaders (since replaced by the original Prism Fall), Demon Attack, Frogger, Freeway, Frostbite, Berzerk, Super Breakout. The five were Pitfall!, Missile Command, Combat, Air-Sea Battle and Megamania; the games after them each tried a new word.
 
 | Game | Written for | Left out |
 |---|---|---|
@@ -136,7 +137,7 @@ The author listed about thirty non-scrolling Atari 2600 games and asked for five
 | Tennis | altitude, shadows, a computer player | serving, the net stopping a low ball |
 | Haunted House | light and dark | the scepter, the nine variations |
 | Fishing Derby | values read when used, tethers | the shark's dive |
-| Space Invaders shields | `<hole>` | aliens eating the shields |
+| Prism Fall's pylons | `<hole>` | shards eating the pylons |
 
 ### Decisions in the games
 

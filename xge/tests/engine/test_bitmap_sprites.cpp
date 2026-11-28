@@ -7,7 +7,7 @@
 // clear pixel, an asterisk a solid one, each character drawn scale by scale
 // real pixels) and for animations: an object with several named <sprite>s and
 // an <animation> that shows them one after the other, each for some seconds.
-// Then Space Invaders, which is written with both, and both schema checkers
+// Then Prism Fall, which is written with both, and both schema checkers
 // (Xerces's real validation and this project's own XsdLiteValidator) on it.
 //
 // Small games are written to a scratch file and loaded by a real xge::Game,
@@ -1157,137 +1157,136 @@ TEST_CASE("an animated object that turns keeps its picture and its heading toget
 	CHECK(thing.drawn.bitmap->rgba == thing.drawn.turnables[0]->at(0.0f).rgba);
 }
 
-// ---------------------------------------------------------- Space Invaders
+// -------------------------------------------------------------- Prism Fall
 
 namespace
 {
-	std::vector<const Object*> aliensOf(Game& game)
+	std::vector<const Object*> shardsOf(Game& game)
 	{
-		std::vector<const Object*> aliens;
+		std::vector<const Object*> shards;
 		for (const Object& object : game.getCurrentObjects())
 		{
-			if (object.objClass == "aliens") { aliens.push_back(&object); }
+			if (object.objClass == "shards") { shards.push_back(&object); }
 		}
-		return aliens;
+		return shards;
 	}
 
-	struct Invasion
+	struct Sky
 	{
-		Game game{ "descriptions/spaceinvaders.xml" };
+		Game game{ "descriptions/prismfall.xml" };
 		CommandExecutor executor{ game };
 
-		Invasion()
+		Sky()
 		{
 			measure(game);
 			game.setCurrentState("playing");
 		}
 
-		int alive()
+		int whole()
 		{
-			const auto aliens = aliensOf(game);
-			return static_cast<int>(std::count_if(aliens.begin(), aliens.end(), [](const Object* alien) { return alien->isVisible; }));
+			const auto shards = shardsOf(game);
+			return static_cast<int>(std::count_if(shards.begin(), shards.end(), [](const Object* shard) { return shard->isVisible; }));
 		}
 	};
 }
 
-TEST_CASE("Space Invaders has three kinds of alien, a ship and a bullet drawn as the sprites they are", "[spaceinvaders]")
+TEST_CASE("Prism Fall has three kinds of shard, a lens and a beam drawn as the sprites they are", "[prismfall]")
 {
-	Invasion invasion;
-	Game& game = invasion.game;
+	Sky sky;
+	Game& game = sky.game;
 
-	// Eleven to a row: one row of squids, two of crabs, two of octopuses.
-	CHECK(aliensOf(game).size() == 55);
-	for (const char* name : { "aliens.1.1", "aliens.11.1", "aliens.1.2", "aliens.11.3", "aliens.1.4", "aliens.11.5" })
+	// Nine to a row: a row of diamonds, one of rings, two of crosses.
+	CHECK(shardsOf(game).size() == 36);
+	for (const char* name : { "shards.1.1", "shards.9.1", "shards.1.2", "shards.9.3", "shards.1.4", "shards.9.4" })
 	{
 		INFO(name);
 		CHECK(game.find(name) != nullptr);
 	}
-	CHECK(game.find("aliens.12.1") == nullptr);
-	CHECK(game.find("aliens.1.6") == nullptr);
+	CHECK(game.find("shards.10.1") == nullptr);
+	CHECK(game.find("shards.1.5") == nullptr);
 
-	// Every alien is a picture of 11 by 8 characters at 5 pixels each, two
-	// pictures that take turns, four steps of half a second (a, b, a, b).
-	for (const Object* alien : aliensOf(game))
+	// Every shard is a picture of 9 by 8 characters at 5 pixels each, two
+	// pictures that take turns, four steps of the beat (a, b, a, b).
+	for (const Object* shard : shardsOf(game))
 	{
-		REQUIRE(alien->drawn.bitmap);
-		CHECK(alien->drawn.bitmap->width == 55);
-		CHECK(alien->drawn.bitmap->height == 40);
-		CHECK(alien->animation.frames.shows().bitmaps.size() == 4);
-		CHECK(alien->animation.frames.shows().seconds == 0.5f);
+		REQUIRE(shard->drawn.bitmap);
+		CHECK(shard->drawn.bitmap->width == 45);
+		CHECK(shard->drawn.bitmap->height == 40);
+		CHECK(shard->animation.frames.shows().bitmaps.size() == 4);
+		CHECK(shard->animation.frames.shows().seconds == Catch::Approx(0.6f));
 	}
 
-	// The three kinds are laid out one under the other, a row of gap between.
-	CHECK(game.object("aliens.1.1").position.y == 120.0f);
-	CHECK(game.object("aliens.1.2").position.y == 175.0f);
-	CHECK(game.object("aliens.1.3").position.y == 230.0f);
-	CHECK(game.object("aliens.1.4").position.y == 285.0f);
-	CHECK(game.object("aliens.1.5").position.y == 340.0f);
-	CHECK(game.object("aliens.1.1").position.x == 80.0f);
-	CHECK(game.object("aliens.2.1").position.x == 150.0f);
+	// The kinds are laid out one under the other, a gap between.
+	CHECK(game.object("shards.1.1").position.y == 110.0f);
+	CHECK(game.object("shards.1.2").position.y == 170.0f);
+	CHECK(game.object("shards.1.3").position.y == 230.0f);
+	CHECK(game.object("shards.1.4").position.y == 290.0f);
+	CHECK(game.object("shards.1.1").position.x == 120.0f);
+	CHECK(game.object("shards.2.1").position.x == 185.0f);
 
-	// All of them are one block: one lockstep number.
+	// All of them are one lattice: one lockstep number.
 	std::set<int> lockstep;
-	for (const Object* alien : aliensOf(game)) { lockstep.insert(alien->kind->collisionData.lockstep); }
+	for (const Object* shard : shardsOf(game)) { lockstep.insert(shard->kind->collisionData.lockstep); }
 	CHECK(lockstep.size() == 1);
 	CHECK(*lockstep.begin() > 0);
 
-	// The ship is a picture, in the middle of the screen.
-	const Object& player = game.object("player");
-	REQUIRE(player.drawn.bitmap);
-	CHECK(player.drawn.bitmap->width == 55);
-	CHECK(player.drawn.bitmap->height == 35);
-	CHECK(player.animation.frames.shows().bitmaps.empty());
-	CHECK(player.position.x == (1024.0f - 55.0f) / 2.0f);
+	// The lens is a picture, in the middle of the screen.
+	const Object& lens = game.object("lens");
+	REQUIRE(lens.drawn.bitmap);
+	CHECK(lens.drawn.bitmap->width == 55);
+	CHECK(lens.drawn.bitmap->height == 35);
+	CHECK(lens.animation.frames.shows().bitmaps.empty());
+	CHECK(lens.position.x == (960.0f - 55.0f) / 2.0f);
 
-	// The bullet is a thin tall rectangle.
-	const Object& bullet = game.object("bullet");
-	CHECK(bullet.drawn.picture->kind == ShapeKind::Rectangle);
-	const Vector2f size = measureShapeSize(bullet.drawn.picture);
-	CHECK(size.x == 4.0f);
-	CHECK(size.y == 24.0f);
+	// The beam is a thin tall rectangle.
+	const Object& beam = game.object("beam");
+	CHECK(beam.drawn.picture->kind == ShapeKind::Rectangle);
+	const Vector2f size = measureShapeSize(beam.drawn.picture);
+	CHECK(size.x == 3.0f);
+	CHECK(size.y == 20.0f);
 }
 
-TEST_CASE("the aliens change picture every half second, all together, and march on meanwhile", "[spaceinvaders][animation]")
+TEST_CASE("the shards change picture every beat, all together, and step on meanwhile", "[prismfall][animation]")
 {
-	Invasion invasion;
-	Game& game = invasion.game;
+	Sky sky;
+	Game& game = sky.game;
 
 	const auto onPicture = [&](std::size_t index)
 	{
-		for (const Object* alien : aliensOf(game))
+		for (const Object* shard : shardsOf(game))
 		{
-			if (alien->drawn.bitmap != alien->animation.frames.shows().bitmaps[index]) { return false; }
+			if (shard->drawn.bitmap != shard->animation.frames.shows().bitmaps[index]) { return false; }
 		}
 		return true;
 	};
 
 	REQUIRE(onPicture(0));
 
-	frames(game, 29);
+	frames(game, 35);
 	CHECK(onPicture(0));
 
 	frames(game, 1);
 	CHECK(onPicture(1));
 	CHECK_FALSE(onPicture(0));
 
-	// Held still for 29 frames, then one step of half a second's worth at
-	// 30 pixels a second (<stepped />).
-	CHECK(game.object("aliens.1.1").position.x == Catch::Approx(80.0f + 30.0f * 0.5f));
+	// Held still for 35 frames, then one step of 0.6 seconds' worth at 36
+	// pixels a second (<stepped />).
+	CHECK(game.object("shards.1.1").position.x == Catch::Approx(120.0f + 36.0f * 0.6f));
 
-	// Four steps, a note each: a, b, a, b.
-	frames(game, 30);
+	// Four steps: a, b, a, b.
+	frames(game, 36);
 	CHECK(onPicture(2));
-	CHECK(game.object("aliens.1.1").drawn.bitmap == game.object("aliens.1.1").animation.frames.shows().bitmaps[0]);
+	CHECK(game.object("shards.1.1").drawn.bitmap == game.object("shards.1.1").animation.frames.shows().bitmaps[0]);
 }
 
-TEST_CASE("the march keeps step with the aliens: a note a step, quicker as they fall", "[spaceinvaders][animation][sound]")
+TEST_CASE("the hum keeps step with the shards: a chime a step, quicker as they thin", "[prismfall][animation][sound]")
 {
-	Invasion invasion;
-	Game& game = invasion.game;
-	game.object("player").collisionsOn = false; // no bomb holds the march still
+	Sky sky;
+	Game& game = sky.game;
+	game.object("lens").collisionsOn = false; // no spark holds the lattice still
 	(void)game.sounds().takeRequests();
 
-	// The frames between march notes over the next `count` frames.
+	// The frames between chimes over the next `count` frames.
 	const auto gaps = [&](int count)
 	{
 		std::vector<int> between;
@@ -1298,7 +1297,7 @@ TEST_CASE("the march keeps step with the aliens: a note a step, quicker as they 
 			frames(game, 1);
 			++since;
 			const std::vector<std::string> asked = game.sounds().takeRequests();
-			if (std::any_of(asked.begin(), asked.end(), [](const std::string& sound) { return sound.rfind("march", 0) == 0; }))
+			if (std::any_of(asked.begin(), asked.end(), [](const std::string& sound) { return sound.rfind("hum", 0) == 0; }))
 			{
 				if (heard) { between.push_back(since); }
 				heard = true;
@@ -1308,109 +1307,111 @@ TEST_CASE("the march keeps step with the aliens: a note a step, quicker as they 
 		return between;
 	};
 
-	const std::vector<int> start = gaps(150);
+	const std::vector<int> start = gaps(180);
 	REQUIRE(start.size() >= 3);
-	CHECK(std::all_of(start.begin(), start.end(), [](int gap) { return gap == 30; }));
+	CHECK(std::all_of(start.begin(), start.end(), [](int gap) { return gap == 36; }));
 
-	// Down to 28 aliens: the fleet goes 1.3 times as fast, and so does the march.
+	// Down to 18 shards: the lattice goes 1.25 times as fast, and so does the hum.
 	int gone = 0;
-	for (const Object* alien : aliensOf(game))
+	for (const Object* shard : shardsOf(game))
 	{
-		if (gone == 27) { break; }
-		const_cast<Object*>(alien)->isVisible = false;
+		if (gone == 18) { break; }
+		const_cast<Object*>(shard)->isVisible = false;
 		++gone;
 	}
 	frames(game, 40);
-	(void)game.sounds().takeRequests(); // the notes of those 40
-	const std::vector<int> quicker = gaps(150);
+	(void)game.sounds().takeRequests(); // the chimes of those 40
+	const std::vector<int> quicker = gaps(180);
 	REQUIRE(quicker.size() >= 3);
-	CHECK(std::all_of(quicker.begin(), quicker.end(), [](int gap) { return gap == 23; }));
+	CHECK(std::all_of(quicker.begin(), quicker.end(), [](int gap) { return gap == 28 || gap == 29; }));
 }
 
-TEST_CASE("the aliens' two pictures differ, so there is something to see", "[spaceinvaders][animation]")
+TEST_CASE("the shards' two pictures differ, so there is something to see", "[prismfall][animation]")
 {
-	Invasion invasion;
-	const Object& alien = invasion.game.object("aliens.4.2");
+	Sky sky;
+	const Object& shard = sky.game.object("shards.4.2");
 
-	REQUIRE(alien.animation.frames.shows().bitmaps.size() == 4);
-	CHECK(alien.animation.frames.shows().bitmaps[0]->rgba != alien.animation.frames.shows().bitmaps[1]->rgba);
-	CHECK(alien.animation.frames.shows().bitmaps[0]->width == alien.animation.frames.shows().bitmaps[1]->width);
-	CHECK(alien.animation.frames.shows().bitmaps[0]->height == alien.animation.frames.shows().bitmaps[1]->height);
+	REQUIRE(shard.animation.frames.shows().bitmaps.size() == 4);
+	CHECK(shard.animation.frames.shows().bitmaps[0]->rgba != shard.animation.frames.shows().bitmaps[1]->rgba);
+	CHECK(shard.animation.frames.shows().bitmaps[0]->width == shard.animation.frames.shows().bitmaps[1]->width);
+	CHECK(shard.animation.frames.shows().bitmaps[0]->height == shard.animation.frames.shows().bitmaps[1]->height);
 }
 
-TEST_CASE("a shot from the ship in the middle kills exactly one alien and is taken away", "[spaceinvaders]")
+TEST_CASE("a beam from the lens breaks exactly one shard and is taken away", "[prismfall]")
 {
-	Invasion invasion;
-	Game& game = invasion.game;
+	Sky sky;
+	Game& game = sky.game;
 
-	REQUIRE(invasion.alive() == 55);
+	REQUIRE(sky.whole() == 36);
 
-	invasion.executor.executeInput(Command{ CmdTriggerAction{ "player", "gun" } }, true);
+	// Clear of the pylons, under the fourth column.
+	Object& lens = game.object("lens");
+	lens.position.x = game.object("shards.4.4").position.x;
+	sky.executor.executeInput(Command{ CmdTriggerAction{ "lens", "shine" } }, true);
 	game.settleSpawns();
-	REQUIRE(copies::count(game, "bullet") == 1);
+	REQUIRE(copies::count(game, "beam") == 1);
 
-	// A thin bullet leaves the middle of the cannon.
-	const Object& cannon = game.object("player");
-	Object& shot = game.object("bullet.1");
-	shot.size = measureShapeSize(shot.drawn.picture);
-	CHECK(shot.position.x + 2.0f == Catch::Approx(cannon.position.x + 27.5f));
+	// A thin beam leaves the middle of the lens.
+	Object& beam = game.object("beam.1");
+	beam.size = measureShapeSize(beam.drawn.picture);
+	CHECK(beam.position.x + 1.5f == Catch::Approx(lens.position.x + 27.5f));
 
 	frames(game, 80);
 
-	CHECK(invasion.alive() == 54);
-	CHECK(copies::count(game, "bullet") == 0);
+	CHECK(sky.whole() == 35);
+	CHECK(copies::count(game, "beam") == 0);
 }
 
-TEST_CASE("the aliens still win the game for the player when they are all gone, and a reset brings them back", "[spaceinvaders]")
+TEST_CASE("the shards still win the game for the player when they are all gone, and a reset brings them back", "[prismfall]")
 {
-	Invasion invasion;
-	Game& game = invasion.game;
+	Sky sky;
+	Game& game = sky.game;
 
-	for (const Object* alien : aliensOf(game)) { const_cast<Object*>(alien)->isVisible = false; }
-	REQUIRE(invasion.alive() == 0);
+	for (const Object* shard : shardsOf(game)) { const_cast<Object*>(shard)->isVisible = false; }
+	REQUIRE(sky.whole() == 0);
 
 	frames(game, 1);
 	CHECK(game.getCurrentState().name == "over");
 	CHECK(game.object("over.message").lookName() == "won");
 
 	game.resetAll();
-	CHECK(invasion.alive() == 55);
+	CHECK(sky.whole() == 36);
 }
 
-TEST_CASE("each state of Space Invaders has its own objects, and paused and the endings draw the invasion still", "[spaceinvaders][scenes][shows]")
+TEST_CASE("each state of Prism Fall has its own objects, and paused and the endings draw the lattice still", "[prismfall][scenes][shows]")
 {
-	Invasion invasion;
-	Game& game = invasion.game;
-	CHECK(game.object("aliens.1.1").name == "playing.aliens.1.1");
+	Sky sky;
+	Game& game = sky.game;
+	CHECK(game.object("shards.1.1").name == "playing.shards.1.1");
 	CHECK(game.object("lives").name == "playing.lives");
-	CHECK(game.object("player").name == "player"); // the game's own: the title and playing show it
-	CHECK(game.isShown(game.object("player")));
-	CHECK(game.isShown(game.object("aliens.1.1")));
+	CHECK(game.object("lens").name == "lens"); // the game's own: the title and playing show it
+	CHECK(game.isShown(game.object("lens")));
+	CHECK(game.isShown(game.object("shards.1.1")));
 	CHECK_FALSE(game.isShown(game.object("title")));
 
 	game.setCurrentState("title");
 	CHECK(game.isShown(game.object("title")));
-	CHECK(game.isShown(game.object("player")));
-	CHECK_FALSE(game.isShown(game.object("aliens.1.1")));
-	CHECK_FALSE(game.isStill(game.object("aliens.1.1")));
+	CHECK(game.isShown(game.object("lens")));
+	CHECK_FALSE(game.isShown(game.object("shards.1.1")));
+	CHECK_FALSE(game.isStill(game.object("shards.1.1")));
 
-	// Paused: the block stands where it was, drawn under the word, ship and all.
+	// Paused: the lattice stands where it was, drawn under the word, lens and all.
 	game.setCurrentState("playing");
 	frames(game, 5);
 	game.pushState("paused");
-	const Vector2f at = game.object("aliens.1.1").position;
-	frames(game, 30);
-	CHECK(game.object("aliens.1.1").position.x == at.x);
-	CHECK(game.isStill(game.object("aliens.1.1")));
-	CHECK(game.isStill(game.object("player")));
+	const Vector2f at = game.object("shards.1.1").position;
+	frames(game, 40);
+	CHECK(game.object("shards.1.1").position.x == at.x);
+	CHECK(game.isStill(game.object("shards.1.1")));
+	CHECK(game.isStill(game.object("lens")));
 	CHECK(game.isStill(game.object("lives")));
 	CHECK(game.isShown(game.object("paused")));
 	game.popState();
-	frames(game, 30);
-	CHECK(game.object("aliens.1.1").position.x != at.x);
+	frames(game, 40);
+	CHECK(game.object("shards.1.1").position.x != at.x);
 
 	game.pushState("over");
-	CHECK(game.isStill(game.object("aliens.1.1")));
+	CHECK(game.isStill(game.object("shards.1.1")));
 	CHECK(game.isShown(game.object("over.message")));
 	CHECK(game.isShown(game.object("continue")));
 }
@@ -1453,9 +1454,9 @@ namespace
 	}
 }
 
-TEST_CASE("both schema checkers accept Space Invaders", "[spaceinvaders][schema]")
+TEST_CASE("both schema checkers accept Prism Fall", "[prismfall][schema]")
 {
-	const Verdict verdict = judge(readFile("descriptions/spaceinvaders.xml"));
+	const Verdict verdict = judge(readFile("descriptions/prismfall.xml"));
 
 	CHECK(verdict.weakAccepts);
 	CHECK(verdict.strongAccepts);
@@ -1474,7 +1475,7 @@ TEST_CASE("both schema checkers turn away the same mistakes in bitmaps and anima
 	const Mistake mistakes[] = {
 		{ "an animation with no interval", "<seconds update=\"live\">pace.beat</seconds>", "", "seconds" },
 		{ "an animation whose frames are not frames", "<frame sprite=\"a\" />", "<picture sprite=\"a\" />", "picture" },
-		{ "a bitmap with its scale before its rows", "<bitmap name=\"player\">\n      <row>.....*.....</row>", "<bitmap name=\"player\">\n      <scale>pixel</scale>\n      <row>.....*.....</row>", "scale" },
+		{ "a bitmap with its scale before its rows", "<bitmap name=\"lens\">\n      <row>.....*.....</row>", "<bitmap name=\"lens\">\n      <scale>pixel</scale>\n      <row>.....*.....</row>", "scale" },
 		{ "a bitmap row with something inside it", "<row>.....*.....</row>", "<row><x>1</x></row>", "x" },
 		{ "a frame with no sprite", "<frame sprite=\"a\" />", "<frame />", "sprite" },
 	};
@@ -1483,7 +1484,7 @@ TEST_CASE("both schema checkers turn away the same mistakes in bitmaps and anima
 	{
 		DYNAMIC_SECTION(mistake.what)
 		{
-			const Verdict verdict = judge(gameWith("descriptions/spaceinvaders.xml", mistake.from, mistake.to));
+			const Verdict verdict = judge(gameWith("descriptions/prismfall.xml", mistake.from, mistake.to));
 
 			CHECK_FALSE(verdict.weakAccepts);
 			CHECK_THAT(verdict.weakMessage, ContainsSubstring(mistake.weakSays));
@@ -1494,16 +1495,16 @@ TEST_CASE("both schema checkers turn away the same mistakes in bitmaps and anima
 
 TEST_CASE("an attribute the schema does not declare is turned away by both validators", "[animation][schema]")
 {
-	const Verdict verdict = judge(gameWith("descriptions/spaceinvaders.xml", "<sprite name=\"a\">", "<sprite title=\"a\">"));
+	const Verdict verdict = judge(gameWith("descriptions/prismfall.xml", "<sprite name=\"a\">", "<sprite title=\"a\">"));
 
 	CHECK_FALSE(verdict.weakAccepts);
 	CHECK_THAT(verdict.weakMessage, ContainsSubstring("is not declared for"));
 	CHECK_FALSE(verdict.strongAccepts);
 }
 
-TEST_CASE("the aliens drop bombs from a pool of three, and three hits on the cannon end the game", "[spaceinvaders][facing]")
+TEST_CASE("the shards shed sparks four at most, and three on the lens end the game", "[prismfall][facing]")
 {
-	Game game{ "descriptions/spaceinvaders.xml" };
+	Game game{ "descriptions/prismfall.xml" };
 	for (auto& object : game.getCurrentObjects())
 	{
 		object.size = measureShapeSize(object.drawn.picture);
@@ -1514,12 +1515,12 @@ TEST_CASE("the aliens drop bombs from a pool of three, and three hits on the can
 	const auto falling = [&]
 	{
 		int n = 0;
-		for (const auto& object : game.getCurrentObjects()) { if (object.objClass == "bomb" && object.isVisible) { ++n; } }
+		for (const auto& object : game.getCurrentObjects()) { if (object.objClass == "spark" && object.isVisible) { ++n; } }
 		return n;
 	};
 
-	// The cannon out of the way of the bombs while they are counted.
-	game.object("player").collisionsOn = false;
+	// The lens out of the way of the sparks while they are counted.
+	game.object("lens").collisionsOn = false;
 	int most = 0;
 	for (int frame = 0; frame < 600; ++frame)
 	{
@@ -1527,114 +1528,114 @@ TEST_CASE("the aliens drop bombs from a pool of three, and three hits on the can
 		most = std::max(most, falling());
 	}
 	CHECK(most >= 1);
-	CHECK(most <= 3);
+	CHECK(most <= 4);
 
-	// Every bomb falls straight down from below an alien, and none kills one.
+	// Every spark falls straight down from below a shard, and none breaks one.
 	for (const auto& object : game.getCurrentObjects())
 	{
-		if (object.objClass == "bomb" && object.isVisible) { CHECK(object.velocity.y > 0); }
+		if (object.objClass == "spark" && object.isVisible) { CHECK(object.velocity.y > 0); }
 	}
-	int aliens = 0;
-	for (const auto& object : game.getCurrentObjects()) { if (object.objClass == "aliens" && object.isVisible) { ++aliens; } }
-	CHECK(aliens == 55);
+	int shards = 0;
+	for (const auto& object : game.getCurrentObjects()) { if (object.objClass == "shards" && object.isVisible) { ++shards; } }
+	CHECK(shards == 36);
 
-	// Bombs put on the cannon (a stray one may find it first) until the game is
-	// lost. Each hit holds the invasion still for a second ("blasted").
-	Object& player = game.object("player");
-	player.collisionsOn = true;
-	bool blasted = false;
+	// Sparks put on the lens (a stray one may find it first) until the game is
+	// lost. Each hit holds everything still for a second ("cracked").
+	Object& lens = game.object("lens");
+	lens.collisionsOn = true;
+	bool cracked = false;
 	for (int frame = 0; frame < 20000 && game.getCurrentState().name != "over"; ++frame)
 	{
 		game.updateObjects(xge::kSixtieth);
-		if (game.getCurrentState().name == "blasted") { blasted = true; continue; }
+		if (game.getCurrentState().name == "cracked") { cracked = true; continue; }
 		for (auto& object : game.getCurrentObjects())
 		{
-			if (object.objClass == "bomb" && object.isVisible && object.position.y < player.position.y - 40)
+			if (object.objClass == "spark" && object.isVisible && object.position.y < lens.position.y - 40)
 			{
-				object.position = { player.position.x + player.size.x / 2, player.position.y - object.size.y - 2 };
+				object.position = { lens.position.x + lens.size.x / 2, lens.position.y - object.size.y - 2 };
 				break;
 			}
 		}
 	}
-	CHECK(blasted);
-	CHECK(player.variable.at("lives") <= 0);
+	CHECK(cracked);
+	CHECK(lens.variable.at("lives") <= 0);
 	CHECK(game.getCurrentState().name == "over");
 	CHECK(game.object("over.message").lookName() == "lost");
 }
 
-TEST_CASE("each kind of alien scores its own, and the block marches faster as it thins", "[spaceinvaders]")
+TEST_CASE("each kind of shard scores its own, and the lattice drifts faster as it thins", "[prismfall]")
 {
-	Invasion invasion;
-	Game& game = invasion.game;
+	Sky sky;
+	Game& game = sky.game;
 
-	CHECK(game.object("aliens.1.1").variable.at("worth") == 30.0f);
-	CHECK(game.object("aliens.1.3").variable.at("worth") == 20.0f);
-	CHECK(game.object("aliens.1.5").variable.at("worth") == 10.0f);
+	CHECK(game.object("shards.1.1").variable.at("worth") == 40.0f);
+	CHECK(game.object("shards.1.2").variable.at("worth") == 25.0f);
+	CHECK(game.object("shards.1.4").variable.at("worth") == 15.0f);
 
-	// A shot under a crab of the third row, the rows below gone.
-	for (const Object* alien : aliensOf(game))
+	// A beam under a ring of the second row, the rows below gone.
+	for (const Object* shard : shardsOf(game))
 	{
-		if (alien->name.str().find("aliens.6.") == std::string::npos) { continue; }
-		if (alien->name.str().back() == '4' || alien->name.str().back() == '5') { const_cast<Object*>(alien)->isVisible = false; }
+		if (shard->name.str().find("shards.6.") == std::string::npos) { continue; }
+		if (shard->name.str().back() == '3' || shard->name.str().back() == '4') { const_cast<Object*>(shard)->isVisible = false; }
 	}
-	const Object& crab = game.object("aliens.6.3");
-	Object& bullet = copies::spawned(game, "bullet");
-	bullet.size = measureShapeSize(bullet.drawn.picture);
-	bullet.position = { crab.position.x + crab.size.x / 2.0f, crab.position.y + crab.size.y + 2.0f };
-	bullet.velocity = { 0.0f, -720.0f };
+	const Object& ring = game.object("shards.6.2");
+	Object& beam = copies::spawned(game, "beam");
+	beam.size = measureShapeSize(beam.drawn.picture);
+	beam.position = { ring.position.x + ring.size.x / 2.0f, ring.position.y + ring.size.y + 2.0f };
+	beam.velocity = { 0.0f, -780.0f };
 	frames(game, 1);
-	CHECK_FALSE(crab.isVisible);
-	CHECK(game.object("player").variable.at("score") == 20.0f);
+	CHECK_FALSE(ring.isVisible);
+	CHECK(game.object("lens").variable.at("score") == 25.0f);
 
-	// 28 left: half as fast again, and the next speed-up at 14.
-	int gone = 55 - invasion.alive();
-	for (const Object* alien : aliensOf(game))
+	// 18 left: 1.25 times as fast, and the next speed-up at 9.
+	int gone = 36 - sky.whole();
+	for (const Object* shard : shardsOf(game))
 	{
-		if (gone >= 27) { break; }
-		if (alien->isVisible) { const_cast<Object*>(alien)->isVisible = false; ++gone; }
+		if (gone >= 18) { break; }
+		if (shard->isVisible) { const_cast<Object*>(shard)->isVisible = false; ++gone; }
 	}
-	REQUIRE(invasion.alive() == 28);
-	const float before = std::abs(game.object("aliens.11.1").velocity.x);
+	REQUIRE(sky.whole() == 18);
+	const float before = std::abs(game.object("shards.9.1").velocity.x);
 	frames(game, 1);
-	CHECK(std::abs(game.object("aliens.11.1").velocity.x) == Catch::Approx(before * 1.3f));
-	CHECK(game.object("pace").variable.at("next") == 14.0f);
+	CHECK(std::abs(game.object("shards.9.1").velocity.x) == Catch::Approx(before * 1.25f));
+	CHECK(game.object("pace").variable.at("next") == 9.0f);
 	frames(game, 1);
-	CHECK(std::abs(game.object("aliens.11.1").velocity.x) == Catch::Approx(before * 1.3f));
+	CHECK(std::abs(game.object("shards.9.1").velocity.x) == Catch::Approx(before * 1.25f));
 }
 
-TEST_CASE("the mystery ship crosses the top now and then and scores 50 to 200", "[spaceinvaders]")
+TEST_CASE("the comet crosses the top now and then and scores 60 to 240", "[prismfall]")
 {
-	Invasion invasion;
-	Game& game = invasion.game;
-	const Object& ufo = game.object("ufo");
-	REQUIRE_FALSE(ufo.isVisible);
-	game.object("player").collisionsOn = false; // no bombs on it meanwhile
+	Sky sky;
+	Game& game = sky.game;
+	const Object& comet = game.object("comet");
+	REQUIRE_FALSE(comet.isVisible);
+	game.object("lens").collisionsOn = false; // no sparks on it meanwhile
 
-	for (int frame = 0; frame < 60 * 31 && !ufo.isVisible; ++frame) { frames(game, 1); }
-	REQUIRE(ufo.isVisible);
-	CHECK(ufo.velocity.x > 0.0f);
+	for (int frame = 0; frame < 60 * 26 && !comet.isVisible; ++frame) { frames(game, 1); }
+	REQUIRE(comet.isVisible);
+	CHECK(comet.velocity.x > 0.0f);
 	frames(game, 60);
-	REQUIRE(ufo.isVisible);
+	REQUIRE(comet.isVisible);
 
-	Object& player = game.object("player");
-	Object& bullet = copies::spawned(game, "bullet");
-	bullet.size = measureShapeSize(bullet.drawn.picture);
-	bullet.position = { ufo.position.x + ufo.size.x / 2.0f, ufo.position.y + ufo.size.y + 2.0f };
-	bullet.velocity = { 0.0f, -720.0f };
-	const float score = player.variable.at("score");
+	Object& lens = game.object("lens");
+	Object& beam = copies::spawned(game, "beam");
+	beam.size = measureShapeSize(beam.drawn.picture);
+	beam.position = { comet.position.x + comet.size.x / 2.0f, comet.position.y + comet.size.y + 2.0f };
+	beam.velocity = { 0.0f, -780.0f };
+	const float score = lens.variable.at("score");
 	frames(game, 1);
-	CHECK_FALSE(ufo.isVisible);
-	const float scored = player.variable.at("score") - score;
-	CHECK(scored >= 50.0f);
-	CHECK(scored <= 200.0f);
-	CHECK(std::fmod(scored, 50.0f) == 0.0f);
+	CHECK_FALSE(comet.isVisible);
+	const float scored = lens.variable.at("score") - score;
+	CHECK(scored >= 60.0f);
+	CHECK(scored <= 240.0f);
+	CHECK(std::fmod(scored, 60.0f) == 0.0f);
 }
 
-TEST_CASE("the invasion landing on the shields ends the game", "[spaceinvaders]")
+TEST_CASE("the lattice landing on the pylons ends the game", "[prismfall]")
 {
-	Invasion invasion;
-	Game& game = invasion.game;
-	for (const Object* alien : aliensOf(game)) { const_cast<Object*>(alien)->position.y += 300.0f; }
+	Sky sky;
+	Game& game = sky.game;
+	for (const Object* shard : shardsOf(game)) { const_cast<Object*>(shard)->position.y += 300.0f; }
 	frames(game, 1);
 	CHECK(game.getCurrentState().name == "over");
 	CHECK(game.object("over.message").lookName() == "lost");
