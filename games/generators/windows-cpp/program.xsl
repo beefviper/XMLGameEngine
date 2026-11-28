@@ -149,6 +149,17 @@ namespace
 			window.draw(shape);
 		}
 </xsl:text>
+      <xsl:if test="$cell-maps//circle">
+        <xsl:text>
+		void disc(sf::Vector2f middle, float radius, sf::Color color = sf::Color::White)
+		{
+			sf::CircleShape shape(radius);
+			shape.setPosition(middle - sf::Vector2f{ radius, radius });
+			shape.setFillColor(color);
+			window.draw(shape);
+		}
+</xsl:text>
+      </xsl:if>
       <xsl:if test="$pictures and not($painted)">
         <xsl:text>
 		// The lit pixels of a picture's rows over the box at `position`, `extent` big.
@@ -212,6 +223,9 @@ namespace
     <xsl:if test="not($texts-drawn) and $painted">
       <xsl:message terminate="yes">windows-cpp cannot write pictures of their own colours in a game with no words yet; use engine-cpp for this game</xsl:message>
     </xsl:if>
+    <xsl:if test="not($texts-drawn) and $cell-maps//circle">
+      <xsl:message terminate="yes">windows-cpp cannot write circles in a game with no words yet; use engine-cpp for this game</xsl:message>
+    </xsl:if>
     <xsl:if test="not($texts-drawn)">
       <xsl:text>
 	void box(sf::RenderWindow&amp; window, sf::Vector2f position, sf::Vector2f extent, sf::Color color = sf::Color::White)
@@ -240,6 +254,7 @@ namespace
 </xsl:text>
       </xsl:if>
     </xsl:if>
+    <xsl:call-template name="map-place-functions" />
     <xsl:if test="$colored-pictures">
       <xsl:call-template name="palettes" />
     </xsl:if>
@@ -438,7 +453,7 @@ int main(</xsl:text>
   <!-- const sf::Color lightgrey{ 192, 192, 192 }: the colours SFML has no
        name for. -->
   <xsl:template name="color-constants">
-    <xsl:variable name="used" select="(//rectangle/color | //text/color | $styles/color | /game/window/background | $colored-pictures/color
+    <xsl:variable name="used" select="(//rectangle/color | //circle/color | //text/color | $styles/color | /game/window/background | $colored-pictures/color
         | /game/styles/style[@name = $colored-pictures/@style]/color
         | /game/pictures/bitmap[@name = $looked-grids/descendant::bitmap/@from]/color | $looked-grids/descendant::bitmap/color)[not(contains($basic-colors, concat('|', normalize-space(.), '|')))]" />
     <xsl:variable name="list">
@@ -648,6 +663,9 @@ int main(</xsl:text>
       </xsl:when>
       <xsl:when test="count(. | $marching) = count($marching)">
         <xsl:call-template name="march-draw-lines" />
+      </xsl:when>
+      <xsl:when test="self::map">
+        <xsl:call-template name="map-draw-lines" />
       </xsl:when>
       <xsl:when test="count(. | $holed) = count($holed)">
         <!-- each with its own picture, holes and all -->

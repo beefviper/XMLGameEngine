@@ -10,7 +10,7 @@
 // them but no XML library and none of the other libraries. That it plays as
 // the file does, frame by frame, is in test_generated_games.cpp, which
 // compiles it. The windows-cpp target (games/generators/windows-cpp) writes
-// pong_min, pong, breakout, spacerace, kaboom, freeway, frogger and prismfall, web-js the same as a page
+// pong_min, pong, breakout, spacerace, kaboom, freeway, frogger, prismfall and snake, web-js the same as a page
 // of plain JavaScript each, and web-asm what engine-cpp does for a web page.
 
 #include "scratch.h"
@@ -311,7 +311,7 @@ TEST_CASE("windows-cpp names no parameter or local as one of the game's constant
 	// main.cpp takes in the game's namespace whole, so a parameter named as a
 	// constant hides it: MSVC warns (C4459), GCC and Clang do not
 	const std::regex constant(R"(constexpr \S+ (\w+) =)");
-	for (const std::string game : { "pong_min", "pong", "breakout", "spacerace", "kaboom", "freeway", "frogger", "prismfall" })
+	for (const std::string game : { "pong_min", "pong", "breakout", "spacerace", "kaboom", "freeway", "frogger", "prismfall", "snake" })
 	{
 		INFO(game);
 		TempFolder folder("xge_test_generate_windows_cpp_names_" + game);
@@ -332,9 +332,9 @@ TEST_CASE("windows-cpp names no parameter or local as one of the game's constant
 	}
 }
 
-TEST_CASE("windows-cpp writes pong_min, pong, breakout, spacerace, kaboom, freeway, frogger and prismfall as stand-alone SFML games", "[generate]")
+TEST_CASE("windows-cpp writes pong_min, pong, breakout, spacerace, kaboom, freeway, frogger, prismfall and snake as stand-alone SFML games", "[generate]")
 {
-	for (const std::string game : { "pong_min", "pong", "breakout", "spacerace", "kaboom", "freeway", "frogger", "prismfall" })
+	for (const std::string game : { "pong_min", "pong", "breakout", "spacerace", "kaboom", "freeway", "frogger", "prismfall", "snake" })
 	{
 		INFO(game);
 		TempFolder folder("xge_test_generate_windows_cpp_" + game);
@@ -399,7 +399,7 @@ TEST_CASE("windows-cpp lists every part of a game it has no words for yet, then 
 	CHECK_FALSE(fs::exists(folder.path / "out"));
 }
 
-TEST_CASE("web-js writes pong_min, pong, breakout, spacerace, kaboom, freeway, frogger and prismfall as one page of plain JavaScript each that names nothing of the engine", "[generate]")
+TEST_CASE("web-js writes pong_min, pong, breakout, spacerace, kaboom, freeway, frogger, prismfall and snake as one page of plain JavaScript each that names nothing of the engine", "[generate]")
 {
 	// a line or two of each, in the page's own words
 	const std::map<std::string, std::vector<std::string>> lines{
@@ -493,8 +493,17 @@ TEST_CASE("web-js writes pong_min, pong, breakout, spacerace, kaboom, freeway, f
 			"else if (shards.length <= pace.next) {",
 			"pixels(shardFrame % 2 === 1 ? ringBPicture : ringAPicture,",
 			"const frame = Math.floor(crackedTime / 0.12) % 2;" } },
+		{ "snake", {
+			"\t\"#.....ooo@............f........#\",",
+			"function go(way, speed) {\n\tif (body.length > 0 && same(body[0], { column: head.spot.column + way.column, row: head.spot.row + way.row })) { return; }",
+			"\tif (contains(food, next)) {\n\t\thead.growing += 1;",
+			"food = food.filter((spot) => !same(spot, next));\n\t\tconst spot = freeSpot(next);\n\t\tif (spot) { food.push(spot); }",
+			"function inBody(spot) {\n\tconst end = head.growing > 0 ? body.length : body.length - 1;",
+			"\tif (untilRight !== null) {\n\t\tuntilRight -= elapsed;",
+			"\t\twhile (head.wait <= 0) {\n\t\t\thead.wait += head.every;\n\t\t\tstepHead();",
+			"for (const spot of food) { discOnField(spot, cell / 2 - 2, \"red\"); }" } },
 	};
-	const std::map<std::string, std::string> titles{ { "pong_min", "Pong" }, { "pong", "Pong" }, { "breakout", "Breakout" }, { "spacerace", "Space Race" }, { "kaboom", "Kaboom!" }, { "freeway", "Freeway" }, { "frogger", "Frogger" }, { "prismfall", "Prism Fall" } };
+	const std::map<std::string, std::string> titles{ { "pong_min", "Pong" }, { "pong", "Pong" }, { "breakout", "Breakout" }, { "spacerace", "Space Race" }, { "kaboom", "Kaboom!" }, { "freeway", "Freeway" }, { "frogger", "Frogger" }, { "prismfall", "Prism Fall" }, { "snake", "Snake" } };
 	for (const auto& [game, wanted] : lines)
 	{
 		INFO(game);
@@ -546,7 +555,7 @@ TEST_CASE("web-js lists every part of a game it has no words for yet, then stops
 TEST_CASE("the games windows-cpp and web-js cover: the rest stop with their list", "[.long][generate]")
 {
 	// A line here for each game they learn to write (plan A5).
-	const std::set<std::string> covered{ "pong_min", "pong", "breakout", "spacerace", "kaboom", "freeway", "frogger", "prismfall" };
+	const std::set<std::string> covered{ "pong_min", "pong", "breakout", "spacerace", "kaboom", "freeway", "frogger", "prismfall", "snake" };
 
 	for (const std::string target : { "windows-cpp", "web-js" })
 	{

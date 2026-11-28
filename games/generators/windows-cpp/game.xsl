@@ -24,7 +24,7 @@
   <xsl:variable name="class"><xsl:call-template name="class-name" /></xsl:variable>
   <xsl:variable name="inputs" select="$states/inputs//input" />
   <!-- actions a key presses once, each a function: those that hop or fire -->
-  <xsl:variable name="pressed" select="($everything/actions/action | $states/objects/group/actions/action)[hop or fire]" />
+  <xsl:variable name="pressed" select="($everything/actions/action | $states/objects/group/actions/action)[hop or fire] | $goers/actions/action[go]" />
   <xsl:variable name="held-inputs" select="$inputs[trigger][not(trigger/@action = $pressed/@name)]" />
   <xsl:variable name="press-inputs" select="$inputs[not(trigger) or trigger/@action = $pressed/@name]" />
   <xsl:variable name="held-list">
@@ -84,6 +84,9 @@
   <!-- whether a rule passes over a touch while another is touched too -->
   <xsl:variable name="unless-grids" select="$grids[@class = //collision/@unless or @name = //collision/@unless]" />
   <xsl:variable name="randoms" select="$everything//random" />
+  <xsl:variable name="uses-random" select="boolean($randoms or $free-spawns)" />
+  <!-- the played screen's timers that go off once: each a countdown still to go, or none -->
+  <xsl:variable name="once-timers" select="$state-timers[after]" />
   <xsl:variable name="deflects" select="$played//deflect" />
   <xsl:variable name="sounds" select="/game/sounds/sound" />
   <xsl:variable name="uses-people" select="boolean(//people or $computer)" />
@@ -107,12 +110,13 @@
 #include &lt;SFML/System/Vector2.hpp&gt;
 #include &lt;SFML/Window/Keyboard.hpp&gt;
 </xsl:text>
-    <xsl:if test="$randoms or $kept or $screens or $sounds or $grids or $pictures or $fired or $scenes">
+    <xsl:if test="$uses-random or $kept or $screens or $sounds or $grids or $pictures or $fired or $scenes or $cell-maps or $once-timers">
       <xsl:text>&#10;</xsl:text>
       <xsl:if test="$scenes"><xsl:text>#include &lt;cstddef&gt;&#10;</xsl:text></xsl:if>
-      <xsl:if test="$randoms"><xsl:text>#include &lt;random&gt;&#10;</xsl:text></xsl:if>
-      <xsl:if test="$kept or $pictures"><xsl:text>#include &lt;string&gt;&#10;</xsl:text></xsl:if>
-      <xsl:if test="$screens or $sounds or $grids or $pictures or $fired"><xsl:text>#include &lt;vector&gt;&#10;</xsl:text></xsl:if>
+      <xsl:if test="$free-spawns or $once-timers"><xsl:text>#include &lt;optional&gt;&#10;</xsl:text></xsl:if>
+      <xsl:if test="$uses-random"><xsl:text>#include &lt;random&gt;&#10;</xsl:text></xsl:if>
+      <xsl:if test="$kept or $pictures or $cell-maps"><xsl:text>#include &lt;string&gt;&#10;</xsl:text></xsl:if>
+      <xsl:if test="$screens or $sounds or $grids or $pictures or $fired or $cell-maps"><xsl:text>#include &lt;vector&gt;&#10;</xsl:text></xsl:if>
     </xsl:if>
     <xsl:text>&#10;namespace </xsl:text>
     <xsl:call-template name="namespace-name" />
@@ -162,12 +166,16 @@
       </xsl:for-each>
       <xsl:text> };&#10;</xsl:text>
     </xsl:for-each>
+    <xsl:if test="$cell-maps"><xsl:call-template name="map-constants" /></xsl:if>
     <xsl:if test="$scenes"><xsl:call-template name="scene-table" /></xsl:if>
     <xsl:for-each select="$records[not(self::member) or not(preceding-sibling::member[count(. | $records) = count($records)])] | $grids">
       <xsl:choose>
         <xsl:when test="self::group"><xsl:call-template name="grid-record" /></xsl:when>
         <xsl:otherwise><xsl:call-template name="record" /></xsl:otherwise>
       </xsl:choose>
+    </xsl:for-each>
+    <xsl:for-each select="$goers">
+      <xsl:call-template name="goer-record" />
     </xsl:for-each>
     <xsl:for-each select="$fired">
       <xsl:variable name="type"><xsl:call-template name="fired-type" /></xsl:variable>
@@ -190,7 +198,7 @@
     </xsl:if>
     <xsl:value-of select="concat('&#10;&#9;class ', $class, '&#10;&#9;{&#10;&#9;public:&#10;')" />
     <xsl:choose>
-      <xsl:when test="$randoms">
+      <xsl:when test="$uses-random">
         <xsl:value-of select="concat('&#9;&#9;explicit ', $class, '(unsigned seed = std::random_device{}());&#10;')" />
       </xsl:when>
       <xsl:otherwise>
@@ -241,6 +249,7 @@
       <xsl:call-template name="object-name" />
       <xsl:text>;&#10;</xsl:text>
     </xsl:for-each>
+    <xsl:call-template name="map-members" />
     <xsl:for-each select="$fired">
       <xsl:text>&#9;&#9;std::vector&lt;</xsl:text>
       <xsl:call-template name="fired-type" />
@@ -270,9 +279,15 @@
           <xsl:if test="$kept"><xsl:text>&#9;&#9;std::string keptFile;&#10;</xsl:text></xsl:if>
           <xsl:if test="$scenes"><xsl:value-of select="concat('&#9;&#9;std::size_t ', $scene-at, '{ 0 };&#10;')" /></xsl:if>
           <xsl:for-each select="$state-timers">
-            <xsl:text>&#9;&#9;float </xsl:text>
+            <xsl:choose>
+              <xsl:when test="after"><xsl:text>&#9;&#9;std::optional&lt;float&gt; </xsl:text></xsl:when>
+              <xsl:otherwise><xsl:text>&#9;&#9;float </xsl:text></xsl:otherwise>
+            </xsl:choose>
             <xsl:call-template name="timer-name" />
-            <xsl:text>{ 0 };&#10;</xsl:text>
+            <xsl:choose>
+              <xsl:when test="after"><xsl:text>; // until it goes off, once&#10;</xsl:text></xsl:when>
+              <xsl:otherwise><xsl:text>{ 0 };&#10;</xsl:text></xsl:otherwise>
+            </xsl:choose>
           </xsl:for-each>
           <xsl:for-each select="$marching">
             <xsl:text>&#9;&#9;float </xsl:text>
@@ -281,11 +296,10 @@
           </xsl:for-each>
         </part>
       </xsl:if>
-      <xsl:if test="$randoms">
+      <xsl:if test="$uses-random">
         <part>
-          <xsl:text>		std::mt19937 random;
-		float between(float min, float max);
-</xsl:text>
+          <xsl:text>		std::mt19937 random;&#10;</xsl:text>
+          <xsl:if test="$randoms"><xsl:text>		float between(float min, float max);&#10;</xsl:text></xsl:if>
         </part>
       </xsl:if>
       <xsl:if test="$held-buttons">
@@ -302,7 +316,7 @@
           </xsl:for-each>
         </part>
       </xsl:if>
-      <xsl:if test="$new-game or $started or $computer or $called or $scenes or $pressed or $holed">
+      <xsl:if test="$new-game or $started or $computer or $called or $scenes or $pressed or $holed or $cell-maps">
         <part>
           <xsl:if test="$new-game"><xsl:text>&#9;&#9;void newGame();&#10;</xsl:text></xsl:if>
           <xsl:if test="$scenes"><xsl:value-of select="concat('&#9;&#9;void ', $scene-start, '(std::size_t at);&#10;')" /></xsl:if>
@@ -318,6 +332,7 @@
               <xsl:text>);&#10;</xsl:text>
             </xsl:if>
           </xsl:for-each>
+          <xsl:call-template name="map-declarations" />
           <xsl:for-each select="$called">
             <xsl:text>&#9;&#9;void </xsl:text>
             <xsl:call-template name="action-name"><xsl:with-param name="action" select="@name" /></xsl:call-template>
@@ -468,12 +483,13 @@
   <xsl:template name="game-file">
     <xsl:call-template name="header"><xsl:with-param name="file" select="concat($name, '.cpp')" /></xsl:call-template>
     <xsl:value-of select="concat('&#10;#include &quot;', $name, '.h&quot;&#10;')" />
-    <xsl:variable name="uses-algorithm" select="$deflects or $mouse-input or $unless-grids or $marching or $played/conditions/condition/@total[. != 'count'] or $fired-touchers[@name = $on-fired/@object or collisions/collision[@class = $grids/@class or @class = $grids/@name or @object = $fired/@name or @class = $fired/@class]]" />
+    <xsl:variable name="uses-algorithm" select="$cell-maps or $deflects or $mouse-input or $unless-grids or $marching or $played/conditions/condition/@total[. != 'count'] or $fired-touchers[@name = $on-fired/@object or collisions/collision[@class = $grids/@class or @class = $grids/@name or @object = $fired/@name or @class = $fired/@class]]" />
     <xsl:variable name="uses-cmath" select="$deflects or $uses-angles or $edge-owners//bounce or $touch-bounces or //ceiling" />
     <xsl:if test="$uses-algorithm or $uses-cmath or $kept or $sounds">
       <xsl:text>&#10;</xsl:text>
       <xsl:if test="$uses-algorithm"><xsl:text>#include &lt;algorithm&gt;&#10;</xsl:text></xsl:if>
       <xsl:if test="$uses-cmath"><xsl:text>#include &lt;cmath&gt;&#10;</xsl:text></xsl:if>
+      <xsl:if test="$goers/chain"><xsl:text>#include &lt;cstdlib&gt;&#10;</xsl:text></xsl:if>
       <xsl:if test="$kept"><xsl:text>#include &lt;fstream&gt;&#10;</xsl:text></xsl:if>
       <xsl:if test="$sounds"><xsl:text>#include &lt;utility&gt;&#10;</xsl:text></xsl:if>
     </xsl:if>
@@ -495,6 +511,7 @@
         <xsl:otherwise><xsl:call-template name="start-function" /></xsl:otherwise>
       </xsl:choose>
     </xsl:for-each>
+    <xsl:call-template name="map-functions" />
     <xsl:if test="$kept">
       <xsl:call-template name="keep-functions" />
     </xsl:if>
@@ -527,7 +544,7 @@
 
   <!-- The small functions the rules are written with, those they use. -->
   <xsl:template name="helpers">
-    <xsl:if test="$uses-sign or $uses-angles or $touch-owners or $touch-bounces or $fired-touchers">
+    <xsl:if test="$uses-sign or $uses-angles or $touch-owners or $touch-bounces or $fired-touchers or $cell-maps">
       <xsl:text>	namespace
 	{
 </xsl:text>
@@ -541,6 +558,13 @@
         </xsl:if>
         <xsl:if test="$uses-sign">
           <part>		float sign(float number) { return number &gt; 0 ? 1.0f : number &lt; 0 ? -1.0f : 0.0f; }
+</part>
+        </xsl:if>
+        <xsl:if test="$cell-maps">
+          <part>		bool contains(const std::vector&lt;Spot&gt;&amp; spots, Spot spot)
+		{
+			return std::find(spots.begin(), spots.end(), spot) != spots.end();
+		}
 </part>
         </xsl:if>
         <xsl:if test="$touch-owners or $fired-touchers">
@@ -656,7 +680,7 @@
   <!-- The constructor: a new game, or each thing where the file puts it. -->
   <xsl:template name="constructor">
     <xsl:choose>
-      <xsl:when test="$randoms">
+      <xsl:when test="$uses-random">
         <xsl:value-of select="concat('&#9;', $class, '::', $class, '(unsigned seed) : random(seed)&#10;&#9;{&#10;')" />
       </xsl:when>
       <xsl:otherwise>
@@ -695,6 +719,11 @@
         </xsl:otherwise>
       </xsl:choose>
     </xsl:for-each>
+    <xsl:for-each select="$cell-maps">
+      <xsl:text>&#9;&#9;</xsl:text>
+      <xsl:call-template name="map-start-name" />
+      <xsl:text>();&#10;</xsl:text>
+    </xsl:for-each>
     <xsl:if test="$scenes"><xsl:value-of select="concat('&#9;&#9;', $scene-start, '(0);&#10;')" /></xsl:if>
     <xsl:for-each select="$fired">
       <xsl:text>&#9;&#9;</xsl:text>
@@ -705,7 +734,7 @@
       <xsl:text>&#9;&#9;</xsl:text>
       <xsl:call-template name="timer-name" />
       <xsl:text> = </xsl:text>
-      <xsl:call-template name="value"><xsl:with-param name="node" select="every" /></xsl:call-template>
+      <xsl:call-template name="value"><xsl:with-param name="node" select="every | after" /></xsl:call-template>
       <xsl:text>;&#10;</xsl:text>
     </xsl:for-each>
     <xsl:for-each select="$marching">
@@ -1144,8 +1173,11 @@
     </xsl:if>
     <xsl:if test="$timed or $state-timers or $timed-cells">
       <xsl:text>&#9;&#9;// the timers: each, as often as the time owes it&#10;</xsl:text>
-      <xsl:for-each select="$timed | $played[timers/timer]">
+      <xsl:for-each select="$timed | $played[timers/timer[every]]">
         <xsl:call-template name="timer-lines" />
+      </xsl:for-each>
+      <xsl:for-each select="$once-timers">
+        <xsl:call-template name="once-timer-lines" />
       </xsl:for-each>
       <xsl:for-each select="$timed-cells">
         <xsl:variable name="cell"><xsl:call-template name="cell-name" /></xsl:variable>
@@ -1164,8 +1196,11 @@
       </xsl:for-each>
       <xsl:text>&#10;</xsl:text>
     </xsl:if>
-    <xsl:text>		// everything moves
+    <xsl:variable name="moves" select="$things or $moving-grids or $fired or $marching or $timed-grids or $fired[animation/once]" />
+    <xsl:if test="$moves">
+      <xsl:text>		// everything moves
 </xsl:text>
+    </xsl:if>
     <xsl:for-each select="$things">
       <xsl:variable name="thing"><xsl:call-template name="object-name" /></xsl:variable>
       <xsl:choose>
@@ -1200,6 +1235,7 @@
     <xsl:for-each select="$marching">
       <xsl:call-template name="march" />
     </xsl:for-each>
+    <xsl:call-template name="map-steps"><xsl:with-param name="after" select="$moves" /></xsl:call-template>
     <xsl:for-each select="$timed-grids">
       <xsl:call-template name="look-timers" />
     </xsl:for-each>
@@ -1295,7 +1331,7 @@
         <xsl:when test="$object"><xsl:call-template name="object-name" /><xsl:text>.</xsl:text></xsl:when>
       </xsl:choose>
     </xsl:variable>
-    <xsl:for-each select="timers/timer">
+    <xsl:for-each select="timers/timer[every]">
       <xsl:variable name="until"><xsl:call-template name="timer-name" /></xsl:variable>
       <xsl:variable name="left" select="concat($thing, $until)" />
       <xsl:variable name="body">
@@ -1316,6 +1352,25 @@
       </xsl:call-template>
       <xsl:text>&#9;&#9;}&#10;</xsl:text>
     </xsl:for-each>
+  </xsl:template>
+
+  <!-- A timer of the played screen that goes off once: while it is still
+       to go, it counts down, and at 0 it is done and its verbs run. -->
+  <xsl:template name="once-timer-lines">
+    <xsl:variable name="until"><xsl:call-template name="timer-name" /></xsl:variable>
+    <xsl:variable name="body">
+      <line><xsl:value-of select="concat($until, '.reset();')" /></line>
+      <xsl:for-each select="*[not(self::after)]">
+        <line><xsl:apply-templates select="." mode="do" /></line>
+      </xsl:for-each>
+    </xsl:variable>
+    <xsl:value-of select="concat('&#9;&#9;if (', $until, ')&#10;&#9;&#9;{&#10;&#9;&#9;&#9;*', $until, ' -= elapsed;&#10;')" />
+    <xsl:call-template name="write-block">
+      <xsl:with-param name="header" select="concat('if (*', $until, ' &lt;= 0)')" />
+      <xsl:with-param name="lines" select="exsl:node-set($body)/line" />
+      <xsl:with-param name="indent" select="'&#9;&#9;&#9;'" />
+    </xsl:call-template>
+    <xsl:text>&#9;&#9;}&#10;</xsl:text>
   </xsl:template>
 
   <!-- A grid that marches: every so long its cells' next picture comes
@@ -1705,6 +1760,9 @@
       <xsl:value-of select="concat('a hop ', @direction)" />
     </xsl:for-each>
     <xsl:if test="hop"> when it lands inside the window</xsl:if>
+    <xsl:for-each select="go">
+      <xsl:value-of select="concat('on ', @direction, ', ', normalize-space(.), ' cells a second')" />
+    </xsl:for-each>
     <xsl:for-each select="fire[not(preceding-sibling::hop)]">
       <xsl:variable name="most" select="normalize-space($fired[@name = current()/@object]/most)" />
       <xsl:value-of select="concat('a ', @object, ' fired')" />

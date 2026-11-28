@@ -151,3 +151,17 @@ Each is an idea, to be weighed when the game that needs it is written out.
 ## Open
 
 - Whether `kinds.xsl`'s guesses should become words in the file. So far, inferring them has been enough, and that keeps the file free of code-shaped hints.
+
+## What Snake added
+
+| Part of the file | What the written game does with it |
+|---|---|
+| A `<map>` with `<cells>` | its rows kept as drawn (`fieldMap`), read by `startField()` into a list of spots a kind (`walls`, `body`, `food`) |
+| `<go direction>` in an action | `go({ 0, -1 }, status.speed)`: the head's way and how often it steps, never straight back into its body |
+| A step into a taken cell | both sides' rules, then refused unless they took the piece away (`stepHead()`) |
+| `<chain>` and `<grow />` | the body follows a cell behind, a link longer when `growing`; its tail is out of the way unless it grows (`inBody`) |
+| `<spawn>` with `<free />` | `freeSpot(next)`: a cell at random that nothing is in, nor the head stepping into |
+| A screen's timer `<after>` | a countdown that goes off once (`untilRight`), the press it stands for called |
+
+- **The map stays a picture.** Its rows go in as the file draws them, so a reader sees the field; the code reads them once at the start, rather than the generator writing a list of numbers nobody can check by eye.
+- **Hidden rules again.** A step into the tail is no bite, because the tail moves on in the same step; a link grown stays where the tail was. Both are one line each in the written game, and the checks pin them.

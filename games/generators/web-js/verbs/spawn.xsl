@@ -26,6 +26,18 @@
       <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;spawn&gt; of other than a picture or a rectangle, on a meeting of a thing or a grid'" /></xsl:call-template>
     </xsl:if>
   </xsl:template>
+  <!-- covered: in a rule of a list of a map, one more of a list of it in
+       a free cell at random, if there is one -->
+  <xsl:template match="map/group/collisions/collision/spawn[@object][count(*) = 1][free[not(@* or node())]]" mode="covers">
+    <xsl:if test="not(ancestor::map[1]/group[@name = current()/@object])">
+      <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;spawn&gt; on a map other than of a list of it, in a free cell'" /></xsl:call-template>
+    </xsl:if>
+  </xsl:template>
+  <xsl:template match="spawn" mode="cell">
+    <xsl:text>const spot = freeSpot(next);&#10;if (spot) { </xsl:text>
+    <xsl:call-template name="object-name"><xsl:with-param name="object" select="ancestor::map[1]/group[@name = current()/@object]" /></xsl:call-template>
+    <xsl:text>.push(spot); }</xsl:text>
+  </xsl:template>
   <xsl:template match="spawn/@object" mode="covers" />
 
   <xsl:template match="spawn" mode="touch">

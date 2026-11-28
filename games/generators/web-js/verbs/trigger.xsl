@@ -23,6 +23,13 @@
     </xsl:if>
   </xsl:template>
 
+  <!-- covered: in a timer of the played state, an action a key presses -->
+  <xsl:template match="state/timers/timer/trigger[@object and @action and not(node())]" mode="covers">
+    <xsl:if test="count(ancestor::state[1] | $played) != 1 or not($pressed[@name = current()/@action][../../@name = current()/@object])">
+      <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;trigger&gt; in a timer other than of an action a key presses, in the played state'" /></xsl:call-template>
+    </xsl:if>
+  </xsl:template>
+
   <xsl:template match="trigger" mode="do">
     <xsl:call-template name="action-name"><xsl:with-param name="action" select="@action" /></xsl:call-template>
     <xsl:text>();</xsl:text>

@@ -104,6 +104,14 @@
   </xsl:variable>
   <xsl:variable name="records" select="$everything[@name = exsl:node-set($record-list)/name]" />
 
+  <!-- maps of cells (cells.xsl): each kind of piece a list, or one piece
+       of its own; those that go -->
+  <xsl:variable name="cell-maps" select="$states/objects/map[cells]" />
+  <!-- each kind of piece a list, or one piece of its own; those that go -->
+  <xsl:variable name="map-lists" select="$cell-maps/group" />
+  <xsl:variable name="map-pieces" select="$cell-maps/object" />
+  <xsl:variable name="goers" select="$map-pieces[actions/action/go]" />
+  <xsl:variable name="free-spawns" select="$cell-maps//spawn[free]" />
   <xsl:variable name="kept" select="$everything[@name = /game/keeps/keep/@object]" />
 
   <!-- The scenes' numbers: those of the first, which every scene names. -->

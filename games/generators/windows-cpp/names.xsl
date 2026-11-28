@@ -155,6 +155,7 @@
         <xsl:text>until </xsl:text>
         <xsl:choose>
           <xsl:when test="$timer/@name"><xsl:value-of select="$timer/@name" /></xsl:when>
+          <xsl:when test="$timer/../parent::state and $timer/*[not(self::every or self::after)][1][self::trigger]"><xsl:value-of select="$timer/trigger[1]/@action" /></xsl:when>
           <xsl:when test="$timer/../parent::state and $timer/*[not(self::every)][1]/@object"><xsl:value-of select="$timer/*[not(self::every)][1]/@object" /></xsl:when>
           <xsl:when test="$timer/../parent::state">tick</xsl:when>
           <xsl:otherwise><xsl:value-of select="local-name($timer/*[not(self::every)][1])" /></xsl:otherwise>

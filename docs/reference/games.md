@@ -75,7 +75,7 @@ The tables list only keys beyond that.
 | `tetris` | A/D move, W/E/X turn clockwise, Q counterclockwise, S drops faster, Space drops at once | [cells](maps.md#cells), standard turns and kicks, full rows cleared, the next shape by `<send>` |
 | `columns` | A/D move, W/E/X/Space cycle, Q cycles back, S drops faster | lines of three alike, chains by `<fall />` |
 | `capsules` | as Tetris, without the drop | an original game of germs and capsules; halves that stay joined ([`<joins>`](maps.md#cells)) |
-| `snake` | W A S D or arrows | a [chain](maps.md#cells) for a body, food in a free cell |
+| `snake` | W A S D or arrows | a [chain](maps.md#cells) for a body, food in a free cell; `windows-cpp` and `web-js` write it out |
 | `crates` | W A S D or arrows walk, U/Backspace undo, R restarts the room | four rooms of crates to push onto spots: [`<shove />`](maps.md#pushing-merging-and-counting), a floor layer, `<count><here /></count>`, `<undo />` |
 | `doubles` | W A S D or arrows slide | a four by four board of numbers that add up when equal: `<slide class>`, `<merge>`, pairs counted `<around>` |
 | `minefield` | W A S D or arrows or the mouse point, Space/left click opens, F/right click flags | nine by nine, ten mines: counts `<around>`, a flood by `<trigger><around /></trigger>` |

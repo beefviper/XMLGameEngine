@@ -26,6 +26,15 @@
     </xsl:if>
   </xsl:template>
 
+  <!-- covered bare, in a rule of a list of a
+       map: the one stepped into taken off it -->
+  <xsl:template match="map/group/collisions/collision/despawn[not(@* or node())]" mode="covers" />
+  <xsl:template match="despawn" mode="cell">
+    <xsl:param name="self" />
+    <xsl:variable name="list"><xsl:call-template name="object-name"><xsl:with-param name="object" select="$self" /></xsl:call-template></xsl:variable>
+    <xsl:value-of select="concat($list, ' = ', $list, '.filter((spot) =&gt; !same(spot, next));')" />
+  </xsl:template>
+
   <xsl:template match="despawn" mode="do">
     <xsl:call-template name="fired-list-name"><xsl:with-param name="piece" select="$fired[@name = current()/@object]" /></xsl:call-template>
     <xsl:text> = [];</xsl:text>

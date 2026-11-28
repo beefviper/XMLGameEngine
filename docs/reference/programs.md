@@ -125,7 +125,7 @@ In the page the canvas fills the browser's window, the game's proportions kept. 
 
 | Written | By | What |
 |---|---|---|
-| `source/<game>.h`, `source/<game>.cpp` | `game.xsl`, with `kinds.xsl`, `names.xsl`, `values.xsl`, `grids.xsl` and a file per verb in `verbs/` | the game's numbers, class (`pong::Pong`) and rules |
+| `source/<game>.h`, `source/<game>.cpp` | `game.xsl`, with `kinds.xsl`, `names.xsl`, `values.xsl`, `grids.xsl`, `cells.xsl` and a file per verb in `verbs/` | the game's numbers, class (`pong::Pong`) and rules |
 | `source/main.cpp`, `CMakeLists.txt`, `README.md`, `.gitignore` | `program.xsl` | the window: keys, pads and the mouse in, a step of the time since the last frame (at most a quarter of a second), the picture and the sounds out; the build finds or fetches SFML 3 |
 | (nothing: the game, reshaped) | `prepare.xsl`, run first | groups in groups made plain, each kind taking what it leaves out from the groups around it, so a river of logs and turtles is one list of logs |
 | `assets/tuffy.ttf` | `xgecli` | the font, when the game has words |
@@ -133,7 +133,7 @@ In the page the canvas fills the browser's window, the game's proportions kept. 
 
 `kinds.xsl` sorts the game's parts once for both targets: the things (what moves, meets or counts), the grids (rows and columns whose cells meet), the words and still pictures only drawn, the records (live variables, or more than one look), each variable a constant, a start value or a member, and what is kept.
 
-It writes `pong_min.xml`, `pong.xml`, `breakout.xml`, `spacerace.xml`, `kaboom.xml`, `freeway.xml`, `frogger.xml` and `prismfall.xml` for now; `ctest --test-dir build/generated` writes and builds each under `output/<config>/generated/windows-cpp/<game>/`. Before writing, it walks the game; for any other game it writes nothing and lists every part it has no words for yet, a line each with the object it is in:
+It writes `pong_min.xml`, `pong.xml`, `breakout.xml`, `spacerace.xml`, `kaboom.xml`, `freeway.xml`, `frogger.xml`, `prismfall.xml` and `snake.xml` for now; `ctest --test-dir build/generated` writes and builds each under `output/<config>/generated/windows-cpp/<game>/`. Before writing, it walks the game; for any other game it writes nothing and lists every part it has no words for yet, a line each with the object it is in:
 
 ```
 windows-cpp cannot write these parts of prismfall2.xml yet; use engine-cpp for this game:
@@ -147,7 +147,7 @@ windows-cpp cannot write these parts of prismfall2.xml yet; use engine-cpp for t
 
 | Written | By | What |
 |---|---|---|
-| `<game>.html` | `game.xsl`, with `windows-cpp`'s `kinds.xsl`, its own `names.xsl`, `values.xsl`, `grids.xsl` and a file per verb in `verbs/` | the game's numbers, things and rules, then the page: the canvas filling the window with the game's proportions, keys in (a game's key is kept from the page), a frame each time the browser draws with the time since the last (at most a quarter of a second) |
+| `<game>.html` | `game.xsl`, with `windows-cpp`'s `kinds.xsl`, its own `names.xsl`, `values.xsl`, `grids.xsl`, `cells.xsl` and a file per verb in `verbs/` | the game's numbers, things and rules, then the page: the canvas filling the window with the game's proportions, keys in (a game's key is kept from the page), a frame each time the browser draws with the time since the last (at most a quarter of a second) |
 | `README.md` | `generate.xsl` | what the page is, and to open it |
 | `LICENSE` | `xgecli` | the repository's licence |
 

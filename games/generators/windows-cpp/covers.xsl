@@ -318,8 +318,8 @@
     <xsl:apply-templates select="*" mode="covers" />
   </xsl:template>
   <xsl:template match="state/timers/timer" mode="covers" priority="2">
-    <xsl:if test="@* or not(every or after) or (every and after) or *[not(self::every or self::after)][not(self::play or self::inc or self::dec or self::set or self::reveal or self::despawn or self::pop)]
-        or after[* or string(number(.)) = 'NaN'] or (after and count(../.. | $played) = 1)">
+    <xsl:if test="@* or not(every or after) or (every and after) or *[not(self::every or self::after)][not(self::play or self::inc or self::dec or self::set or self::reveal or self::despawn or self::pop or self::trigger)]
+        or after[* or string(number(.)) = 'NaN']">
       <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;timer&gt; of a state other than every so often, or once after a while'" /></xsl:call-template>
     </xsl:if>
     <xsl:apply-templates select="*[not(self::after)]" mode="covers" />
@@ -365,6 +365,60 @@
     <xsl:if test="count(.. | $fired) != count($fired) or string(number(.)) = 'NaN'">
       <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;most&gt; other than a number of what is fired'" /></xsl:call-template>
     </xsl:if>
+  </xsl:template>
+
+  <!-- Maps of cells (cells.xsl). -->
+  <!-- covered: one map of cells in the played state, each piece one cell
+       picked by its letter -->
+  <xsl:template match="objects/map" mode="covers" priority="2">
+    <xsl:choose>
+      <xsl:when test="not(cells) or cells/node() or cells/@* or count(../.. | $played) != 1 or count($cell-maps) != 1 or *[not(self::tile or self::position or self::cells or self::row or self::group or self::object)]
+          or not(row) or (group | object)[not(@char) or string-length(@char) != 1]">
+        <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;map&gt; other than one of cells in the played state, its pieces each one cell picked by a letter'" /></xsl:call-template>
+      </xsl:when>
+      <xsl:otherwise><xsl:apply-templates select="@* | tile | position | group | object" mode="covers" /></xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+  <xsl:template match="map/@name | map/group/@char | map/object/@char | chain/@object" mode="covers" />
+  <xsl:template match="map/group | map/object | map/tile | tile/width | tile/height | map/position | map/group/sprite | map/object/sprite | map/group/collisions | map/object/collisions | map/object/actions" mode="covers" priority="2">
+    <xsl:apply-templates select="@* | * | text()" mode="covers" />
+  </xsl:template>
+  <!-- a piece's look: a rectangle or a circle of one colour -->
+  <xsl:template match="map/group[count(sprite) != 1] | map/object[count(sprite) != 1] | map/*/sprite[not(rectangle or circle) or count(*) != 1 or @*]" mode="covers" priority="3">
+    <xsl:call-template name="gap"><xsl:with-param name="what" select="'a piece of a map other than a rectangle or a circle'" /></xsl:call-template>
+  </xsl:template>
+  <xsl:template match="map/*/sprite/circle | circle/radius | circle/color" mode="covers" priority="2">
+    <xsl:apply-templates select="@* | * | text()" mode="covers" />
+  </xsl:template>
+  <xsl:template match="map/object/facing" mode="covers" priority="3">
+    <xsl:if test="not(. = 'up' or . = 'down' or . = 'left' or . = 'right')">
+      <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;facing&gt; other than up, down, left or right'" /></xsl:call-template>
+    </xsl:if>
+  </xsl:template>
+  <!-- a chain: the links of a list of the map behind a piece that goes -->
+  <xsl:template match="map/object/chain" mode="covers" priority="2">
+    <xsl:if test="node() or @*[local-name() != 'object'] or not(../../group[@name = current()/@object]) or count(.. | $goers) != count($goers)">
+      <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;chain&gt; other than of a list of its map, on a piece that goes'" /></xsl:call-template>
+    </xsl:if>
+  </xsl:template>
+  <!-- a rule on stepping into a cell: a piece that goes meeting a class of
+       the map, or a list met by one that goes -->
+  <xsl:template match="map/*/collisions/collision" mode="covers" priority="3">
+    <xsl:variable name="owner" select="../.." />
+    <xsl:variable name="classes" select="$owner/../*[self::group or self::object]/@class" />
+    <xsl:choose>
+      <xsl:when test="@*[local-name() != 'class'] or not(@class) or (count($owner | $goers) = count($goers) and not($classes = @class))
+          or (count($owner | $goers) != count($goers) and not($goers/@class = @class))">
+        <xsl:call-template name="gap"><xsl:with-param name="what" select="'a &lt;collision&gt; on a map other than by the class of what is stepped into, or of what steps'" /></xsl:call-template>
+      </xsl:when>
+      <xsl:otherwise><xsl:apply-templates select="*" mode="covers" /></xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+  <xsl:template match="map/object/actions/action" mode="covers" priority="2">
+    <xsl:if test="*[not(self::go)] or count(go) != 1">
+      <xsl:call-template name="gap"><xsl:with-param name="what" select="'an action of a piece of a map other than one &lt;go&gt;'" /></xsl:call-template>
+    </xsl:if>
+    <xsl:apply-templates select="@* | *" mode="covers" />
   </xsl:template>
 
   <!-- The parts covered: the game, its window and numbers, its states of
@@ -414,7 +468,7 @@
   <xsl:template mode="covers" match="text()[normalize-space(.) != ''][parent::width or parent::height or parent::x or parent::y
       or parent::value or parent::min or parent::max or parent::variable or parent::move or parent::bounce or parent::deflect
       or parent::offset or parent::number or parent::set or parent::inc or parent::atleast or parent::atmost or parent::above
-      or parent::below or parent::equal or parent::unequal or parent::every or parent::seconds]">
+      or parent::below or parent::equal or parent::unequal or parent::every or parent::seconds or parent::go or parent::radius]">
     <xsl:variable name="text" select="normalize-space(.)" />
     <xsl:variable name="first" select="substring-before($text, '.')" />
     <xsl:variable name="rest" select="substring-after($text, '.')" />

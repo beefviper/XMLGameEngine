@@ -31,6 +31,7 @@
   <xsl:include href="values.xsl" />
   <xsl:include href="game.xsl" />
   <xsl:include href="grids.xsl" />
+  <xsl:include href="cells.xsl" />
   <xsl:include href="scenes.xsl" />
   <xsl:include href="verbs/become.xsl" />
   <xsl:include href="verbs/bounce.xsl" />
@@ -41,6 +42,8 @@
   <xsl:include href="verbs/die.xsl" />
   <xsl:include href="verbs/enter.xsl" />
   <xsl:include href="verbs/fire.xsl" />
+  <xsl:include href="verbs/go.xsl" />
+  <xsl:include href="verbs/grow.xsl" />
   <xsl:include href="verbs/hold.xsl" />
   <xsl:include href="verbs/hole.xsl" />
   <xsl:include href="verbs/inc.xsl" />
